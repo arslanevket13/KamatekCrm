@@ -9,12 +9,15 @@ namespace KamatekCrm
     {
         public MainWindow()
         {
-            InitializeComponent(); // ← Bu metot MainWindow.g.cs içinde tanımlı
+            InitializeComponent(); // Bu çağrı XAML'i yüklemek için zorunludur.
         }
 
-        private void InitializeComponent()
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            throw new NotImplementedException();
+
         }
+
+        // private void InitializeComponent() { ... } <-- BU BLOK TAMAMEN SİLİNMELİDİR.
+        // Bu metodu manuel olarak tanımlamayın.
     }
 }

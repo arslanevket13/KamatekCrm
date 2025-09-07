@@ -1,6 +1,4 @@
-﻿
-
-using KamatekCrm.Commands; 
+﻿using KamatekCrm.Commands; 
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -10,7 +8,7 @@ namespace KamatekCrm.ViewModels
     public class MainWindowViewModel : INotifyPropertyChanged
     {
         // Aktif olan ViewModel'i tutacak özellik
-        private object _currentViewModel;
+        private object _currentViewModel = null!;
         public object CurrentViewModel
         {
             get => _currentViewModel;
