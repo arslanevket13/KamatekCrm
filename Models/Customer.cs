@@ -1,4 +1,8 @@
+﻿
 ﻿using System.ComponentModel;
+
+using System.ComponentModel;
+
 using System.Runtime.CompilerServices; // Bu satırın eklendiğinden emin olun
 
 namespace KamatekCrm.Models
