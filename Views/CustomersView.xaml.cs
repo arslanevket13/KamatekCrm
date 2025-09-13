@@ -4,12 +4,9 @@ using System.Windows.Media;
 
 namespace KamatekCrm.Views
 {
-    public partial class TicketsView : UserControl
+    public partial class CustomersView : UserControl
     {
-        public TicketsView()
-        {
-            InitializeComponent();
-        }
+        public CustomersView() => InitializeComponent();
 
         private void TextBox_GotFocus(object sender, RoutedEventArgs e)
         {
@@ -28,5 +25,9 @@ namespace KamatekCrm.Views
                 textBox.Foreground = Brushes.Gray;
             }
         }
+
+
+
     }
-}
+    }
+

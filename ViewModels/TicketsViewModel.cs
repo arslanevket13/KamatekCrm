@@ -1,61 +1,54 @@
-﻿using KamatekCrm.Commands; // RelayCommand sınıfınızın burada olduğunu varsayıyoruz
+﻿using KamatekCrm.Commands;
 using KamatekCrm.Models;
+using KamatekCrm.Services;
+using KamatekCrm.Views;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
 
 namespace KamatekCrm.ViewModels
 {
     public class TicketsViewModel : INotifyPropertyChanged
     {
-        private readonly ObservableCollection<Ticket> _tickets = [];
-        private Ticket _newOrEditTicket = new();
-        private Ticket? _selectedTicket; // Seçim için kullanılacak doğru yedekleme alanı
+        private ObservableCollection<Ticket> _tickets = [];
+        private Ticket _selectedTicket = new Ticket();
+        private ObservableCollection<Customer> _allCustomers = new ObservableCollection<Customer>();
         private int _nextId = 1;
-        // private Ticket? _SelectedTicket; // <-- Gereksiz ve hataya neden olan kopya alan kaldırıldı.
 
-        public ObservableCollection<Ticket> Tickets => _tickets;
-
-        public Ticket NewOrEditTicket
+        public ObservableCollection<Ticket> Tickets
         {
-            get => _newOrEditTicket;
+            get => _tickets;
             set
             {
-                _newOrEditTicket = value;
+                _tickets = value;
                 OnPropertyChanged();
             }
         }
 
-        public Ticket? SelectedTicket
+        public Ticket SelectedTicket
         {
             get => _selectedTicket;
             set
             {
-                // --- KRİTİK DÜZELTME BAŞLANGICI ---
-                // 'value' değişkenini büyük harfli _SelectedTicket yerine küçük harfli _selectedTicket alanına atıyoruz.
                 _selectedTicket = value;
-                // --- KRİTİK DÜZELTME SONU ---
-
                 OnPropertyChanged();
+                (UpdateCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (DeleteCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            }
+        }
 
-                if (value != null)
-                {
-                    // Seçili öğenin verilerini düzenleme formuna kopyala
-                    NewOrEditTicket = new Ticket { Id = value.Id, Title = value.Title, Description = value.Description };
-                }
-                else
-                {
-                    // Seçim kaldırıldığında formu temizle
-                    NewOrEditTicket = new Ticket();
-                }
-
-                // Komutların CanExecute durumunu güncelle (Butonları etkinleştir/devre dışı bırak)
-                if (UpdateCommand is RelayCommand updateRelay)
-                    updateRelay.RaiseCanExecuteChanged();
-
-                if (DeleteCommand is RelayCommand deleteRelay)
-                    deleteRelay.RaiseCanExecuteChanged();
+        // 💡 Tüm müşterileri tutar — ComboBox için
+        public ObservableCollection<Customer> AllCustomers
+        {
+            get => _allCustomers;
+            set
+            {
+                _allCustomers = value;
+                OnPropertyChanged();
             }
         }
 
@@ -63,48 +56,108 @@ namespace KamatekCrm.ViewModels
         public ICommand UpdateCommand { get; }
         public ICommand DeleteCommand { get; }
 
+        public ICommand OpenAddCustomerCommand { get; }
+
         public TicketsViewModel()
         {
-            AddCommand = new RelayCommand(AddTicket);
-            UpdateCommand = new RelayCommand(UpdateTicket, () => SelectedTicket?.Id > 0);
-            DeleteCommand = new RelayCommand(DeleteTicket, () => SelectedTicket?.Id > 0);
+            Tickets = new ObservableCollection<Ticket>();
+            SelectedTicket = new Ticket();
+
+            // 💡 Artık örnek veri yok — CustomerService'ten al
+            AllCustomers = CustomerService.Instance.Customers;
+
+            AddCommand = new RelayCommand(AddTicket, CanAddTicket);
+            UpdateCommand = new RelayCommand(UpdateTicket, CanModifyTicket);
+            DeleteCommand = new RelayCommand(DeleteTicket, CanModifyTicket);
+            OpenAddCustomerCommand = new RelayCommand(OpenAddCustomer);
+            CustomerService.Instance.CustomerAdded += OnCustomerAdded;
+
         }
+
+
+
+            private void OnCustomerAdded(Customer customer)
+        {
+            SelectedTicket.CustomerId = customer.Id; // ← Otomatik seç
+        }
+
+
+        private void OpenAddCustomer()
+        {
+            var customersViewModel = new CustomersViewModel(this);
+            var customersView = new CustomersView
+            {
+                DataContext = customersViewModel
+            };
+            
+        
+
+
+
+            var window = new Window
+            {
+                Title = "Müşteri Ekle",
+                Content = new CustomersView(), // ← UserControl burada kullanılıyor
+                Width = 1000,
+                Height = 700,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            };
+            window.Show();
+        }
+
+
+        private bool CanAddTicket() => !string.IsNullOrWhiteSpace(SelectedTicket.Title) && SelectedTicket.CustomerId > 0;
+
+        private bool CanModifyTicket() => SelectedTicket != null && SelectedTicket.Id > 0;
 
         private void AddTicket()
         {
-            if (string.IsNullOrWhiteSpace(NewOrEditTicket.Title))
-                return;
+            if (!CanAddTicket()) return;
+
+            var customer = AllCustomers.FirstOrDefault(c => c.Id == SelectedTicket.CustomerId);
 
             var newTicket = new Ticket
             {
-                Id = _nextId++, 
-                Title = NewOrEditTicket.Title,
-                Description = NewOrEditTicket.Description,
-                CreatedDate = DateTime.Now
+                Id = _nextId++,
+                Title = SelectedTicket.Title,
+                Description = SelectedTicket.Description,
+                CreatedDate = DateTime.Now,
+                CustomerId = SelectedTicket.CustomerId,
+                Customer = customer! // ← Artık uyarı vermez, çünkü Customer? tipinde
             };
 
             Tickets.Add(newTicket);
-            NewOrEditTicket = new Ticket(); // Formu temizle
+
+            SelectedTicket.Title = string.Empty;
+            SelectedTicket.Description = string.Empty;
+            SelectedTicket.CustomerId = 0;
         }
+
+    
+
+            // Formu temizle
+        
+   
 
         private void UpdateTicket()
         {
-            if (SelectedTicket == null) return;
+            if (!CanModifyTicket()) return;
 
-            SelectedTicket.Title = NewOrEditTicket.Title;
-            SelectedTicket.Description = NewOrEditTicket.Description;
-
-            SelectedTicket = null; // Seçimi ve formu temizle
+            // Zaten SelectedTicket üzerinden düzenleme yapılıyor
+            // Referans tip olduğu için doğrudan koleksiyondaki nesne güncellenir
         }
 
         private void DeleteTicket()
         {
-            if (SelectedTicket == null) return;
+            if (!CanModifyTicket()) return;
+
             Tickets.Remove(SelectedTicket);
-            SelectedTicket = null; // Seçimi temizle
+            SelectedTicket = new Ticket();
         }
 
+        // INotifyPropertyChanged
         public event PropertyChangedEventHandler? PropertyChanged;
+
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

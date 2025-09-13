@@ -1,9 +1,6 @@
 ﻿
-﻿using System.ComponentModel;
-
 using System.ComponentModel;
-
-using System.Runtime.CompilerServices; // Bu satırın eklendiğinden emin olun
+using System.Runtime.CompilerServices;
 
 namespace KamatekCrm.Models
 {
@@ -14,12 +11,14 @@ namespace KamatekCrm.Models
         private string _surname = "";
         private string _email = "";
         private string _phone = "";
+        private string _adres = "";
 
         public int Id
         {
             get => _id;
             set { _id = value; OnPropertyChanged(); }
         }
+       
 
         public string Name
         {
@@ -43,6 +42,28 @@ namespace KamatekCrm.Models
         {
             get => _phone;
             set { _phone = value; OnPropertyChanged(); }
+        }
+
+        public string Adres
+        {
+            get => _adres;
+            set { _adres = value; OnPropertyChanged(); }
+        }
+
+        // 💡 YENİ: Parametreli Constructor
+        public Customer(int id, string name, string surname, string email, string phone, string adres)
+        {
+            Id = id;
+            Name = name;
+            Surname = surname;
+            Email = email;
+            Phone = phone;
+            Adres = adres;
+        }
+
+        // Varsayılan constructor
+        public Customer() : this(0, "", "", "", "", "")
+        {
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

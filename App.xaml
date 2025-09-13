@@ -4,20 +4,22 @@
              xmlns:views="clr-namespace:KamatekCrm.Views"
              xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
              StartupUri="MainWindow.xaml">
+
     <Application.Resources>
         <ResourceDictionary>
+            <!-- 1. MaterialDesign Temaları -->
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Light.xaml" />
-               
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.Teal.xaml" />
             </ResourceDictionary.MergedDictionaries>
-                
+
+            <!-- 2. DataTemplate'ler BURAYA, MergedDictionaries dışında gelmeli -->
             <DataTemplate DataType="{x:Type viewmodels:CustomersViewModel}">
-                <views:CustomersView/>
+                <views:CustomersView />
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type viewmodels:TicketsViewModel}">
-                <views:TicketsView/>
+                <views:TicketsView />
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

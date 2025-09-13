@@ -1,120 +1,119 @@
 ﻿using KamatekCrm.Commands;
 using KamatekCrm.Models;
+using KamatekCrm.Services;
+using KamatekCrm.Views;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
-namespace KamatekCrm.ViewModels;
-
-public class CustomersViewModel : INotifyPropertyChanged
+namespace KamatekCrm.ViewModels
 {
-    private ObservableCollection<Customer> _customers = [];
-    private Customer _newOrEditCustomer = new();
-    private Customer? _selectedCustomer; // ✅ ? eklendi
-
-    public ObservableCollection<Customer> Customers
+    public class CustomersViewModel : INotifyPropertyChanged
     {
-        get => _customers;
-        set { _customers = value; OnPropertyChanged(); }
-    }
+        private readonly TicketsViewModel? _ticketsViewModel;
+        private Customer _selectedCustomer = new Customer();
 
-    public Customer NewOrEditCustomer
-    {
-        get => _newOrEditCustomer;
-        set { _newOrEditCustomer = value; OnPropertyChanged(); }
-    }
+        public ObservableCollection<Customer> Customers { get; }
 
-    public Customer? SelectedCustomer
-    {
-        get => _selectedCustomer;
-        set
+        public Customer SelectedCustomer
         {
-            if (_selectedCustomer != value)
+            get => _selectedCustomer;
+            set
             {
                 _selectedCustomer = value;
                 OnPropertyChanged();
-
-                if (value != null)
-                {
-                    NewOrEditCustomer = new Customer
-                    {
-                        Id = value.Id,
-                        Name = value.Name,
-                        Surname = value.Surname,
-                        Email = value.Email,
-                        Phone = value.Phone
-                    };
-                }
-                else
-                {
-                    NewOrEditCustomer = new Customer();
-                }
-
-                ((RelayCommand)UpdateCommand).RaiseCanExecuteChanged();
-                ((RelayCommand)DeleteCommand).RaiseCanExecuteChanged();
+                (AddCommand as RelayCommand)?.RaiseCanExecuteChanged(); // ← EKLENDİ
+                (UpdateCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                (DeleteCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
-    }
 
-    public ICommand AddCommand { get; }
-    public ICommand UpdateCommand { get; }
-    public ICommand DeleteCommand { get; }
-    public ICommand CancelCommand { get; }
+        public ICommand AddCommand { get; }
+        public ICommand UpdateCommand { get; }
+        public ICommand DeleteCommand { get; }
 
-    public CustomersViewModel()
-    {
-        AddCommand = new RelayCommand(AddCustomer);
-        UpdateCommand = new RelayCommand(UpdateCustomer, CanUpdateOrDelete);
-        DeleteCommand = new RelayCommand(DeleteCustomer, CanUpdateOrDelete);
-        CancelCommand = new RelayCommand(CancelEdit);
+        public ICommand CancelCommand { get; }
 
-        // Örnek müşteriler
-        Customers.Add(new Customer { Id = 1, Name = "Ali", Surname = "Veli", Email = "ali@veli.com", Phone = "555 123 45 67" });
-        Customers.Add(new Customer { Id = 2, Name = "Ayşe", Surname = "Fatma", Email = "ayse@fatma.com", Phone = "555 987 65 43" });
-    }
+        public CustomersViewModel(TicketsViewModel ticketsViewModel)
+        {
+            _ticketsViewModel = ticketsViewModel;
+            Customers = CustomerService.Instance.Customers;
 
-    private void AddCustomer()
-    {
-        if (string.IsNullOrWhiteSpace(NewOrEditCustomer.Name) ||
-            string.IsNullOrWhiteSpace(NewOrEditCustomer.Surname))
-            return;
+            AddCommand = new RelayCommand(AddCustomer, CanAddCustomer);
+            UpdateCommand = new RelayCommand(UpdateCustomer, CanModifyCustomer);
+            DeleteCommand = new RelayCommand(DeleteCustomer, CanModifyCustomer);
+            CancelCommand = new RelayCommand(CancelEdit);
 
-        NewOrEditCustomer.Id = Customers.Any() ? Customers.Max(c => c.Id) + 1 : 1;
-        Customers.Add(NewOrEditCustomer);
-        NewOrEditCustomer = new Customer();
-    }
+            if (Customers.Any())
+                SelectedCustomer = Customers.First();
+        }
 
-    private void UpdateCustomer()
-    {
-        if (SelectedCustomer == null) return;
+        private bool CanAddCustomer()
+        {
+            return !string.IsNullOrWhiteSpace(SelectedCustomer?.Name?.Trim()) &&
+                   !string.IsNullOrWhiteSpace(SelectedCustomer?.Surname?.Trim());
+        }
 
-        SelectedCustomer.Name = NewOrEditCustomer.Name;
-        SelectedCustomer.Surname = NewOrEditCustomer.Surname;
-        SelectedCustomer.Email = NewOrEditCustomer.Email;
-        SelectedCustomer.Phone = NewOrEditCustomer.Phone;
+        private bool CanModifyCustomer()
+        {
+            return SelectedCustomer != null && SelectedCustomer.Id > 0;
+        }
 
-        SelectedCustomer = null;
-    }
+        private void AddCustomer()
+        {
+            System.Diagnostics.Debug.WriteLine($"Name: '{SelectedCustomer.Name}', Surname: '{SelectedCustomer.Surname}'");
+            if (!CanAddCustomer())
+            {
+                System.Diagnostics.Debug.WriteLine("CanAddCustomer() returned false");
+                return;
+            }
 
-    private void DeleteCustomer()
-    {
-        if (SelectedCustomer == null) return;
-        Customers.Remove(SelectedCustomer);
-        SelectedCustomer = null;
-    }
+            var newCustomer = new Customer
+            {
+                Name = SelectedCustomer.Name,
+                Surname = SelectedCustomer.Surname,
+                Email = SelectedCustomer.Email,
+                Phone = SelectedCustomer.Phone,
+                Adres = SelectedCustomer.Adres
+            };
 
-    private void CancelEdit()
-    {
-        SelectedCustomer = null;
-        NewOrEditCustomer = new Customer();
-    }
+            CustomerService.Instance.AddCustomer(newCustomer);
+            SelectedCustomer = new Customer();
+        }
 
-    private bool CanUpdateOrDelete() => SelectedCustomer != null;
+        private static void OpenAddCustomer()
+        {
+            
+           
+        }
+        private void UpdateCustomer()
+        {
+            if (!CanModifyCustomer()) return;
 
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string? name = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            CustomerService.Instance.UpdateCustomer(SelectedCustomer);
+        }
+
+        private void DeleteCustomer()
+        {
+            if (!CanModifyCustomer()) return;
+
+            CustomerService.Instance.DeleteCustomer(SelectedCustomer.Id);
+            SelectedCustomer = new Customer();
+        }
+
+        private void CancelEdit()
+        {
+            SelectedCustomer = new Customer(); // Formu temizle
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

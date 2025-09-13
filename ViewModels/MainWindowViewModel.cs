@@ -1,4 +1,5 @@
-﻿using KamatekCrm.Commands; 
+﻿using KamatekCrm.Commands;
+using KamatekCrm.ViewModels; // ← ViewModel'leri kullanmak için
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -7,7 +8,6 @@ namespace KamatekCrm.ViewModels
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        // Aktif olan ViewModel'i tutacak özellik
         private object _currentViewModel = null!;
         public object CurrentViewModel
         {
@@ -19,25 +19,25 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        // Diğer ViewModel'lerin örnekleri (instance)
         private readonly CustomersViewModel _customersViewModel;
         private readonly TicketsViewModel _ticketsViewModel;
 
-        // Gezinti Komutları
         public ICommand ShowCustomersViewCommand { get; }
         public ICommand ShowTicketsViewCommand { get; }
 
         public MainWindowViewModel()
         {
-            // ViewModelleri başlat
-            _customersViewModel = new CustomersViewModel();
+            // 1. Önce TicketsViewModel oluştur
             _ticketsViewModel = new TicketsViewModel();
 
-            // Komutları tanımla (RelayCommand kullanarak)
+            // 2. Sonra CustomersViewModel'e aynı örneği geç
+            _customersViewModel = new CustomersViewModel(_ticketsViewModel);
+
+            // 3. Komutları tanımla
             ShowCustomersViewCommand = new RelayCommand(ShowCustomersView);
             ShowTicketsViewCommand = new RelayCommand(ShowTicketsView);
 
-            // Uygulama açıldığında varsayılan olarak Müşteriler ekranını göster
+            // 4. Varsayılan görünüm
             CurrentViewModel = _customersViewModel;
         }
 
@@ -51,9 +51,9 @@ namespace KamatekCrm.ViewModels
             CurrentViewModel = _ticketsViewModel;
         }
 
-        
         public event PropertyChangedEventHandler? PropertyChanged;
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

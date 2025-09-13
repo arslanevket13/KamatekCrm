@@ -12,10 +12,7 @@ namespace KamatekCrm
             InitializeComponent(); // Bu çağrı XAML'i yüklemek için zorunludur.
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
+        
 
         // private void InitializeComponent() { ... } <-- BU BLOK TAMAMEN SİLİNMELİDİR.
         // Bu metodu manuel olarak tanımlamayın.
