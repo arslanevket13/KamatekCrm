@@ -1,6 +1,8 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Input;
+using KamatekCrm.Commands;
 using KamatekCrm.Data;
 using KamatekCrm.Enums;
 using KamatekCrm.Models;
@@ -9,79 +11,11 @@ using Microsoft.EntityFrameworkCore;
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
-    /// Dashboard ViewModel - Ana sayfa iş zekası ve özet bilgiler
+    /// Dashboard ViewModel - Komut Merkezi: Kritik uyarılar, günlük işler ve finansal özet
     /// </summary>
     public class DashboardViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
-
-        #region KPI Counters
-
-        private int _activeJobsCount;
-        /// <summary>
-        /// Aktif iş sayısı (Status != Completed)
-        /// </summary>
-        public int ActiveJobsCount
-        {
-            get => _activeJobsCount;
-            set => SetProperty(ref _activeJobsCount, value);
-        }
-
-        private int _criticalStockCount;
-        /// <summary>
-        /// Kritik stok sayısı (TotalStockQuantity <= MinStockLevel)
-        /// </summary>
-        public int CriticalStockCount
-        {
-            get => _criticalStockCount;
-            set => SetProperty(ref _criticalStockCount, value);
-        }
-
-        private int _totalCustomersCount;
-        /// <summary>
-        /// Toplam müşteri sayısı
-        /// </summary>
-        public int TotalCustomersCount
-        {
-            get => _totalCustomersCount;
-            set => SetProperty(ref _totalCustomersCount, value);
-        }
-
-        private int _monthlyJobsCount;
-        /// <summary>
-        /// Bu ay oluşturulan iş sayısı
-        /// </summary>
-        public int MonthlyJobsCount
-        {
-            get => _monthlyJobsCount;
-            set => SetProperty(ref _monthlyJobsCount, value);
-        }
-
-        #endregion
-
-        #region Collections
-
-        /// <summary>
-        /// Acil İşler - Priority == Urgent/Critical ve Status != Completed
-        /// </summary>
-        public ObservableCollection<ServiceJob> UrgentJobs { get; set; } = new();
-
-        /// <summary>
-        /// Son Stok Hareketleri - Son 10 hareket
-        /// </summary>
-        public ObservableCollection<StockTransaction> RecentTransactions { get; set; } = new();
-
-        /// <summary>
-        /// Yeni Müşteriler - Son 5 eklenen
-        /// </summary>
-        public ObservableCollection<Customer> NewCustomers { get; set; } = new();
-
-        /// <summary>
-        /// Kritik Stoklar - TotalStockQuantity <= MinStockLevel
-        /// </summary>
-        public ObservableCollection<Product> CriticalStocks { get; set; } = new();
-
-        #endregion
 
         #region Display Properties
 
@@ -95,6 +29,114 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public string TodayDate => DateTime.Now.ToString("dd MMMM yyyy, dddd", new System.Globalization.CultureInfo("tr-TR"));
 
+        /// <summary>
+        /// Mevcut ay adı
+        /// </summary>
+        public string CurrentMonthName => DateTime.Now.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"));
+
+        #endregion
+
+        #region Widget 1: Kritik Uyarılar (Stok & Bakım)
+
+        /// <summary>
+        /// Düşük stoklu ürünler (Quantity <= 5)
+        /// </summary>
+        public ObservableCollection<LowStockItem> LowStockProducts { get; set; } = new();
+
+        private int _lowStockCount;
+        /// <summary>
+        /// Düşük stok uyarısı sayısı
+        /// </summary>
+        public int LowStockCount
+        {
+            get => _lowStockCount;
+            set => SetProperty(ref _lowStockCount, value);
+        }
+
+        #endregion
+
+        #region Widget 2: Bugünün İşleri (Arıza & Saha)
+
+        /// <summary>
+        /// Bugün planlanan işler
+        /// </summary>
+        public ObservableCollection<TodayJobItem> TodaysJobs { get; set; } = new();
+
+        /// <summary>
+        /// Teslime hazır tamirler
+        /// </summary>
+        public ObservableCollection<ReadyRepairItem> ReadyToDeliverRepairs { get; set; } = new();
+
+        private int _todaysJobsCount;
+        /// <summary>
+        /// Bugünün iş sayısı
+        /// </summary>
+        public int TodaysJobsCount
+        {
+            get => _todaysJobsCount;
+            set => SetProperty(ref _todaysJobsCount, value);
+        }
+
+        private int _readyRepairsCount;
+        /// <summary>
+        /// Teslime hazır tamir sayısı
+        /// </summary>
+        public int ReadyRepairsCount
+        {
+            get => _readyRepairsCount;
+            set => SetProperty(ref _readyRepairsCount, value);
+        }
+
+        #endregion
+
+        #region Widget 3: Aylık Özet (Finans)
+
+        private decimal _monthlySalesTotal;
+        /// <summary>
+        /// Bu ay toplam satış
+        /// </summary>
+        public decimal MonthlySalesTotal
+        {
+            get => _monthlySalesTotal;
+            set => SetProperty(ref _monthlySalesTotal, value);
+        }
+
+        private int _monthlySalesCount;
+        /// <summary>
+        /// Bu ay satış sayısı
+        /// </summary>
+        public int MonthlySalesCount
+        {
+            get => _monthlySalesCount;
+            set => SetProperty(ref _monthlySalesCount, value);
+        }
+
+        private int _monthlyJobsCompleted;
+        /// <summary>
+        /// Bu ay tamamlanan iş sayısı
+        /// </summary>
+        public int MonthlyJobsCompleted
+        {
+            get => _monthlyJobsCompleted;
+            set => SetProperty(ref _monthlyJobsCompleted, value);
+        }
+
+        private int _activeJobsCount;
+        /// <summary>
+        /// Aktif iş sayısı
+        /// </summary>
+        public int ActiveJobsCount
+        {
+            get => _activeJobsCount;
+            set => SetProperty(ref _activeJobsCount, value);
+        }
+
+        #endregion
+
+        #region Commands
+
+        public ICommand RefreshDashboardCommand { get; }
+
         #endregion
 
         /// <summary>
@@ -103,116 +145,225 @@ namespace KamatekCrm.ViewModels
         public DashboardViewModel()
         {
             _context = new AppDbContext();
+            RefreshDashboardCommand = new RelayCommand(_ => LoadDashboardData());
             LoadDashboardData();
         }
 
         /// <summary>
-        /// Dashboard verilerini yükle
+        /// Tüm dashboard verilerini yükle
         /// </summary>
         private void LoadDashboardData()
         {
-            LoadKPICounters();
-            LoadUrgentJobs();
-            LoadRecentTransactions();
-            LoadNewCustomers();
-            LoadCriticalStocks();
+            LoadLowStockAlerts();
+            LoadTodaysJobs();
+            LoadReadyRepairs();
+            LoadMonthlyFinancials();
         }
 
         /// <summary>
-        /// KPI sayaçlarını yükle
+        /// Widget 1: Düşük stok uyarılarını yükle
         /// </summary>
-        private void LoadKPICounters()
+        private void LoadLowStockAlerts()
         {
-            // Aktif İş Sayısı (Tamamlanmamış)
-            ActiveJobsCount = _context.ServiceJobs
-                .Count(j => j.Status != JobStatus.Completed);
-
-            // Kritik Stok Sayısı
-            CriticalStockCount = _context.Products
-                .Count(p => p.TotalStockQuantity <= p.MinStockLevel && p.MinStockLevel > 0);
-
-            // Toplam Müşteri Sayısı
-            TotalCustomersCount = _context.Customers.Count();
-
-            // Bu Ay Oluşturulan İşler
-            var startOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-            MonthlyJobsCount = _context.ServiceJobs
-                .Count(j => j.CreatedDate >= startOfMonth);
-        }
-
-        /// <summary>
-        /// Acil işleri yükle (Urgent/Critical priority, henüz tamamlanmamış)
-        /// </summary>
-        private void LoadUrgentJobs()
-        {
-            var urgentJobs = _context.ServiceJobs
-                .Include(j => j.Customer)
-                .Where(j => (j.Priority == JobPriority.Urgent || j.Priority == JobPriority.Critical)
-                         && j.Status != JobStatus.Completed)
-                .OrderBy(j => j.ScheduledDate ?? j.CreatedDate)
-                .Take(10)
-                .ToList();
-
-            UrgentJobs.Clear();
-            foreach (var job in urgentJobs)
-            {
-                UrgentJobs.Add(job);
-            }
-        }
-
-        /// <summary>
-        /// Son stok hareketlerini yükle
-        /// </summary>
-        private void LoadRecentTransactions()
-        {
-            var recentTransactions = _context.StockTransactions
-                .Include(t => t.Product)
-                .Include(t => t.SourceWarehouse)
-                .Include(t => t.TargetWarehouse)
-                .OrderByDescending(t => t.Date)
-                .Take(10)
-                .ToList();
-
-            RecentTransactions.Clear();
-            foreach (var transaction in recentTransactions)
-            {
-                RecentTransactions.Add(transaction);
-            }
-        }
-
-        /// <summary>
-        /// Son eklenen müşterileri yükle
-        /// </summary>
-        private void LoadNewCustomers()
-        {
-            var newCustomers = _context.Customers
-                .OrderByDescending(c => c.Id) // ID'ye göre son eklenenler
-                .Take(5)
-                .ToList();
-
-            NewCustomers.Clear();
-            foreach (var customer in newCustomers)
-            {
-                NewCustomers.Add(customer);
-            }
-        }
-
-        /// <summary>
-        /// Kritik stokları yükle
-        /// </summary>
-        private void LoadCriticalStocks()
-        {
-            var criticalStocks = _context.Products
-                .Where(p => p.TotalStockQuantity <= p.MinStockLevel && p.MinStockLevel > 0)
+            var lowStockThreshold = 5;
+            var lowStocks = _context.Products
+                .Where(p => p.TotalStockQuantity <= lowStockThreshold && p.TotalStockQuantity >= 0)
                 .OrderBy(p => p.TotalStockQuantity)
                 .Take(10)
+                .Select(p => new LowStockItem
+                {
+                    ProductId = p.Id,
+                    ProductName = p.ProductName ?? "Bilinmeyen Ürün",
+                    CurrentStock = p.TotalStockQuantity,
+                    MinStockLevel = p.MinStockLevel,
+                    UrgencyLevel = p.TotalStockQuantity == 0 ? "Kritik" : 
+                                   p.TotalStockQuantity <= 2 ? "Çok Düşük" : "Düşük"
+                })
                 .ToList();
 
-            CriticalStocks.Clear();
-            foreach (var product in criticalStocks)
+            LowStockProducts.Clear();
+            foreach (var item in lowStocks)
             {
-                CriticalStocks.Add(product);
+                LowStockProducts.Add(item);
             }
+            LowStockCount = _context.Products.Count(p => p.TotalStockQuantity <= lowStockThreshold);
         }
+
+        /// <summary>
+        /// Widget 2: Bugünün işlerini yükle
+        /// </summary>
+        private void LoadTodaysJobs()
+        {
+            var today = DateTime.Today;
+            var todaysJobs = _context.ServiceJobs
+                .Include(j => j.Customer)
+                .Where(j => j.ScheduledDate.HasValue && 
+                           j.ScheduledDate.Value.Date == today &&
+                           j.Status != JobStatus.Completed)
+                .OrderBy(j => j.ScheduledDate)
+                .Take(10)
+                .ToList()
+                .Select(j => new TodayJobItem
+                {
+                    JobId = j.Id,
+                    CustomerName = j.Customer?.FullName ?? "Bilinmeyen Müşteri",
+                    Category = GetCategoryIcon(j.JobCategory) + " " + GetCategoryName(j.JobCategory),
+                    ScheduledTime = j.ScheduledDate?.ToString("HH:mm") ?? "--:--",
+                    Priority = j.Priority.ToString(),
+                    Address = j.Customer?.FullAddress ?? ""
+                })
+                .ToList();
+
+            TodaysJobs.Clear();
+            foreach (var job in todaysJobs)
+            {
+                TodaysJobs.Add(job);
+            }
+            TodaysJobsCount = _context.ServiceJobs.Count(j => 
+                j.ScheduledDate.HasValue && 
+                j.ScheduledDate.Value.Date == today &&
+                j.Status != JobStatus.Completed);
+        }
+
+        /// <summary>
+        /// Widget 2b: Teslime hazır tamirleri yükle
+        /// </summary>
+        private void LoadReadyRepairs()
+        {
+            var readyRepairs = _context.ServiceJobs
+                .Include(j => j.Customer)
+                .Where(j => j.WorkOrderType == WorkOrderType.Repair && 
+                           j.RepairStatus == RepairStatus.ReadyForPickup)
+                .OrderBy(j => j.CreatedDate)
+                .Take(10)
+                .ToList()
+                .Select(j => new ReadyRepairItem
+                {
+                    JobId = j.Id,
+                    TicketNo = $"T-{j.Id}",
+                    CustomerName = j.Customer?.FullName ?? "Bilinmeyen Müşteri",
+                    DeviceInfo = $"{j.DeviceBrand} {j.DeviceModel}",
+                    DaysWaiting = (DateTime.Now - (j.CompletedDate ?? j.CreatedDate)).Days,
+                    CustomerPhone = j.Customer?.PhoneNumber ?? ""
+                })
+                .ToList();
+
+            ReadyToDeliverRepairs.Clear();
+            foreach (var repair in readyRepairs)
+            {
+                ReadyToDeliverRepairs.Add(repair);
+            }
+            ReadyRepairsCount = _context.ServiceJobs.Count(j => 
+                j.WorkOrderType == WorkOrderType.Repair && 
+                j.RepairStatus == RepairStatus.ReadyForPickup);
+        }
+
+        /// <summary>
+        /// Widget 3: Aylık finansal özeti yükle
+        /// </summary>
+        private void LoadMonthlyFinancials()
+        {
+            var startOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1);
+
+            // Bu ay satış toplamı
+            // Bu ay satış toplamı
+            var salesAmounts = _context.SalesOrders
+                .Where(o => o.Date >= startOfMonth && o.Date < endOfMonth)
+                .Select(o => o.TotalAmount)
+                .ToList();
+
+            MonthlySalesTotal = salesAmounts.Sum();
+
+            MonthlySalesCount = salesAmounts.Count;
+
+            // Bu ay tamamlanan işler
+            MonthlyJobsCompleted = _context.ServiceJobs
+                .Count(j => j.CompletedDate.HasValue && 
+                           j.CompletedDate.Value >= startOfMonth && 
+                           j.CompletedDate.Value < endOfMonth);
+
+            // Aktif işler
+            ActiveJobsCount = _context.ServiceJobs
+                .Count(j => j.Status != JobStatus.Completed);
+        }
+
+        #region Helper Methods
+
+        private string GetCategoryIcon(JobCategory category)
+        {
+            return category switch
+            {
+                JobCategory.CCTV => "📹",
+                JobCategory.VideoIntercom => "📞",
+                JobCategory.FireAlarm => "🔥",
+                JobCategory.BurglarAlarm => "🚨",
+                JobCategory.SmartHome => "🏠",
+                JobCategory.AccessControl => "🔐",
+                JobCategory.SatelliteSystem => "📡",
+                JobCategory.FiberOptic => "🔌",
+                _ => "🔧"
+            };
+        }
+
+        private string GetCategoryName(JobCategory category)
+        {
+            return category switch
+            {
+                JobCategory.CCTV => "CCTV",
+                JobCategory.VideoIntercom => "Diafon",
+                JobCategory.FireAlarm => "Yangın",
+                JobCategory.BurglarAlarm => "Alarm",
+                JobCategory.SmartHome => "Akıllı Ev",
+                JobCategory.AccessControl => "PDKS",
+                JobCategory.SatelliteSystem => "Uydu",
+                JobCategory.FiberOptic => "Fiber",
+                _ => "Diğer"
+            };
+        }
+
+        #endregion
     }
+
+    #region Display Models
+
+    /// <summary>
+    /// Düşük stok ürün görüntüleme modeli
+    /// </summary>
+    public class LowStockItem
+    {
+        public int ProductId { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public int CurrentStock { get; set; }
+        public int MinStockLevel { get; set; }
+        public string UrgencyLevel { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Bugünün işleri görüntüleme modeli
+    /// </summary>
+    public class TodayJobItem
+    {
+        public int JobId { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string ScheduledTime { get; set; } = string.Empty;
+        public string Priority { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Teslime hazır tamir görüntüleme modeli
+    /// </summary>
+    public class ReadyRepairItem
+    {
+        public int JobId { get; set; }
+        public string TicketNo { get; set; } = string.Empty;
+        public string CustomerName { get; set; } = string.Empty;
+        public string DeviceInfo { get; set; } = string.Empty;
+        public int DaysWaiting { get; set; }
+        public string CustomerPhone { get; set; } = string.Empty;
+    }
+
+    #endregion
 }

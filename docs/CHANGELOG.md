@@ -6,6 +6,13 @@
 - `Views/ServiceJobsView.xaml`: Liste kaldırıldı, sadece "Yeni İş Emri" oluşturma butonu kaldı
 - Mevcut işler için "🔧 Tamir Listesi" ve "🚜 Saha İşleri" kullanılacak
 
+### ✅ Dashboard Intelligence (Komut Merkezi)
+- `DashboardViewModel.cs`: 3 widget ile yeniden yazıldı:
+  1. **🚨 Kritik Uyarılar**: Stok <= 5 olan ürünler (renk kodlu badge)
+  2. **🔧 Bugünün İşleri**: Bugün planlanan işler + Teslime hazır tamirler
+  3. **💰 Aylık Özet**: Toplam satış, tamamlanan işler, aktif işler
+- `DashboardView.xaml`: Modern 3-kolon layout
+
 ---
 
 ## 2026-01-22

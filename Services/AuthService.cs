@@ -31,28 +31,39 @@ namespace KamatekCrm.Services
         public static bool Login(string username, string password)
         {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-                return false;
+                throw new Exception("Kullanıcı adı veya şifre boş olamaz.");
 
             using var context = new AppDbContext();
 
-            var passwordHash = HashPassword(password);
-            var user = context.Users.FirstOrDefault(u =>
-                u.Username.ToLower() == username.ToLower() &&
-                u.PasswordHash == passwordHash &&
-                u.IsActive);
+            // 1. ADIM: Kullanıcıyı sadece ismine göre bul (Debug için)
+            var targetUser = context.Users.FirstOrDefault(u => u.Username.ToLower() == username.ToLower());
 
-            if (user != null)
+            if (targetUser == null)
             {
-                CurrentUser = user;
-
-                // Son giriş tarihini güncelle
-                user.LastLoginDate = DateTime.Now;
-                context.SaveChanges();
-
-                return true;
+                // Veritabanındaki tüm kullanıcıları listele (Debug için)
+                var allUsers = string.Join(", ", context.Users.Select(u => u.Username).ToList());
+                throw new Exception($"Kullanıcı '{username}' bulunamadı.\nVeritabanındaki Kullanıcılar: [{allUsers}]");
             }
 
-            return false;
+            // 2. ADIM: Şifre kontrolü
+            var inputHash = HashPassword(password);
+            if (targetUser.PasswordHash != inputHash)
+            {
+                throw new Exception($"Şifre hatalı!\n\nDB Hash: {targetUser.PasswordHash}\nGirdi Hash: {inputHash}");
+            }
+
+            // 3. ADIM: Aktiflik kontrolü
+            if (!targetUser.IsActive)
+            {
+                throw new Exception("Kullanıcı hesabı pasif durumda.");
+            }
+
+            // Başarılı Giriş
+            CurrentUser = targetUser;
+            targetUser.LastLoginDate = DateTime.Now;
+            context.SaveChanges();
+
+            return true;
         }
 
         /// <summary>
@@ -70,14 +81,16 @@ namespace KamatekCrm.Services
         {
             using var context = new AppDbContext();
 
-            // Eğer hiç kullanıcı yoksa admin oluştur
-            if (!context.Users.Any())
+            // Admin kullanıcısı var mı diye özel olarak bak
+            var adminUser = context.Users.FirstOrDefault(u => u.Username == "admin");
+
+            if (adminUser == null)
             {
-                var adminUser = new User
+                adminUser = new User
                 {
-                    Username = "admin.user",  // Ad.Soyad formatında
-                    PasswordHash = HashPassword("1234"),
-                    Role = "Admin",  // Arayüzde "Patron" olarak gösterilir
+                    Username = "admin",
+                    PasswordHash = HashPassword("123"),
+                    Role = "Admin",
                     Ad = "Admin",
                     Soyad = "User",
                     IsActive = true,
@@ -87,6 +100,8 @@ namespace KamatekCrm.Services
                 context.Users.Add(adminUser);
                 context.SaveChanges();
             }
+            // Eski 'admin.user' varsa ve şifresi '1234' ise, onu da güncel veya yedek olarak tutabiliriz
+            // Ama şimdilik sadece 'admin' garantisi veriyoruz.
         }
 
         /// <summary>

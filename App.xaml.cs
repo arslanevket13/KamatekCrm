@@ -27,6 +27,10 @@ namespace KamatekCrm
                 // 3. Varsayılan admin kullanıcısı oluştur
                 AuthService.CreateDefaultUser();
 
+                // DEBUG: Veritabanı yolunu göster
+                string dbPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "KamatekCrm.db");
+                // MessageBox.Show($"Sistem Başlatıldı.\nDB Yolu: {dbPath}\n\nLütfen 'admin' / '123' ile giriş yapın.", "Sistem Durumu", MessageBoxButton.OK, MessageBoxImage.Information);
+
                 // 4. MainWindow'u oluştur ve göster
                 var mainWindow = new MainWindow();
                 MainWindow = mainWindow;

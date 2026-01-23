@@ -1,0 +1,8 @@
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\Services\PdfService.cs(185,85): error CS0311: 'QuestPDF.Infrastructure.IContainer' türü, 'TextSpanDescriptorExtensions.FontColor<T>(T, Color)' genel türü veya yöntemi için 'T' tür parametresi olarak kullanılamaz. 'QuestPDF.Infrastructure.IContainer' türünden 'QuestPDF.Fluent.TextSpanDescriptor' türüne örtük bir başvuru dönüştürmesi yoktur. [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_hdgzhhpt_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\Services\PdfService.cs(271,40): error CS1061: 'IContainer' bir 'ConstantItem' tanımı içermiyor ve 'IContainer' türünde bir ilk bağımsız değişken kabul eden hiçbir erişilebilir 'ConstantItem' genişletme yöntemi bulunamadı (bir kullanma yönergeniz veya derleme başvurunuz eksik olabilir mi?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_hdgzhhpt_wpftmp.csproj]
+
+Oluşturma BAŞARISIZ OLDU.
+    5 Uyarı
+    2 Hata
+
+Geçen Süre 00:00:01.83

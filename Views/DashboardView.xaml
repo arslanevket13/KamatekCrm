@@ -26,44 +26,122 @@
                         <TextBlock Text="{Binding WelcomeMessage}" 
                                    FontSize="28" FontWeight="Bold" 
                                    Foreground="{StaticResource TextPrimaryColor}"/>
-                        <TextBlock Text="İşletmenizin günlük durumunu buradan takip edin." 
+                        <TextBlock Text="🎯 Komut Merkezi - Günlük operasyonlarınızı buradan yönetin." 
                                    FontSize="14" 
                                    Foreground="{StaticResource TextSecondaryColor}"
                                    Margin="0,4,0,0"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
-                        <TextBlock Text="{Binding TodayDate}" 
-                                   FontSize="14" FontWeight="Medium"
-                                   Foreground="{StaticResource TextSecondaryColor}"
-                                   HorizontalAlignment="Right"/>
-                        <TextBlock Text="📅 Bugün" 
-                                   FontSize="11" 
-                                   Foreground="{StaticResource TextSecondaryColor}"
-                                   HorizontalAlignment="Right"
-                                   Margin="0,2,0,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="🔄 Yenile" 
+                                Style="{StaticResource SecondaryButton}"
+                                Command="{Binding RefreshDashboardCommand}"
+                                Height="36" Padding="16,0" Margin="0,0,16,0"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TodayDate}" 
+                                       FontSize="14" FontWeight="Medium"
+                                       Foreground="{StaticResource TextSecondaryColor}"
+                                       HorizontalAlignment="Right"/>
+                            <TextBlock Text="📅 Bugün" 
+                                       FontSize="11" 
+                                       Foreground="{StaticResource TextSecondaryColor}"
+                                       HorizontalAlignment="Right"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- ==================== ROW 1: KPI CARDS ==================== -->
+            <!-- ==================== ROW 1: QUICK STATS ==================== -->
             <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,20">
                 
-                <!-- Aktif İşler -->
-                <Border Style="{StaticResource CardPanel}" Margin="0,0,12,0">
+                <!-- Bugünün İşleri -->
+                <Border Style="{StaticResource CardPanel}" Margin="0,0,8,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Aktif İşler" FontSize="13" 
+                            <TextBlock Text="Bugünün İşleri" FontSize="12" 
                                        Foreground="{StaticResource TextSecondaryColor}"/>
-                            <TextBlock Text="{Binding ActiveJobsCount}" 
-                                       FontSize="32" FontWeight="Bold" 
-                                       Foreground="#1976D2"/>
+                            <TextBlock Text="{Binding TodaysJobsCount}" 
+                                       FontSize="36" FontWeight="Bold" 
+                                       Foreground="#2196F3"/>
                         </StackPanel>
                         <Border Grid.Column="1" Background="#E3F2FD" 
+                                CornerRadius="50" Width="50" Height="50"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="📆" FontSize="24" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Teslime Hazır -->
+                <Border Style="{StaticResource CardPanel}" Margin="4,0,4,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Teslime Hazır" FontSize="12" 
+                                       Foreground="{StaticResource TextSecondaryColor}"/>
+                            <TextBlock Text="{Binding ReadyRepairsCount}" 
+                                       FontSize="36" FontWeight="Bold" 
+                                       Foreground="#4CAF50"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="#E8F5E9" 
+                                CornerRadius="50" Width="50" Height="50"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="✅" FontSize="24" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Stok Uyarısı -->
+                <Border Style="{StaticResource CardPanel}" Margin="4,0,4,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Stok Uyarısı" FontSize="12" 
+                                       Foreground="{StaticResource TextSecondaryColor}"/>
+                            <TextBlock Text="{Binding LowStockCount}" 
+                                       FontSize="36" FontWeight="Bold" 
+                                       Foreground="#F44336"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="#FFEBEE" 
+                                CornerRadius="50" Width="50" Height="50"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="🚨" FontSize="24" 
+                                       HorizontalAlignment="Center" 
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Aktif İşler -->
+                <Border Style="{StaticResource CardPanel}" Margin="8,0,0,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Aktif İşler" FontSize="12" 
+                                       Foreground="{StaticResource TextSecondaryColor}"/>
+                            <TextBlock Text="{Binding ActiveJobsCount}" 
+                                       FontSize="36" FontWeight="Bold" 
+                                       Foreground="#FF9800"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="#FFF3E0" 
                                 CornerRadius="50" Width="50" Height="50"
                                 VerticalAlignment="Center">
                             <TextBlock Text="🔧" FontSize="24" 
@@ -72,328 +150,361 @@
                         </Border>
                     </Grid>
                 </Border>
-
-                <!-- Kritik Stoklar -->
-                <Border Style="{StaticResource CardPanel}" Margin="6,0,6,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Kritik Stok" FontSize="13" 
-                                       Foreground="{StaticResource TextSecondaryColor}"/>
-                            <TextBlock Text="{Binding CriticalStockCount}" 
-                                       FontSize="32" FontWeight="Bold" 
-                                       Foreground="#F44336"/>
-                        </StackPanel>
-                        <Border Grid.Column="1" Background="#FFEBEE" 
-                                CornerRadius="50" Width="50" Height="50"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="⚠️" FontSize="24" 
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center"/>
-                        </Border>
-                    </Grid>
-                </Border>
-
-                <!-- Bu Ay İşler -->
-                <Border Style="{StaticResource CardPanel}" Margin="6,0,6,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Bu Ay İşler" FontSize="13" 
-                                       Foreground="{StaticResource TextSecondaryColor}"/>
-                            <TextBlock Text="{Binding MonthlyJobsCount}" 
-                                       FontSize="32" FontWeight="Bold" 
-                                       Foreground="#FF9800"/>
-                        </StackPanel>
-                        <Border Grid.Column="1" Background="#FFF3E0" 
-                                CornerRadius="50" Width="50" Height="50"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="📊" FontSize="24" 
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center"/>
-                        </Border>
-                    </Grid>
-                </Border>
-
-                <!-- Toplam Müşteri -->
-                <Border Style="{StaticResource CardPanel}" Margin="12,0,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Toplam Müşteri" FontSize="13" 
-                                       Foreground="{StaticResource TextSecondaryColor}"/>
-                            <TextBlock Text="{Binding TotalCustomersCount}" 
-                                       FontSize="32" FontWeight="Bold" 
-                                       Foreground="#4CAF50"/>
-                        </StackPanel>
-                        <Border Grid.Column="1" Background="#E8F5E9" 
-                                CornerRadius="50" Width="50" Height="50"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="👥" FontSize="24" 
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center"/>
-                        </Border>
-                    </Grid>
-                </Border>
             </UniformGrid>
 
-            <!-- ==================== ROW 2: MAIN CONTENT ==================== -->
+            <!-- ==================== ROW 2: MAIN WIDGETS ==================== -->
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
                     <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1.2*"/>
+                    <ColumnDefinition Width="0.8*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- SOL KOLON: Acil İşler + Son Stok Hareketleri -->
-                <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                    
-                    <!-- Acil İşler -->
-                    <Border Style="{StaticResource CardPanel}" Margin="0,0,0,16">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <TextBlock Text="🚨" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text="ACİL İŞLER" FontSize="14" FontWeight="Bold" 
-                                           Foreground="{StaticResource TextPrimaryColor}"
-                                           Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="(Öncelikli)" FontSize="12" 
-                                           Foreground="{StaticResource TextSecondaryColor}"
-                                           Margin="8,0,0,0" VerticalAlignment="Center"/>
+                <!-- ========== WIDGET 1: KRİTİK UYARILAR ========== -->
+                <Border Grid.Column="0" Style="{StaticResource CardPanel}" Margin="0,0,8,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Border Grid.Row="0" Background="#FFEBEE" CornerRadius="8" Padding="12" Margin="-16,-16,-16,12">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🚨" FontSize="20" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0">
+                                    <TextBlock Text="KRİTİK UYARILAR" FontSize="14" FontWeight="Bold" 
+                                               Foreground="#C62828"/>
+                                    <TextBlock Text="Stok &amp; Bakım" FontSize="11" 
+                                               Foreground="#E57373"/>
+                                </StackPanel>
                             </StackPanel>
+                        </Border>
 
-                            <DataGrid ItemsSource="{Binding UrgentJobs}"
-                                      Style="{StaticResource ModernDataGrid}"
-                                      MaxHeight="220"
-                                      IsReadOnly="True">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Müşteri" Width="*"
-                                                        Binding="{Binding Customer.FullName}"/>
-                                    <DataGridTextColumn Header="Kategori" Width="100"
-                                                        Binding="{Binding JobCategory}"/>
-                                    <DataGridTemplateColumn Header="Öncelik" Width="80">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Center">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="#FF9800"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Priority}" Value="Critical">
-                                                                    <Setter Property="Background" Value="#F44336"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Priority}" Value="Urgent">
-                                                                    <Setter Property="Background" Value="#FF5722"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                    <TextBlock Text="{Binding Priority}" FontSize="11" 
-                                                               FontWeight="SemiBold" Foreground="White"/>
-                                                </Border>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Tarih" Width="100"
-                                                        Binding="{Binding ScheduledDate, StringFormat='dd/MM/yyyy'}"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                        <!-- Content -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                            <StackPanel>
+                                <ItemsControl ItemsSource="{Binding LowStockProducts}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#FFCDD2" BorderThickness="0,0,0,1" 
+                                                    Padding="8,12" Margin="0,0,0,4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding ProductName}" 
+                                                                   FontWeight="Medium" FontSize="13"
+                                                                   Foreground="{StaticResource TextPrimaryColor}"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                            <Border CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
+                                                                <Border.Style>
+                                                                    <Style TargetType="Border">
+                                                                        <Setter Property="Background" Value="#FFF3E0"/>
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding UrgencyLevel}" Value="Kritik">
+                                                                                <Setter Property="Background" Value="#FFEBEE"/>
+                                                                            </DataTrigger>
+                                                                            <DataTrigger Binding="{Binding UrgencyLevel}" Value="Çok Düşük">
+                                                                                <Setter Property="Background" Value="#FFF8E1"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Border.Style>
+                                                                <TextBlock Text="{Binding UrgencyLevel}" FontSize="10" FontWeight="SemiBold">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Foreground" Value="#F57C00"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding UrgencyLevel}" Value="Kritik">
+                                                                                    <Setter Property="Foreground" Value="#C62828"/>
+                                                                                </DataTrigger>
+                                                                                <DataTrigger Binding="{Binding UrgencyLevel}" Value="Çok Düşük">
+                                                                                    <Setter Property="Foreground" Value="#FF8F00"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </Border>
+                                                            <TextBlock FontSize="11" Foreground="{StaticResource TextSecondaryColor}">
+                                                                <Run Text="Min:"/>
+                                                                <Run Text="{Binding MinStockLevel, Mode=OneWay}"/>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1" CornerRadius="6" Padding="10,6"
+                                                            VerticalAlignment="Center">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="#F44336"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding CurrentStock}" Value="0">
+                                                                        <Setter Property="Background" Value="#B71C1C"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock Text="{Binding CurrentStock}" 
+                                                                   FontWeight="Bold" FontSize="16"
+                                                                   Foreground="White" HorizontalAlignment="Center"/>
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
 
-                            <TextBlock Text="Acil veya kritik öncelikli iş bulunmuyor." 
-                                       Foreground="{StaticResource TextSecondaryColor}"
-                                       FontStyle="Italic" Margin="0,8,0,0"
-                                       HorizontalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding UrgentJobs.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Son Stok Hareketleri -->
-                    <Border Style="{StaticResource CardPanel}">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <TextBlock Text="📦" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text="SON STOK HAREKETLERİ" FontSize="14" FontWeight="Bold" 
-                                           Foreground="{StaticResource TextPrimaryColor}"
-                                           Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                <!-- Empty State -->
+                                <TextBlock Text="✓ Tüm stoklar yeterli seviyede" 
+                                           Foreground="#4CAF50"
+                                           FontWeight="Medium" Margin="0,16,0,0"
+                                           HorizontalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding LowStockProducts.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
 
-                            <DataGrid ItemsSource="{Binding RecentTransactions}"
-                                      Style="{StaticResource ModernDataGrid}"
-                                      MaxHeight="220"
-                                      IsReadOnly="True">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Ürün" Width="*"
-                                                        Binding="{Binding Product.ProductName}"/>
-                                    <DataGridTextColumn Header="Tip" Width="80"
-                                                        Binding="{Binding TransactionType}"/>
-                                    <DataGridTextColumn Header="Miktar" Width="70"
-                                                        Binding="{Binding Quantity}"/>
-                                    <DataGridTextColumn Header="Tarih" Width="100"
-                                                        Binding="{Binding Date, StringFormat='dd/MM/yyyy'}"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
+                <!-- ========== WIDGET 2: BUGÜNÜN İŞLERİ ========== -->
+                <Border Grid.Column="1" Style="{StaticResource CardPanel}" Margin="8,0,8,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                            <TextBlock Text="Henüz stok hareketi bulunmuyor." 
-                                       Foreground="{StaticResource TextSecondaryColor}"
-                                       FontStyle="Italic" Margin="0,8,0,0"
-                                       HorizontalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding RecentTransactions.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <!-- SAĞ KOLON: Kritik Stoklar + Yeni Müşteriler -->
-                <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                    
-                    <!-- Kritik Stoklar -->
-                    <Border Style="{StaticResource CardPanel}" Margin="0,0,0,16">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <TextBlock Text="⚠️" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text="KRİTİK STOKLAR" FontSize="14" FontWeight="Bold" 
-                                           Foreground="#F44336"
-                                           Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        <!-- Header -->
+                        <Border Grid.Row="0" Background="#E3F2FD" CornerRadius="8" Padding="12" Margin="-16,-16,-16,12">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔧" FontSize="20" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0">
+                                    <TextBlock Text="BUGÜNÜN İŞLERİ" FontSize="14" FontWeight="Bold" 
+                                               Foreground="#1565C0"/>
+                                    <TextBlock Text="Arıza &amp; Saha Operasyonları" FontSize="11" 
+                                               Foreground="#64B5F6"/>
+                                </StackPanel>
                             </StackPanel>
+                        </Border>
 
-                            <ItemsControl ItemsSource="{Binding CriticalStocks}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderBrush="#FFCDD2" BorderThickness="0,0,0,1" 
-                                                Padding="8,10" Background="#FFF8F8">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel Grid.Column="0">
-                                                    <TextBlock Text="{Binding ProductName}" 
-                                                               FontWeight="Medium" FontSize="13"
-                                                               Foreground="{StaticResource TextPrimaryColor}"
-                                                               TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock FontSize="11" 
-                                                               Foreground="{StaticResource TextSecondaryColor}">
-                                                        <Run Text="Min:"/>
-                                                        <Run Text="{Binding MinStockLevel, Mode=OneWay}"/>
-                                                    </TextBlock>
-                                                </StackPanel>
-                                                <Border Grid.Column="1" Background="#F44336" 
-                                                        CornerRadius="4" Padding="8,4"
-                                                        VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding TotalStockQuantity}" 
-                                                               FontWeight="Bold" FontSize="14"
-                                                               Foreground="White"/>
-                                                </Border>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <TextBlock Text="Kritik stok seviyesinde ürün yok. ✓" 
-                                       Foreground="#4CAF50"
-                                       FontWeight="Medium" Margin="0,8,0,0"
-                                       HorizontalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding CriticalStocks.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Yeni Müşteriler -->
-                    <Border Style="{StaticResource CardPanel}">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <TextBlock Text="👤" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text="YENİ MÜŞTERİLER" FontSize="14" FontWeight="Bold" 
-                                           Foreground="{StaticResource TextPrimaryColor}"
-                                           Margin="8,0,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
-
-                            <ItemsControl ItemsSource="{Binding NewCustomers}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderBrush="{StaticResource DividerColor}" 
-                                                BorderThickness="0,0,0,1" Padding="8,10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                
-                                                <Border Grid.Column="0" Background="#E3F2FD" 
-                                                        CornerRadius="20" Width="36" Height="36"
-                                                        Margin="0,0,10,0">
-                                                    <TextBlock Text="👤" FontSize="16" 
-                                                               HorizontalAlignment="Center" 
-                                                               VerticalAlignment="Center"/>
-                                                </Border>
-                                                
-                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding FullName}" 
-                                                               FontWeight="Medium" FontSize="13"
-                                                               Foreground="{StaticResource TextPrimaryColor}"/>
-                                                    <TextBlock Text="{Binding City}" FontSize="11" 
+                        <!-- Today's Jobs List -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="200">
+                            <StackPanel>
+                                <ItemsControl ItemsSource="{Binding TodaysJobs}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{StaticResource DividerColor}" 
+                                                    BorderThickness="0,0,0,1" Padding="8,10">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.Column="0" Background="#E3F2FD" 
+                                                            CornerRadius="6" Padding="8,4" Margin="0,0,10,0"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding ScheduledTime}" 
+                                                                   FontWeight="Bold" FontSize="12"
+                                                                   Foreground="#1976D2"/>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding CustomerName}" 
+                                                                   FontWeight="Medium" FontSize="13"
+                                                                   Foreground="{StaticResource TextPrimaryColor}"/>
+                                                        <TextBlock Text="{Binding Category}" FontSize="11" 
+                                                                   Foreground="{StaticResource TextSecondaryColor}"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Priority}" 
+                                                               FontSize="10" VerticalAlignment="Center"
                                                                Foreground="{StaticResource TextSecondaryColor}"/>
-                                                </StackPanel>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
 
-                            <TextBlock Text="Henüz müşteri bulunmuyor." 
-                                       Foreground="{StaticResource TextSecondaryColor}"
-                                       FontStyle="Italic" Margin="0,8,0,0"
-                                       HorizontalAlignment="Center">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding NewCustomers.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+                                <!-- Empty State -->
+                                <TextBlock Text="📅 Bugün planlanmış iş yok" 
+                                           Foreground="{StaticResource TextSecondaryColor}"
+                                           FontStyle="Italic" Margin="0,16,0,0"
+                                           HorizontalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding TodaysJobs.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- Separator -->
+                        <Border Grid.Row="2" Background="#E8F5E9" CornerRadius="8" Padding="12" 
+                                Margin="-16,12,-16,12">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="✅" FontSize="16" VerticalAlignment="Center"/>
+                                <TextBlock Text="TESLİME HAZIR TAMİRLER" FontSize="12" FontWeight="Bold" 
+                                           Foreground="#2E7D32" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Ready Repairs List -->
+                        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" MaxHeight="180">
+                            <StackPanel>
+                                <ItemsControl ItemsSource="{Binding ReadyToDeliverRepairs}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="{StaticResource DividerColor}" 
+                                                    BorderThickness="0,0,0,1" Padding="8,10"
+                                                    Background="#FAFAFA">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.Column="0" Background="#4CAF50" 
+                                                            CornerRadius="4" Padding="6,4" Margin="0,0,10,0"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding TicketNo}" 
+                                                                   FontWeight="Bold" FontSize="11"
+                                                                   Foreground="White"/>
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding CustomerName}" 
+                                                                   FontWeight="Medium" FontSize="13"
+                                                                   Foreground="{StaticResource TextPrimaryColor}"/>
+                                                        <TextBlock Text="{Binding DeviceInfo}" FontSize="11" 
+                                                                   Foreground="{StaticResource TextSecondaryColor}"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                                                        <TextBlock FontSize="11" HorizontalAlignment="Right">
+                                                            <Run Text="{Binding DaysWaiting, Mode=OneWay}"/>
+                                                            <Run Text=" gün"/>
+                                                        </TextBlock>
+                                                        <TextBlock Text="bekliyor" FontSize="10" 
+                                                                   Foreground="{StaticResource TextSecondaryColor}"
+                                                                   HorizontalAlignment="Right"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <!-- Empty State -->
+                                <TextBlock Text="Teslime hazır cihaz yok" 
+                                           Foreground="{StaticResource TextSecondaryColor}"
+                                           FontStyle="Italic" Margin="0,12,0,0"
+                                           HorizontalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ReadyToDeliverRepairs.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- ========== WIDGET 3: AYLIK ÖZET ========== -->
+                <Border Grid.Column="2" Style="{StaticResource CardPanel}" Margin="8,0,0,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Border Grid.Row="0" Background="#FFF8E1" CornerRadius="8" Padding="12" Margin="-16,-16,-16,12">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="💰" FontSize="20" VerticalAlignment="Center"/>
+                                <StackPanel Margin="10,0,0,0">
+                                    <TextBlock Text="AYLIK ÖZET" FontSize="14" FontWeight="Bold" 
+                                               Foreground="#F57C00"/>
+                                    <TextBlock Text="{Binding CurrentMonthName}" FontSize="11" 
+                                               Foreground="#FFB74D"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Content -->
+                        <StackPanel Grid.Row="1" VerticalAlignment="Top">
+                            
+                            <!-- Total Sales -->
+                            <Border Background="#F5F5F5" CornerRadius="12" Padding="16" Margin="0,0,0,16">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="TOPLAM SATIŞ" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondaryColor}"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock FontSize="32" FontWeight="Bold" 
+                                               Foreground="#4CAF50" HorizontalAlignment="Center"
+                                               Margin="0,8,0,0">
+                                        <Run Text="₺"/>
+                                        <Run Text="{Binding MonthlySalesTotal, StringFormat=N0}"/>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryColor}"
+                                               HorizontalAlignment="Center" Margin="0,4,0,0">
+                                        <Run Text="{Binding MonthlySalesCount, Mode=OneWay}"/>
+                                        <Run Text=" işlem"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Completed Jobs -->
+                            <Border Background="#E8F5E9" CornerRadius="12" Padding="16" Margin="0,0,0,12">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="TAMAMLANAN İŞLER" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="#2E7D32"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding MonthlyJobsCompleted}" 
+                                               FontSize="28" FontWeight="Bold" 
+                                               Foreground="#388E3C" HorizontalAlignment="Center"
+                                               Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Active Jobs -->
+                            <Border Background="#FFF3E0" CornerRadius="12" Padding="16">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="AKTİF İŞLER" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="#E65100"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding ActiveJobsCount}" 
+                                               FontSize="28" FontWeight="Bold" 
+                                               Foreground="#FF9800" HorizontalAlignment="Center"
+                                               Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
-                    </Border>
-                </StackPanel>
+                    </Grid>
+                </Border>
             </Grid>
         </Grid>
     </ScrollViewer>

@@ -120,7 +120,13 @@ namespace KamatekCrm.ViewModels
             }
             catch (System.Exception ex)
             {
-                ErrorMessage = $"Giriş hatası: {ex.Message}";
+                var fullMessage = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    fullMessage += $"\n\nDetay: {ex.InnerException.Message}";
+                }
+                MessageBox.Show($"Giriş sırasında hata oluştu:\n\n{fullMessage}", "Giriş Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
+                ErrorMessage = "Sistem hatası oluştu.";
             }
             finally
             {

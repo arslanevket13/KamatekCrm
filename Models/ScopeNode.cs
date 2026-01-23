@@ -172,6 +172,23 @@ namespace KamatekCrm.Models
         public decimal RecursiveProfit => RecursiveTotal - RecursiveTotalCost;
 
         /// <summary>
+        /// Recursive kalem sayısı
+        /// </summary>
+        [JsonIgnore]
+        public int RecursiveItemCount
+        {
+            get
+            {
+                int count = Items.Count;
+                foreach (var child in Children)
+                {
+                    count += child.RecursiveItemCount;
+                }
+                return count;
+            }
+        }
+
+        /// <summary>
         /// TreeView header'da gösterilecek maliyet badge
         /// </summary>
         [JsonIgnore]

@@ -40,6 +40,11 @@ namespace KamatekCrm.Models
         public string? ProductSKU { get; set; }
 
         /// <summary>
+        /// Birim (Adet, mt, tk vb.)
+        /// </summary>
+        public string Unit { get; set; } = "Adet";
+
+        /// <summary>
         /// Adet
         /// </summary>
         public int Quantity
@@ -213,6 +218,7 @@ namespace KamatekCrm.Models
                 ProductId = product.Id,
                 ProductName = product.ProductName,
                 ProductSKU = product.SKU,
+                Unit = product.Unit,
                 Quantity = quantity,
                 UnitCost = product.PurchasePrice,
                 UnitPrice = product.SalePrice

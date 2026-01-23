@@ -193,6 +193,7 @@ namespace KamatekCrm.ViewModels
 
         // Proje İşlemleri
         public ICommand SaveCommand { get; }
+        public ICommand ExportPdfCommand { get; }
         public ICommand CancelCommand { get; }
 
         #endregion
@@ -220,6 +221,7 @@ namespace KamatekCrm.ViewModels
             RemoveItemCommand = new RelayCommand(_ => RemoveItemFromNode(), _ => SelectedItem != null);
 
             SaveCommand = new RelayCommand(_ => Save(), _ => CanSave());
+            ExportPdfCommand = new RelayCommand(_ => ExportPdf());
             CancelCommand = new RelayCommand(CloseWindow);
 
             LoadData();
@@ -624,6 +626,58 @@ namespace KamatekCrm.ViewModels
                     "Hata",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
+            }
+        }
+
+        private void ExportPdf()
+        {
+            if (RootNodes == null || !RootNodes.Any())
+            {
+                MessageBox.Show("Dışa aktarılacak veri yok.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = $"Teklif_{ProjectName}_{DateTime.Now:yyyyMMdd}",
+                DefaultExt = ".pdf",
+                Filter = "PDF Belgeleri (.pdf)|*.pdf"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var pdfService = new PdfService();
+                    
+                    // Geçici proje nesnesi oluştur (Eğer henüz kaydedilmediyse UI'dan verileri al)
+                    var exportProject = CurrentProject;
+                    exportProject.Title = ProjectName;
+                    if(SelectedCustomer != null) exportProject.Customer = SelectedCustomer;
+
+                    pdfService.GenerateProjectQuote(exportProject, RootNodes.ToList(), dialog.FileName);
+
+                    var result = MessageBox.Show(
+                        "PDF başarıyla oluşturuldu. Dosyayı açmak ister misiniz?", 
+                        "Başarılı", 
+                        MessageBoxButton.YesNo, 
+                        MessageBoxImage.Question);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        new System.Diagnostics.Process
+                        {
+                            StartInfo = new System.Diagnostics.ProcessStartInfo(dialog.FileName)
+                            {
+                                UseShellExecute = true
+                            }
+                        }.Start();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"PDF oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
