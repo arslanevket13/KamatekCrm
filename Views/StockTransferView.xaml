@@ -1,0 +1,121 @@
+<Window x:Class="KamatekCrm.Views.StockTransferView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KamatekCrm.Views"
+        xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
+        mc:Ignorable="d"
+        Title="Stok Transferi" Height="500" Width="600"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BackgroundColor}">
+
+    <Window.DataContext>
+        <viewmodels:StockTransferViewModel/>
+    </Window.DataContext>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="*"/>    <!-- Content -->
+            <RowDefinition Height="Auto"/> <!-- Footer -->
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="Depolar Arası Stok Transferi" 
+                   FontSize="24" FontWeight="Bold"
+                   Foreground="{StaticResource TextPrimaryColor}"
+                   Margin="0,0,0,20"/>
+
+        <!-- Content -->
+        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="20">
+            <StackPanel>
+                <!-- Warehouses -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0">
+                        <Label Content="Kaynak Depo" Style="{StaticResource ModernLabel}"/>
+                        <ComboBox ItemsSource="{Binding Warehouses}"
+                                  SelectedItem="{Binding SourceWarehouse}"
+                                  DisplayMemberPath="Name"
+                                  Style="{StaticResource ModernComboBox}"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="1" Text="➜" 
+                               FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Bottom" 
+                               Margin="0,0,0,10" Foreground="{StaticResource PrimaryColor}"/>
+
+                    <StackPanel Grid.Column="2">
+                        <Label Content="Hedef Depo" Style="{StaticResource ModernLabel}"/>
+                        <ComboBox ItemsSource="{Binding Warehouses}"
+                                  SelectedItem="{Binding TargetWarehouse}"
+                                  DisplayMemberPath="Name"
+                                  Style="{StaticResource ModernComboBox}"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Product Selection -->
+                <StackPanel Margin="0,20,0,0">
+                    <Label Content="Transfer Edilecek Ürün" Style="{StaticResource ModernLabel}"/>
+                    <ComboBox ItemsSource="{Binding Products}"
+                              SelectedItem="{Binding SelectedProduct}"
+                              DisplayMemberPath="ProductName"
+                              Style="{StaticResource ModernComboBox}"/>
+                </StackPanel>
+
+                <!-- Quantity and Available Stock -->
+                <Grid Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <Label Content="Transfer Miktarı" Style="{StaticResource ModernLabel}"/>
+                        <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource ModernTextBox}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                        <Label Content="Mevcut Stok (Kaynak)" Style="{StaticResource ModernLabel}"/>
+                        <Border Background="#f0f0f0" CornerRadius="4" Padding="10,8">
+                            <TextBlock Text="{Binding AvailableStock, StringFormat='{}{0} adet'}" 
+                                       FontWeight="Bold" Foreground="{StaticResource TextSecondaryColor}"/>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Status Message -->
+                <TextBlock Text="{Binding StatusMessage}" 
+                           Margin="0,20,0,0"
+                           TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           FontWeight="Medium">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="Red"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsActionSuccessful}" Value="True">
+                                    <Setter Property="Foreground" Value="Green"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Footer Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Kapat" Click="CloseButton_Click"
+                    Style="{StaticResource SecondaryButton}" Width="100" Margin="0,0,10,0"/>
+            <Button Content="Transferi Tamamla" Command="{Binding TransferCommand}"
+                    Style="{StaticResource ModernButton}" Width="150"/>
+        </StackPanel>
+    </Grid>
+</Window>

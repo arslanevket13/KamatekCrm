@@ -1,0 +1,478 @@
+<UserControl x:Class="KamatekCrm.Views.CustomerDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:KamatekCrm.Views"
+             xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
+             xmlns:enums="clr-namespace:KamatekCrm.Enums"
+             xmlns:helpers="clr-namespace:KamatekCrm.Helpers"
+             d:DataContext="{d:DesignInstance Type=viewmodels:CustomerDetailViewModel, IsDesignTimeCreatable=False}"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1200"
+             Background="{StaticResource BackgroundColor}">
+
+    <UserControl.Resources>
+        <helpers:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ========== HEADER ========== -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="← Geri" Command="{Binding BackCommand}" 
+                    Style="{StaticResource SecondaryButton}" Padding="16,8" Margin="0,0,16,0"/>
+            
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock Text="{Binding FullName}" FontSize="24" FontWeight="Bold"
+                           Foreground="{StaticResource TextPrimaryColor}"/>
+                <TextBlock Text="{Binding CompanyName}" FontSize="14" 
+                           Foreground="{StaticResource TextSecondaryColor}"
+                           Visibility="{Binding CustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Corporate}"/>
+            </StackPanel>
+
+            <!-- Customer Code Badge -->
+            <Border Grid.Column="2" Background="#E3F2FD" CornerRadius="8" Padding="12,8">
+                <StackPanel>
+                    <TextBlock Text="Müşteri Kodu" FontSize="10" Foreground="#1565C0" Margin="0,0,0,2"/>
+                    <TextBlock Text="{Binding CustomerCode}" FontSize="16" FontWeight="Bold" Foreground="#1565C0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ========== TABS ========== -->
+        <TabControl Grid.Row="1" Style="{StaticResource {x:Type TabControl}}">
+            
+            <!-- TAB 1: Profile -->
+            <TabItem Header="📋 Genel Bilgiler">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Customer Type -->
+                        <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Müşteri Tipi" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Content="Bireysel" 
+                                                 IsChecked="{Binding CustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Individual, Mode=OneWay}"
+                                                 Checked="OnIndividualChecked"
+                                                 GroupName="CustomerType" 
+                                                 Margin="0,0,24,0"/>
+                                    <RadioButton Content="Kurumsal" 
+                                                 IsChecked="{Binding CustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Corporate, Mode=OneWay}"
+                                                 Checked="OnCorporateChecked"
+                                                 GroupName="CustomerType"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Individual Fields -->
+                        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16"
+                                Visibility="{Binding CustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Individual}">
+                            <StackPanel>
+                                <TextBlock Text="Bireysel Müşteri Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,12"/>
+                                <Label Content="TC Kimlik No" Style="{StaticResource ModernLabel}"/>
+                                <TextBox Text="{Binding TcKimlikNo, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBox}" MaxLength="11" Width="200" HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Corporate Fields -->
+                        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16"
+                                Visibility="{Binding CustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Corporate}">
+                            <StackPanel>
+                                <TextBlock Text="Kurumsal Müşteri Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,12"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <Label Content="Şirket Ünvanı" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <Label Content="Vergi Numarası" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="4">
+                                        <Label Content="Vergi Dairesi" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding TaxOffice, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Contact Info -->
+                        <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="İletişim Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,12"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <Label Content="Ad Soyad *" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <Label Content="Telefon *" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="4">
+                                        <Label Content="E-posta" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Address Info -->
+                        <Border Grid.Row="3" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Adres Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,12"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <StackPanel Grid.Row="0" Grid.Column="0">
+                                        <Label Content="Şehir *" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding City, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0" Grid.Column="2">
+                                        <Label Content="İlçe" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding District, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0" Grid.Column="4">
+                                        <Label Content="Mahalle" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding Neighborhood, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,0,0">
+                                        <Label Content="Sokak/Cadde" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding Street, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,12,0,0">
+                                        <Label Content="Bina No" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding BuildingNo, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="4" Margin="0,12,0,0">
+                                        <Label Content="Daire No" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding ApartmentNo, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Notes -->
+                        <Border Grid.Row="4" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <Label Content="Notlar" Style="{StaticResource ModernLabel}"/>
+                                <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBox}"
+                                         TextWrapping="Wrap" AcceptsReturn="True" Height="80"
+                                         VerticalScrollBarVisibility="Auto"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Save Button -->
+                        <Button Grid.Row="5" Content="💾 Değişiklikleri Kaydet" 
+                                Command="{Binding SaveCommand}" 
+                                Style="{StaticResource ModernButton}" 
+                                Width="200" Height="44"
+                                HorizontalAlignment="Right"/>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 2: Active Jobs -->
+            <TabItem Header="🔧 Aktif İşler">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                        <Button Content="➕ Yeni İş Emri" 
+                                Command="{Binding NewServiceJobCommand}"
+                                Style="{StaticResource ModernButton}"
+                                Height="40" Padding="16,0"/>
+                        <TextBlock Text="{Binding ActiveJobCount, StringFormat='{}{0} aktif iş'}" 
+                                   VerticalAlignment="Center" Margin="16,0,0,0"
+                                   FontWeight="SemiBold" Foreground="{StaticResource PrimaryColor}"/>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1"
+                              AutoGenerateColumns="False"
+                              ItemsSource="{Binding ActiveJobs}"
+                              Style="{StaticResource ModernDataGrid}"
+                              ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              RowHeight="45"
+                              AlternatingRowBackground="#FAFAFA">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="50"/>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding CreatedDate, StringFormat=dd.MM.yyyy}" Width="90"/>
+                            <DataGridTemplateColumn Header="Öncelik" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock FontSize="16" HorizontalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Priority}" Value="{x:Static enums:JobPriority.Low}">
+                                                            <Setter Property="Text" Value="🟢"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Priority}" Value="{x:Static enums:JobPriority.Normal}">
+                                                            <Setter Property="Text" Value="🔵"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Priority}" Value="{x:Static enums:JobPriority.Urgent}">
+                                                            <Setter Property="Text" Value="🟠"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Priority}" Value="{x:Static enums:JobPriority.Critical}">
+                                                            <Setter Property="Text" Value="🔴"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Kategori" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.CCTV}">
+                                                            <Setter Property="Text" Value="📹 CCTV"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.VideoIntercom}">
+                                                            <Setter Property="Text" Value="📞 Diafon"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.FireAlarm}">
+                                                            <Setter Property="Text" Value="🔥 Yangın"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.BurglarAlarm}">
+                                                            <Setter Property="Text" Value="🚨 Alarm"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.SmartHome}">
+                                                            <Setter Property="Text" Value="🏠 Akıllı Ev"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.AccessControl}">
+                                                            <Setter Property="Text" Value="🔐 PDKS"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.SatelliteSystem}">
+                                                            <Setter Property="Text" Value="📡 Uydu"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.FiberOptic}">
+                                                            <Setter Property="Text" Value="🔌 Fiber"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="*"/>
+                            <DataGridTemplateColumn Header="Durum" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10" Padding="8,4" HorizontalAlignment="Left">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.Pending}">
+                                                            <Setter Property="Background" Value="#FFF3E0"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.InProgress}">
+                                                            <Setter Property="Background" Value="#E3F2FD"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock FontSize="11" FontWeight="SemiBold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.Pending}">
+                                                                <Setter Property="Text" Value="Bekliyor"/>
+                                                                <Setter Property="Foreground" Value="#E65100"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.InProgress}">
+                                                                <Setter Property="Text" Value="Devam Ediyor"/>
+                                                                <Setter Property="Foreground" Value="#1565C0"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 3: Service History -->
+            <TabItem Header="📜 Servis Geçmişi">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <DataGrid Grid.Row="0"
+                              AutoGenerateColumns="False"
+                              ItemsSource="{Binding PastJobs}"
+                              Style="{StaticResource ModernDataGrid}"
+                              ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              RowHeight="45"
+                              AlternatingRowBackground="#FAFAFA">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="50"/>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding CreatedDate, StringFormat=dd.MM.yyyy}" Width="90"/>
+                            <DataGridTextColumn Header="Tamamlanma" Binding="{Binding CompletedDate, StringFormat=dd.MM.yyyy}" Width="100"/>
+                            <DataGridTemplateColumn Header="Kategori" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.CCTV}">
+                                                            <Setter Property="Text" Value="📹 CCTV"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.VideoIntercom}">
+                                                            <Setter Property="Text" Value="📞 Diafon"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.FireAlarm}">
+                                                            <Setter Property="Text" Value="🔥 Yangın"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.BurglarAlarm}">
+                                                            <Setter Property="Text" Value="🚨 Alarm"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.SmartHome}">
+                                                            <Setter Property="Text" Value="🏠 Akıllı Ev"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.AccessControl}">
+                                                            <Setter Property="Text" Value="🔐 PDKS"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.SatelliteSystem}">
+                                                            <Setter Property="Text" Value="📡 Uydu"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding JobCategory}" Value="{x:Static enums:JobCategory.FiberOptic}">
+                                                            <Setter Property="Text" Value="🔌 Fiber"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="*"/>
+                            <DataGridTextColumn Header="Tutar" Binding="{Binding Price, StringFormat=₺{0:N2}}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Foreground" Value="#2E7D32"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Border Grid.Row="1" Background="#E8F5E9" Padding="16" CornerRadius="8" Margin="0,16,0,0">
+                        <TextBlock FontWeight="Bold" FontSize="16">
+                            <Run Text="Toplam Harcama: "/>
+                            <Run Text="{Binding TotalSpent, Mode=OneWay, StringFormat=₺{0:N2}}" Foreground="#2E7D32"/>
+                        </TextBlock>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 4: Financial -->
+            <TabItem Header="💰 Finansal">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <DataGrid Grid.Row="0"
+                              AutoGenerateColumns="False"
+                              ItemsSource="{Binding Transactions}"
+                              Style="{StaticResource ModernDataGrid}"
+                              ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              RowHeight="42">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat=dd.MM.yyyy}" Width="100"/>
+                            <DataGridTextColumn Header="Tür" Binding="{Binding Type}" Width="100"/>
+                            <DataGridTextColumn Header="Tutar" Binding="{Binding Amount, StringFormat=₺{0:N2}}" Width="120"/>
+                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Border Grid.Row="1" Background="#FFF3E0" Padding="16" CornerRadius="8" Margin="0,16,0,0">
+                        <TextBlock FontWeight="Bold" FontSize="16">
+                            <Run Text="Bakiye: "/>
+                            <Run Text="{Binding TotalBalance, Mode=OneWay, StringFormat=₺{0:N2}}" Foreground="#E65100"/>
+                        </TextBlock>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

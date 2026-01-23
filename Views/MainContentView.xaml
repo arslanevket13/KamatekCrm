@@ -1,0 +1,361 @@
+<UserControl x:Class="KamatekCrm.Views.MainContentView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
+             xmlns:views="clr-namespace:KamatekCrm.Views"
+             Background="{StaticResource BackgroundColor}">
+    
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sol Navigasyon Menüsü -->
+        <Border Grid.Column="0" Background="#15212d">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Logo/Başlık -->
+                <Border Grid.Row="0" Background="#15212d" Padding="10,15">
+                    <StackPanel HorizontalAlignment="Center">
+                        <Image Source="/Assets/Images/KamatekLogo.png" 
+                               Width="210" Height="Auto"
+                               Stretch="Uniform"
+                               HorizontalAlignment="Center"/>
+                        <TextBlock Text="Teknik Servis Yönetimi" 
+                                 FontSize="11" 
+                                 Foreground="#E3F2FD"
+                                 HorizontalAlignment="Center"
+                                 Margin="0,6,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Navigasyon Butonları -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,10,0,0">
+                        <Button Content="🏠 Ana Sayfa" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToDashboardCommand}"/>
+                        
+                        <Button Content="👥 Müşteriler" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToCustomersCommand}"/>
+                        
+                        <Button Content="📦 Stoklar" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToProductsCommand}"/>
+                        
+                        <Button Content="🔧 İş Emirleri" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToServiceJobsCommand}"/>
+
+                        <!-- Hızlı Erişim Butonları -->
+                        <Border Margin="20,15,20,8" BorderThickness="0,1,0,0" BorderBrush="#3a5a7c"/>
+                        <TextBlock Text="HIZLI ERİŞİM" 
+                                   Foreground="#7a9ab8" 
+                                   FontSize="10" 
+                                   FontWeight="SemiBold"
+                                   Margin="20,5,20,10"/>
+
+                        <Button Content="⚡ Hızlı Kabul (Arıza Kaydı)" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding OpenFaultTicketCommand}"/>
+
+                        <Button Content="🔍 Arıza Takip &amp; İşlem" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding OpenRepairTrackingCommand}"/>
+
+                        <Button Content="🔧 Tamir Listesi" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToRepairListCommand}"/>
+
+                        <Button Content="🚜 Saha İşleri" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToFieldJobListCommand}"/>
+                        
+                        <Button Content="🏗️ PROJE &amp; TEKLİF" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding OpenProjectQuoteCommand}"
+                                Background="#1565C0"
+                                Foreground="White"
+                                FontWeight="SemiBold"/>
+
+                        <Button Content="🛒 HIZLI SATIŞ (KASA)" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding OpenDirectSalesCommand}"
+                                Background="#2E7D32"
+                                Foreground="White"
+                                FontWeight="SemiBold"/>
+
+                        <!-- Envanter Yönetimi Bölümü -->
+                        <Border Margin="20,20,20,10" BorderThickness="0,1,0,0" BorderBrush="#3a5a7c"/>
+                        <TextBlock Text="ENVANTER YÖNETİMİ" 
+                                   Foreground="#7a9ab8" 
+                                   FontSize="10" 
+                                   FontWeight="SemiBold"
+                                   Margin="20,5,20,10"/>
+
+                        <Button Content="📋 Stok Sayım" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToStockCountCommand}"/>
+                        
+                        <Button Content="📊 Raporlar" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToReportsCommand}"/>
+
+                        <!-- Yönetim Bölümü (Sadece Admin) -->
+                        <Border Margin="20,20,20,10" BorderThickness="0,1,0,0" BorderBrush="#3a5a7c"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="YÖNETİM" 
+                                   Foreground="#7a9ab8" 
+                                   FontSize="10" 
+                                   FontWeight="SemiBold"
+                                   Margin="20,5,20,10"
+                                   Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
+
+                        <Button Content="👤 Kullanıcılar" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToUsersCommand}"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
+
+                        <Button Content="📋 Sistem Logları" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToSystemLogsCommand}"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Alt Kısım: Kullanıcı Bilgisi + Çıkış -->
+                <Border Grid.Row="2" Background="#0d1821" Padding="16">
+                    <StackPanel>
+                        <!-- Kullanıcı Bilgisi -->
+                        <Border Background="#1a2f3d" CornerRadius="8" Padding="12,10" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Background="#2196F3" CornerRadius="20" 
+                                        Width="36" Height="36" Margin="0,0,10,0">
+                                    <TextBlock Text="👤" FontSize="18" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding CurrentUserName}" 
+                                               Foreground="White" FontWeight="SemiBold" FontSize="12"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding CurrentUserRole}" 
+                                               Foreground="#90CAF9" FontSize="10"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Çıkış Butonu -->
+                        <Button Content="🚪 Çıkış Yap" 
+                                Command="{Binding LogoutCommand}"
+                                Background="#c62828" Foreground="White"
+                                FontWeight="SemiBold" Height="36"
+                                BorderThickness="0" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#b71c1c"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <!-- Versiyon -->
+                        <TextBlock Text="v1.0.0" 
+                                 Foreground="#546E7A"
+                                 FontSize="10"
+                                 HorizontalAlignment="Center"
+                                 Margin="0,12,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Sağ İçerik Alanı -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Global Search Bar -->
+            <Border Grid.Row="0" Background="White" Padding="20,12" 
+                    BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MaxWidth="500"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Search Box -->
+                    <Grid Grid.Column="0">
+                        <Border Background="#F5F5F5" CornerRadius="20" 
+                                BorderBrush="#E0E0E0" BorderThickness="1"
+                                Padding="4,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Grid.Column="0" Text="🔍" 
+                                           FontSize="16" VerticalAlignment="Center"
+                                           Margin="12,0,8,0" Foreground="#9E9E9E"/>
+                                
+                                <TextBox Grid.Column="1" 
+                                         x:Name="GlobalSearchBox"
+                                         Text="{Binding SearchViewModel.SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         VerticalAlignment="Center"
+                                         Height="36"
+                                         FontSize="14"
+                                         Padding="0,8">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Foreground" Value="#424242"/>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                
+                                <!-- Clear Button -->
+                                <Button Grid.Column="2" Content="✕" 
+                                        Command="{Binding SearchViewModel.ClearCommand}"
+                                        Visibility="{Binding SearchViewModel.HasResults, Converter={StaticResource BoolToVis}}"
+                                        Background="Transparent" BorderThickness="0"
+                                        Foreground="#9E9E9E" FontSize="12"
+                                        Width="30" Height="30" Cursor="Hand"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Search Results Popup -->
+                        <Popup IsOpen="{Binding SearchViewModel.ShowResults}"
+                               PlacementTarget="{Binding ElementName=GlobalSearchBox}"
+                               Placement="Bottom"
+                               StaysOpen="False"
+                               AllowsTransparency="True"
+                               PopupAnimation="Fade">
+                            <Border Background="White" 
+                                    CornerRadius="8" 
+                                    BorderBrush="#E0E0E0" 
+                                    BorderThickness="1"
+                                    MinWidth="400"
+                                    MaxHeight="350"
+                                    Margin="0,4,0,0">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="15" Opacity="0.15" ShadowDepth="4"/>
+                                </Border.Effect>
+
+                                <Grid>
+                                    <!-- Results -->
+                                    <ScrollViewer MaxHeight="320" 
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  Visibility="{Binding SearchViewModel.HasResults, Converter={StaticResource BoolToVis}}">
+                                        <ItemsControl ItemsSource="{Binding SearchViewModel.Results}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Padding="12,10" Cursor="Hand"
+                                                            Background="Transparent"
+                                                            BorderBrush="#F0F0F0"
+                                                            BorderThickness="0,0,0,1">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Style.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Background" Value="#F5F5F5"/>
+                                                                    </Trigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            
+                                                            <TextBlock Grid.Column="0" 
+                                                                       Text="{Binding Icon}" 
+                                                                       FontSize="20"
+                                                                       VerticalAlignment="Center"
+                                                                       Margin="0,0,12,0"/>
+                                                            
+                                                            <StackPanel Grid.Column="1">
+                                                                <TextBlock Text="{Binding Title}" 
+                                                                           FontWeight="SemiBold"
+                                                                           FontSize="13"/>
+                                                                <TextBlock Text="{Binding Subtitle}" 
+                                                                           Foreground="#757575"
+                                                                           FontSize="11"/>
+                                                            </StackPanel>
+                                                            
+                                                            <Border Grid.Column="2" 
+                                                                    Background="{Binding CategoryColor}"
+                                                                    Opacity="0.15"
+                                                                    CornerRadius="10"
+                                                                    Padding="8,4"
+                                                                    VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Category}" 
+                                                                           Foreground="{Binding CategoryColor}"
+                                                                           FontSize="10"
+                                                                           FontWeight="SemiBold"/>
+                                                            </Border>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+
+                                    <!-- No Results -->
+                                    <Border Padding="20" 
+                                            Visibility="{Binding SearchViewModel.ShowNoResults, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="🔍" FontSize="32" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Sonuç bulunamadı" 
+                                                       Foreground="#9E9E9E"
+                                                       FontSize="13"
+                                                       Margin="0,8,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Ana içerik -->
+            <ContentControl Grid.Row="1" 
+                           Content="{Binding CurrentView}"
+                           Margin="0"/>
+
+            <!-- Toast Notifications Overlay -->
+            <views:ToastNotificationControl Grid.Row="1"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Margin="20"/>
+        </Grid>
+    </Grid>
+</UserControl>

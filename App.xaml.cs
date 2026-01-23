@@ -1,0 +1,70 @@
+﻿using System;
+using System.Windows;
+using KamatekCrm.Data;
+using KamatekCrm.Services;
+using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
+
+namespace KamatekCrm
+{
+    /// <summary>
+    /// Interaction logic for App.xaml
+    /// </summary>
+    public partial class App : Application
+    {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+
+            try
+            {
+                // 1. QuestPDF Community License Configuration
+                QuestPDF.Settings.License = LicenseType.Community;
+
+                // 2. Veritabanını başlat
+                InitializeDatabase();
+
+                // 3. Varsayılan admin kullanıcısı oluştur
+                AuthService.CreateDefaultUser();
+
+                // 4. MainWindow'u oluştur ve göster
+                var mainWindow = new MainWindow();
+                MainWindow = mainWindow;
+
+                // 5. Login ekranını aktif et
+                NavigationService.Instance.NavigateToLogin();
+                // NavigationService.Instance.NavigateToMainContent(); // Giriş ekranını atlamak için bunu kullan
+
+                mainWindow.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Uygulama başlatılırken hata oluştu:\n\n{ex.Message}\n\nDetay: {ex.InnerException?.Message}",
+                    "Başlatma Hatası",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                Shutdown();
+            }
+        }
+
+        /// <summary>
+        /// Veritabanını başlat ve migration'ları uygula
+        /// </summary>
+        /// <summary>
+        /// Veritabanını başlat ve migration'ları uygula
+        /// </summary>
+        private static void InitializeDatabase()
+        {
+            using var context = new AppDbContext();
+            try 
+            {
+                context.Database.Migrate(); // Migration kullan (EnsureCreated yerine)
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Veritabanı güncellenirken hata oluştu: {ex.Message}", "Veritabanı Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+}

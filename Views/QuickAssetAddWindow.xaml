@@ -1,0 +1,91 @@
+<Window x:Class="KamatekCrm.Views.QuickAssetAddWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="➕ Hızlı Cihaz Kaydı"
+        WindowStartupLocation="CenterOwner"
+        SizeToContent="WidthAndHeight"
+        MinWidth="400"
+        ResizeMode="NoResize"
+        Background="#F5F5F5">
+
+    <Border Margin="20" Background="White" CornerRadius="8" Padding="24">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="10" Opacity="0.1" ShadowDepth="2"/>
+        </Border.Effect>
+
+        <StackPanel Width="350">
+            <!-- Header -->
+            <TextBlock Text="🔧 Yeni Cihaz Kaydı" 
+                       FontSize="18" FontWeight="SemiBold"
+                       Foreground="#1976D2" Margin="0,0,0,20"/>
+
+            <!-- Kategori -->
+            <TextBlock Text="Kategori *" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+            <ComboBox x:Name="CategoryCombo" 
+                      Style="{StaticResource ModernComboBox}"
+                      Height="40" Margin="0,0,0,16">
+                <ComboBoxItem Content="📹 Güvenlik Kamera" Tag="CCTV"/>
+                <ComboBoxItem Content="📞 Görüntülü Diafon" Tag="VideoIntercom"/>
+                <ComboBoxItem Content="🔥 Yangın Alarm" Tag="FireAlarm"/>
+                <ComboBoxItem Content="🚨 Hırsız Alarm" Tag="BurglarAlarm"/>
+                <ComboBoxItem Content="🏠 Akıllı Ev" Tag="SmartHome"/>
+                <ComboBoxItem Content="🔐 Kartlı Geçiş" Tag="AccessControl"/>
+                <ComboBoxItem Content="📡 Uydu Sistemleri" Tag="SatelliteSystem"/>
+                <ComboBoxItem Content="🔌 Fiber Optik" Tag="FiberOptic"/>
+            </ComboBox>
+
+            <!-- Marka -->
+            <TextBlock Text="Marka *" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+            <ComboBox x:Name="BrandCombo" 
+                      IsEditable="True"
+                      Style="{StaticResource ModernComboBox}"
+                      Height="40" Margin="0,0,0,16">
+                <ComboBoxItem Content="Hikvision"/>
+                <ComboBoxItem Content="Dahua"/>
+                <ComboBoxItem Content="Haikon"/>
+                <ComboBoxItem Content="Comelit"/>
+                <ComboBoxItem Content="Fermax"/>
+                <ComboBoxItem Content="Paradox"/>
+                <ComboBoxItem Content="Dsi"/>
+                <ComboBoxItem Content="Diğer"/>
+            </ComboBox>
+
+            <!-- Model -->
+            <TextBlock Text="Model *" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+            <TextBox x:Name="ModelBox" 
+                     Style="{StaticResource ModernTextBox}"
+                     Height="40" Margin="0,0,0,16"/>
+
+            <!-- Seri No -->
+            <TextBlock Text="Seri Numarası" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+            <TextBox x:Name="SerialBox" 
+                     Style="{StaticResource ModernTextBox}"
+                     Height="40" Margin="0,0,0,16"/>
+
+            <!-- Konum -->
+            <TextBlock Text="Konum (Örn: Giriş Kapısı)" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+            <TextBox x:Name="LocationBox" 
+                     Style="{StaticResource ModernTextBox}"
+                     Height="40" Margin="0,0,0,24"/>
+
+            <!-- Buttons -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Content="İptal"
+                        Style="{StaticResource SecondaryButton}"
+                        Height="44"
+                        Click="CancelButton_Click"/>
+
+                <Button Grid.Column="2" Content="💾 Kaydet ve Seç"
+                        Style="{StaticResource ModernButton}"
+                        Height="44"
+                        Click="SaveButton_Click"/>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

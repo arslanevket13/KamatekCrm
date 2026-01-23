@@ -1,0 +1,185 @@
+<UserControl x:Class="KamatekCrm.Views.ProductsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:KamatekCrm.Views"
+             xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=viewmodels:ProductViewModel, IsDesignTimeCreatable=False}"
+             d:DesignHeight="600" d:DesignWidth="1000"
+             Background="{StaticResource BackgroundColor}">
+
+    <UserControl.Resources>
+        <!-- Boolean to Visibility Converter -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Başlık ve Üst Butonlar -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" 
+                       Text="Stok ve Envanter Yönetimi" 
+                       FontSize="28" 
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryColor}"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="📂 Excel'den Yükle" 
+                        Command="{Binding ImportExcelCommand}"
+                        Style="{StaticResource SecondaryButton}" 
+                        ToolTip="Excel dosyasından toplu ürün içe aktar"
+                        Width="140" Margin="0,0,10,0"/>
+                
+                <Button Content="+ Yeni Ürün" 
+                        Command="{Binding AddNewProductCommand}"
+                        Style="{StaticResource ModernButton}" 
+                        Width="120" Margin="0,0,10,0"/>
+
+                <Button Content="Transfer Yap" 
+                        Command="{Binding TransferStockCommand}"
+                        Style="{StaticResource SecondaryButton}" 
+                        Width="120"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Arama ve Filtreleme -->
+        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Margin="0,0,0,15" Padding="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Text="Ara:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                
+                <TextBox Grid.Column="1" 
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource ModernTextBox}"
+                         Tag="Ürün Adı, SKU veya Kategori..."/>
+                
+                <!-- Edit Button (Seçili ürün için) -->
+                <Button Grid.Column="3" 
+                        Content="✏️ Düzenle" 
+                        Command="{Binding EditProductCommand}"
+                        Style="{StaticResource SecondaryButton}" 
+                        Width="100"/>
+            </Grid>
+        </Border>
+
+        <!-- Stok Listesi DataGrid -->
+        <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="0">
+            <DataGrid ItemsSource="{Binding ProductsView}"
+                      SelectedItem="{Binding SelectedProduct}"
+                      Style="{StaticResource ModernDataGrid}"
+                      ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="Horizontal">
+                
+                <!-- Double-Click ile Düzenleme -->
+                <DataGrid.InputBindings>
+                    <MouseBinding MouseAction="LeftDoubleClick" 
+                                  Command="{Binding EditProductCommand}"/>
+                </DataGrid.InputBindings>
+                
+                <DataGrid.Columns>
+                    <!-- SKU / Barkod -->
+                    <DataGridTextColumn Header="SKU / Barkod" 
+                                        Binding="{Binding SKU}" 
+                                        Width="Auto"
+                                        MinWidth="100"/>
+
+                    <!-- Ürün Adı -->
+                    <DataGridTextColumn Header="Ürün Adı" 
+                                        Binding="{Binding ProductName}" 
+                                        Width="*"
+                                        FontWeight="SemiBold"/>
+
+                    <!-- Kategori -->
+                    <DataGridTextColumn Header="Kategori" 
+                                        Binding="{Binding Category.Name}" 
+                                        Width="150"/>
+
+                    <!-- Toplam Stok (Bold) -->
+                    <DataGridTextColumn Header="Toplam Stok" 
+                                        Binding="{Binding TotalStockQuantity}" 
+                                        Width="100">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="{StaticResource PrimaryColor}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Birim -->
+                    <DataGridTextColumn Header="Birim" 
+                                        Binding="{Binding Unit}" 
+                                        Width="80"/>
+
+                    <!-- Satış Fiyatı -->
+                    <DataGridTextColumn Header="Satış Fiyatı" 
+                                        Binding="{Binding SalePrice, StringFormat='{}{0:C2}'}" 
+                                        Width="100"/>
+
+                    <!-- Ortalama Maliyet (Gizli/Admin) -->
+                    <DataGridTextColumn Header="Ort. Maliyet" 
+                                        Binding="{Binding CurrentAverageCost, StringFormat='{}{0:C2}'}" 
+                                        Width="100"
+                                        Foreground="Gray"/>
+
+                    <!-- Düzenle Butonu -->
+                    <DataGridTemplateColumn Header="" Width="50">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="✏️" 
+                                        Command="{Binding DataContext.EditProductCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        ToolTip="Düzenle"
+                                        FontSize="14"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="3" Margin="0,10,0,0" Padding="5">
+            <TextBlock Text="{Binding StatusMessage}" 
+                       FontWeight="Medium">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="Red"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsActionSuccessful}" Value="True">
+                                <Setter Property="Foreground" Value="Green"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,172 @@
+<Window x:Class="KamatekCrm.Views.RepairTrackingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
+        xmlns:enums="clr-namespace:KamatekCrm.Enums"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        mc:Ignorable="d"
+        Title="Arıza Takip &amp; İşlem Merkezi" Height="800" Width="1200"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.DataContext>
+        <vm:RepairViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="350"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT PANEL: LIST -->
+        <Border Grid.Column="0" BorderBrush="LightGray" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Text="Aktif Arızalar" FontWeight="Bold" FontSize="16" Margin="10"/>
+
+                <ListBox Grid.Row="1" ItemsSource="{Binding AllRepairs}" SelectedItem="{Binding SelectedJob}" Margin="5">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="Gray" BorderThickness="0,0,0,1" Padding="5">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Customer.FullName}" FontWeight="Bold"/>
+                                    <TextBlock>
+                                        <Run Text="{Binding DeviceBrand}"/> 
+                                        <Run Text="{Binding DeviceModel}"/>
+                                    </TextBlock>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding RepairStatus}" Foreground="Blue" FontWeight="SemiBold"/>
+                                        <TextBlock Text=" - "/>
+                                        <TextBlock Text="{Binding CreatedDate, StringFormat=dd.MM.yyyy}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                
+                <Button Grid.Row="2" Content="Yeni Kayıt Aç" Margin="10" Height="40" Command="{Binding OpenRegistrationCommand}"/>
+            </Grid>
+        </Border>
+
+        <!-- RIGHT PANEL: DETAILS -->
+        <Grid Grid.Column="1" Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/> 
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header Info -->
+            <StackPanel Grid.Row="0" Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock Text="{Binding SelectedJob.Customer.FullName}" FontSize="24" FontWeight="Bold"/>
+                <TextBlock FontSize="16" Foreground="Gray">
+                    <Run Text="{Binding SelectedJob.DeviceBrand}"/>
+                    <Run Text="{Binding SelectedJob.DeviceModel}"/>
+                    <Run Text=" - Seri No: "/>
+                    <Run Text="{Binding SelectedJob.SerialNumber}"/>
+                </TextBlock>
+                <Separator Margin="0,10"/>
+                
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Aksesuarlar:" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding SelectedJob.Accessories}"/>
+                        <TextBlock Text="Fiziksel Durum:" FontWeight="Bold" Margin="0,5,0,0"/>
+                        <TextBlock Text="{Binding SelectedJob.PhysicalCondition}"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Arıza Beyanı:" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding SelectedJob.Description}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+            
+            <!-- Actions Section -->
+             <GroupBox Grid.Row="1" Header="İşlem &amp; Durum" Margin="0,0,0,10" Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                 <StackPanel>
+                     <TextBlock Text="Durum Değiştir:" Margin="0,0,0,5"/>
+                     <WrapPanel Margin="0,0,0,10">
+                         <!-- Simple Status Buttons for Quick Actions -->
+                         <Button Content="Arıza Tespiti" Padding="10,5" Margin="2" Command="{Binding UpdateStatusCommand}">
+                             <Button.CommandParameter>
+                                 <enums:RepairStatus>Diagnosing</enums:RepairStatus>
+                             </Button.CommandParameter>
+                         </Button>
+                         <Button Content="Parça Bekleniyor" Padding="10,5" Margin="2" Command="{Binding UpdateStatusCommand}">
+                             <Button.CommandParameter>
+                                 <enums:RepairStatus>WaitingForParts</enums:RepairStatus>
+                             </Button.CommandParameter>
+                         </Button>
+                         <Button Content="Servise Gönder" Padding="10,5" Margin="2" Command="{Binding UpdateStatusCommand}">
+                             <Button.CommandParameter>
+                                 <enums:RepairStatus>SentToFactory</enums:RepairStatus>
+                             </Button.CommandParameter>
+                         </Button>
+                         <Button Content="Tamir Ediliyor" Padding="10,5" Margin="2" Command="{Binding UpdateStatusCommand}">
+                             <Button.CommandParameter>
+                                 <enums:RepairStatus>InRepair</enums:RepairStatus>
+                             </Button.CommandParameter>
+                         </Button>
+                         <Button Content="Hazır" Padding="10,5" Margin="2" Background="LightGreen" Command="{Binding UpdateStatusCommand}">
+                             <Button.CommandParameter>
+                                 <enums:RepairStatus>ReadyForPickup</enums:RepairStatus>
+                             </Button.CommandParameter>
+                         </Button>
+                         <Button Content="Teslim Et" Padding="10,5" Margin="2" Command="{Binding UpdateStatusCommand}">
+                             <Button.CommandParameter>
+                                 <enums:RepairStatus>Delivered</enums:RepairStatus>
+                             </Button.CommandParameter>
+                         </Button>
+                     </WrapPanel>
+                     
+                     <TextBlock Text="Teknisyen Notu:" Margin="0,0,0,5"/>
+                     <Grid>
+                         <Grid.ColumnDefinitions>
+                             <ColumnDefinition Width="*"/>
+                             <ColumnDefinition Width="Auto"/>
+                         </Grid.ColumnDefinitions>
+                         <TextBox Text="{Binding NewNoteText}" Height="60" TextWrapping="Wrap" AcceptsReturn="True"/>
+                         <Button Grid.Column="1" Content="Not Ekle" Width="100" Margin="10,0,0,0" Command="{Binding AddNoteCommand}"/>
+                     </Grid>
+                 </StackPanel>
+             </GroupBox>
+
+            <!-- History Feed -->
+            <GroupBox Grid.Row="2" Header="İşlem Geçmişi (Timeline)" Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <DataGrid ItemsSource="{Binding JobHistory}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat='dd.MM.yyyy HH:mm'}" Width="120"/>
+                        <DataGridTextColumn Header="Durum" Binding="{Binding StatusChange}" Width="120"/>
+                        <DataGridTextColumn Header="Not / İşlem" Binding="{Binding TechnicianNote}" Width="*"/>
+                        <DataGridTextColumn Header="Kullanıcı" Binding="{Binding UserId}" Width="80"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </GroupBox>
+            
+            <!-- Empty State -->
+            <TextBlock Grid.Row="1" Text="Lütfen soldan bir kayıt seçin." 
+                       HorizontalAlignment="Center" VerticalAlignment="Center" 
+                       FontSize="18" Foreground="Gray"
+                       Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverted}"/> <!-- Need inverted converter or trigger -->
+        </Grid>
+    </Grid>
+    
+</Window>

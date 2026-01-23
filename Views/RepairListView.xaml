@@ -1,0 +1,279 @@
+<UserControl x:Class="KamatekCrm.Views.RepairListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
+             mc:Ignorable="d"
+             Background="{StaticResource BackgroundColor}"
+             d:DesignHeight="600" d:DesignWidth="900">
+
+    <UserControl.DataContext>
+        <vm:RepairListViewModel/>
+    </UserControl.DataContext>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- Başlık -->
+            <RowDefinition Height="Auto"/>  <!-- Filtre Bar -->
+            <RowDefinition Height="*"/>     <!-- DataGrid -->
+            <RowDefinition Height="Auto"/>  <!-- Footer -->
+        </Grid.RowDefinitions>
+
+        <!-- ===== BAŞLIK ===== -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <TextBlock Text="🔧" FontSize="28" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="CİHAZ KABUL &amp; TAMİR LİSTESİ" 
+                           FontSize="22" FontWeight="Bold" Foreground="#1565C0"/>
+                <TextBlock Text="Serviste bulunan cihazlar ve tamir durumları" 
+                           FontSize="12" Foreground="{StaticResource TextSecondaryColor}"/>
+            </StackPanel>
+            
+            <!-- Yenile butonu -->
+            <Button Content="🔄 Yenile" 
+                    Style="{StaticResource SecondaryButton}"
+                    Command="{Binding RefreshCommand}"
+                    Margin="30,0,0,0"
+                    VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- ===== FİLTRE BAR ===== -->
+        <Border Grid.Row="1" Style="{StaticResource FilterBarPanel}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Durum Filtresi -->
+                <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                    <TextBlock Text="Durum" FontSize="11" Foreground="#888" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding StatusOptions}"
+                              SelectedValue="{Binding SelectedStatus}"
+                              SelectedValuePath="Status"
+                              DisplayMemberPath="FullDisplay"
+                              Width="180"
+                              Style="{StaticResource ModernComboBox}"/>
+                </StackPanel>
+
+                <!-- Başlangıç Tarihi -->
+                <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                    <TextBlock Text="Başlangıç" FontSize="11" Foreground="#888" Margin="0,0,0,4"/>
+                    <DatePicker SelectedDate="{Binding StartDate}"
+                                Width="130"
+                                Style="{StaticResource ModernDatePicker}"/>
+                </StackPanel>
+
+                <!-- Bitiş Tarihi -->
+                <StackPanel Grid.Column="2" Margin="0,0,20,0">
+                    <TextBlock Text="Bitiş" FontSize="11" Foreground="#888" Margin="0,0,0,4"/>
+                    <DatePicker SelectedDate="{Binding EndDate}"
+                                Width="130"
+                                Style="{StaticResource ModernDatePicker}"/>
+                </StackPanel>
+
+                <!-- Arama -->
+                <Border Grid.Column="3" Background="#F5F5F5" CornerRadius="6" Padding="10,0" 
+                        VerticalAlignment="Bottom" Height="34" Margin="0,0,12,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="🔍" FontSize="14" VerticalAlignment="Center" 
+                                   Foreground="#999" Margin="0,0,8,0"/>
+                        <TextBox Grid.Column="1" 
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 VerticalAlignment="Center"
+                                 FontSize="13"/>
+                    </Grid>
+                </Border>
+
+                <!-- Temizle -->
+                <Button Grid.Column="4" Content="✕ Temizle"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding ClearFiltersCommand}"
+                        VerticalAlignment="Bottom"/>
+            </Grid>
+        </Border>
+
+        <!-- ===== DATA GRID ===== -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="0">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" Opacity="0.08" ShadowDepth="2"/>
+            </Border.Effect>
+            
+            <DataGrid ItemsSource="{Binding FilteredRepairJobs}"
+                      Style="{StaticResource ModernDataGrid}"
+                      RowHeight="52"
+                      BorderThickness="0"
+                      IsReadOnly="True">
+
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource ModernDataGridColumnHeader}">
+                        <Setter Property="Background" Value="#1565C0"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Cursor" Value="Hand"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F5F5F5"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#E3F2FD"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.RowStyle>
+
+                <DataGrid.Columns>
+                    <!-- Ticket No (Badge) -->
+                    <DataGridTemplateColumn Header="Ticket" Width="90">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Background="#E3F2FD" CornerRadius="4" Padding="8,4"
+                                        HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding TicketNo}" 
+                                               FontWeight="Bold" FontSize="11"
+                                               Foreground="#1565C0"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Müşteri -->
+                    <DataGridTextColumn Header="Müşteri" Binding="{Binding CustomerName}" Width="140">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="8,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Cihaz (Marka/Model + Seri No) -->
+                    <DataGridTemplateColumn Header="Cihaz" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel VerticalAlignment="Center" Margin="8,0">
+                                    <TextBlock Text="{Binding DeviceDisplay}" FontWeight="Medium"/>
+                                    <TextBlock Text="{Binding SerialNumber}" 
+                                               FontSize="11" Foreground="#888"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Durum (Status Badge) -->
+                    <DataGridTemplateColumn Header="Durum" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Background="{Binding StatusBgColor}" 
+                                        CornerRadius="12" Padding="10,4"
+                                        HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding StatusDisplay}" 
+                                               FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{Binding StatusColor}"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Gün -->
+                    <DataGridTemplateColumn Header="Gün" Width="60">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="{Binding DaysInShop}"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                            <Setter Property="Foreground" Value="#4CAF50"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding DaysInShop}" Value="0">
+                                                    <Setter Property="Text" Value="Bugün"/>
+                                                    <Setter Property="FontSize" Value="10"/>
+                                                </DataTrigger>
+                                                <DataTrigger Value="True">
+                                                    <DataTrigger.Binding>
+                                                        <Binding Path="DaysInShop" Converter="{x:Null}"/>
+                                                    </DataTrigger.Binding>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Ücret -->
+                    <DataGridTextColumn Header="Ücret" Binding="{Binding Price, StringFormat='{}{0:N0} ₺'}" Width="90">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Foreground" Value="#E65100"/>
+                                <Setter Property="Margin" Value="0,0,8,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Aksiyonlar -->
+                    <DataGridTemplateColumn Header="" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Content="💬" 
+                                            Style="{StaticResource IconActionButton}"
+                                            ToolTip="Müşteriye SMS/WP Gönder"
+                                            Command="{Binding DataContext.NotifyCustomerCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                    <Button Content="📷" 
+                                            Style="{StaticResource IconActionButton}"
+                                            ToolTip="Cihaz Fotoğrafları"
+                                            Command="{Binding DataContext.ShowRepairPhotosCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                    <Button Content="🖨️" 
+                                            Style="{StaticResource IconActionButton}"
+                                            ToolTip="Servis Fişi Yazdır"
+                                            Command="{Binding DataContext.PrintTicketCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- ===== FOOTER ===== -->
+        <Border Grid.Row="3" Background="White" CornerRadius="6" Padding="16,10" Margin="0,12,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock VerticalAlignment="Center">
+                    <Run Text="Toplam:" Foreground="#888"/>
+                    <Run Text="{Binding TotalCount, Mode=OneWay}" FontWeight="Bold" Foreground="#1565C0"/>
+                    <Run Text="kayıt" Foreground="#888"/>
+                </TextBlock>
+                
+                <!-- İleride pagination eklenebilir -->
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

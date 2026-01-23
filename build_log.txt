@@ -1,0 +1,13 @@
+  Geri y├╝klenecek projeler belirleniyor...
+  Geri y├╝kleme i├ğin t├╝m projeler g├╝ncel.
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\Views\FaultTicketWindow.xaml(8,26): error MC3000: 'An error occurred while parsing EntityName. Line 8, position 26.' XML ge├ğerli de─şil. [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\Views\ProjectWorkflowWindow.xaml(8,27): error MC3000: 'An error occurred while parsing EntityName. Line 8, position 27.' XML ge├ğerli de─şil. [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.csproj]
+
+Olu┼şturma BA┼ŞARISIZ OLDU.
+
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\Views\FaultTicketWindow.xaml(8,26): error MC3000: 'An error occurred while parsing EntityName. Line 8, position 26.' XML ge├ğerli de─şil. [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\Views\ProjectWorkflowWindow.xaml(8,27): error MC3000: 'An error occurred while parsing EntityName. Line 8, position 27.' XML ge├ğerli de─şil. [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.csproj]
+    0 Uyar─▒
+    2 Hata
+
+Ge├ğen S├╝re 00:00:01.25

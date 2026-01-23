@@ -1,0 +1,84 @@
+<UserControl x:Class="KamatekCrm.Views.ToastNotificationControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:services="clr-namespace:KamatekCrm.Services"
+             HorizontalAlignment="Right"
+             VerticalAlignment="Top"
+             Margin="20">
+    
+    <UserControl.DataContext>
+        <Binding Source="{x:Static services:ToastNotificationManager.Instance}"/>
+    </UserControl.DataContext>
+
+    <ItemsControl ItemsSource="{Binding Toasts}"
+                  Visibility="{Binding HasToasts, Converter={StaticResource BoolToVis}}">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <StackPanel/>
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <Border Margin="0,0,0,8"
+                        CornerRadius="8"
+                        MinWidth="280"
+                        MaxWidth="400"
+                        Padding="16,12"
+                        Background="{Binding BackgroundColor}"
+                        BorderBrush="{Binding BorderColor}"
+                        BorderThickness="1,1,1,1">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" Opacity="0.15" ShadowDepth="3"/>
+                    </Border.Effect>
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Icon -->
+                        <TextBlock Grid.Column="0" 
+                                   Text="{Binding Icon}" 
+                                   FontSize="18" 
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,12,0"/>
+                        
+                        <!-- Message -->
+                        <TextBlock Grid.Column="1" 
+                                   Text="{Binding Message}" 
+                                   Foreground="{Binding TextColor}"
+                                   FontSize="13"
+                                   FontWeight="Medium"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center"/>
+                        
+                        <!-- Close Button -->
+                        <Button Grid.Column="2" 
+                                Content="✕" 
+                                FontSize="12"
+                                Width="24" Height="24"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Foreground="{Binding TextColor}"
+                                Opacity="0.6"
+                                Cursor="Hand"
+                                VerticalAlignment="Center"
+                                Margin="12,0,0,0"
+                                Click="DismissButton_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="12">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

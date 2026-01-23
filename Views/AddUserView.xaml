@@ -1,0 +1,201 @@
+<Window x:Class="KamatekCrm.Views.AddUserView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
+        Title="Yeni Kullanıcı Ekle" 
+        SizeToContent="Height"
+        Width="450"
+        MinHeight="500"
+        MaxHeight="700"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F5F5F5">
+    
+    <Window.DataContext>
+        <vm:AddUserViewModel/>
+    </Window.DataContext>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+            <TextBlock Text="👤 Yeni Kullanıcı Ekle" 
+                       FontSize="22" FontWeight="Bold" 
+                       Foreground="#1976D2"/>
+            <TextBlock Text="Admin tarafından kullanıcı oluşturma" 
+                       FontSize="12" Foreground="#757575" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Form -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" 
+                Padding="20" BorderBrush="#E0E0E0" BorderThickness="1">
+            <StackPanel>
+                <!-- Ad -->
+                <TextBlock Text="Ad *" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+                <TextBox x:Name="AdTextBox"
+                         Text="{Binding Ad, UpdateSourceTrigger=PropertyChanged}"
+                         Height="40" FontSize="14" Padding="12,8"
+                         BorderBrush="#BDBDBD" BorderThickness="1">
+                    <TextBox.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </TextBox.Resources>
+                </TextBox>
+
+                <!-- Soyad -->
+                <TextBlock Text="Soyad *" FontWeight="SemiBold" Foreground="#424242" Margin="0,16,0,6"/>
+                <TextBox Text="{Binding Soyad, UpdateSourceTrigger=PropertyChanged}"
+                         Height="40" FontSize="14" Padding="12,8"
+                         BorderBrush="#BDBDBD" BorderThickness="1">
+                    <TextBox.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </TextBox.Resources>
+                </TextBox>
+
+                <!-- Kullanıcı Adı (Manuel) -->
+                <TextBlock Text="Kullanıcı Adı *" FontWeight="SemiBold" Foreground="#424242" Margin="0,16,0,6"/>
+                <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                         Height="40" FontSize="14" Padding="12,8"
+                         BorderBrush="#BDBDBD" BorderThickness="1">
+                    <TextBox.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </TextBox.Resources>
+                </TextBox>
+                <!-- Kullanıcı adı doğrulama mesajı -->
+                <TextBlock Text="{Binding UsernameValidationMessage}" 
+                           FontSize="11" Margin="0,4,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="#2E7D32"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsUsernameAvailable}" Value="False">
+                                    <Setter Property="Foreground" Value="#C62828"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <!-- Rol -->
+                <TextBlock Text="Rol *" FontWeight="SemiBold" Foreground="#424242" Margin="0,12,0,6"/>
+                <ComboBox ItemsSource="{Binding RoleDisplayOptions}"
+                          SelectedItem="{Binding SelectedRoleDisplay}"
+                          Height="40" FontSize="14" Padding="12,8"
+                          BorderBrush="#BDBDBD" BorderThickness="1">
+                    <ComboBox.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </ComboBox.Resources>
+                </ComboBox>
+
+                <!-- Bilgi notu -->
+                <Border Background="#E3F2FD" CornerRadius="6" Padding="12,10" Margin="0,16,0,0">
+                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#1565C0">
+                        <Run FontWeight="SemiBold">ℹ️ Bilgi:</Run>
+                        <LineBreak/>
+                        <Run>• Varsayılan şifre: 1234</Run>
+                        <LineBreak/>
+                        <Run>• Patron = Yönetici yetkisi</Run>
+                        <LineBreak/>
+                        <Run>• Personel = Standart kullanıcı</Run>
+                    </TextBlock>
+                </Border>
+
+                <!-- Status Message -->
+                <Border Margin="0,12,0,0" CornerRadius="6" Padding="12,10"
+                        Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVis}}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="#FFEBEE"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSuccess}" Value="True">
+                                    <Setter Property="Background" Value="#E8F5E9"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" FontSize="12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#C62828"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSuccess}" Value="True">
+                                        <Setter Property="Foreground" Value="#2E7D32"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Buttons -->
+        <Grid Grid.Row="2" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="🗑️ Temizle" 
+                    Command="{Binding ClearCommand}"
+                    Height="44" FontSize="14"
+                    Background="#F5F5F5" Foreground="#424242"
+                    BorderBrush="#BDBDBD" BorderThickness="1"
+                    Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
+            <Button Grid.Column="2" Content="💾 Kaydet" 
+                    Command="{Binding SaveCommand}"
+                    Height="44" FontSize="14" FontWeight="SemiBold"
+                    Foreground="White"
+                    Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#4CAF50"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#43A047"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#BDBDBD"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+    </Grid>
+</Window>
