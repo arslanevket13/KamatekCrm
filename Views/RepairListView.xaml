@@ -135,6 +135,12 @@
                     </Style>
                 </DataGrid.RowStyle>
 
+                <DataGrid.InputBindings>
+                    <MouseBinding MouseAction="LeftDoubleClick" 
+                                  Command="{Binding OpenRepairDetailCommand}"
+                                  CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                </DataGrid.InputBindings>
+
                 <DataGrid.Columns>
                     <!-- Ticket No (Badge) -->
                     <DataGridTemplateColumn Header="Ticket" Width="90">

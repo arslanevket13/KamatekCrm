@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
-    /// Müşteri detay sayfası ViewModel
+    /// Müşteri detay sayfası ViewModel - 360 Derece Görünüm
     /// </summary>
     public class CustomerDetailViewModel : ViewModelBase
     {
@@ -44,6 +44,7 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<ServiceJob> ActiveJobs { get; set; }
         public ObservableCollection<ServiceJob> PastJobs { get; set; }
         public ObservableCollection<Transaction> Transactions { get; set; }
+        public ObservableCollection<SalesOrder> SalesOrders { get; set; }
 
         // Calculated Properties
         private decimal _totalSpent;
@@ -57,10 +58,15 @@ namespace KamatekCrm.ViewModels
             ActiveJobs = new ObservableCollection<ServiceJob>();
             PastJobs = new ObservableCollection<ServiceJob>();
             Transactions = new ObservableCollection<Transaction>();
+            SalesOrders = new ObservableCollection<SalesOrder>();
 
             SaveCommand = new RelayCommand(_ => SaveCustomer(), _ => CanSaveCustomer());
             BackCommand = new RelayCommand(_ => NavigateBack());
             NewServiceJobCommand = new RelayCommand(_ => CreateNewServiceJob());
+            
+            // Financial Commands
+            AddPaymentCommand = new RelayCommand(_ => AddTransaction(TransactionType.Payment));
+            AddDebtCommand = new RelayCommand(_ => AddTransaction(TransactionType.Debt));
 
             LoadCustomerData();
         }
@@ -172,9 +178,17 @@ namespace KamatekCrm.ViewModels
         public decimal TotalBalance
         {
             get => _totalBalance;
-            private set => SetProperty(ref _totalBalance, value);
+            private set 
+            {
+               if(SetProperty(ref _totalBalance, value))
+               {
+                   OnPropertyChanged(nameof(BalanceColor));
+               }
+            }
         }
 
+        public string BalanceColor => TotalBalance > 0 ? "#F44336" : (TotalBalance < 0 ? "#2E7D32" : "#757575");
+        
         /// <summary>
         /// Aktif iş sayısı
         /// </summary>
@@ -187,6 +201,8 @@ namespace KamatekCrm.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand BackCommand { get; }
         public ICommand NewServiceJobCommand { get; }
+        public ICommand AddPaymentCommand { get; }
+        public ICommand AddDebtCommand { get; }
 
         #endregion
 
@@ -200,6 +216,7 @@ namespace KamatekCrm.ViewModels
                 _customer = _context.Customers
                     .Include(c => c.ServiceJobs)
                     .Include(c => c.Transactions)
+                    //.Include(c => c.SalesOrders) // SalesOrders ilişkisi Customer modelinde tanımlı olmalı
                     .FirstOrDefault(c => c.Id == _customerId);
 
                 if (_customer == null)
@@ -207,6 +224,9 @@ namespace KamatekCrm.ViewModels
                     MessageBox.Show("Müşteri bulunamadı!", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
+
+                // Customer modelinde SalesOrders koleksiyonu yoksa manuel yükle
+                var salesOrders = _context.SalesOrders.Where(s => s.CustomerId == _customerId).ToList();
 
                 // Editable alanları doldur
                 FullName = _customer.FullName;
@@ -255,6 +275,13 @@ namespace KamatekCrm.ViewModels
                     Transactions.Add(transaction);
                 }
 
+                // SalesOrders koleksiyonunu doldur
+                SalesOrders.Clear();
+                foreach(var order in salesOrders.OrderByDescending(o => o.Date))
+                {
+                    SalesOrders.Add(order);
+                }
+
                 // Hesaplamaları yap
                 CalculateTotals();
             }
@@ -266,13 +293,76 @@ namespace KamatekCrm.ViewModels
 
         private void CalculateTotals()
         {
-            // Toplam harcama (ServiceJob fiyatları toplamı)
-            TotalSpent = ServiceJobs.Sum(j => j.Price);
+            // Toplam harcama (Servis + Satış)
+            var serviceTotal = ServiceJobs.Sum(j => j.Price);
+            var salesTotal = SalesOrders.Sum(s => (decimal)s.TotalAmount); // SalesOrder TotalAmount double olabilir
+            TotalSpent = serviceTotal + salesTotal;
 
             // Toplam bakiye (Borçlar - Ödemeler)
             var totalDebts = Transactions.Where(t => t.Type == Enums.TransactionType.Debt).Sum(t => t.Amount);
             var totalPayments = Transactions.Where(t => t.Type == Enums.TransactionType.Payment).Sum(t => t.Amount);
+            
+            // Pozitif bakiye = Müşteri Borçlu (Kırmızı)
+            // Negatif bakiye = Müşteri Alacaklı (Yeşil)
             TotalBalance = totalDebts - totalPayments;
+        }
+
+        private void AddTransaction(TransactionType type)
+        {
+            var title = type == TransactionType.Payment ? "Ödeme/Tahsilat Al" : "Borç Ekle";
+            var label = type == TransactionType.Payment ? "Tahsilat Tutarı:" : "Borç Tutarı:";
+            
+            var input = Microsoft.VisualBasic.Interaction.InputBox(
+                $"{label}\n(Açıklama girmek için '100 - Açıklama' formatını kullanabilirsiniz)", 
+                title, "0");
+
+            if (string.IsNullOrWhiteSpace(input)) return;
+
+            decimal amount = 0;
+            string description = type == TransactionType.Payment ? "Tahsilat" : "Borç Yansıtma";
+
+            // Parse input format "Amount - Description"
+            if (input.Contains("-"))
+            {
+                var parts = input.Split('-', 2);
+                if (decimal.TryParse(parts[0].Trim(), out decimal parsedAmount))
+                {
+                    amount = parsedAmount;
+                    description = parts[1].Trim();
+                }
+            }
+            else
+            {
+                decimal.TryParse(input, out amount);
+            }
+
+            if (amount <= 0)
+            {
+                MessageBox.Show("Geçerli bir tutar giriniz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var transaction = new Transaction
+                {
+                    CustomerId = _customerId,
+                    Type = type,
+                    Amount = amount,
+                    Date = DateTime.Now,
+                    Description = description
+                };
+
+                _context.Transactions.Add(transaction);
+                _context.SaveChanges();
+
+                Transactions.Insert(0, transaction);
+                CalculateTotals();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"İşlem eklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private bool CanSaveCustomer()

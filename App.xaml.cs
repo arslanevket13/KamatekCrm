@@ -52,9 +52,26 @@ namespace KamatekCrm
             }
         }
 
-        /// <summary>
-        /// Veritabanını başlat ve migration'ları uygula
-        /// </summary>
+        protected override void OnExit(ExitEventArgs e)
+        {
+            base.OnExit(e);
+
+            try
+            {
+                // Uygulama kapanırken otomatik yedek al
+                var backupService = new BackupService();
+                backupService.BackupDatabase();
+                
+                // Loglama veya debug eklenebilir
+                System.Diagnostics.Debug.WriteLine("Auto backup completed on exit.");
+            }
+            catch (Exception ex)
+            {
+                // Kapanışta hata olursa kullanıcıyı rahatsız etmeyelim, ama loglayalım
+                System.Diagnostics.Debug.WriteLine($"Auto backup failed: {ex.Message}");
+            }
+        }
+
         /// <summary>
         /// Veritabanını başlat ve migration'ları uygula
         /// </summary>
@@ -64,6 +81,9 @@ namespace KamatekCrm
             try 
             {
                 context.Database.Migrate(); // Migration kullan (EnsureCreated yerine)
+                
+                // Demo verilerini yükle (Seeder)
+                DbSeeder.SeedDemoData(context);
             }
             catch (Exception ex)
             {

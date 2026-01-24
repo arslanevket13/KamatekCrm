@@ -127,6 +127,11 @@
                                 Style="{StaticResource NavButton}"
                                 Command="{Binding NavigateToSystemLogsCommand}"
                                 Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
+
+                        <Button Content="⚙️ Ayarlar" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToSettingsCommand}"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
                     </StackPanel>
                 </ScrollViewer>
 

@@ -58,6 +58,7 @@ namespace KamatekCrm.ViewModels
         public ICommand OpenDirectSalesCommand { get; }
         public ICommand NavigateToRepairListCommand { get; }
         public ICommand NavigateToFieldJobListCommand { get; }
+        public ICommand NavigateToSettingsCommand { get; }
 
         #endregion
 
@@ -83,7 +84,9 @@ namespace KamatekCrm.ViewModels
             OpenRepairTrackingCommand = new RelayCommand(_ => OpenRepairTracking());
             OpenDirectSalesCommand = new RelayCommand(_ => OpenDirectSales());
             NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
+            NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
             NavigateToFieldJobListCommand = new RelayCommand(_ => NavigateToFieldJobList());
+            NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings());
 
             // Varsayılan olarak Dashboard'u göster
             NavigateToDashboard();
@@ -136,6 +139,8 @@ namespace KamatekCrm.ViewModels
             var window = new DirectSalesWindow();
             window.Show();
         }
+
+        private void NavigateToSettings() => CurrentView = new SettingsViewModel();
 
         #endregion
 

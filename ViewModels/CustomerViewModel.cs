@@ -460,11 +460,22 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedCustomer == null) return;
 
-            // MainViewModel'e eriş ve müşteri detay sayfasına git
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow?.DataContext is MainViewModel mainViewModel)
+            // Fix: User requested to access MainViewModel via NavigationService
+            // We handle both MainViewModel and MainContentViewModel to be robust against class naming confusion
+            var currentView = NavigationService.Instance.CurrentView;
+
+            if (currentView is MainViewModel mainVM)
             {
-                mainViewModel.NavigateToCustomerDetail(SelectedCustomer.Id);
+                mainVM.NavigateToCustomerDetail(SelectedCustomer.Id);
+            }
+            else if (currentView is MainContentViewModel mainContentVM)
+            {
+                mainContentVM.NavigateToCustomerDetail(SelectedCustomer.Id);
+            }
+            else
+            {
+                // Fallback: This shouldn't happen if shell is loaded
+                MessageBox.Show("Navigasyon hatası: Ana sayfa yüklenemedi. Lütfen uygulamayı yeniden başlatın.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

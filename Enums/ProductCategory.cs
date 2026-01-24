@@ -31,6 +31,9 @@ namespace KamatekCrm.Enums
         [Description("Fiber Optik")]
         FiberOptic = 7,
 
+        [Description("Kablo ve Altyapı")]
+        Cable = 8,
+
         [Description("Diğer / Genel")]
         Other = 99
     }

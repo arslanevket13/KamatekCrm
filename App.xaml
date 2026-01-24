@@ -71,6 +71,10 @@
                 <views:FieldJobListView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+                <views:SettingsView/>
+            </DataTemplate>
+
             <!-- Global Converters -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         </ResourceDictionary>

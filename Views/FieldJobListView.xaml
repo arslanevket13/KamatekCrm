@@ -149,6 +149,12 @@
                     </Style>
                 </DataGrid.RowStyle>
 
+                <DataGrid.InputBindings>
+                    <MouseBinding MouseAction="LeftDoubleClick" 
+                                  Command="{Binding OpenFieldJobDetailCommand}"
+                                  CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                </DataGrid.InputBindings>
+
                 <DataGrid.Columns>
                     <!-- Job No (Badge) -->
                     <DataGridTemplateColumn Header="İş No" Width="90">

@@ -11,6 +11,8 @@ using KamatekCrm.Enums;
 using KamatekCrm.Models;
 using Microsoft.EntityFrameworkCore;
 
+using KamatekCrm.Services;
+
 namespace KamatekCrm.ViewModels
 {
     public class RepairViewModel : ViewModelBase
@@ -218,11 +220,10 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void UpdateStatus(RepairStatus? newStatus)
+        private async void UpdateStatus(RepairStatus? newStatus)
         {
-             // ... (Implementation remains same, just ensuring context)
             if (SelectedJob == null || newStatus == null) return;
-            // ...
+
              var oldStatus = SelectedJob.RepairStatus;
             SelectedJob.RepairStatus = newStatus.Value;
             
@@ -244,6 +245,25 @@ namespace KamatekCrm.ViewModels
             };
             _context.ServiceJobHistories.Add(history);
             _context.SaveChanges();
+
+            // SMS Bildirimi (Otomatik)
+            if (newStatus == RepairStatus.ReadyForPickup && SelectedJob.Customer != null)
+            {
+                if (!string.IsNullOrWhiteSpace(SelectedJob.Customer.PhoneNumber))
+                {
+                    try
+                    {
+                        var smsService = new SmsService();
+                        string msg = $"Sayın {SelectedJob.Customer.FullName}, cihazınızın (Takip No: {SelectedJob.Id}) tamir işlemleri tamamlanmıştır. Teslim alabilirsiniz. Kamatek Teknik Servis";
+                        await smsService.SendSmsAsync(SelectedJob.Customer.PhoneNumber, msg);
+                        MessageBox.Show("Müşteriye otomatik SMS bildirimi gönderildi.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"SMS gönderimi başarısız: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+            }
 
             NewNoteText = string.Empty; // Notu temizle
             LoadHistory(SelectedJob.Id);

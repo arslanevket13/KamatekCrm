@@ -222,6 +222,7 @@ namespace KamatekCrm.ViewModels
 
             SaveCommand = new RelayCommand(_ => Save(), _ => CanSave());
             ExportPdfCommand = new RelayCommand(_ => ExportPdf());
+            SendEmailCommand = new RelayCommand(_ => SendEmail(), _ => CanSave());
             CancelCommand = new RelayCommand(CloseWindow);
 
             LoadData();
@@ -646,39 +647,94 @@ namespace KamatekCrm.ViewModels
 
             if (dialog.ShowDialog() == true)
             {
-                try
-                {
-                    var pdfService = new PdfService();
+                GeneratePdf(dialog.FileName, true);
+            }
+        }
+
+        private void GeneratePdf(string filePath, bool openAfter)
+        {
+            try
+            {
+                var pdfService = new PdfService();
                     
-                    // Geçici proje nesnesi oluştur (Eğer henüz kaydedilmediyse UI'dan verileri al)
-                    var exportProject = CurrentProject;
-                    exportProject.Title = ProjectName;
-                    if(SelectedCustomer != null) exportProject.Customer = SelectedCustomer;
+                // Geçici proje nesnesi oluştur (Eğer henüz kaydedilmediyse UI'dan verileri al)
+                var exportProject = CurrentProject;
+                exportProject.Title = ProjectName;
+                if(SelectedCustomer != null) exportProject.Customer = SelectedCustomer;
 
-                    pdfService.GenerateProjectQuote(exportProject, RootNodes.ToList(), dialog.FileName);
+                pdfService.GenerateProjectQuote(exportProject, RootNodes.ToList(), filePath);
 
+                if (openAfter)
+                {
                     var result = MessageBox.Show(
                         "PDF başarıyla oluşturuldu. Dosyayı açmak ister misiniz?", 
                         "Başarılı", 
                         MessageBoxButton.YesNo, 
                         MessageBoxImage.Question);
 
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        new System.Diagnostics.Process
-                        {
-                            StartInfo = new System.Diagnostics.ProcessStartInfo(dialog.FileName)
-                            {
-                                UseShellExecute = true
-                            }
-                        }.Start();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"PDF oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                     if (result == MessageBoxResult.Yes)
+                     {
+                         new System.Diagnostics.Process
+                         {
+                             StartInfo = new System.Diagnostics.ProcessStartInfo(filePath)
+                             {
+                                 UseShellExecute = true
+                             }
+                         }.Start();
+                     }
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"PDF oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public ICommand SendEmailCommand { get; }
+
+        private async void SendEmail()
+        {
+             if (SelectedCustomer == null || string.IsNullOrWhiteSpace(SelectedCustomer.Email))
+             {
+                 MessageBox.Show("Müşterinin e-posta adresi kayıtlı değil.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+                 return;
+             }
+
+             if (RootNodes == null || !RootNodes.Any())
+             {
+                 MessageBox.Show("Gönderilecek veri yok.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                 return;
+             }
+
+             var result = MessageBox.Show(
+                 $"{SelectedCustomer.Email} adresine teklif gönderilecek. Onaylıyor musunuz?",
+                 "E-Posta Gönder",
+                 MessageBoxButton.YesNo,
+                 MessageBoxImage.Question);
+
+             if (result != MessageBoxResult.Yes) return;
+
+             try
+             {
+                 // Geçici dosya oluştur
+                 string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Teklif_{ProjectName}_{DateTime.Now:yyyyMMdd}.pdf");
+                 
+                 // PDF Oluştur
+                 GeneratePdf(tempPath, false);
+
+                 // Gönder
+                 var emailService = new EmailService();
+                 string subject = $"Teklif: {ProjectName}";
+                 string body = $"Sayın {SelectedCustomer.FullName},<br><br>Projenize ait teknik ve ticari teklifimiz ektedir.<br><br>Saygılarımızla,<br>Kamatek Teknik Servis";
+
+                 await emailService.SendQuoteEmailAsync(SelectedCustomer.Email, subject, body, tempPath);
+
+                 MessageBox.Show("E-posta başarıyla gönderildi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+             }
+             catch (Exception ex)
+             {
+                 MessageBox.Show($"E-posta hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+             }
         }
 
         private void CloseWindow(object? parameter)

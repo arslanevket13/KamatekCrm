@@ -60,6 +60,16 @@ namespace KamatekCrm.ViewModels
         public ICommand NavigateToServiceJobsCommand { get; }
 
         /// <summary>
+        /// Tamir Listesi sayfasına git komutu
+        /// </summary>
+        public ICommand NavigateToRepairListCommand { get; }
+
+        /// <summary>
+        /// Saha İşleri sayfasına git komutu
+        /// </summary>
+        public ICommand NavigateToFieldJobListCommand { get; }
+
+        /// <summary>
         /// Stok Sayım sayfasına git komutu
         /// </summary>
         public ICommand NavigateToStockCountCommand { get; }
@@ -96,11 +106,14 @@ namespace KamatekCrm.ViewModels
             NavigateToCustomersCommand = new RelayCommand(_ => NavigateToCustomers());
             NavigateToProductsCommand = new RelayCommand(_ => NavigateToProducts());
             NavigateToServiceJobsCommand = new RelayCommand(_ => NavigateToServiceJobs());
+            NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
+            NavigateToFieldJobListCommand = new RelayCommand(_ => NavigateToFieldJobList());
             NavigateToStockCountCommand = new RelayCommand(_ => NavigateToStockCount());
             NavigateToReportsCommand = new RelayCommand(_ => NavigateToReports());
             NavigateToUsersCommand = new RelayCommand(_ => NavigateToUsers(), _ => IsAdmin);
             LogoutCommand = new RelayCommand(_ => Logout());
             OpenFaultTicketCommand = new RelayCommand(_ => OpenFaultTicket());
+            NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings());
 
             // Varsayılan olarak Dashboard sayfasını göster
             NavigateToDashboard();
@@ -112,6 +125,8 @@ namespace KamatekCrm.ViewModels
         private void NavigateToCustomers() => CurrentView = new CustomersViewModel();
         private void NavigateToProducts() => CurrentView = new ProductViewModel();
         private void NavigateToServiceJobs() => CurrentView = new ServiceJobViewModel();
+        public void NavigateToRepairList() => CurrentView = new RepairListViewModel(); // Public for external access if needed
+        public void NavigateToFieldJobList() => CurrentView = new FieldJobListViewModel();
         private void NavigateToStockCount() => CurrentView = new StockCountViewModel();
         private void NavigateToReports() => CurrentView = new StockReportsViewModel();
         private void NavigateToUsers() => CurrentView = new UsersViewModel();
@@ -132,6 +147,13 @@ namespace KamatekCrm.ViewModels
             var window = new FaultTicketWindow();
             window.ShowDialog();
         }
+
+        private void NavigateToSettings() => CurrentView = new SettingsViewModel();
+
+        /// <summary>
+        /// Ayarlar sayfasına git komutu
+        /// </summary>
+        public ICommand NavigateToSettingsCommand { get; }
 
         #endregion
 

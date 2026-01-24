@@ -42,6 +42,22 @@ namespace KamatekCrm.Models
         public decimal TotalAmount { get; set; }
 
         /// <summary>
+        /// Müşteri ID (Foreign Key)
+        /// </summary>
+        public int? CustomerId { get; set; }
+
+        /// <summary>
+        /// İlgili Müşteri
+        /// </summary>
+        [ForeignKey(nameof(CustomerId))]
+        public virtual Customer? Customer { get; set; }
+
+        /// <summary>
+        /// Sipariş Durumu
+        /// </summary>
+        public OrderStatus Status { get; set; } = OrderStatus.Completed;
+
+        /// <summary>
         /// Müşteri Adı (Opsiyonel - varsayılan: Perakende Müşteri)
         /// </summary>
         [MaxLength(200)]
