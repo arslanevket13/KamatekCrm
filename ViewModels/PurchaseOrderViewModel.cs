@@ -127,7 +127,7 @@ namespace KamatekCrm.ViewModels
                 }
 
                 // Toplam Borç
-                TotalSupplierDebt = _context.Suppliers.Sum(s => s.Balance);
+                TotalSupplierDebt = _context.Suppliers.Select(s => s.Balance).AsEnumerable().Sum();
 
                 // Ürünler (PO için)
                 Products.Clear();
