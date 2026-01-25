@@ -73,29 +73,49 @@ namespace KamatekCrm.ViewModels
 
         public void Drop(IDropInfo dropInfo)
         {
-            if (dropInfo.Data is ServiceProject project)
+            try
             {
-                var sourceCollection = dropInfo.DragInfo.SourceCollection as ObservableCollection<ServiceProject>;
-                var targetCollection = dropInfo.TargetCollection as ObservableCollection<ServiceProject>;
+                // Güvenli Tip Kontrolü (Robust Type Checking)
+                if (dropInfo.Data is ServiceProject project && dropInfo.TargetCollection is ObservableCollection<ServiceProject> targetCollection)
+                {
+                    var sourceCollection = dropInfo.DragInfo.SourceCollection as ObservableCollection<ServiceProject>;
+                    if (sourceCollection == null) return;
 
-                if (targetCollection == null || sourceCollection == null) return;
+                    // UI Update: Remove from source, Add to target
+                    // Kaynak ve Hedef aynı ise sadece sıra değişimi (Reorder)
+                    if (sourceCollection == targetCollection)
+                    {
+                         // Reorder logic (GongSolutions handle edebilir, manuel de yapılabilir)
+                         var oldIndex = sourceCollection.IndexOf(project);
+                         if (oldIndex != -1)
+                         {
+                             sourceCollection.Move(oldIndex, dropInfo.InsertIndex);
+                             // DB'de SortOrder güncellenebilir (Şimdilik pas geçiyoruz)
+                         }
+                    }
+                    else
+                    {
+                        // Farklı kolona taşıma
+                        sourceCollection.Remove(project);
+                        targetCollection.Insert(dropInfo.InsertIndex, project);
 
-                // UI Update
-                sourceCollection.Remove(project);
-                targetCollection.Insert(dropInfo.InsertIndex, project);
+                        // Database Update logic...
+                        PipelineStage newStage;
 
-                // Database Update logic...
-                // Hedef koleksiyona göre PipelineStage'i belirle
-                PipelineStage newStage;
+                        if (targetCollection == Leads) newStage = PipelineStage.Lead;
+                        else if (targetCollection == Quoted) newStage = PipelineStage.Quoted;
+                        else if (targetCollection == Negotiating) newStage = PipelineStage.Negotiating;
+                        else if (targetCollection == Won) newStage = PipelineStage.Won;
+                        else if (targetCollection == Lost) newStage = PipelineStage.Lost;
+                        else return; // Tanımsız hedef
 
-                if (targetCollection == Leads) newStage = PipelineStage.Lead;
-                else if (targetCollection == Quoted) newStage = PipelineStage.Quoted;
-                else if (targetCollection == Negotiating) newStage = PipelineStage.Negotiating;
-                else if (targetCollection == Won) newStage = PipelineStage.Won;
-                else if (targetCollection == Lost) newStage = PipelineStage.Lost;
-                else return; // Hata
-
-                UpdateProjectStage(project, newStage);
+                        UpdateProjectStage(project, newStage);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Taşıma işlemi sırasında hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

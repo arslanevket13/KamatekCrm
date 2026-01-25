@@ -27,8 +27,23 @@ namespace KamatekCrm
                 // 3. Varsayılan admin kullanıcısı oluştur
                 AuthService.CreateDefaultUser();
 
-                // 4. SLA Otomasyon Servisini Başlat (Arka Plan)
-                System.Threading.Tasks.Task.Run(async () => await new SlaService().CheckAndGenerateJobsAsync());
+                // 4. SLA Otomasyon Servisini Başlat (TAM İZOLE ARKA PLAN)
+                // UI Thread'i bloklamaması için tamamen ayrı bir Task içinde çalıştırıyoruz.
+                Task.Run(async () => 
+                {
+                    try 
+                    {
+                        // Servis kendi içinde DbContext yönetiyor, burada sadece çağırıyoruz.
+                        // Arka planda sessizce çalışır.
+                        var slaService = new SlaService();
+                        await slaService.CheckAndGenerateJobsAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Arka plan hatası UI'ı çökertmesin
+                        System.Diagnostics.Debug.WriteLine($"SLA Service Background Error: {ex.Message}");
+                    }
+                });
 
                 // DEBUG: Veritabanı yolunu göster
                 string dbPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "KamatekCrm.db");

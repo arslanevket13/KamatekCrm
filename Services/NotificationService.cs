@@ -10,6 +10,13 @@ namespace KamatekCrm.Services
 {
     public class NotificationService
     {
+        // Memory Cache for displayed notifications to prevent loops
+        // Gerçek hayat senaryosunda bu bir DB tablosu veya LocalStorage olmalı.
+        private static readonly HashSet<string> _readNotifications = new HashSet<string>();
+        
+        // Servis sınıfı her çağrıldığında yeni instance oluşuyorsa Static kullanmak zorundayız.
+        // Singleton olarak kaydedildiyse instance field olabilir. Güvence için static kullanıyoruz.
+
         public List<NotificationItem> GetNotifications()
         {
             var notifications = new List<NotificationItem>();
@@ -27,18 +34,23 @@ namespace KamatekCrm.Services
 
                     foreach (var item in lowStock)
                     {
-                        notifications.Add(new NotificationItem
+                        var key = $"STOCK_{item.ProductName}_{DateTime.Today.ToShortDateString()}";
+                        if (!_readNotifications.Contains(key)) // Okunmadıysa ekle
                         {
-                            Title = "Düşük Stok",
-                            Message = $"{item.ProductName} stoğu kritik seviyede ({item.TotalStockQuantity} adet).",
-                            Type = NotificationType.Warning,
-                            ActionLabel = "Sipariş Ver"
-                        });
+                            notifications.Add(new NotificationItem
+                            {
+                                Id = key,
+                                Title = "Düşük Stok",
+                                Message = $"{item.ProductName} stoğu kritik seviyede ({item.TotalStockQuantity} adet).",
+                                Type = NotificationType.Warning,
+                                ActionLabel = "Sipariş Ver"
+                            });
+                        }
                     }
 
                     // 2. Unutulmuş Teklifler (7 günden eski Lead/Quoted)
                     var staleDate = DateTime.Today.AddDays(-7);
-                    var staleQuotes = context.ServiceProjects // ServiceProject kullanıyoruz
+                    var staleQuotes = context.ServiceProjects
                         .Include(p => p.Customer)
                         .Where(p => (p.PipelineStage == PipelineStage.Lead || p.PipelineStage == PipelineStage.Quoted) 
                                  && p.CreatedDate <= staleDate)
@@ -47,13 +59,18 @@ namespace KamatekCrm.Services
 
                     foreach (var quote in staleQuotes)
                     {
-                        notifications.Add(new NotificationItem
+                        var key = $"QUOTE_{quote.Id}_{DateTime.Today.ToShortDateString()}";
+                        if (!_readNotifications.Contains(key))
                         {
-                            Title = "Bekleyen Fırsat",
-                            Message = $"{quote.Customer?.FullName} - {quote.Title} (7+ gündür işlem görmedi).",
-                            Type = NotificationType.Info,
-                            ActionLabel = "İncele"
-                        });
+                            notifications.Add(new NotificationItem
+                            {
+                                Id = key,
+                                Title = "Bekleyen Fırsat",
+                                Message = $"{quote.Customer?.FullName} - {quote.Title} (7+ gündür işlem görmedi).",
+                                Type = NotificationType.Info,
+                                ActionLabel = "İncele"
+                            });
+                        }
                     }
                 }
             }
@@ -64,10 +81,22 @@ namespace KamatekCrm.Services
 
             return notifications;
         }
+
+        /// <summary>
+        /// Bildirimi okundu olarak işaretle
+        /// </summary>
+        public void MarkAsRead(string id)
+        {
+            if (!string.IsNullOrEmpty(id))
+            {
+                _readNotifications.Add(id);
+            }
+        }
     }
 
     public class NotificationItem
     {
+        public string Id { get; set; } = string.Empty; // Unique Key for tracking read state
         public string Title { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;
         public NotificationType Type { get; set; } = NotificationType.Info;
