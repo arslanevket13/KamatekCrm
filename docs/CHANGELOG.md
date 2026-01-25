@@ -35,6 +35,7 @@ CRM uygulaması 4 büyük kurumsal modül ile ERP seviyesine yükseltildi.
 - **FinanceViewModel**: `LoadData()` metodunda benzer LINQ Translation hatası düzeltildi (`IsExpense` yerine `TransactionType`).
 - **PurchaseOrderViewModel**: `TotalSupplierDebt` hesaplarken SQLite `Sum` (decimal) hatası giderildi (`AsEnumerable` ile client-side calculation).
 - **DashboardViewModel**: `LoadFinancialSummary` metodunda LINQ Translation hatası oluşabilecek sorgular explicit enum kontrolü ile güvenli hale getirildi.
+- **AnalyticsViewModel & DashboardViewModel**: `decimal` tipindeki alanlar için SQLite `Sum` hatası (`NotSupportedException`) giderildi. Hesaplama client-side (`AsEnumerable`) tarafına alındı.
 
 ---
 

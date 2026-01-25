@@ -156,14 +156,18 @@ namespace KamatekCrm.ViewModels
                            (t.TransactionType == CashTransactionType.CashIncome || 
                             t.TransactionType == CashTransactionType.CardIncome || 
                             t.TransactionType == CashTransactionType.TransferIncome))
-                .Sum(t => (decimal?)t.Amount) ?? 0;
+                .Select(t => t.Amount)
+                .AsEnumerable()
+                .Sum();
 
             // Toplam Gider (6 ay)
             TotalExpense = _context.CashTransactions
                 .Where(t => t.Date >= sixMonthsAgo && 
                            (t.TransactionType == CashTransactionType.Expense || 
                             t.TransactionType == CashTransactionType.TransferExpense))
-                .Sum(t => (decimal?)t.Amount) ?? 0;
+                .Select(t => t.Amount)
+                .AsEnumerable()
+                .Sum();
 
             // Aktif İşler
             ActiveJobs = _context.ServiceJobs
@@ -193,13 +197,17 @@ namespace KamatekCrm.ViewModels
                                (t.TransactionType == CashTransactionType.CashIncome || 
                                 t.TransactionType == CashTransactionType.CardIncome || 
                                 t.TransactionType == CashTransactionType.TransferIncome))
-                    .Sum(t => (decimal?)t.Amount) ?? 0);
+                    .Select(t => t.Amount)
+                    .AsEnumerable()
+                    .Sum());
 
                 expenseData[i] = (double)(_context.CashTransactions
                     .Where(t => t.Date >= startDate && t.Date < endDate && 
                                (t.TransactionType == CashTransactionType.Expense || 
                                 t.TransactionType == CashTransactionType.TransferExpense))
-                    .Sum(t => (decimal?)t.Amount) ?? 0);
+                    .Select(t => t.Amount)
+                    .AsEnumerable()
+                    .Sum());
             }
 
             FinancialSeries = new ISeries[]

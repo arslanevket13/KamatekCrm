@@ -185,12 +185,18 @@ namespace KamatekCrm.ViewModels
                 DailyIncome = _context.CashTransactions.Where(t => t.Date >= today && 
                     (t.TransactionType == CashTransactionType.CashIncome || 
                      t.TransactionType == CashTransactionType.CardIncome || 
-                     t.TransactionType == CashTransactionType.TransferIncome)).Sum(t => t.Amount);
+                     t.TransactionType == CashTransactionType.TransferIncome))
+                     .Select(t => t.Amount)
+                     .AsEnumerable()
+                     .Sum();
 
                 // REPLACE DailyExpense QUERY WITH explicit Enum checks
                 DailyExpense = _context.CashTransactions.Where(t => t.Date >= today && 
                     (t.TransactionType == CashTransactionType.Expense || 
-                     t.TransactionType == CashTransactionType.TransferExpense)).Sum(t => t.Amount);
+                     t.TransactionType == CashTransactionType.TransferExpense))
+                     .Select(t => t.Amount)
+                     .AsEnumerable()
+                     .Sum();
             }
             catch (Exception ex)
             {
