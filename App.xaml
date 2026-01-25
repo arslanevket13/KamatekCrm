@@ -13,7 +13,6 @@
             </ResourceDictionary.MergedDictionaries>
 
             <SolidColorBrush x:Key="BorderColor" Color="#DDDDDD"/>
-
             <SolidColorBrush x:Key="PrimaryColor" Color="#2196F3"/>
             <SolidColorBrush x:Key="SecondaryColor" Color="#607D8B"/>
             <SolidColorBrush x:Key="BackgroundColor" Color="#F5F5F5"/>
@@ -52,7 +51,7 @@
                 <views:StockCountView/>
             </DataTemplate>
 
-            <DataTemplate DataType="{x:Type vm:StockReportsViewModel}">
+             <DataTemplate DataType="{x:Type vm:StockReportsViewModel}">
                 <views:StockReportsView/>
             </DataTemplate>
 
@@ -83,11 +82,12 @@
             <DataTemplate DataType="{x:Type vm:AnalyticsViewModel}">
                 <views:AnalyticsView/>
             </DataTemplate>
-
+            
             <DataTemplate DataType="{x:Type vm:PurchaseOrderViewModel}">
                 <views:PurchaseOrderView/>
             </DataTemplate>
 
+            <!-- SMART ERP MODULES -->
             <DataTemplate DataType="{x:Type vm:PipelineViewModel}">
                 <views:SalesPipelineView/>
             </DataTemplate>
