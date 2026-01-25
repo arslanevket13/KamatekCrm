@@ -79,6 +79,14 @@
                 <views:FinanceView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:AnalyticsViewModel}">
+                <views:AnalyticsView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:PurchaseOrderViewModel}">
+                <views:PurchaseOrderView/>
+            </DataTemplate>
+
             <!-- Global Converters -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         </ResourceDictionary>

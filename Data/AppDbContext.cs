@@ -51,6 +51,9 @@ namespace KamatekCrm.Data
         // --- Kasa / Finans ---
         public DbSet<CashTransaction> CashTransactions { get; set; }
 
+        // --- Dijital Arşiv ---
+        public DbSet<Attachment> Attachments { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

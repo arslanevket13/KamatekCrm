@@ -60,6 +60,13 @@ namespace KamatekCrm.ViewModels
         public ICommand NavigateToFieldJobListCommand { get; }
         public ICommand NavigateToSettingsCommand { get; }
         public ICommand NavigateToFinanceCommand { get; }
+        public ICommand NavigateToAnalyticsCommand { get; }
+        public ICommand NavigateToPurchaseOrdersCommand { get; }
+
+        // RBAC Visibility
+        public bool CanViewFinance => AuthService.CanViewFinance;
+        public bool CanViewAnalytics => AuthService.CanViewAnalytics;
+        public bool CanAccessSettings => AuthService.CanAccessSettings;
 
         #endregion
 
@@ -87,8 +94,10 @@ namespace KamatekCrm.ViewModels
             NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
             NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
             NavigateToFieldJobListCommand = new RelayCommand(_ => NavigateToFieldJobList());
-            NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings());
-            NavigateToFinanceCommand = new RelayCommand(_ => NavigateToFinance());
+            NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings(), _ => CanAccessSettings);
+            NavigateToFinanceCommand = new RelayCommand(_ => NavigateToFinance(), _ => CanViewFinance);
+            NavigateToAnalyticsCommand = new RelayCommand(_ => NavigateToAnalytics(), _ => CanViewAnalytics);
+            NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateToPurchaseOrders());
 
             // Varsayılan olarak Dashboard'u göster
             NavigateToDashboard();
@@ -144,6 +153,8 @@ namespace KamatekCrm.ViewModels
 
         private void NavigateToSettings() => CurrentView = new SettingsViewModel();
         private void NavigateToFinance() => CurrentView = new FinanceViewModel();
+        private void NavigateToAnalytics() => CurrentView = new AnalyticsViewModel();
+        private void NavigateToPurchaseOrders() => CurrentView = new PurchaseOrderViewModel();
 
         #endregion
 

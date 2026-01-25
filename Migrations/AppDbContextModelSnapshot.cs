@@ -64,6 +64,51 @@ namespace KamatekCrm.Migrations
                     b.ToTable("ActivityLogs");
                 });
 
+            modelBuilder.Entity("KamatekCrm.Models.Attachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EntityType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UploadDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UploadedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Attachments");
+                });
+
             modelBuilder.Entity("KamatekCrm.Models.Brand", b =>
                 {
                     b.Property<int>("Id")
@@ -943,6 +988,9 @@ namespace KamatekCrm.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -951,6 +999,13 @@ namespace KamatekCrm.Migrations
                     b.Property<string>("ContactInfo")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
@@ -1004,6 +1059,21 @@ namespace KamatekCrm.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("CanAccessSettings")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CanApprovePurchase")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CanDeleteRecords")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CanViewAnalytics")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CanViewFinance")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("TEXT");

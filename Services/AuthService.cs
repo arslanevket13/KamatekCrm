@@ -22,6 +22,35 @@ namespace KamatekCrm.Services
         /// </summary>
         public static bool IsLoggedIn => CurrentUser != null;
 
+        #region RBAC - Granular Permissions
+
+        /// <summary>
+        /// Finans modülünü görme yetkisi
+        /// </summary>
+        public static bool CanViewFinance => CurrentUser?.CanViewFinance == true || IsAdmin;
+
+        /// <summary>
+        /// Analitik dashboard görme yetkisi
+        /// </summary>
+        public static bool CanViewAnalytics => CurrentUser?.CanViewAnalytics == true || IsAdmin;
+
+        /// <summary>
+        /// Kayıt silme yetkisi
+        /// </summary>
+        public static bool CanDeleteRecords => CurrentUser?.CanDeleteRecords == true || IsAdmin;
+
+        /// <summary>
+        /// Satın alma onaylama yetkisi
+        /// </summary>
+        public static bool CanApprovePurchase => CurrentUser?.CanApprovePurchase == true || IsAdmin;
+
+        /// <summary>
+        /// Ayarlara erişim yetkisi
+        /// </summary>
+        public static bool CanAccessSettings => CurrentUser?.CanAccessSettings == true || IsAdmin;
+
+        #endregion
+
         /// <summary>
         /// Kullanıcı adı ve şifre ile giriş yap
         /// </summary>
@@ -94,10 +123,26 @@ namespace KamatekCrm.Services
                     Ad = "Admin",
                     Soyad = "User",
                     IsActive = true,
-                    CreatedDate = DateTime.Now
+                    CreatedDate = DateTime.Now,
+                    // Admin için tüm izinler aktif
+                    CanViewFinance = true,
+                    CanViewAnalytics = true,
+                    CanDeleteRecords = true,
+                    CanApprovePurchase = true,
+                    CanAccessSettings = true
                 };
 
                 context.Users.Add(adminUser);
+                context.SaveChanges();
+            }
+            else if (!adminUser.CanViewFinance)
+            {
+                // Mevcut admin kullanıcısına izinleri ekle (migration sonrası)
+                adminUser.CanViewFinance = true;
+                adminUser.CanViewAnalytics = true;
+                adminUser.CanDeleteRecords = true;
+                adminUser.CanApprovePurchase = true;
+                adminUser.CanAccessSettings = true;
                 context.SaveChanges();
             }
             // Eski 'admin.user' varsa ve şifresi '1234' ise, onu da güncel veya yedek olarak tutabiliriz

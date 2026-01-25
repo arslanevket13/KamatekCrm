@@ -97,6 +97,22 @@
                                 Command="{Binding NavigateToFinanceCommand}"
                                 Background="#E65100"
                                 Foreground="White"
+                                FontWeight="SemiBold"
+                                Visibility="{Binding CanViewFinance, Converter={StaticResource BoolToVis}}"/>
+
+                        <Button Content="📊 ANALİTİK" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToAnalyticsCommand}"
+                                Background="#9C27B0"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                Visibility="{Binding CanViewAnalytics, Converter={StaticResource BoolToVis}}"/>
+
+                        <Button Content="📦 SATIN ALMA" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToPurchaseOrdersCommand}"
+                                Background="#00838F"
+                                Foreground="White"
                                 FontWeight="SemiBold"/>
 
                         <!-- Envanter Yönetimi Bölümü -->

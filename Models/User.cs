@@ -70,6 +70,35 @@ namespace KamatekCrm.Models
         /// Son giriş tarihi
         /// </summary>
         public DateTime? LastLoginDate { get; set; }
+
+        #region RBAC - Granular Permissions
+
+        /// <summary>
+        /// Finans modülünü görme yetkisi
+        /// </summary>
+        public bool CanViewFinance { get; set; } = false;
+
+        /// <summary>
+        /// Analitik dashboard görme yetkisi
+        /// </summary>
+        public bool CanViewAnalytics { get; set; } = false;
+
+        /// <summary>
+        /// Kayıt silme yetkisi
+        /// </summary>
+        public bool CanDeleteRecords { get; set; } = false;
+
+        /// <summary>
+        /// Satın alma onaylama yetkisi
+        /// </summary>
+        public bool CanApprovePurchase { get; set; } = false;
+
+        /// <summary>
+        /// Ayarlara erişim yetkisi
+        /// </summary>
+        public bool CanAccessSettings { get; set; } = false;
+
+        #endregion
     }
 }
 

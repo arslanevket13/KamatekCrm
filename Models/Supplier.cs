@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KamatekCrm.Models
 {
@@ -43,5 +44,22 @@ namespace KamatekCrm.Models
         /// </summary>
         [MaxLength(500)]
         public string? Address { get; set; }
+
+        /// <summary>
+        /// E-posta
+        /// </summary>
+        [MaxLength(100)]
+        public string? Email { get; set; }
+
+        /// <summary>
+        /// Borç Bakiyesi (Tedarikçiye olan borcumuz)
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Balance { get; set; } = 0;
+
+        /// <summary>
+        /// Aktif mi?
+        /// </summary>
+        public bool IsActive { get; set; } = true;
     }
 }
