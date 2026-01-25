@@ -43,6 +43,7 @@ CRM uygulaması 4 büyük kurumsal modül ile ERP seviyesine yükseltildi.
 - **SLA Automation Engine**: `SlaService` ile süresi gelen bakım sözleşmelerinden (`MaintenanceContract`) otomatik iş emri oluşturma (arka plan servisi).
 - **Smart Action Center**: `MainContentView` başlığında Bildirim Merkezi (Çan ikonu). Düşük stok ve unutulmuş teklif bildirimleri (`NotificationService`).
 - **Veritabanı**: `PipelineStage` Enum, `MaintenanceContracts` tablosu eklendi. `JobCategory.Other` seçeneği eklendi. Migration: `AddSmartERPCore`.
+- **UI FIX**: "Beyaz Ekran" sorunu (ViewModel binding hatası) ve "Görünmeyen Bildirim Butonu" (Stil hatası) düzeltildi.
 
 ---
 

@@ -5,9 +5,7 @@
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
              Background="#F5F5F5">
 
-    <UserControl.DataContext>
-        <vm:SchedulerViewModel/>
-    </UserControl.DataContext>
+    <!-- Context provided by MainContentViewModel via DataTemplate -->
 
     <Grid>
         <Grid.ColumnDefinitions>
