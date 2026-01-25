@@ -1,5 +1,37 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+## 2026-01-25
+
+### ✅ Enterprise ERP Megamodule
+CRM uygulaması 4 büyük kurumsal modül ile ERP seviyesine yükseltildi.
+
+| Modül | Açıklama |
+|-------|----------|
+| **BI Analytics** | LiveCharts ile 6 aylık trend, kategori dağılımı, top 5 ürün |
+| **B2B Procurement** | Tedarikçi borç takibi, PO oluşturma, stok güncelleme |
+| **Digital Archive** | Attachment entity, GUID dosyalar, AppData arşivi |
+| **RBAC** | 5 granular izin: Finance, Analytics, Delete, Purchase, Settings |
+
+**Yeni Dosyalar:**
+- `ViewModels/AnalyticsViewModel.cs`
+- `ViewModels/PurchaseOrderViewModel.cs`
+- `Views/AnalyticsView.xaml`
+- `Views/PurchaseOrderView.xaml`
+- `Models/Attachment.cs`
+- `Enums/AttachmentEntityType.cs`
+- `Services/AttachmentService.cs`
+
+**Güncellenen Dosyalar:**
+- `Models/User.cs` - RBAC izin alanları
+- `Models/Supplier.cs` - Balance, Email, IsActive
+- `Services/AuthService.cs` - RBAC property'leri
+- `Views/MainContentView.xaml` - Yeni navigation butonları
+- `App.xaml` - DataTemplates
+
+**Migration:** `AddERPEnhancements`
+
+---
+
 ## 2026-01-24
 
 ### ✅ Kritik Üretim Düzeltmeleri (Production-Ready)
