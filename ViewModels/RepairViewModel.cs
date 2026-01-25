@@ -246,6 +246,27 @@ namespace KamatekCrm.ViewModels
             _context.ServiceJobHistories.Add(history);
             _context.SaveChanges();
 
+            // ═══════════════════════════════════════════════════════════════════
+            // KASA ENTEGRASYONU: Teslim edildiğinde geliri CashTransaction'a kaydet
+            // ═══════════════════════════════════════════════════════════════════
+            if (newStatus == RepairStatus.Delivered && SelectedJob.TotalAmount > 0)
+            {
+                var cashTransaction = new CashTransaction
+                {
+                    Date = DateTime.Now,
+                    Amount = SelectedJob.TotalAmount,
+                    TransactionType = CashTransactionType.CashIncome, // Varsayılan nakit
+                    Description = $"Tamir Teslimi - İş #{SelectedJob.Id}",
+                    Category = "Teknik Servis",
+                    ReferenceNumber = $"REP-{SelectedJob.Id}",
+                    CustomerId = SelectedJob.CustomerId,
+                    CreatedBy = AuthService.CurrentUser?.AdSoyad ?? "Teknisyen",
+                    CreatedAt = DateTime.Now
+                };
+                _context.CashTransactions.Add(cashTransaction);
+                _context.SaveChanges();
+            }
+
             // SMS Bildirimi (Otomatik)
             if (newStatus == RepairStatus.ReadyForPickup && SelectedJob.Customer != null)
             {

@@ -10,6 +10,7 @@ using KamatekCrm.Commands;
 using KamatekCrm.Data;
 using KamatekCrm.Enums;
 using KamatekCrm.Models;
+using KamatekCrm.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
@@ -390,6 +391,30 @@ namespace KamatekCrm.ViewModels
                     };
                     _context.StockTransactions.Add(stockTransaction);
                 }
+
+                // ═══════════════════════════════════════════════════════════════════
+                // KASA ENTEGRASYONU: POS satışını CashTransaction'a kaydet
+                // ═══════════════════════════════════════════════════════════════════
+                var cashTransactionType = paymentMethod switch
+                {
+                    PaymentMethod.Cash => CashTransactionType.CashIncome,
+                    PaymentMethod.CreditCard => CashTransactionType.CardIncome,
+                    _ => CashTransactionType.CashIncome
+                };
+
+                var cashTransaction = new CashTransaction
+                {
+                    Date = DateTime.Now,
+                    Amount = CartTotal,
+                    TransactionType = cashTransactionType,
+                    Description = $"POS Satış - {orderNumber}",
+                    Category = "Perakende Satış",
+                    ReferenceNumber = orderNumber,
+                    SalesOrderId = salesOrder.Id,
+                    CreatedBy = AuthService.CurrentUser?.AdSoyad ?? "Sistem",
+                    CreatedAt = DateTime.Now
+                };
+                _context.CashTransactions.Add(cashTransaction);
 
                 _context.SaveChanges();
                 transaction.Commit();
