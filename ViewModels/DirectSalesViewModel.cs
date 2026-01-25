@@ -186,11 +186,8 @@ namespace KamatekCrm.ViewModels
 
         private bool CanAddToCart(object? parameter)
         {
-            if (parameter is ProductDisplayItem product)
-            {
-                return product.StockQuantity > 0;
-            }
-            return false;
+            // Negatif stok satışına izin ver (stok kontrolü kaldırıldı)
+            return parameter is ProductDisplayItem;
         }
 
         /// <summary>
@@ -200,16 +197,9 @@ namespace KamatekCrm.ViewModels
         {
             if (parameter is not ProductDisplayItem product) return;
 
-            // Mevcut stok kontrolü
+            // Mevcut sepet kontrolü (stok sınırı kaldırıldı - negatif stok satışı destekleniyor)
             var existingCartItem = CartItems.FirstOrDefault(i => i.ProductId == product.ProductId);
             var currentCartQty = existingCartItem?.Quantity ?? 0;
-
-            if (currentCartQty >= product.StockQuantity)
-            {
-                StatusMessage = $"Yetersiz stok! Mevcut: {product.StockQuantity}";
-                IsActionSuccessful = false;
-                return;
-            }
 
             if (existingCartItem != null)
             {

@@ -184,7 +184,7 @@ namespace KamatekCrm.ViewModels
                 if (ShowMonthly)
                 {
                     startDate = new DateTime(SelectedDate.Year, SelectedDate.Month, 1);
-                    endDate = startDate.AddMonths(1).AddDays(-1);
+                    endDate = startDate.AddMonths(1).AddTicks(-1); // Ayın son günü 23:59:59.9999999
                 }
                 else
                 {
