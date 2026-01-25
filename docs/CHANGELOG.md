@@ -34,6 +34,7 @@ CRM uygulaması 4 büyük kurumsal modül ile ERP seviyesine yükseltildi.
 - **AnalyticsViewModel**: EF Core LINQ Translation hatası (`IsIncome`/`IsExpense` unmapped properties) düzeltildi. Sorgularda explicit `TransactionType` kontrolüne geçildi.
 - **FinanceViewModel**: `LoadData()` metodunda benzer LINQ Translation hatası düzeltildi (`IsExpense` yerine `TransactionType`).
 - **PurchaseOrderViewModel**: `TotalSupplierDebt` hesaplarken SQLite `Sum` (decimal) hatası giderildi (`AsEnumerable` ile client-side calculation).
+- **DashboardViewModel**: `LoadFinancialSummary` metodunda LINQ Translation hatası oluşabilecek sorgular explicit enum kontrolü ile güvenli hale getirildi.
 
 ---
 

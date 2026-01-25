@@ -131,6 +131,20 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _activeJobsCount, value);
         }
 
+        private decimal _dailyIncome;
+        public decimal DailyIncome
+        {
+            get => _dailyIncome;
+            set => SetProperty(ref _dailyIncome, value);
+        }
+
+        private decimal _dailyExpense;
+        public decimal DailyExpense
+        {
+            get => _dailyExpense;
+            set => SetProperty(ref _dailyExpense, value);
+        }
+
         #endregion
 
         #region Commands
@@ -158,6 +172,31 @@ namespace KamatekCrm.ViewModels
             LoadTodaysJobs();
             LoadReadyRepairs();
             LoadMonthlyFinancials();
+            LoadFinancialSummary();
+        }
+
+        private void LoadFinancialSummary()
+        {
+            try 
+            {
+                var today = DateTime.Today;
+
+                // REPLACE DailyIncome QUERY WITH explicit Enum checks
+                DailyIncome = _context.CashTransactions.Where(t => t.Date >= today && 
+                    (t.TransactionType == CashTransactionType.CashIncome || 
+                     t.TransactionType == CashTransactionType.CardIncome || 
+                     t.TransactionType == CashTransactionType.TransferIncome)).Sum(t => t.Amount);
+
+                // REPLACE DailyExpense QUERY WITH explicit Enum checks
+                DailyExpense = _context.CashTransactions.Where(t => t.Date >= today && 
+                    (t.TransactionType == CashTransactionType.Expense || 
+                     t.TransactionType == CashTransactionType.TransferExpense)).Sum(t => t.Amount);
+            }
+            catch (Exception ex)
+            {
+                // Silent fail or log
+                System.Diagnostics.Debug.WriteLine($"Dashboard Finance Error: {ex.Message}");
+            }
         }
 
         /// <summary>
