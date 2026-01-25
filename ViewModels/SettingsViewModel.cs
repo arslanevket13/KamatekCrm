@@ -136,23 +136,27 @@ namespace KamatekCrm.ViewModels
                     _backupService.RestoreDatabase(dialog.FileName);
                 });
 
+                // ═══════════════════════════════════════════════════════════════════
+                // GHOST DATA ÖNLEME: MessageBox'tan ÖNCE restart yap
+                // EF Core tracking cache'i eski verileri gösterebilir
+                // ═══════════════════════════════════════════════════════════════════
+                
+                // Kullanıcıya bilgi ver ve hemen yeniden başlat
                 MessageBox.Show(
-                    "Geri yükleme başarılı!\n\nProgram yeniden başlatılacak.",
+                    "Geri yükleme başarılı!\n\nProgram şimdi yeniden başlatılacak.",
                     "Başarılı",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
 
-                // 3. Uygulamayı yeniden başlat
+                // Hemen restart - Ghost data önleme için kritik
                 RestartApplication();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Geri yükleme sırasında hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
                 IsBusy = false;
             }
+            // Not: IsBusy = false finally'de olmamalı çünkü restart yapılıyor
         }
 
         private void RestartApplication()

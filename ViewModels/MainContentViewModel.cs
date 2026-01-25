@@ -59,6 +59,7 @@ namespace KamatekCrm.ViewModels
         public ICommand NavigateToRepairListCommand { get; }
         public ICommand NavigateToFieldJobListCommand { get; }
         public ICommand NavigateToSettingsCommand { get; }
+        public ICommand NavigateToFinanceCommand { get; }
 
         #endregion
 
@@ -87,6 +88,7 @@ namespace KamatekCrm.ViewModels
             NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
             NavigateToFieldJobListCommand = new RelayCommand(_ => NavigateToFieldJobList());
             NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings());
+            NavigateToFinanceCommand = new RelayCommand(_ => NavigateToFinance());
 
             // Varsayılan olarak Dashboard'u göster
             NavigateToDashboard();
@@ -141,6 +143,7 @@ namespace KamatekCrm.ViewModels
         }
 
         private void NavigateToSettings() => CurrentView = new SettingsViewModel();
+        private void NavigateToFinance() => CurrentView = new FinanceViewModel();
 
         #endregion
 

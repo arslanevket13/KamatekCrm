@@ -48,6 +48,9 @@ namespace KamatekCrm.Data
         public DbSet<SalesOrder> SalesOrders { get; set; }
         public DbSet<SalesOrderItem> SalesOrderItems { get; set; }
 
+        // --- Kasa / Finans ---
+        public DbSet<CashTransaction> CashTransactions { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

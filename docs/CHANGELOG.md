@@ -1,6 +1,64 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+## 2026-01-24
+
+### ✅ Kritik Üretim Düzeltmeleri (Production-Ready)
+5 kritik sistem açığı/hatası düzeltildi:
+
+| # | Sorun | Düzeltme |
+|---|-------|----------|
+| 1 | SMS simülasyon modunda | Production-ready API çağrısı (placeholder kontrollü) |
+| 2 | Gmail normal şifre hatası | Google App Password zorunluluğu + dokümantasyon |
+| 3 | POS'ta stok düşmüyor (inventory yoksa) | Eksik Inventory kaydı otomatik oluşturma |
+| 4 | Temp PDF dosyaları birikimi | try-finally ile otomatik temizlik |
+| 5 | Restore sonrası Ghost Data | Restart önceliklendirme, EF cache bypass |
+
+**Güncellenen Dosyalar:**
+- `Services/SmsService.cs`
+- `Services/EmailService.cs`
+- `ViewModels/DirectSalesViewModel.cs`
+- `ViewModels/ProjectQuoteEditorViewModel.cs`
+- `ViewModels/SettingsViewModel.cs`
+
+---
+
 ## 2026-01-23
+
+### ✅ İletişim Motoru (SMS & E-Posta)
+Müşterilerle iletişim için profesyonel SMS ve E-Posta altyapısı eklendi.
+
+**Yeni Servisler:**
+- `Services/EmailService.cs` [YENİ]: SMTP ile PDF teklif gönderimi
+- `Services/SmsService.cs` [YENİ]: HTTP API ile SMS bildirimi (NetGSM/Twilio uyumlu)
+
+**Entegrasyonlar:**
+- `ProjectQuoteEditorViewModel.cs`: "📧 E-POSTA GÖNDER" komutu eklendi (PDF eklentiyle)
+- `RepairViewModel.cs`: Cihaz "Hazır" durumuna geçtiğinde otomatik SMS bildirimi
+- `ProjectQuoteEditorWindow.xaml`: E-posta gönder butonu eklendi
+
+---
+
+### ✅ Otomatik Yedekleme Sistemi
+SQLite veritabanı için kapsamlı yedekleme ve geri yükleme işlevselliği.
+
+**Yeni Dosyalar:**
+- `Services/BackupService.cs` [YENİ]: SQLite Backup API + ZIP sıkıştırma
+- `ViewModels/SettingsViewModel.cs` [YENİ]: Yedekleme UI mantığı
+- `Views/SettingsView.xaml` [YENİ]: Ayarlar ekranı (Yedek Al / Yedekten Yükle)
+
+**Özellikler:**
+- **Manuel Yedekleme:** "💾 ŞİMDİ YEDEK AL" butonu
+- **Geri Yükleme:** "📂 YEDEKTEN YÜKLE" butonu (ZIP seçimi)
+- **Otomatik Çıkış Yedeği:** Uygulama kapanırken arka planda yedek alınır
+- **Yedek Konumu:** `Belgelerim/KamatekBackups/KamatekBackup_YYYY-MM-DD_HHmm.zip`
+
+**Entegrasyonlar:**
+- `MainContentView.xaml`: Sidebar'a "⚙️ Ayarlar" butonu eklendi
+- `MainContentViewModel.cs`: `NavigateToSettingsCommand` eklendi
+- `App.xaml`: `SettingsViewModel` → `SettingsView` DataTemplate eşlemesi
+- `App.xaml.cs`: `OnExit` override ile otomatik yedekleme
+
+---
 
 ### ✅ İş Emirleri Sadeleştirmesi
 - `Views/ServiceJobsView.xaml`: Liste kaldırıldı, sadece "Yeni İş Emri" oluşturma butonu kaldı

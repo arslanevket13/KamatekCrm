@@ -714,11 +714,11 @@ namespace KamatekCrm.ViewModels
 
              if (result != MessageBoxResult.Yes) return;
 
+             // Geçici dosya yolu
+             string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Teklif_{ProjectName}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
              try
              {
-                 // Geçici dosya oluştur
-                 string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Teklif_{ProjectName}_{DateTime.Now:yyyyMMdd}.pdf");
-                 
                  // PDF Oluştur
                  GeneratePdf(tempPath, false);
 
@@ -734,6 +734,24 @@ namespace KamatekCrm.ViewModels
              catch (Exception ex)
              {
                  MessageBox.Show($"E-posta hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+             }
+             finally
+             {
+                 // ═══════════════════════════════════════════════════════════════════
+                 // TEMP DOSYA TEMİZLİĞİ - Memory/Disk leak önleme
+                 // ═══════════════════════════════════════════════════════════════════
+                 try
+                 {
+                     if (System.IO.File.Exists(tempPath))
+                     {
+                         System.IO.File.Delete(tempPath);
+                     }
+                 }
+                 catch
+                 {
+                     // Silme başarısız olursa sessizce devam et (dosya kullanımda olabilir)
+                     System.Diagnostics.Debug.WriteLine($"[CLEANUP] Temp dosya silinemedi: {tempPath}");
+                 }
              }
         }
 

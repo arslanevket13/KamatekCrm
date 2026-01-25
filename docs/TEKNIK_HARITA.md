@@ -26,6 +26,7 @@ KamatekCrm/
 │   ├── ProductViewModel.cs       # Ürün listesi + Excel import
 │   ├── AddProductViewModel.cs    # Ürün ekleme/düzenleme
 │   ├── StockTransferViewModel.cs # Stok transfer işlemleri
+│   ├── SettingsViewModel.cs      # Yedekleme/Ayarlar mantığı (YENİ)
 │   └── ...
 │
 ├── Views/                # XAML arayüzleri
@@ -40,6 +41,7 @@ KamatekCrm/
 │   ├── CustomerDetailView.xaml   # 4 Tab yapısı
 │   ├── ProductsView.xaml         # Ürün listesi
 │   ├── AddProductWindow.xaml     # Ürün formu (dinamik specs)
+│   ├── SettingsView.xaml         # Ayarlar ekranı (YENİ)
 │   └── ...
 │
 ├── Models/               # Entity sınıfları
@@ -70,9 +72,12 @@ KamatekCrm/
 │   └── AppDbContext.cs   # EF Core DbContext
 │
 ├── Services/             # İş servisleri
-│   ├── AddressService.cs # Adres veri yönetimi
-│   ├── PdfService.cs     # PDF oluşturma (QuestPDF)
-│   └── ProjectScopeService.cs # Proje ağacı ve veri yönetimi
+│   ├── AddressService.cs     # Adres veri yönetimi
+│   ├── PdfService.cs         # PDF oluşturma (QuestPDF)
+│   ├── ProjectScopeService.cs # Proje ağacı ve veri yönetimi
+│   ├── EmailService.cs       # SMTP e-posta gönderimi (YENİ)
+│   ├── SmsService.cs         # HTTP API SMS gönderimi (YENİ)
+│   └── BackupService.cs      # SQLite yedekleme/geri yükleme (YENİ)
 │
 ├── Views/ (Devam)
 │   ├── RepairRegistrationWindow.xaml # Cihaz kabul formu (YENİ)

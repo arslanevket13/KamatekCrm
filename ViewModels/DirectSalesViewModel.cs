@@ -363,6 +363,17 @@ namespace KamatekCrm.ViewModels
                     {
                         inventory.Quantity -= cartItem.Quantity;
                     }
+                    else
+                    {
+                        // Inventory kaydı yoksa yeni oluştur (negatif stok = eksik kayıt)
+                        var newInventory = new Inventory
+                        {
+                            ProductId = cartItem.ProductId,
+                            WarehouseId = SelectedWarehouse.Id,
+                            Quantity = -cartItem.Quantity // Negatif başlangıç
+                        };
+                        _context.Inventories.Add(newInventory);
+                    }
 
                     // StockTransaction kaydet
                     var stockTransaction = new StockTransaction

@@ -75,6 +75,10 @@
                 <views:SettingsView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:FinanceViewModel}">
+                <views:FinanceView/>
+            </DataTemplate>
+
             <!-- Global Converters -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         </ResourceDictionary>
