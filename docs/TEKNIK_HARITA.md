@@ -20,13 +20,15 @@ KamatekCrm/
 │   ├── ServiceJobViewModel.cs    # İş emri wizard + liste mantığı
 │   ├── FaultTicketViewModel.cs   # Arıza kaydı (hibrit cihaz seçici)
 │   ├── ProjectQuoteEditorViewModel.cs  # Üç Panelli Teklif Editörü
-│   ├── RepairListViewModel.cs    # Tamir Listesi (Profesyonel UI) (YENİ)
-│   ├── FieldJobListViewModel.cs  # Saha İşleri Listesi (YENİ)
+│   ├── RepairListViewModel.cs    # Tamir Listesi (Profesyonel UI)
+│   ├── FieldJobListViewModel.cs  # Saha İşleri Listesi
 │   ├── CustomerDetailViewModel.cs # Müşteri profili (tabs)
+│   ├── AnalyticsViewModel.cs     # BI Dashboard (LiveCharts) (YENİ)
+│   ├── PurchaseOrderViewModel.cs # B2B Satın Alma ve Tedarikçi (YENİ)
 │   ├── ProductViewModel.cs       # Ürün listesi + Excel import
 │   ├── AddProductViewModel.cs    # Ürün ekleme/düzenleme
 │   ├── StockTransferViewModel.cs # Stok transfer işlemleri
-│   ├── SettingsViewModel.cs      # Yedekleme/Ayarlar mantığı (YENİ)
+│   ├── SettingsViewModel.cs      # Yedekleme/Ayarlar mantığı
 │   └── ...
 │
 ├── Views/                # XAML arayüzleri
@@ -37,20 +39,26 @@ KamatekCrm/
 │   ├── ServiceJobsView.xaml      # Master list (DataGrid)
 │   ├── NewServiceJobWindow.xaml  # Wizard (ayrı pencere)
 │   ├── FaultTicketWindow.xaml    # Arıza kaydı formu
-│   ├── ProjectQuoteEditorWindow.xaml  # Üç Panelli Teklif Editörü (YENİ)
+│   ├── ProjectQuoteEditorWindow.xaml  # Üç Panelli Teklif Editörü
 │   ├── CustomerDetailView.xaml   # 4 Tab yapısı
+│   ├── AnalyticsView.xaml        # BI Dashboard charts (YENİ)
+│   ├── PurchaseOrderView.xaml    # Satın alma ekranı (YENİ)
 │   ├── ProductsView.xaml         # Ürün listesi
 │   ├── AddProductWindow.xaml     # Ürün formu (dinamik specs)
-│   ├── SettingsView.xaml         # Ayarlar ekranı (YENİ)
+│   ├── SettingsView.xaml         # Ayarlar ekranı
 │   └── ...
 │
 ├── Models/               # Entity sınıfları
 │   ├── Customer.cs       # Müşteri (Type, Address fields)
+│   ├── Supplier.cs       # Tedarikçi (Balance, Email, IsActive) (YENİ)
+│   ├── Attachment.cs     # Dijital Arşiv (YENİ)
 │   ├── ServiceJob.cs     # İş emri (JobCategory, Priority)
+│   ├── PurchaseOrder.cs  # Satın alma emri (YENİ)
+│   ├── PurchaseOrderItem.cs # Sipariş kalemi (YENİ)
 │   ├── ServiceProject.cs # Proje (ProjectScopeJson, TotalCost, TotalProfit)
 │   ├── Product.cs        # Ürün (TechSpecsJson)
-│   ├── ScopeNode.cs      # Kapsam ağacı node (Recursive, JSON) (YENİ)
-│   ├── ScopeNodeItem.cs  # Kapsam kalemi (Finansal alanlar) (YENİ)
+│   ├── ScopeNode.cs      # Kapsam ağacı node (Recursive, JSON)
+│   ├── ScopeNodeItem.cs  # Kapsam kalemi (Finansal alanlar)
 │   ├── Inventory.cs      # Stok (ProductId + WarehouseId)
 │   ├── StockTransaction.cs # Stok hareketi (audit trail)
 │   └── JobDetails/       # Dinamik iş detayları
@@ -62,6 +70,7 @@ KamatekCrm/
 │   ├── ServiceJobType.cs # Fault / Project ayrımı
 │   ├── WorkflowStatus.cs # 9 farklı proje durumu
 │   ├── DeviceType.cs     # Cihaz türleri (IP Kamera, DVR vb.)
+│   ├── AttachmentEntityType.cs # Dosya entity türleri (YENİ)
 │   └── StockTransactionType.cs
 │
 ├── Helpers/              # Yardımcı sınıflar
@@ -75,30 +84,31 @@ KamatekCrm/
 │   ├── AddressService.cs     # Adres veri yönetimi
 │   ├── PdfService.cs         # PDF oluşturma (QuestPDF)
 │   ├── ProjectScopeService.cs # Proje ağacı ve veri yönetimi
-│   ├── EmailService.cs       # SMTP e-posta gönderimi (YENİ)
-│   ├── SmsService.cs         # HTTP API SMS gönderimi (YENİ)
-│   └── BackupService.cs      # SQLite yedekleme/geri yükleme (YENİ)
+│   ├── EmailService.cs       # SMTP e-posta gönderimi
+│   ├── SmsService.cs         # HTTP API SMS gönderimi
+│   ├── AttachmentService.cs  # Dijital arşiv dosya yönetimi (YENİ)
+│   └── BackupService.cs      # SQLite yedekleme/geri yükleme
 │
 ├── Views/ (Devam)
-│   ├── RepairRegistrationWindow.xaml # Cihaz kabul formu (YENİ)
-│   ├── RepairTrackingWindow.xaml     # Arıza takip ve işlem merkezi (YENİ)
-│   ├── DirectSalesWindow.xaml        # Perakende Satış (POS) (YENİ)
+│   ├── RepairRegistrationWindow.xaml # Cihaz kabul formu
+│   ├── RepairTrackingWindow.xaml     # Arıza takip ve işlem merkezi
+│   ├── DirectSalesWindow.xaml        # Perakende Satış (POS)
 │   └── ...
 │
 ├── ViewModels/ (Devam)
-│   ├── RepairViewModel.cs        # Tamir iş akışı ve tarihçe yönetimi (YENİ)
-│   ├── DirectSalesViewModel.cs   # POS sepet ve satış mantığı (YENİ)
+│   ├── RepairViewModel.cs        # Tamir iş akışı ve tarihçe yönetimi
+│   ├── DirectSalesViewModel.cs   # POS sepet ve satış mantığı
 │   └── ...
 │
 ├── Models/ (Devam)
-│   ├── ServiceJobHistory.cs      # İşlem logları (YENİ)
-│   ├── SalesOrder.cs             # Satış siparişi (YENİ)
-│   ├── SalesOrderItem.cs         # Sipariş kalemi (YENİ)
+│   ├── ServiceJobHistory.cs      # İşlem logları
+│   ├── SalesOrder.cs             # Satış siparişi
+│   ├── SalesOrderItem.cs         # Sipariş kalemi
 │   └── ...
 │
 ├── Enums/ (Devam)
-│   ├── RepairStatus.cs          # Tamir durumları (Workflow) (YENİ)
-│   ├── PaymentMethod.cs         # Ödeme yöntemi (Cash/Card) (YENİ)
+│   ├── RepairStatus.cs          # Tamir durumları (Workflow)
+│   ├── PaymentMethod.cs         # Ödeme yöntemi (Cash/Card)
 │   └── ...
 │
 └── docs/                 # Bu dokümantasyon
@@ -126,3 +136,9 @@ KamatekCrm/
 - **Proje (Project)**: 5 fazlı akış → `ProjectWorkflowWindow`
   - Keşif → Teklif → Onay → Uygulama → Final
 - `IsStockReserved` / `IsStockDeducted` → Stok takibi
+
+### 5. Enterprise ERP (ERP Megamodule)
+- **BI Analytics**: `LiveChartsCore.SkiaSharpView.WPF` ile dashboard
+- **B2B Procurement**: Tedarikçi borç takibi, stok entegreli satın alma
+- **Digital Archive**: `AttachmentService` ile merkezi dosya yönetimi (GUID filenames)
+- **RBAC**: `User` modelinde granular permission alanları (`CanViewFinance` vb.)

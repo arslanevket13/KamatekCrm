@@ -18,6 +18,8 @@
 - **MaterialDesignInXAML** - UI Theme
 - **ClosedXML** - Excel import/export
 - **WebView2** - Harita entegrasyonu
+- **LiveChartsCore** - BI Grafikleri
+- **QuestPDF** - PDF Raporlama
 
 ## Ana Özellikler
 
@@ -55,8 +57,14 @@
 
 ### 👤 Kullanıcı Yönetimi
 - Login/Logout sistemi (SHA256 şifreleme)
-- Rol tabanlı erişim kontrolü (Admin, Personel)
+- Rol tabanlı erişim kontrolü (Admin, Personel) + Granular Permissions
 - Varsayılan: admin.user / 1234
+
+### 🏢 Enterprise ERP (YENİ)
+- **BI Analytics**: 6 aylık trend, kategori dağılımı, KPI dashboard
+- **B2B Procurement**: Tedarikçi yönetimi, satınalma siparişleri
+- **Digital Archive**: Müşteri/ürün/servis belgeleri ve fotoğraflar
+- **RBAC**: Buton seviyesinde yetkilendirme
 
 ## Mevcut Durum
 
@@ -69,6 +77,7 @@
 - Login/Logout ve RBAC
 - Gelişmiş Servis Yaşam Döngüsü (Arıza + Proje)
 - MainContentView hızlı erişim butonları
+- **Enterprise ERP Modülleri** (Analytics, B2B, Archive, RBAC)
 
 🔄 **Devam Eden:**
 - Proforma PDF oluşturma (QuestPDF)
