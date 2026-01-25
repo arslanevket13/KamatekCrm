@@ -213,7 +213,8 @@ namespace KamatekCrm.ViewModels
                     .Sum(t => t.Amount);
 
                 TotalExpense = transactions
-                    .Where(t => t.IsExpense)
+                    .Where(t => t.TransactionType == CashTransactionType.Expense || 
+                                t.TransactionType == CashTransactionType.TransferExpense)
                     .Sum(t => t.Amount);
 
                 OnPropertyChanged(nameof(NetBalance));
