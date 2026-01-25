@@ -98,6 +98,14 @@ namespace KamatekCrm.Models
         public string? AssignedTechnician { get; set; }
 
         /// <summary>
+        /// Atanan Teknisyen ID (Scheduler)
+        /// </summary>
+        public int? AssignedUserId { get; set; }
+
+        [ForeignKey(nameof(AssignedUserId))]
+        public virtual User? AssignedUser { get; set; }
+
+        /// <summary>
         /// İş önceliği
         /// </summary>
         public JobPriority Priority { get; set; } = JobPriority.Normal;

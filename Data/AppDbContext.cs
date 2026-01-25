@@ -19,6 +19,7 @@ namespace KamatekCrm.Data
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ServiceJob> ServiceJobs { get; set; }
+        public DbSet<MaintenanceContract> MaintenanceContracts { get; set; }
         public DbSet<ServiceJobItem> ServiceJobItems { get; set; }
         public DbSet<Brand> Brands { get; set; }
         public DbSet<Category> Categories { get; set; }

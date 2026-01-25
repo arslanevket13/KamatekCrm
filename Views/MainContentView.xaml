@@ -77,6 +77,14 @@
                         <Button Content="🚜 Saha İşleri" 
                                 Style="{StaticResource NavButton}"
                                 Command="{Binding NavigateToFieldJobListCommand}"/>
+
+                        <Button Content="📊 Satış Boru Hattı" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToPipelineCommand}"/>
+
+                        <Button Content="📅 Teknisyen Takvimi" 
+                                Style="{StaticResource NavButton}"
+                                Command="{Binding NavigateToSchedulerCommand}"/>
                         
                         <Button Content="🏗️ PROJE &amp; TEKLİF" 
                                 Style="{StaticResource NavButton}"
@@ -233,6 +241,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" MaxWidth="500"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Search Box -->
@@ -371,6 +380,69 @@
                             </Border>
                         </Popup>
                     </Grid>
+
+                    <!-- Action Center (Bell Icon) -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,20,0" VerticalAlignment="Center">
+                        <Grid>
+                            <Button Command="{Binding ToggleNotificationsCommand}"
+                                    Style="{StaticResource NavButton}" 
+                                    Background="Transparent" 
+                                    Padding="10"
+                                    Margin="0">
+                                <Grid>
+                                    <TextBlock Text="🔔" FontSize="20"/>
+                                    <Border Background="Red" CornerRadius="10" 
+                                            Width="16" Height="16" 
+                                            HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                            Margin="-5,-5,0,0"
+                                            Visibility="{Binding NotificationCount, Converter={StaticResource IntToVis}}">
+                                        <TextBlock Text="{Binding NotificationCount}" Foreground="White" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+                            </Button>
+
+                            <Popup IsOpen="{Binding IsNotificationsOpen}" 
+                                   StaysOpen="False" 
+                                   Placement="Bottom"
+                                   AllowsTransparency="True">
+                                <Border Background="White" CornerRadius="8" BorderBrush="#E0E0E0" BorderThickness="1" 
+                                        Width="300" MaxHeight="400" Margin="0,5,20,0">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="10" Opacity="0.1"/>
+                                    </Border.Effect>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <Border Padding="10" BorderBrush="#EEEEEE" BorderThickness="0,0,0,1">
+                                            <DockPanel>
+                                                <TextBlock Text="Bildirimler" FontWeight="Bold"/>
+                                                <Button Content="🔄" Command="{Binding RefreshNotificationsCommand}" 
+                                                        Width="20" Height="20" Padding="0" Background="Transparent" BorderThickness="0" 
+                                                        HorizontalAlignment="Right"/>
+                                            </DockPanel>
+                                        </Border>
+                                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding Notifications}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Padding="10" BorderBrush="#F5F5F5" BorderThickness="0,0,0,1">
+                                                            <StackPanel>
+                                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="12"/>
+                                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,2,0,5" FontSize="11"/>
+                                                                <Button Content="{Binding ActionLabel}" Height="24" FontSize="10" HorizontalAlignment="Right"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </Grid>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </StackPanel>
                 </Grid>
             </Border>
 

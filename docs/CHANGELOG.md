@@ -37,6 +37,13 @@ CRM uygulaması 4 büyük kurumsal modül ile ERP seviyesine yükseltildi.
 - **DashboardViewModel**: `LoadFinancialSummary` metodunda LINQ Translation hatası oluşabilecek sorgular explicit enum kontrolü ile güvenli hale getirildi.
 - **AnalyticsViewModel & DashboardViewModel**: `decimal` tipindeki alanlar için SQLite `Sum` hatası (`NotSupportedException`) giderildi. Hesaplama client-side (`AsEnumerable`) tarafına alındı.
 
+### [NEW] Ultimate Smart ERP Ecosystem
+- **Kanban Sales Pipeline**: `SalesPipelineView` ile sürükle-bırak destekli görsel satış takibi (Lead -> Won). `PipelineStage` enum yapısı ve `ServiceProject` entegrasyonu.
+- **Technician Scheduler**: `SchedulerView` ile atanmamış işlerin teknisyenlere sürükle-bırak yöntemiyle takvim üzerinde atanması. `ServiceJob.AssignedUserId` alanı.
+- **SLA Automation Engine**: `SlaService` ile süresi gelen bakım sözleşmelerinden (`MaintenanceContract`) otomatik iş emri oluşturma (arka plan servisi).
+- **Smart Action Center**: `MainContentView` başlığında Bildirim Merkezi (Çan ikonu). Düşük stok ve unutulmuş teklif bildirimleri (`NotificationService`).
+- **Veritabanı**: `PipelineStage` Enum, `MaintenanceContracts` tablosu eklendi. `JobCategory.Other` seçeneği eklendi. Migration: `AddSmartERPCore`.
+
 ---
 
 ## 2026-01-24

@@ -48,6 +48,11 @@ namespace KamatekCrm.Models
         public ProjectStatus Status { get; set; } = ProjectStatus.Draft;
 
         /// <summary>
+        /// Satış Boru Hattı Aşaması (Kanban)
+        /// </summary>
+        public PipelineStage PipelineStage { get; set; } = PipelineStage.Lead;
+
+        /// <summary>
         /// Oluşturulma tarihi
         /// </summary>
         [Required]

@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:KamatekCrm"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
              xmlns:views="clr-namespace:KamatekCrm.Views"
+             xmlns:converters="clr-namespace:KamatekCrm.Converters"
              ShutdownMode="OnMainWindowClose">
     <Application.Resources>
         <ResourceDictionary>
@@ -87,8 +88,17 @@
                 <views:PurchaseOrderView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:PipelineViewModel}">
+                <views:SalesPipelineView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:SchedulerViewModel}">
+                <views:SchedulerView/>
+            </DataTemplate>
+
             <!-- Global Converters -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <converters:IntToVisibilityConverter x:Key="IntToVis"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

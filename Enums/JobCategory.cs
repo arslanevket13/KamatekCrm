@@ -29,6 +29,9 @@ namespace KamatekCrm.Enums
         SatelliteSystem = 6,
 
         [Description("Fiber Optik")]
-        FiberOptic = 7
+        FiberOptic = 7,
+
+        [Description("Diğer / Genel")]
+        Other = 99
     }
 }

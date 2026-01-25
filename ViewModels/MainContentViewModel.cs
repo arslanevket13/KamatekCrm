@@ -17,6 +17,23 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public GlobalSearchViewModel SearchViewModel { get; }
 
+        private readonly NotificationService _notificationService;
+        public System.Collections.ObjectModel.ObservableCollection<NotificationItem> Notifications { get; } = new();
+
+        private int _notificationCount;
+        public int NotificationCount
+        {
+            get => _notificationCount;
+            set => SetProperty(ref _notificationCount, value);
+        }
+
+        private bool _isNotificationsOpen;
+        public bool IsNotificationsOpen
+        {
+            get => _isNotificationsOpen;
+            set => SetProperty(ref _isNotificationsOpen, value);
+        }
+
         /// <summary>
         /// Aktif görünüm
         /// </summary>
@@ -62,6 +79,10 @@ namespace KamatekCrm.ViewModels
         public ICommand NavigateToFinanceCommand { get; }
         public ICommand NavigateToAnalyticsCommand { get; }
         public ICommand NavigateToPurchaseOrdersCommand { get; }
+        public ICommand NavigateToPipelineCommand { get; }
+        public ICommand NavigateToSchedulerCommand { get; }
+        public ICommand ToggleNotificationsCommand { get; }
+        public ICommand RefreshNotificationsCommand { get; }
 
         // RBAC Visibility
         public bool CanViewFinance => AuthService.CanViewFinance;
@@ -76,7 +97,9 @@ namespace KamatekCrm.ViewModels
         public MainContentViewModel()
         {
             // Global arama başlat
+            // Global arama başlat
             SearchViewModel = new GlobalSearchViewModel();
+            _notificationService = new NotificationService();
 
             NavigateToDashboardCommand = new RelayCommand(_ => NavigateToDashboard());
             NavigateToCustomersCommand = new RelayCommand(_ => NavigateToCustomers());
@@ -92,12 +115,17 @@ namespace KamatekCrm.ViewModels
             OpenRepairTrackingCommand = new RelayCommand(_ => OpenRepairTracking());
             OpenDirectSalesCommand = new RelayCommand(_ => OpenDirectSales());
             NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
-            NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
             NavigateToFieldJobListCommand = new RelayCommand(_ => NavigateToFieldJobList());
             NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings(), _ => CanAccessSettings);
             NavigateToFinanceCommand = new RelayCommand(_ => NavigateToFinance(), _ => CanViewFinance);
             NavigateToAnalyticsCommand = new RelayCommand(_ => NavigateToAnalytics(), _ => CanViewAnalytics);
             NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateToPurchaseOrders());
+            NavigateToPipelineCommand = new RelayCommand(_ => NavigateToPipeline());
+            NavigateToSchedulerCommand = new RelayCommand(_ => NavigateToScheduler());
+            ToggleNotificationsCommand = new RelayCommand(_ => IsNotificationsOpen = !IsNotificationsOpen);
+            RefreshNotificationsCommand = new RelayCommand(_ => LoadNotifications());
+
+            LoadNotifications();
 
             // Varsayılan olarak Dashboard'u göster
             NavigateToDashboard();
@@ -155,6 +183,16 @@ namespace KamatekCrm.ViewModels
         private void NavigateToFinance() => CurrentView = new FinanceViewModel();
         private void NavigateToAnalytics() => CurrentView = new AnalyticsViewModel();
         private void NavigateToPurchaseOrders() => CurrentView = new PurchaseOrderViewModel();
+        private void NavigateToPipeline() => CurrentView = new PipelineViewModel();
+        private void NavigateToScheduler() => CurrentView = new SchedulerViewModel();
+
+        private void LoadNotifications()
+        {
+            var items = _notificationService.GetNotifications();
+            Notifications.Clear();
+            foreach (var item in items) Notifications.Add(item);
+            NotificationCount = items.Count;
+        }
 
         #endregion
 
