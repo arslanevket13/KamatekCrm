@@ -152,12 +152,17 @@ namespace KamatekCrm.ViewModels
 
             // Toplam Gelir (6 ay)
             TotalRevenue = _context.CashTransactions
-                .Where(t => t.Date >= sixMonthsAgo && t.IsIncome)
+                .Where(t => t.Date >= sixMonthsAgo && 
+                           (t.TransactionType == CashTransactionType.CashIncome || 
+                            t.TransactionType == CashTransactionType.CardIncome || 
+                            t.TransactionType == CashTransactionType.TransferIncome))
                 .Sum(t => (decimal?)t.Amount) ?? 0;
 
             // Toplam Gider (6 ay)
             TotalExpense = _context.CashTransactions
-                .Where(t => t.Date >= sixMonthsAgo && t.IsExpense)
+                .Where(t => t.Date >= sixMonthsAgo && 
+                           (t.TransactionType == CashTransactionType.Expense || 
+                            t.TransactionType == CashTransactionType.TransferExpense))
                 .Sum(t => (decimal?)t.Amount) ?? 0;
 
             // Aktif İşler
@@ -184,11 +189,16 @@ namespace KamatekCrm.ViewModels
                 var endDate = startDate.AddMonths(1);
 
                 incomeData[i] = (double)(_context.CashTransactions
-                    .Where(t => t.Date >= startDate && t.Date < endDate && t.IsIncome)
+                    .Where(t => t.Date >= startDate && t.Date < endDate && 
+                               (t.TransactionType == CashTransactionType.CashIncome || 
+                                t.TransactionType == CashTransactionType.CardIncome || 
+                                t.TransactionType == CashTransactionType.TransferIncome))
                     .Sum(t => (decimal?)t.Amount) ?? 0);
 
                 expenseData[i] = (double)(_context.CashTransactions
-                    .Where(t => t.Date >= startDate && t.Date < endDate && t.IsExpense)
+                    .Where(t => t.Date >= startDate && t.Date < endDate && 
+                               (t.TransactionType == CashTransactionType.Expense || 
+                                t.TransactionType == CashTransactionType.TransferExpense))
                     .Sum(t => (decimal?)t.Amount) ?? 0);
             }
 

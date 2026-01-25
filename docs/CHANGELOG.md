@@ -30,6 +30,9 @@ CRM uygulaması 4 büyük kurumsal modül ile ERP seviyesine yükseltildi.
 
 **Migration:** `AddERPEnhancements`
 
+### 🐛 Hata Düzeltmeleri
+- **AnalyticsViewModel**: EF Core LINQ Translation hatası (`IsIncome`/`IsExpense` unmapped properties) düzeltildi. Sorgularda explicit `TransactionType` kontrolüne geçildi.
+
 ---
 
 ## 2026-01-24
