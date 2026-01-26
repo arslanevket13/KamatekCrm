@@ -350,4 +350,24 @@
         </Setter>
     </Style>
 
+    <!-- ==================== VALIDATION ERROR TEMPLATE ==================== -->
+    <ControlTemplate x:Key="ValidationErrorTemplate">
+        <StackPanel>
+            <Border BorderBrush="{StaticResource ErrorColor}" BorderThickness="1" CornerRadius="4">
+                <AdornedElementPlaceholder x:Name="placeholder"/>
+            </Border>
+            <TextBlock Text="{Binding [0].ErrorContent}" 
+                       Foreground="{StaticResource ErrorColor}" 
+                       FontSize="11" 
+                       Margin="0,2,0,0"/>
+        </StackPanel>
+    </ControlTemplate>
+
+    <!-- ==================== NUMERIC TEXTBOX (Right Aligned) ==================== -->
+    <Style x:Key="NumericTextBox" TargetType="TextBox" BasedOn="{StaticResource ModernTextBox}">
+        <Setter Property="HorizontalContentAlignment" Value="Right"/>
+        <Setter Property="Validation.ErrorTemplate" Value="{StaticResource ValidationErrorTemplate}"/>
+        <!-- Note: Input restrictions usually handled by Behaviors or Code-behind in WPF/MVVM -->
+    </Style>
+
 </ResourceDictionary>

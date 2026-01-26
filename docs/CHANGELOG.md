@@ -45,6 +45,7 @@ CRM uygulaması 4 büyük kurumsal modül ile ERP seviyesine yükseltildi.
 - **Veritabanı**: `PipelineStage` Enum, `MaintenanceContracts` tablosu eklendi. `JobCategory.Other` seçeneği eklendi. Migration: `AddSmartERPCore`.
 - **UI FIX**: "Beyaz Ekran" sorunu (ViewModel binding hatası) ve "Görünmeyen Bildirim Butonu" (Stil hatası) düzeltildi.
 - **CRITICAL FIX**: `SlaService` UI bloklama sorunu giderildi (Async Task). `PipelineViewModel` DragDrop çökmesi (InvalidCast) düzeltildi. `NotificationService` bildirim döngüsü engellendi (Stateful memory).
+- **UX/UI OVERHAUL**: Klavye kısayolları (Enter/Esc), TabIndex sıralaması, DataGrid 'Delete' tuşu desteği ve Numeric TextBox stilleri eklendi.
 
 ---
 

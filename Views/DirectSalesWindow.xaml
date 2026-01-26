@@ -105,6 +105,8 @@
                                  FontSize="16"
                                  BorderThickness="0"
                                  Background="Transparent"
+                                 TabIndex="0"
+                                 FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}"
                                  VerticalAlignment="Center">
                             <TextBox.Style>
                                 <Style TargetType="TextBox">
@@ -451,6 +453,7 @@
                 <StackPanel Grid.Row="4">
                     <Button Style="{StaticResource LargePaymentButton}"
                             Command="{Binding ProcessCashPaymentCommand}"
+                            IsDefault="True"
                             Background="#4CAF50"
                             Foreground="White">
                         <StackPanel Orientation="Horizontal">

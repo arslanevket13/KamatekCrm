@@ -96,6 +96,7 @@
                 <DataGrid.InputBindings>
                     <MouseBinding MouseAction="LeftDoubleClick" 
                                   Command="{Binding EditProductCommand}"/>
+                    <KeyBinding Key="Delete" Command="{Binding DeleteProductCommand}"/>
                 </DataGrid.InputBindings>
                 
                 <DataGrid.Columns>

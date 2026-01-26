@@ -222,7 +222,11 @@
                               AutoGenerateColumns="False"
                               ItemsSource="{Binding CustomersView}"
                               SelectedItem="{Binding SelectedCustomer}"
-                              Style="{StaticResource ModernDataGrid}"
+                              Style="{StaticResource ModernDataGrid}">
+                        <DataGrid.InputBindings>
+                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding EditCustomerCommand}"/>
+                            <KeyBinding Key="Delete" Command="{Binding DeleteCustomerCommand}"/>
+                        </DataGrid.InputBindings>
                               ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
