@@ -29,8 +29,65 @@ namespace KamatekCrm.ViewModels
             AddNoteCommand = new RelayCommand(AddNote, _ => SelectedJob != null && !string.IsNullOrWhiteSpace(NewNoteText));
             RefreshCommand = new RelayCommand(_ => LoadData());
             OpenRegistrationCommand = new RelayCommand(OpenRegistration);
+            AddItemToJobCommand = new RelayCommand(AddItemToJob);
+            RemoveItemFromJobCommand = new RelayCommand(RemoveItemFromJob);
+            CompleteJobCommand = new RelayCommand(CompleteJob);
+            PrintServiceFormCommand = new RelayCommand(PrintServiceForm);
             
             LoadData();
+        }
+
+        private decimal _laborCost;
+        public decimal LaborCost
+        {
+            get => _laborCost;
+            set
+            {
+                if (SetProperty(ref _laborCost, value)) UpdateTotals();
+            }
+        }
+
+        private decimal _discountAmount;
+        public decimal DiscountAmount
+        {
+            get => _discountAmount;
+            set
+            {
+                if (SetProperty(ref _discountAmount, value)) UpdateTotals();
+            }
+        }
+
+        public decimal MaterialTotal => CurrentJobItems.Sum(x => x.UnitPrice * x.QuantityUsed);
+        public decimal GrandTotal => MaterialTotal + LaborCost - DiscountAmount;
+
+        public ObservableCollection<ServiceJobItem> CurrentJobItems { get; set; } = new ObservableCollection<ServiceJobItem>();
+        public ObservableCollection<Product> Products { get; set; } = new ObservableCollection<Product>();
+
+        private Product? _selectedProductToAdd;
+        public Product? SelectedProductToAdd
+        {
+            get => _selectedProductToAdd;
+            set
+            {
+                if (SetProperty(ref _selectedProductToAdd, value) && value != null)
+                {
+                    UnitPriceToAdd = value.SalePrice;
+                }
+            }
+        }
+
+        private int _quantityToAdd = 1;
+        public int QuantityToAdd
+        {
+            get => _quantityToAdd;
+            set => SetProperty(ref _quantityToAdd, value);
+        }
+
+        private decimal _unitPriceToAdd;
+        public decimal UnitPriceToAdd
+        {
+            get => _unitPriceToAdd;
+            set => SetProperty(ref _unitPriceToAdd, value);
         }
 
         #region Properties (List & Detail)
@@ -119,6 +176,11 @@ namespace KamatekCrm.ViewModels
 
 
 
+        public ICommand AddItemToJobCommand { get; }
+        public ICommand RemoveItemFromJobCommand { get; }
+        public ICommand CompleteJobCommand { get; }
+        public ICommand PrintServiceFormCommand { get; }
+
         public void SelectJobById(int id)
         {
             var job = AllRepairs.FirstOrDefault(x => x.Id == id);
@@ -147,9 +209,19 @@ namespace KamatekCrm.ViewModels
             Customers.Clear();
             foreach(var c in customers) Customers.Add(c);
 
+            // Ürünleri yükle (Parça değişimi için)
+            LoadProducts();
+
             OnPropertyChanged(nameof(PendingRepairs));
             OnPropertyChanged(nameof(InProgressRepairs));
             OnPropertyChanged(nameof(CompletedRepairs));
+        }
+
+        private void LoadProducts()
+        {
+            Products.Clear();
+            var products = _context.Products.OrderBy(p => p.ProductName).ToList();
+            foreach (var p in products) Products.Add(p);
         }
 
         private void LoadHistory(int jobId)
@@ -157,6 +229,7 @@ namespace KamatekCrm.ViewModels
             if (jobId == 0)
             {
                 JobHistory.Clear();
+                CurrentJobItems.Clear();
                 return;
             }
 
@@ -166,12 +239,33 @@ namespace KamatekCrm.ViewModels
                 .ToList();
 
             JobHistory = new ObservableCollection<ServiceJobHistory>(history);
+
+            // Parçaları yükle
+            LoadJobItems(jobId);
+        }
+
+        private void LoadJobItems(int jobId)
+        {
+            CurrentJobItems.Clear();
+            var items = _context.ServiceJobItems
+                .Include(i => i.Product)
+                .Where(i => i.ServiceJobId == jobId)
+                .ToList();
+
+            foreach(var item in items) CurrentJobItems.Add(item);
+            
+            // Fiyatları güncelle
+            if (SelectedJob != null)
+            {
+                 // Eğer DB'de kayıtlı değerler 0 ise hesapla, yoksa kaydet
+                 // Basitlik için UI'da gösterilen değerleri SelectedJob üzerinden alıyoruz
+                 // Değişiklikler Save/Update ile kaydedilmeli
+            }
+            UpdateTotals();
         }
 
         private void OpenRegistration(object? parameter)
         {
-            // Yeni pencere açma işlemi View katmanında yapılacak code-behind veya servis aracılığıyla yapılır.
-            // MVVM kuralını esneterek şimdilik basit tutuyoruz, bu command View'dan tetiklenecek
             ResetNewJobForm();
         }
 
@@ -242,6 +336,13 @@ namespace KamatekCrm.ViewModels
             if (newStatus == RepairStatus.Delivered) SelectedJob.Status = JobStatus.Completed;
             else if (newStatus == RepairStatus.Unrepairable) SelectedJob.Status = JobStatus.Cancelled;
             else SelectedJob.Status = JobStatus.InProgress;
+
+            if (newStatus == RepairStatus.ReadyForPickup || newStatus == RepairStatus.Delivered)
+            {
+                // Fiyatları kaydet
+                SelectedJob.LaborCost = LaborCost;
+                SelectedJob.DiscountAmount = DiscountAmount;
+            }
 
             _context.ServiceJobs.Update(SelectedJob);
 
@@ -318,6 +419,116 @@ namespace KamatekCrm.ViewModels
 
             NewNoteText = string.Empty;
             LoadHistory(SelectedJob.Id);
+        }
+
+        // ==========================================
+        // PARÇA VE MALİYET YÖNETİMİ
+        // ==========================================
+
+        private void AddItemToJob(object? parameter)
+        {
+            if (SelectedJob == null || SelectedProductToAdd == null) return;
+
+            var newItem = new ServiceJobItem
+            {
+                ServiceJobId = SelectedJob.Id,
+                ProductId = SelectedProductToAdd.Id,
+                Product = SelectedProductToAdd, // Navigation prop
+                QuantityUsed = QuantityToAdd,
+                UnitPrice = UnitPriceToAdd,
+                UnitCost = SelectedProductToAdd.PurchasePrice
+            };
+
+            _context.ServiceJobItems.Add(newItem);
+            _context.SaveChanges(); // DB'ye hemen ekle
+
+            CurrentJobItems.Add(newItem);
+            
+            // Stok güncellemesi (opsiyonel hemen düşülmesi gerekiyorsa)
+            // Şimdilik "Complete" aşamasında düşme mantığı korunabilir veya burada düşülebilir.
+            // ServiceJobViewModel'da CompleteJob'da düşülüyordu. Burada da aynısını yapalım.
+
+            SelectedProductToAdd = null;
+            QuantityToAdd = 1;
+            UnitPriceToAdd = 0;
+            UpdateTotals();
+        }
+
+        private void RemoveItemFromJob(object? parameter)
+        {
+            if (parameter is ServiceJobItem item)
+            {
+                _context.ServiceJobItems.Remove(item);
+                _context.SaveChanges();
+                CurrentJobItems.Remove(item);
+                UpdateTotals();
+            }
+        }
+
+        private void UpdateTotals()
+        {
+            if (SelectedJob == null) return;
+
+            OnPropertyChanged(nameof(MaterialTotal));
+            OnPropertyChanged(nameof(GrandTotal));
+            
+            // DB Update (Fiyatlar değiştikçe kaydetmek iyi olabilir)
+            SelectedJob.LaborCost = LaborCost;
+            SelectedJob.DiscountAmount = DiscountAmount;
+            _context.ServiceJobs.Update(SelectedJob);
+            _context.SaveChanges();
+        }
+
+        private void CompleteJob(object? parameter)
+        {
+            // Stok düşme işlemi ve 'Delivered' statüsüne çekme
+            // Mevcut UpdateStatus('Delivered') çağrılabilir
+            UpdateStatus(RepairStatus.Delivered);
+
+             // Stok düşme işlemini buraya da ekleyebiliriz
+             foreach(var item in CurrentJobItems)
+             {
+                 var product = _context.Products.Find(item.ProductId);
+                 if (product != null)
+                 {
+                     product.TotalStockQuantity -= item.QuantityUsed;
+                 }
+             }
+             _context.SaveChanges();
+        }
+
+        private void PrintServiceForm(object? parameter)
+        {
+            if (SelectedJob == null) return;
+            
+            try
+            {
+                // PDF Servisi kullan
+                 var saveDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Servis Fişini Kaydet",
+                    Filter = "PDF Dosyası (*.pdf)|*.pdf",
+                    FileName = $"ServisFisi_{SelectedJob.Id}.pdf"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    // Tam data (Items yüklü olmalı)
+                    var pdfService = new PdfService();
+                    pdfService.GenerateServiceForm(SelectedJob, saveDialog.FileName);
+
+                     var processInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = saveDialog.FileName,
+                        UseShellExecute = true
+                    };
+                    System.Diagnostics.Process.Start(processInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Yazdırma hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         #endregion

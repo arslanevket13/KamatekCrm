@@ -5,10 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
         xmlns:enums="clr-namespace:KamatekCrm.Enums"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
-        Title="Arıza Takip &amp; İşlem Merkezi" Height="800" Width="1200"
-        WindowStartupLocation="CenterScreen">
+        Title="Arıza Takip &amp; Servis İşlem Merkezi" Height="850" Width="1400"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized">
 
     <Window.DataContext>
         <vm:RepairViewModel/>
@@ -20,153 +20,364 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="350"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="300"/> <!-- Sol Panel: Liste (Daraltıldı) -->
+            <ColumnDefinition Width="*"/>   <!-- Orta Panel: Detay & Geçmiş -->
+            <ColumnDefinition Width="400"/> <!-- Sağ Panel: Maliyet & Parça -->
         </Grid.ColumnDefinitions>
 
-        <!-- LEFT PANEL: LIST -->
-        <Border Grid.Column="0" BorderBrush="LightGray" BorderThickness="0,0,1,0">
+        <!-- ================= SOL PANEL: LİSTE ================= -->
+        <Border Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Background="#FAFAFA">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 
-                <TextBlock Text="Aktif Arızalar" FontWeight="Bold" FontSize="16" Margin="10"/>
+                <StackPanel Margin="15">
+                    <TextBlock Text="📋 Aktif İşler" FontWeight="Bold" FontSize="18" Foreground="#333"/>
+                    <TextBlock Text="Bekleyen ve devam eden arızalar" FontSize="12" Foreground="#888"/>
+                </StackPanel>
 
-                <ListBox Grid.Row="1" ItemsSource="{Binding AllRepairs}" SelectedItem="{Binding SelectedJob}" Margin="5">
+                <!-- Status Filter -->
+                <ComboBox Grid.Row="1" Margin="15,0,15,10" SelectedIndex="0" Style="{StaticResource ModernComboBox}">
+                    <ComboBoxItem Content="Tümü"/>
+                    <ComboBoxItem Content="Acil İşler"/>
+                    <ComboBoxItem Content="Parça Bekleyenler"/>
+                </ComboBox>
+
+                <ListBox Grid.Row="2" ItemsSource="{Binding AllRepairs}" SelectedItem="{Binding SelectedJob}" 
+                         BorderThickness="0" Background="Transparent"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0,0,0,5"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border Name="Border" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="15,10" Background="White">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#E3F2FD"/>
+                                                <Setter TargetName="Border" Property="BorderBrush" Value="#2196F3"/>
+                                                <Setter TargetName="Border" Property="BorderThickness" Value="4,0,0,0"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#F5F5F5"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Border BorderBrush="Gray" BorderThickness="0,0,0,1" Padding="5">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Customer.FullName}" FontWeight="Bold"/>
-                                    <TextBlock>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Icon/Badge -->
+                                <Border Width="40" Height="40" CornerRadius="20" Background="#E0E0E0" Margin="0,0,10,0">
+                                    <TextBlock Text="🔧" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18"/>
+                                </Border>
+                                
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Customer.FullName}" FontWeight="Bold" FontSize="13"/>
+                                    <TextBlock FontSize="11" Foreground="#666" Margin="0,2">
                                         <Run Text="{Binding DeviceBrand}"/> 
                                         <Run Text="{Binding DeviceModel}"/>
                                     </TextBlock>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding RepairStatus}" Foreground="Blue" FontWeight="SemiBold"/>
-                                        <TextBlock Text=" - "/>
-                                        <TextBlock Text="{Binding CreatedDate, StringFormat=dd.MM.yyyy}"/>
+                                        <Border Background="{Binding StatusBgColor}" CornerRadius="3" Padding="4,1">
+                                            <TextBlock Text="{Binding StatusDisplay}" FontSize="10" 
+                                                       Foreground="{Binding StatusColor}" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding CreatedDate, StringFormat=dd.MM}" Margin="8,0,0,0" 
+                                                   FontSize="10" Foreground="#999" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
-                            </Border>
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
                 
-                <Button Grid.Row="2" Content="Yeni Kayıt Aç" Margin="10" Height="40" Command="{Binding OpenRegistrationCommand}"/>
+                <Button Grid.Row="3" Content="+ Yeni Kayıt" Margin="15" Height="40" 
+                        Style="{StaticResource ModernButton}"
+                        Command="{Binding OpenRegistrationCommand}"/>
             </Grid>
         </Border>
 
-        <!-- RIGHT PANEL: DETAILS -->
-        <Grid Grid.Column="1" Margin="10">
+        <!-- ================= ORTA PANEL: DETAY & GEÇMİŞ ================= -->
+        <Grid Grid.Column="1" Margin="20" Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/> 
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Header Info -->
-            <StackPanel Grid.Row="0" Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <TextBlock Text="{Binding SelectedJob.Customer.FullName}" FontSize="24" FontWeight="Bold"/>
-                <TextBlock FontSize="16" Foreground="Gray">
-                    <Run Text="{Binding SelectedJob.DeviceBrand}"/>
-                    <Run Text="{Binding SelectedJob.DeviceModel}"/>
-                    <Run Text=" - Seri No: "/>
-                    <Run Text="{Binding SelectedJob.SerialNumber}"/>
-                </TextBlock>
-                <Separator Margin="0,10"/>
-                
-                <Grid Margin="0,0,0,10">
+            <!-- 1. Cihaz & Müşteri Kartı -->
+            <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,20">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" Opacity="0.1" ShadowDepth="2"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <Border Width="60" Height="60" CornerRadius="8" Background="#E3F2FD" Margin="0,0,20,0">
+                        <TextBlock Text="📱" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding SelectedJob.Customer.FullName}" FontSize="22" FontWeight="Bold" Foreground="#1565C0"/>
+                        <TextBlock FontSize="14" Foreground="#555" Margin="0,4,0,0">
+                            <Run Text="{Binding SelectedJob.DeviceBrand}" FontWeight="SemiBold"/>
+                            <Run Text="{Binding SelectedJob.DeviceModel}"/>
+                            <Run Text=" | " Foreground="#CCC"/>
+                            <Run Text="Seri No:" Foreground="#888"/>
+                            <Run Text="{Binding SelectedJob.SerialNumber}"/>
+                        </TextBlock>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                        <TextBlock Text="Takip No" FontSize="11" Foreground="#888" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding SelectedJob.Id, StringFormat='#TK-{0:D5}'}" FontSize="18" FontWeight="Bold" Foreground="#333"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 2. Arıza Bilgisi & Notlar -->
+            <GroupBox Grid.Row="1" Header="Arıza Beyanı &amp; Durum" Margin="0,0,0,20" Padding="10">
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
                     
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Aksesuarlar:" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding SelectedJob.Accessories}"/>
-                        <TextBlock Text="Fiziksel Durum:" FontWeight="Bold" Margin="0,5,0,0"/>
-                        <TextBlock Text="{Binding SelectedJob.PhysicalCondition}"/>
+                    <!-- Sol: Beyan -->
+                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,10">
+                        <TextBlock Text="Müşteri Şikayeti:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding SelectedJob.Description}" IsReadOnly="True" 
+                                 Background="#F9F9F9" BorderThickness="0" Padding="8" TextWrapping="Wrap" MinHeight="60"/>
+                        
+                        <TextBlock Text="Aksesuarlar &amp; Fiziksel Durum:" FontWeight="Bold" Margin="0,15,0,5"/>
+                        <TextBlock>
+                            <Run Text="Aksesuarlar:" Foreground="#666"/> <Run Text="{Binding SelectedJob.Accessories}"/>
+                            <LineBreak/>
+                            <Run Text="Fiziksel:" Foreground="#666"/> <Run Text="{Binding SelectedJob.PhysicalCondition}"/>
+                        </TextBlock>
                     </StackPanel>
-                    
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="Arıza Beyanı:" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding SelectedJob.Description}" TextWrapping="Wrap"/>
+
+                    <!-- Sağ: Hızlı Aksiyonlar -->
+                    <StackPanel Grid.Row="0" Grid.Column="1">
+                         <TextBlock Text="Durum Güncelle:" FontWeight="Bold" Margin="0,0,0,5"/>
+                         <WrapPanel>
+                             <Button Content="🔍 Tespit Yapılıyor" Command="{Binding UpdateStatusCommand}" Margin="2">
+                                 <Button.CommandParameter><enums:RepairStatus>Diagnosing</enums:RepairStatus></Button.CommandParameter>
+                             </Button>
+                             <Button Content="📦 Parça Bekliyor" Command="{Binding UpdateStatusCommand}" Margin="2">
+                                 <Button.CommandParameter><enums:RepairStatus>WaitingForParts</enums:RepairStatus></Button.CommandParameter>
+                             </Button>
+                             <Button Content="🏭 Servise Gönder" Command="{Binding UpdateStatusCommand}" Margin="2">
+                                 <Button.CommandParameter><enums:RepairStatus>SentToFactory</enums:RepairStatus></Button.CommandParameter>
+                             </Button>
+                             <Button Content="🔧 Tamir Sürüyor" Command="{Binding UpdateStatusCommand}" Margin="2">
+                                 <Button.CommandParameter><enums:RepairStatus>InRepair</enums:RepairStatus></Button.CommandParameter>
+                             </Button>
+                             <Button Content="✔️ Test Ok" Command="{Binding UpdateStatusCommand}" Margin="2">
+                                 <Button.CommandParameter><enums:RepairStatus>Testing</enums:RepairStatus></Button.CommandParameter>
+                             </Button>
+                             <Button Content="✅ Teslime Hazır" Background="#4CAF50" Foreground="White" Command="{Binding UpdateStatusCommand}" Margin="2">
+                                 <Button.CommandParameter><enums:RepairStatus>ReadyForPickup</enums:RepairStatus></Button.CommandParameter>
+                             </Button>
+                         </WrapPanel>
+                        
+                         <!-- Not Ekleme -->
+                         <TextBlock Text="Teknisyen Notu Ekle:" FontWeight="Bold" Margin="0,15,0,5"/>
+                         <Grid>
+                             <Grid.ColumnDefinitions>
+                                 <ColumnDefinition Width="*"/>
+                                 <ColumnDefinition Width="Auto"/>
+                             </Grid.ColumnDefinitions>
+                             <TextBox Text="{Binding NewNoteText}" Height="35" Style="{StaticResource ModernTextBox}" Margin="0,0,5,0"/>
+                             <Button Grid.Column="1" Content="Ekle" Command="{Binding AddNoteCommand}" Style="{StaticResource SecondaryButton}"/>
+                         </Grid>
                     </StackPanel>
                 </Grid>
-            </StackPanel>
-            
-            <!-- Actions Section -->
-             <GroupBox Grid.Row="1" Header="İşlem &amp; Durum" Margin="0,0,0,10" Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
-                 <StackPanel>
-                     <TextBlock Text="Durum Değiştir:" Margin="0,0,0,5"/>
-                     <WrapPanel Margin="0,0,0,10">
-                         <!-- Simple Status Buttons for Quick Actions -->
-                         <Button Content="Arıza Tespiti" Padding="10,5" Margin="2" Command="{Binding UpdateStatusCommand}">
-                             <Button.CommandParameter>
-                                 <enums:RepairStatus>Diagnosing</enums:RepairStatus>
-                             </Button.CommandParameter>
-                         </Button>
-                         <Button Content="Parça Bekleniyor" Padding="10,5" Margin="2" Command="{Binding UpdateStatusCommand}">
-                             <Button.CommandParameter>
-                                 <enums:RepairStatus>WaitingForParts</enums:RepairStatus>
-                             </Button.CommandParameter>
-                         </Button>
-                         <Button Content="Servise Gönder" Padding="10,5" Margin="2" Command="{Binding UpdateStatusCommand}">
-                             <Button.CommandParameter>
-                                 <enums:RepairStatus>SentToFactory</enums:RepairStatus>
-                             </Button.CommandParameter>
-                         </Button>
-                         <Button Content="Tamir Ediliyor" Padding="10,5" Margin="2" Command="{Binding UpdateStatusCommand}">
-                             <Button.CommandParameter>
-                                 <enums:RepairStatus>InRepair</enums:RepairStatus>
-                             </Button.CommandParameter>
-                         </Button>
-                         <Button Content="Hazır" Padding="10,5" Margin="2" Background="LightGreen" Command="{Binding UpdateStatusCommand}">
-                             <Button.CommandParameter>
-                                 <enums:RepairStatus>ReadyForPickup</enums:RepairStatus>
-                             </Button.CommandParameter>
-                         </Button>
-                         <Button Content="Teslim Et" Padding="10,5" Margin="2" Command="{Binding UpdateStatusCommand}">
-                             <Button.CommandParameter>
-                                 <enums:RepairStatus>Delivered</enums:RepairStatus>
-                             </Button.CommandParameter>
-                         </Button>
-                     </WrapPanel>
-                     
-                     <TextBlock Text="Teknisyen Notu:" Margin="0,0,0,5"/>
-                     <Grid>
-                         <Grid.ColumnDefinitions>
-                             <ColumnDefinition Width="*"/>
-                             <ColumnDefinition Width="Auto"/>
-                         </Grid.ColumnDefinitions>
-                         <TextBox Text="{Binding NewNoteText}" Height="60" TextWrapping="Wrap" AcceptsReturn="True"/>
-                         <Button Grid.Column="1" Content="Not Ekle" Width="100" Margin="10,0,0,0" Command="{Binding AddNoteCommand}"/>
-                     </Grid>
-                 </StackPanel>
-             </GroupBox>
+            </GroupBox>
 
-            <!-- History Feed -->
-            <GroupBox Grid.Row="2" Header="İşlem Geçmişi (Timeline)" Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <DataGrid ItemsSource="{Binding JobHistory}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column">
+            <!-- 2.5 Timeline Header -->
+            <TextBlock Grid.Row="2" Text="İşlem Geçmişi" FontWeight="Bold" Margin="0,0,0,10"/>
+
+            <!-- 3. Timeline / History -->
+            <DataGrid Grid.Row="3" ItemsSource="{Binding JobHistory}" 
+                      AutoGenerateColumns="False" IsReadOnly="True" 
+                      Style="{StaticResource ModernDataGrid}" HeadersVisibility="Column">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat='dd.MM.yyyy HH:mm'}" Width="130"/>
+                    <DataGridTemplateColumn Header="Durum" Width="140">
+                         <DataGridTemplateColumn.CellTemplate>
+                             <DataTemplate>
+                                 <Border Background="#F0F0F0" Padding="8,2" CornerRadius="4" HorizontalAlignment="Left">
+                                     <TextBlock Text="{Binding StatusChange}"/>
+                                 </Border>
+                             </DataTemplate>
+                         </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Açıklama" Binding="{Binding TechnicianNote}" Width="*"/>
+                    <DataGridTextColumn Header="İşlemi Yapan" Binding="{Binding UserId}" Width="100"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+        
+        <!-- ================= SAĞ PANEL: MALİYET & PARÇA ================= -->
+        <Border Grid.Column="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="1,0,0,0"
+                Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid Margin="15">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Margin="0,0,0,20">
+                    <TextBlock Text="🛠️ Malzeme &amp; Maliyet" FontWeight="Bold" FontSize="18" Foreground="#455A64"/>
+                    <TextBlock Text="Kullanılan parça ve işçilik giderleri" FontSize="12" Foreground="#90A4AE"/>
+                </StackPanel>
+
+                <!-- Parça Ekleme -->
+                <GroupBox Grid.Row="1" Header="Parça Ekle" BorderBrush="#B0BEC5" Padding="10" Margin="0,0,0,15">
+                     <StackPanel>
+                         <TextBlock Text="Ürün Seçimi:" FontSize="11" Foreground="#555" Margin="0,0,0,3"/>
+                         <ComboBox ItemsSource="{Binding Products}" 
+                                   SelectedItem="{Binding SelectedProductToAdd}"
+                                   DisplayMemberPath="ProductName"
+                                   IsEditable="True"
+                                   Height="32" Margin="0,0,0,8"/>
+                         
+                         <Grid>
+                             <Grid.ColumnDefinitions>
+                                 <ColumnDefinition Width="*"/>
+                                 <ColumnDefinition Width="*"/>
+                                 <ColumnDefinition Width="Auto"/>
+                             </Grid.ColumnDefinitions>
+                             
+                             <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                                 <TextBlock Text="Adet:" FontSize="11" Foreground="#555" Margin="0,0,0,3"/>
+                                 <TextBox Text="{Binding QuantityToAdd}" Height="30" TextAlignment="Center"/>
+                             </StackPanel>
+                             
+                             <StackPanel Grid.Column="1" Margin="0,0,5,0">
+                                 <TextBlock Text="Satış Fiyatı:" FontSize="11" Foreground="#555" Margin="0,0,0,3"/>
+                                 <TextBox Text="{Binding UnitPriceToAdd}" Height="30" TextAlignment="Right"/>
+                             </StackPanel>
+                             
+                             <Button Grid.Column="2" Content="EKLE" Width="60" Height="30" VerticalAlignment="Bottom"
+                                     Command="{Binding AddItemToJobCommand}"
+                                     Background="#4CAF50" Foreground="White" FontWeight="Bold"/>
+                         </Grid>
+                     </StackPanel>
+                </GroupBox>
+
+                <!-- Parça Listesi -->
+                <DataGrid Grid.Row="2" ItemsSource="{Binding CurrentJobItems}" 
+                          AutoGenerateColumns="False" CanUserAddRows="False"
+                          BorderThickness="1" BorderBrush="#EEEEEE"
+                          Margin="0,0,0,15">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat='dd.MM.yyyy HH:mm'}" Width="120"/>
-                        <DataGridTextColumn Header="Durum" Binding="{Binding StatusChange}" Width="120"/>
-                        <DataGridTextColumn Header="Not / İşlem" Binding="{Binding TechnicianNote}" Width="*"/>
-                        <DataGridTextColumn Header="Kullanıcı" Binding="{Binding UserId}" Width="80"/>
+                        <DataGridTextColumn Header="Ürün" Binding="{Binding Product.ProductName}" Width="*"/>
+                        <DataGridTextColumn Header="Adet" Binding="{Binding QuantityUsed}" Width="40"/>
+                        <DataGridTextColumn Header="Tutar" Binding="{Binding UnitPrice, StringFormat=N0}" Width="60"/>
+                        <DataGridTemplateColumn Width="40">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="🗑️" Command="{Binding DataContext.RemoveItemFromJobCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Padding="2" Background="Transparent" BorderThickness="0"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
-            </GroupBox>
-            
-            <!-- Empty State -->
-            <TextBlock Grid.Row="1" Text="Lütfen soldan bir kayıt seçin." 
-                       HorizontalAlignment="Center" VerticalAlignment="Center" 
-                       FontSize="18" Foreground="Gray"
-                       Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverted}"/> <!-- Need inverted converter or trigger -->
-        </Grid>
+
+                <!-- Özet -->
+                <Grid Grid.Row="3" Background="#F5F5F5" Margin="-15,0,-15,15">
+                    <Grid Margin="15">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                             <ColumnDefinition Width="*"/>
+                             <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="Malzeme Toplam:" Foreground="#666"/>
+                        <TextBlock Grid.Column="1" Text="{Binding MaterialTotal, StringFormat=C2}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+
+                        <TextBlock Grid.Row="1" Text="İşçilik:" Foreground="#666" Margin="0,8,0,0" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged}" 
+                                 Margin="0,8,0,0" TextAlignment="Right" Background="White"/>
+
+                        <TextBlock Grid.Row="2" Text="İndirim:" Foreground="#E57373" Margin="0,8,0,0" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged}" 
+                                 Margin="0,8,0,0" TextAlignment="Right" Background="White" Foreground="#E57373"/>
+
+                        <Separator Grid.Row="3" Grid.ColumnSpan="2" Margin="0,10"/>
+                        
+                        <TextBlock Grid.Row="4" Text="GENEL TOPLAM:" FontWeight="Bold" FontSize="14"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding GrandTotal, StringFormat=C2}" 
+                                   HorizontalAlignment="Right" FontWeight="Bold" FontSize="16" Foreground="#D32F2F"/>
+                    </Grid>
+                </Grid>
+
+                <!-- Actions -->
+                <StackPanel Grid.Row="4">
+                    <Button Content="🖨️ Servis Fişi Yazdır" Height="40" Margin="0,0,0,10"
+                            Style="{StaticResource SecondaryButton}"
+                            Command="{Binding PrintServiceFormCommand}"/>
+                    
+                    <Button Content="✅ İŞLEMİ TAMAMLA &amp; TESLİM ET" Height="50" 
+                            Background="#1565C0" Foreground="White" FontWeight="Bold" FontSize="13"
+                            Command="{Binding CompleteJobCommand}">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="6"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Empty State (No selection) -->
+        <Border Grid.Column="1" Grid.ColumnSpan="2" Background="White" 
+                Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverted}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="🔍" FontSize="60" HorizontalAlignment="Center" Foreground="#DDD"/>
+                <TextBlock Text="Lütfen soldaki listeden bir iş seçin." FontSize="20" Foreground="Gray" Margin="0,20,0,0"/>
+            </StackPanel>
+        </Border>
     </Grid>
-    
 </Window>

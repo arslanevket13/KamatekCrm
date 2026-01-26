@@ -46,8 +46,13 @@ CRM uygulaması 4 büyük kurumsal modül ile ERP seviyesine yükseltildi.
 - **UI FIX**: "Beyaz Ekran" sorunu (ViewModel binding hatası) ve "Görünmeyen Bildirim Butonu" (Stil hatası) düzeltildi.
 - **CRITICAL FIX**: `SlaService` UI bloklama sorunu giderildi (Async Task). `PipelineViewModel` DragDrop çökmesi (InvalidCast) düzeltildi. `NotificationService` bildirim döngüsü engellendi (Stateful memory).
 - **UX/UI OVERHAUL**: Klavye kısayolları (Enter/Esc), TabIndex sıralaması, DataGrid 'Delete' tuşu desteği ve Numeric TextBox stilleri eklendi.
-- **REPAIR SYSTEM FIX**: Arıza listesi ("RepairListView") asenkron yüklenecek şekilde (`async/await`) optimize edildi. UI bloklanmaları giderildi.
-- **NEW FEATURES**: Arıza Listesi'ne "+ Yeni Arıza Kaydı" butonu eklendi. Çift tıklama ile detay penceresine (`RepairTrackingWindow`) geçiş sağlandı.
+- **REPAIR SYSTEM FIX**: Arıza listesi ("RepairListView") asenkron yüklenecek şekilde (`async/await`) optimize edildi.
+- **MAJOR FEATURE**: Arıza Takip Ekranı (`RepairTrackingWindow`) tamamen yenilendi.
+    - **Parça Yönetimi**: Arıza kaydına malzeme/yedek parça ekleme özelliği getirildi.
+    - **Maliyet Takibi**: Malzeme + İşçilik + İndirim hesaplaması eklendi.
+    - **Servis Fişi**: Müşteri için PDF servis formu yazdırma özelliği entegre edildi.
+    - **Stok Entegrasyonu**: Kullanılan parçaların stoktan otomatik düşülmesi sağlandı.
+- **NEW FEATURES**: Arıza Listesi'ne "+ Yeni Arıza Kaydı" butonu eklendi. Navigasyon iyileştirildi.
 
 ---
 
