@@ -117,6 +117,17 @@ namespace KamatekCrm.ViewModels
         public ICommand RefreshCommand { get; }
         public ICommand OpenRegistrationCommand { get; }
 
+
+
+        public void SelectJobById(int id)
+        {
+            var job = AllRepairs.FirstOrDefault(x => x.Id == id);
+            if (job != null)
+            {
+                SelectedJob = job;
+            }
+        }
+
         #endregion
 
         #region Methods

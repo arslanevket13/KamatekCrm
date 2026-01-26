@@ -71,6 +71,13 @@ namespace KamatekCrm.ViewModels
 
         public int TotalCount => FilteredRepairJobs?.Cast<object>().Count() ?? 0;
 
+        private bool _isBusy;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set => SetProperty(ref _isBusy, value);
+        }
+
         // Commands
         public ICommand RefreshCommand { get; }
         public ICommand ClearFiltersCommand { get; }
@@ -78,6 +85,7 @@ namespace KamatekCrm.ViewModels
         public ICommand ShowRepairPhotosCommand { get; }
         public ICommand PrintTicketCommand { get; }
         public ICommand OpenRepairDetailCommand { get; }
+        public ICommand CreateNewRepairCommand { get; }
 
         public RepairListViewModel()
         {
@@ -89,12 +97,13 @@ namespace KamatekCrm.ViewModels
             InitializeStatusOptions();
 
             // Commands
-            RefreshCommand = new RelayCommand(_ => LoadRepairJobs());
+            RefreshCommand = new RelayCommand(async _ => await LoadRepairJobsAsync());
             ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
             NotifyCustomerCommand = new RelayCommand(ExecuteNotifyCustomer);
             ShowRepairPhotosCommand = new RelayCommand(ExecuteShowPhotos);
             PrintTicketCommand = new RelayCommand(ExecutePrintTicket);
             OpenRepairDetailCommand = new RelayCommand(ExecuteOpenDetail);
+            CreateNewRepairCommand = new RelayCommand(ExecuteCreateNewRepair);
 
             // CollectionView
             FilteredRepairJobs = CollectionViewSource.GetDefaultView(AllRepairJobs);
@@ -102,7 +111,7 @@ namespace KamatekCrm.ViewModels
             FilteredRepairJobs.CollectionChanged += (s, e) => OnPropertyChanged(nameof(TotalCount));
 
             // Veriyi yükle
-            LoadRepairJobs();
+            _ = LoadRepairJobsAsync();
         }
 
         private void InitializeStatusOptions()
@@ -118,17 +127,20 @@ namespace KamatekCrm.ViewModels
             StatusOptions.Add(new RepairStatusOption { Status = RepairStatus.Delivered, DisplayName = "Teslim Edildi", Icon = "🚗" });
         }
 
-        private void LoadRepairJobs()
+        private async Task LoadRepairJobsAsync()
         {
+            if (IsBusy) return;
+
+            IsBusy = true;
             AllRepairJobs.Clear();
 
             try
             {
-                var repairJobs = _context.ServiceJobs
+                var repairJobs = await _context.ServiceJobs
                     .Include(j => j.Customer)
                     .Where(j => j.WorkOrderType == WorkOrderType.Repair)
                     .OrderByDescending(j => j.CreatedDate)
-                    .ToList();
+                    .ToListAsync();
 
                 foreach (var job in repairJobs)
                 {
@@ -154,6 +166,10 @@ namespace KamatekCrm.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"Veriler yüklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 
@@ -238,8 +254,18 @@ namespace KamatekCrm.ViewModels
         {
             if (parameter is RepairJobDisplayItem job)
             {
-                // RepairTrackingWindow ile açılabilir
-                MessageBox.Show($"Tamir detay penceresi: {job.TicketNo}", "Detay", MessageBoxButton.OK, MessageBoxImage.Information);
+                var detailWindow = new Views.RepairTrackingWindow(job.Id);
+                detailWindow.Show();
+            }
+        }
+
+        private async void ExecuteCreateNewRepair(object? parameter)
+        {
+            var regWindow = new Views.RepairRegistrationWindow();
+            if (regWindow.ShowDialog() == true) // Eğer DialogResult true dönerse (Kaydedildi)
+            {
+                // Listeyi yenile
+                 await LoadRepairJobsAsync();
             }
         }
     }

@@ -7,9 +7,18 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class RepairTrackingWindow : Window
     {
+
         public RepairTrackingWindow()
         {
             InitializeComponent();
+        }
+
+        public RepairTrackingWindow(int jobId) : this()
+        {
+            if (DataContext is ViewModels.RepairViewModel vm)
+            {
+                vm.SelectJobById(jobId);
+            }
         }
     }
 }

@@ -31,11 +31,35 @@
             </StackPanel>
             
             <!-- Yenile butonu -->
-            <Button Content="🔄 Yenile" 
+            <!-- Yeni Kayıt butonu -->
+            <Button Content="+ Yeni Arıza Kaydı" 
+                    Style="{StaticResource ModernButton}"
+                    Command="{Binding CreateNewRepairCommand}"
+                    Margin="30,0,10,0"
+                    VerticalAlignment="Center"/>
+
+            <!-- Yenile butonu -->
+            <Button Content="🔄" 
                     Style="{StaticResource SecondaryButton}"
                     Command="{Binding RefreshCommand}"
-                    Margin="30,0,0,0"
+                    ToolTip="Listeyi Yenile"
                     VerticalAlignment="Center"/>
+
+            <!-- Loading Indicator -->
+            <ProgressBar Width="100" Height="4" Margin="15,0,0,0"
+                         IsIndeterminate="True"
+                         VerticalAlignment="Center">
+                 <ProgressBar.Style>
+                     <Style TargetType="ProgressBar">
+                         <Setter Property="Visibility" Value="Collapsed"/>
+                         <Style.Triggers>
+                             <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                 <Setter Property="Visibility" Value="Visible"/>
+                             </DataTrigger>
+                         </Style.Triggers>
+                     </Style>
+                 </ProgressBar.Style>
+            </ProgressBar>
         </StackPanel>
 
         <!-- ===== FİLTRE BAR ===== -->
