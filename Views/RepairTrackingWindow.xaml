@@ -92,8 +92,8 @@
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Text="{Binding Customer.FullName}" FontWeight="Bold" FontSize="13"/>
                                     <TextBlock FontSize="11" Foreground="#666" Margin="0,2">
-                                        <Run Text="{Binding DeviceBrand}"/> 
-                                        <Run Text="{Binding DeviceModel}"/>
+                                        <Run Text="{Binding DeviceBrand, Mode=OneWay}"/> 
+                                        <Run Text="{Binding DeviceModel, Mode=OneWay}"/>
                                     </TextBlock>
                                     <StackPanel Orientation="Horizontal">
                                         <Border Background="{Binding StatusBgColor}" CornerRadius="3" Padding="4,1">
@@ -143,11 +143,11 @@
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Text="{Binding SelectedJob.Customer.FullName}" FontSize="22" FontWeight="Bold" Foreground="#1565C0"/>
                         <TextBlock FontSize="14" Foreground="#555" Margin="0,4,0,0">
-                            <Run Text="{Binding SelectedJob.DeviceBrand}" FontWeight="SemiBold"/>
-                            <Run Text="{Binding SelectedJob.DeviceModel}"/>
+                            <Run Text="{Binding SelectedJob.DeviceBrand, Mode=OneWay}" FontWeight="SemiBold"/>
+                            <Run Text="{Binding SelectedJob.DeviceModel, Mode=OneWay}"/>
                             <Run Text=" | " Foreground="#CCC"/>
                             <Run Text="Seri No:" Foreground="#888"/>
-                            <Run Text="{Binding SelectedJob.SerialNumber}"/>
+                            <Run Text="{Binding SelectedJob.SerialNumber, Mode=OneWay}"/>
                         </TextBlock>
                     </StackPanel>
                     
@@ -178,9 +178,9 @@
                         
                         <TextBlock Text="Aksesuarlar &amp; Fiziksel Durum:" FontWeight="Bold" Margin="0,15,0,5"/>
                         <TextBlock>
-                            <Run Text="Aksesuarlar:" Foreground="#666"/> <Run Text="{Binding SelectedJob.Accessories}"/>
+                            <Run Text="Aksesuarlar:" Foreground="#666"/> <Run Text="{Binding SelectedJob.Accessories, Mode=OneWay}"/>
                             <LineBreak/>
-                            <Run Text="Fiziksel:" Foreground="#666"/> <Run Text="{Binding SelectedJob.PhysicalCondition}"/>
+                            <Run Text="Fiziksel:" Foreground="#666"/> <Run Text="{Binding SelectedJob.PhysicalCondition, Mode=OneWay}"/>
                         </TextBlock>
                     </StackPanel>
 

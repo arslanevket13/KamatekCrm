@@ -44,16 +44,17 @@
 
                 <!-- Customer Type Selection (RadioButtons) -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
+                    <StackPanel.Resources>
+                        <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>
+                    </StackPanel.Resources>
                     <TextBlock Text="Müşteri Tipi:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,20,0"/>
                     <RadioButton Content="Bireysel" 
-                                 IsChecked="{Binding NewCustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Individual, Mode=OneWay}"
-                                 Checked="OnIndividualChecked"
+                                 IsChecked="{Binding NewCustomerType, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Individual, Mode=TwoWay}"
                                  GroupName="NewCustomerType" 
                                  Margin="0,0,20,0" 
                                  VerticalAlignment="Center"/>
                     <RadioButton Content="Kurumsal" 
-                                 IsChecked="{Binding NewCustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Corporate, Mode=OneWay}"
-                                 Checked="OnCorporateChecked"
+                                 IsChecked="{Binding NewCustomerType, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Corporate, Mode=TwoWay}"
                                  GroupName="NewCustomerType" 
                                  VerticalAlignment="Center"/>
                 </StackPanel>
@@ -222,15 +223,15 @@
                               AutoGenerateColumns="False"
                               ItemsSource="{Binding CustomersView}"
                               SelectedItem="{Binding SelectedCustomer}"
-                              Style="{StaticResource ModernDataGrid}">
-                        <DataGrid.InputBindings>
-                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding EditCustomerCommand}"/>
-                            <KeyBinding Key="Delete" Command="{Binding DeleteCustomerCommand}"/>
-                        </DataGrid.InputBindings>
+                              Style="{StaticResource ModernDataGrid}"
                               ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               CanUserAddRows="False">
+                        <DataGrid.InputBindings>
+                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding EditCustomerCommand}"/>
+                            <KeyBinding Key="Delete" Command="{Binding DeleteCustomerCommand}"/>
+                        </DataGrid.InputBindings>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Ad Soyad" Binding="{Binding FullName}" Width="1.5*"/>
                             <DataGridTextColumn Header="Telefon" Binding="{Binding PhoneNumber}" Width="*"/>

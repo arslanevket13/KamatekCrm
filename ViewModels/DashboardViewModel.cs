@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
@@ -7,6 +8,10 @@ using KamatekCrm.Data;
 using KamatekCrm.Enums;
 using KamatekCrm.Models;
 using Microsoft.EntityFrameworkCore;
+using LiveChartsCore;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using SkiaSharp;
 
 namespace KamatekCrm.ViewModels
 {
@@ -22,7 +27,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Kullanıcı karşılama metni
         /// </summary>
-        public string WelcomeMessage => "Hoşgeldin, Admin";
+        public string WelcomeMessage => $"Hoşgeldin, {Services.AuthService.CurrentUser?.AdSoyad ?? "Kullanıcı"}";
 
         /// <summary>
         /// Bugünün tarihi (Türkçe format)
@@ -147,6 +152,40 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
+        #region LiveCharts Properties
+
+        /// <summary>
+        /// 7 günlük gelir/gider trend grafiği
+        /// </summary>
+        public ISeries[] WeeklyTrendSeries { get; set; } = Array.Empty<ISeries>();
+
+        /// <summary>
+        /// X ekseni - Günler
+        /// </summary>
+        public Axis[] WeeklyTrendXAxes { get; set; } = Array.Empty<Axis>();
+
+        /// <summary>
+        /// Y ekseni
+        /// </summary>
+        public Axis[] WeeklyTrendYAxes { get; set; } = Array.Empty<Axis>();
+
+        /// <summary>
+        /// İş kategorileri dağılımı (Pie Chart)
+        /// </summary>
+        public ISeries[] JobCategoryPieSeries { get; set; } = Array.Empty<ISeries>();
+
+        /// <summary>
+        /// Teknisyen performans grafiği
+        /// </summary>
+        public ISeries[] TechnicianPerformanceSeries { get; set; } = Array.Empty<ISeries>();
+
+        /// <summary>
+        /// X ekseni - Teknisyenler
+        /// </summary>
+        public Axis[] TechnicianXAxes { get; set; } = Array.Empty<Axis>();
+
+        #endregion
+
         #region Commands
 
         public ICommand RefreshDashboardCommand { get; }
@@ -173,6 +212,7 @@ namespace KamatekCrm.ViewModels
             LoadReadyRepairs();
             LoadMonthlyFinancials();
             LoadFinancialSummary();
+            LoadChartData();
         }
 
         private void LoadFinancialSummary()
@@ -365,6 +405,152 @@ namespace KamatekCrm.ViewModels
                 JobCategory.FiberOptic => "Fiber",
                 _ => "Diğer"
             };
+        }
+
+        /// <summary>
+        /// Grafik verilerini yükle
+        /// </summary>
+        private void LoadChartData()
+        {
+            try
+            {
+                LoadWeeklyTrendChart();
+                LoadJobCategoryPieChart();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Chart loading error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 7 günlük gelir trend grafiği
+        /// </summary>
+        private void LoadWeeklyTrendChart()
+        {
+            var labels = new List<string>();
+            var incomeData = new List<double>();
+            var jobsData = new List<double>();
+
+            for (int i = 6; i >= 0; i--)
+            {
+                var date = DateTime.Today.AddDays(-i);
+                labels.Add(date.ToString("ddd", new System.Globalization.CultureInfo("tr-TR")));
+
+                // Günlük gelir
+                var dailyIncome = _context.CashTransactions
+                    .Where(t => t.Date.Date == date.Date && 
+                        (t.TransactionType == CashTransactionType.CashIncome || 
+                         t.TransactionType == CashTransactionType.CardIncome || 
+                         t.TransactionType == CashTransactionType.TransferIncome))
+                    .Select(t => (double)t.Amount)
+                    .AsEnumerable()
+                    .Sum();
+                incomeData.Add(dailyIncome);
+
+                // Günlük tamamlanan iş sayısı
+                var dailyJobs = _context.ServiceJobs
+                    .Count(j => j.CompletedDate.HasValue && j.CompletedDate.Value.Date == date.Date);
+                jobsData.Add(dailyJobs);
+            }
+
+            WeeklyTrendSeries = new ISeries[]
+            {
+                new LineSeries<double>
+                {
+                    Values = incomeData,
+                    Name = "Gelir (₺)",
+                    Stroke = new SolidColorPaint(SKColors.DodgerBlue) { StrokeThickness = 3 },
+                    Fill = new LinearGradientPaint(
+                        new[] { SKColors.DodgerBlue.WithAlpha(100), SKColors.DodgerBlue.WithAlpha(20) },
+                        new SKPoint(0.5f, 0), new SKPoint(0.5f, 1)),
+                    GeometrySize = 10,
+                    GeometryStroke = new SolidColorPaint(SKColors.DodgerBlue) { StrokeThickness = 2 },
+                    GeometryFill = new SolidColorPaint(SKColors.White),
+                    LineSmoothness = 0.7
+                },
+                new ColumnSeries<double>
+                {
+                    Values = jobsData,
+                    Name = "Tamamlanan İş",
+                    Fill = new SolidColorPaint(SKColors.MediumSeaGreen.WithAlpha(180)),
+                    MaxBarWidth = 20,
+                    Rx = 4,
+                    Ry = 4
+                }
+            };
+
+            WeeklyTrendXAxes = new Axis[]
+            {
+                new Axis
+                {
+                    Labels = labels,
+                    LabelsPaint = new SolidColorPaint(SKColors.Gray),
+                    TextSize = 11
+                }
+            };
+
+            WeeklyTrendYAxes = new Axis[]
+            {
+                new Axis
+                {
+                    LabelsPaint = new SolidColorPaint(SKColors.Gray),
+                    TextSize = 11,
+                    Labeler = value => value.ToString("N0")
+                }
+            };
+
+            OnPropertyChanged(nameof(WeeklyTrendSeries));
+            OnPropertyChanged(nameof(WeeklyTrendXAxes));
+            OnPropertyChanged(nameof(WeeklyTrendYAxes));
+        }
+
+        /// <summary>
+        /// İş kategorileri dağılım grafiği
+        /// </summary>
+        private void LoadJobCategoryPieChart()
+        {
+            var categoryData = _context.ServiceJobs
+                .Where(j => j.Status != JobStatus.Completed)
+                .GroupBy(j => j.JobCategory)
+                .Select(g => new { Category = g.Key, Count = g.Count() })
+                .ToList();
+
+            if (categoryData.Count == 0)
+            {
+                JobCategoryPieSeries = Array.Empty<ISeries>();
+                OnPropertyChanged(nameof(JobCategoryPieSeries));
+                return;
+            }
+
+            var colors = new SKColor[]
+            {
+                SKColors.DodgerBlue,
+                SKColors.Orange,
+                SKColors.MediumSeaGreen,
+                SKColors.Tomato,
+                SKColors.MediumPurple,
+                SKColors.Gold,
+                SKColors.DeepPink,
+                SKColors.Teal
+            };
+
+            var series = new List<ISeries>();
+            int colorIndex = 0;
+            foreach (var item in categoryData)
+            {
+                series.Add(new PieSeries<int>
+                {
+                    Values = new[] { item.Count },
+                    Name = GetCategoryName(item.Category),
+                    Fill = new SolidColorPaint(colors[colorIndex % colors.Length]),
+                    Pushout = 2
+                });
+                colorIndex++;
+            }
+
+            JobCategoryPieSeries = series.ToArray();
+            OnPropertyChanged(nameof(JobCategoryPieSeries));
         }
 
         #endregion

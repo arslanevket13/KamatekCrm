@@ -9,6 +9,11 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <!-- Tema - Varsayılan Light -->
+                <ResourceDictionary Source="Resources/Themes/LightTheme.xaml"/>
+                <!-- Animasyonlar -->
+                <ResourceDictionary Source="Resources/Animations.xaml"/>
+                <!-- Stiller -->
                 <ResourceDictionary Source="Resources/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
@@ -99,6 +104,7 @@
             <!-- Global Converters -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
             <converters:IntToVisibilityConverter x:Key="IntToVis"/>
+            <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBoolToVis"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

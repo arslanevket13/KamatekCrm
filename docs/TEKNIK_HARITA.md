@@ -73,9 +73,12 @@ KamatekCrm/
 │   ├── AttachmentEntityType.cs # Dosya entity türleri (YENİ)
 │   └── StockTransactionType.cs
 │
+├── Converters/           # Değer dönüştürücüler
+│   ├── IntToVisibilityConverter.cs               # int → Visibility
+│   └── InvertedBooleanToVisibilityConverter.cs   # bool (ters) → Visibility
+│
 ├── Helpers/              # Yardımcı sınıflar
-│   ├── WebViewHelper.cs  # WebView2 HTML binding
-│   └── Converters
+│   └── WebViewHelper.cs  # WebView2 HTML binding
 │
 ├── Data/
 │   └── AppDbContext.cs   # EF Core DbContext

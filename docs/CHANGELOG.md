@@ -1,5 +1,70 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+## 2026-01-28
+
+### 🎨 UI Profesyonelleştirme - Sprint 1-3
+
+**Sprint 1: Foundation & UI Yenileme**
+- ✅ **Dark Mode / Light Mode** - Tam tema sistemi (`LightTheme.xaml`, `DarkTheme.xaml`)
+- ✅ **Collapsible Sidebar** - Daraltılabilir menü (65px ↔ 250px)
+- ✅ **Sayfa Geçiş Animasyonları** - FadeIn, SlideIn efektleri (`Animations.xaml`)
+- ✅ **Loading Skeleton** - Dashboard yükleme göstericisi
+
+**Sprint 2: Dashboard Revival**
+- ✅ **Modern Dashboard** - Hover efektli widget kartları
+- ✅ **LiveCharts Entegrasyonu** - 7 günlük performans grafiği + İş kategorileri pie chart
+
+**Sprint 3: UX Polish**
+- ✅ **Quick Add Modal (Ctrl+K)** - Evrensel arama/aksiyon menüsü
+- ✅ **Keyboard Shortcuts** - Ctrl+B (sidebar), Ctrl+D (tema), Ctrl+N (arıza kabul)
+
+**Yeni Dosyalar:**
+- `Resources/Themes/LightTheme.xaml`
+- `Resources/Themes/DarkTheme.xaml`
+- `Resources/Animations.xaml`
+- `Services/ThemeService.cs`
+- `Views/LoadingSkeletonControl.xaml`
+- `Views/QuickAddModal.xaml`
+- `Properties/Settings.settings` + `Settings.Designer.cs`
+
+**Güncellenen Dosyalar:**
+- `App.xaml` - Tema ve animasyon ResourceDictionary entegrasyonu
+- `MainContentView.xaml` - Tamamen yeniden tasarım
+- `MainContentViewModel.cs` - Sidebar, tema ve QuickAdd komutları
+- `DashboardView.xaml` - Modern grafik tasarımı
+- `DashboardViewModel.cs` - LiveCharts veri kaynakları
+
+### 🐛 Hata Düzeltmeleri (ViewModel Fixes)
+- **AnalyticsViewModel**: Null Reference uyarıları için constructor initialization yapıldı. Deprecated `PrimaryValue` kullanımı `Coordinate.PrimaryValue` ile güncellendi.
+- **FinancialHealthViewModel**: `ProjectProfitItem` ve grafik serileri için null safety sağlandı.
+- **RoutePlanningViewModel**: `MapHtmlContent` ve marker özellikleri initialize edildi.
+
+### 🚑 Kritik Düzeltmeler (Hotfix)
+- **Veritabanı**: Giriş hatasına (`SQLite Error 1: no such column: c.Latitude`) neden olan eksik kolonlar için `AddCustomerCoordinates` migration'ı uygulandı. `Customers` tablosuna `Latitude` ve `Longitude` eklendi.
+
+---
+
+## 2026-01-27
+
+### 🔍 Kapsamlı Kod İncelemesi ve Düzeltmeler
+Kullanıcı perspektifinden uygulama test edildi, 10 sorun tespit edildi ve kritik olanlar düzeltildi.
+
+**Düzeltilen Sorunlar:**
+- **InvertedBooleanToVisibilityConverter**: Yeni converter eklendi (`Converters/InvertedBooleanToVisibilityConverter.cs`). "Boş durum" metinleri artık doğru görünüyor.
+- **RepairListView UI**: Test metni ("Filter Section OK") silindi, İngilizce metin Türkçeye çevrildi.
+- **Fotoğraf Ekleme**: Çoklu fotoğraf seçimi eklendi, fotoğraf eklendikten sonra UI otomatik yenileniyor.
+- **Dashboard Karşılama**: "Hoşgeldin, Admin" statik metni dinamik kullanıcı adına dönüştürüldü.
+- **Kullanılmayan Kod**: `ExecuteNotifyCustomer`, `ExecuteShowPhotos`, `ExecuteOpenDetail` metodları silindi.
+
+**Güncellenen Dosyalar:**
+- `Converters/InvertedBooleanToVisibilityConverter.cs` [YENİ]
+- `App.xaml` - Yeni converter tanımı
+- `Views/RepairListView.xaml` - UI düzeltmeleri
+- `ViewModels/RepairListViewModel.cs` - Ölü kod temizliği + Fotoğraf UI yenileme
+- `ViewModels/DashboardViewModel.cs` - Dinamik kullanıcı adı
+
+---
+
 ## 2026-01-25
 
 ### ✅ Enterprise ERP Megamodule

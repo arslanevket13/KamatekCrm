@@ -3,16 +3,75 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
              xmlns:views="clr-namespace:KamatekCrm.Views"
-             Background="{StaticResource BackgroundColor}">
+             Background="{DynamicResource ThemeBackground}"
+             Focusable="True">
+    
+    <!-- Keyboard Shortcuts -->
+    <UserControl.InputBindings>
+        <KeyBinding Modifiers="Ctrl" Key="K" Command="{Binding OpenQuickAddCommand}"/>
+        <KeyBinding Modifiers="Ctrl" Key="B" Command="{Binding ToggleSidebarCommand}"/>
+        <KeyBinding Modifiers="Ctrl" Key="N" Command="{Binding OpenFaultTicketCommand}"/>
+        <KeyBinding Modifiers="Ctrl" Key="D" Command="{Binding ToggleDarkModeCommand}"/>
+    </UserControl.InputBindings>
+    
+    <UserControl.Resources>
+        <!-- Animasyonlar -->
+        <Storyboard x:Key="FadeIn">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3">
+                <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+        
+        <!-- NavButton Modern Style -->
+        <Style x:Key="ModernNavButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeSidebarText}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Margin" Value="8,2"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ThemeSidebarHover}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Accent NavButton -->
+        <Style x:Key="AccentNavButton" TargetType="Button" BasedOn="{StaticResource ModernNavButton}">
+            <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+    </UserControl.Resources>
     
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="{Binding SidebarWidth}"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Sol Navigasyon Menüsü -->
-        <Border Grid.Column="0" Background="#15212d">
+        <!-- ==================== SOL SIDEBAR ==================== -->
+        <Border Grid.Column="0" Background="{DynamicResource ThemeSidebar}">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20" Opacity="0.15" ShadowDepth="0" Direction="0"/>
+            </Border.Effect>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -21,222 +80,388 @@
                 </Grid.RowDefinitions>
 
                 <!-- Logo/Başlık -->
-                <Border Grid.Row="0" Background="#15212d" Padding="10,15">
-                    <StackPanel HorizontalAlignment="Center">
-                        <Image Source="/Assets/Images/KamatekLogo.png" 
-                               Width="210" Height="Auto"
-                               Stretch="Uniform"
-                               HorizontalAlignment="Center"/>
-                        <TextBlock Text="Teknik Servis Yönetimi" 
-                                 FontSize="11" 
-                                 Foreground="#E3F2FD"
-                                 HorizontalAlignment="Center"
-                                 Margin="0,6,0,0"/>
-                    </StackPanel>
+                <Border Grid.Row="0" Padding="12,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Hamburger Menu -->
+                        <Button Grid.Column="0" 
+                                Command="{Binding ToggleSidebarCommand}"
+                                Background="Transparent" BorderThickness="0"
+                                Width="36" Height="36" Cursor="Hand"
+                                ToolTip="Menüyü Daralt/Genişlet (Ctrl+B)">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bg" Background="Transparent" CornerRadius="6">
+                                        <TextBlock Text="☰" FontSize="20" Foreground="{DynamicResource ThemeSidebarText}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bg" Property="Background" Value="{DynamicResource ThemeSidebarHover}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        
+                        <!-- Logo -->
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0"
+                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="KAMATEK" FontSize="18" FontWeight="Bold" 
+                                       Foreground="{DynamicResource ThemeSidebarText}"/>
+                            <TextBlock Text="Teknik Servis" FontSize="10" 
+                                       Foreground="{DynamicResource ThemeSidebarSecondaryText}"/>
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- Navigasyon Butonları -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="0,10,0,0">
-                        <Button Content="🏠 Ana Sayfa" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToDashboardCommand}"/>
+                    <StackPanel Margin="0,8,0,0">
                         
-                        <Button Content="👥 Müşteriler" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToCustomersCommand}"/>
+                        <!-- Ana Menü -->
+                        <Button Command="{Binding NavigateToDashboardCommand}" Style="{StaticResource ModernNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🏠" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Ana Sayfa" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
                         
-                        <Button Content="📦 Stoklar" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToProductsCommand}"/>
+                        <Button Command="{Binding NavigateToCustomersCommand}" Style="{StaticResource ModernNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="👥" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Müşteriler" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
                         
-                        <Button Content="🔧 İş Emirleri" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToServiceJobsCommand}"/>
-
-                        <!-- Hızlı Erişim Butonları -->
-                        <Border Margin="20,15,20,8" BorderThickness="0,1,0,0" BorderBrush="#3a5a7c"/>
-                        <TextBlock Text="HIZLI ERİŞİM" 
-                                   Foreground="#7a9ab8" 
-                                   FontSize="10" 
-                                   FontWeight="SemiBold"
-                                   Margin="20,5,20,10"/>
-
-                        <Button Content="⚡ Hızlı Kabul (Arıza Kaydı)" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding OpenFaultTicketCommand}"/>
-
-                        <Button Content="🔍 Arıza Takip &amp; İşlem" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding OpenRepairTrackingCommand}"/>
-
-                        <Button Content="🔧 Tamir Listesi" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToRepairListCommand}"/>
-
-                        <Button Content="🚜 Saha İşleri" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToFieldJobListCommand}"/>
-
-                        <Button Content="📊 Satış Boru Hattı" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToPipelineCommand}"/>
-
-                        <Button Content="📅 Teknisyen Takvimi" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToSchedulerCommand}"/>
+                        <Button Command="{Binding NavigateToProductsCommand}" Style="{StaticResource ModernNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📦" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Stoklar" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
                         
-                        <Button Content="🏗️ PROJE &amp; TEKLİF" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding OpenProjectQuoteCommand}"
-                                Background="#1565C0"
-                                Foreground="White"
-                                FontWeight="SemiBold"/>
+                        <Button Command="{Binding NavigateToServiceJobsCommand}" Style="{StaticResource ModernNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔧" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" İş Emirleri" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
 
-                        <Button Content="🛒 HIZLI SATIŞ (KASA)" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding OpenDirectSalesCommand}"
-                                Background="#2E7D32"
-                                Foreground="White"
-                                FontWeight="SemiBold"/>
+                        <!-- Ayırıcı -->
+                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" 
+                                BorderBrush="{DynamicResource ThemeSidebarHover}"
+                                Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="HIZLI ERİŞİM" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource ThemeSidebarSecondaryText}" Margin="20,4,20,8"
+                                   Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
-                        <Button Content="💰 FİNANS / KASA" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToFinanceCommand}"
+                        <Button Command="{Binding OpenFaultTicketCommand}" Style="{StaticResource AccentNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚡" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Hızlı Kabul" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateToRepairListCommand}" Style="{StaticResource ModernNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔧" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Tamir Listesi" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateToFieldJobListCommand}" Style="{StaticResource ModernNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🚜" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Saha İşleri" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateToRoutePlanningCommand}" Style="{StaticResource ModernNavButton}"
+                                Background="#D84315">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🗺️" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Rota Planlama" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateToPipelineCommand}" Style="{StaticResource ModernNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📊" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Satış Pipeline" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateToSchedulerCommand}" Style="{StaticResource ModernNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📅" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Takvim" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding OpenProjectQuoteCommand}" Style="{StaticResource ModernNavButton}"
+                                Background="#1565C0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🏗️" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Proje &amp; Teklif" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding OpenDirectSalesCommand}" Style="{StaticResource ModernNavButton}"
+                                Background="#2E7D32">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🛒" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Hızlı Satış" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateToFinanceCommand}" Style="{StaticResource ModernNavButton}"
                                 Background="#E65100"
-                                Foreground="White"
-                                FontWeight="SemiBold"
-                                Visibility="{Binding CanViewFinance, Converter={StaticResource BoolToVis}}"/>
+                                Visibility="{Binding CanViewFinance, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="💰" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Finans" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
 
-                        <Button Content="📊 ANALİTİK" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToAnalyticsCommand}"
+                        <Button Command="{Binding NavigateToAnalyticsCommand}" Style="{StaticResource ModernNavButton}"
                                 Background="#9C27B0"
-                                Foreground="White"
-                                FontWeight="SemiBold"
-                                Visibility="{Binding CanViewAnalytics, Converter={StaticResource BoolToVis}}"/>
+                                Visibility="{Binding CanViewAnalytics, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📊" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Analitik" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
 
-                        <Button Content="📦 SATIN ALMA" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToPurchaseOrdersCommand}"
-                                Background="#00838F"
-                                Foreground="White"
-                                FontWeight="SemiBold"/>
+                        <Button Command="{Binding NavigateToPurchaseOrdersCommand}" Style="{StaticResource ModernNavButton}"
+                                Background="#00838F">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📦" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Satın Alma" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
 
-                        <!-- Envanter Yönetimi Bölümü -->
-                        <Border Margin="20,20,20,10" BorderThickness="0,1,0,0" BorderBrush="#3a5a7c"/>
-                        <TextBlock Text="ENVANTER YÖNETİMİ" 
-                                   Foreground="#7a9ab8" 
-                                   FontSize="10" 
-                                   FontWeight="SemiBold"
-                                   Margin="20,5,20,10"/>
+                         <!-- Envanter & Raporlar -->
+                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" 
+                                BorderBrush="{DynamicResource ThemeSidebarHover}"
+                                Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="ZEKA &amp; RAPOR" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource ThemeSidebarSecondaryText}" Margin="20,4,20,8"
+                                   Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
-                        <Button Content="📋 Stok Sayım" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToStockCountCommand}"/>
-                        
-                        <Button Content="📊 Raporlar" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToReportsCommand}"/>
+                        <Button Command="{Binding NavigateToAnalyticsCommand}" Style="{StaticResource ModernNavButton}"
+                                ToolTip="İş Analitiği"
+                                Visibility="{Binding CanViewAnalytics, Converter={StaticResource BoolToVis}}">
+                           <StackPanel Orientation="Horizontal">
+                               <TextBlock Text="📈" FontSize="18" VerticalAlignment="Center"/>
+                               <TextBlock Text=" İş Analitiği" VerticalAlignment="Center" Margin="8,0,0,0"
+                                          Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                           </StackPanel>
+                        </Button>
 
-                        <!-- Yönetim Bölümü (Sadece Admin) -->
-                        <Border Margin="20,20,20,10" BorderThickness="0,1,0,0" BorderBrush="#3a5a7c"
+                       <Button Command="{Binding NavigateToFinancialHealthCommand}" Style="{StaticResource ModernNavButton}"
+                               ToolTip="Finansal Sağlık"
+                               Visibility="{Binding CanViewFinance, Converter={StaticResource BoolToVis}}">
+                           <StackPanel Orientation="Horizontal">
+                               <TextBlock Text="💰" FontSize="18" VerticalAlignment="Center"/>
+                               <TextBlock Text=" Finansal Rapor" VerticalAlignment="Center" Margin="8,0,0,0"
+                                          Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                           </StackPanel>
+                       </Button>
+
+                        <Button Command="{Binding NavigateToStockCountCommand}" Style="{StaticResource ModernNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📋" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Stok Sayım" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateToReportsCommand}" Style="{StaticResource ModernNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📄" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Standart Raporlar" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Yönetim (Admin) -->
+                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" 
+                                BorderBrush="{DynamicResource ThemeSidebarHover}"
                                 Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
-                        <TextBlock Text="YÖNETİM" 
-                                   Foreground="#7a9ab8" 
-                                   FontSize="10" 
-                                   FontWeight="SemiBold"
-                                   Margin="20,5,20,10"
+                        <TextBlock Text="YÖNETİM" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource ThemeSidebarSecondaryText}" Margin="20,4,20,8"
                                    Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
 
-                        <Button Content="👤 Kullanıcılar" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToUsersCommand}"
-                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
+                        <Button Command="{Binding NavigateToUsersCommand}" Style="{StaticResource ModernNavButton}"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="👤" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Kullanıcılar" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
 
-                        <Button Content="📋 Sistem Logları" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToSystemLogsCommand}"
-                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
+                        <Button Command="{Binding NavigateToSystemLogsCommand}" Style="{StaticResource ModernNavButton}"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📋" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Loglar" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
 
-                        <Button Content="⚙️ Ayarlar" 
-                                Style="{StaticResource NavButton}"
-                                Command="{Binding NavigateToSettingsCommand}"
-                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
+                        <Button Command="{Binding NavigateToSettingsCommand}" Style="{StaticResource ModernNavButton}"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚙️" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Ayarlar" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- Alt Kısım: Kullanıcı Bilgisi + Çıkış -->
-                <Border Grid.Row="2" Background="#0d1821" Padding="16">
+                <!-- Alt Kısım: Kullanıcı + Tema + Çıkış -->
+                <Border Grid.Row="2" Padding="12" Background="{DynamicResource ThemeSidebarHover}">
                     <StackPanel>
                         <!-- Kullanıcı Bilgisi -->
-                        <Border Background="#1a2f3d" CornerRadius="8" Padding="12,10" Margin="0,0,0,12">
+                        <Border Background="{DynamicResource ThemeSidebar}" CornerRadius="8" Padding="10" Margin="0,0,0,10"
+                                Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Background="#2196F3" CornerRadius="20" 
-                                        Width="36" Height="36" Margin="0,0,10,0">
-                                    <TextBlock Text="👤" FontSize="18" 
-                                               HorizontalAlignment="Center" 
-                                               VerticalAlignment="Center"/>
+                                <Border Grid.Column="0" Background="{DynamicResource ThemePrimary}" 
+                                        CornerRadius="20" Width="36" Height="36" Margin="0,0,10,0">
+                                    <TextBlock Text="👤" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding CurrentUserName}" 
-                                               Foreground="White" FontWeight="SemiBold" FontSize="12"
-                                               TextTrimming="CharacterEllipsis"/>
+                                               Foreground="{DynamicResource ThemeSidebarText}" 
+                                               FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/>
                                     <TextBlock Text="{Binding CurrentUserRole}" 
-                                               Foreground="#90CAF9" FontSize="10"/>
+                                               Foreground="{DynamicResource ThemeSidebarSecondaryText}" FontSize="10"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
 
-                        <!-- Çıkış Butonu -->
-                        <Button Content="🚪 Çıkış Yap" 
-                                Command="{Binding LogoutCommand}"
-                                Background="#c62828" Foreground="White"
-                                FontWeight="SemiBold" Height="36"
-                                BorderThickness="0" Cursor="Hand">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="6">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Button.Template>
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#b71c1c"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
+                        <!-- Aksiyon Butonları -->
+                        <UniformGrid Columns="3" Margin="0,0,0,8">
+                            <!-- Dark Mode Toggle -->
+                            <Button Command="{Binding ToggleDarkModeCommand}"
+                                    ToolTip="Tema Değiştir"
+                                    Background="Transparent" BorderThickness="0"
+                                    Width="36" Height="36" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="bg" Background="Transparent" CornerRadius="6">
+                                            <TextBlock FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="🌙"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsDarkMode}" Value="True">
+                                                                <Setter Property="Text" Value="☀️"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource ThemeSidebar}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Ayarlar -->
+                            <Button Command="{Binding NavigateToSettingsCommand}"
+                                    ToolTip="Ayarlar"
+                                    Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"
+                                    Background="Transparent" BorderThickness="0"
+                                    Width="36" Height="36" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="bg" Background="Transparent" CornerRadius="6">
+                                            <TextBlock Text="⚙️" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource ThemeSidebar}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <!-- Çıkış -->
+                            <Button Command="{Binding LogoutCommand}"
+                                    ToolTip="Çıkış Yap"
+                                    Background="Transparent" BorderThickness="0"
+                                    Width="36" Height="36" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="bg" Background="Transparent" CornerRadius="6">
+                                            <TextBlock Text="🚪" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bg" Property="Background" Value="#c62828"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </UniformGrid>
 
                         <!-- Versiyon -->
-                        <TextBlock Text="v1.0.0" 
-                                 Foreground="#546E7A"
-                                 FontSize="10"
-                                 HorizontalAlignment="Center"
-                                 Margin="0,12,0,0"/>
+                        <TextBlock Text="v2.0.0" FontSize="10" 
+                                   Foreground="{DynamicResource ThemeSidebarSecondaryText}"
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                     </StackPanel>
                 </Border>
             </Grid>
         </Border>
 
-        <!-- Sağ İçerik Alanı -->
+        <!-- ==================== SAĞ İÇERİK ALANI ==================== -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Global Search Bar -->
-            <Border Grid.Row="0" Background="White" Padding="20,12" 
-                    BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+            <!-- Global Header Bar -->
+            <Border Grid.Row="0" Background="{DynamicResource ThemeSurface}" Padding="20,12" 
+                    BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="5" Opacity="0.05" ShadowDepth="1" Direction="270"/>
+                </Border.Effect>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" MaxWidth="500"/>
@@ -246,8 +471,8 @@
 
                     <!-- Search Box -->
                     <Grid Grid.Column="0">
-                        <Border Background="#F5F5F5" CornerRadius="20" 
-                                BorderBrush="#E0E0E0" BorderThickness="1"
+                        <Border Background="{DynamicResource ThemeBackground}" CornerRadius="20" 
+                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                                 Padding="4,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -256,202 +481,94 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 
-                                <TextBlock Grid.Column="0" Text="🔍" 
-                                           FontSize="16" VerticalAlignment="Center"
-                                           Margin="12,0,8,0" Foreground="#9E9E9E"/>
+                                <TextBlock Grid.Column="0" Text="🔍" FontSize="16" VerticalAlignment="Center"
+                                           Margin="12,0,8,0" Foreground="{DynamicResource ThemeTextTertiary}"/>
                                 
-                                <TextBox Grid.Column="1" 
-                                         x:Name="GlobalSearchBox"
+                                <TextBox Grid.Column="1" x:Name="GlobalSearchBox"
                                          Text="{Binding SearchViewModel.SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                                         Background="Transparent"
-                                         BorderThickness="0"
-                                         VerticalAlignment="Center"
-                                         Height="36"
-                                         FontSize="14"
-                                         Padding="0,8">
-                                    <TextBox.Style>
-                                        <Style TargetType="TextBox">
-                                            <Setter Property="Foreground" Value="#424242"/>
-                                        </Style>
-                                    </TextBox.Style>
-                                </TextBox>
+                                         Background="Transparent" BorderThickness="0"
+                                         VerticalAlignment="Center" Height="36" FontSize="14" Padding="0,8"
+                                         Foreground="{DynamicResource ThemeTextPrimary}"/>
                                 
-                                <!-- Clear Button -->
                                 <Button Grid.Column="2" Content="✕" 
                                         Command="{Binding SearchViewModel.ClearCommand}"
                                         Visibility="{Binding SearchViewModel.HasResults, Converter={StaticResource BoolToVis}}"
                                         Background="Transparent" BorderThickness="0"
-                                        Foreground="#9E9E9E" FontSize="12"
+                                        Foreground="{DynamicResource ThemeTextTertiary}" FontSize="12"
                                         Width="30" Height="30" Cursor="Hand"/>
                             </Grid>
                         </Border>
-
-                        <!-- Search Results Popup -->
-                        <Popup IsOpen="{Binding SearchViewModel.ShowResults}"
-                               PlacementTarget="{Binding ElementName=GlobalSearchBox}"
-                               Placement="Bottom"
-                               StaysOpen="False"
-                               AllowsTransparency="True"
-                               PopupAnimation="Fade">
-                            <Border Background="White" 
-                                    CornerRadius="8" 
-                                    BorderBrush="#E0E0E0" 
-                                    BorderThickness="1"
-                                    MinWidth="400"
-                                    MaxHeight="350"
-                                    Margin="0,4,0,0">
-                                <Border.Effect>
-                                    <DropShadowEffect BlurRadius="15" Opacity="0.15" ShadowDepth="4"/>
-                                </Border.Effect>
-
-                                <Grid>
-                                    <!-- Results -->
-                                    <ScrollViewer MaxHeight="320" 
-                                                  VerticalScrollBarVisibility="Auto"
-                                                  Visibility="{Binding SearchViewModel.HasResults, Converter={StaticResource BoolToVis}}">
-                                        <ItemsControl ItemsSource="{Binding SearchViewModel.Results}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Padding="12,10" Cursor="Hand"
-                                                            Background="Transparent"
-                                                            BorderBrush="#F0F0F0"
-                                                            BorderThickness="0,0,0,1">
-                                                        <Border.Style>
-                                                            <Style TargetType="Border">
-                                                                <Style.Triggers>
-                                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                                        <Setter Property="Background" Value="#F5F5F5"/>
-                                                                    </Trigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Border.Style>
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
-                                                            
-                                                            <TextBlock Grid.Column="0" 
-                                                                       Text="{Binding Icon}" 
-                                                                       FontSize="20"
-                                                                       VerticalAlignment="Center"
-                                                                       Margin="0,0,12,0"/>
-                                                            
-                                                            <StackPanel Grid.Column="1">
-                                                                <TextBlock Text="{Binding Title}" 
-                                                                           FontWeight="SemiBold"
-                                                                           FontSize="13"/>
-                                                                <TextBlock Text="{Binding Subtitle}" 
-                                                                           Foreground="#757575"
-                                                                           FontSize="11"/>
-                                                            </StackPanel>
-                                                            
-                                                            <Border Grid.Column="2" 
-                                                                    Background="{Binding CategoryColor}"
-                                                                    Opacity="0.15"
-                                                                    CornerRadius="10"
-                                                                    Padding="8,4"
-                                                                    VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Category}" 
-                                                                           Foreground="{Binding CategoryColor}"
-                                                                           FontSize="10"
-                                                                           FontWeight="SemiBold"/>
-                                                            </Border>
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </ScrollViewer>
-
-                                    <!-- No Results -->
-                                    <Border Padding="20" 
-                                            Visibility="{Binding SearchViewModel.ShowNoResults, Converter={StaticResource BoolToVis}}">
-                                        <StackPanel HorizontalAlignment="Center">
-                                            <TextBlock Text="🔍" FontSize="32" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="Sonuç bulunamadı" 
-                                                       Foreground="#9E9E9E"
-                                                       FontSize="13"
-                                                       Margin="0,8,0,0"/>
-                                        </StackPanel>
-                                    </Border>
-                                </Grid>
-                            </Border>
-                        </Popup>
                     </Grid>
 
-                    <!-- Action Center (Bell Icon) -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,20,0" VerticalAlignment="Center">
+                    <!-- Notification Bell -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,10,0" VerticalAlignment="Center">
                         <Grid>
                             <Button Command="{Binding ToggleNotificationsCommand}"
-                                    Background="Transparent" 
-                                    BorderThickness="0"
-                                    Foreground="#455A64"
-                                    Padding="10"
-                                    Cursor="Hand"
-                                    Margin="0">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                        <Style.Triggers>
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="{DynamicResource ThemeTextSecondary}"
+                                    Padding="10" Cursor="Hand">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="bg" Background="Transparent" CornerRadius="8" Padding="8">
+                                            <Grid>
+                                                <TextBlock Text="🔔" FontSize="20"/>
+                                                <Border Background="{DynamicResource ThemeError}" CornerRadius="10" 
+                                                        Width="18" Height="18" 
+                                                        HorizontalAlignment="Right" VerticalAlignment="Top" 
+                                                        Margin="0,-4,-4,0"
+                                                        Visibility="{Binding NotificationCount, Converter={StaticResource IntToVis}}">
+                                                    <TextBlock Text="{Binding NotificationCount}" Foreground="White" 
+                                                               FontSize="10" FontWeight="Bold"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#F5F5F5"/>
+                                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource ThemeBackground}"/>
                                             </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                                <Grid>
-                                    <TextBlock Text="🔔" FontSize="20"/>
-                                    <Border Background="Red" CornerRadius="10" 
-                                            Width="16" Height="16" 
-                                            HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                            Margin="-5,-5,0,0"
-                                            Visibility="{Binding NotificationCount, Converter={StaticResource IntToVis}}">
-                                        <TextBlock Text="{Binding NotificationCount}" Foreground="White" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </Grid>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
                             </Button>
 
-                            <Popup IsOpen="{Binding IsNotificationsOpen}" 
-                                   StaysOpen="False" 
-                                   Placement="Bottom"
-                                   AllowsTransparency="True">
-                                <Border Background="White" CornerRadius="8" BorderBrush="#E0E0E0" BorderThickness="1" 
-                                        Width="300" MaxHeight="400" Margin="0,5,20,0">
+                            <Popup IsOpen="{Binding IsNotificationsOpen}" StaysOpen="False" 
+                                   Placement="Bottom" AllowsTransparency="True">
+                                <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" 
+                                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" 
+                                        Width="320" MaxHeight="400" Margin="0,8,20,0">
                                     <Border.Effect>
-                                        <DropShadowEffect BlurRadius="10" Opacity="0.1"/>
+                                        <DropShadowEffect BlurRadius="20" Opacity="0.15" ShadowDepth="4"/>
                                     </Border.Effect>
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
-                                        <Border Padding="10" BorderBrush="#EEEEEE" BorderThickness="0,0,0,1">
+                                        <Border Padding="16,12" BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,0,0,1">
                                             <DockPanel>
-                                                <TextBlock Text="Bildirimler" FontWeight="Bold"/>
+                                                <TextBlock Text="Bildirimler" FontWeight="Bold" FontSize="14"
+                                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
                                                 <Button Content="🔄" Command="{Binding RefreshNotificationsCommand}" 
-                                                        Width="20" Height="20" Padding="0" Background="Transparent" BorderThickness="0" 
-                                                        HorizontalAlignment="Right"/>
+                                                        Width="28" Height="28" Padding="0" 
+                                                        Background="Transparent" BorderThickness="0" 
+                                                        HorizontalAlignment="Right" Cursor="Hand"/>
                                             </DockPanel>
                                         </Border>
-                                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="300">
                                             <ItemsControl ItemsSource="{Binding Notifications}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border Padding="10" BorderBrush="#F5F5F5" BorderThickness="0,0,0,1">
+                                                        <Border Padding="14,12" BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,0,0,1">
                                                             <StackPanel>
-                                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="12"/>
-                                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,2,0,5" FontSize="11"/>
-                                                                <Button Content="{Binding ActionLabel}" Height="24" FontSize="10" HorizontalAlignment="Right"/>
+                                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12"
+                                                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" 
+                                                                           Margin="0,4,0,8" FontSize="11"
+                                                                           Foreground="{DynamicResource ThemeTextSecondary}"/>
+                                                                <Button Content="{Binding ActionLabel}" Height="28" FontSize="10" 
+                                                                        HorizontalAlignment="Right" Padding="12,0"
+                                                                        Style="{StaticResource ModernButton}"/>
                                                             </StackPanel>
                                                         </Border>
                                                     </DataTemplate>
@@ -467,9 +584,13 @@
             </Border>
 
             <!-- Ana içerik -->
-            <ContentControl Grid.Row="1" 
-                           Content="{Binding CurrentView}"
-                           Margin="0"/>
+            <ContentControl Grid.Row="1" Content="{Binding CurrentView}" Margin="0">
+                <ContentControl.Triggers>
+                    <EventTrigger RoutedEvent="ContentControl.Loaded">
+                        <BeginStoryboard Storyboard="{StaticResource FadeIn}"/>
+                    </EventTrigger>
+                </ContentControl.Triggers>
+            </ContentControl>
 
             <!-- Toast Notifications Overlay -->
             <views:ToastNotificationControl Grid.Row="1"

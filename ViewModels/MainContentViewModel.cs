@@ -34,6 +34,54 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _isNotificationsOpen, value);
         }
 
+        // ==================== SIDEBAR & TEMA ====================
+        
+        private bool _isSidebarCollapsed;
+        /// <summary>
+        /// Sidebar daraltılmış mı?
+        /// </summary>
+        public bool IsSidebarCollapsed
+        {
+            get => _isSidebarCollapsed;
+            set
+            {
+                if (SetProperty(ref _isSidebarCollapsed, value))
+                {
+                    OnPropertyChanged(nameof(SidebarWidth));
+                    OnPropertyChanged(nameof(ShowSidebarText));
+                    // Tercihi kaydet
+                    Properties.Settings.Default.SidebarCollapsed = value;
+                    Properties.Settings.Default.Save();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sidebar genişliği (Collapsed: 60, Expanded: 250)
+        /// </summary>
+        public double SidebarWidth => IsSidebarCollapsed ? 65 : 250;
+
+        /// <summary>
+        /// Sidebar metin gösterilsin mi?
+        /// </summary>
+        public bool ShowSidebarText => !IsSidebarCollapsed;
+
+        private bool _isDarkMode;
+        /// <summary>
+        /// Dark mode aktif mi?
+        /// </summary>
+        public bool IsDarkMode
+        {
+            get => _isDarkMode;
+            set
+            {
+                if (SetProperty(ref _isDarkMode, value))
+                {
+                    ThemeService.ApplyTheme(value);
+                }
+            }
+        }
+
         /// <summary>
         /// Aktif görünüm
         /// </summary>
@@ -83,11 +131,21 @@ namespace KamatekCrm.ViewModels
         public ICommand NavigateToSchedulerCommand { get; }
         public ICommand ToggleNotificationsCommand { get; }
         public ICommand RefreshNotificationsCommand { get; }
+        
+        // Yeni Komutlar
+        public ICommand ToggleSidebarCommand { get; }
+        public ICommand ToggleDarkModeCommand { get; }
+        public ICommand OpenQuickAddCommand { get; }
 
         // RBAC Visibility
         public bool CanViewFinance => AuthService.CanViewFinance;
         public bool CanViewAnalytics => AuthService.CanViewAnalytics;
         public bool CanAccessSettings => AuthService.CanAccessSettings;
+
+        // Finansal Sağlık Komutu
+        public ICommand NavigateToFinancialHealthCommand { get; }
+
+        public ICommand NavigateToRoutePlanningCommand { get; }
 
         #endregion
 
@@ -97,9 +155,12 @@ namespace KamatekCrm.ViewModels
         public MainContentViewModel()
         {
             // Global arama başlat
-            // Global arama başlat
             SearchViewModel = new GlobalSearchViewModel();
             _notificationService = new NotificationService();
+
+            // Kayıtlı tercihleri yükle
+            _isSidebarCollapsed = Properties.Settings.Default.SidebarCollapsed;
+            _isDarkMode = Properties.Settings.Default.IsDarkMode;
 
             NavigateToDashboardCommand = new RelayCommand(_ => NavigateToDashboard());
             NavigateToCustomersCommand = new RelayCommand(_ => NavigateToCustomers());
@@ -124,6 +185,13 @@ namespace KamatekCrm.ViewModels
             NavigateToSchedulerCommand = new RelayCommand(_ => NavigateToScheduler());
             ToggleNotificationsCommand = new RelayCommand(_ => IsNotificationsOpen = !IsNotificationsOpen);
             RefreshNotificationsCommand = new RelayCommand(_ => LoadNotifications());
+            
+            // Yeni komutlar
+            ToggleSidebarCommand = new RelayCommand(_ => IsSidebarCollapsed = !IsSidebarCollapsed);
+            ToggleDarkModeCommand = new RelayCommand(_ => IsDarkMode = !IsDarkMode);
+            OpenQuickAddCommand = new RelayCommand(_ => OpenQuickAdd());
+            NavigateToFinancialHealthCommand = new RelayCommand(_ => NavigateToFinancialHealth(), _ => CanViewFinance);
+            NavigateToRoutePlanningCommand = new RelayCommand(_ => NavigateToRoutePlanning());
 
             LoadNotifications();
 
@@ -182,9 +250,12 @@ namespace KamatekCrm.ViewModels
         private void NavigateToSettings() => CurrentView = new SettingsViewModel();
         private void NavigateToFinance() => CurrentView = new FinanceViewModel();
         private void NavigateToAnalytics() => CurrentView = new AnalyticsViewModel();
+        private void NavigateToFinancialHealth() => CurrentView = new FinancialHealthViewModel();
         private void NavigateToPurchaseOrders() => CurrentView = new PurchaseOrderViewModel();
         private void NavigateToPipeline() => CurrentView = new PipelineViewModel();
         private void NavigateToScheduler() => CurrentView = new SchedulerViewModel();
+        private void NavigateToRoutePlanning() => CurrentView = new RoutePlanningViewModel();
+
 
         private void LoadNotifications()
         {
@@ -217,6 +288,53 @@ namespace KamatekCrm.ViewModels
                 "viewer" => "İzleyici",
                 _ => role ?? ""
             };
+        }
+
+        /// <summary>
+        /// Quick Add Modal'ı aç (Ctrl+K)
+        /// </summary>
+        private void OpenQuickAdd()
+        {
+            var modal = new Views.QuickAddModal
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+
+            modal.ActionSelected += action =>
+            {
+                switch (action)
+                {
+                    case "OpenFaultTicket":
+                        OpenFaultTicket();
+                        break;
+                    case "OpenDirectSales":
+                        OpenDirectSales();
+                        break;
+                    case "NewCustomer":
+                        NavigateToCustomers();
+                        break;
+                    case "OpenProjectQuote":
+                        OpenProjectQuote();
+                        break;
+                    case "NavigateDashboard":
+                        NavigateToDashboard();
+                        break;
+                    case "NavigateCustomers":
+                        NavigateToCustomers();
+                        break;
+                    case "NavigateProducts":
+                        NavigateToProducts();
+                        break;
+                    case "NavigateRepairList":
+                        NavigateToRepairList();
+                        break;
+                    case "NavigateFinance":
+                        NavigateToFinance();
+                        break;
+                }
+            };
+
+            modal.ShowDialog();
         }
     }
 }

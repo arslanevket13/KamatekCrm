@@ -1,321 +1,195 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows.Input;
-using KamatekCrm.Commands;
 using KamatekCrm.Data;
 using KamatekCrm.Enums;
+using KamatekCrm.Models;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
-    /// <summary>
-    /// İş Zekası (BI) Analytics Dashboard ViewModel
-    /// LiveCharts ile finansal ve operasyonel analizler
-    /// </summary>
     public class AnalyticsViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
 
-        #region Properties
-
-        private bool _isLoading;
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // CHART 1: Finansal Trend (6 Aylık Gelir vs Gider)
-        // ═══════════════════════════════════════════════════════════════════
-
-        private ISeries[] _financialSeries = Array.Empty<ISeries>();
-        public ISeries[] FinancialSeries
-        {
-            get => _financialSeries;
-            set => SetProperty(ref _financialSeries, value);
-        }
-
-        private Axis[] _financialXAxes = Array.Empty<Axis>();
-        public Axis[] FinancialXAxes
-        {
-            get => _financialXAxes;
-            set => SetProperty(ref _financialXAxes, value);
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // CHART 2: Servis Kategori Dağılımı (Pie)
-        // ═══════════════════════════════════════════════════════════════════
-
-        private ISeries[] _categorySeries = Array.Empty<ISeries>();
-        public ISeries[] CategorySeries
-        {
-            get => _categorySeries;
-            set => SetProperty(ref _categorySeries, value);
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // CHART 3: En Çok Satan 5 Ürün (Bar)
-        // ═══════════════════════════════════════════════════════════════════
-
-        private ISeries[] _topProductsSeries = Array.Empty<ISeries>();
-        public ISeries[] TopProductsSeries
-        {
-            get => _topProductsSeries;
-            set => SetProperty(ref _topProductsSeries, value);
-        }
-
-        private Axis[] _topProductsYAxes = Array.Empty<Axis>();
-        public Axis[] TopProductsYAxes
-        {
-            get => _topProductsYAxes;
-            set => SetProperty(ref _topProductsYAxes, value);
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // KPI KARTLARI
-        // ═══════════════════════════════════════════════════════════════════
-
-        private decimal _totalRevenue;
-        public decimal TotalRevenue
-        {
-            get => _totalRevenue;
-            set => SetProperty(ref _totalRevenue, value);
-        }
-
-        private decimal _totalExpense;
-        public decimal TotalExpense
-        {
-            get => _totalExpense;
-            set => SetProperty(ref _totalExpense, value);
-        }
-
-        private int _activeJobs;
-        public int ActiveJobs
-        {
-            get => _activeJobs;
-            set => SetProperty(ref _activeJobs, value);
-        }
-
-        private int _totalCustomers;
-        public int TotalCustomers
-        {
-            get => _totalCustomers;
-            set => SetProperty(ref _totalCustomers, value);
-        }
-
-        #endregion
-
-        #region Commands
-
-        public ICommand RefreshCommand { get; }
-
-        #endregion
-
-        #region Constructor
-
         public AnalyticsViewModel()
         {
             _context = new AppDbContext();
-            RefreshCommand = new RelayCommand(_ => LoadData());
+            // Initialize non-nullable fields
+            _jobDistributionSeries = Array.Empty<ISeries>();
+            _techPerformanceSeries = Array.Empty<ISeries>();
+            _techXAxes = Array.Empty<Axis>();
+            _trendSeries = Array.Empty<ISeries>();
+            _trendXAxes = Array.Empty<Axis>();
+            
             LoadData();
+        }
+
+        #region Charts Properties
+
+        private ISeries[] _jobDistributionSeries;
+        public ISeries[] JobDistributionSeries 
+        { 
+            get => _jobDistributionSeries; 
+            set => SetProperty(ref _jobDistributionSeries, value); 
+        }
+
+        private ISeries[] _techPerformanceSeries;
+        public ISeries[] TechPerformanceSeries 
+        { 
+            get => _techPerformanceSeries; 
+            set => SetProperty(ref _techPerformanceSeries, value); 
+        }
+
+        private Axis[] _techXAxes;
+        public Axis[] TechXAxes 
+        { 
+            get => _techXAxes; 
+            set => SetProperty(ref _techXAxes, value); 
+        }
+
+        private ISeries[] _trendSeries;
+        public ISeries[] TrendSeries 
+        { 
+            get => _trendSeries; 
+            set => SetProperty(ref _trendSeries, value); 
+        }
+
+        private Axis[] _trendXAxes;
+        public Axis[] TrendXAxes 
+        { 
+            get => _trendXAxes; 
+            set => SetProperty(ref _trendXAxes, value); 
         }
 
         #endregion
 
-        #region Methods
+        #region KPI Properties
+        
+        private int _totalJobs;
+        public int TotalJobs { get => _totalJobs; set => SetProperty(ref _totalJobs, value); }
+
+        private int _completedJobs;
+        public int CompletedJobs { get => _completedJobs; set => SetProperty(ref _completedJobs, value); }
+        
+        private double _successRate;
+        public double SuccessRate { get => _successRate; set => SetProperty(ref _successRate, value); }
+
+        #endregion
 
         private void LoadData()
         {
-            IsLoading = true;
+            // Verileri çek (Include ile ilişkili tabloları almayı unutma gerekirse)
+            var allJobs = _context.ServiceJobs.Include(j => j.AssignedUser).ToList();
 
-            try
-            {
-                LoadKPIs();
-                LoadFinancialTrend();
-                LoadCategoryDistribution();
-                LoadTopProducts();
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
+            // --- KPI Hesaplama ---
+            TotalJobs = allJobs.Count;
+            CompletedJobs = allJobs.Count(j => j.Status == JobStatus.Completed);
+            SuccessRate = TotalJobs > 0 ? (double)CompletedJobs / TotalJobs * 100 : 0;
 
-        private void LoadKPIs()
-        {
-            var sixMonthsAgo = DateTime.Today.AddMonths(-6);
-
-            // Toplam Gelir (6 ay)
-            TotalRevenue = _context.CashTransactions
-                .Where(t => t.Date >= sixMonthsAgo && 
-                           (t.TransactionType == CashTransactionType.CashIncome || 
-                            t.TransactionType == CashTransactionType.CardIncome || 
-                            t.TransactionType == CashTransactionType.TransferIncome))
-                .Select(t => t.Amount)
-                .AsEnumerable()
-                .Sum();
-
-            // Toplam Gider (6 ay)
-            TotalExpense = _context.CashTransactions
-                .Where(t => t.Date >= sixMonthsAgo && 
-                           (t.TransactionType == CashTransactionType.Expense || 
-                            t.TransactionType == CashTransactionType.TransferExpense))
-                .Select(t => t.Amount)
-                .AsEnumerable()
-                .Sum();
-
-            // Aktif İşler
-            ActiveJobs = _context.ServiceJobs
-                .Count(j => j.Status != JobStatus.Completed && j.Status != JobStatus.Cancelled);
-
-            // Toplam Müşteri
-            TotalCustomers = _context.Customers.Count();
-        }
-
-        private void LoadFinancialTrend()
-        {
-            var months = Enumerable.Range(0, 6)
-                .Select(i => DateTime.Today.AddMonths(-5 + i))
-                .Select(d => new DateTime(d.Year, d.Month, 1))
-                .ToList();
-
-            var incomeData = new double[6];
-            var expenseData = new double[6];
-
-            for (int i = 0; i < 6; i++)
-            {
-                var startDate = months[i];
-                var endDate = startDate.AddMonths(1);
-
-                incomeData[i] = (double)(_context.CashTransactions
-                    .Where(t => t.Date >= startDate && t.Date < endDate && 
-                               (t.TransactionType == CashTransactionType.CashIncome || 
-                                t.TransactionType == CashTransactionType.CardIncome || 
-                                t.TransactionType == CashTransactionType.TransferIncome))
-                    .Select(t => t.Amount)
-                    .AsEnumerable()
-                    .Sum());
-
-                expenseData[i] = (double)(_context.CashTransactions
-                    .Where(t => t.Date >= startDate && t.Date < endDate && 
-                               (t.TransactionType == CashTransactionType.Expense || 
-                                t.TransactionType == CashTransactionType.TransferExpense))
-                    .Select(t => t.Amount)
-                    .AsEnumerable()
-                    .Sum());
-            }
-
-            FinancialSeries = new ISeries[]
-            {
-                new LineSeries<double>
-                {
-                    Name = "Gelir",
-                    Values = incomeData,
-                    Fill = null,
-                    Stroke = new SolidColorPaint(SKColors.LimeGreen, 3),
-                    GeometryFill = new SolidColorPaint(SKColors.LimeGreen),
-                    GeometrySize = 10
-                },
-                new LineSeries<double>
-                {
-                    Name = "Gider",
-                    Values = expenseData,
-                    Fill = null,
-                    Stroke = new SolidColorPaint(SKColors.OrangeRed, 3),
-                    GeometryFill = new SolidColorPaint(SKColors.OrangeRed),
-                    GeometrySize = 10
-                }
-            };
-
-            FinancialXAxes = new Axis[]
-            {
-                new Axis
-                {
-                    Labels = months.Select(m => m.ToString("MMM yy")).ToArray(),
-                    LabelsPaint = new SolidColorPaint(SKColors.White),
-                    SeparatorsPaint = new SolidColorPaint(new SKColor(100, 100, 100))
-                }
-            };
-        }
-
-        private void LoadCategoryDistribution()
-        {
-            var categories = _context.ServiceJobs
+            // --- 1. İş Türü Dağılımı (Pie Chart) ---
+            var jobTypes = allJobs
                 .GroupBy(j => j.JobCategory)
                 .Select(g => new { Category = g.Key, Count = g.Count() })
                 .ToList();
 
-            if (!categories.Any())
+            // Eğer veri yoksa boş grafik yerine örnek veri gösterilebilir veya boş bırakılabilir
+            if (jobTypes.Any())
             {
-                CategorySeries = Array.Empty<ISeries>();
-                return;
+                JobDistributionSeries = jobTypes.Select(x => new PieSeries<int>
+                {
+                    Values = new int[] { x.Count },
+                    Name = x.Category.ToString(),
+                    InnerRadius = 50,
+                    DataLabelsPaint = new SolidColorPaint(SKColors.Black),
+                    DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
+                    // Use Coordinate.PrimaryValue instead of PrimaryValue (deprecated)
+                    DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue} ({point.StackedValue.Share:P1})"
+                }).ToArray();
+            }
+            else
+            {
+                // Boş veri durumu için placeholder
+                 JobDistributionSeries = new ISeries[] { 
+                    new PieSeries<int> { Values = new[] { 1 }, Name = "Veri Yok", Fill = new SolidColorPaint(SKColors.LightGray) } 
+                 };
             }
 
-            var colors = new SKColor[]
-            {
-                SKColors.DodgerBlue,
-                SKColors.Orange,
-                SKColors.LimeGreen,
-                SKColors.Crimson,
-                SKColors.MediumPurple,
-                SKColors.Gold,
-                SKColors.Teal
-            };
 
-            CategorySeries = categories.Select((c, i) => new PieSeries<int>
-            {
-                Name = c.Category.ToString(),
-                Values = new[] { c.Count },
-                Fill = new SolidColorPaint(colors[i % colors.Length]),
-                DataLabelsPaint = new SolidColorPaint(SKColors.White),
-                DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
-                DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue}"
-            }).ToArray<ISeries>();
-        }
-
-        private void LoadTopProducts()
-        {
-            var topProducts = _context.SalesOrderItems
-                .GroupBy(i => i.ProductName)
-                .Select(g => new { Name = g.Key, Quantity = g.Sum(x => x.Quantity) })
-                .OrderByDescending(x => x.Quantity)
-                .Take(5)
+            // --- 2. Teknisyen Performansı (Column Chart) ---
+            var techStats = allJobs
+                .Where(j => !string.IsNullOrEmpty(j.AssignedTechnician)) // AssignedTechnician string property
+                .GroupBy(j => j.AssignedTechnician)
+                .Select(g => new { Tech = g.Key!, Completed = g.Count(j => j.Status == JobStatus.Completed) }) // Key is not null here due to Where clause
+                .OrderByDescending(x => x.Completed)
+                .Take(5) // Top 5
                 .ToList();
 
-            if (!topProducts.Any())
+            if (techStats.Any())
             {
-                TopProductsSeries = Array.Empty<ISeries>();
-                return;
+                TechPerformanceSeries = new ISeries[]
+                {
+                    new ColumnSeries<int>
+                    {
+                        Values = techStats.Select(x => x.Completed).ToArray(),
+                        Name = "Tamamlanan İşler",
+                        Fill = new SolidColorPaint(SKColors.CornflowerBlue)
+                    }
+                };
+
+                TechXAxes = new Axis[]
+                {
+                    new Axis
+                    {
+                        // Ensure it is IList<string> by creating a List explicitly
+                        Labels = techStats.Select(x => x.Tech).ToList(), 
+                        LabelsRotation = 0
+                    }
+                };
             }
 
-            TopProductsSeries = new ISeries[]
+
+            // --- 3. Son 6 Ay Arıza Trendi (Line Chart) ---
+            var last6Months = Enumerable.Range(0, 6)
+                .Select(i => DateTime.Now.AddMonths(-i))
+                .OrderBy(d => d)
+                .ToList();
+
+            var trendValues = new List<int>();
+            var monthLabels = new List<string>();
+
+            foreach (var date in last6Months)
             {
-                new RowSeries<double>
+                var count = allJobs.Count(j => j.CreatedDate.Month == date.Month && j.CreatedDate.Year == date.Year);
+                trendValues.Add(count);
+                monthLabels.Add(date.ToString("MMM"));
+            }
+
+            TrendSeries = new ISeries[]
+            {
+                new LineSeries<int>
                 {
-                    Name = "Satış Adedi",
-                    Values = topProducts.Select(p => (double)p.Quantity).ToArray(),
-                    Fill = new SolidColorPaint(SKColors.DodgerBlue),
-                    DataLabelsPaint = new SolidColorPaint(SKColors.White),
-                    DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.End,
-                    DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue:N0}"
+                    Values = trendValues.ToArray(),
+                    Name = "Aylık Arıza Kaydı",
+                    Fill = new SolidColorPaint(SKColors.LightBlue.WithAlpha(100)),
+                    Stroke = new SolidColorPaint(SKColors.Blue) { StrokeThickness = 3 },
+                    GeometrySize = 10,
+                    LineSmoothness = 1
                 }
             };
 
-            TopProductsYAxes = new Axis[]
+            TrendXAxes = new Axis[]
             {
                 new Axis
                 {
-                    Labels = topProducts.Select(p => p.Name ?? "Bilinmiyor").ToArray(),
-                    LabelsPaint = new SolidColorPaint(SKColors.White)
+                    Labels = monthLabels.ToArray()
                 }
             };
         }
-
-        #endregion
     }
 }

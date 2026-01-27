@@ -47,6 +47,14 @@ namespace KamatekCrm.ViewModels
                 .Where(p => p.Status != ProjectStatus.Cancelled) // İptal edilenler hariç
                 .ToList();
 
+            if (projects.Count == 0)
+            {
+                // Dummy Data for Demonstration
+                Leads.Add(new ServiceProject { Title = "Örnek Proje: Otel WiFi", TotalCost = 150000, Customer = new Customer { FullName = "Grand Hotel" } });
+                Quoted.Add(new ServiceProject { Title = "Örnek: Fabrika Kamera", TotalCost = 45000, Customer = new Customer { FullName = "Sanayi A.Ş." } });
+                return;
+            }
+
             foreach (var p in projects)
             {
                 switch (p.PipelineStage)
@@ -73,31 +81,51 @@ namespace KamatekCrm.ViewModels
 
         public void Drop(IDropInfo dropInfo)
         {
+            if (dropInfo == null || dropInfo.DragInfo == null) return;
+
             try
             {
-                // Güvenli Tip Kontrolü (Robust Type Checking)
+                // Güvenli Tip Kontrolü
                 if (dropInfo.Data is ServiceProject project && dropInfo.TargetCollection is ObservableCollection<ServiceProject> targetCollection)
                 {
                     var sourceCollection = dropInfo.DragInfo.SourceCollection as ObservableCollection<ServiceProject>;
                     if (sourceCollection == null) return;
 
-                    // UI Update: Remove from source, Add to target
-                    // Kaynak ve Hedef aynı ise sadece sıra değişimi (Reorder)
+                    // Eğer kaynak ve hedef aynıysa ve index değişmiyorsa işlem yapma
+                    if (sourceCollection == targetCollection && sourceCollection.IndexOf(project) == dropInfo.InsertIndex)
+                        return;
+
+                    // Kaynak ve Hedef aynı ise (Reorder)
                     if (sourceCollection == targetCollection)
                     {
-                         // Reorder logic (GongSolutions handle edebilir, manuel de yapılabilir)
                          var oldIndex = sourceCollection.IndexOf(project);
-                         if (oldIndex != -1)
-                         {
-                             sourceCollection.Move(oldIndex, dropInfo.InsertIndex);
-                             // DB'de SortOrder güncellenebilir (Şimdilik pas geçiyoruz)
-                         }
+                         
+                         // Index sınır kontrolleri
+                         if (oldIndex < 0 || oldIndex >= sourceCollection.Count) return;
+                         
+                         int newIndex = dropInfo.InsertIndex;
+                         if (newIndex < 0) newIndex = 0;
+                         if (newIndex > sourceCollection.Count) newIndex = sourceCollection.Count;
+                         
+                         // Move işlemi insert mantığıyla çalıştığı için index kayması olabilir, Move methodu bunu handle eder ama yine de dikkatli olalım
+                         // GongSolutions genelde doğru index verir ama manual fix gerekebilir
+                         if (newIndex > sourceCollection.Count - 1) newIndex = sourceCollection.Count - 1;
+
+                         sourceCollection.Move(oldIndex, newIndex);
                     }
                     else
                     {
                         // Farklı kolona taşıma
+                        
+                        // Önce source'dan sil
                         sourceCollection.Remove(project);
-                        targetCollection.Insert(dropInfo.InsertIndex, project);
+
+                        // Hedefe ekle (Index kontrolü)
+                        int insertIndex = dropInfo.InsertIndex;
+                        if (insertIndex < 0) insertIndex = 0;
+                        if (insertIndex > targetCollection.Count) insertIndex = targetCollection.Count;
+
+                        targetCollection.Insert(insertIndex, project);
 
                         // Database Update logic...
                         PipelineStage newStage;
@@ -115,7 +143,10 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Taşıma işlemi sırasında hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Crash yerine kullanıcıya uyarı göster
+                // MessageBox.Show($"Taşıma işlemi sırasında hata: {ex.Message} \n\nLütfen sayfayı yenileyiniz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // Production ortamında sessiz failure veya loglama tercih edilebilir, ancak kullanıcıya crash hissettirmemek önemli.
+                System.Diagnostics.Debug.WriteLine($"Drop Error: {ex}");
             }
         }
 

@@ -99,6 +99,18 @@ namespace KamatekCrm.Models
         [MaxLength(11)]
         public string? TcKimlikNo { get; set; }
 
+        // ========== KONUM BİLGİLERİ (Harita İçin) ==========
+        
+        /// <summary>
+        /// Enlem (Latitude) - Örn: 39.7766
+        /// </summary>
+        public double? Latitude { get; set; }
+
+        /// <summary>
+        /// Boylam (Longitude) - Örn: 30.5206
+        /// </summary>
+        public double? Longitude { get; set; }
+
         // ========== KURUMSAL MÜŞTERİ ALANLARI ==========
         
         /// <summary>

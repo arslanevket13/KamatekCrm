@@ -1,0 +1,292 @@
+<Window x:Class="KamatekCrm.Views.QuickAddModal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Hızlı Aksiyon" 
+        Width="600" Height="450"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Topmost="True">
+
+    <Window.Resources>
+        <Style x:Key="ActionItemStyle" TargetType="Border">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="14,12"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource ThemeSidebarHover}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="Escape" Command="{Binding CloseCommand}"/>
+    </Window.InputBindings>
+
+    <!-- Kenarlık ve gölge -->
+    <Border Background="{DynamicResource ThemeSurface}" 
+            CornerRadius="16" 
+            BorderBrush="{DynamicResource ThemeBorder}"
+            BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="40" Opacity="0.3" ShadowDepth="10" Direction="270"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Arama Çubuğu -->
+            <Border Grid.Row="0" Padding="20,16" 
+                    BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="🔍" FontSize="22" 
+                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+
+                    <TextBox x:Name="SearchBox" Grid.Column="1"
+                             Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="16" Background="Transparent"
+                             BorderThickness="0" VerticalAlignment="Center"
+                             Foreground="{DynamicResource ThemeTextPrimary}">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="Tag" Value="Bir aksiyon veya sayfa ara... (Ctrl+K)"/>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+
+                    <Border Grid.Column="2" Background="{DynamicResource ThemeBackground}" 
+                            CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                        <TextBlock Text="ESC" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource ThemeTextTertiary}"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Aksiyon Listesi -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="12,8">
+                <StackPanel>
+                    <!-- Hızlı Aksiyonlar Başlığı -->
+                    <TextBlock Text="HIZLI AKSİYONLAR" FontSize="10" FontWeight="Bold"
+                               Foreground="{DynamicResource ThemeTextTertiary}" 
+                               Margin="8,8,0,10"/>
+
+                    <!-- Arıza Kabuı -->
+                    <Border Style="{StaticResource ActionItemStyle}" 
+                            Tag="OpenFaultTicket" MouseDown="ActionItem_Click">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="#3B82F6" 
+                                    CornerRadius="8" Width="40" Height="40">
+                                <TextBlock Text="⚡" FontSize="18" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="Arıza Kabul" FontWeight="SemiBold" FontSize="14"
+                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                <TextBlock Text="Yeni cihaz arıza kaydı oluştur" FontSize="11"
+                                           Foreground="{DynamicResource ThemeTextSecondary}"/>
+                            </StackPanel>
+                            <Border Grid.Column="2" Background="{DynamicResource ThemeBackground}" 
+                                    CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                                <TextBlock Text="Ctrl+N" FontSize="10" FontWeight="Medium"
+                                           Foreground="{DynamicResource ThemeTextTertiary}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Hızlı Satış -->
+                    <Border Style="{StaticResource ActionItemStyle}" 
+                            Tag="OpenDirectSales" MouseDown="ActionItem_Click">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="#10B981" 
+                                    CornerRadius="8" Width="40" Height="40">
+                                <TextBlock Text="🛒" FontSize="18" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="Hızlı Satış" FontWeight="SemiBold" FontSize="14"
+                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                <TextBlock Text="Perakende ürün satışı yap" FontSize="11"
+                                           Foreground="{DynamicResource ThemeTextSecondary}"/>
+                            </StackPanel>
+                            <Border Grid.Column="2" Background="{DynamicResource ThemeBackground}" 
+                                    CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                                <TextBlock Text="Ctrl+S" FontSize="10" FontWeight="Medium"
+                                           Foreground="{DynamicResource ThemeTextTertiary}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Yeni Müşteri -->
+                    <Border Style="{StaticResource ActionItemStyle}" 
+                            Tag="NewCustomer" MouseDown="ActionItem_Click">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="#8B5CF6" 
+                                    CornerRadius="8" Width="40" Height="40">
+                                <TextBlock Text="👤" FontSize="18" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="Yeni Müşteri" FontWeight="SemiBold" FontSize="14"
+                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                <TextBlock Text="Müşteri veritabanına ekle" FontSize="11"
+                                           Foreground="{DynamicResource ThemeTextSecondary}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Proje & Teklif -->
+                    <Border Style="{StaticResource ActionItemStyle}" 
+                            Tag="OpenProjectQuote" MouseDown="ActionItem_Click">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="#F59E0B" 
+                                    CornerRadius="8" Width="40" Height="40">
+                                <TextBlock Text="🏗️" FontSize="18" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="Proje &amp; Teklif" FontWeight="SemiBold" FontSize="14"
+                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                <TextBlock Text="Proje veya teklif oluştur" FontSize="11"
+                                           Foreground="{DynamicResource ThemeTextSecondary}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Ayırıcı -->
+                    <Border Margin="0,12,0,8" BorderThickness="0,1,0,0" 
+                            BorderBrush="{DynamicResource ThemeDivider}"/>
+
+                    <!-- Sayfalar Başlığı -->
+                    <TextBlock Text="SAYFALAR" FontSize="10" FontWeight="Bold"
+                               Foreground="{DynamicResource ThemeTextTertiary}" 
+                               Margin="8,4,0,10"/>
+
+                    <!-- Dashboard -->
+                    <Border Style="{StaticResource ActionItemStyle}" 
+                            Tag="NavigateDashboard" MouseDown="ActionItem_Click">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🏠" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Ana Sayfa (Dashboard)" FontSize="13"
+                                       Foreground="{DynamicResource ThemeTextPrimary}" 
+                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Müşteriler -->
+                    <Border Style="{StaticResource ActionItemStyle}" 
+                            Tag="NavigateCustomers" MouseDown="ActionItem_Click">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="👥" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Müşteriler" FontSize="13"
+                                       Foreground="{DynamicResource ThemeTextPrimary}" 
+                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Stoklar -->
+                    <Border Style="{StaticResource ActionItemStyle}" 
+                            Tag="NavigateProducts" MouseDown="ActionItem_Click">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="📦" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Stoklar" FontSize="13"
+                                       Foreground="{DynamicResource ThemeTextPrimary}" 
+                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Tamir Listesi -->
+                    <Border Style="{StaticResource ActionItemStyle}" 
+                            Tag="NavigateRepairList" MouseDown="ActionItem_Click">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🔧" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Tamir Listesi" FontSize="13"
+                                       Foreground="{DynamicResource ThemeTextPrimary}" 
+                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Finans -->
+                    <Border Style="{StaticResource ActionItemStyle}" 
+                            Tag="NavigateFinance" MouseDown="ActionItem_Click">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="💰" FontSize="20" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="Finans" FontSize="13"
+                                       Foreground="{DynamicResource ThemeTextPrimary}" 
+                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer -->
+            <Border Grid.Row="2" Padding="16,10"
+                    BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,1,0,0"
+                    Background="{DynamicResource ThemeBackground}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="⌨️ " FontSize="11" Foreground="{DynamicResource ThemeTextTertiary}"/>
+                    <TextBlock Text="↑↓ Navigasyon" FontSize="11" 
+                               Foreground="{DynamicResource ThemeTextTertiary}" Margin="0,0,16,0"/>
+                    <TextBlock Text="↵ Seç" FontSize="11" 
+                               Foreground="{DynamicResource ThemeTextTertiary}" Margin="0,0,16,0"/>
+                    <TextBlock Text="ESC Kapat" FontSize="11" 
+                               Foreground="{DynamicResource ThemeTextTertiary}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

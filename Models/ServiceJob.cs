@@ -295,6 +295,18 @@ namespace KamatekCrm.Models
         [NotMapped]
         public bool BelongsToProject => ServiceProjectId.HasValue;
 
+        /// <summary>
+        /// Fotoğraf listesi (JSON'dan parse edilir)
+        /// </summary>
+        [NotMapped]
+        public System.Collections.Generic.List<string> PhotoPathsList =>
+            string.IsNullOrEmpty(PhotoPathsJson)
+                ? new System.Collections.Generic.List<string>()
+                : System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(PhotoPathsJson) ?? new System.Collections.Generic.List<string>();
+
+        [NotMapped]
+        public bool HasPhotos => !string.IsNullOrEmpty(PhotoPathsJson);
+
         #endregion
     }
 }

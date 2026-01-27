@@ -1,142 +1,102 @@
 <UserControl x:Class="KamatekCrm.Views.AnalyticsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
-             Background="#1a1a2e">
+             Background="#F5F5F5">
     
-    <UserControl.DataContext>
-        <vm:AnalyticsViewModel/>
-    </UserControl.DataContext>
-    
-    <Grid>
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Margin="20">
-                
-                <!-- Header -->
-                <Grid Margin="0,0,0,20">
-                    <TextBlock Text="📊 İş Zekası Dashboard" 
-                               FontSize="28" FontWeight="Bold" Foreground="White"/>
-                    <Button Content="🔄 Yenile" 
-                            HorizontalAlignment="Right"
-                            Command="{Binding RefreshCommand}"
-                            Background="#3498db" Foreground="White"
-                            Padding="15,8" BorderThickness="0"
-                            Cursor="Hand"/>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="Auto"/> <!-- KPI Cards -->
+            <RowDefinition Height="*"/>    <!-- Charts -->
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Text="Analitik &amp; Raporlar 📈" FontSize="24" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,20"/>
+
+        <!-- KPI Cards -->
+        <Grid Grid.Row="1" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="15"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="15"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Card 1 -->
+            <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+                <StackPanel>
+                    <TextBlock Text="Toplam İşler" Foreground="#546E7A" FontSize="14"/>
+                    <TextBlock Text="{Binding TotalJobs}" FontSize="28" FontWeight="Bold" Foreground="#2196F3"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 2 -->
+            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+                <StackPanel>
+                    <TextBlock Text="Tamamlanan" Foreground="#546E7A" FontSize="14"/>
+                    <TextBlock Text="{Binding CompletedJobs}" FontSize="28" FontWeight="Bold" Foreground="#4CAF50"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 3 -->
+            <Border Grid.Column="4" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+                <StackPanel>
+                    <TextBlock Text="Başarı Oranı" Foreground="#546E7A" FontSize="14"/>
+                    <TextBlock Text="{Binding SuccessRate, StringFormat={}{0:N1}%}" FontSize="28" FontWeight="Bold" Foreground="#FF9800"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Charts Grid -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/> <!-- Pie -->
+                <ColumnDefinition Width="15"/>
+                <ColumnDefinition Width="1.5*"/> <!-- Bar/Line -->
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="15"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- 1. Pie Chart: İş Türü Dağılımı -->
+            <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Arıza Türü Dağılımı" FontWeight="Bold" Foreground="#455A64" Margin="0,0,0,10"/>
+                    <lvc:PieChart Grid.Row="1" Series="{Binding JobDistributionSeries}" LegendPosition="Right"/>
                 </Grid>
+            </Border>
 
-                <!-- KPI Cards -->
-                <UniformGrid Columns="4" Margin="0,0,0,25">
-                    <!-- Toplam Gelir -->
-                    <Border CornerRadius="12" Margin="5" Padding="20">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#2ECC71" Offset="0"/>
-                                <GradientStop Color="#27AE60" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <StackPanel>
-                            <TextBlock Text="💰 Toplam Gelir (6 Ay)" Foreground="White" FontSize="13" Opacity="0.9"/>
-                            <TextBlock Text="{Binding TotalRevenue, StringFormat='₺{0:N0}'}" 
-                                       Foreground="White" FontSize="28" FontWeight="Bold" Margin="0,8,0,0"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Toplam Gider -->
-                    <Border CornerRadius="12" Margin="5" Padding="20">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#E74C3C" Offset="0"/>
-                                <GradientStop Color="#C0392B" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <StackPanel>
-                            <TextBlock Text="📤 Toplam Gider (6 Ay)" Foreground="White" FontSize="13" Opacity="0.9"/>
-                            <TextBlock Text="{Binding TotalExpense, StringFormat='₺{0:N0}'}" 
-                                       Foreground="White" FontSize="28" FontWeight="Bold" Margin="0,8,0,0"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Aktif İşler -->
-                    <Border CornerRadius="12" Margin="5" Padding="20">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#3498DB" Offset="0"/>
-                                <GradientStop Color="#2980B9" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <StackPanel>
-                            <TextBlock Text="🔧 Aktif İşler" Foreground="White" FontSize="13" Opacity="0.9"/>
-                            <TextBlock Text="{Binding ActiveJobs}" 
-                                       Foreground="White" FontSize="28" FontWeight="Bold" Margin="0,8,0,0"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Toplam Müşteri -->
-                    <Border CornerRadius="12" Margin="5" Padding="20">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#9B59B6" Offset="0"/>
-                                <GradientStop Color="#8E44AD" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <StackPanel>
-                            <TextBlock Text="👥 Toplam Müşteri" Foreground="White" FontSize="13" Opacity="0.9"/>
-                            <TextBlock Text="{Binding TotalCustomers}" 
-                                       Foreground="White" FontSize="28" FontWeight="Bold" Margin="0,8,0,0"/>
-                        </StackPanel>
-                    </Border>
-                </UniformGrid>
-
-                <!-- Charts Row 1 -->
-                <Grid Margin="0,0,0,20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Financial Trend Chart -->
-                    <Border Grid.Column="0" Background="#252541" CornerRadius="12" Padding="20" Margin="0,0,10,0">
-                        <StackPanel>
-                            <TextBlock Text="📈 6 Aylık Finansal Trend" Foreground="White" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,15"/>
-                            <lvc:CartesianChart Height="280"
-                                                Series="{Binding FinancialSeries}"
-                                                XAxes="{Binding FinancialXAxes}"
-                                                TooltipPosition="Top"
-                                                LegendPosition="Bottom"
-                                                LegendTextPaint="{x:Null}"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Category Pie Chart -->
-                    <Border Grid.Column="1" Background="#252541" CornerRadius="12" Padding="20" Margin="10,0,0,0">
-                        <StackPanel>
-                            <TextBlock Text="📊 Servis Kategorileri" Foreground="White" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,15"/>
-                            <lvc:PieChart Height="280"
-                                          Series="{Binding CategorySeries}"
-                                          LegendPosition="Bottom"/>
-                        </StackPanel>
-                    </Border>
+            <!-- 2. Column Chart: Teknisyen Performansı -->
+            <Border Grid.Column="2" Grid.Row="0" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="En İyi Teknisyenler (Top 5)" FontWeight="Bold" Foreground="#455A64" Margin="0,0,0,10"/>
+                    <lvc:CartesianChart Grid.Row="1" Series="{Binding TechPerformanceSeries}" XAxes="{Binding TechXAxes}"/>
                 </Grid>
+            </Border>
 
-                <!-- Charts Row 2 -->
-                <Border Background="#252541" CornerRadius="12" Padding="20">
-                    <StackPanel>
-                        <TextBlock Text="🏆 En Çok Satan 5 Ürün" Foreground="White" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,15"/>
-                        <lvc:CartesianChart Height="200"
-                                            Series="{Binding TopProductsSeries}"
-                                            YAxes="{Binding TopProductsYAxes}"
-                                            TooltipPosition="Right"/>
-                    </StackPanel>
-                </Border>
-
-            </StackPanel>
-        </ScrollViewer>
-        
-        <!-- Loading Overlay -->
-        <Border Background="#80000000" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
-            <TextBlock Text="Yükleniyor..." FontSize="24" Foreground="White" 
-                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        </Border>
+            <!-- 3. Line Chart: Aylık Trend -->
+            <Border Grid.Column="2" Grid.Row="2" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Son 6 Ay İş Trendi" FontWeight="Bold" Foreground="#455A64" Margin="0,0,0,10"/>
+                    <lvc:CartesianChart Grid.Row="1" Series="{Binding TrendSeries}" XAxes="{Binding TrendXAxes}"/>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>
