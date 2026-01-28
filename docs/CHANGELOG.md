@@ -2,6 +2,32 @@
 
 ## 2026-01-28
 
+### 🗄️ Hibrit Veritabanı Mimarisi
+
+**Yeni Özellik:** Uygulama artık hem SQLite (geliştirme) hem de SQL Server (production) veritabanlarını destekliyor.
+
+**Yapılandırma:**
+- `appsettings.json` dosyasından `DatabaseType` değeri ile provider seçimi
+- `"SQLite"` veya `"SqlServer"` değerleri destekleniyor
+- Bağlantı dizeleri merkezi olarak yönetiliyor
+
+**Eşzamanlılık Kontrolü:**
+- `Inventory` entity'sine `RowVersion` özelliği eklendi
+- `UnitOfWork.SaveChangesWithConcurrencyHandling()` metodu ile optimistic concurrency desteği
+- "Kayıt başka bir kullanıcı tarafından değiştirildi" hatası artık düzgün yakalanıyor
+
+**Yeni Dosyalar:**
+- `appsettings.json` - Veritabanı ve uygulama yapılandırması
+- `Settings/AppSettings.cs` - Yapılandırma okuyucu (singleton)
+
+**Güncellenen Dosyalar:**
+- `KamatekCrm.csproj` - SqlServer ve Configuration NuGet paketleri eklendi
+- `Data/AppDbContext.cs` - Dinamik provider seçimi
+- `Models/Inventory.cs` - RowVersion özelliği
+- `Repositories/UnitOfWork.cs` - Concurrency handling
+
+---
+
 ### 🏗️ Enterprise Mimari Dönüşümü
 
 **Yeni Mimari Bileşenler:**

@@ -1,5 +1,6 @@
 using System;
 using KamatekCrm.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace KamatekCrm.Repositories
@@ -39,6 +40,35 @@ namespace KamatekCrm.Repositories
         public int SaveChanges()
         {
             return _context.SaveChanges();
+        }
+
+        /// <summary>
+        /// Eşzamanlılık hatası kontrolü ile kaydetme
+        /// </summary>
+        /// <returns>Başarılı ise true, eşzamanlılık hatası varsa false</returns>
+        public (bool Success, string? ErrorMessage) SaveChangesWithConcurrencyHandling()
+        {
+            try
+            {
+                _context.SaveChanges();
+                return (true, null);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                // Eşzamanlılık hatası: Kayıt başka bir kullanıcı tarafından değiştirildi
+                foreach (var entry in ex.Entries)
+                {
+                    var databaseValues = entry.GetDatabaseValues();
+                    if (databaseValues == null)
+                    {
+                        return (false, "Kayıt başka bir kullanıcı tarafından silindi.");
+                    }
+                    
+                    // Veritabanındaki güncel değerleri al
+                    entry.OriginalValues.SetValues(databaseValues);
+                }
+                return (false, "Kayıt başka bir kullanıcı tarafından değiştirildi. Lütfen sayfayı yenileyip tekrar deneyin.");
+            }
         }
 
         public void Commit()

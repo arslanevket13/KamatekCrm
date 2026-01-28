@@ -1,10 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Models;
+using KamatekCrm.Settings;
 
 namespace KamatekCrm.Data
 {
     /// <summary>
     /// Entity Framework DbContext - Veri tabanı bağlantısı ve yapılandırması
+    /// Hibrit mimari: SQLite (geliştirme) ve SQL Server (production) desteği
     /// </summary>
     public class AppDbContext : DbContext
     {
@@ -60,8 +62,17 @@ namespace KamatekCrm.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                // SQLite veri tabanı bağlantı dizesi
-                optionsBuilder.UseSqlite("Data Source=KamatekCrm.db");
+                // Hibrit veritabanı desteği: appsettings.json'dan oku
+                if (AppSettings.UseSqlServer)
+                {
+                    // SQL Server (Production / Multi-user)
+                    optionsBuilder.UseSqlServer(AppSettings.SqlServerConnectionString);
+                }
+                else
+                {
+                    // SQLite (Geliştirme / Tek kullanıcı)
+                    optionsBuilder.UseSqlite(AppSettings.SqliteConnectionString);
+                }
             }
         }
 

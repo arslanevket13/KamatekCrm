@@ -42,6 +42,14 @@ namespace KamatekCrm.Models
         public int Quantity { get; set; }
 
         /// <summary>
+        /// Eşzamanlılık kontrolü için RowVersion (Optimistic Concurrency)
+        /// SQLite: BLOB olarak saklanır
+        /// SQL Server: rowversion/timestamp olarak saklanır
+        /// </summary>
+        [Timestamp]
+        public byte[]? RowVersion { get; set; }
+
+        /// <summary>
         /// Kritik seviye kontrolü için özel override (Opsiyonel)
         /// Ürün bazlı MinStockLevel'a bakılır genelde ama depo bazlı da olabilir.
         /// Şimdilik sadece miktar tutuyoruz.
