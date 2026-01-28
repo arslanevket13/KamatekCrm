@@ -269,15 +269,7 @@
                                    Foreground="{DynamicResource ThemeSidebarSecondaryText}" Margin="20,4,20,8"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
-                        <Button Command="{Binding NavigateToAnalyticsCommand}" Style="{StaticResource ModernNavButton}"
-                                ToolTip="İş Analitiği"
-                                Visibility="{Binding CanViewAnalytics, Converter={StaticResource BoolToVis}}">
-                           <StackPanel Orientation="Horizontal">
-                               <TextBlock Text="📈" FontSize="18" VerticalAlignment="Center"/>
-                               <TextBlock Text=" İş Analitiği" VerticalAlignment="Center" Margin="8,0,0,0"
-                                          Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
-                           </StackPanel>
-                        </Button>
+
 
                        <Button Command="{Binding NavigateToFinancialHealthCommand}" Style="{StaticResource ModernNavButton}"
                                ToolTip="Finansal Sağlık"
