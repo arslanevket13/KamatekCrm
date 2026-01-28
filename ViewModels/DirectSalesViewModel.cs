@@ -295,7 +295,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Ödeme işle
+        /// Ödeme işle - Domain Service'e delege edildi
         /// </summary>
         private void ExecuteProcessPayment(PaymentMethod paymentMethod)
         {
@@ -312,104 +312,28 @@ namespace KamatekCrm.ViewModels
 
             if (result != MessageBoxResult.Yes) return;
 
-            using var transaction = _context.Database.BeginTransaction();
-            try
+            // Domain Service'e delege et
+            var salesService = new KamatekCrm.Services.Domain.SalesDomainService();
+            var request = new KamatekCrm.Services.Domain.SaleRequest
             {
-                // 1. Sipariş numarası oluştur
-                var todayOrders = _context.SalesOrders.Count(o => o.Date.Date == DateTime.Today);
-                var orderNumber = $"SO-{DateTime.Now:yyyyMMdd}-{(todayOrders + 1):D3}";
-
-                // 2. SalesOrder oluştur
-                var salesOrder = new SalesOrder
+                WarehouseId = SelectedWarehouse.Id,
+                CustomerName = CustomerName,
+                PaymentMethod = paymentMethod,
+                CreatedBy = AuthService.CurrentUser?.AdSoyad ?? "Sistem",
+                Items = CartItems.Select(c => new KamatekCrm.Services.Domain.SaleItemRequest
                 {
-                    OrderNumber = orderNumber,
-                    Date = DateTime.Now,
-                    PaymentMethod = paymentMethod,
-                    TotalAmount = CartTotal,
-                    CustomerName = CustomerName
-                };
+                    ProductId = c.ProductId,
+                    ProductName = c.ProductName,
+                    Quantity = c.Quantity,
+                    UnitPrice = c.UnitPrice
+                }).ToList()
+            };
 
-                _context.SalesOrders.Add(salesOrder);
-                _context.SaveChanges(); // ID almak için
+            var saleResult = salesService.ProcessSale(request);
 
-                // 3. Sipariş kalemleri ve stok işlemleri
-                foreach (var cartItem in CartItems)
-                {
-                    // SalesOrderItem
-                    var orderItem = new SalesOrderItem
-                    {
-                        SalesOrderId = salesOrder.Id,
-                        ProductId = cartItem.ProductId,
-                        ProductName = cartItem.ProductName,
-                        Quantity = cartItem.Quantity,
-                        UnitPrice = cartItem.UnitPrice
-                    };
-                    _context.SalesOrderItems.Add(orderItem);
-
-                    // Stok düş
-                    var inventory = _context.Inventories
-                        .FirstOrDefault(i => i.ProductId == cartItem.ProductId && i.WarehouseId == SelectedWarehouse.Id);
-
-                    if (inventory != null)
-                    {
-                        inventory.Quantity -= cartItem.Quantity;
-                    }
-                    else
-                    {
-                        // Inventory kaydı yoksa yeni oluştur (negatif stok = eksik kayıt)
-                        var newInventory = new Inventory
-                        {
-                            ProductId = cartItem.ProductId,
-                            WarehouseId = SelectedWarehouse.Id,
-                            Quantity = -cartItem.Quantity // Negatif başlangıç
-                        };
-                        _context.Inventories.Add(newInventory);
-                    }
-
-                    // StockTransaction kaydet
-                    var stockTransaction = new StockTransaction
-                    {
-                        Date = DateTime.Now,
-                        ProductId = cartItem.ProductId,
-                        SourceWarehouseId = SelectedWarehouse.Id,
-                        TargetWarehouseId = null, // Satış çıkışı
-                        Quantity = cartItem.Quantity,
-                        TransactionType = StockTransactionType.Sale,
-                        UnitCost = cartItem.UnitPrice,
-                        Description = $"POS Satış - {orderNumber}",
-                        ReferenceId = orderNumber
-                    };
-                    _context.StockTransactions.Add(stockTransaction);
-                }
-
-                // ═══════════════════════════════════════════════════════════════════
-                // KASA ENTEGRASYONU: POS satışını CashTransaction'a kaydet
-                // ═══════════════════════════════════════════════════════════════════
-                var cashTransactionType = paymentMethod switch
-                {
-                    PaymentMethod.Cash => CashTransactionType.CashIncome,
-                    PaymentMethod.CreditCard => CashTransactionType.CardIncome,
-                    _ => CashTransactionType.CashIncome
-                };
-
-                var cashTransaction = new CashTransaction
-                {
-                    Date = DateTime.Now,
-                    Amount = CartTotal,
-                    TransactionType = cashTransactionType,
-                    Description = $"POS Satış - {orderNumber}",
-                    Category = "Perakende Satış",
-                    ReferenceNumber = orderNumber,
-                    SalesOrderId = salesOrder.Id,
-                    CreatedBy = AuthService.CurrentUser?.AdSoyad ?? "Sistem",
-                    CreatedAt = DateTime.Now
-                };
-                _context.CashTransactions.Add(cashTransaction);
-
-                _context.SaveChanges();
-                transaction.Commit();
-
-                StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {orderNumber}";
+            if (saleResult.Success)
+            {
+                StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {saleResult.OrderNumber}";
                 IsActionSuccessful = true;
 
                 // Sepeti temizle ve ürünleri yenile
@@ -419,19 +343,18 @@ namespace KamatekCrm.ViewModels
 
                 MessageBox.Show(
                     $"Satış Başarılı!\n\n" +
-                    $"Sipariş No: {orderNumber}\n" +
-                    $"Toplam: {salesOrder.TotalAmount:C}\n" +
+                    $"Sipariş No: {saleResult.OrderNumber}\n" +
+                    $"Toplam: {saleResult.TotalAmount:C}\n" +
                     $"Ödeme: {paymentName}",
                     "Satış Tamamlandı",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
             }
-            catch (Exception ex)
+            else
             {
-                transaction.Rollback();
-                StatusMessage = $"Satış hatası: {ex.Message}";
+                StatusMessage = $"Satış hatası: {saleResult.ErrorMessage}";
                 IsActionSuccessful = false;
-                MessageBox.Show($"Satış işlemi sırasında hata oluştu:\n{ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Satış işlemi sırasında hata oluştu:\n{saleResult.ErrorMessage}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

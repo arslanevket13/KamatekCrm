@@ -89,8 +89,27 @@ KamatekCrm/
 │   ├── ProjectScopeService.cs # Proje ağacı ve veri yönetimi
 │   ├── EmailService.cs       # SMTP e-posta gönderimi
 │   ├── SmsService.cs         # HTTP API SMS gönderimi
-│   ├── AttachmentService.cs  # Dijital arşiv dosya yönetimi (YENİ)
-│   └── BackupService.cs      # SQLite yedekleme/geri yükleme
+│   ├── AttachmentService.cs  # Dijital arşiv dosya yönetimi
+│   ├── BackupService.cs      # SQLite yedekleme/geri yükleme
+│   ├── EventAggregator.cs    # Pub/Sub Event Bus (YENİ)
+│   │
+│   └── Domain/               # Domain Services (YENİ)
+│       ├── ISalesDomainService.cs      # Satış interface
+│       ├── SalesDomainService.cs       # Thread-safe satış işlemleri
+│       ├── IInventoryDomainService.cs  # Stok interface
+│       └── InventoryDomainService.cs   # Thread-safe stok işlemleri
+│
+├── Repositories/         # Data Access Layer (YENİ)
+│   ├── IUnitOfWork.cs    # Unit of Work interface
+│   └── UnitOfWork.cs     # Transaction yönetimi
+│
+├── Exceptions/           # Custom Exceptions (YENİ)
+│   ├── InsufficientStockException.cs   # Yetersiz stok hatası
+│   └── ReferentialIntegrityException.cs # Bağımlılık hatası
+│
+├── Events/               # Event DTOs (YENİ)
+│   ├── SaleCompletedEvent.cs   # Satış tamamlandı eventi
+│   └── StockUpdatedEvent.cs    # Stok güncellendi eventi
 │
 ├── Views/ (Devam)
 │   ├── RepairRegistrationWindow.xaml # Cihaz kabul formu

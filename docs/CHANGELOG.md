@@ -2,6 +2,38 @@
 
 ## 2026-01-28
 
+### 🏗️ Enterprise Mimari Dönüşümü
+
+**Yeni Mimari Bileşenler:**
+- ✅ **Unit of Work Pattern** - Transaction yönetimi merkezileştirildi (`Repositories/IUnitOfWork.cs`, `UnitOfWork.cs`)
+- ✅ **Domain Services** - İş mantığı ViewModel'lerden ayrıldı:
+  - `SalesDomainService` - Thread-safe satış işlemleri (SemaphoreSlim)
+  - `InventoryDomainService` - Thread-safe stok operasyonları
+- ✅ **Event Bus** - ViewModel'ler arası iletişim (`Services/EventAggregator.cs`, WeakReference ile memory-safe)
+- ✅ **Custom Exceptions** - Özelleştirilmiş hata türleri:
+  - `InsufficientStockException` - Yetersiz stok
+  - `ReferentialIntegrityException` - Bağımlılık hatası
+- ✅ **Event DTOs** - Pub/Sub mesajları (`SaleCompletedEvent`, `StockUpdatedEvent`)
+
+**Refactored ViewModels:**
+- `DirectSalesViewModel.cs` - 140 satır → 60 satır (SalesDomainService'e delege)
+- `StockTransferViewModel.cs` - 70 satır → 30 satır (InventoryDomainService'e delege)
+
+**Yeni Dosyalar:**
+- `Repositories/IUnitOfWork.cs`
+- `Repositories/UnitOfWork.cs`
+- `Services/Domain/ISalesDomainService.cs`
+- `Services/Domain/SalesDomainService.cs`
+- `Services/Domain/IInventoryDomainService.cs`
+- `Services/Domain/InventoryDomainService.cs`
+- `Services/EventAggregator.cs`
+- `Exceptions/InsufficientStockException.cs`
+- `Exceptions/ReferentialIntegrityException.cs`
+- `Events/SaleCompletedEvent.cs`
+- `Events/StockUpdatedEvent.cs`
+
+---
+
 ### 🎨 UI Profesyonelleştirme - Sprint 1-3
 
 **Sprint 1: Foundation & UI Yenileme**

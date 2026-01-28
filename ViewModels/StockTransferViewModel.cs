@@ -120,68 +120,31 @@ namespace KamatekCrm.ViewModels
         {
             if (SourceWarehouse == null || TargetWarehouse == null || SelectedProduct == null) return;
 
-            using var transaction = _context.Database.BeginTransaction();
-            try
+            // Domain Service'e delege et
+            var inventoryService = new KamatekCrm.Services.Domain.InventoryDomainService();
+            var request = new KamatekCrm.Services.Domain.TransferRequest
             {
-                // 1. Kaynak Depo Stok Azaltma
-                var sourceInventory = _context.Inventories
-                    .FirstOrDefault(i => i.ProductId == SelectedProduct.Id && i.WarehouseId == SourceWarehouse.Id);
+                ProductId = SelectedProduct.Id,
+                SourceWarehouseId = SourceWarehouse.Id,
+                TargetWarehouseId = TargetWarehouse.Id,
+                Quantity = Quantity,
+                Description = $"{SourceWarehouse.Name} deposundan {TargetWarehouse.Name} deposuna transfer."
+            };
 
-                if (sourceInventory == null || sourceInventory.Quantity < Quantity)
-                {
-                    StatusMessage = "Kaynak depoda yeterli stok bulunamadı.";
-                    IsActionSuccessful = false;
-                    return;
-                }
+            var result = inventoryService.TransferStock(request);
 
-                sourceInventory.Quantity -= Quantity;
-
-                // 2. Hedef Depo Stok Artırma
-                var targetInventory = _context.Inventories
-                    .FirstOrDefault(i => i.ProductId == SelectedProduct.Id && i.WarehouseId == TargetWarehouse.Id);
-
-                if (targetInventory == null)
-                {
-                    targetInventory = new Inventory
-                    {
-                        ProductId = SelectedProduct.Id,
-                        WarehouseId = TargetWarehouse.Id,
-                        Quantity = Quantity
-                    };
-                    _context.Inventories.Add(targetInventory);
-                }
-                else
-                {
-                    targetInventory.Quantity += Quantity;
-                }
-
-                // 3. Stok Hareketi Kaydı (Ledger)
-                var stockTransaction = new StockTransaction
-                {
-                    Date = System.DateTime.Now,
-                    ProductId = SelectedProduct.Id,
-                    SourceWarehouseId = SourceWarehouse.Id,
-                    TargetWarehouseId = TargetWarehouse.Id,
-                    Quantity = Quantity,
-                    TransactionType = StockTransactionType.Transfer,
-                    Description = $"{SourceWarehouse.Name} deposundan {TargetWarehouse.Name} deposuna transfer."
-                };
-                _context.StockTransactions.Add(stockTransaction);
-
-                _context.SaveChanges();
-                transaction.Commit();
-
+            if (result.Success)
+            {
                 StatusMessage = "Transfer işlemi başarıyla tamamlandı.";
                 IsActionSuccessful = true;
                 
-                // Formu temizle veya güncelle
+                // Formu temizle
                 Quantity = 0;
                 OnPropertyChanged(nameof(AvailableStock));
             }
-            catch (System.Exception ex)
+            else
             {
-                transaction.Rollback();
-                StatusMessage = $"Hata oluştu: {ex.Message}";
+                StatusMessage = result.ErrorMessage;
                 IsActionSuccessful = false;
             }
         }
