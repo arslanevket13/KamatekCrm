@@ -90,6 +90,10 @@
             <DataTemplate DataType="{x:Type vm:AnalyticsViewModel}">
                 <views:AnalyticsView/>
             </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:FinancialHealthViewModel}">
+                <views:FinancialHealthView/>
+            </DataTemplate>
             
             <DataTemplate DataType="{x:Type vm:PurchaseOrderViewModel}">
                 <views:PurchaseOrderView/>
