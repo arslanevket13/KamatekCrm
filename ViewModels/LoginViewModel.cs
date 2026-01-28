@@ -14,6 +14,7 @@ namespace KamatekCrm.ViewModels
         private string _password = string.Empty;
         private string _errorMessage = string.Empty;
         private bool _isLoading;
+        private bool _rememberMe;
 
         /// <summary>
         /// Kullanıcı adı
@@ -39,6 +40,15 @@ namespace KamatekCrm.ViewModels
                 SetProperty(ref _password, value);
                 ErrorMessage = string.Empty;
             }
+        }
+
+        /// <summary>
+        /// Beni Hatırla seçeneği
+        /// </summary>
+        public bool RememberMe
+        {
+            get => _rememberMe;
+            set => SetProperty(ref _rememberMe, value);
         }
 
         /// <summary>
@@ -79,6 +89,50 @@ namespace KamatekCrm.ViewModels
         public LoginViewModel()
         {
             LoginCommand = new RelayCommand(_ => ExecuteLogin(), _ => CanLogin());
+            
+            // Load saved settings
+            LoadSavedCredentials();
+        }
+
+        /// <summary>
+        /// Kayıtlı kullanıcı bilgilerini yükle
+        /// </summary>
+        private void LoadSavedCredentials()
+        {
+            try
+            {
+                var settings = Properties.Settings.Default;
+                _rememberMe = settings.RememberMe;
+                
+                if (_rememberMe && !string.IsNullOrEmpty(settings.SavedUsername))
+                {
+                    _username = settings.SavedUsername;
+                    OnPropertyChanged(nameof(Username));
+                    OnPropertyChanged(nameof(RememberMe));
+                }
+            }
+            catch
+            {
+                // Settings yüklenemezse sessizce devam et
+            }
+        }
+
+        /// <summary>
+        /// Kullanıcı bilgilerini kaydet
+        /// </summary>
+        private void SaveCredentials()
+        {
+            try
+            {
+                var settings = Properties.Settings.Default;
+                settings.RememberMe = _rememberMe;
+                settings.SavedUsername = _rememberMe ? _username : string.Empty;
+                settings.Save();
+            }
+            catch
+            {
+                // Settings kaydedilemezse sessizce devam et
+            }
         }
 
         /// <summary>
@@ -109,7 +163,10 @@ namespace KamatekCrm.ViewModels
             {
                 if (AuthService.Login(Username, Password))
                 {
-                    // Başarılı giriş - Ana içeriğe geç
+                    // Başarılı giriş - Ayarları kaydet
+                    SaveCredentials();
+                    
+                    // Ana içeriğe geç
                     NavigationService.Instance.NavigateToMainContent();
                 }
                 else
@@ -135,3 +192,4 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+

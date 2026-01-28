@@ -82,6 +82,14 @@
                         </Grid>
                     </Border>
                     
+                    <!-- Remember Me Checkbox -->
+                    <CheckBox Content="Beni Hatırla" 
+                              IsChecked="{Binding RememberMe}"
+                              Foreground="#616161"
+                              FontSize="13"
+                              Margin="0,16,0,0"
+                              Cursor="Hand"/>
+                    
                     <!-- Error Message -->
                     <Border Background="#FFEBEE" CornerRadius="6" 
                             Padding="12,8" Margin="0,16,0,0"

@@ -43,7 +43,13 @@ namespace KamatekCrm.ViewModels
         public PurchaseOrder? SelectedOrder
         {
             get => _selectedOrder;
-            set => SetProperty(ref _selectedOrder, value);
+            set
+            {
+                if (SetProperty(ref _selectedOrder, value))
+                {
+                    CalculateOrderTotals();
+                }
+            }
         }
 
         // Yeni PO Formu
@@ -81,6 +87,35 @@ namespace KamatekCrm.ViewModels
         {
             get => _totalSupplierDebt;
             set => SetProperty(ref _totalSupplierDebt, value);
+        }
+
+        // Seçili Sipariş Özet Bilgileri
+        private decimal _orderSubTotal;
+        public decimal OrderSubTotal
+        {
+            get => _orderSubTotal;
+            set => SetProperty(ref _orderSubTotal, value);
+        }
+
+        private decimal _orderTaxAmount;
+        public decimal OrderTaxAmount
+        {
+            get => _orderTaxAmount;
+            set => SetProperty(ref _orderTaxAmount, value);
+        }
+
+        private decimal _orderDiscountAmount;
+        public decimal OrderDiscountAmount
+        {
+            get => _orderDiscountAmount;
+            set => SetProperty(ref _orderDiscountAmount, value);
+        }
+
+        private decimal _orderGrandTotal;
+        public decimal OrderGrandTotal
+        {
+            get => _orderGrandTotal;
+            set => SetProperty(ref _orderGrandTotal, value);
         }
 
         #endregion
@@ -162,6 +197,26 @@ namespace KamatekCrm.ViewModels
             {
                 PurchaseOrders.Add(po);
             }
+        }
+
+        /// <summary>
+        /// Seçili sipariş için özet hesaplamaları yap
+        /// </summary>
+        private void CalculateOrderTotals()
+        {
+            if (SelectedOrder?.Items == null || !SelectedOrder.Items.Any())
+            {
+                OrderSubTotal = 0;
+                OrderTaxAmount = 0;
+                OrderDiscountAmount = 0;
+                OrderGrandTotal = 0;
+                return;
+            }
+
+            OrderSubTotal = SelectedOrder.Items.Sum(i => i.SubTotal);
+            OrderDiscountAmount = SelectedOrder.Items.Sum(i => i.DiscountAmount);
+            OrderTaxAmount = SelectedOrder.Items.Sum(i => i.TaxAmount);
+            OrderGrandTotal = SelectedOrder.Items.Sum(i => i.LineTotal);
         }
 
         private bool CanCreateOrder()

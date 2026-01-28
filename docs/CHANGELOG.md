@@ -2,6 +2,48 @@
 
 ## 2026-01-28
 
+### 📋 Hızlı Kabul Modern UI (RepairRegistrationWindow)
+
+**Tamamen Yeniden Tasarlanan Form:**
+- `Views/RepairRegistrationWindow.xaml` - 3 sütunlu modern kart layout (320 satır)
+- Sol Panel: Müşteri seçimi + ⚡ Hızlı müşteri ekleme toggle
+- Orta Panel: 📹 Kamera / 🔔 Diafon kategori seçimi + Manuel cihaz tipi girişi
+- Sağ Panel: Arıza açıklaması + Aksesuar checkbox'ları
+
+**Yeni ViewModel Özellikleri:**
+- `ViewModels/RepairViewModel.cs` - 115+ satır yeni kod
+- `IsCameraCategory` / `IsDiafonCategory` - Kategori seçimi
+- `DeviceTypeOptions` - Kategoriye göre değişen cihaz tipi listesi
+- `SelectedDeviceTypeName` - Manuel giriş destekli cihaz tipi
+- `AccessoryAdapter`, `AccessoryCable`, `AccessoryRemote` - Aksesuar takibi
+- `IsQuickAddCustomer`, `QuickCustomerName`, `QuickCustomerPhone` - Hızlı müşteri
+- `UpdateDeviceTypeOptions()` - Dinamik liste yükleme
+
+---
+
+### 🚀 Pro UX ve Satınalma Mantığı Yükseltmesi
+
+**Modül 1: Akıllı Login "Beni Hatırla"**
+- `Properties/Settings.settings` - RememberMe ve SavedUsername ayarları eklendi
+- `Properties/Settings.Designer.cs` - Generated property'ler güncellendi
+- `ViewModels/LoginViewModel.cs` - RememberMe mantığı, LoadSavedCredentials() ve SaveCredentials() metodları eklendi
+- `Views/LoginView.xaml` - "Beni Hatırla" CheckBox eklendi
+
+**Modül 2: Modern Tamir/Servis Formu UI**
+- `Views/NewServiceJobWindow.xaml` - MaterialDesign kartları ve gölge efektleri ile yeniden tasarlandı
+- Üst kısımda müşteri bilgi kartı (Müşteri, Öncelik, Tarih seçimi)
+- İkonlu alan başlıkları (👤, 🚨, 📅, 🏠, 📂, 📝, 📦)
+- Filtrelenebilir IsEditable ComboBox'lar
+- DropShadowEffect ile premium görünüm
+
+**Modül 3: Kapsamlı Satınalma Mantığı**
+- `Models/PurchaseOrderItem.cs` - TaxRate, DiscountRate, SubTotal, DiscountAmount, TaxAmount, LineTotal property'leri eklendi
+- Migration: `AddPurchaseOrderItemFinancials` oluşturuldu ve uygulandı
+- `ViewModels/PurchaseOrderViewModel.cs` - OrderSubTotal, OrderTaxAmount, OrderDiscountAmount, OrderGrandTotal ve CalculateOrderTotals() eklendi
+- `Views/PurchaseOrderView.xaml` - Sipariş özeti footer paneli eklendi (Ara Toplam, İndirim, KDV, Genel Toplam)
+
+---
+
 ### 🗄️ Hibrit Veritabanı Mimarisi
 
 **Yeni Özellik:** Uygulama artık hem SQLite (geliştirme) hem de SQL Server (production) veritabanlarını destekliyor.

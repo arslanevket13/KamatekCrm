@@ -45,10 +45,45 @@ namespace KamatekCrm.Models
         public decimal UnitPrice { get; set; }
 
         /// <summary>
-        /// Toplam (Computed)
+        /// KDV Oranı (%, örn: 1, 10, 20)
+        /// </summary>
+        public int TaxRate { get; set; } = 20;
+
+        /// <summary>
+        /// İndirim Oranı (%)
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal DiscountRate { get; set; } = 0;
+
+        /// <summary>
+        /// Ara Toplam (Miktar × Birim Fiyat)
         /// </summary>
         [NotMapped]
-        public decimal Total => Quantity * UnitPrice;
+        public decimal SubTotal => Quantity * UnitPrice;
+
+        /// <summary>
+        /// İndirim Tutarı
+        /// </summary>
+        [NotMapped]
+        public decimal DiscountAmount => SubTotal * (DiscountRate / 100m);
+
+        /// <summary>
+        /// KDV Tutarı
+        /// </summary>
+        [NotMapped]
+        public decimal TaxAmount => (SubTotal - DiscountAmount) * (TaxRate / 100m);
+
+        /// <summary>
+        /// Satır Toplamı (Ara Toplam - İndirim + KDV)
+        /// </summary>
+        [NotMapped]
+        public decimal LineTotal => SubTotal - DiscountAmount + TaxAmount;
+
+        /// <summary>
+        /// Eski Total property (geriye uyumluluk için)
+        /// </summary>
+        [NotMapped]
+        public decimal Total => LineTotal;
 
         /// <summary>
         /// İlgili satın alma emri
@@ -63,3 +98,4 @@ namespace KamatekCrm.Models
         public virtual Product? Product { get; set; }
     }
 }
+

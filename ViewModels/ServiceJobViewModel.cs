@@ -61,6 +61,23 @@ namespace KamatekCrm.ViewModels
         private string _newAssetSerialNumber = string.Empty;
         private string _newAssetLocation = string.Empty;
 
+        // ===== ARIZA KAYIT FORM (Yeni UI) =====
+        private bool _isCameraCategory = true;
+        private bool _isDiafonCategory;
+        private string _selectedDeviceTypeName = string.Empty;
+        private string _deviceBrand = string.Empty;
+        private string _deviceModel = string.Empty;
+        private string _serialNumber = string.Empty;
+        private bool _accessoryAdapter;
+        private bool _accessoryCable;
+        private bool _accessoryRemote;
+        private string _physicalCondition = string.Empty;
+        private bool _isQuickAddCustomer;
+        private string _quickCustomerName = string.Empty;
+        private string _quickCustomerPhone = string.Empty;
+        private bool _isSaving;
+        private bool _hasValidationError;
+
         #region Structure Type Properties (Yapı Tipi)
 
         /// <summary>
@@ -286,6 +303,193 @@ namespace KamatekCrm.ViewModels
   src='https://maps.google.com/maps?q={encoded}&t=&z=15&ie=UTF8&iwloc=&output=embed'></iframe>
 </body>
 </html>";
+            }
+        }
+
+        #endregion
+
+        #region Arıza Kayıt Form Properties
+
+        /// <summary>
+        /// Kamera kategorisi seçili mi?
+        /// </summary>
+        public bool IsCameraCategory
+        {
+            get => _isCameraCategory;
+            set
+            {
+                if (SetProperty(ref _isCameraCategory, value) && value)
+                {
+                    _isDiafonCategory = false;
+                    OnPropertyChanged(nameof(IsDiafonCategory));
+                    UpdateDeviceTypeOptions();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Diafon kategorisi seçili mi?
+        /// </summary>
+        public bool IsDiafonCategory
+        {
+            get => _isDiafonCategory;
+            set
+            {
+                if (SetProperty(ref _isDiafonCategory, value) && value)
+                {
+                    _isCameraCategory = false;
+                    OnPropertyChanged(nameof(IsCameraCategory));
+                    UpdateDeviceTypeOptions();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Cihaz tipi seçenekleri (Kategoriye göre değişir)
+        /// </summary>
+        public ObservableCollection<string> DeviceTypeOptions { get; } = new ObservableCollection<string>();
+
+        /// <summary>
+        /// Cihaz tipi adı (manuel giriş destekli)
+        /// </summary>
+        public string SelectedDeviceTypeName
+        {
+            get => _selectedDeviceTypeName;
+            set => SetProperty(ref _selectedDeviceTypeName, value);
+        }
+
+        /// <summary>
+        /// Cihaz markası
+        /// </summary>
+        public string DeviceBrand
+        {
+            get => _deviceBrand;
+            set => SetProperty(ref _deviceBrand, value);
+        }
+
+        /// <summary>
+        /// Cihaz modeli
+        /// </summary>
+        public string DeviceModel
+        {
+            get => _deviceModel;
+            set => SetProperty(ref _deviceModel, value);
+        }
+
+        /// <summary>
+        /// Seri numarası
+        /// </summary>
+        public string SerialNumber
+        {
+            get => _serialNumber;
+            set => SetProperty(ref _serialNumber, value);
+        }
+
+        /// <summary>
+        /// Aksesuar: Adaptör
+        /// </summary>
+        public bool AccessoryAdapter
+        {
+            get => _accessoryAdapter;
+            set => SetProperty(ref _accessoryAdapter, value);
+        }
+
+        /// <summary>
+        /// Aksesuar: Kablo
+        /// </summary>
+        public bool AccessoryCable
+        {
+            get => _accessoryCable;
+            set => SetProperty(ref _accessoryCable, value);
+        }
+
+        /// <summary>
+        /// Aksesuar: Kumanda
+        /// </summary>
+        public bool AccessoryRemote
+        {
+            get => _accessoryRemote;
+            set => SetProperty(ref _accessoryRemote, value);
+        }
+
+        /// <summary>
+        /// Fiziksel durum açıklaması
+        /// </summary>
+        public string PhysicalCondition
+        {
+            get => _physicalCondition;
+            set => SetProperty(ref _physicalCondition, value);
+        }
+
+        /// <summary>
+        /// Hızlı müşteri ekleme modu
+        /// </summary>
+        public bool IsQuickAddCustomer
+        {
+            get => _isQuickAddCustomer;
+            set => SetProperty(ref _isQuickAddCustomer, value);
+        }
+
+        /// <summary>
+        /// Hızlı müşteri adı
+        /// </summary>
+        public string QuickCustomerName
+        {
+            get => _quickCustomerName;
+            set => SetProperty(ref _quickCustomerName, value);
+        }
+
+        /// <summary>
+        /// Hızlı müşteri telefonu
+        /// </summary>
+        public string QuickCustomerPhone
+        {
+            get => _quickCustomerPhone;
+            set => SetProperty(ref _quickCustomerPhone, value);
+        }
+
+        /// <summary>
+        /// Kaydediliyor mu? (Spinner için)
+        /// </summary>
+        public bool IsSaving
+        {
+            get => _isSaving;
+            set => SetProperty(ref _isSaving, value);
+        }
+
+        /// <summary>
+        /// Doğrulama hatası var mı?
+        /// </summary>
+        public bool HasValidationError
+        {
+            get => _hasValidationError;
+            set => SetProperty(ref _hasValidationError, value);
+        }
+
+        /// <summary>
+        /// Kategoriye göre cihaz tipi seçeneklerini güncelle
+        /// </summary>
+        private void UpdateDeviceTypeOptions()
+        {
+            DeviceTypeOptions.Clear();
+            
+            if (IsCameraCategory)
+            {
+                DeviceTypeOptions.Add("DVR");
+                DeviceTypeOptions.Add("NVR");
+                DeviceTypeOptions.Add("IP Kamera");
+                DeviceTypeOptions.Add("Analog Kamera");
+                DeviceTypeOptions.Add("PTZ Kamera");
+                DeviceTypeOptions.Add("Monitör");
+                DeviceTypeOptions.Add("Hard Disk");
+            }
+            else if (IsDiafonCategory)
+            {
+                DeviceTypeOptions.Add("Diafon Paneli");
+                DeviceTypeOptions.Add("Daire Monitörü");
+                DeviceTypeOptions.Add("Kapı Açma Ünitesi");
+                DeviceTypeOptions.Add("Santral");
+                DeviceTypeOptions.Add("Güç Kaynağı");
             }
         }
 
@@ -749,6 +953,9 @@ namespace KamatekCrm.ViewModels
 
             // Verileri yükle
             LoadData();
+            
+            // Varsayılan cihaz tipi seçeneklerini yükle
+            UpdateDeviceTypeOptions();
         }
 
         #region Helper Methods

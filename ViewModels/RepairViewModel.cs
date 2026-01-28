@@ -35,6 +35,7 @@ namespace KamatekCrm.ViewModels
             PrintServiceFormCommand = new RelayCommand(PrintServiceForm);
             
             LoadData();
+            UpdateDeviceTypeOptions();
         }
 
         private decimal _laborCost;
@@ -163,6 +164,98 @@ namespace KamatekCrm.ViewModels
         }
 
         public ObservableCollection<Customer> Customers { get; } = new();
+        
+        // Yeni: Cihaz tipi seçenekleri
+        public ObservableCollection<string> DeviceTypeOptions { get; } = new();
+
+        // === MODERN UI PROPERTİES ===
+        
+        private bool _isCameraCategory = true;
+        public bool IsCameraCategory
+        {
+            get => _isCameraCategory;
+            set
+            {
+                if (SetProperty(ref _isCameraCategory, value))
+                {
+                    if (value) 
+                    {
+                        IsDiafonCategory = false;
+                        NewJob.JobCategory = JobCategory.CCTV;
+                    }
+                    UpdateDeviceTypeOptions();
+                }
+            }
+        }
+
+        private bool _isDiafonCategory;
+        public bool IsDiafonCategory
+        {
+            get => _isDiafonCategory;
+            set
+            {
+                if (SetProperty(ref _isDiafonCategory, value))
+                {
+                    if (value) 
+                    {
+                        IsCameraCategory = false;
+                        NewJob.JobCategory = JobCategory.VideoIntercom;
+                    }
+                    UpdateDeviceTypeOptions();
+                }
+            }
+        }
+
+        private string _selectedDeviceTypeName = string.Empty;
+        public string SelectedDeviceTypeName
+        {
+            get => _selectedDeviceTypeName;
+            set => SetProperty(ref _selectedDeviceTypeName, value);
+        }
+
+        // Aksesuarlar
+        private bool _accessoryAdapter;
+        public bool AccessoryAdapter
+        {
+            get => _accessoryAdapter;
+            set => SetProperty(ref _accessoryAdapter, value);
+        }
+
+        private bool _accessoryCable;
+        public bool AccessoryCable
+        {
+            get => _accessoryCable;
+            set => SetProperty(ref _accessoryCable, value);
+        }
+
+        private bool _accessoryRemote;
+        public bool AccessoryRemote
+        {
+            get => _accessoryRemote;
+            set => SetProperty(ref _accessoryRemote, value);
+        }
+
+        // Hızlı müşteri ekleme
+        private bool _isQuickAddCustomer;
+        public bool IsQuickAddCustomer
+        {
+            get => _isQuickAddCustomer;
+            set => SetProperty(ref _isQuickAddCustomer, value);
+        }
+
+        private string _quickCustomerName = string.Empty;
+        public string QuickCustomerName
+        {
+            get => _quickCustomerName;
+            set => SetProperty(ref _quickCustomerName, value);
+        }
+
+        private string _quickCustomerPhone = string.Empty;
+        public string QuickCustomerPhone
+        {
+            get => _quickCustomerPhone;
+            set => SetProperty(ref _quickCustomerPhone, value);
+        }
 
         #endregion
 
@@ -222,6 +315,30 @@ namespace KamatekCrm.ViewModels
             Products.Clear();
             var products = _context.Products.OrderBy(p => p.ProductName).ToList();
             foreach (var p in products) Products.Add(p);
+        }
+
+        private void UpdateDeviceTypeOptions()
+        {
+            DeviceTypeOptions.Clear();
+            
+            if (IsCameraCategory)
+            {
+                DeviceTypeOptions.Add("DVR");
+                DeviceTypeOptions.Add("NVR");
+                DeviceTypeOptions.Add("IP Kamera");
+                DeviceTypeOptions.Add("Analog Kamera");
+                DeviceTypeOptions.Add("PTZ Kamera");
+                DeviceTypeOptions.Add("Speed Dome");
+                DeviceTypeOptions.Add("Monitor");
+            }
+            else if (IsDiafonCategory)
+            {
+                DeviceTypeOptions.Add("Diafon Paneli");
+                DeviceTypeOptions.Add("Diafon Dairesi");
+                DeviceTypeOptions.Add("Görüntülü Diafon");
+                DeviceTypeOptions.Add("Zil Paneli");
+                DeviceTypeOptions.Add("Santral");
+            }
         }
 
         private void LoadHistory(int jobId)

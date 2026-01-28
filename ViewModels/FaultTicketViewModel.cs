@@ -39,6 +39,25 @@ namespace KamatekCrm.ViewModels
         private decimal _laborCost;
         private decimal _estimatedPartsTotal;
 
+        // === YENİ: Modern UI için ===
+        private bool _isCameraCategory = true;
+        private bool _isDiafonCategory;
+        private string _selectedDeviceTypeName = string.Empty;
+        private string _physicalCondition = string.Empty;
+        
+        // Aksesuarlar
+        private bool _accessoryAdapter;
+        private bool _accessoryCable;
+        private bool _accessoryRemote;
+        
+        // Hızlı müşteri ekleme
+        private bool _isQuickAddCustomer;
+        private string _quickCustomerName = string.Empty;
+        private string _quickCustomerPhone = string.Empty;
+        
+        // Save spinner
+        private bool _isSaving;
+
         #endregion
 
         #region Collections
@@ -49,6 +68,9 @@ namespace KamatekCrm.ViewModels
             Enum.GetValues(typeof(JobCategory)).Cast<JobCategory>());
         public ObservableCollection<JobPriority> Priorities { get; } = new(
             Enum.GetValues(typeof(JobPriority)).Cast<JobPriority>());
+        
+        // Yeni: Cihaz tipi seçenekleri (kategoriye göre değişir)
+        public ObservableCollection<string> DeviceTypeOptions { get; } = new();
 
         #endregion
 
@@ -175,6 +197,101 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
+        #region Modern UI Properties
+
+        public bool IsCameraCategory
+        {
+            get => _isCameraCategory;
+            set
+            {
+                if (SetProperty(ref _isCameraCategory, value))
+                {
+                    if (value) 
+                    {
+                        IsDiafonCategory = false;
+                        SelectedCategory = JobCategory.CCTV;
+                    }
+                    UpdateDeviceTypeOptions();
+                }
+            }
+        }
+
+        public bool IsDiafonCategory
+        {
+            get => _isDiafonCategory;
+            set
+            {
+                if (SetProperty(ref _isDiafonCategory, value))
+                {
+                    if (value) 
+                    {
+                        IsCameraCategory = false;
+                        SelectedCategory = JobCategory.VideoIntercom;
+                    }
+                    UpdateDeviceTypeOptions();
+                }
+            }
+        }
+
+        public string SelectedDeviceTypeName
+        {
+            get => _selectedDeviceTypeName;
+            set => SetProperty(ref _selectedDeviceTypeName, value);
+        }
+
+        public string PhysicalCondition
+        {
+            get => _physicalCondition;
+            set => SetProperty(ref _physicalCondition, value);
+        }
+
+        // Aksesuarlar
+        public bool AccessoryAdapter
+        {
+            get => _accessoryAdapter;
+            set => SetProperty(ref _accessoryAdapter, value);
+        }
+
+        public bool AccessoryCable
+        {
+            get => _accessoryCable;
+            set => SetProperty(ref _accessoryCable, value);
+        }
+
+        public bool AccessoryRemote
+        {
+            get => _accessoryRemote;
+            set => SetProperty(ref _accessoryRemote, value);
+        }
+
+        // Hızlı müşteri ekleme
+        public bool IsQuickAddCustomer
+        {
+            get => _isQuickAddCustomer;
+            set => SetProperty(ref _isQuickAddCustomer, value);
+        }
+
+        public string QuickCustomerName
+        {
+            get => _quickCustomerName;
+            set => SetProperty(ref _quickCustomerName, value);
+        }
+
+        public string QuickCustomerPhone
+        {
+            get => _quickCustomerPhone;
+            set => SetProperty(ref _quickCustomerPhone, value);
+        }
+
+        // Save spinner
+        public bool IsSaving
+        {
+            get => _isSaving;
+            set => SetProperty(ref _isSaving, value);
+        }
+
+        #endregion
+
         #region Commands
 
         public ICommand SaveFaultTicketCommand { get; }
@@ -192,6 +309,7 @@ namespace KamatekCrm.ViewModels
             CancelCommand = new RelayCommand(_ => Cancel());
 
             LoadCustomers();
+            UpdateDeviceTypeOptions();
         }
 
         #endregion
@@ -226,6 +344,30 @@ namespace KamatekCrm.ViewModels
                 }
             }
             catch { /* Asset tablosu henüz oluşturulmamış olabilir */ }
+        }
+
+        private void UpdateDeviceTypeOptions()
+        {
+            DeviceTypeOptions.Clear();
+            
+            if (IsCameraCategory)
+            {
+                DeviceTypeOptions.Add("DVR");
+                DeviceTypeOptions.Add("NVR");
+                DeviceTypeOptions.Add("IP Kamera");
+                DeviceTypeOptions.Add("Analog Kamera");
+                DeviceTypeOptions.Add("PTZ Kamera");
+                DeviceTypeOptions.Add("Speed Dome");
+                DeviceTypeOptions.Add("Monitor");
+            }
+            else if (IsDiafonCategory)
+            {
+                DeviceTypeOptions.Add("Diafon Paneli");
+                DeviceTypeOptions.Add("Diafon Dairesi");
+                DeviceTypeOptions.Add("Görüntülü Diafon");
+                DeviceTypeOptions.Add("Zil Paneli");
+                DeviceTypeOptions.Add("Santral");
+            }
         }
 
         private bool CanSave()

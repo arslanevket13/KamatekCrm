@@ -8,7 +8,7 @@ namespace KamatekCrm.Exceptions
     public class InsufficientStockException : Exception
     {
         public int ProductId { get; }
-        public string ProductName { get; }
+        public string? ProductName { get; }
         public int RequestedQuantity { get; }
         public int AvailableQuantity { get; }
         public int WarehouseId { get; }

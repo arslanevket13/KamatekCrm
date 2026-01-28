@@ -68,6 +68,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Header -->
@@ -108,13 +109,12 @@
                       RowBackground="#252541" AlternatingRowBackground="#2d2d52"
                       HeadersVisibility="Column">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="PO No" Binding="{Binding PONumber}" Width="120"/>
+                    <DataGridTextColumn Header="PO No" Binding="{Binding PONumber}" Width="100"/>
                     <DataGridTextColumn Header="Tedarikçi" Binding="{Binding SupplierName}" Width="*"/>
-                    <DataGridTextColumn Header="Durum" Binding="{Binding StatusDisplay}" Width="140"/>
-                    <DataGridTextColumn Header="Tarih" Binding="{Binding OrderDate, StringFormat='{}{0:dd.MM.yyyy}'}" Width="100"/>
-                    <DataGridTextColumn Header="Beklenen" Binding="{Binding ExpectedDate, StringFormat='{}{0:dd.MM.yyyy}'}" Width="100"/>
-                    <DataGridTextColumn Header="Tutar" Binding="{Binding TotalAmount, StringFormat='₺{0:N2}'}" Width="100"/>
-                    <DataGridTemplateColumn Header="İşlem" Width="180">
+                    <DataGridTextColumn Header="Durum" Binding="{Binding StatusDisplay}" Width="100"/>
+                    <DataGridTextColumn Header="Tarih" Binding="{Binding OrderDate, StringFormat='{}{0:dd.MM.yyyy}'}" Width="85"/>
+                    <DataGridTextColumn Header="Tutar" Binding="{Binding TotalAmount, StringFormat='₺{0:N2}'}" Width="90"/>
+                    <DataGridTemplateColumn Header="İşlem" Width="150">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -122,20 +122,71 @@
                                             Command="{Binding DataContext.ReceiveGoodsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Background="#27ae60" Foreground="White" 
-                                            Padding="8,4" Margin="2" BorderThickness="0"
-                                            FontSize="11" Cursor="Hand"/>
+                                            Padding="6,3" Margin="2" BorderThickness="0"
+                                            FontSize="10" Cursor="Hand"/>
                                     <Button Content="❌ İptal" 
                                             Command="{Binding DataContext.CancelOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Background="#e74c3c" Foreground="White" 
-                                            Padding="8,4" Margin="2" BorderThickness="0"
-                                            FontSize="11" Cursor="Hand"/>
+                                            Padding="6,3" Margin="2" BorderThickness="0"
+                                            FontSize="10" Cursor="Hand"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
+            
+            <!-- Order Summary Footer -->
+            <Border Grid.Row="3" Background="#252541" CornerRadius="8" Padding="15" Margin="0,15,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBlock Grid.Column="0" Text="Seçili sipariş özeti (kalem detayları için siparişi genişletin)" 
+                               Foreground="#888" FontSize="12" VerticalAlignment="Center"/>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <!-- Ara Toplam -->
+                        <Border Background="#1a1a2e" CornerRadius="6" Padding="12,8" Margin="5,0">
+                            <StackPanel>
+                                <TextBlock Text="Ara Toplam" Foreground="#888" FontSize="10"/>
+                                <TextBlock Text="{Binding OrderSubTotal, StringFormat='₺{0:N2}'}" 
+                                           Foreground="White" FontSize="14" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- İndirim -->
+                        <Border Background="#1a1a2e" CornerRadius="6" Padding="12,8" Margin="5,0">
+                            <StackPanel>
+                                <TextBlock Text="İndirim" Foreground="#888" FontSize="10"/>
+                                <TextBlock Text="{Binding OrderDiscountAmount, StringFormat='-₺{0:N2}'}" 
+                                           Foreground="#E74C3C" FontSize="14" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- KDV -->
+                        <Border Background="#1a1a2e" CornerRadius="6" Padding="12,8" Margin="5,0">
+                            <StackPanel>
+                                <TextBlock Text="KDV" Foreground="#888" FontSize="10"/>
+                                <TextBlock Text="{Binding OrderTaxAmount, StringFormat='+₺{0:N2}'}" 
+                                           Foreground="#3498db" FontSize="14" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <!-- Genel Toplam -->
+                        <Border Background="#27ae60" CornerRadius="6" Padding="15,8" Margin="5,0">
+                            <StackPanel>
+                                <TextBlock Text="GENEL TOPLAM" Foreground="White" FontSize="10" Opacity="0.8"/>
+                                <TextBlock Text="{Binding OrderGrandTotal, StringFormat='₺{0:N2}'}" 
+                                           Foreground="White" FontSize="16" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- Loading Overlay -->

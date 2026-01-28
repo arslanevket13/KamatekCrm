@@ -5,10 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
         mc:Ignorable="d"
-        Title="🔧 Arıza &amp; Servis Kaydı" 
-        Width="700" Height="750"
+        Title="📋 Yeni Arıza Kaydı" 
+        Width="1200" Height="700"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource BackgroundColor}">
+        Background="#1a1a2e">
 
     <Window.DataContext>
         <vm:FaultTicketViewModel/>
@@ -16,232 +16,329 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        
+        <!-- Modern White Card -->
+        <Style x:Key="WhiteCard" TargetType="Border">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="25" ShadowDepth="3" Opacity="0.15" Color="Black"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Light Gray Card -->
+        <Style x:Key="GrayCard" TargetType="Border">
+            <Setter Property="Background" Value="#F5F5F5"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="2" Opacity="0.1" Color="Black"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Section Header -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#2c3e50"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+        
+        <!-- Field Label -->
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#7f8c8d"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        
+        <!-- Modern Input -->
+        <Style x:Key="ModernInput" TargetType="TextBox">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#ddd"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#2c3e50"/>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#3498db"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <!-- Category Button -->
+        <Style x:Key="CategoryButton" TargetType="RadioButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="#f8f9fa" BorderBrush="#ddd" BorderThickness="1" 
+                                CornerRadius="8" Padding="16,12" Cursor="Hand">
+                            <ContentPresenter HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3498db"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#2980b9"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#ecf0f1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
-    <Grid Margin="24">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-
+        
         <!-- ========== HEADER ========== -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="🔧 Arıza &amp; Servis Kaydı" 
-                       FontSize="24" FontWeight="Bold"
-                       Foreground="{StaticResource TextPrimaryColor}"/>
-            <TextBlock Text="Hızlı arıza/servis kaydı için basitleştirilmiş form" 
-                       FontSize="13" Foreground="{StaticResource TextSecondaryColor}"
-                       Margin="0,4,0,0"/>
-        </StackPanel>
-
-        <!-- ========== FORM ========== -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <Border Style="{StaticResource CardPanel}" Padding="20">
-                <StackPanel>
-                    
-                    <!-- MÜŞTERİ SEÇİMİ -->
-                    <TextBlock Text="👤 MÜŞTERİ BİLGİLERİ" FontWeight="SemiBold" FontSize="14" 
-                               Foreground="#1976D2" Margin="0,0,0,12"/>
-                    
-                    <Label Content="Müşteri *" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox ItemsSource="{Binding Customers}"
-                              SelectedItem="{Binding SelectedCustomer}"
-                              DisplayMemberPath="FullName"
-                              Style="{StaticResource ModernComboBox}"
-                              Height="40"/>
-
-                    <Border Background="#F5F5F5" CornerRadius="4" Padding="10" Margin="0,8,0,16">
-                        <TextBlock Text="{Binding CustomerAddress}" 
-                                   FontSize="12" TextWrapping="Wrap"
-                                   Foreground="{StaticResource TextSecondaryColor}"/>
-                    </Border>
-
-                    <!-- CİHAZ SEÇİMİ -->
-                    <TextBlock Text="📱 CİHAZ BİLGİSİ" FontWeight="SemiBold" FontSize="14" 
-                               Foreground="#1976D2" Margin="0,0,0,12"/>
-
-                    <!-- Toggle: Mevcut / Yeni -->
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <RadioButton Content="📋 Kayıtlı Cihaz" 
-                                    IsChecked="{Binding IsExistingAsset, Mode=OneWay}"
-                                    GroupName="AssetType"
-                                    Margin="0,0,24,0" FontSize="13"/>
-                        <RadioButton Content="➕ Yeni/Getirilen Cihaz" 
-                                    IsChecked="{Binding IsNewAsset}"
-                                    GroupName="AssetType" FontSize="13"/>
+        <Border Grid.Row="0" Background="#252541" Padding="24,16">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="📋" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel>
+                        <TextBlock Text="YENİ ARIZA KAYDI" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="Cihaz arıza bilgilerini hızlıca kaydedin" FontSize="12" Foreground="#888" Margin="0,2,0,0"/>
                     </StackPanel>
-
-                    <!-- Mevcut Cihaz -->
-                    <StackPanel Visibility="{Binding IsExistingAsset, Converter={StaticResource BoolToVis}}">
-                        <ComboBox ItemsSource="{Binding CustomerAssets}"
-                                  SelectedItem="{Binding SelectedAsset}"
-                                  Style="{StaticResource ModernComboBox}"
-                                  Height="40">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding CategoryIcon}" Margin="0,0,8,0"/>
-                                        <TextBlock Text="{Binding FullName}" FontWeight="SemiBold"/>
-                                        <TextBlock Text=" - " Foreground="#757575"/>
-                                        <TextBlock Text="{Binding Location}" Foreground="#757575"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <TextBlock Text="Müşteriye ait kayıtlı cihazlardan seçin." 
-                                   FontSize="10" Foreground="#9E9E9E" Margin="0,4,0,0"/>
-                    </StackPanel>
-
-                    <!-- Yeni Cihaz Formu -->
-                    <Border Visibility="{Binding IsNewAsset, Converter={StaticResource BoolToVis}}"
-                            Background="#FFF8E1" BorderBrush="#FFE082" BorderThickness="1"
-                            CornerRadius="6" Padding="12" Margin="0,0,0,8">
-                        <StackPanel>
-                            <TextBlock Text="📝 Getirilen Cihaz Bilgileri" FontWeight="SemiBold" 
-                                       Foreground="#F57F17" Margin="0,0,0,12"/>
-                            
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="12"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-
-                                <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,8">
-                                    <TextBlock Text="Marka *" FontSize="11" Margin="0,0,0,4"/>
-                                    <ComboBox IsEditable="True"
-                                              Text="{Binding NewAssetBrand, UpdateSourceTrigger=PropertyChanged}"
-                                              Style="{StaticResource ModernComboBox}" Height="36">
-                                        <ComboBoxItem Content="Hikvision"/>
-                                        <ComboBoxItem Content="Dahua"/>
-                                        <ComboBoxItem Content="Haikon"/>
-                                        <ComboBoxItem Content="Next"/>
-                                        <ComboBoxItem Content="Paradox"/>
-                                    </ComboBox>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,8">
-                                    <TextBlock Text="Model *" FontSize="11" Margin="0,0,0,4"/>
-                                    <TextBox Text="{Binding NewAssetModel, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource ModernTextBox}" Height="36"/>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="0" Grid.Row="1">
-                                    <TextBlock Text="Seri Numarası" FontSize="11" Margin="0,0,0,4"/>
-                                    <TextBox Text="{Binding NewAssetSerialNumber, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource ModernTextBox}" Height="36"/>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="2" Grid.Row="1">
-                                    <TextBlock Text="Konum (isteğe bağlı)" FontSize="11" Margin="0,0,0,4"/>
-                                    <TextBox Text="{Binding NewAssetLocation, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource ModernTextBox}" Height="36"/>
-                                </StackPanel>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- ARIZA DETAYLARI -->
-                    <TextBlock Text="🔍 ARIZA DETAYLARI" FontWeight="SemiBold" FontSize="14" 
-                               Foreground="#1976D2" Margin="0,16,0,12"/>
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0">
-                            <Label Content="Kategori" Style="{StaticResource ModernLabel}"/>
-                            <ComboBox ItemsSource="{Binding Categories}"
-                                      SelectedItem="{Binding SelectedCategory}"
-                                      Style="{StaticResource ModernComboBox}" Height="40"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2">
-                            <Label Content="Öncelik" Style="{StaticResource ModernLabel}"/>
-                            <ComboBox ItemsSource="{Binding Priorities}"
-                                      SelectedItem="{Binding SelectedPriority}"
-                                      Style="{StaticResource ModernComboBox}" Height="40"/>
-                        </StackPanel>
-                    </Grid>
-
-                    <Label Content="Arıza Belirtisi *" Style="{StaticResource ModernLabel}" Margin="0,12,0,0"/>
-                    <TextBox Text="{Binding FaultSymptom, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource ModernTextBox}"
-                             Height="40"
-                             ToolTip="Örn: Görüntü yok, Kayıt yapmıyor"/>
-
-                    <Label Content="Detaylı Açıklama" Style="{StaticResource ModernLabel}" Margin="0,12,0,0"/>
-                    <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource ModernTextBox}"
-                             Height="80"
-                             TextWrapping="Wrap"
-                             AcceptsReturn="True"
-                             VerticalScrollBarVisibility="Auto"/>
-
-                    <!-- MALİYET TAHMİNİ -->
-                    <TextBlock Text="💰 MALİYET (Opsiyonel)" FontWeight="SemiBold" FontSize="14" 
-                               Foreground="#1976D2" Margin="0,16,0,12"/>
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0">
-                            <Label Content="Tahmini İşçilik (₺)" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
-                                     Style="{StaticResource ModernTextBox}" Height="40"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2">
-                            <Label Content="Tahmini Parça (₺)" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding EstimatedPartsTotal, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
-                                     Style="{StaticResource ModernTextBox}" Height="40"/>
-                        </StackPanel>
-                    </Grid>
-
-                    <!-- TOPLAM -->
-                    <Border Background="#E3F2FD" CornerRadius="8" Padding="16" Margin="0,16,0,0">
-                        <Grid>
-                            <TextBlock Text="Tahmini Toplam:" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding TotalEstimate, StringFormat=₺{0:N2}}" 
-                                       FontSize="20" FontWeight="Bold" 
-                                       Foreground="#1565C0" HorizontalAlignment="Right"/>
-                        </Grid>
-                    </Border>
-
                 </StackPanel>
-            </Border>
-        </ScrollViewer>
+                
+                <!-- Öncelik Badge -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="Öncelik:" Foreground="#888" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <ComboBox ItemsSource="{Binding Priorities}"
+                             SelectedItem="{Binding SelectedPriority}"
+                             Background="#1a1a2e" Foreground="White"
+                             BorderBrush="#3498db" BorderThickness="1"
+                             Width="120" Height="32" Padding="8,4"/>
+                </StackPanel>
+            </Grid>
+        </Border>
 
-        <!-- ========== FOOTER ========== -->
-        <Grid Grid.Row="2" Margin="0,16,0,0">
+        <!-- ========== 3-COLUMN MAIN CONTENT ========== -->
+        <Grid Grid.Row="1" Margin="20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="16"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Column="0" Content="İptal"
-                    Style="{StaticResource SecondaryButton}"
-                    Command="{Binding CancelCommand}"
-                    IsCancel="True"
-                    Height="44"/>
+            <!-- ===== SOL PANEL: MÜŞTERİ ===== -->
+            <Border Grid.Column="0" Style="{StaticResource GrayCard}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionHeader}">
+                        <Run Text="👤" FontSize="18"/>
+                        <Run Text=" MÜŞTERİ BİLGİLERİ"/>
+                    </TextBlock>
+                    
+                    <!-- Müşteri Arama -->
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Müşteri Seçin *"/>
+                    <ComboBox ItemsSource="{Binding Customers}"
+                             SelectedItem="{Binding SelectedCustomer}"
+                             DisplayMemberPath="FullName"
+                             IsEditable="True"
+                             IsTextSearchEnabled="True"
+                             Background="White" Foreground="#2c3e50"
+                             BorderBrush="#ddd" BorderThickness="1"
+                             Height="40" Padding="10,8" Margin="0,0,0,12"/>
+                    
+                    <!-- Müşteri Adres -->
+                    <Border Background="#e8f4fc" CornerRadius="6" Padding="10" Margin="0,0,0,16">
+                        <TextBlock Text="{Binding CustomerAddress}" 
+                                  TextWrapping="Wrap" FontSize="11" Foreground="#555"/>
+                    </Border>
+                    
+                    <!-- Hızlı Müşteri Ekle Toggle -->
+                    <Border Background="#fff3e0" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                        <CheckBox Content="⚡ Hızlı Müşteri Ekle" 
+                                 IsChecked="{Binding IsQuickAddCustomer}"
+                                 FontSize="13" FontWeight="SemiBold" Foreground="#e65100"/>
+                    </Border>
+                    
+                    <!-- Hızlı Ekle Alanları -->
+                    <StackPanel Visibility="{Binding IsQuickAddCustomer, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="Ad Soyad"/>
+                        <TextBox Text="{Binding QuickCustomerName, UpdateSourceTrigger=PropertyChanged}"
+                                Style="{StaticResource ModernInput}" Margin="0,0,0,12"/>
+                        
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="Telefon"/>
+                        <TextBox Text="{Binding QuickCustomerPhone, UpdateSourceTrigger=PropertyChanged}"
+                                Style="{StaticResource ModernInput}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
 
-            <Button Grid.Column="2" Content="💾 Arıza Kaydı Oluştur"
-                    Style="{StaticResource ModernButton}"
-                    Command="{Binding SaveFaultTicketCommand}"
-                    Height="44" FontWeight="SemiBold"/>
+            <!-- ===== ORTA PANEL: CİHAZ ===== -->
+            <Border Grid.Column="2" Style="{StaticResource WhiteCard}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionHeader}">
+                        <Run Text="📱" FontSize="18"/>
+                        <Run Text=" CİHAZ BİLGİLERİ"/>
+                    </TextBlock>
+                    
+                    <!-- Ana Kategori -->
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Ana Kategori *"/>
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <RadioButton Grid.Column="0" GroupName="Category" 
+                                    IsChecked="{Binding IsCameraCategory}"
+                                    Style="{StaticResource CategoryButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📹" FontSize="18" Margin="0,0,8,0"/>
+                                <TextBlock Text="Kamera" FontWeight="SemiBold" Foreground="#2c3e50"/>
+                            </StackPanel>
+                        </RadioButton>
+                        
+                        <RadioButton Grid.Column="2" GroupName="Category"
+                                    IsChecked="{Binding IsDiafonCategory}"
+                                    Style="{StaticResource CategoryButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔔" FontSize="18" Margin="0,0,8,0"/>
+                                <TextBlock Text="Diafon" FontWeight="SemiBold" Foreground="#2c3e50"/>
+                            </StackPanel>
+                        </RadioButton>
+                    </Grid>
+                    
+                    <!-- Cihaz Tipi (Manuel Giriş Destekli) -->
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Cihaz Tipi *"/>
+                    <ComboBox IsEditable="True"
+                             Text="{Binding SelectedDeviceTypeName, UpdateSourceTrigger=PropertyChanged}"
+                             ItemsSource="{Binding DeviceTypeOptions}"
+                             Background="White" Foreground="#2c3e50"
+                             BorderBrush="#ddd" BorderThickness="1"
+                             Height="40" Padding="10,8" Margin="0,0,0,16"/>
+                    
+                    <!-- Marka / Model -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="Marka"/>
+                            <TextBox Text="{Binding NewAssetBrand, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource ModernInput}"/>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="Model"/>
+                            <TextBox Text="{Binding NewAssetModel, UpdateSourceTrigger=PropertyChanged}"
+                                    Style="{StaticResource ModernInput}"/>
+                        </StackPanel>
+                    </Grid>
+                    
+                    <!-- Seri No -->
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Seri Numarası"/>
+                    <Grid>
+                        <TextBox Text="{Binding NewAssetSerialNumber, UpdateSourceTrigger=PropertyChanged}"
+                                Style="{StaticResource ModernInput}" Padding="12,10,40,10"/>
+                        <TextBlock Text="🔍" FontSize="16" HorizontalAlignment="Right" 
+                                  VerticalAlignment="Center" Margin="0,0,12,0" Opacity="0.5"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ===== SAĞ PANEL: ARIZA ===== -->
+            <Border Grid.Column="4" Style="{StaticResource WhiteCard}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" Style="{StaticResource SectionHeader}">
+                        <Run Text="🔧" FontSize="18"/>
+                        <Run Text=" ARIZA DETAYLARI"/>
+                    </TextBlock>
+                    
+                    <!-- Arıza Bilgileri -->
+                    <StackPanel Grid.Row="1">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="Arıza Belirtisi *"/>
+                        <TextBox Text="{Binding FaultSymptom, UpdateSourceTrigger=PropertyChanged}"
+                                Style="{StaticResource ModernInput}" Margin="0,0,0,12"/>
+                        
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="Detaylı Açıklama"/>
+                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                Style="{StaticResource ModernInput}"
+                                AcceptsReturn="True" TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Auto"
+                                Height="100" Margin="0,0,0,16"/>
+                        
+                        <!-- Fiziksel Durum -->
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="Fiziksel Durum (Çizik, Kırık vb.)"/>
+                        <TextBox Text="{Binding PhysicalCondition, UpdateSourceTrigger=PropertyChanged}"
+                                Style="{StaticResource ModernInput}" Margin="0,0,0,16"/>
+                    </StackPanel>
+                    
+                    <!-- Aksesuarlar -->
+                    <Border Grid.Row="2" Background="#f8f9fa" CornerRadius="8" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="📦 Teslim Edilen Aksesuarlar" FontSize="12" 
+                                      FontWeight="SemiBold" Foreground="#7f8c8d" Margin="0,0,0,10"/>
+                            <WrapPanel>
+                                <CheckBox Content="Adaptör / Güç Kaynağı" 
+                                         IsChecked="{Binding AccessoryAdapter}"
+                                         Margin="0,0,16,6"/>
+                                <CheckBox Content="Kablo" 
+                                         IsChecked="{Binding AccessoryCable}"
+                                         Margin="0,0,16,6"/>
+                                <CheckBox Content="Kumanda" 
+                                         IsChecked="{Binding AccessoryRemote}"
+                                         Margin="0,0,16,6"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
         </Grid>
+
+        <!-- ========== FOOTER ========== -->
+        <Border Grid.Row="2" Background="#252541" Padding="24,16">
+            <Grid>
+                <Button Content="❌ İptal" 
+                       Command="{Binding CancelCommand}"
+                       Background="#e74c3c" Foreground="White" BorderThickness="0"
+                       HorizontalAlignment="Left"
+                       Width="100" Height="44" FontSize="13" Cursor="Hand"/>
+                
+                <!-- Save Button with Spinner -->
+                <Button Command="{Binding SaveFaultTicketCommand}"
+                       Background="#27ae60" Foreground="White" BorderThickness="0"
+                       HorizontalAlignment="Right"
+                       Width="200" Height="48" FontSize="15" FontWeight="Bold" Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Content" Value="💾 KAYDI OLUŞTUR"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSaving}" Value="True">
+                                    <Setter Property="Content" Value="⏳ Kaydediliyor..."/>
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
