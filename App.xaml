@@ -22,6 +22,9 @@
             <SolidColorBrush x:Key="SecondaryColor" Color="#607D8B"/>
             <SolidColorBrush x:Key="BackgroundColor" Color="#F5F5F5"/>
 
+            <!-- Global Effects -->
+            <DropShadowEffect x:Key="DropShadow" BlurRadius="15" ShadowDepth="2" Direction="315" Color="#EEEEEE" Opacity="0.3"/>
+
             <!-- Navigation Views -->
             <DataTemplate DataType="{x:Type vm:LoginViewModel}">
                 <views:LoginView/>

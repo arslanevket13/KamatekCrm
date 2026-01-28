@@ -41,6 +41,7 @@
 
 ### 🚑 Kritik Düzeltmeler (Hotfix)
 - **Veritabanı**: Giriş hatasına (`SQLite Error 1: no such column: c.Latitude`) neden olan eksik kolonlar için `AddCustomerCoordinates` migration'ı uygulandı. `Customers` tablosuna `Latitude` ve `Longitude` eklendi.
+- **UI**: `AnalyticsView` ve `FinancialHealthView` açılırken çökmesine neden olan (`System.Windows.Markup.XamlParseException`) eksik `DropShadow` kaynağı `App.xaml` içerisine eklendi.
 
 ---
 
