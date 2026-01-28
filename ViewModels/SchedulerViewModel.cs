@@ -44,20 +44,27 @@ namespace KamatekCrm.ViewModels
 
         private void LoadData()
         {
-            Technicians.Clear();
-            UnassignedJobs.Clear();
+            try
+            {
+                Technicians.Clear();
+                UnassignedJobs.Clear();
 
-            // Teknisyen Rolündeki Kullanıcılar (veya hepsi)
-            var techs = _context.Users.Where(u => u.IsActive).ToList(); // Rol filtresi eklenebilir
-            foreach (var t in techs) Technicians.Add(t);
+                // Teknisyen Rolündeki Kullanıcılar (veya hepsi)
+                var techs = _context.Users.Where(u => u.IsActive).ToList(); // Rol filtresi eklenebilir
+                foreach (var t in techs) Technicians.Add(t);
 
-            // Atanmamış İşler (veya o günkü işler değil, genel havuz)
-            var pendingJobs = _context.ServiceJobs
-                .Include(j => j.Customer)
-                .Where(j => j.AssignedUserId == null && j.Status != Enums.JobStatus.Completed)
-                .ToList();
+                // Atanmamış İşler (veya o günkü işler değil, genel havuz)
+                var pendingJobs = _context.ServiceJobs
+                    .Include(j => j.Customer)
+                    .Where(j => j.AssignedUserId == null && j.Status != Enums.JobStatus.Completed)
+                    .ToList();
 
-            foreach (var j in pendingJobs) UnassignedJobs.Add(j);
+                foreach (var j in pendingJobs) UnassignedJobs.Add(j);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Veri yükleme hatası:\n{ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         #region IDropTarget

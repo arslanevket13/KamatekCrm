@@ -108,10 +108,15 @@
                 <views:SchedulerView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:RoutePlanningViewModel}">
+                <views:RoutePlanningView/>
+            </DataTemplate>
+
             <!-- Global Converters -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
             <converters:IntToVisibilityConverter x:Key="IntToVis"/>
             <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBoolToVis"/>
+            <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

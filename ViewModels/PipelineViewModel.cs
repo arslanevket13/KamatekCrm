@@ -36,35 +36,42 @@ namespace KamatekCrm.ViewModels
 
         private void LoadData()
         {
-            Leads.Clear();
-            Quoted.Clear();
-            Negotiating.Clear();
-            Won.Clear();
-            Lost.Clear();
-
-            var projects = _context.ServiceProjects
-                .Include(p => p.Customer)
-                .Where(p => p.Status != ProjectStatus.Cancelled) // İptal edilenler hariç
-                .ToList();
-
-            if (projects.Count == 0)
+            try
             {
-                // Dummy Data for Demonstration
-                Leads.Add(new ServiceProject { Title = "Örnek Proje: Otel WiFi", TotalCost = 150000, Customer = new Customer { FullName = "Grand Hotel" } });
-                Quoted.Add(new ServiceProject { Title = "Örnek: Fabrika Kamera", TotalCost = 45000, Customer = new Customer { FullName = "Sanayi A.Ş." } });
-                return;
-            }
+                Leads.Clear();
+                Quoted.Clear();
+                Negotiating.Clear();
+                Won.Clear();
+                Lost.Clear();
 
-            foreach (var p in projects)
-            {
-                switch (p.PipelineStage)
+                var projects = _context.ServiceProjects
+                    .Include(p => p.Customer)
+                    .Where(p => p.Status != ProjectStatus.Cancelled) // İptal edilenler hariç
+                    .ToList();
+
+                if (projects.Count == 0)
                 {
-                    case PipelineStage.Lead: Leads.Add(p); break;
-                    case PipelineStage.Quoted: Quoted.Add(p); break;
-                    case PipelineStage.Negotiating: Negotiating.Add(p); break;
-                    case PipelineStage.Won: Won.Add(p); break;
-                    case PipelineStage.Lost: Lost.Add(p); break;
+                    // Dummy Data for Demonstration
+                    Leads.Add(new ServiceProject { Title = "Örnek Proje: Otel WiFi", TotalCost = 150000, Customer = new Customer { FullName = "Grand Hotel" } });
+                    Quoted.Add(new ServiceProject { Title = "Örnek: Fabrika Kamera", TotalCost = 45000, Customer = new Customer { FullName = "Sanayi A.Ş." } });
+                    return;
                 }
+
+                foreach (var p in projects)
+                {
+                    switch (p.PipelineStage)
+                    {
+                        case PipelineStage.Lead: Leads.Add(p); break;
+                        case PipelineStage.Quoted: Quoted.Add(p); break;
+                        case PipelineStage.Negotiating: Negotiating.Add(p); break;
+                        case PipelineStage.Won: Won.Add(p); break;
+                        case PipelineStage.Lost: Lost.Add(p); break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Veri yükleme hatası:\n{ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
