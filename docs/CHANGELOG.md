@@ -1,8 +1,39 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+## 2026-01-29
+
+### 🏢 Gelişmiş Tedarikçi Modülü (SRM v2)
+
+**Yeni Model Özellikleri:**
+- `Enums/SupplierType.cs` - Tedarikçi tipi enum (Toptancı, Servis, Üretici, Distribütör)
+- `Supplier.cs` güncellendi: `SupplierType`, `PaymentTermDays`, `Website` alanları
+- DataAnnotation doğrulamaları: `[EmailAddress]`, `[Url]`, `[Range]`
+
+**Mimari İyileştirmeler:**
+- `IUnitOfWork` → `SaveChangesAsync()` async metot eklendi
+- `SuppliersViewModel` → IUnitOfWork enjeksiyonu (DI ready)
+- Tüm CRUD operasyonları async/await ile yeniden yazıldı
+
+**Gelişmiş Filtreleme:**
+- Borçlu tedarikçiler filtresi (`ShowDebtorsOnly`)
+- Pasif tedarikçileri göster (`ShowInactiveSuppliers`)
+- Tip bazlı filtreleme (`SelectedSupplierTypeFilter`)
+
+**UI/UX İyileştirmeleri:**
+- `SuppliersView.xaml` tam yeniden tasarım
+- Bakiye DataTrigger renklendirmesi (Kırmızı: Borçlu, Yeşil: Dengeli)
+- Filtreleme paneli (CheckBox + ComboBox)
+- Yeni form alanları: Tip, Vade Günü, Web Sitesi
+- Sipariş geçmişine "Detay" butonu
+
+**Yeni Converter:**
+- `Converters/GreaterThanZeroConverter.cs` - DataTrigger koşulları için
+
+---
+
 ## 2026-01-28
 
-### 🏢 Tedarikçi Modülü Profesyonelleştirildi (SuppliersView)
+
 
 **UI Yeniden Tasarımı:**
 - `Views/SuppliersView.xaml` - Modern iki panelli layout (Sol: Liste, Sağ: Detay)

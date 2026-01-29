@@ -122,6 +122,7 @@
             <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBoolToVis"/>
             <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
             <converters:NullToVisibilityConverter x:Key="NullToVis"/>
+            <converters:GreaterThanZeroConverter x:Key="GreaterThanZero"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -50,8 +50,8 @@ KamatekCrm/
 │
 ├── Models/               # Entity sınıfları
 │   ├── Customer.cs       # Müşteri (Type, Address fields)
-│   ├── Supplier.cs       # Tedarikçi (Balance, Email, IsActive) (YENİ)
-│   ├── Attachment.cs     # Dijital Arşiv (YENİ)
+│   ├── Supplier.cs       # Tedarikçi (SupplierType, PaymentTermDays, Website, Balance)
+│   ├── Attachment.cs     # Dijital Arşiv
 │   ├── ServiceJob.cs     # İş emri (JobCategory, Priority)
 │   ├── PurchaseOrder.cs  # Satın alma emri (YENİ)
 │   ├── PurchaseOrderItem.cs # Sipariş kalemi (YENİ)
@@ -70,12 +70,14 @@ KamatekCrm/
 │   ├── ServiceJobType.cs # Fault / Project ayrımı
 │   ├── WorkflowStatus.cs # 9 farklı proje durumu
 │   ├── DeviceType.cs     # Cihaz türleri (IP Kamera, DVR vb.)
-│   ├── AttachmentEntityType.cs # Dosya entity türleri (YENİ)
+│   ├── AttachmentEntityType.cs # Dosya entity türleri
+│   ├── SupplierType.cs   # Tedarikçi tipi (Toptancı, Servis, Üretici, Distribütör)
 │   └── StockTransactionType.cs
 │
 ├── Converters/           # Değer dönüştürücüler
 │   ├── IntToVisibilityConverter.cs               # int → Visibility
-│   └── InvertedBooleanToVisibilityConverter.cs   # bool (ters) → Visibility
+│   ├── InvertedBooleanToVisibilityConverter.cs   # bool (ters) → Visibility
+│   ├── GreaterThanZeroConverter.cs               # Sayı > 0 kontrolü (DataTrigger)
 │
 ├── Helpers/              # Yardımcı sınıflar
 │   └── WebViewHelper.cs  # WebView2 HTML binding

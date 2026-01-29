@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using KamatekCrm.Data;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -20,9 +21,14 @@ namespace KamatekCrm.Repositories
         IDbContextTransaction BeginTransaction();
 
         /// <summary>
-        /// Değişiklikleri veritabanına kaydeder
+        /// Değişiklikleri veritabanına kaydeder (Senkron)
         /// </summary>
         int SaveChanges();
+
+        /// <summary>
+        /// Değişiklikleri veritabanına kaydeder (Asenkron)
+        /// </summary>
+        Task<int> SaveChangesAsync();
 
         /// <summary>
         /// Transaction'ı onaylar (commit)

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using KamatekCrm.Enums;
 
 namespace KamatekCrm.Models
 {
@@ -20,6 +21,11 @@ namespace KamatekCrm.Models
         [Required(ErrorMessage = "Firma ünvanı zorunludur")]
         [MaxLength(200)]
         public string CompanyName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Tedarikçi Tipi (Toptancı, Servis, Üretici vb.)
+        /// </summary>
+        public SupplierType SupplierType { get; set; } = SupplierType.Wholesaler;
 
         /// <summary>
         /// İletişim Kişisi / Bilgileri
@@ -49,7 +55,21 @@ namespace KamatekCrm.Models
         /// E-posta
         /// </summary>
         [MaxLength(100)]
+        [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi giriniz")]
         public string? Email { get; set; }
+
+        /// <summary>
+        /// Web Sitesi
+        /// </summary>
+        [MaxLength(200)]
+        [Url(ErrorMessage = "Geçerli bir URL giriniz")]
+        public string? Website { get; set; }
+
+        /// <summary>
+        /// Vade Günü (0 = Peşin)
+        /// </summary>
+        [Range(0, 365, ErrorMessage = "Vade günü 0-365 arasında olmalıdır")]
+        public int PaymentTermDays { get; set; } = 0;
 
         /// <summary>
         /// Borç Bakiyesi (Tedarikçiye olan borcumuz)
