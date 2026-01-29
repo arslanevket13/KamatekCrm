@@ -87,6 +87,38 @@ namespace KamatekCrm.Models
         public string? Notes { get; set; }
 
         /// <summary>
+        /// Tedarikçi ID (FK)
+        /// </summary>
+        public int? SupplierId { get; set; }
+
+        /// <summary>
+        /// İlgili Tedarikçi
+        /// </summary>
+        [ForeignKey(nameof(SupplierId))]
+        public virtual Supplier? Supplier { get; set; }
+
+        /// <summary>
+        /// Teslim Alınacak Depo ID (FK)
+        /// </summary>
+        public int? WarehouseId { get; set; }
+
+        /// <summary>
+        /// İlgili Depo
+        /// </summary>
+        [ForeignKey(nameof(WarehouseId))]
+        public virtual Warehouse? Warehouse { get; set; }
+
+        /// <summary>
+        /// Stoka işlendi mi?
+        /// </summary>
+        public bool IsProcessedToStock { get; set; } = false;
+
+        /// <summary>
+        /// Stok işlem tarihi
+        /// </summary>
+        public DateTime? ProcessedDate { get; set; }
+
+        /// <summary>
         /// İlgili iş emri
         /// </summary>
         [ForeignKey(nameof(ServiceJobId))]

@@ -1,5 +1,33 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+## 2026-01-29 (v2)
+
+### 🏭 Uçtan Uca Profesyonel Satın Alma Sistemi
+
+**Model Güncellemeleri:**
+- `Supplier.cs` → LeadTimeDays, MinOrderAmount, CurrencyCode eklendi
+- `PurchaseOrder.cs` → SupplierId (FK), WarehouseId (FK), IsProcessedToStock, ProcessedDate eklendi
+- Migration: `ExtendSupplierAndPurchaseOrder`
+
+**Stok Entegrasyonu:**
+- `PurchaseOrderViewModel.ReceiveGoods()` güncellendi:
+  - Dinamik WarehouseId kullanımı (hardcoded 1 yerine)
+  - `IsProcessedToStock` flag ile çift işlem önleme
+  - `SupplierId` FK ile tedarikçi bağlantısı
+  - `StockTransaction.UserId` audit logging
+
+**Dijital Arşiv Entegrasyonu:**
+- `SuppliersViewModel` → AttachmentService bağlantısı
+- Dosya ekleme (OpenFileDialog), silme, açma komutları
+- `SupplierAttachments` ObservableCollection
+
+**3-Panel SuppliersView UI:**
+- Panel 1: Liste + Arama + Borçlu/Pasif filtreleri
+- Panel 2: Detay/Düzenleme (Firma, Ticari, Banka bilgileri)
+- Panel 3: Sipariş Geçmişi + Dijital Arşiv (dosya önizleme)
+
+---
+
 ## 2026-01-29
 
 ### 🏢 Gelişmiş Tedarikçi Modülü (SRM v2)

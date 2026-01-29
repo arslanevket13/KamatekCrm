@@ -400,8 +400,18 @@ namespace KamatekCrm.ViewModels
                      return;
             }
 
+            // Zaten stoka işlenmiş mi kontrol
+            if (order.IsProcessedToStock)
+            {
+                MessageBox.Show("Bu sipariş zaten stoka işlenmiş.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Hedef depo kontrolü
+            int targetWarehouseId = order.WarehouseId ?? 1; // Varsayılan: Ana Depo
+
             var result = MessageBox.Show(
-                $"'{order.PONumber}' siparişi teslim alındı olarak işaretlensin mi?\n\nBu işlem stok miktarlarını otomatik olarak güncelleyecektir.",
+                $"'{order.PONumber}' siparişi teslim alındı olarak işaretlensin mi?\n\nBu işlem stok miktarlarını otomatik olarak güncelleyecektir.\nHedef Depo ID: {targetWarehouseId}",
                 "Teslim Alma Onayı",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -414,6 +424,8 @@ namespace KamatekCrm.ViewModels
                 // Sipariş durumunu güncelle
                 order.Status = PurchaseStatus.Received;
                 order.ReceivedDate = DateTime.Now;
+                order.IsProcessedToStock = true;
+                order.ProcessedDate = DateTime.Now;
 
                 // Stok güncelle (Items varsa)
                 var dbOrder = _context.PurchaseOrders
@@ -424,9 +436,9 @@ namespace KamatekCrm.ViewModels
                 {
                     foreach (var item in dbOrder.Items)
                     {
-                        // Ana depoya ekle (Warehouse ID 1)
+                        // Seçili depoya ekle
                         var inventory = _context.Inventories
-                            .FirstOrDefault(i => i.ProductId == item.ProductId && i.WarehouseId == 1);
+                            .FirstOrDefault(i => i.ProductId == item.ProductId && i.WarehouseId == targetWarehouseId);
 
                         if (inventory != null)
                         {
@@ -437,7 +449,7 @@ namespace KamatekCrm.ViewModels
                             _context.Inventories.Add(new Inventory
                             {
                                 ProductId = item.ProductId ?? 0,
-                                WarehouseId = 1,
+                                WarehouseId = targetWarehouseId,
                                 Quantity = item.Quantity
                             });
                         }
@@ -447,18 +459,28 @@ namespace KamatekCrm.ViewModels
                         {
                             Date = DateTime.Now,
                             ProductId = item.ProductId ?? 0,
-                            TargetWarehouseId = 1,
+                            TargetWarehouseId = targetWarehouseId,
                             Quantity = item.Quantity,
                             TransactionType = StockTransactionType.Purchase,
                             UnitCost = item.UnitPrice,
                             Description = $"Satın Alma - {order.PONumber} - Ref: {order.SupplierReferenceNo}",
-                            ReferenceId = order.PONumber
+                            ReferenceId = order.PONumber,
+                            UserId = AuthService.CurrentUser?.AdSoyad ?? "Sistem"
                         });
                     }
                 }
 
-                // Tedarikçi borcunu güncelle
-                var supplier = _context.Suppliers.FirstOrDefault(s => s.CompanyName == order.SupplierName);
+                // Tedarikçi borcunu güncelle (SupplierId FK veya CompanyName ile)
+                Supplier? supplier = null;
+                if (order.SupplierId.HasValue)
+                {
+                    supplier = _context.Suppliers.Find(order.SupplierId.Value);
+                }
+                else
+                {
+                    supplier = _context.Suppliers.FirstOrDefault(s => s.CompanyName == order.SupplierName);
+                }
+                
                 if (supplier != null)
                 {
                     supplier.Balance += order.TotalAmount;

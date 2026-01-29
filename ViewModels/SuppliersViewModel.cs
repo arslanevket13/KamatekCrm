@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,6 +11,7 @@ using KamatekCrm.Models;
 using KamatekCrm.Repositories;
 using KamatekCrm.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Win32;
 
 namespace KamatekCrm.ViewModels
 {
@@ -19,12 +21,14 @@ namespace KamatekCrm.ViewModels
     public class SuppliersViewModel : ViewModelBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly AttachmentService _attachmentService;
 
         #region Collections
 
         public ObservableCollection<Supplier> Suppliers { get; } = new();
         public ObservableCollection<Supplier> FilteredSuppliers { get; } = new();
         public ObservableCollection<PurchaseOrder> SupplierPurchaseHistory { get; } = new();
+        public ObservableCollection<Attachment> SupplierAttachments { get; } = new();
 
         /// <summary>
         /// Tedarikçi Tipi seçenekleri (ComboBox için)
@@ -104,13 +108,16 @@ namespace KamatekCrm.ViewModels
                     {
                         IsEditing = true;
                         _ = LoadPurchaseHistoryAsync();
+                        LoadAttachments();
                     }
                     else
                     {
                         IsEditing = false;
                         SupplierPurchaseHistory.Clear();
+                        SupplierAttachments.Clear();
                     }
                     OnPropertyChanged(nameof(SupplierPurchaseHistory));
+                    OnPropertyChanged(nameof(SupplierAttachments));
                 }
             }
         }
@@ -129,6 +136,13 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _isBusy, value);
         }
 
+        private Attachment? _selectedAttachment;
+        public Attachment? SelectedAttachment
+        {
+            get => _selectedAttachment;
+            set => SetProperty(ref _selectedAttachment, value);
+        }
+
         #endregion
 
         #region Commands
@@ -140,6 +154,11 @@ namespace KamatekCrm.ViewModels
         public ICommand ClearSearchCommand { get; }
         public ICommand ClearTypeFilterCommand { get; }
         public ICommand ViewOrderDetailCommand { get; }
+        
+        // Attachment Commands
+        public ICommand AddAttachmentCommand { get; }
+        public ICommand RemoveAttachmentCommand { get; }
+        public ICommand OpenAttachmentCommand { get; }
 
         #endregion
 
@@ -150,6 +169,7 @@ namespace KamatekCrm.ViewModels
         public SuppliersViewModel(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+            _attachmentService = new AttachmentService(_unitOfWork.Context);
 
             // Command tanımlamaları
             SaveCommand = new RelayCommand(async _ => await SaveChangesAsync(), _ => CanSave());
@@ -159,6 +179,11 @@ namespace KamatekCrm.ViewModels
             ClearSearchCommand = new RelayCommand(_ => SearchText = string.Empty);
             ClearTypeFilterCommand = new RelayCommand(_ => SelectedSupplierTypeFilter = null);
             ViewOrderDetailCommand = new RelayCommand(ViewOrderDetail, _ => SelectedSupplier != null);
+            
+            // Attachment Commands
+            AddAttachmentCommand = new RelayCommand(_ => AddAttachment(), _ => SelectedSupplier != null && SelectedSupplier.Id > 0);
+            RemoveAttachmentCommand = new RelayCommand(RemoveAttachment, _ => SelectedAttachment != null);
+            OpenAttachmentCommand = new RelayCommand(OpenAttachment, _ => SelectedAttachment != null);
 
             // Veri yükleme
             _ = LoadDataAsync();
@@ -363,5 +388,105 @@ namespace KamatekCrm.ViewModels
         }
 
         #endregion
+
+        #region Attachment Operations
+
+        private void LoadAttachments()
+        {
+            SupplierAttachments.Clear();
+            if (SelectedSupplier == null || SelectedSupplier.Id <= 0) return;
+
+            try
+            {
+                var attachments = _attachmentService.GetAttachments(AttachmentEntityType.Supplier, SelectedSupplier.Id);
+                foreach (var att in attachments)
+                    SupplierAttachments.Add(att);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ekler yüklenemedi: {ex.Message}");
+            }
+        }
+
+        private void AddAttachment()
+        {
+            if (SelectedSupplier == null || SelectedSupplier.Id <= 0)
+            {
+                MessageBox.Show("Önce tedarikçiyi kaydedin.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var dialog = new OpenFileDialog
+            {
+                Title = "Belge Ekle",
+                Filter = "Tüm Dosyalar (*.*)|*.*|PDF Dosyaları (*.pdf)|*.pdf|Resim Dosyaları (*.jpg;*.png)|*.jpg;*.png",
+                Multiselect = true
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    foreach (var filePath in dialog.FileNames)
+                    {
+                        var attachment = _attachmentService.UploadFile(
+                            AttachmentEntityType.Supplier,
+                            SelectedSupplier.Id,
+                            filePath,
+                            $"Tedarikçi belgesi: {Path.GetFileName(filePath)}");
+                        
+                        SupplierAttachments.Add(attachment);
+                    }
+                    MessageBox.Show($"{dialog.FileNames.Length} dosya başarıyla eklendi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Dosya ekleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void RemoveAttachment(object? parameter)
+        {
+            if (SelectedAttachment == null) return;
+
+            var result = MessageBox.Show(
+                $"'{SelectedAttachment.FileName}' dosyasını silmek istediğinize emin misiniz?",
+                "Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            try
+            {
+                if (_attachmentService.DeleteAttachment(SelectedAttachment.Id))
+                {
+                    SupplierAttachments.Remove(SelectedAttachment);
+                    SelectedAttachment = null;
+                    MessageBox.Show("Dosya silindi.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Silme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void OpenAttachment(object? parameter)
+        {
+            var attachment = parameter as Attachment ?? SelectedAttachment;
+            if (attachment == null) return;
+
+            try
+            {
+                _attachmentService.OpenFile(attachment);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Dosya açılamadı: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
     }
 }
+

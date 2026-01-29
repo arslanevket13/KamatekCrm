@@ -108,6 +108,24 @@ namespace KamatekCrm.Models
         public string? Notes { get; set; }
 
         /// <summary>
+        /// Ortalama Teslimat Süresi (gün)
+        /// </summary>
+        [Range(0, 180, ErrorMessage = "Teslimat süresi 0-180 gün arasında olmalıdır")]
+        public int LeadTimeDays { get; set; } = 7;
+
+        /// <summary>
+        /// Minimum Sipariş Tutarı
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal MinOrderAmount { get; set; } = 0;
+
+        /// <summary>
+        /// Para Birimi (TRY, USD, EUR)
+        /// </summary>
+        [MaxLength(3)]
+        public string CurrencyCode { get; set; } = "TRY";
+
+        /// <summary>
         /// Aktif mi?
         /// </summary>
         public bool IsActive { get; set; } = true;
