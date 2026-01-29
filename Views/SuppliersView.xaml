@@ -134,17 +134,16 @@
             </Grid>
         </Border>
 
-        <!-- ==================== PANEL 2: DETAY / DÜZENLEME ==================== -->
-        <Border Grid.Column="1" Background="#252541" CornerRadius="12" Margin="5,0"
-                Visibility="{Binding SelectedSupplier, Converter={StaticResource NullToVis}}">
+        <!-- ==================== PANEL 2: DETAY & GEÇMİŞ (TAB CONTROL) ==================== -->
+        <Border Grid.Column="1" Grid.ColumnSpan="2" Background="#252541" CornerRadius="12" Margin="5,0,0,0"
+                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVis}}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Başlık -->
+                <!-- Üst Başlık & Özet Kartları -->
                 <Border Grid.Row="0" Padding="20,16" BorderBrush="#333" BorderThickness="0,0,0,1">
                     <DockPanel>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
@@ -155,8 +154,9 @@
                         <StackPanel>
                             <TextBlock Text="{Binding SelectedSupplier.CompanyName, FallbackValue='Tedarikçi Detayı'}" 
                                        FontSize="18" FontWeight="Bold" Foreground="White"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <Border CornerRadius="3" Padding="6,2" Margin="0,0,6,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <!-- Bakiye Kartı -->
+                                <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="#27ae60"/>
@@ -167,291 +167,314 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Border.Style>
-                                    <TextBlock FontSize="10" Foreground="White">
-                                        <Run Text="₺"/><Run Text="{Binding SelectedSupplier.Balance, StringFormat='N2'}" FontWeight="Bold"/>
-                                    </TextBlock>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="💰 Bakiye: " Foreground="White" FontSize="11" Opacity="0.8"/>
+                                        <TextBlock Text="{Binding SelectedSupplier.Balance, StringFormat='₺{0:N2}'}" FontWeight="Bold" Foreground="White" FontSize="11"/>
+                                    </StackPanel>
                                 </Border>
-                                <Border Background="#8e44ad" CornerRadius="3" Padding="6,2" Margin="0,0,6,0">
-                                    <TextBlock FontSize="10" Foreground="White">
-                                        <Run Text="{Binding SelectedSupplier.PaymentTermDays}"/><Run Text=" gün"/>
-                                    </TextBlock>
+
+                                <!-- Vade Kartı -->
+                                <Border Background="#8e44ad" CornerRadius="4" Padding="8,4" Margin="0,0,8,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="📅 Vade: " Foreground="White" FontSize="11" Opacity="0.8"/>
+                                        <TextBlock Text="{Binding SelectedSupplier.PaymentTermDays, StringFormat='{}{0} Gün'}" FontWeight="Bold" Foreground="White" FontSize="11"/>
+                                    </StackPanel>
                                 </Border>
-                                <Border Background="#2980b9" CornerRadius="3" Padding="6,2">
-                                    <TextBlock FontSize="10" Foreground="White">
-                                        <Run Text="{Binding SelectedSupplier.LeadTimeDays}"/><Run Text=" gün teslimat"/>
-                                    </TextBlock>
+
+                                <!-- Teslimat Kartı -->
+                                <Border Background="#2980b9" CornerRadius="4" Padding="8,4">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="🚚 Teslimat: " Foreground="White" FontSize="11" Opacity="0.8"/>
+                                        <TextBlock Text="{Binding SelectedSupplier.LeadTimeDays, StringFormat='{}{0} Gün'}" FontWeight="Bold" Foreground="White" FontSize="11"/>
+                                    </StackPanel>
                                 </Border>
                             </StackPanel>
                         </StackPanel>
                     </DockPanel>
                 </Border>
 
-                <!-- Form -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,16">
-                    <StackPanel>
-                        <!-- Firma Bilgileri -->
-                        <TextBlock Text="FİRMA BİLGİLERİ" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,0,0,10"/>
+                <!-- Tab Control -->
+                <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="10">
+                    <TabControl.Resources>
+                        <Style TargetType="TabItem">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TabItem">
+                                        <Border Name="Border" BorderThickness="0,0,0,2" BorderBrush="Transparent" Margin="0,0,15,0" Padding="10,8" Cursor="Hand">
+                                            <ContentPresenter x:Name="ContentSite" VerticalAlignment="Center" HorizontalAlignment="Center" ContentSource="Header" Margin="0,2"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Border" Property="BorderBrush" Value="#3498db"/>
+                                                <Setter Property="Foreground" Value="#3498db"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="False">
+                                                <Setter Property="Foreground" Value="#888"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Style>
+                    </TabControl.Resources>
+
+                    <!-- TAB 1: GENEL BİLGİLER -->
+                    <TabItem Header="📝 Genel Bilgiler">
                         <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                                <RowDefinition/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             
-                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,12">
-                                <TextBlock Text="Firma Ünvanı *" FontSize="11" Foreground="#888"/>
-                                <TextBox Text="{Binding SelectedSupplier.CompanyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,12">
-                                <TextBlock Text="Tedarikçi Tipi" FontSize="11" Foreground="#888"/>
-                                <ComboBox ItemsSource="{Binding SupplierTypes}" 
-                                          SelectedItem="{Binding SelectedSupplier.SupplierType, Mode=TwoWay}"
-                                          Height="36" FontSize="12" Margin="0,4,0,0"/>
-                            </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,12">
-                                <TextBlock Text="İlgili Kişi" FontSize="11" Foreground="#888"/>
-                                <TextBox Text="{Binding SelectedSupplier.ContactPerson, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,12">
-                                <TextBlock Text="Telefon" FontSize="11" Foreground="#888"/>
-                                <TextBox Text="{Binding SelectedSupplier.PhoneNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,12">
-                                <TextBlock Text="E-posta" FontSize="11" Foreground="#888"/>
-                                <TextBox Text="{Binding SelectedSupplier.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                            <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,0,12">
-                                <TextBlock Text="Web Sitesi" FontSize="11" Foreground="#888"/>
-                                <TextBox Text="{Binding SelectedSupplier.Website, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                        </Grid>
+                            <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Padding="10,15">
+                                <StackPanel>
+                                    <!-- Firma Bilgileri -->
+                                    <TextBlock Text="FİRMA BİLGİLERİ" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,0,0,10"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,12">
+                                            <TextBlock Text="Firma Ünvanı *" FontSize="11" Foreground="#888"/>
+                                            <TextBox Text="{Binding SelectedSupplier.CompanyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" 
+                                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,12">
+                                            <TextBlock Text="Tedarikçi Tipi" FontSize="11" Foreground="#888"/>
+                                            <ComboBox ItemsSource="{Binding SupplierTypes}" 
+                                                      SelectedItem="{Binding SelectedSupplier.SupplierType, Mode=TwoWay}"
+                                                      Height="36" FontSize="12" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,12">
+                                            <TextBlock Text="İlgili Kişi" FontSize="11" Foreground="#888"/>
+                                            <TextBox Text="{Binding SelectedSupplier.ContactPerson, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,12">
+                                            <TextBlock Text="Telefon" FontSize="11" Foreground="#888"/>
+                                            <TextBox Text="{Binding SelectedSupplier.PhoneNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,12">
+                                            <TextBlock Text="E-posta" FontSize="11" Foreground="#888"/>
+                                            <TextBox Text="{Binding SelectedSupplier.Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="2" Grid.Column="1" Margin="8,0,0,12">
+                                            <TextBlock Text="Web Sitesi" FontSize="11" Foreground="#888"/>
+                                            <TextBox Text="{Binding SelectedSupplier.Website, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
 
-                        <!-- Ticari Bilgiler -->
-                        <TextBlock Text="TİCARİ BİLGİLER" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,10,0,10"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" Margin="0,0,8,12">
-                                <TextBlock Text="Vade Günü" FontSize="11" Foreground="#888"/>
-                                <TextBox Text="{Binding SelectedSupplier.PaymentTermDays, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Margin="4,0,4,12">
-                                <TextBlock Text="Teslimat Süresi (gün)" FontSize="11" Foreground="#888"/>
-                                <TextBox Text="{Binding SelectedSupplier.LeadTimeDays, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Margin="8,0,0,12">
-                                <TextBlock Text="Min. Sipariş Tutarı" FontSize="11" Foreground="#888"/>
-                                <TextBox Text="{Binding SelectedSupplier.MinOrderAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                        </Grid>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" Margin="0,0,8,12">
-                                <TextBlock Text="Vergi Dairesi" FontSize="11" Foreground="#888"/>
-                                <TextBox Text="{Binding SelectedSupplier.TaxOffice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Margin="8,0,0,12">
-                                <TextBlock Text="Vergi No" FontSize="11" Foreground="#888"/>
-                                <TextBox Text="{Binding SelectedSupplier.TaxNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                        </Grid>
+                                    <!-- Ticari Bilgiler -->
+                                    <TextBlock Text="TİCARİ BİLGİLER" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,10,0,10"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,12">
+                                            <TextBlock Text="Vade Günü" FontSize="11" Foreground="#888"/>
+                                            <TextBox Text="{Binding SelectedSupplier.PaymentTermDays, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="4,0,4,12">
+                                            <TextBlock Text="Teslimat Süresi (gün)" FontSize="11" Foreground="#888"/>
+                                            <TextBox Text="{Binding SelectedSupplier.LeadTimeDays, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Margin="8,0,0,12">
+                                            <TextBlock Text="Min. Sipariş Tutarı" FontSize="11" Foreground="#888"/>
+                                            <TextBox Text="{Binding SelectedSupplier.MinOrderAmount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,12">
+                                            <TextBlock Text="Vergi Dairesi" FontSize="11" Foreground="#888"/>
+                                            <TextBox Text="{Binding SelectedSupplier.TaxOffice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,12">
+                                            <TextBlock Text="Vergi No" FontSize="11" Foreground="#888"/>
+                                            <TextBox Text="{Binding SelectedSupplier.TaxNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Grid>
 
-                        <!-- Banka -->
-                        <TextBlock Text="BANKA BİLGİLERİ" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,10,0,10"/>
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="IBAN" FontSize="11" Foreground="#888"/>
-                            <TextBox Text="{Binding SelectedSupplier.IBAN, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
-                        </StackPanel>
-
-                        <!-- Adres -->
-                        <StackPanel Margin="0,0,0,12">
-                            <TextBlock Text="Adres" FontSize="11" Foreground="#888"/>
-                            <TextBox Text="{Binding SelectedSupplier.Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}" Height="60" TextWrapping="Wrap"
-                                     AcceptsReturn="True" VerticalContentAlignment="Top" Padding="10" Margin="0,4,0,0"/>
-                        </StackPanel>
-
-                        <!-- Notlar -->
-                        <StackPanel>
-                            <TextBlock Text="Notlar" FontSize="11" Foreground="#888"/>
-                            <TextBox Text="{Binding SelectedSupplier.Notes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}" Height="80" TextWrapping="Wrap"
-                                     AcceptsReturn="True" VerticalContentAlignment="Top" Padding="10" Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- Kaydet -->
-                <Border Grid.Row="2" Padding="20,12" BorderBrush="#333" BorderThickness="0,1,0,0">
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Command="{Binding SaveCommand}" Height="40" Width="140"
-                                Style="{StaticResource ModernButton}" Background="#27ae60">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="💾" FontSize="14" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Kaydet" VerticalAlignment="Center" FontWeight="Bold"/>
-                            </StackPanel>
-                        </Button>
-                        <TextBlock Text="* Zorunlu alan" FontSize="10" Foreground="#666" VerticalAlignment="Center"/>
-                    </DockPanel>
-                </Border>
-            </Grid>
-        </Border>
-
-        <!-- ==================== PANEL 3: İŞLEM GEÇMİŞİ + DİJİTAL ARŞİV ==================== -->
-        <Border Grid.Column="2" Background="#252541" CornerRadius="12" Margin="10,0,0,0"
-                Visibility="{Binding SelectedSupplier, Converter={StaticResource NullToVis}}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="180"/>
-                </Grid.RowDefinitions>
-
-                <!-- Başlık -->
-                <Border Grid.Row="0" Padding="16,14" BorderBrush="#333" BorderThickness="0,0,0,1">
-                    <TextBlock Text="📋 İşlem Geçmişi" FontSize="16" FontWeight="Bold" Foreground="White"/>
-                </Border>
-
-                <!-- Sipariş Geçmişi -->
-                <DataGrid Grid.Row="1" ItemsSource="{Binding SupplierPurchaseHistory}"
-                          AutoGenerateColumns="False" IsReadOnly="True"
-                          Background="Transparent" BorderThickness="0"
-                          GridLinesVisibility="None" HeadersVisibility="Column"
-                          RowHeight="36" ColumnHeaderHeight="36" Margin="8"
-                          Style="{StaticResource ModernDataGrid}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="PO No" Binding="{Binding PONumber}" Width="90"/>
-                        <DataGridTextColumn Header="Tarih" Binding="{Binding OrderDate, StringFormat=dd.MM.yy}" Width="70"/>
-                        <DataGridTextColumn Header="Tutar" Binding="{Binding TotalAmount, StringFormat='₺{0:N0}'}" Width="*"/>
-                        <DataGridTemplateColumn Header="" Width="50">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Button Content="👁️" FontSize="12" Padding="4,2"
-                                            Command="{Binding DataContext.ViewOrderDetailCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Background="Transparent" Foreground="#3498db" BorderThickness="0" Cursor="Hand"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-
-                <!-- Dijital Arşiv Başlığı -->
-                <Border Grid.Row="2" Padding="16,12" BorderBrush="#333" BorderThickness="0,1,0,1">
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="📎 Ekle" Command="{Binding AddAttachmentCommand}"
-                                Height="30" Padding="12,0" Background="#3498db" Foreground="White"
-                                BorderThickness="0" Cursor="Hand" FontSize="11" FontWeight="SemiBold"/>
-                        <TextBlock Text="📁 Dijital Arşiv" FontSize="14" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
-                    </DockPanel>
-                </Border>
-
-                <!-- Dosyalar -->
-                <Grid Grid.Row="3">
-                    <ListBox ItemsSource="{Binding SupplierAttachments}"
-                             SelectedItem="{Binding SelectedAttachment, Mode=TwoWay}"
-                             Background="Transparent" BorderThickness="0" Margin="8"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                        <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ListBoxItem">
-                                            <Border x:Name="ItemBorder" Padding="10,8" Margin="2" 
-                                                    Background="#1a1a2e" CornerRadius="6" Cursor="Hand">
-                                                <ContentPresenter/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="ItemBorder" Property="Background" Value="#3498db"/>
-                                                </Trigger>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="ItemBorder" Property="Background" Value="#2d2d52"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </ListBox.ItemContainerStyle>
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Text" Value="📄"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsPdf}" Value="True">
-                                                        <Setter Property="Text" Value="📕"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsImage}" Value="True">
-                                                        <Setter Property="Text" Value="🖼️"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding FileName}" FontSize="11" FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock FontSize="9" Foreground="#888">
-                                            <Run Text="{Binding UploadDate, StringFormat=dd.MM.yyyy}"/>
-                                        </TextBlock>
+                                    <!-- Banka & Adres -->
+                                    <TextBlock Text="DİĞER BİLGİLER" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,10,0,10"/>
+                                    <StackPanel Margin="0,0,0,12">
+                                        <TextBlock Text="IBAN" FontSize="11" Foreground="#888"/>
+                                        <TextBox Text="{Binding SelectedSupplier.IBAN, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}" Margin="0,4,0,0"/>
                                     </StackPanel>
-                                    <Button Grid.Column="2" Content="👁️" ToolTip="Aç"
-                                            Command="{Binding DataContext.OpenAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Width="28" Height="28" Background="Transparent" BorderThickness="0"
-                                            Foreground="#3498db" FontSize="12" Cursor="Hand" Margin="4,0"/>
-                                    <Button Grid.Column="3" Content="🗑️" ToolTip="Sil"
-                                            Command="{Binding DataContext.RemoveAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Width="28" Height="28" Background="Transparent" BorderThickness="0"
-                                            Foreground="#e74c3c" FontSize="12" Cursor="Hand"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                    
-                    <!-- Boş durum -->
-                    <TextBlock Text="Henüz belge eklenmemiş" FontSize="11" Foreground="#666" 
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Visibility="{Binding SupplierAttachments.Count, Converter={StaticResource IntToVis}, ConverterParameter=Invert}"/>
-                </Grid>
+                                    <StackPanel Margin="0,0,0,12">
+                                        <TextBlock Text="Adres" FontSize="11" Foreground="#888"/>
+                                        <TextBox Text="{Binding SelectedSupplier.Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}" Height="60" TextWrapping="Wrap"
+                                                 AcceptsReturn="True" VerticalContentAlignment="Top" Padding="10" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock Text="Notlar" FontSize="11" Foreground="#888"/>
+                                        <TextBox Text="{Binding SelectedSupplier.Notes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}" Height="60" TextWrapping="Wrap"
+                                                 AcceptsReturn="True" VerticalContentAlignment="Top" Padding="10" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!-- Kaydet Butonu -->
+                            <Border Grid.Row="1" Padding="10" BorderBrush="#333" BorderThickness="0,1,0,0">
+                                <Button Command="{Binding SaveCommand}" Height="40" Content="💾 Değişiklikleri Kaydet"
+                                        Style="{StaticResource ModernButton}" Background="#27ae60" Width="200" HorizontalAlignment="Right"/>
+                            </Border>
+                        </Grid>
+                    </TabItem>
+
+                    <!-- TAB 2: SATIN ALMA GEÇMİŞİ -->
+                    <TabItem Header="📋 Satın Alma Geçmişi">
+                        <Grid>
+                             <DataGrid ItemsSource="{Binding SupplierPurchaseHistory}"
+                                      AutoGenerateColumns="False" IsReadOnly="True"
+                                      Background="Transparent" BorderThickness="0"
+                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                                      RowHeight="40" ColumnHeaderHeight="40" Margin="5"
+                                      Style="{StaticResource ModernDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="PO No" Binding="{Binding PONumber}" Width="100"/>
+                                    <DataGridTextColumn Header="Tarih" Binding="{Binding OrderDate, StringFormat=dd.MM.yyyy}" Width="90"/>
+                                    <DataGridTextColumn Header="Durum" Binding="{Binding Status}" Width="100"/>
+                                    <DataGridTextColumn Header="Tutar" Binding="{Binding TotalAmount, StringFormat='₺{0:N2}'}" Width="*"/>
+                                    <DataGridTemplateColumn Header="İşlem" Width="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="Detay" 
+                                                        Command="{Binding DataContext.ViewOrderDetailCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource SecondaryButton}" Height="28" Padding="5,0"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </TabItem>
+
+                    <!-- TAB 3: DİJİTAL ARŞİV -->
+                    <TabItem Header="📎 Dijital Arşiv">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            
+                            <Border Grid.Row="0" Padding="10" Background="#2d2d52" CornerRadius="6" Margin="0,0,0,10">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="📂 Dosya Ekle" Command="{Binding AddAttachmentCommand}"
+                                            Style="{StaticResource ModernButton}" Background="#3498db" Height="30" Padding="10,0"/>
+                                    <TextBlock Text="Tedarikçi Belgeleri (Sözleşme, Vergi Levhası vb.)" 
+                                               VerticalAlignment="Center" Foreground="#aaa" FontSize="12"/>
+                                </DockPanel>
+                            </Border>
+
+                            <ListBox Grid.Row="1" ItemsSource="{Binding SupplierAttachments}"
+                                     SelectedItem="{Binding SelectedAttachment, Mode=TwoWay}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border x:Name="ItemBorder" Padding="10,8" Margin="0,2" 
+                                                            Background="#1a1a2e" CornerRadius="6" Cursor="Hand">
+                                                        <ContentPresenter/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter TargetName="ItemBorder" Property="Background" Value="#3498db"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="ItemBorder" Property="Background" Value="#2d2d52"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="p"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="📄"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsPdf}" Value="True">
+                                                                <Setter Property="Text" Value="📕"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsImage}" Value="True">
+                                                                <Setter Property="Text" Value="🖼️"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FileName}" FontSize="13" FontWeight="SemiBold" Foreground="White"/>
+                                                <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#888"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="{Binding UploadDate, StringFormat=dd.MM.yyyy HH:mm}" 
+                                                       VerticalAlignment="Center" Foreground="#666" FontSize="11" Margin="10,0"/>
+                                            <StackPanel Grid.Column="3" Orientation="Horizontal">
+                                                <Button Content="👁️ Aç" Command="{Binding DataContext.OpenAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Style="{StaticResource SecondaryButton}" Height="28" Padding="8,0" Margin="0,0,5,0"/>
+                                                <Button Content="🗑️ Sil" Command="{Binding DataContext.RemoveAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" Style="{StaticResource DangerButton}" Height="28" Padding="8,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <!-- Boş Durum -->
+                            <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                        Visibility="{Binding SupplierAttachments.Count, Converter={StaticResource IntToVis}, ConverterParameter=Invert}">
+                                <TextBlock Text="📭" FontSize="36" HorizontalAlignment="Center" Opacity="0.3"/>
+                                <TextBlock Text="Dosya Yok" Foreground="#666" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
             </Grid>
         </Border>
 
         <!-- ==================== BOŞ DURUM (TEDARİKÇİ SEÇİLMEDİ) ==================== -->
         <Border Grid.Column="1" Grid.ColumnSpan="2" Background="#252541" CornerRadius="12" Margin="5,0,0,0"
-                Visibility="{Binding SelectedSupplier, Converter={StaticResource InvertedBoolToVis}}">
+                Visibility="{Binding IsEditing, Converter={StaticResource InvertedBoolToVis}}">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock Text="🏢" FontSize="56" HorizontalAlignment="Center" Opacity="0.3"/>
                 <TextBlock Text="Tedarikçi Seçilmedi" FontSize="18" FontWeight="Bold" Foreground="#888" Margin="0,12,0,6" HorizontalAlignment="Center"/>

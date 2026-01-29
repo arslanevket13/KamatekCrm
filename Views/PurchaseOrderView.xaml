@@ -178,6 +178,10 @@
 
                             <Button Content="➕ Ekle" Command="{Binding AddOrderItemCommand}"
                                     Background="#3498db" Foreground="White" Padding="15,6" BorderThickness="0" Cursor="Hand"/>
+
+                            <Button Content="🪄 Faturadan Tara" Command="{Binding ScanInvoiceCommand}"
+                                    Background="#9b59b6" Foreground="White" Padding="15,6" Margin="10,0,0,0" BorderThickness="0" Cursor="Hand"
+                                    ToolTip="PDF faturasından ürünleri otomatik ayıkla"/>
                         </StackPanel>
                     </Border>
 
@@ -189,6 +193,17 @@
                               RowBackground="#252541" AlternatingRowBackground="#2d2d52"
                               HeadersVisibility="Column"
                               MinHeight="150" MaxHeight="300">
+                    
+                    <!-- Items Actions Toolbar (New) -->
+                    <DataGrid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="PDF'den Otomatik Tara" Command="{Binding ScanInvoiceCommand}">
+                                <MenuItem.Icon>
+                                    <TextBlock Text="🪄"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Ürün" Binding="{Binding ProductName}" Width="*"/>
                             <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity}" Width="60"/>
@@ -218,24 +233,77 @@
 
                     <!-- Invoice & File Upload Section -->
                     <Grid Grid.Row="2" Margin="0,15,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
                         
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Fatura / Belge No:" Foreground="#888" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBox Text="{Binding SelectedOrder.SupplierReferenceNo}" Width="150" 
-                                     Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
-                        </StackPanel>
+                        <!-- Header -->
+                        <Border Grid.Row="0" Margin="0,0,0,5" BorderBrush="#3d3d5c" BorderThickness="0,0,0,1" Padding="0,0,0,5">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="📂 Dosya Ekle" Command="{Binding AddAttachmentCommand}"
+                                        Style="{StaticResource ModernButton}" Background="#3498db" Height="28" Padding="10,0" FontSize="11"/>
+                                <TextBlock Text="📎 Sipariş Ekleri &amp; Belgeler" Foreground="White" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
 
-                        <TextBlock Grid.Column="1" Text="{Binding SelectedOrder.InvoiceDocumentPath}" 
-                                   Foreground="#aaa" VerticalAlignment="Center" Margin="15,0" 
-                                   TextTrimming="CharacterEllipsis" FontStyle="Italic"/>
-
-                        <Button Grid.Column="2" Content="📁 Fatura Yükle" Command="{Binding UploadInvoiceCommand}"
-                                Background="#f39c12" Foreground="White" Padding="15,6" BorderThickness="0" Cursor="Hand"/>
+                        <!-- Attachments List -->
+                        <ListBox Grid.Row="1" ItemsSource="{Binding OrderAttachments}"
+                                 SelectedItem="{Binding SelectedAttachment, Mode=TwoWay}"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 MaxHeight="120">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel IsItemsHost="True"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="ItemBorder" Padding="5" Margin="2" 
+                                                        Background="#2d2d52" CornerRadius="4" Cursor="Hand" Width="200" ToolTip="{Binding FileName}">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="ItemBorder" Property="Background" Value="#3498db"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ItemBorder" Property="Background" Value="#404070"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="📄" FontSize="16" Margin="0,0,5,0"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding FileName}" FontSize="11" Foreground="White" 
+                                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="5,0,0,0">
+                                            <Button Content="👁️" Command="{Binding DataContext.OpenAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="2"/>
+                                            <Button Content="🗑️" Command="{Binding DataContext.RemoveAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="2" Foreground="#e74c3c"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        
+                        <TextBlock Grid.Row="1" Text="Dosya yok" Foreground="#666" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10"
+                                   Visibility="{Binding OrderAttachments.Count, Converter={StaticResource IntToVis}, ConverterParameter=Invert}"/>
                     </Grid>
                 </Grid>
             </Border>

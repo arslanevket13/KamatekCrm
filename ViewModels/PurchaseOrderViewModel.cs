@@ -19,12 +19,14 @@ namespace KamatekCrm.ViewModels
     public class PurchaseOrderViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly AttachmentService _attachmentService;
 
         #region Properties
 
         public ObservableCollection<Supplier> Suppliers { get; } = new();
         public ObservableCollection<PurchaseOrder> PurchaseOrders { get; } = new();
         public ObservableCollection<Product> Products { get; } = new();
+        public ObservableCollection<Attachment> OrderAttachments { get; } = new();
 
         private Supplier? _selectedSupplier;
         public Supplier? SelectedSupplier
@@ -48,8 +50,16 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedOrder, value))
                 {
                     CalculateOrderTotals();
+                    LoadAttachments();
                 }
             }
+        }
+
+        private Attachment? _selectedAttachment;
+        public Attachment? SelectedAttachment
+        {
+            get => _selectedAttachment;
+            set => SetProperty(ref _selectedAttachment, value);
         }
 
         // Yeni PO Formu
@@ -173,14 +183,25 @@ namespace KamatekCrm.ViewModels
         // Yeni Komutlar
         public ICommand AddOrderItemCommand { get; }
         public ICommand RemoveOrderItemCommand { get; }
+        public ICommand UploadInvoiceCommand { get; }
+
+        public ICommand AddAttachmentCommand { get; }
+        public ICommand RemoveAttachmentCommand { get; }
+        public ICommand OpenAttachmentCommand { get; }
 
         #endregion
 
         #region Constructor
 
+        private readonly InvoiceScannerService _invoiceScannerService;
+
+        public ICommand ScanInvoiceCommand { get; }
+
         public PurchaseOrderViewModel()
         {
             _context = new AppDbContext();
+            _attachmentService = new AttachmentService();
+            _invoiceScannerService = new InvoiceScannerService();
 
             CreateOrderCommand = new RelayCommand(_ => CreateOrder(), _ => CanCreateOrder());
             ReceiveGoodsCommand = new RelayCommand(ReceiveGoods, CanReceiveGoods);
@@ -191,9 +212,87 @@ namespace KamatekCrm.ViewModels
             AddOrderItemCommand = new RelayCommand(AddOrderItem);
             RemoveOrderItemCommand = new RelayCommand(RemoveOrderItem);
             UploadInvoiceCommand = new RelayCommand(UploadInvoice, _ => SelectedOrder != null);
+            ScanInvoiceCommand = new RelayCommand(ScanInvoice, _ => SelectedOrder != null && SelectedOrder.Status == PurchaseStatus.Pending);
+
+            AddAttachmentCommand = new RelayCommand(_ => AddAttachment(), _ => SelectedOrder != null && SelectedOrder.Id > 0);
+            RemoveAttachmentCommand = new RelayCommand(RemoveAttachment, _ => SelectedAttachment != null);
+            OpenAttachmentCommand = new RelayCommand(OpenAttachment);
 
             LoadData();
         }
+
+        private async void ScanInvoice(object? parameter)
+        {
+            if (SelectedOrder == null) return;
+
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "PDF Faturalar (*.pdf)|*.pdf",
+                Title = "Taranacak Faturayı Seçin"
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                IsBusy = true;
+                try
+                {
+                    string filePath = openFileDialog.FileName;
+                    
+                    // Run OCR/Scanning in background
+                    var items = await System.Threading.Tasks.Task.Run(() => 
+                        _invoiceScannerService.ExtractItemsFromPdf(filePath, Products.ToList())
+                    );
+
+                    if (items.Any())
+                    {
+                        if (SelectedOrder.Items == null) SelectedOrder.Items = new System.Collections.Generic.List<PurchaseOrderItem>();
+                        
+                        int matchCount = items.Count(i => i.ProductId > 0);
+                        int newCount = items.Count - matchCount;
+
+                        var result = MessageBox.Show(
+                            $"{items.Count} adet kalem ayıkladı.\n" +
+                            $"{matchCount} tanesi sistemdeki ürünlerle eşleşti.\n" +
+                            $"{newCount} tanesi eşleşmedi (manuel kontrol gerekir).\n\n" +
+                            "Kalemler sipariş listesine eklensin mi?",
+                            "Tarama Tamamlandı",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question);
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            foreach (var item in items)
+                            {
+                                item.PurchaseOrderId = SelectedOrder.Id;
+                                
+                                // Veritabanına ekle
+                                _context.PurchaseOrderItems.Add(item);
+                                
+                                // UI listesine (bazen Items null gelebilir, view tarafı için refresh gerekebilir)
+                                SelectedOrder.Items.Add(item);
+                            }
+                            await _context.SaveChangesAsync();
+                            
+                            CalculateOrderTotals();
+                            MessageBox.Show("Kalemler eklendi. Lütfen 'Tamamlanmamış' veya eşleşmeyen ürünleri kontrol ediniz.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Faturadan anlamlı bir veri çıkarılamadı veya format desteklenmiyor.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Tarama hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+            }
+        }
+
 
         #endregion
 
@@ -339,7 +438,7 @@ namespace KamatekCrm.ViewModels
                    AuthService.CanApprovePurchase;
         }
 
-        public ICommand UploadInvoiceCommand { get; }
+
 
         // ... in constructor:
         // UploadInvoiceCommand = new RelayCommand(UploadInvoice, _ => SelectedOrder != null);
@@ -625,6 +724,90 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        private void LoadAttachments()
+        {
+            OrderAttachments.Clear();
+            if (SelectedOrder == null || SelectedOrder.Id <= 0) return;
+
+            try
+            {
+                var attachments = _attachmentService.GetAttachments(AttachmentEntityType.PurchaseOrder, SelectedOrder.Id);
+                foreach (var att in attachments)
+                    OrderAttachments.Add(att);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+            }
+        }
+
+        private void AddAttachment()
+        {
+            if (SelectedOrder == null || SelectedOrder.Id <= 0) return;
+
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Tüm Dosyalar (*.*)|*.*|PDF Dosyaları (*.pdf)|*.pdf|Resim Dosyaları (*.jpg;*.png)|*.jpg;*.png",
+                Title = "Dosya Seçin",
+                Multiselect = true
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    foreach (var file in openFileDialog.FileNames)
+                    {
+                        var attachment = _attachmentService.UploadFile(
+                            AttachmentEntityType.PurchaseOrder,
+                            SelectedOrder.Id,
+                            file,
+                            $"Sipariş eki: {System.IO.Path.GetFileName(file)}"
+                        );
+                        OrderAttachments.Add(attachment);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Dosya ekleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void RemoveAttachment(object? parameter)
+        {
+            if (parameter is not Attachment attachment) return;
+
+            if (MessageBox.Show($"'{attachment.FileName}' dosyasını silmek istediğinize emin misiniz?", "Onay", 
+                MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+
+            try
+            {
+                if (_attachmentService.DeleteAttachment(attachment.Id))
+                {
+                    OrderAttachments.Remove(attachment);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Silme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void OpenAttachment(object? parameter)
+        {
+            if (parameter is not Attachment attachment) return;
+
+            try
+            {
+                _attachmentService.OpenFile(attachment);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Dosya açma hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        
         #endregion
     }
 }
