@@ -138,7 +138,9 @@ namespace KamatekCrm.Models
             PurchaseStatus.Pending => "⏳ Sipariş Bekliyor",
             PurchaseStatus.Ordered => "📦 Sipariş Verildi",
             PurchaseStatus.Shipped => "🚚 Kargoda",
-            PurchaseStatus.Received => "✅ Teslim Alındı",
+            PurchaseStatus.Received => "📥 Teslim Alındı (Stok Bekleniyor)",
+            PurchaseStatus.WaitingInventoryEntry => "⚠️ Stok Girişi Bekleniyor",
+            PurchaseStatus.Completed => "✅ Tamamlandı",
             PurchaseStatus.Cancelled => "❌ İptal",
             _ => Status.ToString()
         };

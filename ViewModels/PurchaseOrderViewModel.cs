@@ -585,30 +585,26 @@ namespace KamatekCrm.ViewModels
                     supplier.Balance += order.TotalAmount;
                 }
 
-                // Kasa kaydı (Gider)
-                _context.CashTransactions.Add(new CashTransaction
-                {
-                    Date = DateTime.Now,
-                    Amount = order.TotalAmount,
-                    TransactionType = CashTransactionType.Expense,
-                    Description = $"Satın Alma - {order.PONumber} ({order.SupplierReferenceNo})",
-                    Category = "Malzeme Alımı",
-                    ReferenceNumber = order.PONumber,
-                    CreatedBy = AuthService.CurrentUser?.AdSoyad ?? "Sistem",
-                    CreatedAt = DateTime.Now
-                });
+                // NOT: ERP Standartlarına göre "Mal Kabulü" (Goods Receipt) işlemi "Kasa Gideri" (Cash Out) DOĞURMAZ.
+                // Bu işlem bir "Tahakkuk" (Accrual) işlemidir. Borç tedarikçiye yazılır (Accounts Payable).
+                // Ödeme işlemi Finans modülünden ayrıca yapılmalıdır.
+                // Bu nedenle CashTransaction oluşturma kodu kaldırılmıştır.
+                
+                order.Status = PurchaseStatus.Completed; // Süreç tamamlandı
 
                 _context.SaveChanges();
                 transaction.Commit();
 
-                MessageBox.Show("Malzeme teslim alındı, stok ve muhasebe kayıtları güncellendi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Sipariş başarıyla teslim alındı ve stoka işlendi.\nTedarikçi bakiyesi güncellendi (₺{order.TotalAmount:N2}).\nÖdeme işlemini Finans modülünden yapmayı unutmayınız.", "İşlem Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                
                 LoadData();
             }
             catch (Exception ex)
             {
                 transaction.Rollback();
-                MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Teslim alma hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+
         }
 
         private bool CanCancelOrder(object? parameter)

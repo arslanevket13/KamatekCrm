@@ -28,6 +28,16 @@ namespace KamatekCrm.Enums
         /// <summary>
         /// İptal edildi
         /// </summary>
-        Cancelled
+        Cancelled,
+
+        /// <summary>
+        /// Stok girişi bekleniyor (Kısmi teslimat veya onay aşaması)
+        /// </summary>
+        WaitingInventoryEntry,
+
+        /// <summary>
+        /// Tamamlandı (Stok işlendi, süreç bitti)
+        /// </summary>
+        Completed
     }
 }

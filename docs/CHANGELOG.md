@@ -1,5 +1,23 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+## 2026-01-29 (v3)
+
+### 🤖 Yapay Zeka & ERP Standartları
+
+**AI Fatura Tarayıcı (Yeni Modül):**
+- `PdfPig` kütüphanesi ile PDF faturalardan metin okuma
+- Regex ve Levenshtein Distance ile akıllı ürün eşleştirme
+- "Bilinmeyen Ürünler" için manuel onay mekanizması
+- `PurchaseOrderView` üzerinden "Faturadan Tara" butonu
+
+**ERP Standartları (Mal Kabul):**
+- **Accrual Accounting:** "Teslim Al" işlemi artık Kasa'dan para çıkışı yapmıyor.
+- Sadece Tedarikçi Bakiyesi (Borç/Payable) artırılıyor.
+- Stoklar `WaitingInventoryEntry` statüsü ile yönetilebiliyor.
+- `PurchaseStatus.Completed` durumu eklendi.
+
+---
+
 ## 2026-01-29 (v2)
 
 ### 🏭 Uçtan Uca Profesyonel Satın Alma Sistemi
