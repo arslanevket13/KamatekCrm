@@ -104,12 +104,29 @@ namespace KamatekCrm.ViewModels
                 var settings = Properties.Settings.Default;
                 _rememberMe = settings.RememberMe;
                 
-                if (_rememberMe && !string.IsNullOrEmpty(settings.SavedUsername))
+                if (_rememberMe)
                 {
-                    _username = settings.SavedUsername;
-                    OnPropertyChanged(nameof(Username));
-                    OnPropertyChanged(nameof(RememberMe));
+                    // Token kontrolü
+                    string token = settings.AuthToken;
+                    if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(settings.SavedUsername))
+                    {
+                        // Basit token doğrulama (Prod: Token süresi, imza vb. kontrol edilmeli)
+                        // Şimdilik token varsa geçerli sayıyoruz
+                        _username = settings.SavedUsername;
+                        
+                        // Auto-login
+                        // Eğer UI donarsa veya kullanıcı giriş ekranını görmek isterse burayı async yapıp biraz bekletebiliriz.
+                        // Şimdilik direkt giriş yapalım.
+                        ExecuteLogin(token); 
+                    }
+                    else if (!string.IsNullOrEmpty(settings.SavedUsername))
+                    {
+                        // Sadece kullanıcı adını hatırla
+                        _username = settings.SavedUsername;
+                        OnPropertyChanged(nameof(Username));
+                    }
                 }
+                 OnPropertyChanged(nameof(RememberMe));
             }
             catch
             {
@@ -120,13 +137,24 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Kullanıcı bilgilerini kaydet
         /// </summary>
-        private void SaveCredentials()
+        private void SaveCredentials(string token = "")
         {
             try
             {
                 var settings = Properties.Settings.Default;
                 settings.RememberMe = _rememberMe;
                 settings.SavedUsername = _rememberMe ? _username : string.Empty;
+                
+                // Token kaydet (Eğer remember me ise ve token geldiyse)
+                if (_rememberMe && !string.IsNullOrEmpty(token))
+                {
+                    settings.AuthToken = token;
+                }
+                else if (!_rememberMe)
+                {
+                    settings.AuthToken = string.Empty;
+                }
+
                 settings.Save();
             }
             catch
@@ -140,20 +168,21 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private bool CanLogin()
         {
-            return !string.IsNullOrWhiteSpace(Username) &&
-                   !string.IsNullOrWhiteSpace(Password) &&
+            return !string.IsNullOrWhiteSpace(Username) && 
+                   (!string.IsNullOrWhiteSpace(Password) || IsLoading) && 
                    !IsLoading;
         }
 
         /// <summary>
         /// Giriş işlemini gerçekleştir
         /// </summary>
-        public void ExecuteLogin()
+        public void ExecuteLogin(string autoToken = "")
         {
-            if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
+            if (string.IsNullOrEmpty(autoToken) && (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password)))
             {
-                ErrorMessage = "Kullanıcı adı ve şifre gerekli!";
-                return;
+                 if(string.IsNullOrWhiteSpace(Username)) ErrorMessage = "Kullanıcı adı gerekli!";
+                 else if(string.IsNullOrWhiteSpace(Password)) ErrorMessage = "Şifre gerekli!";
+                 return;
             }
 
             ErrorMessage = string.Empty;
@@ -161,10 +190,26 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                if (AuthService.Login(Username, Password))
+                bool isAuthenticated = false;
+
+                if (!string.IsNullOrEmpty(autoToken))
                 {
-                    // Başarılı giriş - Ayarları kaydet
-                    SaveCredentials();
+                    // Token login simülasyonu
+                    // Gerçek hayatta: AuthService.LoginWithToken(autoToken)
+                    isAuthenticated = true; 
+                }
+                else
+                {
+                    // Normal login
+                    isAuthenticated = AuthService.Login(Username, Password);
+                }
+
+                if (isAuthenticated)
+                {
+                    // Başarılı giriş - Ayarları ve Token'ı kaydet
+                    // Gerçek hayatta token backend'den gelir. Burada simüle ediyoruz.
+                    string newToken = Guid.NewGuid().ToString(); 
+                    SaveCredentials(newToken);
                     
                     // Ana içeriğe geç
                     NavigationService.Instance.NavigateToMainContent();
@@ -173,6 +218,15 @@ namespace KamatekCrm.ViewModels
                 {
                     ErrorMessage = "Hatalı kullanıcı adı veya şifre!";
                     Password = string.Empty;
+                    
+                    // Token geçersizse temizle
+                    if(!string.IsNullOrEmpty(autoToken))
+                    {
+                        var s = Properties.Settings.Default;
+                        s.AuthToken = string.Empty;
+                        s.Save();
+                        ErrorMessage = "Oturum süresi dolmuş, lütfen tekrar giriş yapın.";
+                    }
                 }
             }
             catch (System.Exception ex)

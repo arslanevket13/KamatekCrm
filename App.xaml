@@ -99,6 +99,10 @@
                 <views:PurchaseOrderView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:SuppliersViewModel}">
+                <views:SuppliersView/>
+            </DataTemplate>
+
             <!-- SMART ERP MODULES -->
             <DataTemplate DataType="{x:Type vm:PipelineViewModel}">
                 <views:SalesPipelineView/>
@@ -117,6 +121,7 @@
             <converters:IntToVisibilityConverter x:Key="IntToVis"/>
             <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBoolToVis"/>
             <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
+            <converters:NullToVisibilityConverter x:Key="NullToVis"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

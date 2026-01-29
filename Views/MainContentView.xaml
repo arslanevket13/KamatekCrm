@@ -252,6 +252,7 @@
                             </StackPanel>
                         </Button>
 
+                        <!-- Satın Alma -->
                         <Button Command="{Binding NavigateToPurchaseOrdersCommand}" Style="{StaticResource ModernNavButton}"
                                 Background="#00838F">
                             <StackPanel Orientation="Horizontal">
@@ -260,6 +261,18 @@
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
+
+                        <!-- Tedarikçi Yönetimi (YENİ) -->
+                        <Button Command="{Binding NavigateToSuppliersCommand}" Style="{StaticResource ModernNavButton}"
+                                Background="#8e44ad">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🏢" FontSize="18" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Tedarikçiler" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+
 
                          <!-- Envanter & Raporlar -->
                         <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" 

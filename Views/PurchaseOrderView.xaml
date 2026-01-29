@@ -69,6 +69,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Header -->
@@ -100,14 +101,15 @@
                 </StackPanel>
             </Border>
 
-            <!-- Orders DataGrid -->
             <DataGrid Grid.Row="2" ItemsSource="{Binding PurchaseOrders}"
                       SelectedItem="{Binding SelectedOrder}"
                       AutoGenerateColumns="False" IsReadOnly="True"
                       Background="#252541" Foreground="White"
                       GridLinesVisibility="Horizontal" BorderThickness="0"
                       RowBackground="#252541" AlternatingRowBackground="#2d2d52"
-                      HeadersVisibility="Column">
+                      HeadersVisibility="Column"
+                      MaxHeight="200"
+                      Margin="0,0,0,15">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="PO No" Binding="{Binding PONumber}" Width="100"/>
                     <DataGridTextColumn Header="Tedarikçi" Binding="{Binding SupplierName}" Width="*"/>
@@ -136,9 +138,110 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
-            
+
+            <!-- Order Details / Items Panel -->
+            <Border Grid.Row="3" Background="#252541" CornerRadius="8" Padding="15" Margin="0,0,0,15"
+                    Visibility="{Binding SelectedOrder, Converter={StaticResource NullToVis}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Add Item Bar -->
+                    <Border Grid.Row="0" Margin="0,0,0,10" Padding="0,0,0,10" BorderBrush="#3d3d5c" BorderThickness="0,0,0,1">
+                        <StackPanel Orientation="Horizontal">
+                            <ComboBox ItemsSource="{Binding Products}" 
+                                      SelectedItem="{Binding SelectedProductToAdd}" 
+                                      DisplayMemberPath="ProductName"
+                                      Width="200" Margin="0,0,10,0"/>
+                            
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                <TextBlock Text="Adet:" Foreground="#aaa" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBox Text="{Binding QuantityToAdd}" Width="50" Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                <TextBlock Text="Birim Fiyat:" Foreground="#aaa" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBox Text="{Binding UnitPriceToAdd}" Width="70" Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                <TextBlock Text="KDV %:" Foreground="#aaa" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBox Text="{Binding TaxRateToAdd}" Width="40" Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
+                            </StackPanel>
+                            
+                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                <TextBlock Text="İskonto %:" Foreground="#aaa" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBox Text="{Binding DiscountRateToAdd}" Width="40" Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
+                            </StackPanel>
+
+                            <Button Content="➕ Ekle" Command="{Binding AddOrderItemCommand}"
+                                    Background="#3498db" Foreground="White" Padding="15,6" BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Items List -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedOrder.Items}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              Background="Transparent" Foreground="White"
+                              GridLinesVisibility="Horizontal" BorderThickness="0"
+                              RowBackground="#252541" AlternatingRowBackground="#2d2d52"
+                              HeadersVisibility="Column"
+                              MinHeight="150" MaxHeight="300">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Ürün" Binding="{Binding ProductName}" Width="*"/>
+                            <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity}" Width="60"/>
+                            <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, StringFormat='₺{0:N2}'}" Width="90"/>
+                            <DataGridTextColumn Header="KDV" Binding="{Binding TaxAmount, StringFormat='₺{0:N2}'}" Width="80"/>
+                            <DataGridTextColumn Header="İskonto" Binding="{Binding DiscountAmount, StringFormat='₺{0:N2}'}" Width="80"/>
+                            <DataGridTextColumn Header="Toplam" Binding="{Binding LineTotal, StringFormat='₺{0:N2}'}" Width="90" FontWeight="Bold"/>
+                            <DataGridTemplateColumn Header="Sil" Width="50">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="TRASH" 
+                                                Command="{Binding DataContext.RemoveOrderItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Background="Transparent" Foreground="#e74c3c"
+                                                BorderThickness="0" Padding="5" Cursor="Hand">
+                                             <Button.ContentTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="🗑️"/>
+                                                </DataTemplate>
+                                            </Button.ContentTemplate>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Invoice & File Upload Section -->
+                    <Grid Grid.Row="2" Margin="0,15,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Fatura / Belge No:" Foreground="#888" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBox Text="{Binding SelectedOrder.SupplierReferenceNo}" Width="150" 
+                                     Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="1" Text="{Binding SelectedOrder.InvoiceDocumentPath}" 
+                                   Foreground="#aaa" VerticalAlignment="Center" Margin="15,0" 
+                                   TextTrimming="CharacterEllipsis" FontStyle="Italic"/>
+
+                        <Button Grid.Column="2" Content="📁 Fatura Yükle" Command="{Binding UploadInvoiceCommand}"
+                                Background="#f39c12" Foreground="White" Padding="15,6" BorderThickness="0" Cursor="Hand"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
             <!-- Order Summary Footer -->
-            <Border Grid.Row="3" Background="#252541" CornerRadius="8" Padding="15" Margin="0,15,0,0">
+            <Border Grid.Row="4" Background="#252541" CornerRadius="8" Padding="15" Margin="0,0,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>

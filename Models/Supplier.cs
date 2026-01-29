@@ -58,6 +58,36 @@ namespace KamatekCrm.Models
         public decimal Balance { get; set; } = 0;
 
         /// <summary>
+        /// İlgili Kişi
+        /// </summary>
+        [MaxLength(100)]
+        public string? ContactPerson { get; set; }
+
+        /// <summary>
+        /// Vergi Dairesi
+        /// </summary>
+        [MaxLength(100)]
+        public string? TaxOffice { get; set; }
+
+        /// <summary>
+        /// Vergi Numarası
+        /// </summary>
+        [MaxLength(20)]
+        public string? TaxNumber { get; set; }
+
+        /// <summary>
+        /// IBAN
+        /// </summary>
+        [MaxLength(50)]
+        public string? IBAN { get; set; }
+
+        /// <summary>
+        /// Notlar
+        /// </summary>
+        [MaxLength(1000)]
+        public string? Notes { get; set; }
+
+        /// <summary>
         /// Aktif mi?
         /// </summary>
         public bool IsActive { get; set; } = true;

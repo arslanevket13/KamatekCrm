@@ -28,6 +28,18 @@ namespace KamatekCrm.Models
         public string PONumber { get; set; } = string.Empty;
 
         /// <summary>
+        /// Tedarikçi Referans No / Fatura No
+        /// </summary>
+        [MaxLength(50)]
+        public string? SupplierReferenceNo { get; set; }
+
+        /// <summary>
+        /// Fatura Dosya Yolu
+        /// </summary>
+        [MaxLength(500)]
+        public string? InvoiceDocumentPath { get; set; }
+
+        /// <summary>
         /// Tedarikçi adı
         /// </summary>
         [Required]

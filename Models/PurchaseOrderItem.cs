@@ -58,29 +58,29 @@ namespace KamatekCrm.Models
         /// <summary>
         /// Ara Toplam (Miktar × Birim Fiyat)
         /// </summary>
-        [NotMapped]
-        public decimal SubTotal => Quantity * UnitPrice;
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal SubTotal { get; set; }
 
         /// <summary>
         /// İndirim Tutarı
         /// </summary>
-        [NotMapped]
-        public decimal DiscountAmount => SubTotal * (DiscountRate / 100m);
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal DiscountAmount { get; set; }
 
         /// <summary>
         /// KDV Tutarı
         /// </summary>
-        [NotMapped]
-        public decimal TaxAmount => (SubTotal - DiscountAmount) * (TaxRate / 100m);
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TaxAmount { get; set; }
 
         /// <summary>
         /// Satır Toplamı (Ara Toplam - İndirim + KDV)
         /// </summary>
-        [NotMapped]
-        public decimal LineTotal => SubTotal - DiscountAmount + TaxAmount;
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal LineTotal { get; set; }
 
         /// <summary>
-        /// Eski Total property (geriye uyumluluk için)
+        /// Eski Total property (geriye uyumluluk için, LineTotal'a map edilebilir veya kaldırılabilir ama şimdilik tutalım)
         /// </summary>
         [NotMapped]
         public decimal Total => LineTotal;

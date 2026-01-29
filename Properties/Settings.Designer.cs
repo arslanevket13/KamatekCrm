@@ -82,5 +82,17 @@ namespace KamatekCrm.Properties {
                 this["SavedUsername"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string AuthToken {
+            get {
+                return ((string)(this["AuthToken"]));
+            }
+            set {
+                this["AuthToken"] = value;
+            }
+        }
     }
 }

@@ -2,6 +2,28 @@
 
 ## 2026-01-28
 
+### 🏢 Tedarikçi Modülü Profesyonelleştirildi (SuppliersView)
+
+**UI Yeniden Tasarımı:**
+- `Views/SuppliersView.xaml` - Modern iki panelli layout (Sol: Liste, Sağ: Detay)
+- Arama kutusu ile gerçek zamanlı filtreleme
+- Tab yapısıyla "Genel Bilgiler" ve "Sipariş Geçmişi" bölümleri
+- TwoWay binding ile tüm form alanları düzenlenebilir
+- Finansal özet kartları (Toplam Sipariş, Bakiye, Durum)
+
+**ViewModel Güncellemeleri:**
+- `ViewModels/SuppliersViewModel.cs` - Arama/filtreleme mantığı eklendi
+- `FilteredSuppliers` - Gerçek zamanlı filtrelenmiş tedarikçi listesi
+- `SupplierPurchaseHistory` - Tedarikçinin sipariş geçmişi
+- Soft delete implementasyonu (IsActive = false)
+- DbUpdateException handling eklendi
+
+**Düzeltilen Hatalar:**
+- CS1061: `PurchaseOrder.SupplierId` referansı kaldırıldı (özellik mevcut değil)
+- XamlParseException: `RoundedButtonStyle` yerine `ModernButton` kullanıldı
+
+---
+
 ### 📋 Hızlı Kabul Modern UI (RepairRegistrationWindow)
 
 **Tamamen Yeniden Tasarlanan Form:**

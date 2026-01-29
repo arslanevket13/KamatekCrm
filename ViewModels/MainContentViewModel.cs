@@ -127,7 +127,17 @@ namespace KamatekCrm.ViewModels
         public ICommand NavigateToFinanceCommand { get; }
         public ICommand NavigateToAnalyticsCommand { get; }
         public ICommand NavigateToPurchaseOrdersCommand { get; }
+        public ICommand NavigateToSuppliersCommand { get; } // NEW
         public ICommand NavigateToPipelineCommand { get; }
+
+        // ...
+
+        // Constructor
+        // NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateToPurchaseOrders());
+        // NavigateToSuppliersCommand = new RelayCommand(_ => NavigateToSuppliers()); // NEW
+
+        // Methods
+
         public ICommand NavigateToSchedulerCommand { get; }
         public ICommand ToggleNotificationsCommand { get; }
         public ICommand RefreshNotificationsCommand { get; }
@@ -192,6 +202,8 @@ namespace KamatekCrm.ViewModels
             OpenQuickAddCommand = new RelayCommand(_ => OpenQuickAdd());
             NavigateToFinancialHealthCommand = new RelayCommand(_ => NavigateToFinancialHealth(), _ => CanViewFinance);
             NavigateToRoutePlanningCommand = new RelayCommand(_ => NavigateToRoutePlanning());
+            
+            NavigateToSuppliersCommand = new RelayCommand(_ => NavigateToSuppliers()); // Initialization
 
             LoadNotifications();
 
@@ -252,6 +264,7 @@ namespace KamatekCrm.ViewModels
         private void NavigateToAnalytics() => CurrentView = new AnalyticsViewModel();
         private void NavigateToFinancialHealth() => CurrentView = new FinancialHealthViewModel();
         private void NavigateToPurchaseOrders() => CurrentView = new PurchaseOrderViewModel();
+        private void NavigateToSuppliers() => CurrentView = new SuppliersViewModel(); // Implementation
         private void NavigateToPipeline() => CurrentView = new PipelineViewModel();
         private void NavigateToScheduler() => CurrentView = new SchedulerViewModel();
         private void NavigateToRoutePlanning() => CurrentView = new RoutePlanningViewModel();
