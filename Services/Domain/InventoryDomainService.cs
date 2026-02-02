@@ -210,5 +210,96 @@ namespace KamatekCrm.Services.Domain
                 _stockLock.Release();
             }
         }
+        /// <summary>
+        /// Depoya yeni stok girişi yapar ve Ortalama Maliyet (WAC) hesaplar
+        /// </summary>
+        public void AddStock(int productId, int warehouseId, int quantity, decimal unitCost, string referenceId)
+        {
+             _stockLock.Wait();
+            try
+            {
+                using var unitOfWork = new UnitOfWork();
+                var context = unitOfWork.Context;
+
+                using var transaction = unitOfWork.BeginTransaction();
+                try
+                {
+                    var inventory = context.Inventories
+                        .FirstOrDefault(i => i.ProductId == productId && i.WarehouseId == warehouseId);
+
+                    int oldQty = 0;
+                    decimal oldCost = 0;
+
+                    if (inventory == null)
+                    {
+                        inventory = new Inventory
+                        {
+                            ProductId = productId,
+                            WarehouseId = warehouseId,
+                            Quantity = quantity,
+                            AverageCost = unitCost
+                        };
+                        context.Inventories.Add(inventory);
+                    }
+                    else
+                    {
+                        oldQty = inventory.Quantity;
+                        oldCost = inventory.AverageCost;
+
+                        // Weighted Average Cost (WAC) Calculation
+                        // (OldQty * OldCost) + (NewQty * NewCost) / (OldQty + NewQty)
+                        decimal currentTotalValue = oldQty * oldCost;
+                        decimal newTotalValue = quantity * unitCost;
+                        int totalQty = oldQty + quantity;
+
+                        if (totalQty > 0)
+                        {
+                            inventory.AverageCost = (currentTotalValue + newTotalValue) / totalQty;
+                        }
+                        
+                        inventory.Quantity += quantity;
+                    }
+
+                    // Stok hareketi kaydı
+                    var stockTransaction = new StockTransaction
+                    {
+                        Date = DateTime.Now,
+                        ProductId = productId,
+                        TargetWarehouseId = warehouseId,
+                        Quantity = quantity,
+                        TransactionType = StockTransactionType.Purchase,
+                        UnitCost = unitCost,
+                        Description = $"Satın Alma (WAC Güncellendi) - {referenceId}",
+                        ReferenceId = referenceId,
+                        UserId = AuthService.CurrentUser?.AdSoyad ?? "Sistem"
+                    };
+                    context.StockTransactions.Add(stockTransaction);
+
+                    unitOfWork.Commit();
+
+                    // Event yayınla
+                    EventAggregator.Instance.Publish(new StockUpdatedEvent(
+                        productId,
+                        warehouseId,
+                        oldQty,
+                        inventory.Quantity,
+                        $"Stok Girişi (Satın Alma) - Yeni Maliyet: {inventory.AverageCost:C2}"
+                    ));
+                    
+                    // Log
+                    _ = AuditService.LogAsync(AuditActionType.Update, "Inventory", referenceId, 
+                        $"Stok Girdi: Ürün #{productId}, {quantity} adet @ {unitCost:C2}. Yeni WAC: {inventory.AverageCost:C2}");
+                }
+                catch (Exception ex)
+                {
+                    unitOfWork.Rollback();
+                    throw new Exception($"Stok ekleme hatası: {ex.Message}");
+                }
+            }
+            finally
+            {
+                _stockLock.Release();
+            }
+        }
     }
 }

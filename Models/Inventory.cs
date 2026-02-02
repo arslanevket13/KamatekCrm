@@ -50,6 +50,13 @@ namespace KamatekCrm.Models
         public byte[]? RowVersion { get; set; }
 
         /// <summary>
+        /// Ortalama Birim Maliyet (Weighted Average Cost)
+        /// Her satın almada yeniden hesaplanır.
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal AverageCost { get; set; } = 0;
+
+        /// <summary>
         /// Kritik seviye kontrolü için özel override (Opsiyonel)
         /// Ürün bazlı MinStockLevel'a bakılır genelde ama depo bazlı da olabilir.
         /// Şimdilik sadece miktar tutuyoruz.

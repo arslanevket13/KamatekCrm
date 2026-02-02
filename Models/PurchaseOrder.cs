@@ -81,6 +81,18 @@ namespace KamatekCrm.Models
         public decimal TotalAmount { get; set; }
 
         /// <summary>
+        /// Para Birimi (TRY, USD, EUR)
+        /// </summary>
+        [MaxLength(3)]
+        public string CurrencyCode { get; set; } = "TRY";
+
+        /// <summary>
+        /// İşlem anındaki döviz kuru
+        /// </summary>
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal ExchangeRate { get; set; } = 1.0m;
+
+        /// <summary>
         /// Notlar
         /// </summary>
         [MaxLength(1000)]

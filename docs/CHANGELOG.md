@@ -1,5 +1,28 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+
+## 2026-01-30
+
+### 🎨 Premium Design System (Refactor v2.0)
+Refactored application visual identity from "Material Design" to "Premium Enterprise UX".
+
+**Design System Updates:**
+- **New Color Palette:**
+  - `PrimaryHue` (#2C3E50) - Dark Blue/Gray theme.
+  - `SecondaryHue` (#27AE60) - Green for primary actions.
+  - `Background` (#F5F7FA) - Light gray modern background.
+- **New Styles:**
+  - `BtnPrimary`: Solid green, shadow depth 2, rounded corners (Radius 6).
+  - `BtnSecondary`: Transparent/Outlined blue-gray.
+  - `PremiumDataGrid`: No vertical lines, transparent header, 40px row height.
+  - `PremiumTextBox`: Outlined, 42px height, refined padding.
+  - `CardContainer`: White background, shadow depth 1, consistent padding.
+  - **Restored & Updated:** `FilterBarPanel`, `CategoryToggleButton`, `IconActionButton`, `NavButton` adapted to new theme.
+- **Legacy Compatibility:**
+  - Existing `ModernButton`, `ModernDataGrid` etc. mapped to new Design Tokens.
+
+---
+
 ## 2026-01-29 (v3)
 
 ### 🤖 Yapay Zeka & ERP Standartları
@@ -9,6 +32,12 @@
 - Regex ve Levenshtein Distance ile akıllı ürün eşleştirme
 - "Bilinmeyen Ürünler" için manuel onay mekanizması
 - `PurchaseOrderView` üzerinden "Faturadan Tara" butonu
+
+**ERP Faz 1: Finansal Çekirdek (Maliyet & Güvenlik):**
+- **WAC (Ağırlıklı Ortalama Maliyet):** Stok girişlerinde maliyet otomatik hesaplanıyor.
+- **Inventory.cs:** `AverageCost` alanı eklendi.
+- **PurchaseOrder.cs:** `CurrencyCode` ve `ExchangeRate` alanları eklendi.
+- **Migration:** `UpgradeToProfessionalERP_Phase1` oluşturuldu.
 
 **ERP Standartları (Mal Kabul):**
 - **Accrual Accounting:** "Teslim Al" işlemi artık Kasa'dan para çıkışı yapmıyor.
@@ -769,6 +798,7 @@ Mevcut basit 'Keşif & Teklif' modülü tamamen yeniden yazıldı.
 - WebView2 Map Fix (Async initialization)
 - Product Excel Import (Auto-Inventory Creation)
 - Add Product UI (Editable Unit + Initial Stock field)
+- Financial Health Report White Screen Fix (Missing code-behind + Async Refactor)
 - Navigation Buttons: Stock Count & Reports
 - Customer Type: Individual/Corporate selection
 - Dynamic Job Details: 8 category support

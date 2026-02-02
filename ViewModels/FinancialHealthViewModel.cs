@@ -15,17 +15,16 @@ namespace KamatekCrm.ViewModels
 {
     public class FinancialHealthViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+
 
         public FinancialHealthViewModel()
         {
-            _context = new AppDbContext();
             // Initialize non-nullable properties
             MonthlyFinancialSeries = Array.Empty<ISeries>();
             MonthlyXAxes = Array.Empty<Axis>();
             CostBreakdownSeries = Array.Empty<ISeries>();
             
-            LoadData();
+            _ = LoadDataAsync();
         }
 
         #region KPI Properties
@@ -56,14 +55,15 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        private void LoadData()
+        private async System.Threading.Tasks.Task LoadDataAsync()
         {
             try
             {
-                var projects = _context.ServiceProjects
+                using var context = new AppDbContext();
+                var projects = await context.ServiceProjects
                     .Include(p => p.Customer)
                     .Where(p => p.Status != ProjectStatus.Cancelled)
-                    .ToList();
+                    .ToListAsync();
 
                 // --- KPI ---
                 TotalRevenue = projects.Sum(p => p.TotalCost + p.TotalProfit); // Satış = Maliyet + Kar
@@ -136,6 +136,12 @@ namespace KamatekCrm.ViewModels
                 .ToList();
 
                 ProjectProfits = new ObservableCollection<ProjectProfitItem>(profitList);
+                
+                // Notify UI of changes if necessary (properties are notifying, but collections/arrays might need PropertyChanged if replaced)
+                OnPropertyChanged(nameof(MonthlyFinancialSeries));
+                OnPropertyChanged(nameof(MonthlyXAxes));
+                OnPropertyChanged(nameof(CostBreakdownSeries));
+                OnPropertyChanged(nameof(ProjectProfits));
             }
             catch (Exception ex)
             {

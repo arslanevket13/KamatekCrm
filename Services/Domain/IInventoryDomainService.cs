@@ -21,6 +21,11 @@ namespace KamatekCrm.Services.Domain
         /// Stok miktarını günceller ve StockTransaction kaydı oluşturur
         /// </summary>
         void AdjustStock(StockAdjustmentRequest request);
+
+        /// <summary>
+        /// Yeni stok girişi yapar (Satın Alma) ve Maliyet Hesaplar
+        /// </summary>
+        void AddStock(int productId, int warehouseId, int quantity, decimal unitCost, string referenceId);
     }
 
     /// <summary>

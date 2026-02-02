@@ -493,7 +493,6 @@ namespace KamatekCrm.ViewModels
             // Fatura No Kontrolü
             if (string.IsNullOrWhiteSpace(order.SupplierReferenceNo))
             {
-                 // Eğer fatura no girmeden işlem yapmaya çalışıyorsa uyar ama engelleme (opsiyonel olabilir)
                  if (MessageBox.Show("Tedarikçi Ref. No / Fatura No girilmemiş. Yine de devam etmek istiyor musunuz?", 
                      "Eksik Bilgi", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
                      return;
@@ -510,7 +509,7 @@ namespace KamatekCrm.ViewModels
             int targetWarehouseId = order.WarehouseId ?? 1; // Varsayılan: Ana Depo
 
             var result = MessageBox.Show(
-                $"'{order.PONumber}' siparişi teslim alındı olarak işaretlensin mi?\n\nBu işlem stok miktarlarını otomatik olarak güncelleyecektir.\nHedef Depo ID: {targetWarehouseId}",
+                $"'{order.PONumber}' siparişi teslim alındı olarak işaretlensin mi?\n\nBu işlem stok miktarlarını güncelleyecek ve Ortalama Maliyet (WAC) hesaplayacaktır.\nHedef Depo ID: {targetWarehouseId}",
                 "Teslim Alma Onayı",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -521,7 +520,7 @@ namespace KamatekCrm.ViewModels
             try
             {
                 // Sipariş durumunu güncelle
-                order.Status = PurchaseStatus.Received;
+                order.Status = PurchaseStatus.Completed; // Doğrudan tamamlandıya çekiyoruz
                 order.ReceivedDate = DateTime.Now;
                 order.IsProcessedToStock = true;
                 order.ProcessedDate = DateTime.Now;
@@ -541,6 +540,16 @@ namespace KamatekCrm.ViewModels
 
                         if (inventory != null)
                         {
+                            // Weighted Average Cost (WAC) Hesaplama
+                            decimal oldTotalValue = inventory.Quantity * inventory.AverageCost;
+                            decimal newTotalValue = item.Quantity * item.UnitPrice;
+                            int newTotalQty = inventory.Quantity + item.Quantity;
+
+                            if (newTotalQty > 0)
+                            {
+                                inventory.AverageCost = (oldTotalValue + newTotalValue) / newTotalQty;
+                            }
+                            
                             inventory.Quantity += item.Quantity;
                         }
                         else
@@ -549,7 +558,8 @@ namespace KamatekCrm.ViewModels
                             {
                                 ProductId = item.ProductId ?? 0,
                                 WarehouseId = targetWarehouseId,
-                                Quantity = item.Quantity
+                                Quantity = item.Quantity,
+                                AverageCost = item.UnitPrice // İlk giriş maliyeti
                             });
                         }
 
@@ -562,7 +572,7 @@ namespace KamatekCrm.ViewModels
                             Quantity = item.Quantity,
                             TransactionType = StockTransactionType.Purchase,
                             UnitCost = item.UnitPrice,
-                            Description = $"Satın Alma - {order.PONumber} - Ref: {order.SupplierReferenceNo}",
+                            Description = $"Satın Alma (WAC) - {order.PONumber} - Ref: {order.SupplierReferenceNo}",
                             ReferenceId = order.PONumber,
                             UserId = AuthService.CurrentUser?.AdSoyad ?? "Sistem"
                         });
@@ -585,17 +595,10 @@ namespace KamatekCrm.ViewModels
                     supplier.Balance += order.TotalAmount;
                 }
 
-                // NOT: ERP Standartlarına göre "Mal Kabulü" (Goods Receipt) işlemi "Kasa Gideri" (Cash Out) DOĞURMAZ.
-                // Bu işlem bir "Tahakkuk" (Accrual) işlemidir. Borç tedarikçiye yazılır (Accounts Payable).
-                // Ödeme işlemi Finans modülünden ayrıca yapılmalıdır.
-                // Bu nedenle CashTransaction oluşturma kodu kaldırılmıştır.
-                
-                order.Status = PurchaseStatus.Completed; // Süreç tamamlandı
-
                 _context.SaveChanges();
                 transaction.Commit();
 
-                MessageBox.Show($"Sipariş başarıyla teslim alındı ve stoka işlendi.\nTedarikçi bakiyesi güncellendi (₺{order.TotalAmount:N2}).\nÖdeme işlemini Finans modülünden yapmayı unutmayınız.", "İşlem Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Sipariş teslim alındı.\nStok maliyetleri (WAC) yeniden hesaplandı.\nTedarikçi bakiyesi (Accounts Payable) güncellendi.", "İşlem Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
                 
                 LoadData();
             }
@@ -604,7 +607,6 @@ namespace KamatekCrm.ViewModels
                 transaction.Rollback();
                 MessageBox.Show($"Teslim alma hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
         }
 
         private bool CanCancelOrder(object? parameter)
