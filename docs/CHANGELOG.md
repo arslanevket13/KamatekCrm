@@ -799,6 +799,7 @@ Mevcut basit 'Keşif & Teklif' modülü tamamen yeniden yazıldı.
 - Product Excel Import (Auto-Inventory Creation)
 - Add Product UI (Editable Unit + Initial Stock field)
 - Financial Health Report White Screen Fix (Missing code-behind + Async Refactor)
+- Purchase Order Manual Entry (Editable Product + Auto-Create Stock Card)
 - Navigation Buttons: Stock Count & Reports
 - Customer Type: Individual/Corporate selection
 - Dynamic Job Details: 8 category support

@@ -138,8 +138,16 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedProductToAdd, value) && value != null)
                 {
                     UnitPriceToAdd = value.PurchasePrice; // Alış fiyatını getir
+                    ManualProductSearchText = value.ProductName; // Sync text
                 }
             }
+        }
+
+        private string _manualProductSearchText = string.Empty;
+        public string ManualProductSearchText
+        {
+            get => _manualProductSearchText;
+            set => SetProperty(ref _manualProductSearchText, value);
         }
 
         private int _quantityToAdd = 1;
@@ -652,7 +660,63 @@ namespace KamatekCrm.ViewModels
 
         private void AddOrderItem(object? parameter)
         {
-            if (SelectedOrder == null || SelectedProductToAdd == null) return;
+            if (SelectedOrder == null) return;
+
+            // Manuel Giriş / Yeni Ürün Kontrolü
+            if (SelectedProductToAdd == null && !string.IsNullOrWhiteSpace(ManualProductSearchText))
+            {
+                // Önce bu isimde ürün var mı bakalım (Combobox match etmemiş olabilir)
+                var existing = Products.FirstOrDefault(p => p.ProductName.Equals(ManualProductSearchText, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    SelectedProductToAdd = existing;
+                }
+                else
+                {
+                    // Ürün bulunamadı, stok kartı açılsın mı?
+                    var result = MessageBox.Show(
+                        $"'{ManualProductSearchText}' adında bir ürün bulunamadı.\n\n" +
+                        "Bu ürün için yeni stok kartı oluşturulsun mu?\n" +
+                        "(Hayır derseniz işlem iptal edilir, listeye sadece stoklu ürünler eklenebilir.)", 
+                        "Yeni Ürün", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        var newProductInfo = new Product { ProductName = ManualProductSearchText };
+                        var addProductWindow = new Views.AddProductWindow(newProductInfo);
+                        
+                        if (addProductWindow.ShowDialog() == true)
+                        {
+                            // Listeyi yenile
+                            Products.Clear();
+                            foreach (var p in _context.Products.OrderBy(p => p.ProductName)) Products.Add(p);
+
+                            // Yeni ürünü bul ve seç
+                            var createdProduct = Products.FirstOrDefault(p => p.ProductName.Equals(ManualProductSearchText, StringComparison.OrdinalIgnoreCase));
+                            if (createdProduct != null)
+                            {
+                                SelectedProductToAdd = createdProduct;
+                            }
+                            else
+                            {
+                                // İsim değişmiş olabilir, son ekleneni alabiliriz ama şimdilik kullanıcıya bırakalım
+                                MessageBox.Show("Yeni oluşturulan ürün listede bulunamadı, lütfen manuel seçin.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                             return; // Kullanıcı iptal etti
+                        }
+                    }
+                    else
+                    {
+                        return; // İptal
+                    }
+                }
+            }
+
+            if (SelectedProductToAdd == null) return;
             if (SelectedOrder.Status != PurchaseStatus.Pending)
             {
                 MessageBox.Show("Sadece 'Bekleyen' durumundaki siparişlere ürün eklenebilir.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);

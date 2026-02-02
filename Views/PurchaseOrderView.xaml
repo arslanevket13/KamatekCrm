@@ -153,6 +153,8 @@
                         <StackPanel Orientation="Horizontal">
                             <ComboBox ItemsSource="{Binding Products}" 
                                       SelectedItem="{Binding SelectedProductToAdd}" 
+                                      IsEditable="True"
+                                      Text="{Binding ManualProductSearchText, UpdateSourceTrigger=PropertyChanged}"
                                       DisplayMemberPath="ProductName"
                                       Width="200" Margin="0,0,10,0"/>
                             

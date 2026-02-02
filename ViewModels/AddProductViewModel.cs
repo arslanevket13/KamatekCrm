@@ -76,6 +76,13 @@ namespace KamatekCrm.ViewModels
             {
                 // ADD MODE: Yeni ürün oluştur
                 InitializeNewProduct();
+
+                // Eğer taslak ürün geldiyse (örn: Satın alma ekranından isimle gelmesi)
+                if (productToEdit != null && productToEdit.Id == 0)
+                {
+                    if (!string.IsNullOrEmpty(productToEdit.ProductName))
+                        _newProduct.ProductName = productToEdit.ProductName;
+                }
             }
 
             // Komutları tanımla
