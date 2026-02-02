@@ -259,7 +259,8 @@
     <Style x:Key="ModernButton" TargetType="Button" BasedOn="{StaticResource BtnPrimary}">
         <Setter Property="Background" Value="#1A237E"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderBrush" Value="#1A237E"/>
+        <Setter Property="BorderBrush" Value="#303F9F"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Height" Value="42"/>
     </Style>
     

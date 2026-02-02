@@ -26,6 +26,9 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<Supplier> Suppliers { get; } = new();
         public ObservableCollection<PurchaseOrder> PurchaseOrders { get; } = new();
         public ObservableCollection<Product> Products { get; } = new();
+        // Alias for the specific binding requirement
+        public ObservableCollection<Product> ProductList => Products;
+
         public ObservableCollection<Attachment> OrderAttachments { get; } = new();
 
         private Supplier? _selectedSupplier;
@@ -178,6 +181,45 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _discountRateToAdd, value);
         }
 
+        // --- Manual Entry Specific Properties (Requested) ---
+
+        private Product? _selectedManualProduct;
+        public Product? SelectedManualProduct
+        {
+            get => _selectedManualProduct;
+            set
+            {
+                if (SetProperty(ref _selectedManualProduct, value) && value != null)
+                {
+                    ManualProductName = value.ProductName;
+                    ManualUnitPrice = value.PurchasePrice;
+                }
+            }
+        }
+
+        private string _manualProductName = string.Empty;
+        public string ManualProductName
+        {
+            get => _manualProductName;
+            set => SetProperty(ref _manualProductName, value);
+        }
+
+        private int _manualQuantity = 1;
+        public int ManualQuantity
+        {
+            get => _manualQuantity;
+            set => SetProperty(ref _manualQuantity, value);
+        }
+
+        private decimal _manualUnitPrice;
+        public decimal ManualUnitPrice
+        {
+            get => _manualUnitPrice;
+            set => SetProperty(ref _manualUnitPrice, value);
+        }
+
+        // ----------------------------------------------------
+
         #endregion
 
         #region Commands
@@ -219,7 +261,7 @@ namespace KamatekCrm.ViewModels
             RefreshCommand = new RelayCommand(_ => LoadData());
             
             AddOrderItemCommand = new RelayCommand(AddOrderItem);
-            AddManualItemCommand = AddOrderItemCommand; // Alias for explicit requirement
+            AddManualItemCommand = new RelayCommand(ExecuteAddManualItem); // Explicit implementation
             RemoveOrderItemCommand = new RelayCommand(RemoveOrderItem);
             UploadInvoiceCommand = new RelayCommand(UploadInvoice, _ => SelectedOrder != null);
             ScanInvoiceCommand = new RelayCommand(ScanInvoice, _ => SelectedOrder != null && SelectedOrder.Status == PurchaseStatus.Pending);
@@ -770,6 +812,58 @@ namespace KamatekCrm.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ExecuteAddManualItem(object? parameter)
+        {
+            if (SelectedOrder == null) return;
+
+             // Ensure order is pending
+            if (SelectedOrder.Status != PurchaseStatus.Pending)
+            {
+                MessageBox.Show("Sadece 'Bekleyen' siparişlere ekleme yapılabilir.", "Uyarı");
+                return;
+            }
+
+            // Logic similar to AddOrderItem but using specific Manual properties
+            if (string.IsNullOrWhiteSpace(ManualProductName))
+            {
+                MessageBox.Show("Ürün adı boş olamaz.", "Uyarı");
+                return;
+            }
+
+            var item = new PurchaseOrderItem
+            {
+                PurchaseOrderId = SelectedOrder.Id,
+                ProductId = SelectedManualProduct?.Id ?? 0, // 0 if purely manual text
+                ProductName = ManualProductName,
+                Quantity = ManualQuantity,
+                UnitPrice = ManualUnitPrice,
+                TaxRate = 20, // Default
+                DiscountRate = 0
+            };
+
+            RecalculateItemFinancials(item);
+
+            _context.PurchaseOrderItems.Add(item);
+            
+            try 
+            {
+                _context.SaveChanges();
+                if (SelectedOrder.Items == null) SelectedOrder.Items = new System.Collections.Generic.List<PurchaseOrderItem>();
+                SelectedOrder.Items.Add(item);
+                CalculateOrderTotals();
+
+                // Reset
+                SelectedManualProduct = null;
+                ManualProductName = string.Empty;
+                ManualQuantity = 1;
+                ManualUnitPrice = 0;
+            }
+            catch (Exception ex)
+            {
+                 MessageBox.Show($"Ekleme Hatası: {ex.Message}");
             }
         }
 

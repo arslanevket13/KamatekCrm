@@ -1,6 +1,15 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-02 (Hotfix v3.1)
+
+### 🚑 Kritik Arayüz ve Fonksiyon Düzeltmeleri
+- **Tedarikçiler Modülü**: `SuppliersViewModel` tamamen yeniden yazılarak beyaz ekran sorunu giderildi. Artık veriler `IUnitOfWork` üzerinden güvenli şekilde yükleniyor.
+- **Görünmez Butonlar**: `Styles.xaml` içerisindeki `ModernButton` stiline zorla renk ataması (#1A237E) yapılarak temadan kaynaklı görünmezlik sorunu çözüldü.
+- **Satın Alma Manuel Giriş**: `PurchaseOrderView` içerisine eksik olan "Manuel Ürün Ekleme" paneli enjekte edildi. `PurchaseOrderViewModel` tarafında gerekli komut ve property'ler (ProductList, ManualQuantity vb.) eklendi.
+
+---
+
 ## 2026-01-30
 
 ### 🎨 Premium Design System (Refactor v2.0)
