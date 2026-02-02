@@ -799,7 +799,10 @@ Mevcut basit 'Keşif & Teklif' modülü tamamen yeniden yazıldı.
 - Product Excel Import (Auto-Inventory Creation)
 - Add Product UI (Editable Unit + Initial Stock field)
 - Financial Health Report White Screen Fix (Missing code-behind + Async Refactor)
-- Purchase Order Manual Entry (Editable Product + Auto-Create Stock Card)
+- Purchase Order Manual Entry (Editable Product + Auto-Create Stock Card + Validation)
+- UI Fix: Forced Button Visibility (#1A237E) & Manual Entry Panel Restoration
+- Hotfix: Resolved 'Empty Suppliers Screen' by enforcing DataContext binding.
+- Hotfix: Fixed 'White-on-White' buttons by adding BorderBrush to ModernButton.
 - Navigation Buttons: Stock Count & Reports
 - Customer Type: Individual/Corporate selection
 - Dynamic Job Details: 8 category support

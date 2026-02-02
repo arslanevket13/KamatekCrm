@@ -10,6 +10,10 @@
              d:DesignHeight="750" d:DesignWidth="1400"
              d:DataContext="{d:DesignInstance Type=vm:SuppliersViewModel, IsDesignTimeCreatable=False}">
 
+    <UserControl.DataContext>
+        <vm:SuppliersViewModel/>
+    </UserControl.DataContext>
+
     <Grid Margin="15">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="320"/>

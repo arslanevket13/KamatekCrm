@@ -190,6 +190,7 @@ namespace KamatekCrm.ViewModels
         
         // Yeni Komutlar
         public ICommand AddOrderItemCommand { get; }
+        public ICommand AddManualItemCommand { get; } // Requested Alias
         public ICommand RemoveOrderItemCommand { get; }
         public ICommand UploadInvoiceCommand { get; }
 
@@ -218,6 +219,7 @@ namespace KamatekCrm.ViewModels
             RefreshCommand = new RelayCommand(_ => LoadData());
             
             AddOrderItemCommand = new RelayCommand(AddOrderItem);
+            AddManualItemCommand = AddOrderItemCommand; // Alias for explicit requirement
             RemoveOrderItemCommand = new RelayCommand(RemoveOrderItem);
             UploadInvoiceCommand = new RelayCommand(UploadInvoice, _ => SelectedOrder != null);
             ScanInvoiceCommand = new RelayCommand(ScanInvoice, _ => SelectedOrder != null && SelectedOrder.Status == PurchaseStatus.Pending);
@@ -716,7 +718,18 @@ namespace KamatekCrm.ViewModels
                 }
             }
 
-            if (SelectedProductToAdd == null) return;
+            if (SelectedProductToAdd == null)
+            {
+                MessageBox.Show("Lütfen geçerli bir ürün seçiniz veya ürün adını giriniz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (QuantityToAdd <= 0)
+            {
+                MessageBox.Show("Lütfen 0'dan büyük bir miktar giriniz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (SelectedOrder.Status != PurchaseStatus.Pending)
             {
                 MessageBox.Show("Sadece 'Bekleyen' durumundaki siparişlere ürün eklenebilir.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);

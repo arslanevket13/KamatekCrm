@@ -257,9 +257,10 @@
          The prompt implies a total refactor. Let's make ModernButton use PrimaryHue (Blue-Gray) to be distinct from the 'Save' (Green) button, 
          or just make it the standard button. -->
     <Style x:Key="ModernButton" TargetType="Button" BasedOn="{StaticResource BtnPrimary}">
-        <Setter Property="Background" Value="{StaticResource PrimaryHue}"/>
-        <Setter Property="Height" Value="36"/> <!-- Keep height 36 for backward compatibility layout-wise? Or upgrade to 45? Let's bump to 42 -->
-         <Setter Property="Height" Value="42"/>
+        <Setter Property="Background" Value="#1A237E"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="#1A237E"/>
+        <Setter Property="Height" Value="42"/>
     </Style>
     
     <!-- SecondaryButton (Legacy) -> Map to BtnSecondary -->

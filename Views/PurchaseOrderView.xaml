@@ -149,8 +149,10 @@
                     </Grid.RowDefinitions>
 
                     <!-- Add Item Bar -->
-                    <Border Grid.Row="0" Margin="0,0,0,10" Padding="0,0,0,10" BorderBrush="#3d3d5c" BorderThickness="0,0,0,1">
-                        <StackPanel Orientation="Horizontal">
+                    <Border Grid.Row="0" Margin="0,0,0,10" Padding="10" Background="#2d2d52" CornerRadius="6" Visibility="Visible">
+                        <StackPanel>
+                            <TextBlock Text="Manuel Ürün Ekleme" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <StackPanel Orientation="Horizontal">
                             <ComboBox ItemsSource="{Binding Products}" 
                                       SelectedItem="{Binding SelectedProductToAdd}" 
                                       IsEditable="True"
@@ -178,13 +180,16 @@
                                 <TextBox Text="{Binding DiscountRateToAdd}" Width="40" Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
                             </StackPanel>
 
-                            <Button Content="➕ Ekle" Command="{Binding AddOrderItemCommand}"
-                                    Background="#3498db" Foreground="White" Padding="15,6" BorderThickness="0" Cursor="Hand"/>
+                            <Button Content="➕ Listeye Ekle" Command="{Binding AddManualItemCommand}"
+                                    Style="{StaticResource ModernButton}"
+                                    Background="#1A237E" Foreground="White" 
+                                    Padding="15,6" BorderThickness="0" Cursor="Hand"/>
 
                             <Button Content="🪄 Faturadan Tara" Command="{Binding ScanInvoiceCommand}"
                                     Background="#9b59b6" Foreground="White" Padding="15,6" Margin="10,0,0,0" BorderThickness="0" Cursor="Hand"
                                     ToolTip="PDF faturasından ürünleri otomatik ayıkla"/>
                         </StackPanel>
+                    </StackPanel>
                     </Border>
 
                     <!-- Items List -->
