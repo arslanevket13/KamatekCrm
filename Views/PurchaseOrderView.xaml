@@ -44,9 +44,14 @@
             </Grid>
         </materialDesign:Card>
 
-        <!-- MANUAL ENTRY PANEL -->
-        <materialDesign:Card Grid.Row="1" Margin="0,0,0,16" Padding="16" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp2" Background="#FAFAFA">
-            <Grid>
+        <!-- MANUAL ENTRY PANEL (GroupBox) -->
+        <GroupBox Grid.Row="1" Header="MANUEL ÜRÜN EKLE" Margin="0,0,0,16" 
+                  Style="{StaticResource MaterialDesignGroupBox}"
+                  materialDesign:ColorZoneAssist.Mode="Primary"
+                  materialDesign:ColorZoneAssist.Background="#1A237E"
+                  materialDesign:ColorZoneAssist.Foreground="White"
+                  materialDesign:ElevationAssist.Elevation="Dp2">
+            <Grid Margin="0,8,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>     <!-- Product -->
                     <ColumnDefinition Width="120"/>   <!-- Qty -->
@@ -58,32 +63,30 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 
-                <TextBlock Grid.ColumnSpan="4" Text="ÜRÜN EKLE VEYA SEÇ" FontWeight="Bold" Foreground="#555" Margin="0,0,0,12"/>
-
                 <!-- Inputs -->
-                <ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ProductList}" SelectedItem="{Binding SelectedProduct}"
+                <ComboBox Grid.Row="0" Grid.Column="0" ItemsSource="{Binding ProductList}" SelectedItem="{Binding SelectedProduct}"
                           DisplayMemberPath="ProductName" Margin="0,0,8,0"
                           materialDesign:HintAssist.Hint="Ürün Listesinden Seç..."
                           Style="{StaticResource MaterialDesignFilledComboBox}" Background="White"/>
                 
-                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Quantity}" 
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Quantity}" 
                          materialDesign:HintAssist.Hint="Miktar"
                          Style="{StaticResource MaterialDesignFilledTextBox}" Background="White"
                          Margin="0,0,8,0" Padding="8"/>
                 
-                <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding UnitPrice, StringFormat=N2}" 
+                <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding UnitPrice, StringFormat=N2}" 
                          materialDesign:HintAssist.Hint="Birim Fiyat"
                          Style="{StaticResource MaterialDesignFilledTextBox}" Background="White"
                          Margin="0,0,16,0" Padding="8"/>
 
-                <Button Grid.Row="1" Grid.Column="3" Command="{Binding AddManualItemCommand}"
+                <Button Grid.Row="0" Grid.Column="3" Command="{Binding AddManualItemCommand}"
                         Style="{StaticResource MaterialDesignFloatingActionButton}"
                         Background="#2E7D32" BorderBrush="#2E7D32" 
                         Width="40" Height="40" ToolTip="Sepete Ekle">
                     <materialDesign:PackIcon Kind="Plus" Width="24" Height="24"/>
                 </Button>
             </Grid>
-        </materialDesign:Card>
+        </GroupBox>
 
         <!-- ITEMS LIST -->
         <materialDesign:Card Grid.Row="2" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp2" Background="White" VerticalAlignment="Stretch">

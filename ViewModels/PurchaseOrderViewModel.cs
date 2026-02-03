@@ -284,27 +284,48 @@ namespace KamatekCrm.ViewModels
 
                 if (autoReceive)
                 {
-                    // Update Stocks
+                    decimal orderTotal = 0;
+
+                    // Update Stocks & Create Transactions
                     foreach (var item in CurrentOrderItems)
                     {
-                        // Find product by ID if selected from manual, OR by Name if from PDF
+                        // Find product
                         Product? product = null;
-                        
                         if (item.ProductId > 0)
-                        {
                             product = await _unitOfWork.Context.Products.FindAsync(item.ProductId);
-                        }
                         else
-                        {
-                             // Try find by name
-                             product = await _unitOfWork.Context.Products.FirstOrDefaultAsync(p => p.ProductName.ToLower() == item.ProductName.ToLower());
-                        }
+                            product = await _unitOfWork.Context.Products.FirstOrDefaultAsync(p => p.ProductName.ToLower() == item.ProductName.ToLower());
 
                         if (product != null)
                         {
+                            // 1. Update Product Stock
                             product.TotalStockQuantity += item.Quantity;
                             product.PurchasePrice = item.UnitPrice; // Update latest cost
+                            
+                            // 2. Create Stock Transaction
+                            var transaction = new StockTransaction
+                            {
+                                Date = DateTime.Now,
+                                ProductId = product.Id,
+                                Quantity = item.Quantity,
+                                TransactionType = Enums.StockTransactionType.Purchase, // Alım
+                                UnitCost = item.UnitPrice,
+                                ReferenceId = $"PO-{order.Id}",
+                                Description = $"Satın Alma: {SelectedSupplier.CompanyName}",
+                                TargetWarehouseId = 1 // Varsayılan Ana Depo (Id=1 kabulü)
+                            };
+                            _unitOfWork.Context.Set<StockTransaction>().Add(transaction);
                         }
+
+                        orderTotal += item.LineTotal;
+                    }
+
+                    // 3. Update Supplier Balance (Account Payable increases)
+                    // Önce mevcut tedarikçiyi context'e attach edelim veya bulalım (zaten tracked olabilir ama garantiye alalım)
+                    var supplier = await _unitOfWork.Context.Suppliers.FindAsync(SelectedSupplier.Id);
+                    if (supplier != null)
+                    {
+                        supplier.Balance += orderTotal;
                     }
                 }
 
