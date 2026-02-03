@@ -1,6 +1,20 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-03 (v4.4 - Modern UI Overhaul)
+
+### 🎨 Material Design Transformation
+- **Tedarikçiler (Suppliers)**:
+  - Liste ve Detay panelleri modern "Card" yapısına geçirildi.
+  - Arama kutusu "Floating Hint" ve ikon desteğiyle güncellendi.
+  - Butonlar Material ikonlar ve gölgelendirmelerle yenilendi.
+- **Satın Alma (Purchase Order)**:
+  - Ürün girişi için özel "Floating Card" paneli tasarlandı.
+  - Tablo yapısı "Striped" ve geniş aralıklı hale getirildi.
+  - "Onayla ve Stoklara İşle" butonu FAB (Floating Action Button) stiliyle vurgulandı.
+
+---
+
 ## 2026-02-03 (v4.3 - PDF & Stock Parsing)
 
 ### 📄 PDF Fatura Aktarımı ve Stok Güncelleme

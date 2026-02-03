@@ -3,47 +3,66 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" d:DesignHeight="600" d:DesignWidth="1000">
 
-    <Grid Margin="10">
+    <Grid Margin="16">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="350"/>
+            <ColumnDefinition Width="380"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <!-- LEFT PANEL: LIST -->
-        <Border Grid.Column="0" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Background="White" Margin="0,0,10,0">
-            <Grid Margin="5">
+        <materialDesign:Card Grid.Column="0" Margin="0,0,16,0" Padding="0" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp2" Background="White">
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Search -->
-                <TextBox Grid.Row="0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                         Padding="5" Margin="0,0,0,5" ToolTip="Tedarikçi Ara..."/>
+                <!-- Search Header -->
+                <Border Grid.Row="0" Background="#F5F5F5" Padding="16" CornerRadius="8,8,0,0">
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="Tedarikçi Ara..."
+                             materialDesign:TextFieldAssist.HasClearButton="True"
+                             materialDesign:TextFieldAssist.LeadingIcon="Magnify"
+                             Background="White" BorderBrush="#E0E0E0"/>
+                </Border>
 
                 <!-- List -->
                 <DataGrid Grid.Row="1" ItemsSource="{Binding Suppliers}" SelectedItem="{Binding SelectedSupplier}"
-                          AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="Horizontal" HeadersVisibility="Column"
-                          Background="White" BorderThickness="0">
+                          AutoGenerateColumns="False" IsReadOnly="True" 
+                          CanUserAddRows="False" CanUserDeleteRows="False"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          Background="White" BorderThickness="0"
+                          materialDesign:DataGridAssist.CellPadding="12,8"
+                          materialDesign:DataGridAssist.ColumnHeaderPadding="12,12">
+                    <DataGrid.Resources>
+                        <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Foreground" Value="#1A237E"/>
+                        </Style>
+                    </DataGrid.Resources>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Firma" Binding="{Binding CompanyName}" Width="*"/>
-                        <DataGridTextColumn Header="İlgili Kişi" Binding="{Binding ContactPerson}" Width="120"/>
+                        <DataGridTextColumn Header="FİRMA ÜNVANI" Binding="{Binding CompanyName}" Width="*" ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
+                        <DataGridTextColumn Header="İLGİLİ KİŞİ" Binding="{Binding ContactPerson}" Width="140" ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
                     </DataGrid.Columns>
                 </DataGrid>
 
                 <!-- Add Button -->
-                <Button Grid.Row="2" Command="{Binding AddNewCommand}" Content="YENİ TEDARİKÇİ"
-                        Margin="0,5,0,0" Height="40"
-                        Style="{StaticResource ModernButton}" Background="#1A237E" Foreground="White" FontWeight="Bold"/>
+                <Button Grid.Row="2" Command="{Binding AddNewCommand}" 
+                        Style="{StaticResource MaterialDesignFlatButton}"
+                        Height="50" Content="YENİ TEDARİKÇİ EKLE"
+                        Background="#E8EAF6" Foreground="#1A237E" FontWeight="Bold"
+                        materialDesign:ButtonAssist.CornerRadius="0,0,8,8"/>
             </Grid>
-        </Border>
+        </materialDesign:Card>
 
         <!-- RIGHT PANEL: DETAILS -->
-        <Border Grid.Column="1" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Background="White">
-            <Grid Margin="10">
+        <materialDesign:Card Grid.Column="1" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp2" Background="White">
+            <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -51,82 +70,115 @@
                 </Grid.RowDefinitions>
 
                 <!-- Header -->
-                <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                    <TextBlock Text="{Binding SelectedSupplier.CompanyName, TargetNullValue='Tedarikçi Seçiniz'}" 
-                               FontSize="20" FontWeight="Bold" Foreground="#1A237E"/>
-                </StackPanel>
+                <Border Grid.Row="0" Background="#1A237E" Padding="20" CornerRadius="8,8,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Domain" Width="32" Height="32" Foreground="White" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                        <StackPanel>
+                            <TextBlock Text="{Binding SelectedSupplier.CompanyName, TargetNullValue='TEDARİKÇİ SEÇİNİZ'}" 
+                                       FontSize="20" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="{Binding SelectedSupplier.ContactPerson, StringFormat='İlgili: {0}', TargetNullValue=''}" 
+                                       FontSize="13" Foreground="#E8EAF6" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
                 <!-- Tabs -->
-                <TabControl Grid.Row="1" Visibility="{Binding SelectedSupplier, Converter={StaticResource NullToVis}}">
+                <TabControl Grid.Row="1" Visibility="{Binding SelectedSupplier, Converter={StaticResource NullToVis}}"
+                            Style="{StaticResource MaterialDesignTabControl}" Margin="0">
                     <!-- Tab 1: General -->
-                    <TabItem Header="Genel Bilgiler">
-                        <ScrollViewer>
-                            <Grid Margin="10">
+                    <TabItem Header="GENEL BİLGİLER" Style="{StaticResource MaterialDesignNavigationRailTabItem}">
+                        <ScrollViewer Padding="20">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="20"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Text="Firma Ünvanı*" VerticalAlignment="Center" Margin="0,0,0,5"/>
-                                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSupplier.CompanyName}" Margin="0,0,0,5" Padding="5"/>
+                                <!-- Column 1 -->
+                                <StackPanel Grid.Column="0">
+                                    <TextBox Text="{Binding SelectedSupplier.CompanyName}" Margin="0,0,0,20"
+                                             materialDesign:HintAssist.Hint="Firma Ünvanı *" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                                    
+                                    <TextBox Text="{Binding SelectedSupplier.ContactPerson}" Margin="0,0,0,20"
+                                             materialDesign:HintAssist.Hint="İlgili Kişi Adı Soyadı" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                                    
+                                    <TextBox Text="{Binding SelectedSupplier.PhoneNumber}" Margin="0,0,0,20"
+                                             materialDesign:HintAssist.Hint="Telefon Numarası" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                                    
+                                    <TextBox Text="{Binding SelectedSupplier.Email}" Margin="0,0,0,20"
+                                             materialDesign:HintAssist.Hint="E-Posta Adresi" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                                </StackPanel>
 
-                                <TextBlock Grid.Row="1" Text="İlgili Kişi" VerticalAlignment="Center" Margin="0,0,0,5"/>
-                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSupplier.ContactPerson}" Margin="0,0,0,5" Padding="5"/>
-
-                                <TextBlock Grid.Row="2" Text="Telefon" VerticalAlignment="Center" Margin="0,0,0,5"/>
-                                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSupplier.PhoneNumber}" Margin="0,0,0,5" Padding="5"/>
-
-                                <TextBlock Grid.Row="3" Text="Adres" VerticalAlignment="Top" Margin="0,5,0,5"/>
-                                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding SelectedSupplier.Address}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,5" Padding="5"/>
+                                <!-- Column 2 -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBox Text="{Binding SelectedSupplier.Address}" Height="120"
+                                             TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
+                                             materialDesign:HintAssist.Hint="Açık Adres" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </StackPanel>
                             </Grid>
                         </ScrollViewer>
                     </TabItem>
 
                     <!-- Tab 2: Financial -->
-                    <TabItem Header="Finansal Detaylar">
-                        <Grid Margin="10">
+                    <TabItem Header="FİNANSAL DETAYLAR" Style="{StaticResource MaterialDesignNavigationRailTabItem}">
+                        <Grid Margin="20">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBox Text="{Binding SelectedSupplier.TaxOffice}" Margin="0,0,0,20"
+                                         materialDesign:HintAssist.Hint="Vergi Dairesi" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                                
+                                <TextBox Text="{Binding SelectedSupplier.TaxNumber}" Margin="0,0,0,20"
+                                         materialDesign:HintAssist.Hint="Vergi Kimlik No" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                            </StackPanel>
 
-                            <TextBlock Grid.Row="0" Text="Vergi Dairesi" VerticalAlignment="Center" Margin="0,0,0,5"/>
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSupplier.TaxOffice}" Margin="0,0,0,5" Padding="5"/>
-
-                            <TextBlock Grid.Row="1" Text="Vergi No" VerticalAlignment="Center" Margin="0,0,0,5"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSupplier.TaxNumber}" Margin="0,0,0,5" Padding="5"/>
-
-                            <TextBlock Grid.Row="2" Text="IBAN" VerticalAlignment="Center" Margin="0,0,0,5"/>
-                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSupplier.IBAN}" Margin="0,0,0,5" Padding="5"/>
+                            <StackPanel Grid.Column="2">
+                                <TextBox Text="{Binding SelectedSupplier.IBAN}" Margin="0,0,0,20"
+                                         materialDesign:HintAssist.Hint="IBAN Numarası" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                                
+                                <TextBox Text="{Binding SelectedSupplier.Currency, TargetNullValue='TL'}" Margin="0,0,0,20"
+                                         materialDesign:HintAssist.Hint="Para Birimi" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                            </StackPanel>
                         </Grid>
                     </TabItem>
 
                     <!-- Tab 3: History -->
-                    <TabItem Header="Sipariş Geçmişi">
-                        <TextBlock Text="Sipariş geçmişi burada listelenecek." VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#AAA"/>
+                    <TabItem Header="SİPARİŞ GEÇMİŞİ" Style="{StaticResource MaterialDesignNavigationRailTabItem}">
+                        <Grid>
+                             <materialDesign:PackIcon Kind="History" Width="64" Height="64" Foreground="#EEE" 
+                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
                     </TabItem>
                 </TabControl>
 
                 <!-- Footer / Actions -->
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0"
-                            Visibility="{Binding SelectedSupplier, Converter={StaticResource NullToVis}}">
-                    <Button Command="{Binding DeleteCommand}" Content="SİL" Width="100" Margin="0,0,10,0"
-                            Style="{StaticResource ModernButton}" Background="#D32F2F" Foreground="White" FontWeight="Bold"/>
-                    <Button Command="{Binding SaveCommand}" Content="KAYDET" Width="150"
-                            Style="{StaticResource ModernButton}" Background="#1A237E" Foreground="White" FontWeight="Bold"/>
-                </StackPanel>
+                <Border Grid.Row="2" Padding="16" BorderBrush="#EEE" BorderThickness="0,1,0,0"
+                        Visibility="{Binding SelectedSupplier, Converter={StaticResource NullToVis}}">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Command="{Binding DeleteCommand}" Content="SİL" Width="100" Margin="0,0,16,0"
+                                Style="{StaticResource MaterialDesignOutlinedButton}" 
+                                BorderBrush="#D32F2F" Foreground="#D32F2F"/>
+                        
+                        <Button Command="{Binding SaveCommand}" Width="150"
+                                Style="{StaticResource MaterialDesignRaisedButton}" Background="#1A237E" Foreground="White">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ContentSave" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="KAYDET" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
             </Grid>
-        </Border>
+        </materialDesign:Card>
     </Grid>
 </UserControl>

@@ -3,9 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="1000">
 
-    <Grid Margin="10">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- HEADER -->
             <RowDefinition Height="Auto"/> <!-- MANUAL ENTRY -->
@@ -13,82 +14,137 @@
             <RowDefinition Height="Auto"/> <!-- FOOTER -->
         </Grid.RowDefinitions>
 
-        <!-- HEADER: Supplier Selection -->
-        <Border Grid.Row="0" Margin="0,0,0,10" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Padding="10">
+        <!-- HEADERCARD: Supplier Selection -->
+        <materialDesign:Card Grid.Row="0" Margin="0,0,0,16" Padding="16" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp2" Background="White">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="300"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <TextBlock Text="Tedarikçi Seçimi:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#E8EAF6" CornerRadius="50" Width="40" Height="40" Margin="0,0,16,0">
+                        <materialDesign:PackIcon Kind="TruckDelivery" Foreground="#1A237E" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel>
+                        <TextBlock Text="Satın Alma Siparişi" FontSize="16" FontWeight="Bold" Foreground="#1A237E"/>
+                        <TextBlock Text="Tedarikçi seçimi ve ürün girişi yapınız" FontSize="12" Foreground="Gray"/>
+                    </StackPanel>
+                </StackPanel>
+
                 <ComboBox Grid.Column="1" ItemsSource="{Binding Suppliers}" SelectedItem="{Binding SelectedSupplier}" 
-                          DisplayMemberPath="CompanyName" VerticalAlignment="Center" Padding="5"/>
+                          DisplayMemberPath="CompanyName" Margin="32,0"
+                          materialDesign:HintAssist.Hint="Tedarikçi Seçimi Yapınız..."
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" VerticalAlignment="Center"/>
                 
-                <Button Grid.Column="3" Command="{Binding CreateOrderCommand}" Content="TEMİZLE / YENİ"
-                         Style="{StaticResource ModernButton}" Background="#0288D1" Foreground="White" Width="120"/>
+                <Button Grid.Column="2" Command="{Binding CreateOrderCommand}"
+                         Style="{StaticResource MaterialDesignOutlinedButton}" 
+                         BorderBrush="#0288D1" Foreground="#0288D1" Content="TEMİZLE / YENİ"/>
             </Grid>
-        </Border>
+        </materialDesign:Card>
 
         <!-- MANUAL ENTRY PANEL -->
-        <GroupBox Grid.Row="1" Header="Ürün Ekleme" Margin="0,0,0,10" BorderBrush="#1A237E" Background="White" Padding="5">
+        <materialDesign:Card Grid.Row="1" Margin="0,0,0,16" Padding="16" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp2" Background="#FAFAFA">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>     <!-- Product -->
-                    <ColumnDefinition Width="100"/>   <!-- Qty -->
-                    <ColumnDefinition Width="120"/>   <!-- Price -->
-                    <ColumnDefinition Width="150"/>   <!-- Button -->
+                    <ColumnDefinition Width="120"/>   <!-- Qty -->
+                    <ColumnDefinition Width="150"/>   <!-- Price -->
+                    <ColumnDefinition Width="Auto"/>  <!-- Button -->
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-
-                <!-- Labels -->
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Ürün" Foreground="Gray" Margin="0,0,0,2"/>
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="Miktar" Foreground="Gray" Margin="0,0,0,2"/>
-                <TextBlock Grid.Row="0" Grid.Column="2" Text="Birim Fiyat" Foreground="Gray" Margin="0,0,0,2"/>
+                
+                <TextBlock Grid.ColumnSpan="4" Text="ÜRÜN EKLE VEYA SEÇ" FontWeight="Bold" Foreground="#555" Margin="0,0,0,12"/>
 
                 <!-- Inputs -->
                 <ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ProductList}" SelectedItem="{Binding SelectedProduct}"
-                          DisplayMemberPath="ProductName" Margin="0,0,5,0" Padding="5"/>
+                          DisplayMemberPath="ProductName" Margin="0,0,8,0"
+                          materialDesign:HintAssist.Hint="Ürün Listesinden Seç..."
+                          Style="{StaticResource MaterialDesignFilledComboBox}" Background="White"/>
                 
-                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Quantity}" TextAlignment="Center" Margin="0,0,5,0" Padding="5"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Quantity}" 
+                         materialDesign:HintAssist.Hint="Miktar"
+                         Style="{StaticResource MaterialDesignFilledTextBox}" Background="White"
+                         Margin="0,0,8,0" Padding="8"/>
                 
-                <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding UnitPrice, StringFormat=N2}" TextAlignment="Right" Margin="0,0,5,0" Padding="5"/>
+                <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding UnitPrice, StringFormat=N2}" 
+                         materialDesign:HintAssist.Hint="Birim Fiyat"
+                         Style="{StaticResource MaterialDesignFilledTextBox}" Background="White"
+                         Margin="0,0,16,0" Padding="8"/>
 
-                <Button Grid.Row="1" Grid.Column="3" Command="{Binding AddManualItemCommand}" Content="EKLE"
-                        Style="{StaticResource ModernButton}" Background="#2E7D32" Foreground="White" FontWeight="Bold"/>
+                <Button Grid.Row="1" Grid.Column="3" Command="{Binding AddManualItemCommand}"
+                        Style="{StaticResource MaterialDesignFloatingActionButton}"
+                        Background="#2E7D32" BorderBrush="#2E7D32" 
+                        Width="40" Height="40" ToolTip="Sepete Ekle">
+                    <materialDesign:PackIcon Kind="Plus" Width="24" Height="24"/>
+                </Button>
             </Grid>
-        </GroupBox>
+        </materialDesign:Card>
 
         <!-- ITEMS LIST -->
-        <DataGrid Grid.Row="2" ItemsSource="{Binding CurrentOrderItems}" AutoGenerateColumns="False" 
-                  CanUserAddRows="False" Background="White" BorderThickness="1" BorderBrush="#DDD" HeadersVisibility="Column">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Ürün Adı" Binding="{Binding ProductName}" Width="*"/>
-                <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity}" Width="100"/>
-                <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, StringFormat=C2}" Width="120"/>
-                <DataGridTextColumn Header="Toplam" Binding="{Binding LineTotal, StringFormat=C2}" Width="120" FontWeight="Bold"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <materialDesign:Card Grid.Row="2" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp2" Background="White" VerticalAlignment="Stretch">
+            <DataGrid ItemsSource="{Binding CurrentOrderItems}" AutoGenerateColumns="False" 
+                      CanUserAddRows="False" 
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                      materialDesign:DataGridAssist.CellPadding="12,8"
+                      materialDesign:DataGridAssist.ColumnHeaderPadding="12,12">
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Foreground" Value="#444"/>
+                    </Style>
+                </DataGrid.Resources>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ÜRÜN ADI" Binding="{Binding ProductName}" Width="*" ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
+                    <DataGridTextColumn Header="MİKTAR" Binding="{Binding Quantity}" Width="100" ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
+                    <DataGridTextColumn Header="BİRİM FİYAT" Binding="{Binding UnitPrice, StringFormat=C2}" Width="140" ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
+                    <DataGridTextColumn Header="TOPLAM" Binding="{Binding LineTotal, StringFormat=C2}" Width="140" FontWeight="Bold" ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </materialDesign:Card>
 
         <!-- FOOTER: ACTIONS -->
-        <Border Grid.Row="4" Margin="0,10,0,0" Padding="10" Background="#FAFAFA" BorderBrush="#EEE" BorderThickness="1">
-            <Grid>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Command="{Binding UploadPdfCommand}" Content="PDF YÜKLE" Margin="0,0,10,0" Width="120"
-                            Style="{StaticResource ModernButton}" Background="#757575" Foreground="White"/>
-                    
-                    <Button Command="{Binding SaveOrderCommand}" Content="TASLAK KAYDET" Width="140" Margin="0,0,10,0"
-                            Style="{StaticResource ModernButton}" Background="#F57C00" Foreground="White" FontWeight="Bold"/>
+        <Grid Grid.Row="4" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-                    <Button Command="{Binding SaveAndReceiveCommand}" Content="KAYDET VE STOKLARA İŞLE" Width="220"
-                            Style="{StaticResource ModernButton}" Background="#1A237E" Foreground="White" FontWeight="Bold"/>
+            <!-- Left: Extra Actions -->
+            <Button Grid.Column="0" Command="{Binding UploadPdfCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    BorderBrush="#757575" Foreground="#757575" Margin="0">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="PDF FATURA OKU"/>
                 </StackPanel>
-            </Grid>
-        </Border>
+            </Button>
+
+            <!-- Right: Main Actions -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Command="{Binding SaveOrderCommand}" Margin="0,0,16,0"
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#F57C00">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ContentSaveEdit" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="TASLAK OLARAK KAYDET"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding SaveAndReceiveCommand}" Height="50"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Background="#1A237E" Foreground="White"
+                        materialDesign:ButtonAssist.CornerRadius="25">
+                    <StackPanel Orientation="Horizontal" Margin="16,0">
+                        <materialDesign:PackIcon Kind="CheckBold" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="ONAYLA VE STOKLARA İŞLE" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
     </Grid>
 </UserControl>
