@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using KamatekCrm.Repositories;
 
 namespace KamatekCrm.Services
 {
@@ -68,7 +69,7 @@ namespace KamatekCrm.Services
         /// </summary>
         public void NavigateToMainContent()
         {
-            CurrentView = new ViewModels.MainContentViewModel();
+            CurrentView = new ViewModels.MainContentViewModel(new Repositories.UnitOfWork());
         }
 
         #region INotifyPropertyChanged

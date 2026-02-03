@@ -5,7 +5,7 @@ namespace KamatekCrm.Helpers
 {
     public class EnumBindingSource : MarkupExtension
     {
-        public Type EnumType { get; set; }
+        public Type EnumType { get; set; } = typeof(object);
 
         public EnumBindingSource() { }
 

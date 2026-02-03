@@ -2,6 +2,7 @@ using System.Windows.Input;
 using KamatekCrm.Commands;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
+using KamatekCrm.Repositories;
 
 namespace KamatekCrm.ViewModels
 {
@@ -159,11 +160,15 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
+        private readonly IUnitOfWork _unitOfWork;
+
         /// <summary>
         /// Constructor
         /// </summary>
-        public MainContentViewModel()
+        public MainContentViewModel(IUnitOfWork unitOfWork)
         {
+            _unitOfWork = unitOfWork;
+
             // Global arama başlat
             SearchViewModel = new GlobalSearchViewModel();
             _notificationService = new NotificationService();
@@ -263,8 +268,8 @@ namespace KamatekCrm.ViewModels
         private void NavigateToFinance() => CurrentView = new FinanceViewModel();
         private void NavigateToAnalytics() => CurrentView = new AnalyticsViewModel();
         private void NavigateToFinancialHealth() => CurrentView = new FinancialHealthViewModel();
-        private void NavigateToPurchaseOrders() => CurrentView = new PurchaseOrderViewModel();
-        private void NavigateToSuppliers() => CurrentView = new SuppliersViewModel(); // Implementation
+        private void NavigateToPurchaseOrders() => CurrentView = new PurchaseOrderViewModel(_unitOfWork);
+        private void NavigateToSuppliers() => CurrentView = new SuppliersViewModel(_unitOfWork); // Implementation
         private void NavigateToPipeline() => CurrentView = new PipelineViewModel();
         private void NavigateToScheduler() => CurrentView = new SchedulerViewModel();
         private void NavigateToRoutePlanning() => CurrentView = new RoutePlanningViewModel();

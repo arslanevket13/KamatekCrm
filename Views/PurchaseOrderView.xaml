@@ -1,393 +1,94 @@
 <UserControl x:Class="KamatekCrm.Views.PurchaseOrderView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
-             Background="#1a1a2e">
-    
-    <UserControl.DataContext>
-        <vm:PurchaseOrderViewModel/>
-    </UserControl.DataContext>
-    
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="280"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="1000">
 
-        <!-- Left Panel: Suppliers -->
-        <Border Grid.Column="0" Background="#252541" Margin="10">
-            <StackPanel>
-                <TextBlock Text="📦 Tedarikçiler" FontSize="18" FontWeight="Bold" Foreground="White" 
-                           Margin="15,15,15,5"/>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- HEADER -->
+            <RowDefinition Height="Auto"/> <!-- MANUAL ENTRY -->
+            <RowDefinition Height="*"/>    <!-- ITEM LIST -->
+            <RowDefinition Height="Auto"/> <!-- FOOTER -->
+        </Grid.RowDefinitions>
+
+        <!-- HEADER: Supplier Selection -->
+        <Border Grid.Row="0" Margin="0,0,0,10" Background="White" BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Padding="10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
                 
-                <!-- Toplam Borç -->
-                <Border Background="#E74C3C" CornerRadius="8" Margin="15,10" Padding="12">
-                    <StackPanel>
-                        <TextBlock Text="Toplam Borç (Tedarikçilere)" Foreground="White" FontSize="11" Opacity="0.8"/>
-                        <TextBlock Text="{Binding TotalSupplierDebt, StringFormat='₺{0:N2}'}" 
-                                   Foreground="White" FontSize="18" FontWeight="Bold"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- Tedarikçi Listesi -->
-                <ListBox ItemsSource="{Binding Suppliers}"
-                         SelectedItem="{Binding SelectedSupplier}"
-                         Background="Transparent" BorderThickness="0"
-                         Margin="10,5" MaxHeight="400">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Padding="10,8" Margin="2" Background="#2d2d52" CornerRadius="6">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding CompanyName}" Foreground="White" FontWeight="SemiBold"/>
-                                    <TextBlock Foreground="#888">
-                                        <Run Text="Borç: ₺"/>
-                                        <Run Text="{Binding Balance, StringFormat='{}{0:N2}'}"/>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-
-                <!-- Yeni Tedarikçi Ekle -->
-                <StackPanel Margin="15,10">
-                    <TextBlock Text="Yeni Tedarikçi / PO" Foreground="#888" FontSize="12" Margin="0,0,0,5"/>
-                    <TextBox Text="{Binding NewSupplierName, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="10" Background="#1a1a2e" Foreground="White" BorderThickness="1"
-                             BorderBrush="#444"/>
-                    <Button Content="➕ Tedarikçi Ekle" Command="{Binding AddSupplierCommand}"
-                            Background="#3498db" Foreground="White" Margin="0,5,0,0"
-                            Padding="10,8" BorderThickness="0" Cursor="Hand"/>
-                </StackPanel>
-            </StackPanel>
+                <TextBlock Text="Tedarikçi Seçimi:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Suppliers}" SelectedItem="{Binding SelectedSupplier}" 
+                          DisplayMemberPath="CompanyName" VerticalAlignment="Center" Padding="5"/>
+                
+                <Button Grid.Column="3" Command="{Binding CreateOrderCommand}" Content="TEMİZLE / YENİ"
+                         Style="{StaticResource ModernButton}" Background="#0288D1" Foreground="White" Width="120"/>
+            </Grid>
         </Border>
 
-        <!-- Right Panel: Purchase Orders -->
-        <Grid Grid.Column="1" Margin="10">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        <!-- MANUAL ENTRY PANEL -->
+        <GroupBox Grid.Row="1" Header="Ürün Ekleme" Margin="0,0,0,10" BorderBrush="#1A237E" Background="White" Padding="5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>     <!-- Product -->
+                    <ColumnDefinition Width="100"/>   <!-- Qty -->
+                    <ColumnDefinition Width="120"/>   <!-- Price -->
+                    <ColumnDefinition Width="150"/>   <!-- Button -->
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <Grid Grid.Row="0" Margin="0,0,0,15">
-                <TextBlock Text="📋 Satın Alma Emirleri" FontSize="22" FontWeight="Bold" Foreground="White"/>
+                <!-- Labels -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Ürün" Foreground="Gray" Margin="0,0,0,2"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="Miktar" Foreground="Gray" Margin="0,0,0,2"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Birim Fiyat" Foreground="Gray" Margin="0,0,0,2"/>
+
+                <!-- Inputs -->
+                <ComboBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ProductList}" SelectedItem="{Binding SelectedProduct}"
+                          DisplayMemberPath="ProductName" Margin="0,0,5,0" Padding="5"/>
+                
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Quantity}" TextAlignment="Center" Margin="0,0,5,0" Padding="5"/>
+                
+                <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding UnitPrice, StringFormat=N2}" TextAlignment="Right" Margin="0,0,5,0" Padding="5"/>
+
+                <Button Grid.Row="1" Grid.Column="3" Command="{Binding AddManualItemCommand}" Content="EKLE"
+                        Style="{StaticResource ModernButton}" Background="#2E7D32" Foreground="White" FontWeight="Bold"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- ITEMS LIST -->
+        <DataGrid Grid.Row="2" ItemsSource="{Binding CurrentOrderItems}" AutoGenerateColumns="False" 
+                  CanUserAddRows="False" Background="White" BorderThickness="1" BorderBrush="#DDD" HeadersVisibility="Column">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Ürün Adı" Binding="{Binding ProductName}" Width="*"/>
+                <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity}" Width="100"/>
+                <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, StringFormat=C2}" Width="120"/>
+                <DataGridTextColumn Header="Toplam" Binding="{Binding LineTotal, StringFormat=C2}" Width="120" FontWeight="Bold"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- FOOTER: ACTIONS -->
+        <Border Grid.Row="4" Margin="0,10,0,0" Padding="10" Background="#FAFAFA" BorderBrush="#EEE" BorderThickness="1">
+            <Grid>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="🔄 Yenile" Command="{Binding RefreshCommand}"
-                            Background="#3498db" Foreground="White" Padding="12,8" 
-                            Margin="5,0" BorderThickness="0" Cursor="Hand"/>
-                    <Button Content="➕ Yeni PO Oluştur" Command="{Binding CreateOrderCommand}"
-                            Background="#27ae60" Foreground="White" Padding="12,8" 
-                            BorderThickness="0" Cursor="Hand"/>
+                    <Button Command="{Binding UploadPdfCommand}" Content="PDF YÜKLE" Margin="0,0,10,0" Width="120"
+                            Style="{StaticResource ModernButton}" Background="#757575" Foreground="White"/>
+                    
+                    <Button Command="{Binding SaveOrderCommand}" Content="TASLAK KAYDET" Width="140" Margin="0,0,10,0"
+                            Style="{StaticResource ModernButton}" Background="#F57C00" Foreground="White" FontWeight="Bold"/>
+
+                    <Button Command="{Binding SaveAndReceiveCommand}" Content="KAYDET VE STOKLARA İŞLE" Width="220"
+                            Style="{StaticResource ModernButton}" Background="#1A237E" Foreground="White" FontWeight="Bold"/>
                 </StackPanel>
             </Grid>
-
-            <!-- New PO Form -->
-            <Border Grid.Row="1" Background="#252541" CornerRadius="8" Padding="15" Margin="0,0,0,15">
-                <StackPanel Orientation="Horizontal">
-                    <StackPanel Margin="0,0,20,0">
-                        <TextBlock Text="Tahmini Teslimat" Foreground="#888" FontSize="11"/>
-                        <DatePicker SelectedDate="{Binding ExpectedDate}" Width="150" Margin="0,5,0,0"/>
-                    </StackPanel>
-                    <StackPanel Margin="0,0,20,0" Width="300">
-                        <TextBlock Text="Notlar" Foreground="#888" FontSize="11"/>
-                        <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" 
-                                 Padding="8" Background="#1a1a2e" Foreground="White" 
-                                 BorderThickness="1" BorderBrush="#444" Margin="0,5,0,0"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <DataGrid Grid.Row="2" ItemsSource="{Binding PurchaseOrders}"
-                      SelectedItem="{Binding SelectedOrder}"
-                      AutoGenerateColumns="False" IsReadOnly="True"
-                      Background="#252541" Foreground="White"
-                      GridLinesVisibility="Horizontal" BorderThickness="0"
-                      RowBackground="#252541" AlternatingRowBackground="#2d2d52"
-                      HeadersVisibility="Column"
-                      MaxHeight="200"
-                      Margin="0,0,0,15">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="PO No" Binding="{Binding PONumber}" Width="100"/>
-                    <DataGridTextColumn Header="Tedarikçi" Binding="{Binding SupplierName}" Width="*"/>
-                    <DataGridTextColumn Header="Durum" Binding="{Binding StatusDisplay}" Width="100"/>
-                    <DataGridTextColumn Header="Tarih" Binding="{Binding OrderDate, StringFormat='{}{0:dd.MM.yyyy}'}" Width="85"/>
-                    <DataGridTextColumn Header="Tutar" Binding="{Binding TotalAmount, StringFormat='₺{0:N2}'}" Width="90"/>
-                    <DataGridTemplateColumn Header="İşlem" Width="150">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="✅ Teslim Al" 
-                                            Command="{Binding DataContext.ReceiveGoodsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}"
-                                            Background="#27ae60" Foreground="White" 
-                                            Padding="6,3" Margin="2" BorderThickness="0"
-                                            FontSize="10" Cursor="Hand"/>
-                                    <Button Content="❌ İptal" 
-                                            Command="{Binding DataContext.CancelOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}"
-                                            Background="#e74c3c" Foreground="White" 
-                                            Padding="6,3" Margin="2" BorderThickness="0"
-                                            FontSize="10" Cursor="Hand"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
-
-            <!-- Order Details / Items Panel -->
-            <Border Grid.Row="3" Background="#252541" CornerRadius="8" Padding="15" Margin="0,0,0,15"
-                    Visibility="{Binding SelectedOrder, Converter={StaticResource NullToVis}}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Add Item Bar -->
-                    <Border Grid.Row="0" Margin="0,0,0,10" Padding="10" Background="#2d2d52" CornerRadius="6" Visibility="Visible">
-                        <StackPanel>
-                            <TextBlock Text="Manuel Ürün Ekleme" Foreground="White" FontWeight="Bold" Margin="0,0,0,10"/>
-                            <StackPanel Orientation="Horizontal">
-                            <ComboBox ItemsSource="{Binding Products}" 
-                                      SelectedItem="{Binding SelectedProductToAdd}" 
-                                      IsEditable="True"
-                                      Text="{Binding ManualProductSearchText, UpdateSourceTrigger=PropertyChanged}"
-                                      DisplayMemberPath="ProductName"
-                                      Width="200" Margin="0,0,10,0"/>
-                            
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-                                <TextBlock Text="Adet:" Foreground="#aaa" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <TextBox Text="{Binding QuantityToAdd}" Width="50" Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
-                            </StackPanel>
-
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-                                <TextBlock Text="Birim Fiyat:" Foreground="#aaa" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <TextBox Text="{Binding UnitPriceToAdd}" Width="70" Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
-                            </StackPanel>
-
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-                                <TextBlock Text="KDV %:" Foreground="#aaa" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <TextBox Text="{Binding TaxRateToAdd}" Width="40" Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
-                            </StackPanel>
-                            
-                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-                                <TextBlock Text="İskonto %:" Foreground="#aaa" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <TextBox Text="{Binding DiscountRateToAdd}" Width="40" Padding="5" Background="#1a1a2e" Foreground="White" BorderThickness="1" BorderBrush="#555"/>
-                            </StackPanel>
-
-                            <Button Content="➕ Listeye Ekle" Command="{Binding AddManualItemCommand}"
-                                    Style="{StaticResource ModernButton}"
-                                    Background="#1A237E" Foreground="White" 
-                                    Padding="15,6" BorderThickness="0" Cursor="Hand"/>
-
-                            <Button Content="🪄 Faturadan Tara" Command="{Binding ScanInvoiceCommand}"
-                                    Background="#9b59b6" Foreground="White" Padding="15,6" Margin="10,0,0,0" BorderThickness="0" Cursor="Hand"
-                                    ToolTip="PDF faturasından ürünleri otomatik ayıkla"/>
-                        </StackPanel>
-                    </StackPanel>
-                    </Border>
-
-                    <!-- Manual Entry Panel (Injected) -->
-                    <GroupBox Header="Manuel Ürün Ekle" Margin="0,0,0,10" Padding="5" BorderBrush="#1A237E">
-                      <Grid>
-                        <Grid.ColumnDefinitions>
-                          <ColumnDefinition Width="*"/>
-                          <ColumnDefinition Width="80"/>
-                          <ColumnDefinition Width="100"/>
-                          <ColumnDefinition Width="100"/>
-                        </Grid.ColumnDefinitions>
-                        <ComboBox Grid.Column="0" ItemsSource="{Binding ProductList}" DisplayMemberPath="ProductName" SelectedItem="{Binding SelectedManualProduct}" IsEditable="True" Text="{Binding ManualProductName}" Margin="0,0,5,0"/>
-                        <TextBox Grid.Column="1" Text="{Binding ManualQuantity}" Margin="0,0,5,0"/>
-                        <TextBox Grid.Column="2" Text="{Binding ManualUnitPrice}" Margin="0,0,5,0"/>
-                        <Button Grid.Column="3" Content="EKLE" Command="{Binding AddManualItemCommand}" Background="#2E7D32" Foreground="White"/>
-                      </Grid>
-                    </GroupBox>
-
-                    <!-- Items List -->
-                    <DataGrid x:Name="ItemsGrid" Grid.Row="1" ItemsSource="{Binding SelectedOrder.Items}"
-                              AutoGenerateColumns="False" IsReadOnly="True"
-                              Background="Transparent" Foreground="White"
-                              GridLinesVisibility="Horizontal" BorderThickness="0"
-                              RowBackground="#252541" AlternatingRowBackground="#2d2d52"
-                              HeadersVisibility="Column"
-                              MinHeight="150" MaxHeight="300">
-                    
-                    <!-- Items Actions Toolbar (New) -->
-                    <DataGrid.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="PDF'den Otomatik Tara" Command="{Binding ScanInvoiceCommand}">
-                                <MenuItem.Icon>
-                                    <TextBlock Text="🪄"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                        </ContextMenu>
-                    </DataGrid.ContextMenu>
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Ürün" Binding="{Binding ProductName}" Width="*"/>
-                            <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity}" Width="60"/>
-                            <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, StringFormat='₺{0:N2}'}" Width="90"/>
-                            <DataGridTextColumn Header="KDV" Binding="{Binding TaxAmount, StringFormat='₺{0:N2}'}" Width="80"/>
-                            <DataGridTextColumn Header="İskonto" Binding="{Binding DiscountAmount, StringFormat='₺{0:N2}'}" Width="80"/>
-                            <DataGridTextColumn Header="Toplam" Binding="{Binding LineTotal, StringFormat='₺{0:N2}'}" Width="90" FontWeight="Bold"/>
-                            <DataGridTemplateColumn Header="Sil" Width="50">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="TRASH" 
-                                                Command="{Binding DataContext.RemoveOrderItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Background="Transparent" Foreground="#e74c3c"
-                                                BorderThickness="0" Padding="5" Cursor="Hand">
-                                             <Button.ContentTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="🗑️"/>
-                                                </DataTemplate>
-                                            </Button.ContentTemplate>
-                                        </Button>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-
-                    <!-- Invoice & File Upload Section -->
-                    <Grid Grid.Row="2" Margin="0,15,0,0">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <!-- Header -->
-                        <Border Grid.Row="0" Margin="0,0,0,5" BorderBrush="#3d3d5c" BorderThickness="0,0,0,1" Padding="0,0,0,5">
-                            <DockPanel>
-                                <Button DockPanel.Dock="Right" Content="📂 Dosya Ekle" Command="{Binding AddAttachmentCommand}"
-                                        Style="{StaticResource ModernButton}" Background="#3498db" Height="28" Padding="10,0" FontSize="11"/>
-                                <TextBlock Text="📎 Sipariş Ekleri &amp; Belgeler" Foreground="White" FontWeight="Bold" VerticalAlignment="Center"/>
-                            </DockPanel>
-                        </Border>
-
-                        <!-- Attachments List -->
-                        <ListBox Grid.Row="1" ItemsSource="{Binding OrderAttachments}"
-                                 SelectedItem="{Binding SelectedAttachment, Mode=TwoWay}"
-                                 Background="Transparent" BorderThickness="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                 MaxHeight="120">
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel IsItemsHost="True"/>
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="ListBoxItem">
-                                                <Border x:Name="ItemBorder" Padding="5" Margin="2" 
-                                                        Background="#2d2d52" CornerRadius="4" Cursor="Hand" Width="200" ToolTip="{Binding FileName}">
-                                                    <ContentPresenter/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsSelected" Value="True">
-                                                        <Setter TargetName="ItemBorder" Property="Background" Value="#3498db"/>
-                                                    </Trigger>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="ItemBorder" Property="Background" Value="#404070"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ListBox.ItemContainerStyle>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="📄" FontSize="16" Margin="0,0,5,0"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding FileName}" FontSize="11" Foreground="White" 
-                                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="5,0,0,0">
-                                            <Button Content="👁️" Command="{Binding DataContext.OpenAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="2"/>
-                                            <Button Content="🗑️" Command="{Binding DataContext.RemoveAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="2" Foreground="#e74c3c"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                        
-                        <TextBlock Grid.Row="1" Text="Dosya yok" Foreground="#666" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10"
-                                   Visibility="{Binding OrderAttachments.Count, Converter={StaticResource IntToVis}, ConverterParameter=Invert}"/>
-                    </Grid>
-                </Grid>
-            </Border>
-
-            <!-- Order Summary Footer -->
-            <Border Grid.Row="4" Background="#252541" CornerRadius="8" Padding="15" Margin="0,0,0,0">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <TextBlock Grid.Column="0" Text="Seçili sipariş özeti (kalem detayları için siparişi genişletin)" 
-                               Foreground="#888" FontSize="12" VerticalAlignment="Center"/>
-                    
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <!-- Ara Toplam -->
-                        <Border Background="#1a1a2e" CornerRadius="6" Padding="12,8" Margin="5,0">
-                            <StackPanel>
-                                <TextBlock Text="Ara Toplam" Foreground="#888" FontSize="10"/>
-                                <TextBlock Text="{Binding OrderSubTotal, StringFormat='₺{0:N2}'}" 
-                                           Foreground="White" FontSize="14" FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Border>
-                        
-                        <!-- İndirim -->
-                        <Border Background="#1a1a2e" CornerRadius="6" Padding="12,8" Margin="5,0">
-                            <StackPanel>
-                                <TextBlock Text="İndirim" Foreground="#888" FontSize="10"/>
-                                <TextBlock Text="{Binding OrderDiscountAmount, StringFormat='-₺{0:N2}'}" 
-                                           Foreground="#E74C3C" FontSize="14" FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Border>
-                        
-                        <!-- KDV -->
-                        <Border Background="#1a1a2e" CornerRadius="6" Padding="12,8" Margin="5,0">
-                            <StackPanel>
-                                <TextBlock Text="KDV" Foreground="#888" FontSize="10"/>
-                                <TextBlock Text="{Binding OrderTaxAmount, StringFormat='+₺{0:N2}'}" 
-                                           Foreground="#3498db" FontSize="14" FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Border>
-                        
-                        <!-- Genel Toplam -->
-                        <Border Background="#27ae60" CornerRadius="6" Padding="15,8" Margin="5,0">
-                            <StackPanel>
-                                <TextBlock Text="GENEL TOPLAM" Foreground="White" FontSize="10" Opacity="0.8"/>
-                                <TextBlock Text="{Binding OrderGrandTotal, StringFormat='₺{0:N2}'}" 
-                                           Foreground="White" FontSize="16" FontWeight="Bold"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Grid>
-            </Border>
-        </Grid>
-
-        <!-- Loading Overlay -->
-        <Border Grid.ColumnSpan="2" Background="#80000000" 
-                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}">
-            <TextBlock Text="Yükleniyor..." FontSize="24" Foreground="White" 
-                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Border>
     </Grid>
 </UserControl>

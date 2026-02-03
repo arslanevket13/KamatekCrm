@@ -1,6 +1,69 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-03 (v4.3 - PDF & Stock Parsing)
+
+### 📄 PDF Fatura Aktarımı ve Stok Güncelleme
+- **PDF Parser**: `PdfPig` ile fatura okuma servisi (`PdfInvoiceParserService`) eklendi.
+- **Önizleme Ekranı**: `PdfImportPreviewWindow` ile okunan veriler tablo formatında gösteriliyor, düzenlenebiliyor.
+- **Akıllı Eşleşme**: Ürün adı üzerinden veritabanındaki ürünlerle eşleşme kontrolü.
+- **Stoklara İşle**: `PurchaseOrderView` altına "KAYDET VE STOKLARA İŞLE" butonu eklendi. Bu buton siparişi "Completed" statüsünde kaydedip, ilgili ürünlerin `TotalStockQuantity` ve `PurchasePrice` değerlerini anında günceller.
+
+---
+
+## 2026-02-03 (v4.2 - Hotfix Compilation)
+
+### 🚑 Critical Fixes
+- **DI Failure (CS7036)**: `MainContentViewModel` artık `IUnitOfWork` bekliyor ve `NavigationService` bu bağımlılığı doğru şekilde inject ediyor. (Namespace hatası giderildi).
+- **Null Safety (CS8618)**: `EnumBindingSource.EnumType` özelliği varsayılan değer (`typeof(object)`) ile başlatıldı.
+- **XAML Errors (MC3000/MC3072)**: `PurchaseOrderView` ve `SuppliersView` yeniden yazılarak hatalı karakterler ve geçersiz `Padding` kullanımları temizlendi.
+
+---
+
+## 2026-02-03 (v4.1 - Greenfield Clean Slate)
+
+### 🧹 Complete Module Rewrite (Suppliers & PurchaseOrder)
+- **Zero Legacy Code**: Tüm eski kodlar silindi ve `implementation_tasks` JSON yönergesine göre sıfırdan yazıldı.
+- **Strict MVVM**: View arkasında kod bırakılmadı. Tüm mantık ViewModel'de toplandı.
+- **Suppliers Module**:
+    - `SuppliersViewModel`: `LoadData` ctor içinde çağırılıyor. `SearchText` ile canlı filtreleme.
+    - `SuppliersView`: Rigid Grid Layout (StackPanel hataları önlendi). Hardcoded `#1A237E` butonlar.
+- **Purchase Order Module**:
+    - `PurchaseOrderViewModel`: `AddManualItem` mantığı cilalandı (Adet > 0 kontrolü, Toplam hesabı).
+    - `PurchaseOrderView`: 3-Satır Grid Yapısı. Padding hatalarını önlemek için Border kullanımı.
+    - **Manuel Giriş**: Ürün seçimi, miktar ve fiyat girişi ile `CurrentOrderItems` listesine ekleme.
+
+---
+
+## 2026-02-03 (v4.0 - Module Rebuild)
+
+### 🚀 Yeniden Yazılan Modüller
+- **Suppliers Module (Rewritten)**:
+    - View/ViewModel sıfırdan yazıldı. IUnitOfWork + Async/Await mimarisi.
+    - Tasarım: Sol liste, Sağ detay (TabControl).
+    - Özellikler: Canlı arama, bakiye renklendirme, detaylı iletişim bilgileri.
+- **Purchase Order Module (Rewritten)**:
+    - View/ViewModel sıfırdan yazıldı. Strict Business Rules entegre edildi.
+    - Tasarım: Header, Manuel Giriş (Hızlı), Grid.
+    - Kurallar: Tedarikçi seçimi zorunlu, Stok artışı sadece "Teslim Al" ile.
+    - Manuel Giriş: Ürün listesi alias'ı ve hızlı ekleme paneli.
+
+### 🎨 UI & UX
+- **Hardcoded Styles**: Tüm butonlar `#1A237E` (Lacivert) ve `White` (Beyaz) ile sabitlendi.
+- **DataGrid**: Premium Stil uygulandı.
+
+---
+
+## 2026-02-02 (Hotfix v3.2 - Critical Response)
+
+### 🚑 Emergency Fixes (Suppliers & Purchase Order)
+- **[CRITICAL] SuppliersView Binding Restore**: `SuppliersView` içerisindeki `ListBox` bileşeni `DataGrid` ile değiştirildi. Binding kaynağı boş olan `FilteredSuppliers` yerine doğrudan `Suppliers` koleksiyonuna yönlendirildi (Code 102).
+- **[CRITICAL] PurchaseOrder UI Injection**: "Manuel Ürün Ekle" paneli istenilen XAML yapısıyla (GroupBox, Grid, ToolTip'ler) `ItemsGrid` üzerine zorla enjekte edildi.
+- **[CRITICAL] ProductList Binding**: `PurchaseOrderViewModel` içerisinde `ProductList` alias'ı ve manuel giriş property'leri (ManualQuantity, etc.) tanımlandı.
+- **[STYLE] Force Visibility**: `ModernButton` stili için renkler (#1A237E / White) stil dosyasında override edildi.
+
+---
+
 ## 2026-02-02 (Hotfix v3.1)
 
 ### 🚑 Kritik Arayüz ve Fonksiyon Düzeltmeleri

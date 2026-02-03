@@ -123,6 +123,7 @@
             <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
             <converters:NullToVisibilityConverter x:Key="NullToVis"/>
             <converters:GreaterThanZeroConverter x:Key="GreaterThanZero"/>
+            <converters:BalanceColorConverter x:Key="BalanceColorConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
