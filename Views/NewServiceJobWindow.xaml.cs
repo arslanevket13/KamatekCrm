@@ -1,5 +1,5 @@
 using System.Windows;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Views

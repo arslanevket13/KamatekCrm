@@ -1,5 +1,5 @@
-using KamatekCrm.Enums;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 using System;
 using System.Linq;
 

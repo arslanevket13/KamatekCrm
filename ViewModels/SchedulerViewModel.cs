@@ -4,7 +4,8 @@ using System.Linq;
 using System.Windows;
 using GongSolutions.Wpf.DragDrop;
 using KamatekCrm.Data;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
@@ -56,7 +57,7 @@ namespace KamatekCrm.ViewModels
                 // Atanmamış İşler (veya o günkü işler değil, genel havuz)
                 var pendingJobs = _context.ServiceJobs
                     .Include(j => j.Customer)
-                    .Where(j => j.AssignedUserId == null && j.Status != Enums.JobStatus.Completed)
+                    .Where(j => j.AssignedUserId == null && j.Status != JobStatus.Completed)
                     .ToList();
 
                 foreach (var j in pendingJobs) UnassignedJobs.Add(j);

@@ -1,0 +1,26 @@
+  Geri yüklenecek projeler belirleniyor...
+  Geri yükleme için tüm projeler güncel.
+  KamatekCrm.Shared -> C:\Antigravity Proje\KamatekCRM\KamatekCrm.Shared\bin\Debug\net8.0\KamatekCrm.Shared.dll
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\AddProductViewModel.cs(10,18): error CS0234: 'Models' tür veya ad alanı adı 'KamatekCrm' ad alanında yok (bir derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\ServiceJobViewModel.cs(14,18): error CS0234: 'Models' tür veya ad alanı adı 'KamatekCrm' ad alanında yok (bir derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\Views\JobDetailTemplateSelector.cs(3,18): error CS0234: 'Models' tür veya ad alanı adı 'KamatekCrm' ad alanında yok (bir derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\AddProductViewModel.cs(152,16): error CS0246: 'ProductSpecBase' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\AddProductViewModel.cs(231,17): error CS0246: 'ProductSpecBase' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\AddProductViewModel.cs(250,17): error CS0246: 'ProductSpecBase' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\AddProductViewModel.cs(21,17): error CS0246: 'ProductSpecBase' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\ServiceJobViewModel.cs(1463,17): error CS0246: 'JobDetailBase' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+
+Oluşturma BAŞARISIZ OLDU.
+
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\AddProductViewModel.cs(10,18): error CS0234: 'Models' tür veya ad alanı adı 'KamatekCrm' ad alanında yok (bir derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\ServiceJobViewModel.cs(14,18): error CS0234: 'Models' tür veya ad alanı adı 'KamatekCrm' ad alanında yok (bir derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\Views\JobDetailTemplateSelector.cs(3,18): error CS0234: 'Models' tür veya ad alanı adı 'KamatekCrm' ad alanında yok (bir derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\AddProductViewModel.cs(152,16): error CS0246: 'ProductSpecBase' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\AddProductViewModel.cs(231,17): error CS0246: 'ProductSpecBase' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\AddProductViewModel.cs(250,17): error CS0246: 'ProductSpecBase' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\AddProductViewModel.cs(21,17): error CS0246: 'ProductSpecBase' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\ViewModels\ServiceJobViewModel.cs(1463,17): error CS0246: 'JobDetailBase' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm_qfffqj1e_wpftmp.csproj]
+    0 Uyarı
+    8 Hata
+
+Geçen Süre 00:00:01.82

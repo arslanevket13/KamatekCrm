@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Commands;
 using KamatekCrm.Data;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 
 namespace KamatekCrm.ViewModels

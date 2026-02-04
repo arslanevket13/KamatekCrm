@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KamatekCrm.Views"
         xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
-        xmlns:specs="clr-namespace:KamatekCrm.Models.Specs"
+        xmlns:specs="clr-namespace:KamatekCrm.Shared.Models.Specs;assembly=KamatekCrm.Shared"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewmodels:AddProductViewModel, IsDesignTimeCreatable=False}"
         Title="{Binding WindowTitle}" 

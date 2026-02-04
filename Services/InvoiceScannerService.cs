@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Models;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 

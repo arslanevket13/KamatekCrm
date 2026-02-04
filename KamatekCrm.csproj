@@ -37,6 +37,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\Images\KamatekLogo.jpg" />
     <Resource Include="Assets\Images\KamatekLogo.png" />
   </ItemGroup>

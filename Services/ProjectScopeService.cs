@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using KamatekCrm.Data;
-using KamatekCrm.Enums;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.Services

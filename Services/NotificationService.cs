@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using KamatekCrm.Data;
-using KamatekCrm.Enums;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.Services

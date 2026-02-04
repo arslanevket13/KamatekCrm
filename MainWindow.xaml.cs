@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using KamatekCrm.Services;
 using KamatekCrm.ViewModels;
 

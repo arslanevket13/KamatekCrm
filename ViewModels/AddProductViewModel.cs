@@ -5,9 +5,9 @@ using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Commands;
 using KamatekCrm.Data;
-using KamatekCrm.Enums;
-using KamatekCrm.Models;
-using KamatekCrm.Models.Specs;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Models.Specs;
 
 namespace KamatekCrm.ViewModels
 {

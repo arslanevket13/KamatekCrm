@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
-             xmlns:enums="clr-namespace:KamatekCrm.Enums"
+             xmlns:enums="clr-namespace:KamatekCrm.Shared.Enums;assembly=KamatekCrm.Shared"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="1200"
              d:DataContext="{d:DesignInstance vm:RepairListViewModel}">

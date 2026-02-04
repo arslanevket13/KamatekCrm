@@ -1,15 +1,42 @@
 # KamatekCRM - Teknik Harita
 
-## Klasör Yapısı
+## Solution Yapısı
+
+```
+KamatekCRM/                       # Solution Root
+├── KamatekCrm/                   # WPF Desktop Application (net8.0-windows)
+│   ├── App.xaml                  # Uygulama girişi, global stiller
+│   ├── MainWindow.xaml           # Ana pencere (sidebar navigation)
+│   ├── ViewModels/               # İş mantığı (MVVM) - WPF specific
+│   ├── Views/                    # XAML arayüzleri
+│   ├── Data/                     # Entity Framework DbContext
+│   ├── Services/                 # Application services
+│   ├── Commands/                 # ICommand implementations
+│   ├── Helpers/                  # WPF Converters, utilities
+│   └── docs/                     # Proje dokümantasyonu
+│
+├── KamatekCrm.Shared/            # Shared Class Library (net8.0)
+│   ├── Models/                   # Entity sınıfları (platform-agnostic)
+│   │   ├── Customer.cs
+│   │   ├── Product.cs
+│   │   ├── ServiceJob.cs
+│   │   ├── ScopeNode.cs          # JSON-serializable tree
+│   │   ├── Specs/                # Product specifications
+│   │   └── JobDetails/           # Dynamic job details
+│   ├── Enums/                    # Tüm enum tanımları
+│   │   ├── JobCategory.cs
+│   │   ├── JobStatus.cs
+│   │   ├── ProductCategory.cs
+│   │   └── ...
+│   └── ViewModelBase.cs          # INotifyPropertyChanged base
+│
+└── (Coming Soon) KamatekCrm.API/ # ASP.NET Core Web API
+```
+
+## WPF Proje Detayları
 
 ```
 KamatekCrm/
-├── App.xaml              # Uygulama girişi, global stiller
-├── MainWindow.xaml       # Ana pencere (sidebar navigation)
-│
-├── Assets/               # Görsel dosyalar
-│   └── Images/
-│       └── KamatekLogo.jpg   # Kurumsal logo
 │
 ├── ViewModels/           # İş mantığı (MVVM)
 │   ├── MainViewModel.cs          # Ana navigation kontrolü + Logout

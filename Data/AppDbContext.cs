@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using KamatekCrm.Models;
+using Microsoft.EntityFrameworkCore;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 using KamatekCrm.Settings;
 
 namespace KamatekCrm.Data
@@ -98,8 +99,8 @@ namespace KamatekCrm.Data
 
             // Warehouse Yapılandırması
             modelBuilder.Entity<Warehouse>().HasData(
-                new Warehouse { Id = 1, Name = "Merkez Depo", Type = Enums.WarehouseType.MainWarehouse, IsActive = true },
-                new Warehouse { Id = 2, Name = "Servis Aracı 1", Type = Enums.WarehouseType.Vehicle, IsActive = true }
+                new Warehouse { Id = 1, Name = "Merkez Depo", Type = WarehouseType.MainWarehouse, IsActive = true },
+                new Warehouse { Id = 2, Name = "Servis Aracı 1", Type = WarehouseType.Vehicle, IsActive = true }
              );
 
             // Category - Tree Structure

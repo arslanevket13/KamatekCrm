@@ -3,7 +3,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using KamatekCrm.Data;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Models;
 
 namespace KamatekCrm.Services
 {

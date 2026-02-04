@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
-        xmlns:enums="clr-namespace:KamatekCrm.Enums"
+        xmlns:enums="clr-namespace:KamatekCrm.Shared.Enums;assembly=KamatekCrm.Shared"
         mc:Ignorable="d"
         Title="Arıza Takip &amp; Servis İşlem Merkezi" Height="850" Width="1400"
         WindowStartupLocation="CenterScreen"

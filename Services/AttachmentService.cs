@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using KamatekCrm.Data;
-using KamatekCrm.Enums;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 
 namespace KamatekCrm.Services
 {

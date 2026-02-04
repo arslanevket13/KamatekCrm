@@ -3,7 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Commands;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Models;
 
 namespace KamatekCrm.ViewModels
 {

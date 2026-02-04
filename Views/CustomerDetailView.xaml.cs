@@ -1,5 +1,5 @@
 using System.Windows.Controls;
-using KamatekCrm.Enums;
+using KamatekCrm.Shared.Enums;
 using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Views

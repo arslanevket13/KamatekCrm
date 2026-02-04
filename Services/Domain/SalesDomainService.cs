@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using KamatekCrm.Enums;
+using KamatekCrm.Shared.Enums;
 using KamatekCrm.Events;
 using KamatekCrm.Exceptions;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Models;
 using KamatekCrm.Repositories;
 
 namespace KamatekCrm.Services.Domain

@@ -1,6 +1,24 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-04 (v5.0 - Web API Architecture Foundation)
+
+### 🏗️ Multi-Project Mimari Geçişi
+- **KamatekCrm.Shared** class library oluşturuldu (platform-agnostic).
+- Tüm `Models/` ve `Enums/` klasörleri Shared projeye taşındı.
+- `ViewModelBase` (INotifyPropertyChanged) Shared'a eklendi.
+- WPF projesi artık Shared'ı referans olarak kullanıyor.
+- 35+ namespace hatası düzeltildi (XAML + C#).
+- **Proje Yapısı**:
+  ```
+  KamatekCRM/
+  ├── KamatekCrm/          # WPF Desktop App
+  ├── KamatekCrm.Shared/   # Shared Models & Enums
+  └── (coming soon) KamatekCrm.API/  # Web API
+  ```
+
+---
+
 ## 2026-02-04 (v4.5 - UI Polish)
 
 ### 🎨 Arayüz İyileştirmeleri

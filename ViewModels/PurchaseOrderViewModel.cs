@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Commands;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 using KamatekCrm.Repositories;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Views;
@@ -276,7 +277,7 @@ namespace KamatekCrm.ViewModels
                 {
                     SupplierId = SelectedSupplier.Id,
                     OrderDate = DateTime.Now,
-                    Status = autoReceive ? Enums.PurchaseStatus.Completed : Enums.PurchaseStatus.Pending,
+                    Status = autoReceive ? PurchaseStatus.Completed : PurchaseStatus.Pending,
                     Items = new ObservableCollection<PurchaseOrderItem>(CurrentOrderItems)
                 };
 
@@ -308,7 +309,7 @@ namespace KamatekCrm.ViewModels
                                 Date = DateTime.Now,
                                 ProductId = product.Id,
                                 Quantity = item.Quantity,
-                                TransactionType = Enums.StockTransactionType.Purchase, // Alım
+                                TransactionType = StockTransactionType.Purchase, // Alım
                                 UnitCost = item.UnitPrice,
                                 ReferenceId = $"PO-{order.Id}",
                                 Description = $"Satın Alma: {SelectedSupplier.CompanyName}",

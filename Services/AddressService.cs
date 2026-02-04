@@ -1,4 +1,4 @@
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Models;
 
 namespace KamatekCrm.Services
 {

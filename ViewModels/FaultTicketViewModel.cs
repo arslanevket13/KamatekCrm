@@ -4,9 +4,9 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Data;
-using KamatekCrm.Enums;
+using KamatekCrm.Shared.Enums;
 using KamatekCrm.Commands;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels

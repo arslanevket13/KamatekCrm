@@ -5,10 +5,10 @@ using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Commands;
 using KamatekCrm.Data;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
-using KamatekCrm.Enums;
+using KamatekCrm.Shared.Enums;
 
 namespace KamatekCrm.ViewModels
 {

@@ -6,8 +6,8 @@ using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Commands;
 using KamatekCrm.Data;
-using KamatekCrm.Enums;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
@@ -256,7 +256,7 @@ namespace KamatekCrm.ViewModels
                     ServiceJobs.Add(job);
 
                     // Aktif mi tamamlanmış mı ayır
-                    if (job.Status == Enums.JobStatus.Completed)
+                    if (job.Status == JobStatus.Completed)
                     {
                         PastJobs.Add(job);
                     }
@@ -299,8 +299,8 @@ namespace KamatekCrm.ViewModels
             TotalSpent = serviceTotal + salesTotal;
 
             // Toplam bakiye (Borçlar - Ödemeler)
-            var totalDebts = Transactions.Where(t => t.Type == Enums.TransactionType.Debt).Sum(t => t.Amount);
-            var totalPayments = Transactions.Where(t => t.Type == Enums.TransactionType.Payment).Sum(t => t.Amount);
+            var totalDebts = Transactions.Where(t => t.Type == TransactionType.Debt).Sum(t => t.Amount);
+            var totalPayments = Transactions.Where(t => t.Type == TransactionType.Payment).Sum(t => t.Amount);
             
             // Pozitif bakiye = Müşteri Borçlu (Kırmızı)
             // Negatif bakiye = Müşteri Alacaklı (Yeşil)

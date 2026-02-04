@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using KamatekCrm.Enums;
+using KamatekCrm.Shared.Enums;
 
 namespace KamatekCrm.Services.Domain
 {

@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
-using KamatekCrm.Models.JobDetails;
+using KamatekCrm.Shared.Models.JobDetails;
 
 namespace KamatekCrm.Views
 {

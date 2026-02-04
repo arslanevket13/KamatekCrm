@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Views

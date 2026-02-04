@@ -9,8 +9,8 @@ using System.Windows.Input;
 using ClosedXML.Excel;
 using KamatekCrm.Commands;
 using KamatekCrm.Data;
-using KamatekCrm.Enums;
-using KamatekCrm.Models;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 
