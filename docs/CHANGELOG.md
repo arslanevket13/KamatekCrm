@@ -1,6 +1,18 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-04 (v5.1 - Web API Project)
+
+### 🌐 ASP.NET Core Web API Oluşturuldu
+- **KamatekCrm.API** (.NET 8.0 Web API) projesi eklendi.
+- SQL Server entegrasyonu (`ApiDbContext`) yapılandırıldı.
+- JWT Authentication ve CORS middleware aktif.
+- Swagger/OpenAPI UI root'ta erişilebilir (`/`).
+- **Controllers**: ProductsController, CustomersController (CRUD).
+- appsettings.json: Connection string ve JWT ayarları.
+
+---
+
 ## 2026-02-04 (v5.0 - Web API Architecture Foundation)
 
 ### 🏗️ Multi-Project Mimari Geçişi
@@ -14,7 +26,7 @@
   KamatekCRM/
   ├── KamatekCrm/          # WPF Desktop App
   ├── KamatekCrm.Shared/   # Shared Models & Enums
-  └── (coming soon) KamatekCrm.API/  # Web API
+  └── KamatekCrm.API/      # Web API ✓
   ```
 
 ---

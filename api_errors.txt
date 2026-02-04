@@ -1,0 +1,16 @@
+  Geri yüklenecek projeler belirleniyor...
+  Geri yükleme için tüm projeler güncel.
+  KamatekCrm.Shared -> C:\Antigravity Proje\KamatekCRM\KamatekCrm.Shared\bin\Debug\net8.0\KamatekCrm.Shared.dll
+C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\Data\ApiDbContext.cs(93,34): error CS1061: 'ServiceJob' bir 'Items' tanımı içermiyor ve 'ServiceJob' türünde bir ilk bağımsız değişken kabul eden hiçbir erişilebilir 'Items' genişletme yöntemi bulunamadı (bir kullanma yönergeniz veya derleme başvurunuz eksik olabilir mi?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\KamatekCrm.API.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\Data\ApiDbContext.cs(128,34): error CS1061: 'Supplier' bir 'PurchaseOrders' tanımı içermiyor ve 'Supplier' türünde bir ilk bağımsız değişken kabul eden hiçbir erişilebilir 'PurchaseOrders' genişletme yöntemi bulunamadı (bir kullanma yönergeniz veya derleme başvurunuz eksik olabilir mi?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\KamatekCrm.API.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\Data\ApiDbContext.cs(144,34): error CS1061: 'Customer' bir 'Assets' tanımı içermiyor ve 'Customer' türünde bir ilk bağımsız değişken kabul eden hiçbir erişilebilir 'Assets' genişletme yöntemi bulunamadı (bir kullanma yönergeniz veya derleme başvurunuz eksik olabilir mi?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\KamatekCrm.API.csproj]
+
+Oluşturma BAŞARISIZ OLDU.
+
+C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\Data\ApiDbContext.cs(93,34): error CS1061: 'ServiceJob' bir 'Items' tanımı içermiyor ve 'ServiceJob' türünde bir ilk bağımsız değişken kabul eden hiçbir erişilebilir 'Items' genişletme yöntemi bulunamadı (bir kullanma yönergeniz veya derleme başvurunuz eksik olabilir mi?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\KamatekCrm.API.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\Data\ApiDbContext.cs(128,34): error CS1061: 'Supplier' bir 'PurchaseOrders' tanımı içermiyor ve 'Supplier' türünde bir ilk bağımsız değişken kabul eden hiçbir erişilebilir 'PurchaseOrders' genişletme yöntemi bulunamadı (bir kullanma yönergeniz veya derleme başvurunuz eksik olabilir mi?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\KamatekCrm.API.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\Data\ApiDbContext.cs(144,34): error CS1061: 'Customer' bir 'Assets' tanımı içermiyor ve 'Customer' türünde bir ilk bağımsız değişken kabul eden hiçbir erişilebilir 'Assets' genişletme yöntemi bulunamadı (bir kullanma yönergeniz veya derleme başvurunuz eksik olabilir mi?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm.API\KamatekCrm.API.csproj]
+    0 Uyarı
+    3 Hata
+
+Geçen Süre 00:00:01.23
