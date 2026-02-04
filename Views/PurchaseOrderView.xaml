@@ -47,7 +47,7 @@
         <!-- MANUAL ENTRY PANEL (GroupBox) -->
         <GroupBox Grid.Row="1" Header="MANUEL ÜRÜN EKLE" Margin="0,0,0,16" 
                   Style="{StaticResource MaterialDesignGroupBox}"
-                  materialDesign:ColorZoneAssist.Mode="Primary"
+                  materialDesign:ColorZoneAssist.Mode="PrimaryMid"
                   materialDesign:ColorZoneAssist.Background="#1A237E"
                   materialDesign:ColorZoneAssist.Foreground="White"
                   materialDesign:ElevationAssist.Elevation="Dp2">

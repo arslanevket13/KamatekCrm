@@ -1,6 +1,13 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-04 (v4.5 - UI Polish)
+
+### 🎨 Arayüz İyileştirmeleri
+- **Satın Alma (Purchase Order)**: `PurchaseOrderView` gölgelendirme (Elevation) ayarları optimize edildi.
+
+---
+
 ## 2026-02-03 (v4.4 - Modern UI Overhaul)
 
 ### 🎨 Material Design Transformation
