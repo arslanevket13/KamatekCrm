@@ -72,11 +72,14 @@ namespace KamatekCrm.Services
                 {
                     UserId = AuthService.CurrentUser?.Id,
                     Username = AuthService.CurrentUser?.Username,
-                    ActionType = actionType.ToString(),
+                    Action = actionType.ToString(),
                     EntityName = entityName,
-                    RecordId = recordId,
+                    ReferenceId = recordId,
                     Description = description,
-                    Timestamp = DateTime.Now
+                    Timestamp = DateTime.Now,
+                    DurationMs = 0, // Default value, as it's not a parameter
+                    IpAddress = "127.0.0.1", // Default value, as it's not a parameter
+                    UserAgent = "WPF Client" // Default value, as it's not a parameter
                 };
 
                 context.ActivityLogs.Add(log);

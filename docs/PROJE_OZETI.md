@@ -20,6 +20,8 @@
 - **WebView2** - Harita entegrasyonu
 - **LiveChartsCore** - BI Grafikleri
 - **QuestPDF** - PDF Raporlama
+- **ASP.NET Core 8** - Web API (Mobile Backend)
+- **Swagger/OpenAPI** - API Documentation
 
 ## Ana Özellikler
 

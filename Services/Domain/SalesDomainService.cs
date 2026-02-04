@@ -51,7 +51,7 @@ namespace KamatekCrm.Services.Domain
                     {
                         OrderNumber = orderNumber,
                         Date = DateTime.Now,
-                        PaymentMethod = request.PaymentMethod,
+                        PaymentMethod = request.PaymentMethod.ToString(),
                         TotalAmount = totalAmount,
                         CustomerName = request.CustomerName
                     };

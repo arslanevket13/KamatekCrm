@@ -17,7 +17,7 @@ namespace KamatekCrm.ViewModels
     public class AddProductViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
-        private ProductCategory _selectedCategory = ProductCategory.Other;
+        private ProductCategoryType _selectedCategory = ProductCategoryType.Other;
         private ProductSpecBase _currentSpecs;
         private Product _newProduct;
         private bool _isEditMode;
@@ -48,6 +48,7 @@ namespace KamatekCrm.ViewModels
                 {
                     _newProduct = existingProduct;
                     _selectedCategory = existingProduct.ProductCategoryType;
+
 
                     // Teknik özellikleri deserialize et
                     if (!string.IsNullOrEmpty(existingProduct.TechSpecsJson))
@@ -133,7 +134,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Seçili kategori
         /// </summary>
-        public ProductCategory SelectedCategory
+        public ProductCategoryType SelectedCategory
         {
             get => _selectedCategory;
             set
@@ -228,18 +229,19 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Kategoriye göre uygun Specs sınıfını oluşturur
         /// </summary>
-        private ProductSpecBase CreateSpecsForCategory(ProductCategory category)
+        private ProductSpecBase CreateSpecsForCategory(ProductCategoryType category)
+
         {
             return category switch
             {
-                ProductCategory.Camera => new CameraSpecs(),
-                ProductCategory.Intercom => new IntercomSpecs(),
-                ProductCategory.FireAlarm => new FireAlarmSpecs(),
-                ProductCategory.BurglarAlarm => new BurglarAlarmSpecs(),
-                ProductCategory.SmartHome => new SmartHomeSpecs(),
-                ProductCategory.AccessControl => new AccessControlSpecs(),
-                ProductCategory.Satellite => new SatelliteSpecs(),
-                ProductCategory.FiberOptic => new FiberSpecs(),
+                ProductCategoryType.Camera => new CameraSpecs(),
+                ProductCategoryType.Intercom => new IntercomSpecs(),
+                ProductCategoryType.FireAlarm => new FireAlarmSpecs(),
+                ProductCategoryType.BurglarAlarm => new BurglarAlarmSpecs(),
+                ProductCategoryType.SmartHome => new SmartHomeSpecs(),
+                ProductCategoryType.AccessControl => new AccessControlSpecs(),
+                ProductCategoryType.Satellite => new SatelliteSpecs(),
+                ProductCategoryType.FiberOptic => new FiberSpecs(),
                 _ => new GeneralSpecs()
             };
         }
@@ -247,20 +249,20 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// JSON'dan teknik özellikleri deserialize eder
         /// </summary>
-        private ProductSpecBase DeserializeSpecs(string json, ProductCategory category)
+        private ProductSpecBase DeserializeSpecs(string json, ProductCategoryType category)
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
             return category switch
             {
-                ProductCategory.Camera => JsonSerializer.Deserialize<CameraSpecs>(json, options) ?? new CameraSpecs(),
-                ProductCategory.Intercom => JsonSerializer.Deserialize<IntercomSpecs>(json, options) ?? new IntercomSpecs(),
-                ProductCategory.FireAlarm => JsonSerializer.Deserialize<FireAlarmSpecs>(json, options) ?? new FireAlarmSpecs(),
-                ProductCategory.BurglarAlarm => JsonSerializer.Deserialize<BurglarAlarmSpecs>(json, options) ?? new BurglarAlarmSpecs(),
-                ProductCategory.SmartHome => JsonSerializer.Deserialize<SmartHomeSpecs>(json, options) ?? new SmartHomeSpecs(),
-                ProductCategory.AccessControl => JsonSerializer.Deserialize<AccessControlSpecs>(json, options) ?? new AccessControlSpecs(),
-                ProductCategory.Satellite => JsonSerializer.Deserialize<SatelliteSpecs>(json, options) ?? new SatelliteSpecs(),
-                ProductCategory.FiberOptic => JsonSerializer.Deserialize<FiberSpecs>(json, options) ?? new FiberSpecs(),
+                ProductCategoryType.Camera => JsonSerializer.Deserialize<CameraSpecs>(json, options) ?? new CameraSpecs(),
+                ProductCategoryType.Intercom => JsonSerializer.Deserialize<IntercomSpecs>(json, options) ?? new IntercomSpecs(),
+                ProductCategoryType.FireAlarm => JsonSerializer.Deserialize<FireAlarmSpecs>(json, options) ?? new FireAlarmSpecs(),
+                ProductCategoryType.BurglarAlarm => JsonSerializer.Deserialize<BurglarAlarmSpecs>(json, options) ?? new BurglarAlarmSpecs(),
+                ProductCategoryType.SmartHome => JsonSerializer.Deserialize<SmartHomeSpecs>(json, options) ?? new SmartHomeSpecs(),
+                ProductCategoryType.AccessControl => JsonSerializer.Deserialize<AccessControlSpecs>(json, options) ?? new AccessControlSpecs(),
+                ProductCategoryType.Satellite => JsonSerializer.Deserialize<SatelliteSpecs>(json, options) ?? new SatelliteSpecs(),
+                ProductCategoryType.FiberOptic => JsonSerializer.Deserialize<FiberSpecs>(json, options) ?? new FiberSpecs(),
                 _ => JsonSerializer.Deserialize<GeneralSpecs>(json, options) ?? new GeneralSpecs()
             };
         }

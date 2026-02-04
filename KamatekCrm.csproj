@@ -37,7 +37,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
+    <Compile Remove="KamatekCrm.Shared\**" />
+    <EmbeddedResource Remove="KamatekCrm.Shared\**" />
+    <None Remove="KamatekCrm.Shared\**" />
+    <Page Remove="KamatekCrm.Shared\**" />
+    
+    <Compile Remove="KamatekCrm.API\**" />
+    <EmbeddedResource Remove="KamatekCrm.API\**" />
+    <None Remove="KamatekCrm.API\**" />
+    <Page Remove="KamatekCrm.API\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

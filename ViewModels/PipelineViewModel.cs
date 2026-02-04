@@ -201,7 +201,7 @@ namespace KamatekCrm.ViewModels
             // Otomatik Proje İş Emri
             var job = new ServiceJob
             {
-                CustomerId = project.CustomerId,
+                CustomerId = project.CustomerId ?? 0,
                 ServiceProjectId = project.Id,
                 ServiceJobType = ServiceJobType.Project,
                 JobCategory = JobCategory.Other, // Detaya göre seçilebilir

@@ -82,7 +82,7 @@ namespace KamatekCrm.Data
                 Unit = "Adet",
                 PurchasePrice = 850,
                 SalePrice = 1200,
-                ProductCategoryType = ProductCategory.Camera,
+                ProductCategoryType = ProductCategoryType.Camera,
                 MinStockLevel = 5,
                 TotalStockQuantity = 15
             };
@@ -95,7 +95,7 @@ namespace KamatekCrm.Data
                 Unit = "Adet",
                 PurchasePrice = 1800,
                 SalePrice = 2500,
-                ProductCategoryType = ProductCategory.Intercom,
+                ProductCategoryType = ProductCategoryType.Intercom,
                 MinStockLevel = 10,
                 TotalStockQuantity = 3 // Kritik stok örneği için düşük
             };
@@ -108,7 +108,7 @@ namespace KamatekCrm.Data
                 Unit = "Metre",
                 PurchasePrice = 10,
                 SalePrice = 15,
-                ProductCategoryType = ProductCategory.Cable,
+                ProductCategoryType = ProductCategoryType.Cable,
                 MinStockLevel = 300,
                 TotalStockQuantity = 500
             };

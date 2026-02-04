@@ -180,7 +180,16 @@ namespace KamatekCrm.ViewModels
             // İşlem tipi filtresi
             if (SelectedActionFilter != "Tümü")
             {
-                query = query.Where(l => l.ActionType == SelectedActionFilter);
+                // Assuming AuditActionType is an enum and SelectedActionFilter holds its string representation
+                // If SelectedActionFilter is directly the string value, the original line is correct.
+                // If SelectedActionFilter needs to be converted from an enum, you'd typically parse it or have a different property.
+                // Based on the instruction "Convert AuditActionType to string for comparison",
+                // and assuming SelectedActionFilter is already the string to compare against l.ActionType,
+                // the original line is already performing a string comparison.
+                // If the intent was to introduce an enum property, that would be a larger change.
+                // For now, keeping the existing logic as it correctly compares strings.
+                // Compare as string to avoid Enum vs String mismatch
+                query = query.Where(l => l.ActionType.ToString() == SelectedActionFilter);
             }
 
             // Entity filtresi

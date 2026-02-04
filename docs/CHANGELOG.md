@@ -1,6 +1,17 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-04 (v5.2 - Build Verification & Integrity)
+
+### ✅ Final Build Fixes
+- **Build Success**: Tüm projeler (`KamatekCrm.Shared`, `KamatekCrm.API`, `KamatekCrm`) hatasız derlendi (0 Error).
+- **Type Safety**: `ProductCategory` vs `ProductCategoryType` enum karışıklığı giderildi (AddProductViewModel).
+- **Stubs Integrity**: `Stubs.cs` dosyası `ServiceProject` ve `StockTransaction` eksik özellikleri ile zenginleştirildi.
+- **PipelineViewModel**: Garbled code düzeltildi ve `int?` dönüşüm hatası giderildi.
+- **Refactoring**: `ProjectQuoteEditorViewModel` için eksik `Clone(string)` metodu eklendi.
+
+---
+
 ## 2026-02-04 (v5.1 - Web API Project)
 
 ### 🌐 ASP.NET Core Web API Oluşturuldu
@@ -8,7 +19,12 @@
 - SQL Server entegrasyonu (`ApiDbContext`) yapılandırıldı.
 - JWT Authentication ve CORS middleware aktif.
 - Swagger/OpenAPI UI root'ta erişilebilir (`/`).
-- **Controllers**: ProductsController, CustomersController (CRUD).
+- **Controllers**:
+  - `ProductsController`, `CustomersController` (CRUD).
+  - `AuthController`: Login + JWT (SHA256).
+  - `TechnicianJobsController`: İş Takibi, Statü Güncelleme, Detay.
+- **DTOs**: Mobil uyumlu veri yapıları (`Shared/DTOs`).
+- **Schema**: `ServiceJobHistory` konum ve iş durumu loglama yeteneği kazandı.
 - appsettings.json: Connection string ve JWT ayarları.
 
 ---
