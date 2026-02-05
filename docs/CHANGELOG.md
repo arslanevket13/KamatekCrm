@@ -1,6 +1,20 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-05 (v5.5 - System Audit & Integration Fix)
+
+### 🔧 Port Yapılandırması
+- **API Port Değişikliği**: Port 5000 → 5050 olarak değiştirildi (`AddressInUse` hatasını önlemek için).
+- **Web API Adresi**: `appsettings.json` içindeki `ApiSettings.BaseAddress` güncellendi (5050).
+
+### 🚀 ProcessManager Yeniden Yazımı
+- **Zombie Process Temizliği**: Eski `KamatekCrm.API` ve `KamatekCrm.Web` process'leri başlangıçta otomatik öldürülüyor.
+- **Framework Yolu Güncelleme**: Hardcoded `net8.0` → `net9.0` olarak düzeltildi.
+- **Otomatik Tarayıcı**: Web (Port 5200) başlatıldıktan 3 saniye sonra varsayılan tarayıcı otomatik açılıyor.
+- **Gelişmiş Yol Bulma**: Debug/Release mod kontrolü ve fallback mekanizması eklendi.
+
+---
+
 ## 2026-02-05 (v5.4 - Solution-Wide .NET 9 Upgrade)
 
 ### 🏗️ .NET 9 Migration

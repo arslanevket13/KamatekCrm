@@ -1,48 +1,58 @@
 using KamatekCrm.Web.Components;
-using MudBlazor.Services;
-using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components.Authorization;
 using KamatekCrm.Web.Services;
+using Microsoft.AspNetCore.Components.Authorization;
+using Blazored.LocalStorage;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1. KRITIK AYAR: Portu 5200'e Zorla (EXE icin sart)
+builder.WebHost.UseUrls("http://localhost:5200");
+
+// 2. Statik Dosya Yolu (wwwroot hatasini onler)
+var binPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+var wwwRootPath = Path.Combine(binPath!, "wwwroot");
+if (Directory.Exists(wwwRootPath))
+{
+    builder.Environment.WebRootPath = wwwRootPath;
+}
+
+// Servisler
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// MudBlazor
 builder.Services.AddMudServices();
-
-// Blazored LocalStorage
 builder.Services.AddBlazoredLocalStorage();
-
-// Authentication
-builder.Services.AddAuthorizationCore();
-builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ApiAuthenticationStateProvider>();
+builder.Services.AddAuthorizationCore();
 
-// HttpClient
-builder.Services.AddScoped(sp => new HttpClient
+// API Baglantisi (5050 Portu)
+builder.Services.AddHttpClient("API", client =>
 {
-    BaseAddress = new Uri("http://localhost:5087")
+    client.BaseAddress = new Uri("http://localhost:5050");
 });
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("API"));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
-app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+Console.ForegroundColor = ConsoleColor.Green;
+Console.WriteLine("WEB SERVER CALISTI! Adres: http://localhost:5200");
+Console.ResetColor();
 
 app.Run();
