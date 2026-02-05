@@ -1,17 +1,16 @@
-using System.Security.Claims;
 using KamatekCrm.API.Data;
 using KamatekCrm.Shared.DTOs;
 using KamatekCrm.Shared.Enums;
-using KamatekCrm.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace KamatekCrm.API.Controllers
 {
-    [Route("api/jobs")]
+    [Route("api/technician")]
     [ApiController]
-    [Authorize] // Sadece giriş yapmış kullanıcılar erişebilir
+    [Authorize] // Require Login
     public class TechnicianJobsController : ControllerBase
     {
         private readonly ApiDbContext _context;
@@ -21,130 +20,64 @@ namespace KamatekCrm.API.Controllers
             _context = context;
         }
 
-        // GET: api/jobs/my-jobs
         [HttpGet("my-jobs")]
-        public async Task<ActionResult<IEnumerable<TechnicianJobDto>>> GetMyJobs()
+        public async Task<ActionResult<List<TechnicianJobDto>>> GetMyJobs()
         {
-            var userIdStr = User.FindFirst("id")?.Value;
-            if (!int.TryParse(userIdStr, out int userId))
-            {
-                return Unauthorized();
-            }
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized("User ID not found in token");
+            
+            if (!int.TryParse(userIdClaim.Value, out int userId))
+                 return Unauthorized("Invalid User ID");
 
-            // Teknisyene atanmış ve tamamlanmamış işleri getir
-            var jobEntities = await _context.ServiceJobs
+            var jobs = await _context.ServiceJobs
                 .Include(j => j.Customer)
-                .Where(j => j.AssignedUserId == userId 
-                            && j.Status != JobStatus.Completed 
-                            && j.Status != JobStatus.Cancelled)
-                .OrderByDescending(j => j.Priority)
-                .ThenBy(j => j.CreatedDate)
-                .ToListAsync();
-
-            var jobDtos = jobEntities.Select(j => new TechnicianJobDto
-            {
-                Id = j.Id,
-                Title = $"{j.Customer.FullName} - {j.WorkOrderType}",
-                CustomerName = j.Customer.FullName,
-                CustomerPhone = j.Customer.PhoneNumber,
-                Address = j.Customer.FullAddress,
-                Priority = j.Priority.ToString(),
-                Status = j.Status.ToString(),
-                Latitude = j.Customer.Latitude,
-                Longitude = j.Customer.Longitude,
-                Description = j.Description,
-                Date = j.ScheduledDate ?? j.CreatedDate
-            }).ToList();
-
-            return Ok(jobDtos);
-        }
-
-        // GET: api/jobs/detail/{id}
-        [HttpGet("detail/{id}")]
-        public async Task<ActionResult<TechnicianJobDetailDto>> GetJobDetail(int id)
-        {
-            var job = await _context.ServiceJobs
-                .Include(j => j.Customer)
-                .FirstOrDefaultAsync(j => j.Id == id);
-
-            if (job == null)
-            {
-                return NotFound("İş bulunamadı.");
-            }
-
-            // Tarihçe
-            var historyEntities = await _context.ServiceJobHistories
-                .Where(h => h.ServiceJobId == id)
-                .OrderByDescending(h => h.Date)
-                .ToListAsync();
-
-            var history = historyEntities.Select(h => new ServiceJobHistoryDto
+                .Where(j => j.AssignedUserId == userId)
+                .OrderBy(j => j.ScheduledDate)
+                .Select(j => new TechnicianJobDto
                 {
-                    Date = h.Date,
-                    Status = h.JobStatusChange.HasValue ? h.JobStatusChange.ToString()! : (h.StatusChange.HasValue ? h.StatusChange.ToString()! : "-"),
-                    Note = h.TechnicianNote,
-                    User = h.UserId ?? "Sistem"
+                    Id = j.Id,
+                    Title = $"{j.JobCategory} - {j.ServiceJobType}",
+                    CustomerName = j.Customer.FullName,
+                    CustomerPhone = j.Customer.PhoneNumber,
+                    Address = j.Customer.FullAddress,
+                    Priority = j.Priority.ToString(),
+                    Status = j.Status.ToString(),
+                    Latitude = j.Customer.Latitude,
+                    Longitude = j.Customer.Longitude,
+                    Description = j.Description,
+                    Date = j.ScheduledDate ?? j.CreatedDate
                 })
-                .ToList();
+                .ToListAsync();
 
-            var detailDto = new TechnicianJobDetailDto
-            {
-                Id = job.Id,
-                Title = $"{job.Customer.FullName} - {job.WorkOrderType}",
-                CustomerName = job.Customer.FullName,
-                CustomerPhone = job.Customer.PhoneNumber,
-                Address = job.Customer.FullAddress,
-                Priority = job.Priority.ToString(),
-                Status = job.Status.ToString(),
-                Latitude = job.Customer.Latitude,
-                Longitude = job.Customer.Longitude,
-                Description = job.Description,
-                Date = job.ScheduledDate ?? job.CreatedDate,
-                
-                History = history
-            };
-
-            return Ok(detailDto);
+            return Ok(jobs);
         }
 
-        // POST: api/jobs/update-status
         [HttpPost("update-status")]
         public async Task<IActionResult> UpdateStatus([FromBody] UpdateStatusRequest request)
         {
-            var userIdStr = User.FindFirst("id")?.Value;
-            var username = User.Identity?.Name ?? "Unknown";
-            
-            var job = await _context.ServiceJobs.FindAsync(request.JobId);
-            if (job == null)
-            {
-                return NotFound("İş bulunamadı.");
-            }
+             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+             if (userIdClaim == null) return Unauthorized();
+             int userId = int.Parse(userIdClaim.Value);
 
-            var oldStatus = job.Status;
-            var newStatusEnum = (JobStatus)request.NewStatus;
+             var job = await _context.ServiceJobs.FindAsync(request.JobId);
+             if (job == null) return NotFound();
+             
+             if (job.AssignedUserId != userId) return Forbid();
 
-            job.Status = newStatusEnum;
+             job.Status = (JobStatus)request.NewStatus;
+             
+             // Log history (Minimal implementation)
+             _context.ServiceJobHistories.Add(new KamatekCrm.Shared.Models.ServiceJobHistory
+             {
+                 ServiceJobId = job.Id,
+                 Date = DateTime.Now,
+                 Status = job.Status,
+                 Note = request.TechnicianNote,
+                 UserId = userId
+             });
 
-            if (newStatusEnum == JobStatus.Completed && oldStatus != JobStatus.Completed)
-            {
-                job.CompletedDate = DateTime.Now;
-            }
-
-            var history = new ServiceJobHistory
-            {
-                ServiceJobId = job.Id,
-                Date = DateTime.Now,
-                TechnicianNote = request.TechnicianNote,
-                JobStatusChange = newStatusEnum,
-                UserId = username,
-                Latitude = request.CurrentLatitude,
-                Longitude = request.CurrentLongitude
-            };
-
-            _context.ServiceJobHistories.Add(history);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { Message = "Durum güncellendi." });
+             await _context.SaveChangesAsync();
+             return Ok();
         }
     }
 }

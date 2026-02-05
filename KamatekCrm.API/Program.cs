@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // DB Context
 builder.Services.AddDbContext<ApiDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Authentication (JWT)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -63,6 +63,13 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Seed database with initial data
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
+    ApiDbSeeder.Seed(context);
+}
 
 // Configure the HTTP request pipeline.
 // Always show Swagger for this project (Internal use)

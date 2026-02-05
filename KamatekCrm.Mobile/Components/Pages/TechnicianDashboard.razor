@@ -1,0 +1,114 @@
+@page "/dashboard"
+@using KamatekCrm.Shared.DTOs
+@using System.Net.Http.Json
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="container mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>İşlerim</h3>
+        <button class="btn btn-outline-danger btn-sm" @onclick="Logout">Çıkış</button>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Yükleniyor...</span>
+            </div>
+        </div>
+    }
+    else if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else if (jobs == null || jobs.Count == 0)
+    {
+        <div class="alert alert-warning">Atanmış iş bulunamadı.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var job in jobs)
+            {
+                <div class="col-12 mb-3">
+                    <div class="card shadow-sm border-start border-5 @GetPriorityClass(job.Priority)">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">@job.Title</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">@job.CustomerName</h6>
+
+                            <p class="card-text mb-1">
+                                <i class="oi oi-map-marker"></i> @job.Address
+                            </p>
+                            <p class="card-text mb-2">
+                                <small class="text-muted">@job.Date.ToString("dd.MM.yyyy HH:mm")</small>
+                            </p>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge rounded-pill @GetStatusClass(job.Status)">@job.Status</span>
+                                <button class="btn btn-primary btn-sm" @onclick="() => OpenJob(job.Id)">Detay</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<TechnicianJobDto> jobs;
+    private bool isLoading = true;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = Preferences.Get("auth_token", string.Empty);
+        if (string.IsNullOrEmpty(token))
+        {
+            Nav.NavigateTo("/");
+            return;
+        }
+
+        try
+        {
+            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            jobs = await Http.GetFromJsonAsync<List<TechnicianJobDto>>("api/technician/my-jobs");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Veri yüklenemedi. " + ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Logout()
+    {
+        Preferences.Remove("auth_token");
+        Nav.NavigateTo("/");
+    }
+
+    private void OpenJob(int id)
+    {
+        // Future: Navigate to detail
+    }
+
+    private string GetPriorityClass(string priority) => priority switch
+    {
+        "Critical" => "border-danger",
+        "Urgent" => "border-warning",
+        _ => "border-info"
+    };
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Pending" => "bg-warning text-dark",
+        "InProgress" => "bg-primary",
+        "Completed" => "bg-success",
+        _ => "bg-secondary"
+    };
+}
