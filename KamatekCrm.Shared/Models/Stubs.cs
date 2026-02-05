@@ -335,7 +335,7 @@ namespace KamatekCrm.Shared.Models
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal TotalPrice { get; set; }
-        public Action OnItemChanged { get; set; } // Mock event/delegate
+        public Action OnItemChanged { get; set; } = delegate { }; // Mock event/delegate
     }
 
     public class StructureTreeItem { 

@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using KamatekCrm.Data;
 using KamatekCrm.Services;
+using KamatekCrm.Helpers;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 
@@ -20,6 +21,9 @@ namespace KamatekCrm
             {
                 // 1. QuestPDF Community License Configuration
                 QuestPDF.Settings.License = LicenseType.Community;
+
+                // 1.1 Start Background Processes (API & Web)
+                ProcessManager.StartProcesses();
 
                 // 2. Veritabanını başlat
                 InitializeDatabase();
@@ -79,6 +83,9 @@ namespace KamatekCrm
                 // Uygulama kapanırken otomatik yedek al
                 var backupService = new BackupService();
                 backupService.BackupDatabase();
+                
+                // Stop background processes
+                ProcessManager.StopProcesses();
                 
                 // Loglama veya debug eklenebilir
                 System.Diagnostics.Debug.WriteLine("Auto backup completed on exit.");

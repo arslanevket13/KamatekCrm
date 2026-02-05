@@ -1,0 +1,99 @@
+﻿@page "/"
+@using MudBlazor
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+<PageTitle>Dashboard - Kamatek ERP</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Dashboard</MudText>
+
+<MudGrid>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4" Elevation="2">
+            <div class="d-flex align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Work" Size="Size.Large" Color="Color.Primary" Class="mr-3" />
+                <div>
+                    <MudText Typo="Typo.h4" Color="Color.Primary">12</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Aktif İşler</MudText>
+                </div>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4" Elevation="2">
+            <div class="d-flex align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Pending" Size="Size.Large" Color="Color.Warning" Class="mr-3" />
+                <div>
+                    <MudText Typo="Typo.h4" Color="Color.Warning">8</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Bekleyen İşler</MudText>
+                </div>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4" Elevation="2">
+            <div class="d-flex align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Engineering" Size="Size.Large" Color="Color.Success"
+                         Class="mr-3" />
+                <div>
+                    <MudText Typo="Typo.h4" Color="Color.Success">5</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Teknisyenler</MudText>
+                </div>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="pa-4" Elevation="2">
+            <div class="d-flex align-center">
+                <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" Color="Color.Info" Class="mr-3" />
+                <div>
+                    <MudText Typo="Typo.h4" Color="Color.Info">47</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Müşteriler</MudText>
+                </div>
+            </div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<MudText Typo="Typo.h5" Class="mt-6 mb-3">Son İşler</MudText>
+<MudPaper Elevation="2">
+    <MudSimpleTable Hover="true" Dense="true">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Müşteri</th>
+                <th>Kategori</th>
+                <th>Durum</th>
+                <th>Tarih</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>ABC Şirketi</td>
+                <td>CCTV Kurulum</td>
+                <td>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary">Devam Ediyor</MudChip>
+                </td>
+                <td>@DateTime.Now.ToString("dd.MM.yyyy")</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>XYZ Ltd.</td>
+                <td>Yangın Sistemi</td>
+                <td>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning">Bekliyor</MudChip>
+                </td>
+                <td>@DateTime.Now.AddDays(-1).ToString("dd.MM.yyyy")</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Test Müşteri</td>
+                <td>Diafon Montaj</td>
+                <td>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success">Tamamlandı</MudChip>
+                </td>
+                <td>@DateTime.Now.AddDays(-2).ToString("dd.MM.yyyy")</td>
+            </tr>
+        </tbody>
+    </MudSimpleTable>
+</MudPaper>

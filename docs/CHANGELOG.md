@@ -1,6 +1,19 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-05 (v5.3 - Project Recovery & Auto-Startup)
+
+### 🧹 Project Recovery (Clean Slate)
+- **Web Rebuild**: `KamatekCrm.Web` projesi sıfırdan oluşturuldu (Blazor Server net8.0). Hatalı SDK referansları temizlendi.
+- **Mobile Fix**: `KamatekCrm.Mobile` projesi .NET 9.0 altyapısına yükseltildi ve XAML namespace hataları (MC3074) giderildi.
+- **Build Success**: Tüm çözüm hatasız derleniyor.
+
+### 🚀 Auto-Startup Integration
+- **ProcessManager**: API ve Web uygulamalarını arka planda yöneten servis eklendi.
+- **WPF Lifecycle**: Masaüstü uygulaması açıldığında servisleri başlatır, kapanışta temizler (Zombie process koruması).
+
+---
+
 ## 2026-02-04 (v5.2 - Build Verification & Integrity)
 
 ### ✅ Final Build Fixes

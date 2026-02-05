@@ -30,7 +30,16 @@ KamatekCRM/                       # Solution Root
 │   │   └── ...
 │   └── ViewModelBase.cs          # INotifyPropertyChanged base
 │
-└── (Coming Soon) KamatekCrm.API/ # ASP.NET Core Web API
+├── KamatekCrm.Web/               # Blazor Web App (Server Interactive)
+│   ├── Components/Pages/         # Dashboard, Login
+│   ├── Services/                 # Auth Services
+│   └── Program.cs                # MudBlazor, Blazored.LocalStorage
+│
+├── KamatekCrm.Mobile/            # MAUI Blazor Hybrid (net9.0)
+│   ├── Platforms/                # Android, iOS, Windows, MacCatalyst
+│   ├── Resources/                # App Icon, Fonts, Images
+│   └── MauiProgram.cs            # MAUI Bootstrap
+└── KamatekCrm.API/               # ASP.NET Core Web API (net8.0)
 ```
 
 ## WPF Proje Detayları
@@ -107,7 +116,8 @@ KamatekCrm/
 │   ├── GreaterThanZeroConverter.cs               # Sayı > 0 kontrolü (DataTrigger)
 │
 ├── Helpers/              # Yardımcı sınıflar
-│   └── WebViewHelper.cs  # WebView2 HTML binding
+│   ├── WebViewHelper.cs  # WebView2 HTML binding
+│   └── ProcessManager.cs # API/Web Process Lifecycle (Auto-Start) (YENİ)
 │
 ├── Data/
 │   └── AppDbContext.cs   # EF Core DbContext
