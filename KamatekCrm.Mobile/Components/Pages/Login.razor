@@ -1,83 +1,124 @@
 @page "/"
 @page "/login"
+@layout EmptyLayout
 @using KamatekCrm.Shared.DTOs
 @using System.Net.Http.Json
 @inject HttpClient Http
 @inject NavigationManager Nav
 
-<div class="container mt-5">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white text-center">
-            <h3>Kamatek Saha</h3>
-        </div>
-        <div class="card-body">
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-primary">
+    <div class="card shadow-lg" style="width: 360px; border-radius: 16px;">
+        <div class="card-body p-4">
+            <!-- Logo/Header -->
+            <div class="text-center mb-4">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                     style="width: 64px; height: 64px;">
+                    <i class="oi oi-bolt fs-2"></i>
+                </div>
+                <h4 class="fw-bold text-primary mb-1">Kamatek Saha</h4>
+                <small class="text-muted">Teknisyen Girişi</small>
+            </div>
+
             <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
                 <DataAnnotationsValidator />
-                
+
                 <div class="mb-3">
-                    <label class="form-label">Kullanıcı Adı</label>
-                    <InputText @bind-Value="loginModel.Username" class="form-control" placeholder="Kullanıcı adı" />
+                    <label class="form-label fw-semibold">Kullanıcı Adı</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="oi oi-person"></i></span>
+                        <InputText @bind-Value="loginModel.Username" class="form-control" placeholder="kullanici.adi" />
+                    </div>
                 </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Şifre</label>
-                    <InputText @bind-Value="loginModel.Password" type="password" class="form-control" placeholder="Şifre" />
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Şifre</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="oi oi-lock-locked"></i></span>
+                        <InputText @bind-Value="loginModel.Password" type="password" class="form-control"
+                                   placeholder="••••••••" />
+                    </div>
                 </div>
-                
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg">Giriş Yap</button>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg" disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Giriş yapılıyor...</span>
+                        }
+                        else
+                        {
+                            <span>Giriş Yap</span>
+                        }
+                    </button>
                 </div>
             </EditForm>
-            
+
             @if (!string.IsNullOrEmpty(errorMessage))
             {
-                <div class="alert alert-danger mt-3">
-                    @errorMessage
+                <div class="alert alert-danger mt-3 mb-0 py-2 text-center">
+                    <i class="oi oi-warning me-1"></i> @errorMessage
                 </div>
             }
-             @if (isLoading)
-            {
-                <div class="alert alert-info mt-3">
-                    Giriş yapılıyor...
-                </div>
-            }
+        </div>
+        <div class="card-footer bg-light text-center py-3 text-muted" style="border-radius: 0 0 16px 16px;">
+            <small>© 2026 Kamatek Teknoloji</small>
         </div>
     </div>
 </div>
 
 @code {
     private LoginRequest loginModel = new();
-    private string errorMessage;
+    private string? errorMessage;
     private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check if already logged in
+        var existingToken = await SecureStorage.GetAsync("auth_token");
+        if (!string.IsNullOrEmpty(existingToken))
+        {
+            Nav.NavigateTo("/dashboard");
+        }
+    }
 
     private async Task HandleLogin()
     {
         isLoading = true;
-        errorMessage = string.Empty;
-        
+        errorMessage = null;
+
         try
         {
             var response = await Http.PostAsJsonAsync("api/auth/login", loginModel);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
                 if (result != null)
                 {
-                    // Basic token storage
-                    Preferences.Set("auth_token", result.Token);
-                    Preferences.Set("user_name", result.FullName);
+                    // Secure token storage
+                    await SecureStorage.SetAsync("auth_token", result.Token);
+                    await SecureStorage.SetAsync("user_name", result.FullName);
+                    await SecureStorage.SetAsync("user_id", result.UserId.ToString());
+
                     Nav.NavigateTo("/dashboard");
                 }
             }
             else
             {
-                errorMessage = "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.";
+                var errorContent = await response.Content.ReadAsStringAsync();
+                errorMessage = string.IsNullOrEmpty(errorContent)
+                    ? "Kullanıcı adı veya şifre hatalı."
+                    : errorContent;
             }
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "API sunucusuna bağlanılamadı. Lütfen ağ bağlantınızı kontrol edin.";
         }
         catch (Exception ex)
         {
-            errorMessage = $"Bağlantı hatası: {ex.Message}";
+            errorMessage = $"Beklenmeyen hata: {ex.Message}";
         }
         finally
         {
