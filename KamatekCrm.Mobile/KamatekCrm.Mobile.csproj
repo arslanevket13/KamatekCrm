@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
-
   <PropertyGroup>
     <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
@@ -10,26 +9,21 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
     <Nullable>enable</Nullable>
+    <ResolveStaticWebAssetsInputs>false</ResolveStaticWebAssetsInputs>
     <ApplicationTitle>Kamatek Saha</ApplicationTitle>
     <ApplicationId>com.kamatek.crm</ApplicationId>
-    
-    <ResolveStaticWebAssetsInputs>false</ResolveStaticWebAssetsInputs>
   </PropertyGroup>
-
   <ItemGroup>
     <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appicon.svg" Color="#1A237E" />
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#1A237E" BaseSize="128,128" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.0" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.0" />
-    <PackageReference Include="MudBlazor" Version="8.0.0" />
+    <PackageReference Include="MudBlazor" Version="6.19.1" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
   </ItemGroup>
-
 </Project>
