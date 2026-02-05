@@ -4,7 +4,7 @@
 
 ```
 KamatekCRM/                       # Solution Root
-├── KamatekCrm/                   # WPF Desktop Application (net8.0-windows)
+├── KamatekCrm/                   # WPF Desktop Application (net9.0-windows)
 │   ├── App.xaml                  # Uygulama girişi, global stiller
 │   ├── MainWindow.xaml           # Ana pencere (sidebar navigation)
 │   ├── ViewModels/               # İş mantığı (MVVM) - WPF specific
@@ -15,7 +15,7 @@ KamatekCRM/                       # Solution Root
 │   ├── Helpers/                  # WPF Converters, utilities
 │   └── docs/                     # Proje dokümantasyonu
 │
-├── KamatekCrm.Shared/            # Shared Class Library (net8.0)
+├── KamatekCrm.Shared/            # Shared Class Library (net9.0)
 │   ├── Models/                   # Entity sınıfları (platform-agnostic)
 │   │   ├── Customer.cs
 │   │   ├── Product.cs
@@ -30,16 +30,16 @@ KamatekCRM/                       # Solution Root
 │   │   └── ...
 │   └── ViewModelBase.cs          # INotifyPropertyChanged base
 │
-├── KamatekCrm.Web/               # Blazor Web App (Server Interactive)
+├── KamatekCrm.Web/               # Blazor Web App (Server Interactive, net9.0)
 │   ├── Components/Pages/         # Dashboard, Login
 │   ├── Services/                 # Auth Services
 │   └── Program.cs                # MudBlazor, Blazored.LocalStorage
 │
 ├── KamatekCrm.Mobile/            # MAUI Blazor Hybrid (net9.0)
 │   ├── Platforms/                # Android, iOS, Windows, MacCatalyst
-│   ├── Resources/                # App Icon, Fonts, Images
+│   ├── Resources/                  # App Icon, Fonts, Images
 │   └── MauiProgram.cs            # MAUI Bootstrap
-└── KamatekCrm.API/               # ASP.NET Core Web API (net8.0)
+└── KamatekCrm.API/               # ASP.NET Core Web API (net9.0)
 ```
 
 ## WPF Proje Detayları

@@ -1,7 +1,16 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
-## 2026-02-05 (v5.3 - Project Recovery & Auto-Startup)
+## 2026-02-05 (v5.4 - Solution-Wide .NET 9 Upgrade)
+
+### 🏗️ .NET 9 Migration
+- **Solution Upgrade**: Tüm projeler (API, Mobile, Web, Shared, WPF) `net9.0` (WPF için `net9.0-windows`) yapılandırmasına yükseltildi.
+- **Dependency Refresh**: Entity Framework Core ve Microsoft Extensions paketleri `9.0.0` sürümüne güncellendi.
+- **WPF Fix**: `KamatekCrm.csproj` sürüm kısıtlaması nedeniyle oluşan referans hataları giderildi.
+- **Build & Restore**: Tüm çözüm için `dotnet restore` ve `dotnet clean` rutinleri başarıyla tamamlandı.
+
+---
+
 
 ### 🧹 Project Recovery (Clean Slate)
 - **Web Rebuild**: `KamatekCrm.Web` projesi sıfırdan oluşturuldu (Blazor Server net8.0). Hatalı SDK referansları temizlendi.
@@ -39,23 +48,46 @@
 - **DTOs**: Mobil uyumlu veri yapıları (`Shared/DTOs`).
 - **Schema**: `ServiceJobHistory` konum ve iş durumu loglama yeteneği kazandı.
 - appsettings.json: Connection string ve JWT ayarları.
-
----
-
-## 2026-02-04 (v5.0 - Web API Architecture Foundation)
-
-### 🏗️ Multi-Project Mimari Geçişi
-- **KamatekCrm.Shared** class library oluşturuldu (platform-agnostic).
-- Tüm `Models/` ve `Enums/` klasörleri Shared projeye taşındı.
-- `ViewModelBase` (INotifyPropertyChanged) Shared'a eklendi.
-- WPF projesi artık Shared'ı referans olarak kullanıyor.
-- 35+ namespace hatası düzeltildi (XAML + C#).
 - **Proje Yapısı**:
   ```
   KamatekCRM/
-  ├── KamatekCrm/          # WPF Desktop App
-  ├── KamatekCrm.Shared/   # Shared Models & Enums
-  └── KamatekCrm.API/      # Web API ✓
+  ├── KamatekCrm/                   # WPF Desktop Application (net9.0-windows)
+  │   ├── App.xaml                  # Uygulama girişi, global stiller
+  │   ├── MainWindow.xaml           # Ana pencere (sidebar navigation)
+  │   ├── ViewModels/               # İş mantığı (MVVM) - WPF specific
+  │   ├── Views/                    # XAML arayüzleri
+  │   ├── Data/                     # Entity Framework DbContext
+  │   ├── Services/                 # Application services
+  │   ├── Commands/                 # ICommand implementations
+  │   ├── Helpers/                  # WPF Converters, utilities
+  │   ├── docs/                     # Proje dokümantasyonu
+  │   └── ...
+  │
+  ├── KamatekCrm.Shared/            # Shared Class Library (net9.0)
+  │   ├── Models/                   # Entity sınıfları (platform-agnostic)
+  │   │   ├── Customer.cs
+  │   │   ├── Product.cs
+  │   │   ├── ServiceJob.cs
+  │   │   ├── ScopeNode.cs          # JSON-serializable tree
+  │   │   ├── Specs/                # Product specifications
+  │   │   └── JobDetails/           # Dynamic job details
+  │   ├── Enums/                    # Tüm enum tanımları
+  │   │   ├── JobCategory.cs
+  │   │   ├── JobStatus.cs
+  │   │   ├── ProductCategory.cs
+  │   │   └── ...
+  │   └── ViewModelBase.cs          # INotifyPropertyChanged base
+  │
+  ├── KamatekCrm.Web/               # Blazor Web App (Server Interactive, net9.0)
+  │   ├── Components/Pages/         # Dashboard, Login
+  │   ├── Services/                 # Auth Services
+  │   └── Program.cs                # MudBlazor, Blazored.LocalStorage
+  │
+  ├── KamatekCrm.Mobile/            # MAUI Blazor Hybrid (net9.0)
+  │   ├── Platforms/                # Android, iOS, Windows, MacCatalyst
+  │   ├── Resources/                # App Icon, Fonts, Images
+  │   └── MauiProgram.cs            # MAUI Bootstrap
+  └── KamatekCrm.API/               # ASP.NET Core Web API (net9.0)
   ```
 
 ---
