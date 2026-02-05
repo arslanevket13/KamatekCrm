@@ -71,9 +71,9 @@ namespace KamatekCrm.API.Controllers
              {
                  ServiceJobId = job.Id,
                  Date = DateTime.Now,
-                 Status = job.Status,
-                 Note = request.TechnicianNote,
-                 UserId = userId
+                 JobStatusChange = job.Status,
+                 TechnicianNote = request.TechnicianNote,
+                 UserId = userId.ToString()
              });
 
              await _context.SaveChangesAsync();
