@@ -7,13 +7,24 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1. KRITIK AYAR: API Portunu 5050'ye Sabitle (Cakismayi Onler)
+// EXE olarak calistiginda 5000'e gitmesini engeller.
+builder.WebHost.UseUrls("http://0.0.0.0:5050");
 
 // DB Context
 builder.Services.AddDbContext<ApiDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Authentication (JWT)
+// 2. CORS AYARI (Tum erisimlere izin ver - Localhost sorunu icin)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", b =>
+        b.AllowAnyOrigin()
+         .AllowAnyMethod()
+         .AllowAnyHeader());
+});
+
+// JWT Kimlik Dogrulama
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -30,7 +41,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -44,45 +54,47 @@ builder.Services.AddSwaggerGen(c => {
     c.AddSecurityRequirement(new OpenApiSecurityRequirement {
     {
         new OpenApiSecurityScheme
-        {
-            Reference = new OpenApiReference
-            {
-                Type = ReferenceType.SecurityScheme,
-                Id = "Bearer"
-            }
+        { 
+            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
         },
         new string[] { }
     }});
 });
 
-// CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", builder =>
-        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-});
-
 var app = builder.Build();
 
-// Seed database with initial data
+// Veritabani Baslatma (Otomatik Seed)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
-    ApiDbSeeder.Seed(context);
+    try
+    {
+        // Veritabani yoksa olustur ve verileri ekle
+        ApiDbSeeder.Seed(context);
+        Console.WriteLine("Veritabani kontrolu basarili.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Veritabani hatasi: " + ex.Message);
+    }
 }
 
-// Configure the HTTP request pipeline.
-// Always show Swagger for this project (Internal use)
+// Swagger (Dokumantasyon)
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseHttpsRedirection(); // Optional
-
+// Middleware Siralamasi (CORS -> Auth -> Controllers)
 app.UseCors("AllowAll");
-
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+Console.BackgroundColor = ConsoleColor.DarkGreen;
+Console.ForegroundColor = ConsoleColor.White;
+Console.WriteLine("==============================================");
+Console.WriteLine(" API SERVER CALISTI (Port: 5050)              ");
+Console.WriteLine("==============================================");
+Console.ResetColor();
 
 app.Run();

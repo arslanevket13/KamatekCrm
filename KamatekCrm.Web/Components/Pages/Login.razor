@@ -1,100 +1,84 @@
-@using MudBlazor
+@page "/login"
+@using KamatekCrm.Web.Services
 @using KamatekCrm.Shared.DTOs
-@inject HttpClient Http
+@using KamatekCrm.Web.Components.Layout
+@layout LoginLayout
+@inject ApiAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
-@inject KamatekCrm.Web.Services.ApiAuthenticationStateProvider AuthStateProvider
 @inject ISnackbar Snackbar
 
-@page "/login"
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center mud-width-full" Style="height: 100vh;">
+    <MudPaper Elevation="25" Class="pa-8" Width="100%" MaxWidth="400px">
+        <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true" Color="Color.Primary"><b>Kamatek</b> CRM</MudText>
+        <MudText Typo="Typo.h6" Align="Align.Center" GutterBottom="true">Giriş Yap</MudText>
 
-<PageTitle>Giriş - Kamatek ERP</PageTitle>
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            
+            <MudTextField T="string" Label="Kullanıcı Adı" Variant="Variant.Outlined"
+                          @bind-Value="loginModel.Username" For="@(() => loginModel.Username)" 
+                          Class="mb-4" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" />
 
-<MudThemeProvider />
-<MudPopoverProvider />
-<MudSnackbarProvider />
+            <MudTextField T="string" Label="Şifre" Variant="Variant.Outlined"
+                          @bind-Value="loginModel.Password" For="@(() => loginModel.Password)" 
+                          InputType="InputType.Password" 
+                          Class="mb-6" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" />
 
-<div class="d-flex align-center justify-center"
-     style="height: 100vh; background: linear-gradient(135deg, #1A237E 0%, #3949AB 100%);">
-    <MudCard Style="width: 400px;" Elevation="8">
-        <MudCardHeader>
-            <CardHeaderContent>
-                <div class="d-flex flex-column align-center">
-                    <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Primary"
-                             Class="mb-2" />
-                    <MudText Typo="Typo.h5" Color="Color.Primary">Kamatek ERP</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Yönetim Paneli</MudText>
-                </div>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudForm @ref="_form" @bind-IsValid="_formValid">
-                <MudTextField @bind-Value="_username" Label="Kullanıcı Adı" Variant="Variant.Outlined"
-                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" Required="true"
-                              RequiredError="Kullanıcı adı gerekli" Class="mb-3" />
-                <MudTextField @bind-Value="_password" Label="Şifre" Variant="Variant.Outlined"
-                              InputType="InputType.Password" Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Lock" Required="true" RequiredError="Şifre gerekli"
-                              Class="mb-3" />
-            </MudForm>
-        </MudCardContent>
-        <MudCardActions Class="d-flex flex-column pa-4">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Large"
-                       Disabled="@(_isLoading || !_formValid)" OnClick="HandleLogin">
-                @if (_isLoading)
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" 
+                       Size="Size.Large" FullWidth="true" Disabled="_processing">
+                @if (_processing)
                 {
-                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                    <span>Giriş yapılıyor...</span>
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                    <MudText Class="ms-2">Giriş Yapılıyor...</MudText>
                 }
                 else
                 {
-                    <span>Giriş Yap</span>
+                    <MudText>Giriş Yap</MudText>
                 }
             </MudButton>
-        </MudCardActions>
-    </MudCard>
-</div>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4">@_errorMessage</MudAlert>
+        }
+    </MudPaper>
+</MudContainer>
 
 @code {
-    private MudForm _form = null!;
-    private bool _formValid;
-    private bool _isLoading;
-    private string _username = "";
-    private string _password = "";
+    private LoginRequest loginModel = new LoginRequest();
+    private bool _processing = false;
+    private string _errorMessage = "";
 
     private async Task HandleLogin()
     {
-        if (!_formValid) return;
+        _processing = true;
+        _errorMessage = "";
+        StateHasChanged();
 
-        _isLoading = true;
         try
         {
-            var response = await Http.PostAsJsonAsync("api/auth/login", new LoginRequest
+            var result = await AuthStateProvider.LoginAsync(loginModel);
+            if (result.Success)
             {
-                Username = _username,
-                Password =
-_password
-            });
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
-                if (result != null)
-                {
-                    await AuthStateProvider.MarkUserAsAuthenticated(result.Token);
-                    Navigation.NavigateTo("/");
-                }
+                Snackbar.Add("Giriş Başarılı!", Severity.Success);
+                Navigation.NavigateTo("/");
             }
             else
             {
-                Snackbar.Add("Kullanıcı adı veya şifre hatalı!", Severity.Error);
+                _errorMessage = result.Message ?? "Kullanıcı adı veya şifre hatalı.";
+                Snackbar.Add(_errorMessage, Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Bağlantı hatası: {ex.Message}", Severity.Error);
+            _errorMessage = "Sunucu bağlantı hatası: " + ex.Message;
+            Snackbar.Add("API'ye ulaşılamıyor (Port 5050 kontrol edin)", Severity.Error);
         }
         finally
         {
-            _isLoading = false;
+            _processing = false;
+            StateHasChanged();
         }
     }
 }

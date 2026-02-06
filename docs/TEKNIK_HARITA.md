@@ -32,6 +32,8 @@ KamatekCRM/                       # Solution Root
 │
 ├── KamatekCrm.Web/               # Blazor Web App (Server Interactive, net9.0)
 │   ├── Components/Pages/         # Dashboard, Login
+│   │   ├── Layout/               # MainLayout, LoginLayout
+│   │   │   └── RedirectToLogin.razor # Safe Auth Redirect
 │   ├── Services/                 # Auth Services
 │   └── Program.cs                # MudBlazor, Blazored.LocalStorage
 │

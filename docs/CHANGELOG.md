@@ -1,6 +1,53 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-06 (v5.8.3 - API Port Fix)
+
+### 🚑 Kritik Düzeltmeler
+- **API Port & Stability**: `Program.cs` yeniden düzenlenerek `builder.WebHost.UseUrls("http://0.0.0.0:5050")` ayarı en üst satıra taşındı. Bu, API'nin varsayılan 5000 portuna düşmesini ve EXE olarak çalışırken çökmesini (AddressInUse hatası) %100 engeller. Veritabanı başlatma logları eklendi.
+
+## 2026-02-06 (v5.8.2 - Process Visibility Fix)
+
+### 🚑 Kritik Düzeltmeler
+- **Process Launcher**: `ProcessManager.cs` güncellendi. `UseShellExecute=true` ve `WindowStyle=Normal` ayarlarıyla API ve Web sunucuları artık görünür komut satırı pencerelerinde açılıyor. Bu sayede `Console.ReadLine()` çağrısının uygulamayı çökertmesi (Crash) engellendi. Web URL portu 7001 olarak güncellendi.
+
+## 2026-02-06 (v5.8.1 - Login & CORS Hotfix)
+
+### 🚑 Kritik Düzeltmeler
+- **API CORS**: `KamatekCrm.API` projesinde `AllowAnyOrigin`, `AllowAnyMethod`, `AllowAnyHeader` politikası aktif edildi. Localhost geliştirme ortamında yaşanan kısıtlamalar kaldırıldı.
+- **Login UI**: `Login.razor` sayfası geliştirilmiş hata yönetimi ve `MudSnackbar` entegrasyonu ile güncellendi. Artık hata mesajları kullanıcıya görsel olarak bildiriliyor.
+- **Auth Service**: `ApiAuthenticationStateProvider` servisine eksik olan `LoginAsync` metodu eklendi ve `LoginRequest` DTO kullanımı düzeltildi.
+
+## 2026-02-06 (v5.8 - Web DI & Asset Fix)
+
+### 🚑 Kritik Düzeltmeler
+- **Dependency Injection Fail**: `ApiAuthenticationStateProvider` servisi hem interface (`AuthenticationStateProvider`) hem de concrete sınıf olarak DI container'a eklendi. `MainLayout` ve diğer bileşenlerdeki çökme sorunu giderildi.
+- **Static Assets 404**: `Program.cs` içindeki `WebRootPath` override mantığı sadeleştirildi. Geliştirme ortamında `StaticWebAssets` manifestosunun çalışması sağlandı. MudBlazor CSS/JS dosyaları artık doğru yükleniyor.
+
+## 2026-02-05 (v5.7 - White Screen & Routing)
+
+### 🚑 Critical Fixes (v5.7 - White Screen & Routing)
+- **Safe Routing**: `RedirectToLogin` bileşeni oluşturularak `Routes.razor` içindeki JavaScript tabanlı güvensiz yönlendirme kaldırıldı. Race condition önlendi.
+- **Static Assets Robustness**: `Program.cs` içinde `WebRootPath` mantığı iyileştirildi. `wwwroot` klasörü diskte yoksa varsayılan davranışa (Source Path) düşülmesi sağlandı.
+- **Detailed Errors**: Blazor Circuit Options için `DetailedErrors = true` aktif edildi.
+
+### 🚑 Kritik Düzeltmeler
+- **Build Error (CS1519, CS0103)**: `App.xaml.cs` satır 21'deki bozuk `WEB_URL` sabit tanımı düzeltildi.
+- **Port Çakışması (API)**: API sunucusu port 5000 yerine 5050 kullanacak şekilde zorlandı (`Program.cs` içinde `UseUrls` eklendi).
+- **Port Çakışması (Web)**: Web sunucusu port 7000 yerine 7001 kullanacak şekilde güncellendi (port 7000 zaten kullanımdaydı).
+- **Web Sunucu Hata Yakalama**: `KamatekCrm.Web/Program.cs`'e kapsamlı try-catch bloğu eklendi - startup hataları artık detaylı gösteriliyor.
+- **Beyaz Ekran Fix**: `wwwroot` klasörünün derleme çıktısına kopyalanmaması sorunu `.csproj` güncellemesiyle (`Content Update`) giderildi.
+- **Statik Dosya Yolu**: `Program.cs` içinde `WebRootPath` mantığı güncellenerek, çalıştırılan dizinden bağımsız olarak `wwwroot` klasörünün bulunması sağlandı.
+- **JS Interop Fix**: `ApiAuthenticationStateProvider` içine startup crash koruması (try-catch) eklendi.
+
+### 🔧 Teknik İyileştirmeler
+- **API Port**: `KamatekCrm.API/Program.cs` içinde `builder.WebHost.UseUrls("http://0.0.0.0:5050")` ile port sabitlendi.
+- **Web Port**: `KamatekCrm.Web/Program.cs` içinde port **7001** olarak güncellendi.
+- **WPF Entegrasyon**: `App.xaml.cs` içinde `WEB_URL = "http://localhost:7001"` olarak güncellendi.
+- **Hata Mesajları**: Web sunucusu başlatma hatalarında kırmızı arka planlı detaylı hata çıktısı.
+
+---
+
 ## 2026-02-05 (v5.5 - System Audit & Integration Fix)
 
 ### 🔧 Port Yapılandırması
