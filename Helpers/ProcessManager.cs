@@ -8,140 +8,140 @@ namespace KamatekCrm.Helpers
 {
     public static class ProcessManager
     {
-        private static Process? _apiProcess;
-        private static Process? _webProcess;
+        public const string API_URL = "http://localhost:5050";
+        public const string WEB_URL = "http://localhost:7000";
 
-        private const string API_PROCESS_NAME = "KamatekCrm.API";
-        private const string WEB_PROCESS_NAME = "KamatekCrm.Web";
-        // DÜZELTME 1: Port 7001 (Web projesiyle eslesmeli)
-        private const string WEB_URL = "http://localhost:7001";
-        private const int BROWSER_DELAY_MS = 3000;
-
-        public static void StartProcesses()
+        public static void StartServices()
         {
-            try
-            {
-                KillZombieProcesses();
+            KillZombieProcesses();
 
-                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                string apiPath = GetApiPath(baseDir);
-                string webPath = GetWebPath(baseDir);
+            string apiExe = FindExeRecursive("KamatekCrm.API.exe");
+            string webExe = FindExeRecursive("KamatekCrm.Web.exe");
 
-                // API BASLAT (Gorunur Mod - Hata takibi icin)
-                if (!string.IsNullOrEmpty(apiPath) && File.Exists(apiPath))
-                {
-                    _apiProcess = StartVisibleProcess(apiPath);
-                    Debug.WriteLine($"API Started: {apiPath}");
-                }
+            if (!string.IsNullOrEmpty(apiExe))
+                StartVisibleProcess(apiExe);
+            else
+                Debug.WriteLine("[ProcessManager] API exe not found!");
 
-                // WEB BASLAT (Gorunur Mod - Console.ReadLine'in calismasi icin sart)
-                if (!string.IsNullOrEmpty(webPath) && File.Exists(webPath))
-                {
-                    _webProcess = StartVisibleProcess(webPath);
-                    Debug.WriteLine($"Web App Started: {webPath}");
-                }
+            if (!string.IsNullOrEmpty(webExe))
+                StartVisibleProcess(webExe);
+            else
+                Debug.WriteLine("[ProcessManager] WEB exe not found!");
 
-                // Tarayiciyi Ac
-                if (_webProcess != null)
-                {
-                    Task.Run(async () =>
-                    {
-                        await Task.Delay(BROWSER_DELAY_MS);
-                        OpenDefaultBrowser(WEB_URL);
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"ProcessManager Error: {ex.Message}");
-            }
+            // Open Browser after delay
+            Task.Delay(3000).ContinueWith(_ => OpenBrowser(WEB_URL));
         }
 
-        public static void StopProcesses()
+        public static void StopServices()
         {
-            KillProcess(_apiProcess);
-            KillProcess(_webProcess);
             KillZombieProcesses();
         }
 
         private static void KillZombieProcesses()
         {
-            KillNamedProcess(API_PROCESS_NAME);
-            KillNamedProcess(WEB_PROCESS_NAME);
-        }
-
-        private static void KillNamedProcess(string name)
-        {
-            foreach (var proc in Process.GetProcessesByName(name))
+            foreach (var process in Process.GetProcessesByName("KamatekCrm.API"))
             {
-                try { proc.Kill(); } catch { }
+                try { process.Kill(); } catch { }
+            }
+            foreach (var process in Process.GetProcessesByName("KamatekCrm.Web"))
+            {
+                try { process.Kill(); } catch { }
             }
         }
 
-        private static void OpenDefaultBrowser(string url)
+        private static void StartVisibleProcess(string exePath)
         {
             try
             {
-                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
-            }
-            catch { }
-        }
-
-        // KRİTİK DÜZELTME: StartVisibleProcess (Gizli moddan cikildi)
-        private static Process StartVisibleProcess(string filePath)
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = filePath,
-                // 1. UseShellExecute=true -> Yeni CMD penceresi acar, Console.ReadLine() calisir.
-                // 2. WindowStyle=Normal -> Pencere gorunur, hata varsa okunabilir.
-                UseShellExecute = true,
-                CreateNoWindow = false, 
-                WindowStyle = ProcessWindowStyle.Normal,
-                WorkingDirectory = Path.GetDirectoryName(filePath) // appsettings.json icin sart
-            };
-
-            return Process.Start(startInfo)!;
-        }
-
-        private static void KillProcess(Process? process)
-        {
-            try
-            {
-                if (process != null && !process.HasExited)
+                var psi = new ProcessStartInfo
                 {
-                    process.Kill();
-                    process.WaitForExit(1000);
-                }
+                    FileName = exePath,
+                    UseShellExecute = true, // [CRITICAL] Mandatory for visible console
+                    WindowStyle = ProcessWindowStyle.Normal, // [CRITICAL] Mandatory for debugging
+                    WorkingDirectory = Path.GetDirectoryName(exePath)
+                };
+                Process.Start(psi);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to start process {exePath}: {ex.Message}");
+            }
         }
 
-        public static string? GetApiPath(string baseDir) => FindExeRecursive(baseDir, "KamatekCrm.API", "KamatekCrm.API.exe");
-        public static string? GetWebPath(string baseDir) => FindExeRecursive(baseDir, "KamatekCrm.Web", "KamatekCrm.Web.exe");
-        
-        // Parameterless overloads for App.xaml.cs
-        public static string? GetApiPath() => GetApiPath(AppDomain.CurrentDomain.BaseDirectory);
-        public static string? GetWebPath() => GetWebPath(AppDomain.CurrentDomain.BaseDirectory);
-
-        private static string? FindExeRecursive(string baseDir, string projectName, string exeName)
+        private static string FindExeRecursive(string exeName)
         {
-            string releasePath = Path.Combine(baseDir, projectName.Replace("KamatekCrm.", ""), exeName);
-            if (File.Exists(releasePath)) return releasePath;
+            var currentProcessPath = Process.GetCurrentProcess().MainModule?.FileName;
+            var currentDir = Path.GetDirectoryName(currentProcessPath) ?? AppDomain.CurrentDomain.BaseDirectory;
 
-            DirectoryInfo? dir = new DirectoryInfo(baseDir);
-            while (dir != null)
+            // Strategy: Look up the directory tree until we find the solution root (indicated by .sln)
+            // Then search down specifically in bin/Debug/net9.0/ folders for the target exe
+            
+            var directory = new DirectoryInfo(currentDir);
+            DirectoryInfo solutionRoot = null;
+
+            while (directory != null)
             {
-                string debugPath = Path.Combine(dir.FullName, projectName, "bin", "Debug", "net9.0", exeName);
-                if (File.Exists(debugPath)) return debugPath;
-
-                string releaseModePath = Path.Combine(dir.FullName, projectName, "bin", "Release", "net9.0", exeName);
-                if (File.Exists(releaseModePath)) return releaseModePath;
-
-                if (File.Exists(Path.Combine(dir.FullName, "KamatekCrm.sln"))) break;
-                dir = dir.Parent;
+                if (directory.GetFiles("*.sln").Any())
+                {
+                    solutionRoot = directory;
+                    break;
+                }
+                directory = directory.Parent;
             }
+
+            if (solutionRoot != null)
+            {
+                // We found solution root. Now construct likely paths.
+                // Assuming standard project structure: SolutionRoot/ProjectName/bin/Debug/net9.0/ExeName
+                
+                string projectName = exeName.Replace(".exe", ""); // e.g. KamatekCrm.API
+                string likelyPath = Path.Combine(solutionRoot.FullName, projectName, "bin", "Debug", "net9.0", exeName);
+
+                if (File.Exists(likelyPath)) return likelyPath;
+
+                // Fallback: Search recursively in solution root but limit depth or filter by bin
+                // Search specifically for the file in AllDirectories
+                try 
+                {
+                   var files = solutionRoot.GetFiles(exeName, SearchOption.AllDirectories);
+                   // Prefer bin/Debug/net9.0
+                   var match = files.FirstOrDefault(f => f.FullName.Contains("bin") && f.FullName.Contains("Debug") && f.FullName.Contains("net9.0"));
+                   if (match != null) return match.FullName;
+                   
+                   // Fallback to any found
+                   if (files.Any()) return files.First().FullName;
+                }
+                catch {}
+            }
+            else
+            {
+                // Fallback for when running in VS without deployed structure or weird path
+                // Try relative paths from current dir
+                // ../../../KamatekCrm.API/bin/Debug/net9.0/KamatekCrm.API.exe
+                 string[] searchPaths = new[]
+                 {
+                    Path.Combine(currentDir, exeName), // Same folder
+                    Path.Combine(currentDir, "..", "..", "..", exeName.Replace(".exe", ""), "bin", "Debug", "net9.0", exeName),
+                    Path.Combine(currentDir, "..", "..", "..", exeName.Replace(".exe", ""), "bin", "Release", "net9.0", exeName)
+                 };
+
+                 foreach (var path in searchPaths)
+                 {
+                     var fullPath = Path.GetFullPath(path);
+                     if (File.Exists(fullPath)) return fullPath;
+                 }
+            }
+
             return null;
+        }
+
+        private static void OpenBrowser(string url)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch { }
         }
     }
 }

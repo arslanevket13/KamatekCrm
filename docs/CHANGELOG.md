@@ -1,6 +1,55 @@
 # KamatekCRM - Değişiklik Günlüğü
 
 
+## 2026-02-07 (v6.0 - Greenfield Reconfiguration)
+
+### 🏆 Configuration Overhaul (Stability & Visibility)
+Tamamen yeni "Greenfield" yapılandırması ile başlangıç çökmeleri ve port çakışmaları ortadan kaldırıldı.
+
+- **Strict Port Binding:**
+  - **API**: `http://0.0.0.0:5050` (Hardcoded Program.cs)
+  - **Web**: `http://0.0.0.0:7000` (Hardcoded Program.cs)
+- **Visible Process Launcher:**
+  - API ve Web sunucuları artık **görünür pencerelerde** açılıyor (`UseShellExecute=true`).
+  - Hata durumunda konsol kapanmıyor (`Console.ReadLine()` desteği).
+- **Static Assets Fix**:
+  - Web projesi Production/EXE modunda bile `EnvironmentName="Development"` olarak zorlandı.
+  - `wwwroot` klasörünün çıktı dizinine kopyalanması garanti altına alındı.
+- **Robustness**:
+  - API CORS politikası tamamen açıldı (AllowAll).
+  - Veritabanı Seeding işlemi güvenli scope içine alındı.
+
+### 🛡️ Full System Audit & Recovery (v6.1)
+Sistem genelinde kapsamlı denetim yapıldı ve eksik/hatalı yapılandırmalar giderildi.
+
+- **Missing Files Restored**: `KamatekCrm.Web` projesinin eksik olan Components ve Services klasörleri sıfırdan oluşturuldu.
+- **API Configuration**: `launchSettings.json` ve `appsettings.json` (Connection String: `../KamatekCrm/KamatekCrm.db`) yapılandırıldı.
+- **WPF Configuration**: `appsettings.json` içerisine `ApiBaseUrl` (http://localhost:5050) eklendi.
+- **Authentication**: `IAuthService`, `AuthService` ve `ApiAuthenticationStateProvider` eksiksiz implemente edildi.
+
+## 2026-02-06 (v5.9 - Golden Standard Reconfiguration)
+
+### 🏆 Mimari Yeniden Yapılandırma
+Proje, process yönetimi ve entegrasyon kararlılığını sağlamak için "Golden Standard" mimarisine geçirildi.
+- **API (5050)**: Port hardcoded, CORS açık, Database Seeding güvenli scope içinde.
+- **Web (7000)**: Port hardcoded, `Development` modu zorlandı (Static Assets için), API bağlantısı 5050'ye sabitlendi.
+- **Launcher (ProcessManager)**: API ve Web süreçleri görünür pencerelerde başlatılıyor (Console.ReadLine uyumlu), Zombie process temizliği eklendi, Browser otomatik açılıyor.
+- **Dosya Yapısı**: `KamatekCrm.Web.csproj` içerisinde `wwwroot` kopyalama garanti altına alındı.
+
+### 🚑 Kritik Onarımlar (Health Check)
+- **Port Düzeltmesi**: `KamatekCrm.Web` launchSettings portu 5200/7001'den **7000**'e çekildi (Program.cs ile eşleşti).
+- **Eksik API Uçları**: `CustomersController`, `ServiceJobsController` ve `ProductsController` sıfırdan oluşturuldu. 404 hataları giderildi.
+
+## 2026-02-06 (v5.8.4 - API & Shared Model Stabilization)
+
+### 🚑 Kritik Düzeltmeler & İyileştirmeler
+- **ServiceJob Refactoring**: `KamatekCrm.Shared/Models/ServiceJob.cs` sınıfına geriye dönük uyumluluk için `Items` isminde bir property alias eklendi. Bu, `ServiceJobItems` koleksiyonuna yönlendirme yaparak olası "Items property missing" hatalarını önler.
+- **Model Temizliği**: Proje genelinde yapılan taramada `Customer` ve `User` sınıflarının sadece `Shared` kütüphanesinde olduğu ve çift kopya (duplication) bulunmadığı doğrulandı.
+- **API Port & Config**: API'nin 5050, Web'in 7001 portunda çalıştığı ve `ApiDbContext` yapılandırmasının doğru olduğu son kez teyit edildi.
+
+### 🚑 Kritik Düzeltmeler
+- **Web Startup Stability**: `KamatekCrm.Web` projesinin `Program.cs` dosyasına global Exception Handling (Try-Catch) eklendi. Olası başlangıç hataları artık `web_startup_error.log` dosyasına yazılıyor. Port çakışmalarını önlemek için `launchSettings.json` ve `Program.cs` içinde port **7001** olarak sabitlendi.
+
 ## 2026-02-06 (v5.8.3 - API Port Fix)
 
 ### 🚑 Kritik Düzeltmeler
@@ -1056,3 +1105,10 @@ Mevcut basit 'Keşif & Teklif' modülü tamamen yeniden yazıldı.
 - Raporlama modülleri geliştirme
 - Dashboard ekranı
 - PDF export özelliği
+
+## 2026-02-07 (v5.10 - Mobile Project Removal)
+
+### 🗑️ Temizlik
+- **KamatekCrm.Mobile Kaldırıldı**: Proje gereksinimleri doğrultusunda mobil uygulama (MAUI Blazor Hybrid) projeden tamamen çıkarıldı.
+- **csproj Temizliği**: `KamatekCrm.csproj` dosyasındaki mobil proje dışlama (exclusion) satırları temizlendi.
+- **Dokümantasyon Güncellemesi**: Teknik harita ve proje özeti mobil referanslarından arındırıldı.

@@ -37,10 +37,13 @@ KamatekCRM/                       # Solution Root
 │   ├── Services/                 # Auth Services
 │   └── Program.cs                # MudBlazor, Blazored.LocalStorage
 │
-├── KamatekCrm.Mobile/            # MAUI Blazor Hybrid (net9.0)
-│   ├── Platforms/                # Android, iOS, Windows, MacCatalyst
-│   ├── Resources/                  # App Icon, Fonts, Images
-│   └── MauiProgram.cs            # MAUI Bootstrap
+├── KamatekCrm.Web/               # Blazor Web App (Server Interactive, net9.0)
+│   ├── Components/Pages/         # Dashboard, Login
+│   │   ├── Layout/               # MainLayout, LoginLayout
+│   │   │   └── RedirectToLogin.razor # Safe Auth Redirect
+│   ├── Services/                 # Auth Services
+│   └── Program.cs                # MudBlazor, Blazored.LocalStorage
+│
 └── KamatekCrm.API/               # ASP.NET Core Web API (net9.0)
 ```
 
@@ -205,3 +208,8 @@ KamatekCrm/
 - **B2B Procurement**: Tedarikçi borç takibi, stok entegreli satın alma
 - **Digital Archive**: `AttachmentService` ile merkezi dosya yönetimi (GUID filenames)
 - **RBAC**: `User` modelinde granular permission alanları (`CanViewFinance` vb.)
+
+### 6. System Configuration (Greenfield)
+- **Ports**: API (5050), Web (7000) - Hardcoded.
+- **Launcher**: `ProcessManager` visible console windows (`UseShellExecute=true`).
+- **Environment**: Web App forced to `Development` for static asset compatibility.

@@ -65,6 +65,10 @@ namespace KamatekCrm.Shared.Models
         public virtual CustomerAsset? CustomerAsset { get; set; }
         
         public virtual System.Collections.Generic.ICollection<ServiceJobItem> ServiceJobItems { get; set; } = new System.Collections.Generic.List<ServiceJobItem>();
+        
+        [NotMapped]
+        public virtual System.Collections.Generic.ICollection<ServiceJobItem> Items => ServiceJobItems;
+
         public virtual System.Collections.Generic.ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new System.Collections.Generic.List<PurchaseOrder>();
         
         #region Computed Properties

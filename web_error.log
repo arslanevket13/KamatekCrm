@@ -1,0 +1,12 @@
+  Geri yüklenecek projeler belirleniyor...
+  Geri yükleme için tüm projeler güncel.
+  KamatekCrm.Shared -> C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Shared\bin\Debug\net9.0\KamatekCrm.Shared.dll
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Program.cs(1,25): error CS0234: 'Services' tür veya ad alanı adı 'KamatekCrm.Shared' ad alanında yok (bir derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+
+Oluşturma BAŞARISIZ OLDU.
+
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Program.cs(1,25): error CS0234: 'Services' tür veya ad alanı adı 'KamatekCrm.Shared' ad alanında yok (bir derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+    0 Uyarı
+    1 Hata
+
+Geçen Süre 00:00:01.49

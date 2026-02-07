@@ -17,9 +17,8 @@ namespace KamatekCrm
     /// </summary>
     public partial class App : Application
     {
-        private Process? _apiProcess;
-        private Process? _webProcess;
-        private const string WEB_URL = "http://localhost:7001";
+        // Proses yönetimi KamatekCrm.Helpers.ProcessManager tarafından yapılır
+
 
         protected override async void OnStartup(StartupEventArgs e)
         {
@@ -27,15 +26,8 @@ namespace KamatekCrm
 
             try
             {
-                // 1. TEMİZLİK: Zombie süreçleri agresif şekilde öldür
-                KillZombieProcesses();
-                await Task.Delay(500);
-
-                // 2. QuestPDF Community License Configuration
-                QuestPDF.Settings.License = LicenseType.Community;
-
-                // 3. API ve Web Sunucularını Başlat (Gizli Mod)
-                StartBackgroundProcesses();
+                // 3. API ve Web Sunucularını Başlat (Görünür Mod - ProcessManager)
+                ProcessManager.StartServices();
 
                 // 4. Veritabanını başlat
                 InitializeDatabase();
@@ -66,12 +58,7 @@ namespace KamatekCrm
 
                 mainWindow.Show();
 
-                // 9. TARAYICI: 3 saniye bekle ve siteyi aç
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(3000);
-                    OpenDefaultBrowser(WEB_URL);
-                });
+
             }
             catch (Exception ex)
             {
@@ -95,11 +82,7 @@ namespace KamatekCrm
                 backupService.BackupDatabase();
 
                 // Sunucu süreçlerini kapat
-                KillProcess(_apiProcess);
-                KillProcess(_webProcess);
-
-                // Ekstra güvenlik: isimle de öldür
-                KillZombieProcesses();
+                ProcessManager.StopServices();
 
                 Debug.WriteLine("Auto backup completed on exit.");
             }
@@ -112,123 +95,8 @@ namespace KamatekCrm
         /// <summary>
         /// API ve Web sunucularını gizli modda başlatır.
         /// </summary>
-        private void StartBackgroundProcesses()
-        {
-            try
-            {
-                string? apiPath = ProcessManager.GetApiPath();
-                string? webPath = ProcessManager.GetWebPath();
+        // Helper methods StopServices, StartBackgroundProcesses, KillZombieProcesses, StartHiddenProcess, KillProcess, OpenDefaultBrowser removed as they are now in ProcessManager
 
-                if (!string.IsNullOrEmpty(apiPath) && File.Exists(apiPath))
-                {
-                    _apiProcess = StartHiddenProcess(apiPath);
-                    Debug.WriteLine($"API Started: {apiPath}");
-                }
-                else
-                {
-                    Debug.WriteLine($"API not found at expected path");
-                }
-
-                if (!string.IsNullOrEmpty(webPath) && File.Exists(webPath))
-                {
-                    _webProcess = StartHiddenProcess(webPath);
-                    Debug.WriteLine($"Web App Started: {webPath}");
-                }
-                else
-                {
-                    Debug.WriteLine($"Web not found at expected path");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"StartBackgroundProcesses Error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Zombie süreçleri agresif şekilde öldürür.
-        /// </summary>
-        private static void KillZombieProcesses()
-        {
-            try
-            {
-                foreach (var proc in Process.GetProcessesByName("KamatekCrm.API"))
-                {
-                    try { proc.Kill(); proc.WaitForExit(2000); }
-                    catch { /* Ignore */ }
-                    finally { proc.Dispose(); }
-                }
-
-                foreach (var proc in Process.GetProcessesByName("KamatekCrm.Web"))
-                {
-                    try { proc.Kill(); proc.WaitForExit(2000); }
-                    catch { /* Ignore */ }
-                    finally { proc.Dispose(); }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"KillZombieProcesses Error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Gizli modda process başlatır.
-        /// </summary>
-        private static Process StartHiddenProcess(string filePath)
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = filePath,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden,
-                WorkingDirectory = Path.GetDirectoryName(filePath)
-            };
-
-            return Process.Start(startInfo)!;
-        }
-
-        /// <summary>
-        /// Belirtilen process'i öldürür.
-        /// </summary>
-        private static void KillProcess(Process? process)
-        {
-            try
-            {
-                if (process != null && !process.HasExited)
-                {
-                    process.Kill();
-                    process.WaitForExit(2000);
-                    process.Dispose();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Failed to kill process: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Varsayılan tarayıcıda URL açar.
-        /// </summary>
-        private static void OpenDefaultBrowser(string url)
-        {
-            try
-            {
-                var psi = new ProcessStartInfo
-                {
-                    FileName = url,
-                    UseShellExecute = true
-                };
-                Process.Start(psi);
-                Debug.WriteLine($"Browser opened: {url}");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"OpenDefaultBrowser Error: {ex.Message}");
-            }
-        }
 
         /// <summary>
         /// Veritabanını başlat ve migration'ları uygula

@@ -7,42 +7,15 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. KRITIK AYAR: API Portunu 5050'ye Sabitle (Cakismayi Onler)
-// EXE olarak calistiginda 5000'e gitmesini engeller.
+// [CRITICAL] FORCE BIND TO PORT 5050
 builder.WebHost.UseUrls("http://0.0.0.0:5050");
 
-// DB Context
-builder.Services.AddDbContext<ApiDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// 2. CORS AYARI (Tum erisimlere izin ver - Localhost sorunu icin)
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", b =>
-        b.AllowAnyOrigin()
-         .AllowAnyMethod()
-         .AllowAnyHeader());
-});
-
-// JWT Kimlik Dogrulama
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "SecretKey"))
-        };
-    });
-
+// Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c => {
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "KamatekCRM API", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme.",
@@ -51,50 +24,89 @@ builder.Services.AddSwaggerGen(c => {
         Type = SecuritySchemeType.Http,
         Scheme = "bearer"
     });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
-        new OpenApiSecurityScheme
-        { 
-            Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-        },
-        new string[] { }
-    }});
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
+// [CRITICAL] ALLOW ALL CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder => builder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader());
+});
+
+// Database
+builder.Services.AddDbContext<ApiDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// JWT Auth
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "super_secret_key_123456789_at_least_32_chars";
+var key = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
 });
 
 var app = builder.Build();
 
-// Veritabani Baslatma (Otomatik Seed)
+// [CRITICAL] DATABASE SEEDING
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
+    var services = scope.ServiceProvider;
     try
     {
-        // Veritabani yoksa olustur ve verileri ekle
+        var context = services.GetRequiredService<ApiDbContext>();
+        context.Database.Migrate();
         ApiDbSeeder.Seed(context);
-        Console.WriteLine("Veritabani kontrolu basarili.");
+        Console.WriteLine("[DB] Database seeded successfully.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine("Veritabani hatasi: " + ex.Message);
+        Console.WriteLine($"[DB ERROR] {ex.ToString()}");
     }
 }
 
-// Swagger (Dokumantasyon)
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// Middleware Siralamasi (CORS -> Auth -> Controllers)
 app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-Console.BackgroundColor = ConsoleColor.DarkGreen;
-Console.ForegroundColor = ConsoleColor.White;
-Console.WriteLine("==============================================");
-Console.WriteLine(" API SERVER CALISTI (Port: 5050)              ");
-Console.WriteLine("==============================================");
-Console.ResetColor();
+Console.WriteLine("=================================");
+Console.WriteLine("   KAMATEK CRM API READY (5050)  ");
+Console.WriteLine("=================================");
 
 app.Run();

@@ -1,6 +1,0 @@
-@KamatekCrm.API_HostAddress = http://localhost:5087
-
-GET {{KamatekCrm.API_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

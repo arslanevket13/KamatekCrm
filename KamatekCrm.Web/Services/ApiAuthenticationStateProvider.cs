@@ -1,114 +1,80 @@
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
-using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace KamatekCrm.Web.Services
 {
     public class ApiAuthenticationStateProvider : AuthenticationStateProvider
     {
-        private readonly ILocalStorageService _localStorage;
         private readonly HttpClient _httpClient;
+        private readonly ILocalStorageService _localStorage;
 
-        public ApiAuthenticationStateProvider(ILocalStorageService localStorage, HttpClient httpClient)
+        public ApiAuthenticationStateProvider(HttpClient httpClient, ILocalStorageService localStorage)
         {
-            _localStorage = localStorage;
             _httpClient = httpClient;
+            _localStorage = localStorage;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             try
             {
-                var token = await _localStorage.GetItemAsync<string>("authToken");
+                var savedToken = await _localStorage.GetItemAsync<string>("authToken");
 
-                if (string.IsNullOrWhiteSpace(token))
+                if (string.IsNullOrWhiteSpace(savedToken))
                 {
                     return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
                 }
 
-                // Set Authorization header
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", savedToken);
 
-                // Parse JWT and create claims
-                var claims = ParseClaimsFromJwt(token);
-                var identity = new ClaimsIdentity(claims, "jwt");
-                var user = new ClaimsPrincipal(identity);
-
-                return new AuthenticationState(user);
+                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(savedToken), "jwt")));
             }
-            catch (Exception ex)
+            catch
             {
-                // Hata durumunda (JS Interop henüz hazır değilse vb.) Anonymous döndür
-                Console.WriteLine($"Auth State Error: {ex.Message}");
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
         }
 
-        public async Task MarkUserAsAuthenticated(string token)
+        public void MarkUserAsAuthenticated(string token)
         {
-            await _localStorage.SetItemAsync("authToken", token);
-
-            var claims = ParseClaimsFromJwt(token);
-            var identity = new ClaimsIdentity(claims, "jwt");
-            var user = new ClaimsPrincipal(identity);
-
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
+            var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt"));
+            var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
+            NotifyAuthenticationStateChanged(authState);
         }
 
-        public async Task MarkUserAsLoggedOut()
+        public void MarkUserAsLoggedOut()
         {
-            await _localStorage.RemoveItemAsync("authToken");
-            _httpClient.DefaultRequestHeaders.Authorization = null;
-
-            var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(anonymous)));
-        }
-
-        public async Task<LoginOperationResult> LoginAsync(Shared.DTOs.LoginRequest loginModel)
-        {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginModel);
-                if (response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadFromJsonAsync<Shared.DTOs.LoginResponse>();
-                    if (result != null && !string.IsNullOrEmpty(result.Token))
-                    {
-                        await MarkUserAsAuthenticated(result.Token);
-                        return new LoginOperationResult { Success = true };
-                    }
-                }
-                
-                return new LoginOperationResult { Success = false, Message = "Kullanıcı adı veya şifre hatalı." };
-            }
-            catch (Exception ex)
-            {
-                return new LoginOperationResult { Success = false, Message = ex.Message };
-            }
-        }
-
-        public class LoginOperationResult 
-        {
-            public bool Success { get; set; }
-            public string? Message { get; set; }
+            var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
+            var authState = Task.FromResult(new AuthenticationState(anonymousUser));
+            NotifyAuthenticationStateChanged(authState);
         }
 
         private IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
         {
             var claims = new List<Claim>();
-            try
+            var payload = jwt.Split('.')[1];
+            var jsonBytes = ParseBase64WithoutPadding(payload);
+            var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
+
+            foreach (var kvp in keyValuePairs)
             {
-                var handler = new JwtSecurityTokenHandler();
-                var token = handler.ReadJwtToken(jwt);
-                claims.AddRange(token.Claims);
+                claims.Add(new Claim(kvp.Key, kvp.Value.ToString()));
             }
-            catch
-            {
-                // Invalid token
-            }
+
             return claims;
+        }
+
+        private byte[] ParseBase64WithoutPadding(string base64)
+        {
+            switch (base64.Length % 4)
+            {
+                case 2: base64 += "=="; break;
+                case 3: base64 += "="; break;
+            }
+            return Convert.FromBase64String(base64);
         }
     }
 }

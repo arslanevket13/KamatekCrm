@@ -47,11 +47,10 @@
     <None Remove="KamatekCrm.API\**" />
     <Page Remove="KamatekCrm.API\**" />
     
-    <Compile Remove="KamatekCrm.Mobile\**" />
-    <EmbeddedResource Remove="KamatekCrm.Mobile\**" />
-    <None Remove="KamatekCrm.Mobile\**" />
-    <Page Remove="KamatekCrm.Mobile\**" />
-    <Content Remove="KamatekCrm.Mobile\**" />
+    <Compile Remove="KamatekCrm.API\**" />
+    <EmbeddedResource Remove="KamatekCrm.API\**" />
+    <None Remove="KamatekCrm.API\**" />
+    <Page Remove="KamatekCrm.API\**" />
     
     <Compile Remove="KamatekCrm.Web\**" />
     <EmbeddedResource Remove="KamatekCrm.Web\**" />

@@ -1,11 +1,11 @@
 using KamatekCrm.API.Data;
 using KamatekCrm.Shared.DTOs;
+using KamatekCrm.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace KamatekCrm.API.Controllers
@@ -24,64 +24,65 @@ namespace KamatekCrm.API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
         {
-            var hashedPassword = HashPassword(request.Password);
-            
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == request.Username && u.PasswordHash == hashedPassword);
+                .FirstOrDefaultAsync(u => u.Username == request.Username);
 
-            if (user == null)
+            if (user == null || user.PasswordHash != HashPassword(request.Password))
             {
-                return Unauthorized("Kullanıcı adı veya şifre hatalı.");
+                return Unauthorized(new LoginResponse { Success = false, Message = "Geçersiz kullanıcı adı veya şifre." });
             }
 
             if (!user.IsActive)
             {
-                return Unauthorized("Kullanıcı hesabı aktif değil.");
+                return Unauthorized(new LoginResponse { Success = false, Message = "Kullanıcı hesabı pasif." });
             }
 
             var token = GenerateJwtToken(user);
 
             return Ok(new LoginResponse
             {
+                Success = true,
+                Message = "Giriş başarılı.",
                 Token = token,
                 UserId = user.Id,
-                Role = user.Role,
-                FullName = $"{user.Ad} {user.Soyad}"
+                FullName = $"{user.Ad} {user.Soyad}",
+                Role = user.Role
             });
         }
 
-        private string HashPassword(string password)
+        private string GenerateJwtToken(User user)
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
-        }
-
-        private string GenerateJwtToken(KamatekCrm.Shared.Models.User user)
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "SecretKey"));
+            var jwtKey = _configuration["Jwt:Key"] ?? "super_secret_key_123456789_at_least_32_chars";
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expiry = DateTime.Now.AddMinutes(double.Parse(_configuration["Jwt:ExpireMinutes"] ?? "60"));
 
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Username),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Role, user.Role),
+                new Claim("UserId", user.Id.ToString()),
                 new Claim("FullName", $"{user.Ad} {user.Soyad}")
             };
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                issuer: "https://localhost:5050",
+                audience: "https://localhost:5050",
                 claims: claims,
-                expires: expiry,
+                expires: DateTime.Now.AddDays(7),
                 signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private string HashPassword(string password)
+        {
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(hashedBytes);
         }
     }
 }

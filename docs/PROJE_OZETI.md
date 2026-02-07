@@ -20,7 +20,7 @@
 - **WebView2** - Harita entegrasyonu
 - **LiveChartsCore** - BI Grafikleri
 - **QuestPDF** - PDF Raporlama
-- **ASP.NET Core 8** - Web API (Mobile Backend)
+- **ASP.NET Core 8** - Web API (Backend)
 - **Swagger/OpenAPI** - API Documentation
 
 ## Ana Özellikler
@@ -79,7 +79,9 @@
 - Login/Logout ve RBAC
 - Gelişmiş Servis Yaşam Döngüsü (Arıza + Proje)
 - MainContentView hızlı erişim butonları
+- MainContentView hızlı erişim butonları
 - **Enterprise ERP Modülleri** (Analytics, B2B, Archive, RBAC)
+- **Greenfield Configuration** (Stable Startup, Visible Console, 5050/7000 Ports)
 
 🔄 **Devam Eden:**
 - Proforma PDF oluşturma (QuestPDF)
