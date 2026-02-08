@@ -9,12 +9,18 @@ namespace KamatekCrm
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        public MainWindow(NavigationService navigationService, ToastViewModel toastViewModel, LoadingViewModel loadingViewModel)
         {
             InitializeComponent();
 
-            // DataContext olarak NavigationService'i kullan
-            DataContext = NavigationService.Instance;
+            // DataContext olarak NavigationService'i kullan (DI'dan gelen instance)
+            DataContext = navigationService;
+            
+            // Toast ViewModel'i bağla
+            ToastControl.DataContext = toastViewModel;
+            
+            // Loading ViewModel'i bağla
+            LoadingControl.DataContext = loadingViewModel;
         }
     }
 }

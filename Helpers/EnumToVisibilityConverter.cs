@@ -12,8 +12,11 @@ namespace KamatekCrm.Helpers
             if (value == null || parameter == null)
                 return Visibility.Collapsed;
 
-            string checkValue = value.ToString();
-            string targetValue = parameter.ToString();
+            string? checkValue = value.ToString();
+            string? targetValue = parameter.ToString();
+
+            if (checkValue == null || targetValue == null)
+                return Visibility.Collapsed;
 
             // Büyük/küçük harf duyarsız karşılaştırma
             return checkValue.Equals(targetValue, StringComparison.InvariantCultureIgnoreCase) 

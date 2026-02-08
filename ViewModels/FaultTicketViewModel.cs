@@ -8,6 +8,7 @@ using KamatekCrm.Shared.Enums;
 using KamatekCrm.Commands;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using KamatekCrm.Services;
 
 namespace KamatekCrm.ViewModels
 {
@@ -18,6 +19,7 @@ namespace KamatekCrm.ViewModels
     public class FaultTicketViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IToastService _toastService;
 
         #region Private Fields
 
@@ -301,8 +303,9 @@ namespace KamatekCrm.ViewModels
 
         #region Constructor
 
-        public FaultTicketViewModel()
+        public FaultTicketViewModel(IToastService toastService)
         {
+            _toastService = toastService;
             _context = new AppDbContext();
 
             SaveFaultTicketCommand = new RelayCommand(_ => SaveFaultTicket(), _ => CanSave());
@@ -435,7 +438,7 @@ namespace KamatekCrm.ViewModels
                 _context.ServiceJobs.Add(faultTicket);
                 _context.SaveChanges();
 
-                Services.ToastNotificationManager.ShowSuccess($"Arıza kaydı oluşturuldu: #{faultTicket.Id}");
+                _toastService.ShowSuccess($"Arıza kaydı oluşturuldu: #{faultTicket.Id}");
 
                 // Formu temizle
                 ClearForm();

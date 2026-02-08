@@ -11,6 +11,7 @@ using KamatekCrm.Commands;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Services.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 
@@ -22,6 +23,7 @@ namespace KamatekCrm.ViewModels
     public class ProductViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IInventoryDomainService _inventoryDomainService;
         private Product? _selectedProduct;
         private string _searchText = string.Empty;
         private ICollectionView? _productsView;
@@ -103,8 +105,9 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public ProductViewModel()
+        public ProductViewModel(IInventoryDomainService inventoryDomainService)
         {
+            _inventoryDomainService = inventoryDomainService;
             _context = new AppDbContext();
             Products = new ObservableCollection<Product>();
 
@@ -164,7 +167,7 @@ namespace KamatekCrm.ViewModels
         private void AddNewProduct()
         {
             var window = new Views.AddProductWindow();
-            window.Owner = Application.Current.MainWindow;
+            window.Owner = System.Windows.Application.Current.MainWindow;
             var result = window.ShowDialog();
 
             if (result == true)
@@ -182,7 +185,7 @@ namespace KamatekCrm.ViewModels
             if (SelectedProduct == null) return;
 
             var window = new Views.AddProductWindow(SelectedProduct);
-            window.Owner = Application.Current.MainWindow;
+            window.Owner = System.Windows.Application.Current.MainWindow;
             var result = window.ShowDialog();
 
             if (result == true)
@@ -390,14 +393,13 @@ namespace KamatekCrm.ViewModels
             if (SelectedProduct == null) return;
 
             var window = new Views.StockTransferView();
+            var vm = new StockTransferViewModel(_inventoryDomainService);
+            window.DataContext = vm;
 
             // ViewModel'deki SelectedProduct'ı set et
-            if (window.DataContext is StockTransferViewModel vm)
-            {
-                vm.SelectedProduct = SelectedProduct;
-            }
+            vm.SelectedProduct = SelectedProduct;
 
-            window.Owner = Application.Current.MainWindow;
+            window.Owner = System.Windows.Application.Current.MainWindow;
             window.ShowDialog();
 
             // Transfer sonrası ana listedeki stok miktarını güncelle

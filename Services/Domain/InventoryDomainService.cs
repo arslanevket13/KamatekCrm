@@ -16,6 +16,12 @@ namespace KamatekCrm.Services.Domain
     {
         // Thread safety için SemaphoreSlim
         private static readonly SemaphoreSlim _stockLock = new(1, 1);
+        private readonly IAuthService _authService;
+
+        public InventoryDomainService(IAuthService authService)
+        {
+            _authService = authService;
+        }
 
         /// <summary>
         /// Depolar arası stok transferi gerçekleştirir
@@ -184,7 +190,7 @@ namespace KamatekCrm.Services.Domain
                         Quantity = Math.Abs(request.QuantityChange),
                         TransactionType = transactionType,
                         Description = request.Reason,
-                        ReferenceId = request.ReferenceId
+                        ReferenceId = request.ReferenceId ?? string.Empty
                     };
                     context.StockTransactions.Add(stockTransaction);
 
@@ -271,7 +277,7 @@ namespace KamatekCrm.Services.Domain
                         UnitCost = unitCost,
                         Description = $"Satın Alma (WAC Güncellendi) - {referenceId}",
                         ReferenceId = referenceId,
-                        UserId = AuthService.CurrentUser?.AdSoyad ?? "Sistem"
+                        UserId = _authService.CurrentUser?.AdSoyad ?? "Sistem"
                     };
                     context.StockTransactions.Add(stockTransaction);
 

@@ -15,10 +15,12 @@ namespace KamatekCrm.Services
     public class AttachmentService
     {
         private readonly AppDbContext _context;
+        private readonly IAuthService _authService;
         private readonly string _archivePath;
 
-        public AttachmentService(AppDbContext? context = null)
+        public AttachmentService(IAuthService authService, AppDbContext? context = null)
         {
+            _authService = authService;
             _context = context ?? new AppDbContext();
             
             // Arşiv klasörü: %AppData%/KamatekArchive
@@ -71,8 +73,8 @@ namespace KamatekCrm.Services
                     FileSize = fileInfo.Length,
                     ContentType = contentType,
                     UploadDate = DateTime.Now,
-                    UploadedBy = AuthService.CurrentUser?.AdSoyad ?? "Sistem",
-                    Description = description
+                    UploadedBy = _authService.CurrentUser?.AdSoyad ?? "Sistem",
+                    Description = description ?? string.Empty
                 };
 
                 _context.Attachments.Add(attachment);
@@ -114,8 +116,8 @@ namespace KamatekCrm.Services
                     FileSize = fileInfo.Length,
                     ContentType = contentType,
                     UploadDate = DateTime.Now,
-                    UploadedBy = AuthService.CurrentUser?.AdSoyad ?? "Sistem",
-                    Description = description
+                    UploadedBy = _authService.CurrentUser?.AdSoyad ?? "Sistem",
+                    Description = description ?? string.Empty
                 };
 
                 _context.Attachments.Add(attachment);

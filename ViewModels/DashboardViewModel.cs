@@ -12,6 +12,7 @@ using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
+using KamatekCrm.Services;
 
 namespace KamatekCrm.ViewModels
 {
@@ -21,13 +22,15 @@ namespace KamatekCrm.ViewModels
     public class DashboardViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IAuthService _authService;
+
 
         #region Display Properties
 
         /// <summary>
         /// Kullanıcı karşılama metni
         /// </summary>
-        public string WelcomeMessage => $"Hoşgeldin, {Services.AuthService.CurrentUser?.AdSoyad ?? "Kullanıcı"}";
+        public string WelcomeMessage => $"Hoşgeldin, {_authService.CurrentUser?.AdSoyad ?? "Kullanıcı"}";
 
         /// <summary>
         /// Bugünün tarihi (Türkçe format)
@@ -195,12 +198,24 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public DashboardViewModel()
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public DashboardViewModel(IAuthService authService, AppDbContext context)
         {
-            _context = new AppDbContext();
+            _authService = authService;
+            _context = context;
             RefreshDashboardCommand = new RelayCommand(_ => LoadDashboardData());
             LoadDashboardData();
         }
+
+        /// <summary>
+        /// Constructor for design-time support or manual usage if needed (Try to avoid)
+        /// </summary>
+        public DashboardViewModel() : this(new AuthService(), new AppDbContext())
+        {
+        }
+
 
         /// <summary>
         /// Tüm dashboard verilerini yükle

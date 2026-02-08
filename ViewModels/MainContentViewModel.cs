@@ -11,6 +11,13 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class MainContentViewModel : ViewModelBase
     {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IAuthService _authService;
+        private readonly NavigationService _navigationService;
+        private readonly NotificationService _notificationService;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
+
         private object? _currentView;
 
         /// <summary>
@@ -18,7 +25,6 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public GlobalSearchViewModel SearchViewModel { get; }
 
-        private readonly NotificationService _notificationService;
         public System.Collections.ObjectModel.ObservableCollection<NotificationItem> Notifications { get; } = new();
 
         private int _notificationCount;
@@ -95,17 +101,17 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Mevcut kullanıcı ad soyad
         /// </summary>
-        public string CurrentUserName => AuthService.CurrentUser?.AdSoyad ?? "Misafir";
+        public string CurrentUserName => _authService.CurrentUser?.AdSoyad ?? "Misafir";
 
         /// <summary>
         /// Mevcut kullanıcı rol gösterimi
         /// </summary>
-        public string CurrentUserRole => GetDisplayRole(AuthService.CurrentUser?.Role);
+        public string CurrentUserRole => GetDisplayRole(_authService.CurrentUser?.Role);
 
         /// <summary>
         /// Admin mi?
         /// </summary>
-        public bool IsAdmin => AuthService.IsAdmin;
+        public bool IsAdmin => _authService.IsAdmin;
 
         #region Navigation Commands
 
@@ -149,9 +155,9 @@ namespace KamatekCrm.ViewModels
         public ICommand OpenQuickAddCommand { get; }
 
         // RBAC Visibility
-        public bool CanViewFinance => AuthService.CanViewFinance;
-        public bool CanViewAnalytics => AuthService.CanViewAnalytics;
-        public bool CanAccessSettings => AuthService.CanAccessSettings;
+        public bool CanViewFinance => _authService.CanViewFinance;
+        public bool CanViewAnalytics => _authService.CanViewAnalytics;
+        public bool CanAccessSettings => _authService.CanAccessSettings;
 
         // Finansal Sağlık Komutu
         public ICommand NavigateToFinancialHealthCommand { get; }
@@ -160,14 +166,16 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        private readonly IUnitOfWork _unitOfWork;
-
         /// <summary>
         /// Constructor
         /// </summary>
-        public MainContentViewModel(IUnitOfWork unitOfWork)
+        public MainContentViewModel(IUnitOfWork unitOfWork, IAuthService authService, NavigationService navigationService, IToastService toastService, ILoadingService loadingService)
         {
             _unitOfWork = unitOfWork;
+            _authService = authService;
+            _navigationService = navigationService;
+            _toastService = toastService;
+            _loadingService = loadingService;
 
             // Global arama başlat
             SearchViewModel = new GlobalSearchViewModel();
@@ -183,8 +191,8 @@ namespace KamatekCrm.ViewModels
             NavigateToServiceJobsCommand = new RelayCommand(_ => NavigateToServiceJobs());
             NavigateToStockCountCommand = new RelayCommand(_ => NavigateToStockCount());
             NavigateToReportsCommand = new RelayCommand(_ => NavigateToReports());
-            NavigateToUsersCommand = new RelayCommand(_ => NavigateToUsers(), _ => IsAdmin);
-            NavigateToSystemLogsCommand = new RelayCommand(_ => NavigateToSystemLogs(), _ => IsAdmin);
+            NavigateToUsersCommand = new RelayCommand(_ => NavigateToUsers(), _ => _authService.IsAdmin);
+            NavigateToSystemLogsCommand = new RelayCommand(_ => NavigateToSystemLogs(), _ => _authService.IsAdmin);
             LogoutCommand = new RelayCommand(_ => Logout());
             OpenFaultTicketCommand = new RelayCommand(_ => OpenFaultTicket());
             OpenProjectQuoteCommand = new RelayCommand(_ => OpenProjectQuote());
@@ -192,9 +200,9 @@ namespace KamatekCrm.ViewModels
             OpenDirectSalesCommand = new RelayCommand(_ => OpenDirectSales());
             NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
             NavigateToFieldJobListCommand = new RelayCommand(_ => NavigateToFieldJobList());
-            NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings(), _ => CanAccessSettings);
-            NavigateToFinanceCommand = new RelayCommand(_ => NavigateToFinance(), _ => CanViewFinance);
-            NavigateToAnalyticsCommand = new RelayCommand(_ => NavigateToAnalytics(), _ => CanViewAnalytics);
+            NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings(), _ => _authService.CanAccessSettings);
+            NavigateToFinanceCommand = new RelayCommand(_ => NavigateToFinance(), _ => _authService.CanViewFinance);
+            NavigateToAnalyticsCommand = new RelayCommand(_ => NavigateToAnalytics(), _ => _authService.CanViewAnalytics);
             NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateToPurchaseOrders());
             NavigateToPipelineCommand = new RelayCommand(_ => NavigateToPipeline());
             NavigateToSchedulerCommand = new RelayCommand(_ => NavigateToScheduler());
@@ -205,7 +213,7 @@ namespace KamatekCrm.ViewModels
             ToggleSidebarCommand = new RelayCommand(_ => IsSidebarCollapsed = !IsSidebarCollapsed);
             ToggleDarkModeCommand = new RelayCommand(_ => IsDarkMode = !IsDarkMode);
             OpenQuickAddCommand = new RelayCommand(_ => OpenQuickAdd());
-            NavigateToFinancialHealthCommand = new RelayCommand(_ => NavigateToFinancialHealth(), _ => CanViewFinance);
+            NavigateToFinancialHealthCommand = new RelayCommand(_ => NavigateToFinancialHealth(), _ => _authService.CanViewFinance);
             NavigateToRoutePlanningCommand = new RelayCommand(_ => NavigateToRoutePlanning());
             
             NavigateToSuppliersCommand = new RelayCommand(_ => NavigateToSuppliers()); // Initialization
@@ -218,23 +226,23 @@ namespace KamatekCrm.ViewModels
 
         #region Navigation Methods
 
-        private void NavigateToDashboard() => CurrentView = new DashboardViewModel();
-        private void NavigateToCustomers() => CurrentView = new CustomersViewModel();
-        private void NavigateToProducts() => CurrentView = new ProductViewModel();
-        private void NavigateToServiceJobs() => CurrentView = new ServiceJobViewModel();
-        private void NavigateToStockCount() => CurrentView = new StockCountViewModel();
-        private void NavigateToReports() => CurrentView = new StockReportsViewModel();
-        private void NavigateToUsers() => CurrentView = new UsersViewModel();
-        private void NavigateToSystemLogs() => CurrentView = new SystemLogsViewModel();
-        private void NavigateToRepairList() => CurrentView = new RepairListViewModel();
-        private void NavigateToFieldJobList() => CurrentView = new FieldJobListViewModel();
+        private void NavigateToDashboard() => _navigationService.NavigateTo<DashboardViewModel>();
+        private void NavigateToCustomers() => _navigationService.NavigateTo<CustomersViewModel>();
+        private void NavigateToProducts() => _navigationService.NavigateTo<ProductViewModel>();
+        private void NavigateToServiceJobs() => _navigationService.NavigateTo<ServiceJobViewModel>();
+        private void NavigateToStockCount() => _navigationService.NavigateTo<StockCountViewModel>();
+        private void NavigateToReports() => _navigationService.NavigateTo<StockReportsViewModel>();
+        private void NavigateToUsers() => _navigationService.NavigateTo<UsersViewModel>();
+        private void NavigateToSystemLogs() => _navigationService.NavigateTo<SystemLogsViewModel>();
+        private void NavigateToRepairList() => _navigationService.NavigateTo<RepairListViewModel>();
+        private void NavigateToFieldJobList() => _navigationService.NavigateTo<FieldJobListViewModel>();
 
         /// <summary>
         /// Müşteri detay sayfasına geçiş
         /// </summary>
         public void NavigateToCustomerDetail(int customerId)
         {
-            CurrentView = new CustomerDetailViewModel(customerId);
+            CurrentView = new CustomerDetailViewModel(customerId, _navigationService, _toastService, _loadingService);
         }
 
         private void OpenFaultTicket()
@@ -264,15 +272,19 @@ namespace KamatekCrm.ViewModels
             window.Show();
         }
 
-        private void NavigateToSettings() => CurrentView = new SettingsViewModel();
-        private void NavigateToFinance() => CurrentView = new FinanceViewModel();
-        private void NavigateToAnalytics() => CurrentView = new AnalyticsViewModel();
-        private void NavigateToFinancialHealth() => CurrentView = new FinancialHealthViewModel();
-        private void NavigateToPurchaseOrders() => CurrentView = new PurchaseOrderViewModel(_unitOfWork);
-        private void NavigateToSuppliers() => CurrentView = new SuppliersViewModel(_unitOfWork); // Implementation
-        private void NavigateToPipeline() => CurrentView = new PipelineViewModel();
-        private void NavigateToScheduler() => CurrentView = new SchedulerViewModel();
-        private void NavigateToRoutePlanning() => CurrentView = new RoutePlanningViewModel();
+        private void NavigateToSettings() => _navigationService.NavigateTo<SettingsViewModel>();
+        private void NavigateToFinance() => _navigationService.NavigateTo<FinanceViewModel>();
+        private void NavigateToAnalytics() => _navigationService.NavigateTo<AnalyticsViewModel>();
+        private void NavigateToFinancialHealth() => _navigationService.NavigateTo<FinancialHealthViewModel>();
+        // These need DI too! 
+        // If I use _navigationService.NavigateTo<PurchaseOrderViewModel>(), PurchaseOrderViewModel MUST have properties injected.
+        // PurchaseOrderViewModel constructor takes IUnitOfWork currently (line 271 of old file).
+        // DI can resolve it if registered.
+        private void NavigateToPurchaseOrders() => _navigationService.NavigateTo<PurchaseOrderViewModel>();
+        private void NavigateToSuppliers() => _navigationService.NavigateTo<SuppliersViewModel>();
+        private void NavigateToPipeline() => _navigationService.NavigateTo<PipelineViewModel>();
+        private void NavigateToScheduler() => _navigationService.NavigateTo<SchedulerViewModel>();
+        private void NavigateToRoutePlanning() => _navigationService.NavigateTo<RoutePlanningViewModel>();
 
 
         private void LoadNotifications()
@@ -290,8 +302,8 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void Logout()
         {
-            AuthService.Logout();
-            NavigationService.Instance.NavigateToLogin();
+            _authService.Logout();
+            _navigationService.NavigateToLogin();
         }
 
         /// <summary>
@@ -348,6 +360,9 @@ namespace KamatekCrm.ViewModels
                         break;
                     case "NavigateFinance":
                         NavigateToFinance();
+                        break;
+                    case "NavigateSettings":
+                        NavigateToSettings();
                         break;
                 }
             };

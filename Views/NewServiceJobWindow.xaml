@@ -374,7 +374,7 @@
         <Border Grid.Row="2" Background="#252541" Padding="20,15">
             <Grid>
                 <Button Content="❌ İptal" 
-                       Click="CancelButton_Click"
+                       Command="{Binding CancelCommand}"
                        Background="#e74c3c" Foreground="White" BorderThickness="0"
                        IsCancel="True" TabIndex="16"
                        HorizontalAlignment="Left"

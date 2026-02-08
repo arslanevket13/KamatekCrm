@@ -4,10 +4,9 @@ using KamatekCrm.Shared.Enums;
 
 namespace KamatekCrm.Shared.Models
 {
-    public class Customer
+    public class Customer : KamatekCrm.Shared.Models.Common.BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
+        // Id is in BaseEntity
         public CustomerType Type { get; set; } = CustomerType.Individual;
         [Required]
         [MaxLength(20)]

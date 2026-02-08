@@ -107,9 +107,19 @@ namespace KamatekCrm.ViewModels
         public ICommand SaveCommand { get; }
 
         /// <summary>
+        /// İptal komutu
+        /// </summary>
+        public ICommand CancelCommand { get; }
+
+        /// <summary>
         /// Kaydetme başarılı event
         /// </summary>
         public event Action? SaveSuccessful;
+
+        /// <summary>
+        /// İptal talebi event
+        /// </summary>
+        public event Action? CancelRequested;
 
         /// <summary>
         /// Constructor
@@ -126,6 +136,7 @@ namespace KamatekCrm.ViewModels
             _selectedRoleDisplay = GetDisplayRole(user.Role);
 
             SaveCommand = new RelayCommand(_ => SaveUser(), _ => CanSaveUser());
+            CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
         }
 
         /// <summary>

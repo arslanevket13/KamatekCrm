@@ -16,6 +16,7 @@ namespace KamatekCrm.ViewModels
     public class AddUserViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IAuthService _authService;
         private string _ad = string.Empty;
         private string _soyad = string.Empty;
         private string _username = string.Empty;
@@ -147,8 +148,9 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public AddUserViewModel()
+        public AddUserViewModel(IAuthService authService)
         {
+            _authService = authService;
             _context = new AppDbContext();
             SaveCommand = new RelayCommand(_ => SaveUser(), _ => CanSaveUser());
             ClearCommand = new RelayCommand(_ => ClearForm());
@@ -203,7 +205,7 @@ namespace KamatekCrm.ViewModels
                 var newUser = new User
                 {
                     Username = Username.Trim().ToLower(),
-                    PasswordHash = AuthService.HashPassword("1234"), // Varsayılan şifre
+                    PasswordHash = _authService.HashPassword("1234"), // Varsayılan şifre
                     Role = dbRole,
                     Ad = Ad.Trim(),
                     Soyad = Soyad.Trim(),

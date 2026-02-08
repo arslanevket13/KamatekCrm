@@ -25,7 +25,74 @@ namespace KamatekCrm.ViewModels
     public class ServiceJobViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly NavigationService _navigationService;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
         private ServiceJob? _selectedServiceJob;
+
+        public ServiceJobViewModel(NavigationService navigationService, IToastService toastService, ILoadingService loadingService)
+        {
+            _navigationService = navigationService;
+            _toastService = toastService;
+            _loadingService = loadingService;
+            _context = new AppDbContext();
+
+            ServiceJobs = new ObservableCollection<ServiceJob>();
+            Customers = new ObservableCollection<Customer>();
+            Products = new ObservableCollection<Product>();
+            CurrentJobItems = new ObservableCollection<ServiceJobItem>();
+            CurrentJobItems.CollectionChanged += (s, e) =>
+            {
+                UpdateTotals();
+                OnPropertyChanged(nameof(ItemCount));
+            };
+
+            JobTypes = new ObservableCollection<JobType>
+            {
+                JobType.SecurityCamera,
+                JobType.VideoIntercom,
+                JobType.SatelliteSystem
+            };
+
+            CategoryItems = new ObservableCollection<CategorySelectItem>
+            {
+                new CategorySelectItem { Category = JobCategory.CCTV },
+                new CategorySelectItem { Category = JobCategory.VideoIntercom },
+                new CategorySelectItem { Category = JobCategory.FireAlarm },
+                new CategorySelectItem { Category = JobCategory.BurglarAlarm },
+                new CategorySelectItem { Category = JobCategory.SmartHome },
+                new CategorySelectItem { Category = JobCategory.AccessControl },
+                new CategorySelectItem { Category = JobCategory.SatelliteSystem },
+                new CategorySelectItem { Category = JobCategory.FiberOptic }
+            };
+
+            _selectedJobCategory = JobCategory.CCTV;
+
+            _serviceJobsView = CollectionViewSource.GetDefaultView(ServiceJobs);
+            _serviceJobsView.Filter = FilterServiceJobs;
+
+            SaveServiceJobCommand = new RelayCommand(_ => SaveServiceJob(), _ => CanSaveServiceJob());
+            AddItemToJobCommand = new RelayCommand(_ => AddItemToJob(), _ => CanAddItem());
+            RemoveItemFromJobCommand = new RelayCommand(param => RemoveItemFromJob(param as ServiceJobItem));
+            CompleteJobCommand = new RelayCommand(_ => CompleteJob(), _ => CanCompleteJob());
+            ClearFormCommand = new RelayCommand(_ => ClearForm());
+            OpenNewJobFormCommand = new RelayCommand(_ => OpenNewJobForm());
+            RefreshListCommand = new RelayCommand(_ => RefreshList());
+            ViewJobDetailCommand = new RelayCommand(param => ViewJobDetail(param as ServiceJob));
+            PrintServiceFormCommand = new RelayCommand(param => PrintServiceForm(param as ServiceJob), param => param is ServiceJob);
+            AddAssetCommand = new RelayCommand(_ => OpenQuickAssetAdd(), _ => SelectedCustomer != null);
+            CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
+
+            _ = LoadData();
+            UpdateDeviceTypeOptions();
+        }
+
+        public ServiceJobViewModel() : this(null!, null!, null!)
+        {
+        }
+
+
+
         private Customer? _selectedCustomer;
         private JobType _selectedJobType;
         private JobCategory _selectedJobCategory; // Geriye uyumluluk için
@@ -891,72 +958,27 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Hızlı cihaz ekle komutu
         /// </summary>
+        /// <summary>
+        /// Hızlı cihaz ekle komutu
+        /// </summary>
         public ICommand AddAssetCommand { get; }
+
+        /// <summary>
+        /// İptal komutu
+        /// </summary>
+        public ICommand CancelCommand { get; }
+
+        /// <summary>
+        /// İptal talebi event
+        /// </summary>
+        public event Action? CancelRequested;
 
         #endregion
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public ServiceJobViewModel()
-        {
-            _context = new AppDbContext();
 
-            ServiceJobs = new ObservableCollection<ServiceJob>();
-            Customers = new ObservableCollection<Customer>();
-            Products = new ObservableCollection<Product>();
-            CurrentJobItems = new ObservableCollection<ServiceJobItem>();
-            CurrentJobItems.CollectionChanged += (s, e) =>
-            {
-                UpdateTotals();
-                OnPropertyChanged(nameof(ItemCount));
-            };
-
-            JobTypes = new ObservableCollection<JobType>
-            {
-                JobType.SecurityCamera,
-                JobType.VideoIntercom,
-                JobType.SatelliteSystem
-            };
-
-            // Kategori çoklu seçimi için CategoryItems
-            CategoryItems = new ObservableCollection<CategorySelectItem>
-            {
-                new CategorySelectItem { Category = JobCategory.CCTV },
-                new CategorySelectItem { Category = JobCategory.VideoIntercom },
-                new CategorySelectItem { Category = JobCategory.FireAlarm },
-                new CategorySelectItem { Category = JobCategory.BurglarAlarm },
-                new CategorySelectItem { Category = JobCategory.SmartHome },
-                new CategorySelectItem { Category = JobCategory.AccessControl },
-                new CategorySelectItem { Category = JobCategory.SatelliteSystem },
-                new CategorySelectItem { Category = JobCategory.FiberOptic }
-            };
-
-            // Varsayılan kategori (geriye uyumluluk)
-            _selectedJobCategory = JobCategory.CCTV;
-
-            // ICollectionView oluştur ve filtre tanımla
-            _serviceJobsView = CollectionViewSource.GetDefaultView(ServiceJobs);
-            _serviceJobsView.Filter = FilterServiceJobs;
-
-            // Komutları tanımla
-            SaveServiceJobCommand = new RelayCommand(_ => SaveServiceJob(), _ => CanSaveServiceJob());
-            AddItemToJobCommand = new RelayCommand(_ => AddItemToJob(), _ => CanAddItem());
-            RemoveItemFromJobCommand = new RelayCommand(param => RemoveItemFromJob(param as ServiceJobItem));
-            CompleteJobCommand = new RelayCommand(_ => CompleteJob(), _ => CanCompleteJob());
-            ClearFormCommand = new RelayCommand(_ => ClearForm());
-            OpenNewJobFormCommand = new RelayCommand(_ => OpenNewJobForm());
-            RefreshListCommand = new RelayCommand(_ => RefreshList());
-            ViewJobDetailCommand = new RelayCommand(param => ViewJobDetail(param as ServiceJob));
-            PrintServiceFormCommand = new RelayCommand(param => PrintServiceForm(param as ServiceJob), param => param is ServiceJob);
-            AddAssetCommand = new RelayCommand(_ => OpenQuickAssetAdd(), _ => SelectedCustomer != null);
-
-            // Verileri yükle
-            LoadData();
-            
-            // Varsayılan cihaz tipi seçeneklerini yükle
-            UpdateDeviceTypeOptions();
-        }
 
         #region Helper Methods
 
@@ -1010,8 +1032,11 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void OpenNewJobForm()
         {
-            var window = new NewServiceJobWindow();
-            window.Owner = Application.Current.MainWindow;
+            // Create a new ViewModel with dependencies
+            var newVm = new ServiceJobViewModel(_navigationService, _toastService, _loadingService);
+            
+            var window = new NewServiceJobWindow(newVm);
+            window.Owner = System.Windows.Application.Current.MainWindow;
             var result = window.ShowDialog();
 
             if (result == true)
@@ -1046,11 +1071,26 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Tüm verileri yükle
         /// </summary>
-        private void LoadData()
+        /// <summary>
+        /// Tüm verileri yükle
+        /// </summary>
+        private async Task LoadData()
         {
-            LoadCustomers();
-            LoadProducts();
-            LoadServiceJobs();
+            if (_loadingService != null) 
+                _loadingService.Show("İşler yükleniyor...");
+            
+            await Task.Delay(500); // UI thread'in nefes alması için
+
+            try
+            {
+                LoadCustomers();
+                LoadProducts();
+                LoadServiceJobs();
+            }
+            finally
+            {
+                _loadingService?.Hide();
+            }
         }
 
         /// <summary>
@@ -1154,7 +1194,7 @@ namespace KamatekCrm.ViewModels
             {
                 // Listeye ekle ve seç
                 CustomerAssets.Add(window.CreatedAsset);
-                Services.ToastNotificationManager.ShowSuccess($"Cihaz eklendi: {window.CreatedAsset.FullName}");
+                _toastService.ShowSuccess($"Cihaz eklendi: {window.CreatedAsset.FullName}");
             }
         }
 
@@ -1248,7 +1288,7 @@ namespace KamatekCrm.ViewModels
 
                     // Listeye ekle
                     CustomerAssets.Add(newAsset);
-                    Services.ToastNotificationManager.ShowSuccess($"Cihaz kaydedildi: {newAsset.FullName}");
+                    _toastService.ShowSuccess($"Cihaz kaydedildi: {newAsset.FullName}");
                 }
                 else if (SelectedAsset != null)
                 {
@@ -1301,7 +1341,7 @@ namespace KamatekCrm.ViewModels
                 LoadServiceJobs();
                 ClearForm();
 
-                Services.ToastNotificationManager.ShowSuccess("İş kaydı başarıyla oluşturuldu!");
+                _toastService.ShowSuccess("İş kaydı başarıyla oluşturuldu!");
             }
             catch (Exception ex)
             {

@@ -54,8 +54,8 @@ namespace KamatekCrm.Shared.Models
         public JobCategory Category { get; set; } = JobCategory.Other;
         public string Brand { get; set; } = string.Empty;
         public string Model { get; set; } = string.Empty;
-        public string SerialNumber { get; set; } = string.Empty;
-        public string Location { get; set; } = string.Empty;
+        public string? SerialNumber { get; set; }
+        public string? Location { get; set; }
         public AssetStatus Status { get; set; } = AssetStatus.Active;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public string FullName => $"{Brand} {Model}";
@@ -78,10 +78,9 @@ namespace KamatekCrm.Shared.Models
         public virtual ServiceJob ServiceJob { get; set; } = null!;
     }
 
-    public class PurchaseOrder
+    public class PurchaseOrder : KamatekCrm.Shared.Models.Common.BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
+        // Id is in BaseEntity
         public int SupplierId { get; set; }
         public PurchaseStatus Status { get; set; }
         public DateTime Date { get; set; } = DateTime.Now;
@@ -109,9 +108,9 @@ namespace KamatekCrm.Shared.Models
         public virtual PurchaseOrder PurchaseOrder { get; set; } = null!;
     }
     
-    public class Supplier
+    public class Supplier : KamatekCrm.Shared.Models.Common.BaseEntity
     {
-        public int Id { get; set; }
+        // Id is in BaseEntity
         public string Name { get; set; } = string.Empty;
         public string CompanyName { get; set; } = string.Empty;
         public string ContactPerson { get; set; } = string.Empty;
@@ -122,9 +121,9 @@ namespace KamatekCrm.Shared.Models
         public virtual System.Collections.Generic.ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new System.Collections.Generic.List<PurchaseOrder>();
     }
 
-    public class Product
+    public class Product : KamatekCrm.Shared.Models.Common.BaseEntity
     {
-        public int Id { get; set; }
+        // Id is in BaseEntity
         public string ProductName { get; set; } = string.Empty;
         public decimal PurchasePrice { get; set; }
         public decimal SalePrice { get; set; }
@@ -171,9 +170,9 @@ namespace KamatekCrm.Shared.Models
         public virtual Warehouse Warehouse { get; set; } = null!;
     }
 
-    public class Warehouse
+    public class Warehouse : KamatekCrm.Shared.Models.Common.BaseEntity
     {
-        public int Id { get; set; }
+        // Id is in BaseEntity
         public string Name { get; set; } = string.Empty;
         public WarehouseType Type { get; set; }
         public bool IsActive { get; set; }

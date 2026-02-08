@@ -132,5 +132,12 @@ namespace KamatekCrm.Repositories
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
+        public async Task<System.Collections.Generic.List<T>> GetListAsync<T>(Application.Common.Specifications.ISpecification<T> spec) where T : class
+        {
+            var queryable = _context.Set<T>().AsQueryable();
+            var query = Application.Common.Specifications.SpecificationEvaluator<T>.GetQuery(queryable, spec);
+            return await query.ToListAsync();
+        }
     }
 }

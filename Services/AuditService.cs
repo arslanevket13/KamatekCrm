@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -11,14 +12,22 @@ namespace KamatekCrm.Services
     /// </summary>
     public static class AuditService
     {
+        // Helper to resolve IAuthService from global ServiceProvider
+        private static IAuthService? GetAuthService()
+        {
+            try
+            {
+                return App.ServiceProvider?.GetService<IAuthService>();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         /// <summary>
         /// Aktivite logu kaydet (asenkron - UI'ı bloklamaz)
         /// </summary>
-        /// <param name="actionType">İşlem tipi</param>
-        /// <param name="entityName">Entity adı (opsiyonel)</param>
-        /// <param name="recordId">Kayıt ID (opsiyonel)</param>
-        /// <param name="description">Açıklama</param>
-        /// <param name="additionalData">Ek veri JSON (opsiyonel)</param>
         public static async Task LogAsync(
             AuditActionType actionType,
             string? entityName = null,
@@ -28,14 +37,18 @@ namespace KamatekCrm.Services
         {
             try
             {
+                var user = GetAuthService()?.CurrentUser;
+                var userId = user?.Id;
+                var username = user?.Username ?? "System/Anonymous";
+
                 await Task.Run(() =>
                 {
                     using var context = new AppDbContext();
 
                     var log = new ActivityLog
                     {
-                        UserId = AuthService.CurrentUser?.Id,
-                        Username = AuthService.CurrentUser?.Username,
+                        UserId = userId,
+                        Username = username,
                         ActionType = actionType.ToString(),
                         EntityName = entityName,
                         RecordId = recordId,
@@ -51,7 +64,6 @@ namespace KamatekCrm.Services
             catch
             {
                 // Logging hatası uygulamayı etkilememeli
-                // Production'da buraya error logging eklenebilir
             }
         }
 
@@ -66,20 +78,22 @@ namespace KamatekCrm.Services
         {
             try
             {
+                var user = GetAuthService()?.CurrentUser;
+                
                 using var context = new AppDbContext();
 
                 var log = new ActivityLog
                 {
-                    UserId = AuthService.CurrentUser?.Id,
-                    Username = AuthService.CurrentUser?.Username,
+                    UserId = user?.Id,
+                    Username = user?.Username ?? "System/Anonymous",
                     Action = actionType.ToString(),
                     EntityName = entityName,
                     ReferenceId = recordId,
                     Description = description,
                     Timestamp = DateTime.Now,
-                    DurationMs = 0, // Default value, as it's not a parameter
-                    IpAddress = "127.0.0.1", // Default value, as it's not a parameter
-                    UserAgent = "WPF Client" // Default value, as it's not a parameter
+                    DurationMs = 0, 
+                    IpAddress = "127.0.0.1", 
+                    UserAgent = "WPF Client" 
                 };
 
                 context.ActivityLogs.Add(log);
@@ -104,7 +118,7 @@ namespace KamatekCrm.Services
         /// </summary>
         public static void LogLogout()
         {
-            var username = AuthService.CurrentUser?.Username;
+            var username = GetAuthService()?.CurrentUser?.Username ?? "Unknown";
             Log(AuditActionType.Logout, "User", null, $"{username} sistemden çıkış yaptı");
         }
 

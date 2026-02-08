@@ -6,14 +6,20 @@ using KamatekCrm.Shared.Enums;
 
 namespace KamatekCrm.Shared.Models
 {
-    public class ServiceJob
+    public class ServiceJob : KamatekCrm.Shared.Models.Common.BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
+        // Id is in BaseEntity
         [Required]
         public int CustomerId { get; set; }
         public int? ServiceProjectId { get; set; }
         public int? CustomerAssetId { get; set; }
+
+        [Required]
+        [MaxLength(200)]
+        public string Title { get; set; } = string.Empty;
+
+        public int? AssignedTechnicianId { get; set; } // Alias for AssignedUserId if needed, or separate. Let's map it to AssignedUserId logic if possible, or just add it. The user asked for "AssignedTechnicianId".
+
         [Required]
         public WorkOrderType WorkOrderType { get; set; } = WorkOrderType.Repair;
         
@@ -27,7 +33,7 @@ namespace KamatekCrm.Shared.Models
         [Required]
         public JobStatus Status { get; set; } = JobStatus.Pending;
         [Required]
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        // CreatedDate is in BaseEntity (CreatedAt)
         public DateTime? CompletedDate { get; set; }
         public DateTime? ScheduledDate { get; set; }
         [MaxLength(100)]

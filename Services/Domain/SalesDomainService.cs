@@ -17,6 +17,12 @@ namespace KamatekCrm.Services.Domain
     {
         // Thread safety için SemaphoreSlim (eşzamanlı satış işlemlerini sıraya koy)
         private static readonly SemaphoreSlim _salesLock = new(1, 1);
+        private readonly IAuthService _authService;
+
+        public SalesDomainService(IAuthService authService)
+        {
+            _authService = authService;
+        }
 
         /// <summary>
         /// Satış işlemini gerçekleştirir (Transaction içinde)
@@ -134,9 +140,8 @@ namespace KamatekCrm.Services.Domain
                         TransactionType = cashTransactionType,
                         Description = $"POS Satış - {orderNumber}",
                         Category = "Perakende Satış",
-                        ReferenceNumber = orderNumber,
                         SalesOrderId = salesOrder.Id,
-                        CreatedBy = request.CreatedBy,
+                        CreatedBy = request.CreatedBy ?? _authService.CurrentUser?.AdSoyad ?? "Sistem",
                         CreatedAt = DateTime.Now
                     };
                     context.CashTransactions.Add(cashTransaction);

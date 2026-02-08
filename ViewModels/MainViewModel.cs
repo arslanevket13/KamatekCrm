@@ -11,6 +11,10 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class MainViewModel : ViewModelBase
     {
+        private readonly NavigationService _navigationService;
+        private readonly IAuthService _authService;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
         private object? _currentView;
 
         /// <summary>
@@ -25,17 +29,17 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Mevcut kullanıcı ad soyad
         /// </summary>
-        public string CurrentUserName => AuthService.CurrentUser?.AdSoyad ?? "Misafir";
+        public string CurrentUserName => _authService.CurrentUser?.AdSoyad ?? "Misafir";
 
         /// <summary>
         /// Mevcut kullanıcı rol gösterimi
         /// </summary>
-        public string CurrentUserRole => GetDisplayRole(AuthService.CurrentUser?.Role);
+        public string CurrentUserRole => GetDisplayRole(_authService.CurrentUser?.Role);
 
         /// <summary>
         /// Admin mi?
         /// </summary>
-        public bool IsAdmin => AuthService.IsAdmin;
+        public bool IsAdmin => _authService.IsAdmin;
 
         #region Navigation Commands
 
@@ -99,8 +103,13 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public MainViewModel()
+        public MainViewModel(NavigationService navigationService, IAuthService authService, IToastService toastService, ILoadingService loadingService)
         {
+            _navigationService = navigationService;
+            _authService = authService;
+            _toastService = toastService;
+            _loadingService = loadingService;
+
             // Komutları tanımla
             NavigateToDashboardCommand = new RelayCommand(_ => NavigateToDashboard());
             NavigateToCustomersCommand = new RelayCommand(_ => NavigateToCustomers());
@@ -121,22 +130,37 @@ namespace KamatekCrm.ViewModels
 
         #region Navigation Methods
 
-        private void NavigateToDashboard() => CurrentView = new DashboardViewModel();
-        private void NavigateToCustomers() => CurrentView = new CustomersViewModel();
-        private void NavigateToProducts() => CurrentView = new ProductViewModel();
-        private void NavigateToServiceJobs() => CurrentView = new ServiceJobViewModel();
-        public void NavigateToRepairList() => CurrentView = new RepairListViewModel(); // Public for external access if needed
-        public void NavigateToFieldJobList() => CurrentView = new FieldJobListViewModel();
-        private void NavigateToStockCount() => CurrentView = new StockCountViewModel();
-        private void NavigateToReports() => CurrentView = new StockReportsViewModel();
-        private void NavigateToUsers() => CurrentView = new UsersViewModel();
+        private void NavigateToDashboard() => _navigationService.NavigateTo<DashboardViewModel>();
+        private void NavigateToCustomers() => _navigationService.NavigateTo<CustomersViewModel>();
+        private void NavigateToProducts() => _navigationService.NavigateTo<ProductViewModel>();
+        private void NavigateToServiceJobs() => _navigationService.NavigateTo<ServiceJobViewModel>();
+        public void NavigateToRepairList() => _navigationService.NavigateTo<RepairListViewModel>();
+        public void NavigateToFieldJobList() => _navigationService.NavigateTo<FieldJobListViewModel>();
+        private void NavigateToStockCount() => _navigationService.NavigateTo<StockCountViewModel>();
+        private void NavigateToReports() => _navigationService.NavigateTo<StockReportsViewModel>();
+        private void NavigateToUsers() => _navigationService.NavigateTo<UsersViewModel>();
 
         /// <summary>
         /// Müşteri detay sayfasına geçiş
         /// </summary>
         public void NavigateToCustomerDetail(int customerId)
         {
-            CurrentView = new CustomerDetailViewModel(customerId);
+            // Parameter passing is tricky with simple NavigateTo<T>.
+            // Ideally NavigationService should support Parameter navigation or we resolve factory.
+            // For now, resolving manually via DI if possible, or using the old way if CustomerDetailViewModel is not fully DI ready yet.
+            // But NavigationService no longer supports `new`.
+            // Workaround: We need a way to pass parameters.
+            // Let's assume CustomerDetailViewModel can be instantiated with ID provided via a service or messenger?
+            // Or we use a Factory pattern.
+            // Or we hack it for now: _navigationService.CurrentView = new CustomerDetailViewModel(customerId);
+            // But CustomerDetailViewModel needs DI dependencies!
+            // This requires a factory. 
+            // For this specific case, I will leave it as `CurrentView = ...` but I need to resolve dependencies?
+            // If CustomerDetailViewModel has dependencies, `new` will fail if I don't pass them.
+            // I will default to `new CustomerDetailViewModel(customerId)` but I know this breaks DI rules.
+            // I'll skip fixing parameterized navigation for this atomic step to avoid scope creep.
+            // But I MUST fix the `_currentView` usage in this file to use `_navigationService`.
+             _navigationService.CurrentView = new CustomerDetailViewModel(customerId, _navigationService, _toastService, _loadingService);
         }
 
         /// <summary>
@@ -148,7 +172,7 @@ namespace KamatekCrm.ViewModels
             window.ShowDialog();
         }
 
-        private void NavigateToSettings() => CurrentView = new SettingsViewModel();
+        private void NavigateToSettings() => _navigationService.NavigateTo<SettingsViewModel>();
 
         /// <summary>
         /// Ayarlar sayfasına git komutu
@@ -170,11 +194,11 @@ namespace KamatekCrm.ViewModels
 
             if (result == MessageBoxResult.Yes)
             {
-                AuthService.Logout();
+                _authService.Logout();
 
                 // Uygulamayı yeniden başlat
-                System.Diagnostics.Process.Start(Application.ResourceAssembly.Location.Replace(".dll", ".exe"));
-                Application.Current.Shutdown();
+                System.Diagnostics.Process.Start(System.Windows.Application.ResourceAssembly.Location.Replace(".dll", ".exe"));
+                System.Windows.Application.Current.Shutdown();
             }
         }
 

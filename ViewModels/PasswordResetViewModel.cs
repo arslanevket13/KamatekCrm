@@ -14,6 +14,7 @@ namespace KamatekCrm.ViewModels
     public class PasswordResetViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IAuthService _authService;
         private readonly User _user;
 
         private string _newPassword = string.Empty;
@@ -118,19 +119,31 @@ namespace KamatekCrm.ViewModels
         public ICommand SaveCommand { get; }
 
         /// <summary>
+        /// İptal komutu
+        /// </summary>
+        public ICommand CancelCommand { get; }
+
+        /// <summary>
         /// Kaydetme başarılı event
         /// </summary>
         public event Action? SaveSuccessful;
 
         /// <summary>
+        /// İptal talebi event
+        /// </summary>
+        public event Action? CancelRequested;
+
+        /// <summary>
         /// Constructor
         /// </summary>
-        public PasswordResetViewModel(User user)
+        public PasswordResetViewModel(User user, IAuthService authService)
         {
             _context = new AppDbContext();
             _user = user;
+            _authService = authService;
 
             SaveCommand = new RelayCommand(_ => SavePassword(), _ => CanSavePassword());
+            CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
         }
 
         /// <summary>
@@ -175,7 +188,9 @@ namespace KamatekCrm.ViewModels
                 }
 
                 // Şifreyi hash'le ve kaydet
-                dbUser.PasswordHash = AuthService.HashPassword(NewPassword);
+                // Şifreyi hash'le ve kaydet
+                dbUser.PasswordHash = _authService.HashPassword(NewPassword);
+                _context.SaveChanges();
                 _context.SaveChanges();
 
                 IsSuccess = true;

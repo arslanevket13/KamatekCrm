@@ -1,6 +1,7 @@
 using System.Windows;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;
+using KamatekCrm.Services;
 
 namespace KamatekCrm.Views
 {
@@ -9,16 +10,23 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class PasswordResetView : Window
     {
-        public PasswordResetView(User user)
+        public PasswordResetView(User user, IAuthService authService)
         {
             InitializeComponent();
 
-            var viewModel = new PasswordResetViewModel(user);
+            var viewModel = new PasswordResetViewModel(user, authService);
             viewModel.SaveSuccessful += () =>
             {
                 DialogResult = true;
                 Close();
             };
+            
+            viewModel.CancelRequested += () =>
+            {
+                DialogResult = false;
+                Close();
+            };
+
             DataContext = viewModel;
         }
 
@@ -36,12 +44,6 @@ namespace KamatekCrm.Views
             {
                 vm.ConfirmPassword = ConfirmPasswordBox.Password;
             }
-        }
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
-            Close();
         }
     }
 }

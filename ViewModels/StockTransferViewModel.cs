@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Commands;
 using KamatekCrm.Data;
+using KamatekCrm.Services.Domain;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ namespace KamatekCrm.ViewModels
     public class StockTransferViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IInventoryDomainService _inventoryDomainService;
         private Warehouse? _sourceWarehouse;
         private Warehouse? _targetWarehouse;
         private Product? _selectedProduct;
@@ -96,14 +98,17 @@ namespace KamatekCrm.ViewModels
         }
 
         public ICommand TransferCommand { get; }
-
-        public StockTransferViewModel()
+        public ICommand CloseCommand { get; }
+        
+        public StockTransferViewModel(IInventoryDomainService inventoryDomainService)
         {
+            _inventoryDomainService = inventoryDomainService;
             _context = new AppDbContext();
             Warehouses = new ObservableCollection<Warehouse>(_context.Warehouses.Where(w => w.IsActive).ToList());
             Products = new ObservableCollection<Product>(_context.Products.ToList());
             
             TransferCommand = new RelayCommand(_ => ExecuteTransfer(), _ => CanExecuteTransfer());
+            CloseCommand = new RelayCommand(param => (param as Window)?.Close());
         }
 
         private bool CanExecuteTransfer()
@@ -120,8 +125,8 @@ namespace KamatekCrm.ViewModels
         {
             if (SourceWarehouse == null || TargetWarehouse == null || SelectedProduct == null) return;
 
-            // Domain Service'e delege et
-            var inventoryService = new KamatekCrm.Services.Domain.InventoryDomainService();
+            if (SourceWarehouse == null || TargetWarehouse == null || SelectedProduct == null) return;
+            
             var request = new KamatekCrm.Services.Domain.TransferRequest
             {
                 ProductId = SelectedProduct.Id,
@@ -131,7 +136,7 @@ namespace KamatekCrm.ViewModels
                 Description = $"{SourceWarehouse.Name} deposundan {TargetWarehouse.Name} deposuna transfer."
             };
 
-            var result = inventoryService.TransferStock(request);
+            var result = _inventoryDomainService.TransferStock(request);
 
             if (result.Success)
             {

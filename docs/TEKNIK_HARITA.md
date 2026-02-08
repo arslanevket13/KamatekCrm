@@ -5,46 +5,14 @@
 ```
 KamatekCRM/                       # Solution Root
 ├── KamatekCrm/                   # WPF Desktop Application (net9.0-windows)
-│   ├── App.xaml                  # Uygulama girişi, global stiller
-│   ├── MainWindow.xaml           # Ana pencere (sidebar navigation)
-│   ├── ViewModels/               # İş mantığı (MVVM) - WPF specific
-│   ├── Views/                    # XAML arayüzleri
-│   ├── Data/                     # Entity Framework DbContext
-│   ├── Services/                 # Application services
-│   ├── Commands/                 # ICommand implementations
-│   ├── Helpers/                  # WPF Converters, utilities
-│   └── docs/                     # Proje dokümantasyonu
+│   ├── ... (WPF Files)
+│   ├── Configuration/
+│   │   └── LoggingConfiguration.cs # Serilog Configuration
+│   └── Helpers/ProcessManager.cs # Cleaned (No external processes)
 │
 ├── KamatekCrm.Shared/            # Shared Class Library (net9.0)
-│   ├── Models/                   # Entity sınıfları (platform-agnostic)
-│   │   ├── Customer.cs
-│   │   ├── Product.cs
-│   │   ├── ServiceJob.cs
-│   │   ├── ScopeNode.cs          # JSON-serializable tree
-│   │   ├── Specs/                # Product specifications
-│   │   └── JobDetails/           # Dynamic job details
-│   ├── Enums/                    # Tüm enum tanımları
-│   │   ├── JobCategory.cs
-│   │   ├── JobStatus.cs
-│   │   ├── ProductCategory.cs
-│   │   └── ...
-│   └── ViewModelBase.cs          # INotifyPropertyChanged base
-│
-├── KamatekCrm.Web/               # Blazor Web App (Server Interactive, net9.0)
-│   ├── Components/Pages/         # Dashboard, Login
-│   │   ├── Layout/               # MainLayout, LoginLayout
-│   │   │   └── RedirectToLogin.razor # Safe Auth Redirect
-│   ├── Services/                 # Auth Services
-│   └── Program.cs                # MudBlazor, Blazored.LocalStorage
-│
-├── KamatekCrm.Web/               # Blazor Web App (Server Interactive, net9.0)
-│   ├── Components/Pages/         # Dashboard, Login
-│   │   ├── Layout/               # MainLayout, LoginLayout
-│   │   │   └── RedirectToLogin.razor # Safe Auth Redirect
-│   ├── Services/                 # Auth Services
-│   └── Program.cs                # MudBlazor, Blazored.LocalStorage
-│
-└── KamatekCrm.API/               # ASP.NET Core Web API (net9.0)
+│   ├── Models/User.cs            # Shared Identity Model
+│   └── ...
 ```
 
 ## WPF Proje Detayları
@@ -87,6 +55,8 @@ KamatekCrm/
 │   ├── ProductsView.xaml         # Ürün listesi
 │   ├── AddProductWindow.xaml     # Ürün formu (dinamik specs)
 │   ├── SettingsView.xaml         # Ayarlar ekranı
+│   ├── LoadingOverlay.xaml       # Global Loading Indicator (YENİ)
+│   ├── ToastNotificationControl.xaml # Bildirim kontrolü (YENİ)
 │   └── ...
 │
 ├── Models/               # Entity sınıfları
@@ -124,6 +94,9 @@ KamatekCrm/
 │   ├── WebViewHelper.cs  # WebView2 HTML binding
 │   └── ProcessManager.cs # API/Web Process Lifecycle (Auto-Start) (YENİ)
 │
+├── Infrastructure/       # Altyapı
+│   └── GlobalExceptionHandler.cs # Merkezi Hata Yönetimi
+│
 ├── Data/
 │   └── AppDbContext.cs   # EF Core DbContext
 │
@@ -132,6 +105,9 @@ KamatekCrm/
 │   ├── PdfService.cs         # PDF oluşturma (QuestPDF)
 │   ├── ProjectScopeService.cs # Proje ağacı ve veri yönetimi
 │   ├── EmailService.cs       # SMTP e-posta gönderimi
+│   └── Domain/               # Domain Servisleri
+│       ├── InventoryDomainService.cs # Stok işlemleri (DI)
+│       ├── SalesDomainService.cs     # Satış işlemleri (DI)
 │   ├── SmsService.cs         # HTTP API SMS gönderimi
 │   ├── AttachmentService.cs  # Dijital arşiv dosya yönetimi
 │   ├── BackupService.cs      # SQLite yedekleme/geri yükleme
@@ -142,13 +118,18 @@ KamatekCrm/
 │       ├── SalesDomainService.cs       # Thread-safe satış işlemleri
 │       ├── IInventoryDomainService.cs  # Stok interface
 │       └── InventoryDomainService.cs   # Thread-safe stok işlemleri
+│   ├── LoadingService.cs     # Global Loading Overlay yönetimi (YENİ)
+│   ├── ToastService.cs       # Toast Bildirim yönetimi (YENİ)
 │
 ├── Repositories/         # Data Access Layer (YENİ)
 │   ├── IUnitOfWork.cs    # Unit of Work interface
 │   └── UnitOfWork.cs     # Transaction yönetimi
 │
 ├── Exceptions/           # Custom Exceptions (YENİ)
-│   ├── InsufficientStockException.cs   # Yetersiz stok hatası
+│   ├── ValidationException.cs        # Doğrulama hatası
+│   ├── NotFoundException.cs          # Kayıt bulunamadı hatası
+│   ├── BusinessRuleException.cs      # İş kuralı hatası
+│   ├── InsufficientStockException.cs # Yetersiz stok hatası
 │   └── ReferentialIntegrityException.cs # Bağımlılık hatası
 │
 ├── Events/               # Event DTOs (YENİ)

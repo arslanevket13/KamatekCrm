@@ -1,0 +1,57 @@
+<UserControl x:Class="KamatekCrm.Views.LoadingOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+    
+    <Grid Background="#80000000" 
+          Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
+          d:Visibility="Visible">
+        
+        <Border Background="White" 
+                CornerRadius="10" 
+                Padding="20" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                Effect="{StaticResource DropShadow}">
+            <StackPanel>
+                <!-- Spinner (Simple rotating circle using Path) -->
+                <Viewbox Width="50" Height="50" HorizontalAlignment="Center">
+                    <Grid Width="100" Height="100">
+                        <Path Fill="{StaticResource PrimaryColor}" 
+                              Data="M 50,0 A 50,50 0 1,1 0,50 L 10,50 A 40,40 0 1,0 50,10 Z"
+                              RenderTransformOrigin="0.5,0.5">
+                            <Path.RenderTransform>
+                                <RotateTransform x:Name="SpinnerRotate" Angle="0" />
+                            </Path.RenderTransform>
+                            <Path.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="SpinnerRotate" 
+                                                             Storyboard.TargetProperty="Angle" 
+                                                             From="0" To="360" Duration="0:0:1" 
+                                                             RepeatBehavior="Forever" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Path.Triggers>
+                        </Path>
+                    </Grid>
+                </Viewbox>
+                
+                <TextBlock Text="{Binding BusyMessage}" 
+                           Margin="0,15,0,0" 
+                           FontSize="16" 
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Foreground="{StaticResource TextPrimary}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

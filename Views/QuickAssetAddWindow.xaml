@@ -22,6 +22,8 @@
             <!-- Kategori -->
             <TextBlock Text="Kategori *" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
             <ComboBox x:Name="CategoryCombo" 
+                      SelectedValuePath="Tag"
+                      SelectedValue="{Binding SelectedCategoryTag}"
                       Style="{StaticResource ModernComboBox}"
                       Height="40" Margin="0,0,0,16">
                 <ComboBoxItem Content="📹 Güvenlik Kamera" Tag="CCTV"/>
@@ -38,6 +40,7 @@
             <TextBlock Text="Marka *" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
             <ComboBox x:Name="BrandCombo" 
                       IsEditable="True"
+                      Text="{Binding Brand, UpdateSourceTrigger=PropertyChanged}"
                       Style="{StaticResource ModernComboBox}"
                       Height="40" Margin="0,0,0,16">
                 <ComboBoxItem Content="Hikvision"/>
@@ -53,18 +56,21 @@
             <!-- Model -->
             <TextBlock Text="Model *" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
             <TextBox x:Name="ModelBox" 
+                     Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}"
                      Style="{StaticResource ModernTextBox}"
                      Height="40" Margin="0,0,0,16"/>
 
             <!-- Seri No -->
             <TextBlock Text="Seri Numarası" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
             <TextBox x:Name="SerialBox" 
+                     Text="{Binding SerialNumber, UpdateSourceTrigger=PropertyChanged}"
                      Style="{StaticResource ModernTextBox}"
                      Height="40" Margin="0,0,0,16"/>
 
             <!-- Konum -->
             <TextBlock Text="Konum (Örn: Giriş Kapısı)" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
             <TextBox x:Name="LocationBox" 
+                     Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"
                      Style="{StaticResource ModernTextBox}"
                      Height="40" Margin="0,0,0,24"/>
 
@@ -79,12 +85,12 @@
                 <Button Grid.Column="0" Content="İptal"
                         Style="{StaticResource SecondaryButton}"
                         Height="44"
-                        Click="CancelButton_Click"/>
+                        Command="{Binding CancelCommand}"/>
 
                 <Button Grid.Column="2" Content="💾 Kaydet ve Seç"
                         Style="{StaticResource ModernButton}"
                         Height="44"
-                        Click="SaveButton_Click"/>
+                        Command="{Binding SaveCommand}"/>
             </Grid>
         </StackPanel>
     </Border>

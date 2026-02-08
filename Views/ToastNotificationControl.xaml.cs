@@ -14,12 +14,6 @@ namespace KamatekCrm.Views
             InitializeComponent();
         }
 
-        private void DismissButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button && button.DataContext is ToastMessage toast)
-            {
-                ToastNotificationManager.Instance.DismissToast(toast);
-            }
-        }
+
     }
 }

@@ -11,6 +11,7 @@ using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
+using KamatekCrm.Services.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
@@ -22,6 +23,8 @@ namespace KamatekCrm.ViewModels
     public class DirectSalesViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IAuthService _authService;
+        private readonly ISalesDomainService _salesDomainService;
         private string _searchText = string.Empty;
         private string _customerName = "Perakende Müşteri";
         private string _statusMessage = string.Empty;
@@ -98,8 +101,10 @@ namespace KamatekCrm.ViewModels
         public ICommand ProcessCardPaymentCommand { get; }
         public ICommand ClearCartCommand { get; }
 
-        public DirectSalesViewModel()
+        public DirectSalesViewModel(IAuthService authService, ISalesDomainService salesDomainService)
         {
+            _authService = authService;
+            _salesDomainService = salesDomainService;
             _context = new AppDbContext();
             AllProducts = new ObservableCollection<ProductDisplayItem>();
             CartItems = new ObservableCollection<CartItem>();
@@ -313,13 +318,13 @@ namespace KamatekCrm.ViewModels
             if (result != MessageBoxResult.Yes) return;
 
             // Domain Service'e delege et
-            var salesService = new KamatekCrm.Services.Domain.SalesDomainService();
+            // var salesService = new KamatekCrm.Services.Domain.SalesDomainService(); // Removed manual instantiation
             var request = new KamatekCrm.Services.Domain.SaleRequest
             {
                 WarehouseId = SelectedWarehouse.Id,
                 CustomerName = CustomerName,
                 PaymentMethod = paymentMethod,
-                CreatedBy = AuthService.CurrentUser?.AdSoyad ?? "Sistem",
+                CreatedBy = _authService.CurrentUser?.AdSoyad ?? "Sistem",
                 Items = CartItems.Select(c => new KamatekCrm.Services.Domain.SaleItemRequest
                 {
                     ProductId = c.ProductId,
@@ -329,7 +334,7 @@ namespace KamatekCrm.ViewModels
                 }).ToList()
             };
 
-            var saleResult = salesService.ProcessSale(request);
+            var saleResult = _salesDomainService.ProcessSale(request);
 
             if (saleResult.Success)
             {

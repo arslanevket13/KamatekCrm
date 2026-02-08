@@ -10,44 +10,46 @@ namespace KamatekCrm.Services
     /// <summary>
     /// Kimlik doğrulama servisi
     /// </summary>
-    public static class AuthService
+    public class AuthService : IAuthService
     {
+        private User? _currentUser;
+
         /// <summary>
         /// Şu anda oturum açmış kullanıcı
         /// </summary>
-        public static User? CurrentUser { get; private set; }
+        public User? CurrentUser => _currentUser;
 
         /// <summary>
         /// Oturum açık mı?
         /// </summary>
-        public static bool IsLoggedIn => CurrentUser != null;
+        public bool IsLoggedIn => _currentUser != null;
 
         #region RBAC - Granular Permissions
 
         /// <summary>
         /// Finans modülünü görme yetkisi
         /// </summary>
-        public static bool CanViewFinance => CurrentUser?.CanViewFinance == true || IsAdmin;
+        public bool CanViewFinance => _currentUser?.CanViewFinance == true || IsAdmin;
 
         /// <summary>
         /// Analitik dashboard görme yetkisi
         /// </summary>
-        public static bool CanViewAnalytics => CurrentUser?.CanViewAnalytics == true || IsAdmin;
+        public bool CanViewAnalytics => _currentUser?.CanViewAnalytics == true || IsAdmin;
 
         /// <summary>
         /// Kayıt silme yetkisi
         /// </summary>
-        public static bool CanDeleteRecords => CurrentUser?.CanDeleteRecords == true || IsAdmin;
+        public bool CanDeleteRecords => _currentUser?.CanDeleteRecords == true || IsAdmin;
 
         /// <summary>
         /// Satın alma onaylama yetkisi
         /// </summary>
-        public static bool CanApprovePurchase => CurrentUser?.CanApprovePurchase == true || IsAdmin;
+        public bool CanApprovePurchase => _currentUser?.CanApprovePurchase == true || IsAdmin;
 
         /// <summary>
         /// Ayarlara erişim yetkisi
         /// </summary>
-        public static bool CanAccessSettings => CurrentUser?.CanAccessSettings == true || IsAdmin;
+        public bool CanAccessSettings => _currentUser?.CanAccessSettings == true || IsAdmin;
 
         #endregion
 
@@ -57,7 +59,7 @@ namespace KamatekCrm.Services
         /// <param name="username">Kullanıcı adı</param>
         /// <param name="password">Şifre (plain text)</param>
         /// <returns>Başarılı ise true</returns>
-        public static bool Login(string username, string password)
+        public bool Login(string username, string password)
         {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 throw new Exception("Kullanıcı adı veya şifre boş olamaz.");
@@ -88,7 +90,7 @@ namespace KamatekCrm.Services
             }
 
             // Başarılı Giriş
-            CurrentUser = targetUser;
+            _currentUser = targetUser;
             targetUser.LastLoginDate = DateTime.Now;
             context.SaveChanges();
 
@@ -98,15 +100,15 @@ namespace KamatekCrm.Services
         /// <summary>
         /// Oturumu kapat
         /// </summary>
-        public static void Logout()
+        public void Logout()
         {
-            CurrentUser = null;
+            _currentUser = null;
         }
 
         /// <summary>
         /// Varsayılan admin kullanıcısını oluştur (eğer yoksa)
         /// </summary>
-        public static void CreateDefaultUser()
+        public void CreateDefaultUser()
         {
             using var context = new AppDbContext();
 
@@ -145,8 +147,6 @@ namespace KamatekCrm.Services
                 adminUser.CanAccessSettings = true;
                 context.SaveChanges();
             }
-            // Eski 'admin.user' varsa ve şifresi '1234' ise, onu da güncel veya yedek olarak tutabiliriz
-            // Ama şimdilik sadece 'admin' garantisi veriyoruz.
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace KamatekCrm.Services
         /// </summary>
         /// <param name="password">Plain text şifre</param>
         /// <returns>Hash string</returns>
-        public static string HashPassword(string password)
+        public string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();
             var bytes = Encoding.UTF8.GetBytes(password);
@@ -167,14 +167,14 @@ namespace KamatekCrm.Services
         /// </summary>
         /// <param name="role">Kontrol edilecek rol</param>
         /// <returns>Role sahipse true</returns>
-        public static bool HasRole(string role)
+        public bool HasRole(string role)
         {
-            return CurrentUser?.Role?.Equals(role, StringComparison.OrdinalIgnoreCase) == true;
+            return _currentUser?.Role?.Equals(role, StringComparison.OrdinalIgnoreCase) == true;
         }
 
         /// <summary>
         /// Kullanıcının Admin olup olmadığını kontrol et
         /// </summary>
-        public static bool IsAdmin => HasRole("Admin");
+        public bool IsAdmin => HasRole("Admin");
     }
 }

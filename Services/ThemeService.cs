@@ -53,7 +53,7 @@ namespace KamatekCrm.Services
         {
             try
             {
-                var app = Application.Current;
+                var app = System.Windows.Application.Current;
                 if (app == null) return;
 
                 // Mevcut tema dictionary'sini bul ve kaldır

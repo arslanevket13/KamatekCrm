@@ -21,6 +21,7 @@ namespace KamatekCrm.ViewModels
     public class FinanceViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IAuthService _authService;
 
         #region Properties
 
@@ -150,8 +151,9 @@ namespace KamatekCrm.ViewModels
 
         #region Constructor
 
-        public FinanceViewModel()
+        public FinanceViewModel(IAuthService authService)
         {
+            _authService = authService;
             _context = new AppDbContext();
 
             FilteredTransactions = CollectionViewSource.GetDefaultView(Transactions);
@@ -262,7 +264,7 @@ namespace KamatekCrm.ViewModels
                     TransactionType = CashTransactionType.Expense,
                     Description = NewExpenseDescription,
                     Category = NewExpenseCategory,
-                    CreatedBy = AuthService.CurrentUser?.AdSoyad ?? "Sistem",
+                    CreatedBy = _authService.CurrentUser?.AdSoyad ?? "Sistem",
                     CreatedAt = DateTime.Now
                 };
 
@@ -286,7 +288,7 @@ namespace KamatekCrm.ViewModels
 
         private bool CanDeleteTransaction(object? parameter)
         {
-            return parameter is CashTransaction && AuthService.IsAdmin;
+            return parameter is CashTransaction && _authService.IsAdmin;
         }
 
         private void DeleteTransaction(object? parameter)

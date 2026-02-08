@@ -14,6 +14,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class SystemLogsViewModel : ViewModelBase
     {
+        private readonly IAuthService _authService;
         private string _searchText = string.Empty;
         private string _selectedActionFilter = "Tümü";
         private string _selectedEntityFilter = "Tümü";
@@ -140,13 +141,20 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Admin mi?
         /// </summary>
-        public bool IsAdmin => AuthService.IsAdmin;
+        /// <summary>
+        /// Admin mi?
+        /// </summary>
+        public bool IsAdmin => _authService.IsAdmin;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public SystemLogsViewModel()
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public SystemLogsViewModel(IAuthService authService)
         {
+            _authService = authService;
             RefreshCommand = new RelayCommand(_ => LoadLogs());
             ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
 

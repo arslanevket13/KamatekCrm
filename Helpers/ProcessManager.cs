@@ -15,8 +15,8 @@ namespace KamatekCrm.Helpers
         {
             KillZombieProcesses();
 
-            string apiExe = FindExeRecursive("KamatekCrm.API.exe");
-            string webExe = FindExeRecursive("KamatekCrm.Web.exe");
+            string? apiExe = FindExeRecursive("KamatekCrm.API.exe");
+            string? webExe = FindExeRecursive("KamatekCrm.Web.exe");
 
             if (!string.IsNullOrEmpty(apiExe))
                 StartVisibleProcess(apiExe);
@@ -68,7 +68,7 @@ namespace KamatekCrm.Helpers
             }
         }
 
-        private static string FindExeRecursive(string exeName)
+        private static string? FindExeRecursive(string exeName)
         {
             var currentProcessPath = Process.GetCurrentProcess().MainModule?.FileName;
             var currentDir = Path.GetDirectoryName(currentProcessPath) ?? AppDomain.CurrentDomain.BaseDirectory;
@@ -77,7 +77,7 @@ namespace KamatekCrm.Helpers
             // Then search down specifically in bin/Debug/net9.0/ folders for the target exe
             
             var directory = new DirectoryInfo(currentDir);
-            DirectoryInfo solutionRoot = null;
+            DirectoryInfo? solutionRoot = null;
 
             while (directory != null)
             {

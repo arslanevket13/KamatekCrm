@@ -18,6 +18,10 @@ namespace KamatekCrm.Data
             // Database migration ile oluşturulur: dotnet ef database update
         }
 
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
+
         // --- Mevcut DbSetler ---
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Product> Products { get; set; }
@@ -80,6 +84,22 @@ namespace KamatekCrm.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Global Query Filter for Soft Delete
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (typeof(KamatekCrm.Shared.Models.Common.ISoftDeletable).IsAssignableFrom(entityType.ClrType))
+                {
+                    var parameter = System.Linq.Expressions.Expression.Parameter(entityType.ClrType, "e");
+                    var body = System.Linq.Expressions.Expression.Equal(
+                        System.Linq.Expressions.Expression.Property(parameter, nameof(KamatekCrm.Shared.Models.Common.ISoftDeletable.IsDeleted)),
+                        System.Linq.Expressions.Expression.Constant(false)
+                    );
+                    var lambda = System.Linq.Expressions.Expression.Lambda(body, parameter);
+                    
+                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
+                }
+            }
 
             // --- Inventory Modülü İlişkileri ---
 
@@ -171,6 +191,59 @@ namespace KamatekCrm.Data
                 new Category { Id = 2, Name = "Kablo" },
                 new Category { Id = 3, Name = "Diafon" }
             );
+        }
+
+            // Helper to get current user
+        private string GetCurrentUser()
+        {
+            return App.CurrentUser?.Username ?? "System";
+        }
+
+        public override int SaveChanges()
+        {
+            ApplyAuditInformation();
+            return base.SaveChanges();
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyAuditInformation();
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void ApplyAuditInformation()
+        {
+            var entries = ChangeTracker.Entries<KamatekCrm.Shared.Models.Common.BaseEntity>();
+            var currentUser = GetCurrentUser();
+            var timestamp = DateTime.Now;
+
+            foreach (var entry in entries)
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entry.Entity.CreatedDate = timestamp;
+                        entry.Entity.CreatedBy = currentUser;
+                        entry.Entity.IsDeleted = false;
+                        break;
+
+                    case EntityState.Modified:
+                        if (!entry.Entity.IsDeleted) // Don't overwrite delete info if it's being deleted
+                        {
+                            entry.Entity.ModifiedDate = timestamp;
+                            entry.Entity.ModifiedBy = currentUser;
+                        }
+                        break;
+
+                    case EntityState.Deleted:
+                        // Convert physical delete to soft delete
+                        entry.State = EntityState.Modified;
+                        entry.Entity.IsDeleted = true;
+                        entry.Entity.DeletedAt = timestamp;
+                        entry.Entity.DeletedBy = currentUser;
+                        break;
+                }
+            }
         }
     }
 }

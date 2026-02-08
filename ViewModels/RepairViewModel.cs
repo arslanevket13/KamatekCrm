@@ -18,9 +18,11 @@ namespace KamatekCrm.ViewModels
     public class RepairViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IAuthService _authService;
 
-        public RepairViewModel()
+        public RepairViewModel(IAuthService authService)
         {
+            _authService = authService;
             _context = new AppDbContext();
             
             // Komutlar
@@ -470,7 +472,7 @@ namespace KamatekCrm.ViewModels
                 Date = DateTime.Now,
                 StatusChange = newStatus.Value,
                 TechnicianNote = !string.IsNullOrWhiteSpace(NewNoteText) ? NewNoteText : $"Durum değişikliği: {oldStatus} -> {newStatus}",
-                UserId = "Technician" // TODO: Current User
+                UserId = _authService.CurrentUser?.Username ?? "Technician"
             };
             _context.ServiceJobHistories.Add(history);
             _context.SaveChanges();
@@ -489,7 +491,7 @@ namespace KamatekCrm.ViewModels
                     Category = "Teknik Servis",
                     ReferenceNumber = $"REP-{SelectedJob.Id}",
                     CustomerId = SelectedJob.CustomerId,
-                    CreatedBy = AuthService.CurrentUser?.AdSoyad ?? "Teknisyen",
+                    CreatedBy = _authService.CurrentUser?.AdSoyad ?? "Teknisyen",
                     CreatedAt = DateTime.Now
                 };
                 _context.CashTransactions.Add(cashTransaction);

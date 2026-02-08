@@ -3,10 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KamatekCrm.Shared.Models
 {
-    public class User
+    public class User : KamatekCrm.Shared.Models.Common.BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
+        // Id is in BaseEntity
 
         [Required]
         [MaxLength(50)]
@@ -32,7 +31,7 @@ namespace KamatekCrm.Shared.Models
         public string AdSoyad => $"{Ad} {Soyad}".Trim();
 
         public bool IsActive { get; set; } = true;
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        // CreatedDate is in BaseEntity (CreatedAt)
         public DateTime? LastLoginDate { get; set; }
 
         #region RBAC - Granular Permissions

@@ -10,10 +10,10 @@
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BackgroundColor}">
 
-    <Window.DataContext>
-        <viewmodels:StockTransferViewModel/>
-    </Window.DataContext>
-
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
+    
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Header -->
@@ -112,7 +112,7 @@
 
         <!-- Footer Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button Content="Kapat" Click="CloseButton_Click"
+            <Button Content="Kapat" Command="{Binding CloseCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                     Style="{StaticResource SecondaryButton}" Width="100" Margin="0,0,10,0"/>
             <Button Content="Transferi Tamamla" Command="{Binding TransferCommand}"
                     Style="{StaticResource ModernButton}" Width="150"/>

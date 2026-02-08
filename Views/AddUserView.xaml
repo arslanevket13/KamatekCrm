@@ -11,9 +11,7 @@
         ResizeMode="NoResize"
         Background="#F5F5F5">
     
-    <Window.DataContext>
-        <vm:AddUserViewModel/>
-    </Window.DataContext>
+
 
     <Grid Margin="24">
         <Grid.RowDefinitions>

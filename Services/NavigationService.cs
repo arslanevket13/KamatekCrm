@@ -1,35 +1,21 @@
 using System;
 using System.ComponentModel;
-using KamatekCrm.Repositories;
+using Microsoft.Extensions.DependencyInjection;
+using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Services
 {
     /// <summary>
-    /// Uygulama içi view geçişlerini yöneten servis (Singleton)
+    /// Uygulama içi view geçişlerini yöneten servis (DI Scoped/Singleton)
     /// </summary>
     public class NavigationService : INotifyPropertyChanged
     {
-        private static NavigationService? _instance;
-        private static readonly object _lock = new object();
-
+        private readonly IServiceProvider _serviceProvider;
         private object? _currentView;
 
-        /// <summary>
-        /// Singleton instance
-        /// </summary>
-        public static NavigationService Instance
+        public NavigationService(IServiceProvider serviceProvider)
         {
-            get
-            {
-                if (_instance == null)
-                {
-                    lock (_lock)
-                    {
-                        _instance ??= new NavigationService();
-                    }
-                }
-                return _instance;
-            }
+            _serviceProvider = serviceProvider;
         }
 
         /// <summary>
@@ -49,7 +35,15 @@ namespace KamatekCrm.Services
         }
 
         /// <summary>
-        /// Belirtilen ViewModel'e geçiş yap
+        /// Belirtilen ViewModel tipine geçiş yap (DI'dan çözerek)
+        /// </summary>
+        public void NavigateTo<TViewModel>() where TViewModel : notnull
+        {
+            CurrentView = _serviceProvider.GetRequiredService<TViewModel>();
+        }
+
+        /// <summary>
+        /// Belirtilen ViewModel instance'ına geçiş yap
         /// </summary>
         public void NavigateTo(object viewModel)
         {
@@ -61,7 +55,7 @@ namespace KamatekCrm.Services
         /// </summary>
         public void NavigateToLogin()
         {
-            CurrentView = new ViewModels.LoginViewModel();
+            NavigateTo<LoginViewModel>();
         }
 
         /// <summary>
@@ -69,7 +63,8 @@ namespace KamatekCrm.Services
         /// </summary>
         public void NavigateToMainContent()
         {
-            CurrentView = new ViewModels.MainContentViewModel(new Repositories.UnitOfWork());
+            // Resolve MainContentViewModel
+            CurrentView = _serviceProvider.GetRequiredService<MainContentViewModel>();
         }
 
         #region INotifyPropertyChanged

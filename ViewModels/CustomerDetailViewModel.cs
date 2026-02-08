@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Commands;
 using KamatekCrm.Data;
+using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -50,8 +51,15 @@ namespace KamatekCrm.ViewModels
         private decimal _totalSpent;
         private decimal _totalBalance;
 
-        public CustomerDetailViewModel(int customerId)
+        private readonly NavigationService _navigationService;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
+
+        public CustomerDetailViewModel(int customerId, NavigationService navigationService, IToastService toastService, ILoadingService loadingService)
         {
+            _navigationService = navigationService;
+            _toastService = toastService;
+            _loadingService = loadingService;
             _context = new AppDbContext();
             _customerId = customerId;
             ServiceJobs = new ObservableCollection<ServiceJob>();
@@ -70,6 +78,7 @@ namespace KamatekCrm.ViewModels
 
             LoadCustomerData();
         }
+
 
         #region Properties
 
@@ -408,30 +417,27 @@ namespace KamatekCrm.ViewModels
 
         private void NavigateBack()
         {
-            // MainViewModel'e geri dön
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow?.DataContext is MainViewModel mainViewModel)
-            {
-                mainViewModel.CurrentView = new CustomersViewModel();
-            }
+            // CustomersViewModel'e geri dön (DI üzerinden yeniden oluşturulur ve veri yüklenir)
+            _navigationService.NavigateTo<CustomersViewModel>();
         }
 
         private void CreateNewServiceJob()
         {
             // ServiceJobViewModel'e git ve bu müşteriyi önceden seç
-            var mainWindow = Application.Current.MainWindow;
-            if (mainWindow?.DataContext is MainViewModel mainViewModel)
+            // ServiceJobViewModel DI ile çözülemiyor çünkü parametre (SelectedCustomer) aktarmak istiyoruz.
+            // Ancak ServiceJobViewModel property'si set edilebilir.
+            
+            
+            // Manuel oluşturma (NavigationService'i aktar)
+            var serviceJobViewModel = new ServiceJobViewModel(_navigationService, _toastService, _loadingService);
+
+            // Müşteriyi önceden seç
+            if (_customer != null)
             {
-                var serviceJobViewModel = new ServiceJobViewModel();
-
-                // Müşteriyi önceden seç
-                if (_customer != null)
-                {
-                    serviceJobViewModel.SelectedCustomer = _customer;
-                }
-
-                mainViewModel.CurrentView = serviceJobViewModel;
+                serviceJobViewModel.SelectedCustomer = _customer;
             }
+
+            _navigationService.CurrentView = serviceJobViewModel;
         }
 
         #endregion

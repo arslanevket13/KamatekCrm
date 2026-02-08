@@ -10,10 +10,13 @@ namespace KamatekCrm.Helpers
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value == null || parameter == null)
-                return false;
+                return DependencyProperty.UnsetValue;
 
-            string checkValue = value.ToString();
-            string targetValue = parameter.ToString();
+            string? checkValue = value.ToString();
+            string? targetValue = parameter.ToString();
+
+            if (checkValue == null || targetValue == null)
+                 return DependencyProperty.UnsetValue;
 
             return checkValue.Equals(targetValue, StringComparison.InvariantCultureIgnoreCase);
         }
@@ -21,15 +24,18 @@ namespace KamatekCrm.Helpers
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value == null || parameter == null)
-                return Binding.DoNothing;
+                return DependencyProperty.UnsetValue;
 
-            bool useValue = (bool)value;
-            string targetValue = parameter.ToString();
+            if ((bool)value)
+            {
+                string? targetValue = parameter.ToString();
+                if (targetValue != null)
+                {
+                    return Enum.Parse(targetType, targetValue);
+                }
+            }
 
-            if (useValue)
-                return Enum.Parse(targetType, targetValue);
-
-            return Binding.DoNothing;
+            return DependencyProperty.UnsetValue;
         }
     }
 }

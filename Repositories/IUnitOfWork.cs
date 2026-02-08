@@ -39,5 +39,10 @@ namespace KamatekCrm.Repositories
         /// Transaction'ı geri alır (rollback)
         /// </summary>
         void Rollback();
+        
+        /// <summary>
+        /// Specification kullanarak liste döner
+        /// </summary>
+        Task<System.Collections.Generic.List<T>> GetListAsync<T>(Application.Common.Specifications.ISpecification<T> spec) where T : class;
     }
 }

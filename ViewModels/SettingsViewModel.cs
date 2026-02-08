@@ -163,9 +163,9 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                var appPath = Application.ResourceAssembly.Location.Replace(".dll", ".exe");
+                var appPath = System.Windows.Application.ResourceAssembly.Location.Replace(".dll", ".exe");
                 System.Diagnostics.Process.Start(appPath);
-                Application.Current.Shutdown();
+                System.Windows.Application.Current.Shutdown();
             }
             catch
             {

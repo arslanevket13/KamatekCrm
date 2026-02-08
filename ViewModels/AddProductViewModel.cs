@@ -18,8 +18,8 @@ namespace KamatekCrm.ViewModels
     {
         private readonly AppDbContext _context;
         private ProductCategoryType _selectedCategory = ProductCategoryType.Other;
-        private ProductSpecBase _currentSpecs;
-        private Product _newProduct;
+        private ProductSpecBase _currentSpecs = new GeneralSpecs();
+        private Product _newProduct = new Product();
         private bool _isEditMode;
         private int _initialStock;
         private int _stockAdjustment;

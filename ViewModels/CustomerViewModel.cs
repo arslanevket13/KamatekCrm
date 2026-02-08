@@ -14,6 +14,7 @@ using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace KamatekCrm.ViewModels
 {
@@ -21,7 +22,7 @@ namespace KamatekCrm.ViewModels
     /// M��teri y�netimi ViewModel
     /// </summary>
     // D�ZELTME 1: S�n�f ad� 'CustomersViewModel' yap�ld� (Sonunda 's' var)
-    public class CustomersViewModel : ViewModelBase
+    public class CustomersViewModel : KamatekCrm.ViewModels.Common.PaginationViewModel
     {
         private readonly AppDbContext _context;
         private Customer? _selectedCustomer;
@@ -70,7 +71,8 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    _customersView?.Refresh();
+                    // Arama metni değişince sayfa 1'e dön ve yenile
+                    CurrentPage = 1; 
                 }
             }
         }
@@ -237,8 +239,18 @@ namespace KamatekCrm.ViewModels
         public ICommand ClearFormCommand { get; }
         public ICommand ViewProfileCommand { get; }
 
-        public CustomersViewModel()
+
+        private readonly NavigationService _navigationService;
+        private readonly ILogger<CustomersViewModel> _logger;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
+
+        public CustomersViewModel(NavigationService navigationService, ILogger<CustomersViewModel> logger, IToastService toastService, ILoadingService loadingService)
         {
+            _navigationService = navigationService;
+            _logger = logger;
+            _toastService = toastService;
+            _loadingService = loadingService;
             _context = new AppDbContext();
             Customers = new ObservableCollection<Customer>();
             Cities = new ObservableCollection<City>();
@@ -246,33 +258,72 @@ namespace KamatekCrm.ViewModels
             Neighborhoods = new ObservableCollection<Neighborhood>();
 
             _customersView = CollectionViewSource.GetDefaultView(Customers);
-            _customersView.Filter = FilterCustomers;
+            // _customersView.Filter = FilterCustomers; // DB Paging kullandığımız için kaldırıldı
 
             SaveCustomerCommand = new RelayCommand(_ => SaveCustomer(), _ => CanSaveCustomer());
             DeleteCustomerCommand = new RelayCommand(_ => DeleteCustomer(), _ => SelectedCustomer != null);
             ClearFormCommand = new RelayCommand(_ => ClearForm());
             ViewProfileCommand = new RelayCommand(_ => ViewProfile(), _ => SelectedCustomer != null);
 
+            _logger.LogInformation("CustomersViewModel initialized");
+
             LoadCities();
-            LoadCustomers();
+            // LoadCustomers(); replaced by RefreshDataAsync
+            _ = RefreshDataAsync();
         }
 
-        private bool FilterCustomers(object obj)
+        protected override async Task RefreshDataAsync()
         {
-            if (obj is not Customer customer) return false;
-            if (string.IsNullOrWhiteSpace(SearchText)) return true;
+            try
+            {
+                _loadingService.Show("Müşteriler yükleniyor...");
+                await Task.Delay(1000); // Overlay testi için gecikme
 
-            var searchLower = SearchText.ToLower();
-            return (customer.FullName != null && customer.FullName.ToLower().Contains(searchLower)) ||
-                   (customer.PhoneNumber != null && customer.PhoneNumber.Contains(searchLower));
+                _logger.LogDebug("Refreshing customer data. Page: {Page}, Search: {Search}", CurrentPage, SearchText);
+                
+                var query = _context.Customers.AsQueryable();
+
+                // 1. Filtreleme
+                if (!string.IsNullOrWhiteSpace(SearchText))
+                {
+                    var search = SearchText.ToLower();
+                    query = query.Where(c => c.FullName.ToLower().Contains(search) 
+                                          || c.PhoneNumber.Contains(search)
+                                          || (c.CustomerCode != null && c.CustomerCode.ToLower().Contains(search)));
+                }
+
+                // 2. Toplam Sayı
+                TotalCount = await query.CountAsync();
+
+                // 3. Sayfalama
+                var items = await query
+                    .OrderByDescending(c => c.Id)
+                    .Skip((CurrentPage - 1) * PageSize)
+                    .Take(PageSize)
+                    .ToListAsync();
+
+                // 4. UI Güncelleme
+                Customers.Clear();
+                foreach (var item in items) Customers.Add(item);
+                
+                _logger.LogInformation("Loaded {Count} customers", items.Count);
+                _toastService.ShowSuccess("Müşteri verileri güncellendi.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error refreshing customer data");
+                MessageBox.Show($"Veri yüklenirken hata: {ex.Message}", "Hata");
+                _toastService.ShowError($"Veriler yenilenirken hata oluştu: {ex.Message}");
+            }
+            finally
+            {
+                _loadingService.Hide();
+            }
         }
 
-        private void LoadCustomers()
-        {
-            Customers.Clear();
-            var customers = _context.Customers.ToList();
-            foreach (var customer in customers) Customers.Add(customer);
-        }
+        // Eski metodların yerine RefreshDataAsync kullanılıyor
+        // private bool FilterCustomers... (Kaldırıldı)
+        // private void LoadCustomers... (Kaldırıldı)
 
         private bool CanSaveCustomer()
         {
@@ -329,9 +380,9 @@ namespace KamatekCrm.ViewModels
                 }
 
                 _context.SaveChanges();
-                LoadCustomers();
+                _ = RefreshDataAsync();
                 ClearForm();
-                MessageBox.Show("M��teri ba�ar�yla kaydedildi!", "Ba�ar�l�", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Müşteri başarıyla kaydedildi!", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -343,7 +394,7 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedCustomer == null) return;
 
-            var result = MessageBox.Show($"{SelectedCustomer.FullName} adl� m��teriyi silmek istedi�inize emin misiniz?",
+            var result = MessageBox.Show($"{SelectedCustomer.FullName} adlı müşteriyi silmek istediğinize emin misiniz?",
                 "Onay", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
@@ -352,9 +403,9 @@ namespace KamatekCrm.ViewModels
                 {
                     _context.Customers.Remove(SelectedCustomer);
                     _context.SaveChanges();
-                    LoadCustomers();
+                    _ = RefreshDataAsync();
                     ClearForm();
-                    MessageBox.Show("M��teri ba�ar�yla silindi!", "Ba�ar�l�", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Müşteri başarıyla silindi!", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
@@ -459,24 +510,11 @@ namespace KamatekCrm.ViewModels
         private void ViewProfile()
         {
             if (SelectedCustomer == null) return;
-
-            // Fix: User requested to access MainViewModel via NavigationService
-            // We handle both MainViewModel and MainContentViewModel to be robust against class naming confusion
-            var currentView = NavigationService.Instance.CurrentView;
-
-            if (currentView is MainViewModel mainVM)
-            {
-                mainVM.NavigateToCustomerDetail(SelectedCustomer.Id);
-            }
-            else if (currentView is MainContentViewModel mainContentVM)
-            {
-                mainContentVM.NavigateToCustomerDetail(SelectedCustomer.Id);
-            }
-            else
-            {
-                // Fallback: This shouldn't happen if shell is loaded
-                MessageBox.Show("Navigasyon hatası: Ana sayfa yüklenemedi. Lütfen uygulamayı yeniden başlatın.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            
+            // Parametreli geçiş için NavigationService üzerinden direkt atama yapıyoruz
+            // CustomerDetailViewModel bağımlılıklarını manuel yönetiyoruz
+            var detailVm = new CustomerDetailViewModel(SelectedCustomer.Id, _navigationService, _toastService, _loadingService);
+            _navigationService.CurrentView = detailVm;
         }
 
         /// <summary>

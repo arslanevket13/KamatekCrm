@@ -109,7 +109,7 @@ namespace KamatekCrm.ViewModels
                     DataLabelsPaint = new SolidColorPaint(SKColors.Black),
                     DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
                     // Use Coordinate.PrimaryValue instead of PrimaryValue (deprecated)
-                    DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue} ({point.StackedValue.Share:P1})"
+                    DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue} ({point.StackedValue?.Share:P1})"
                 }).ToArray();
             }
             else

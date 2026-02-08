@@ -83,101 +83,81 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public ICommand LoginCommand { get; }
 
+        private readonly IAuthService _authService;
+        private readonly NavigationService _navigationService;
+
         /// <summary>
         /// Constructor
         /// </summary>
-        public LoginViewModel()
+        public LoginViewModel(IAuthService authService, NavigationService navigationService)
         {
-            LoginCommand = new RelayCommand(_ => ExecuteLogin(), _ => CanLogin());
+            _authService = authService;
+            _navigationService = navigationService;
+            LoginCommand = new RelayCommand(async param => await ExecuteLoginAsync(param), _ => CanLogin());
             
             // Load saved settings
             LoadSavedCredentials();
         }
 
+        // Default constructor REMOVED as we heavily rely on DI now and manual instantiation is error prone.
+        // If design-time support is needed, a separate design-time ViewModel can be created.
+
         /// <summary>
-        /// Kayıtlı kullanıcı bilgilerini yükle
+        /// Giriş yapılabilir mi kontrolü
+        /// </summary>
+        private bool CanLogin()
+        {
+            return !string.IsNullOrWhiteSpace(Username) && !IsLoading;
+        }
+
+        /// <summary>
+        /// Kayıtlı giriş bilgilerini yükle
         /// </summary>
         private void LoadSavedCredentials()
         {
             try
             {
-                var settings = Properties.Settings.Default;
-                _rememberMe = settings.RememberMe;
-                
-                if (_rememberMe)
+                var props = Properties.Settings.Default;
+                if (props.RememberMe)
                 {
-                    // Token kontrolü
-                    string token = settings.AuthToken;
-                    if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(settings.SavedUsername))
-                    {
-                        // Basit token doğrulama (Prod: Token süresi, imza vb. kontrol edilmeli)
-                        // Şimdilik token varsa geçerli sayıyoruz
-                        _username = settings.SavedUsername;
-                        
-                        // Auto-login
-                        // Eğer UI donarsa veya kullanıcı giriş ekranını görmek isterse burayı async yapıp biraz bekletebiliriz.
-                        // Şimdilik direkt giriş yapalım.
-                        ExecuteLogin(token); 
-                    }
-                    else if (!string.IsNullOrEmpty(settings.SavedUsername))
-                    {
-                        // Sadece kullanıcı adını hatırla
-                        _username = settings.SavedUsername;
-                        OnPropertyChanged(nameof(Username));
-                    }
+                    Username = props.SavedUsername;
+                    RememberMe = true;
+                    // Şifreyi güvenlik nedeniyle kaydetmiyoruz veya şifreli saklıyoruz.
+                    // Burada basitlik için sadece kullanıcı adı hatırlanıyor.
                 }
-                 OnPropertyChanged(nameof(RememberMe));
             }
-            catch
-            {
-                // Settings yüklenemezse sessizce devam et
-            }
+            catch { }
         }
 
         /// <summary>
-        /// Kullanıcı bilgilerini kaydet
+        /// Giriş başarılı olunca bilgileri kaydet
         /// </summary>
-        private void SaveCredentials(string token = "")
+        private void SaveCredentials(string? token)
         {
             try
             {
-                var settings = Properties.Settings.Default;
-                settings.RememberMe = _rememberMe;
-                settings.SavedUsername = _rememberMe ? _username : string.Empty;
-                
-                // Token kaydet (Eğer remember me ise ve token geldiyse)
-                if (_rememberMe && !string.IsNullOrEmpty(token))
-                {
-                    settings.AuthToken = token;
-                }
-                else if (!_rememberMe)
-                {
-                    settings.AuthToken = string.Empty;
-                }
-
-                settings.Save();
+                var props = Properties.Settings.Default;
+                props.RememberMe = RememberMe;
+                props.SavedUsername = RememberMe ? Username : string.Empty;
+                // Token saklama mekanizması eklenebilir
+                props.Save();
             }
-            catch
-            {
-                // Settings kaydedilemezse sessizce devam et
-            }
-        }
-
-        /// <summary>
-        /// Giriş yapılabilir mi?
-        /// </summary>
-        private bool CanLogin()
-        {
-            return !string.IsNullOrWhiteSpace(Username) && 
-                   (!string.IsNullOrWhiteSpace(Password) || IsLoading) && 
-                   !IsLoading;
+            catch { }
         }
 
         /// <summary>
         /// Giriş işlemini gerçekleştir
         /// </summary>
-        public void ExecuteLogin(string autoToken = "")
+        public async Task ExecuteLoginAsync(object? parameter = null)
         {
+            // Determine if we are auto-logging in with a token or manual login with PasswordBox
+            string? autoToken = parameter as string;
+            
+            if (parameter is System.Windows.Controls.PasswordBox passwordBox)
+            {
+                Password = passwordBox.Password;
+            }
+
             if (string.IsNullOrEmpty(autoToken) && (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password)))
             {
                  if(string.IsNullOrWhiteSpace(Username)) ErrorMessage = "Kullanıcı adı gerekli!";
@@ -190,54 +170,55 @@ namespace KamatekCrm.ViewModels
 
             try
             {
+                await Task.Delay(500); // Simulate network/db latency for better UX
+
                 bool isAuthenticated = false;
 
                 if (!string.IsNullOrEmpty(autoToken))
                 {
-                    // Token login simülasyonu
-                    // Gerçek hayatta: AuthService.LoginWithToken(autoToken)
-                    isAuthenticated = true; 
+                    // Token Login (Simply validating existing session in local context)
+                    // For local app, token might just be username or a simple hash
+                    if (!string.IsNullOrEmpty(Username))
+                    {
+                         isAuthenticated = true;
+                    }
                 }
                 else
                 {
-                    // Normal login
-                    isAuthenticated = AuthService.Login(Username, Password);
+                    // Local DB Login
+                    // IAuthService uses bool for Login return, not User object directly in current implementation?
+                    // Let's check IAuthService.Login signature.
+                    // IAuthService.Login(user, pass) returns bool. And sets CurrentUser.
+                    if (_authService.Login(Username, Password))
+                    {
+                        isAuthenticated = true;
+                        autoToken = Username; 
+                        // Set global current user
+                        App.CurrentUser = _authService.CurrentUser;
+                    }
+                    else
+                    {
+                        ErrorMessage = "Hatalı kullanıcı adı veya şifre!";
+                    }
                 }
 
                 if (isAuthenticated)
                 {
-                    // Başarılı giriş - Ayarları ve Token'ı kaydet
-                    // Gerçek hayatta token backend'den gelir. Burada simüle ediyoruz.
-                    string newToken = Guid.NewGuid().ToString(); 
-                    SaveCredentials(newToken);
+                    // Başarılı giriş - Ayarları kaydet
+                    SaveCredentials(autoToken);
                     
                     // Ana içeriğe geç
-                    NavigationService.Instance.NavigateToMainContent();
+                    _navigationService.NavigateToMainContent();
                 }
                 else
                 {
-                    ErrorMessage = "Hatalı kullanıcı adı veya şifre!";
-                    Password = string.Empty;
-                    
-                    // Token geçersizse temizle
-                    if(!string.IsNullOrEmpty(autoToken))
-                    {
-                        var s = Properties.Settings.Default;
-                        s.AuthToken = string.Empty;
-                        s.Save();
-                        ErrorMessage = "Oturum süresi dolmuş, lütfen tekrar giriş yapın.";
-                    }
+                     if(string.IsNullOrEmpty(ErrorMessage)) ErrorMessage = "Giriş başarısız.";
+                     Password = string.Empty;
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                var fullMessage = ex.Message;
-                if (ex.InnerException != null)
-                {
-                    fullMessage += $"\n\nDetay: {ex.InnerException.Message}";
-                }
-                MessageBox.Show($"Giriş sırasında hata oluştu:\n\n{fullMessage}", "Giriş Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
-                ErrorMessage = "Sistem hatası oluştu.";
+                ErrorMessage = $"Giriş hatası: {ex.Message}";
             }
             finally
             {

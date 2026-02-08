@@ -9,27 +9,17 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class NewServiceJobWindow : Window
     {
-        public NewServiceJobWindow()
+        public NewServiceJobWindow(ServiceJobViewModel vm)
         {
             InitializeComponent();
-            DataContext = new ServiceJobViewModel();
-        }
-
-        public NewServiceJobWindow(Customer? preselectedCustomer)
-        {
-            InitializeComponent();
-            var vm = new ServiceJobViewModel();
-            if (preselectedCustomer != null)
+            
+            vm.CancelRequested += () =>
             {
-                vm.SelectedCustomer = preselectedCustomer;
-            }
-            DataContext = vm;
-        }
+                DialogResult = false;
+                Close();
+            };
 
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
-            Close();
+            DataContext = vm;
         }
     }
 }

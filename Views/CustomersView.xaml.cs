@@ -14,20 +14,5 @@ namespace KamatekCrm.Views
             InitializeComponent();
         }
 
-        private void OnIndividualChecked(object sender, System.Windows.RoutedEventArgs e)
-        {
-            if (DataContext is CustomersViewModel viewModel)
-            {
-                viewModel.NewCustomerType = CustomerType.Individual;
-            }
-        }
-
-        private void OnCorporateChecked(object sender, System.Windows.RoutedEventArgs e)
-        {
-            if (DataContext is CustomersViewModel viewModel)
-            {
-                viewModel.NewCustomerType = CustomerType.Corporate;
-            }
-        }
     }
 }

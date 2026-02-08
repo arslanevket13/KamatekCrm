@@ -5,10 +5,9 @@ using KamatekCrm.Shared.Enums;
 
 namespace KamatekCrm.Shared.Models
 {
-    public class ServiceJobHistory
+    public class ServiceJobHistory : KamatekCrm.Shared.Models.Common.BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
+        // Id is in BaseEntity
 
         [Required]
         public int ServiceJobId { get; set; }

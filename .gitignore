@@ -27,3 +27,9 @@ packages/
 
 # Publish output
 publish/
+
+# Logs and Build Info
+*.log
+*.txt
+-Host
+build/

@@ -19,13 +19,14 @@ namespace KamatekCrm.Views
                 DialogResult = true;
                 Close();
             };
+            
+            viewModel.CancelRequested += () =>
+            {
+                DialogResult = false;
+                Close();
+            };
+            
             DataContext = viewModel;
-        }
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
-            Close();
         }
     }
 }

@@ -111,7 +111,7 @@
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0" Content="❌ İptal" 
-                    Click="CancelButton_Click"
+                    Command="{Binding CancelCommand}"
                     Height="44" FontSize="14"
                     Background="#F5F5F5" Foreground="#424242"
                     BorderBrush="#BDBDBD" BorderThickness="1"

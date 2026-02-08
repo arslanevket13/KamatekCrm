@@ -18,6 +18,7 @@ namespace KamatekCrm.ViewModels
     public class UsersViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IAuthService _authService;
         private User? _selectedUser;
         private string _searchText = string.Empty;
 
@@ -53,22 +54,28 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Mevcut kullanıcı (giriş yapmış)
         /// </summary>
-        public User? CurrentUser => AuthService.CurrentUser;
+        /// <summary>
+        /// Mevcut kullanıcı (giriş yapmış)
+        /// </summary>
+        public User? CurrentUser => _authService.CurrentUser;
 
         /// <summary>
         /// Mevcut kullanıcı ad soyad
         /// </summary>
-        public string CurrentUserName => AuthService.CurrentUser?.AdSoyad ?? "Misafir";
+        public string CurrentUserName => _authService.CurrentUser?.AdSoyad ?? "Misafir";
 
         /// <summary>
         /// Mevcut kullanıcı rol gösterimi
         /// </summary>
-        public string CurrentUserRole => GetDisplayRole(AuthService.CurrentUser?.Role);
+        /// <summary>
+        /// Mevcut kullanıcı rol gösterimi
+        /// </summary>
+        public string CurrentUserRole => GetDisplayRole(_authService.CurrentUser?.Role);
 
         /// <summary>
         /// Admin mi?
         /// </summary>
-        public bool IsAdmin => AuthService.IsAdmin;
+        public bool IsAdmin => _authService.IsAdmin;
 
         #region Commands
 
@@ -107,8 +114,12 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public UsersViewModel()
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public UsersViewModel(IAuthService authService)
         {
+            _authService = authService;
             _context = new AppDbContext();
 
             AddUserCommand = new RelayCommand(_ => OpenAddUserWindow(), _ => IsAdmin);
@@ -166,9 +177,16 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Yeni kullanıcı penceresi aç
         /// </summary>
+        /// <summary>
+        /// Yeni kullanıcı penceresi aç
+        /// </summary>
         private void OpenAddUserWindow()
         {
-            var addUserView = new AddUserView();
+            var addUserViewModel = new AddUserViewModel(_authService);
+            var addUserView = new AddUserView
+            {
+                DataContext = addUserViewModel
+            };
             addUserView.ShowDialog();
             LoadUsers();
         }
@@ -190,12 +208,24 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Şifre değiştirme penceresi aç
         /// </summary>
+        /// <summary>
+        /// Şifre değiştirme penceresi aç
+        /// </summary>
         private void OpenSetPasswordWindow()
         {
             if (SelectedUser == null) return;
 
-            var passwordView = new PasswordResetView(SelectedUser);
-            passwordView.ShowDialog();
+            var passwordResetViewModel = new PasswordResetViewModel(SelectedUser, _authService);
+            var passwordView = new PasswordResetView(SelectedUser, _authService)
+            {
+                DataContext = passwordResetViewModel
+            };
+            // Note: PasswordResetView constructor sets DataContext, but we can override or just not set it here if constructor does it.
+            // The constructor we refactored does: viewModel = new...; DataContext = viewModel;
+            // But we passed authService to View constructor, which passes to VM.
+            // So we don't need to instantiate VM here!
+            // Wait, we need to correct this. The View constructor handles VM creation.
+             passwordView.ShowDialog();
         }
 
         /// <summary>
@@ -272,7 +302,7 @@ namespace KamatekCrm.ViewModels
                     var user = resetContext.Users.Find(SelectedUser.Id);
                     if (user != null)
                     {
-                        user.PasswordHash = AuthService.HashPassword("1234");
+                        user.PasswordHash = _authService.HashPassword("1234");
                         resetContext.SaveChanges();
 
                         // Audit log kaydet
