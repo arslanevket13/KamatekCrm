@@ -145,22 +145,8 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public void NavigateToCustomerDetail(int customerId)
         {
-            // Parameter passing is tricky with simple NavigateTo<T>.
-            // Ideally NavigationService should support Parameter navigation or we resolve factory.
-            // For now, resolving manually via DI if possible, or using the old way if CustomerDetailViewModel is not fully DI ready yet.
-            // But NavigationService no longer supports `new`.
-            // Workaround: We need a way to pass parameters.
-            // Let's assume CustomerDetailViewModel can be instantiated with ID provided via a service or messenger?
-            // Or we use a Factory pattern.
-            // Or we hack it for now: _navigationService.CurrentView = new CustomerDetailViewModel(customerId);
-            // But CustomerDetailViewModel needs DI dependencies!
-            // This requires a factory. 
-            // For this specific case, I will leave it as `CurrentView = ...` but I need to resolve dependencies?
-            // If CustomerDetailViewModel has dependencies, `new` will fail if I don't pass them.
-            // I will default to `new CustomerDetailViewModel(customerId)` but I know this breaks DI rules.
-            // I'll skip fixing parameterized navigation for this atomic step to avoid scope creep.
-            // But I MUST fix the `_currentView` usage in this file to use `_navigationService`.
-             _navigationService.CurrentView = new CustomerDetailViewModel(customerId, _navigationService, _toastService, _loadingService);
+             var vm = _navigationService.NavigateTo<CustomerDetailViewModel>();
+             vm.Initialize(customerId);
         }
 
         /// <summary>

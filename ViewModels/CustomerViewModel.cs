@@ -511,10 +511,10 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedCustomer == null) return;
             
-            // Parametreli geçiş için NavigationService üzerinden direkt atama yapıyoruz
-            // CustomerDetailViewModel bağımlılıklarını manuel yönetiyoruz
-            var detailVm = new CustomerDetailViewModel(SelectedCustomer.Id, _navigationService, _toastService, _loadingService);
-            _navigationService.CurrentView = detailVm;
+            if (SelectedCustomer == null) return;
+            
+            var detailVm = _navigationService.NavigateTo<CustomerDetailViewModel>();
+            detailVm.Initialize(SelectedCustomer.Id);
         }
 
         /// <summary>

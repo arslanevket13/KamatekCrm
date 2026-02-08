@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using KamatekCrm.Services;
+using KamatekCrm.Settings;
 using KamatekCrm.ViewModels;
 using KamatekCrm.Data;
 using Microsoft.EntityFrameworkCore;
@@ -19,14 +20,19 @@ namespace KamatekCrm.Extensions
             // DbContext
              services.AddDbContext<AppDbContext>(options =>
             {
-                // Retrieve connection strings from configuration or AppSettings class
-                // For now, using logic similar to current AppDbContext
-                // Ideally, configuration should be used.
-                 options.UseSqlite("Data Source=kamatek.db");
+                // Use AppSettings logic for Hybrid DB support
+                if (AppSettings.UseSqlServer)
+                {
+                    options.UseSqlServer(AppSettings.SqlServerConnectionString);
+                }
+                else
+                {
+                    options.UseSqlite(AppSettings.SqliteConnectionString);
+                }
             }, ServiceLifetime.Scoped); // Scoped is default for DbContext
 
              // Services
-            services.AddScoped<NavigationService>(); // Singleton as it holds state
+            services.AddSingleton<NavigationService>(); // Singleton as it holds state
             services.AddSingleton<IToastService, ToastService>();
             services.AddSingleton<ToastViewModel>();
             
@@ -36,7 +42,11 @@ namespace KamatekCrm.Extensions
             // Registering AuthService. Since it was static, we need to handle it. 
             // We will register IAuthService implementation.
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IJwtService, JwtService>();
             services.AddTransient<AttachmentService>();
+            
+            // Technician App Services
+            services.AddSingleton<KamatekCrm.Services.IPhotoStorageService, KamatekCrm.Services.PhotoStorageService>();
 
             // Repositories - Commented out until UnitOfWork is implemented
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -50,8 +60,15 @@ namespace KamatekCrm.Extensions
 
             // Views (Register as needed, usually via ViewModel)
             
-            // MainWindow'u DI container'a ekle (Scoped)
-            services.AddScoped<MainWindow>();
+            // Views (Register as needed, usually via ViewModel)
+            
+            // API Controllers
+            services.AddControllers()
+                .AddApplicationPart(typeof(KamatekCrm.App).Assembly); // Ensure controllers in this assembly are found
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerGen();
+
+            // MainWindow is registered in App.xaml.cs as Singleton
 
             // ViewModels
             services.AddTransient<MainViewModel>();
@@ -74,6 +91,7 @@ namespace KamatekCrm.Extensions
             services.AddTransient<FinanceViewModel>();
             services.AddTransient<RepairViewModel>();
             services.AddTransient<MainContentViewModel>();
+            services.AddTransient<SuppliersViewModel>();
 
             return services;
         }

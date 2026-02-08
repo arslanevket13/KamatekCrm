@@ -18,10 +18,12 @@ namespace KamatekCrm.Helpers
             string? apiExe = FindExeRecursive("KamatekCrm.API.exe");
             string? webExe = FindExeRecursive("KamatekCrm.Web.exe");
 
+            /*
             if (!string.IsNullOrEmpty(apiExe))
                 StartVisibleProcess(apiExe);
             else
                 Debug.WriteLine("[ProcessManager] API exe not found!");
+            */
 
             if (!string.IsNullOrEmpty(webExe))
                 StartVisibleProcess(webExe);

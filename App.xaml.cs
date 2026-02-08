@@ -13,6 +13,9 @@ using KamatekCrm.Data;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Configuration;
 using Serilog;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authentication.JwtBearer; // Added
 
 namespace KamatekCrm
 {
@@ -53,6 +56,49 @@ namespace KamatekCrm
                         
                         // MainWindow'u DI container'a ekle (Scoped veya Transient)
                         services.AddSingleton<MainWindow>();
+
+                        // JWT Authentication Configuration
+                        var jwtKey = context.Configuration["Jwt:Key"] ?? "KamatekCrm_SecretKey_MinimumLength_32Chars";
+                        services.AddAuthentication(options =>
+                        {
+                            options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+                            options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+                        })
+                        .AddJwtBearer(options =>
+                        {
+                            options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                            {
+                                ValidateIssuer = true,
+                                ValidateAudience = true,
+                                ValidateLifetime = true,
+                                ValidateIssuerSigningKey = true,
+                                ValidIssuer = context.Configuration["Jwt:Issuer"] ?? "KamatekCrm",
+                                ValidAudience = context.Configuration["Jwt:Audience"] ?? "KamatekCrm.TechnicianApp",
+                                IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+                                    System.Text.Encoding.UTF8.GetBytes(jwtKey))
+                            };
+                        });
+                    })
+                    .ConfigureWebHostDefaults(webBuilder =>
+                    {
+                        webBuilder.UseUrls(KamatekCrm.Helpers.ProcessManager.API_URL);
+                        webBuilder.Configure(app =>
+                        {
+                            // if (context.HostingEnvironment.IsDevelopment()) // Hard to access context here easily without fuller config
+                            // {
+                                app.UseSwagger();
+                                app.UseSwaggerUI();
+                            // }
+                            
+                            app.UseStaticFiles(); // Enable serving static files (photos)
+                            app.UseRouting();
+                            app.UseAuthentication();
+                            app.UseAuthorization();
+                            app.UseEndpoints(endpoints =>
+                            {
+                                endpoints.MapControllers();
+                            });
+                        });
                     })
                     .Build();
 

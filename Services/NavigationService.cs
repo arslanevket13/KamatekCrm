@@ -37,9 +37,11 @@ namespace KamatekCrm.Services
         /// <summary>
         /// Belirtilen ViewModel tipine geçiş yap (DI'dan çözerek)
         /// </summary>
-        public void NavigateTo<TViewModel>() where TViewModel : notnull
+        public TViewModel NavigateTo<TViewModel>() where TViewModel : notnull
         {
-            CurrentView = _serviceProvider.GetRequiredService<TViewModel>();
+            var vm = _serviceProvider.GetRequiredService<TViewModel>();
+            CurrentView = vm;
+            return vm;
         }
 
         /// <summary>

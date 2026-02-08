@@ -1,0 +1,105 @@
+﻿@page "/"
+@using KamatekCrm.Web.Services
+@using KamatekCrm.Shared.DTOs
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject ITaskService TaskService
+@inject IClientAuthService AuthService
+
+<PageTitle>Dashboard - KamatekCRM</PageTitle>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h3>Dashboard</h3>
+        <p class="text-muted">Welcome, Technician!</p>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <div class="d-flex justify-content-center">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (stats != null)
+{
+    <div class="row g-4 mb-4">
+        <!-- Total Tasks -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card h-100 border-primary">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-primary">Assigned Tasks</h5>
+                    <p class="display-4 fw-bold">@stats.TotalTasks</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Tasks -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card h-100 border-warning">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-warning">Pending</h5>
+                    <p class="display-4 fw-bold">@stats.PendingTasks</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- In Progress -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card h-100 border-info">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-info">In Progress</h5>
+                    <p class="display-4 fw-bold">@stats.InProgressTasks</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed Today -->
+        <div class="col-md-3 col-sm-6">
+            <div class="card h-100 border-success">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-success">Completed Today</h5>
+                    <p class="display-4 fw-bold">@stats.CompletedToday</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Urgent Tasks Alert -->
+        @if (stats.UrgentTasks > 0)
+        {
+            <div class="col-12">
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>
+                        You have <strong>@stats.UrgentTasks</strong> urgent tasks requiring immediate attention!
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private DashboardStatsDto? stats;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            stats = await TaskService.GetDashboardStats();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard stats: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

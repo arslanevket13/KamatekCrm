@@ -19,7 +19,7 @@ namespace KamatekCrm.ViewModels
     public class CustomerDetailViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
-        private readonly int _customerId;
+        // _customerId removed from here, defined below or used from below
         private Customer? _customer;
 
         // Editable Properties
@@ -55,13 +55,15 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
 
-        public CustomerDetailViewModel(int customerId, NavigationService navigationService, IToastService toastService, ILoadingService loadingService)
+        private int _customerId;
+
+        public CustomerDetailViewModel(NavigationService navigationService, IToastService toastService, ILoadingService loadingService)
         {
             _navigationService = navigationService;
             _toastService = toastService;
             _loadingService = loadingService;
             _context = new AppDbContext();
-            _customerId = customerId;
+            
             ServiceJobs = new ObservableCollection<ServiceJob>();
             ActiveJobs = new ObservableCollection<ServiceJob>();
             PastJobs = new ObservableCollection<ServiceJob>();
@@ -75,7 +77,11 @@ namespace KamatekCrm.ViewModels
             // Financial Commands
             AddPaymentCommand = new RelayCommand(_ => AddTransaction(TransactionType.Payment));
             AddDebtCommand = new RelayCommand(_ => AddTransaction(TransactionType.Debt));
+        }
 
+        public void Initialize(int customerId)
+        {
+            _customerId = customerId;
             LoadCustomerData();
         }
 
@@ -428,16 +434,15 @@ namespace KamatekCrm.ViewModels
             // Ancak ServiceJobViewModel property'si set edilebilir.
             
             
-            // Manuel oluşturma (NavigationService'i aktar)
-            var serviceJobViewModel = new ServiceJobViewModel(_navigationService, _toastService, _loadingService);
+            
+            // Refactored to use DI
+            var serviceJobViewModel = _navigationService.NavigateTo<ServiceJobViewModel>();
 
             // Müşteriyi önceden seç
             if (_customer != null)
             {
                 serviceJobViewModel.SelectedCustomer = _customer;
             }
-
-            _navigationService.CurrentView = serviceJobViewModel;
         }
 
         #endregion

@@ -30,5 +30,11 @@ namespace KamatekCrm.Shared.Models
 
         [ForeignKey(nameof(ServiceJobId))]
         public virtual ServiceJob ServiceJob { get; set; } = null!;
+
+        // --- New Fields for Technician Web App ---
+        public string Action { get; set; } = string.Empty;
+        public string? Notes { get; set; }
+        public int PerformedBy { get; set; }
+        public DateTime PerformedAt { get; set; } = DateTime.Now;
     }
 }

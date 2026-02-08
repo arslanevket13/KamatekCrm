@@ -47,8 +47,19 @@ namespace KamatekCrm.Settings
         /// <summary>
         /// SQLite bağlantı dizesi
         /// </summary>
-        public static string SqliteConnectionString => 
-            Configuration["DatabaseSettings:ConnectionStrings:SQLite"] ?? "Data Source=KamatekCrm.db";
+        public static string SqliteConnectionString
+        {
+            get
+            {
+                var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var folder = Path.Combine(appData, "KamatekCRM");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                var dbPath = Path.Combine(folder, "KamatekCrm.db");
+                
+                // Config'den override edilebilir ama default olarak bu yolu kullanalım
+                return Configuration["DatabaseSettings:ConnectionStrings:SQLite"] ?? $"Data Source={dbPath}";
+            }
+        }
 
         /// <summary>
         /// SQL Server bağlantı dizesi

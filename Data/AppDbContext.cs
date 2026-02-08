@@ -62,6 +62,9 @@ namespace KamatekCrm.Data
         // --- Dijital Arşiv ---
         public DbSet<Attachment> Attachments { get; set; }
 
+        // --- Teknisyen Web App (YENİ) ---
+        public DbSet<TaskPhoto> TaskPhotos { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -187,10 +190,41 @@ namespace KamatekCrm.Data
 
             // Mevcut kategori verileri varsa çakışabilir, ancak parentId null olacağı için sorun olmaz.
             modelBuilder.Entity<Category>().HasData(
-                new Category { Id = 1, Name = "Kamera" },
-                new Category { Id = 2, Name = "Kablo" },
                 new Category { Id = 3, Name = "Diafon" }
             );
+
+            // --- TaskPhoto Configuration ---
+            modelBuilder.Entity<TaskPhoto>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                
+                entity.HasOne(e => e.Task)
+                    .WithMany()
+                    .HasForeignKey(e => e.TaskId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.UploadedByUser)
+                    .WithMany()
+                    .HasForeignKey(e => e.UploadedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.TaskId);
+                entity.HasIndex(e => new { e.TaskId, e.IsDeleted });
+            });
+
+            // --- ServiceJobHistory Configuration ---
+            modelBuilder.Entity<ServiceJobHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                
+                entity.HasOne(e => e.ServiceJob)
+                    .WithMany()
+                    .HasForeignKey(e => e.ServiceJobId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.ServiceJobId);
+                entity.HasIndex(e => e.PerformedAt);
+            });
         }
 
             // Helper to get current user

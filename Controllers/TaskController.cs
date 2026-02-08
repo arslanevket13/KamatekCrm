@@ -1,0 +1,102 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using KamatekCrm.Application.Queries.Tasks;
+using KamatekCrm.Shared.DTOs; // Added
+using KamatekCrm.Application.Commands.Tasks;
+using System.Security.Claims;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Application.Common;
+
+namespace KamatekCrm.Controllers
+{
+    [Authorize]
+    [ApiController]
+    [Route("api/[controller]")]
+    public class TaskController : ControllerBase
+    {
+        private readonly IMediator _mediator;
+
+        public TaskController(IMediator mediator)
+        {
+            _mediator = mediator;
+        }
+
+        [HttpGet("technician/tasks")]
+        public async Task<IActionResult> GetMyTasks(
+            [FromQuery] JobStatus? status, 
+            [FromQuery] DateTime? startDate, 
+            [FromQuery] DateTime? endDate)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+            
+            var query = new GetTechnicianTasksQuery
+            {
+                TechnicianId = userId,
+                Status = status,
+                StartDate = startDate,
+                EndDate = endDate
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(new { Data = result, Success = true });
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetTaskDetail(int id)
+        {
+            var query = new GetTaskDetailQuery { TaskId = id };
+            var result = await _mediator.Send(query);
+
+            if (result == null)
+            {
+                return NotFound(new { Success = false, Message = "Görev bulunamadı" });
+            }
+
+            return Ok(new { Data = result, Success = true });
+        }
+
+        [HttpGet("dashboard/stats")]
+        public async Task<IActionResult> GetDashboardStats()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+            var query = new GetDashboardStatsQuery
+            {
+                TechnicianId = userId
+            };
+
+            var result = await _mediator.Send(query);
+            return Ok(new { Data = result, Success = true });
+        }
+
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+            var command = new UpdateTaskStatusCommand
+            {
+                TaskId = id,
+                NewStatus = request.Status,
+                Notes = request.Notes,
+                UpdatedBy = userId
+            };
+
+            var result = await _mediator.Send(command);
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new { Success = false, Message = result.ErrorMessage });
+            }
+
+            return Ok(new { Success = true });
+        }
+    }
+
+    public class UpdateStatusRequest
+    {
+        public JobStatus Status { get; set; }
+        public string? Notes { get; set; }
+    }
+}

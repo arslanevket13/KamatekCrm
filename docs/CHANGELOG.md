@@ -1,5 +1,11 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+## 2026-02-08 (v6.7 - Technician App Enhancement & Stability)
+- **Photo Upload**: Blazor üzerinden fotoğraf yükleme ve galeri görünümü. `IPhotoStorageService` ile thumbnail desteği.
+- **Google Maps**: Görev detay sayfasında müşteri konumuna navigasyon ve harita görünümü.
+- **Web App Stability**: Namespace çakışmaları ve derleme hataları giderildi. `RootNamespace` tanımlandı.
+- **Database Reset**: `SQLite Error (missing columns)` hatası için veritabanı %AppData% altına taşındı ve şema sıfırlandı.
+- **DI & Navigation**: ViewModels manuel `new` yerine `NavigationService` üzerinden DI uyumlu hale getirildi.
 
 ## 2026-02-08 (v6.6 - Professional UI/UX Enhancement)
 - **Toast Notifications**: Modern bildirim sistemi (Success, Error, Warning, Info). `IToastService` ile global yönetim.

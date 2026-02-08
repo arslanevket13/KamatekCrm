@@ -224,16 +224,6 @@ namespace KamatekCrm.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
-                            Name = "Kamera"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Kablo"
-                        },
-                        new
-                        {
                             Id = 3,
                             Name = "Diafon"
                         });
@@ -874,6 +864,10 @@ namespace KamatekCrm.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -908,6 +902,15 @@ namespace KamatekCrm.Migrations
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PerformedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PerformedBy")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("ServiceJobId")
                         .HasColumnType("INTEGER");
 
@@ -924,6 +927,8 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PerformedAt");
 
                     b.HasIndex("ServiceJobId");
 
@@ -1140,6 +1145,75 @@ namespace KamatekCrm.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Suppliers");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.TaskPhoto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MimeType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ThumbnailPath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UploadedBy")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskId");
+
+                    b.HasIndex("UploadedBy");
+
+                    b.HasIndex("TaskId", "IsDeleted");
+
+                    b.ToTable("TaskPhotos");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Transaction", b =>
@@ -1529,6 +1603,25 @@ namespace KamatekCrm.Migrations
                     b.Navigation("SourceWarehouse");
 
                     b.Navigation("TargetWarehouse");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.TaskPhoto", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.ServiceJob", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamatekCrm.Shared.Models.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Task");
+
+                    b.Navigation("UploadedByUser");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Transaction", b =>

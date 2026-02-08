@@ -2,13 +2,13 @@ using System;
 
 namespace KamatekCrm.Shared.DTOs
 {
-    public class LoginRequest
+    public class LoginRequestDto
     {
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
     }
 
-    public class LoginResponse
+    public class LoginResponseDto
     {
         public string Token { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
@@ -16,5 +16,6 @@ namespace KamatekCrm.Shared.DTOs
         public int UserId { get; set; }
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
     }
 }

@@ -242,7 +242,8 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public void NavigateToCustomerDetail(int customerId)
         {
-            CurrentView = new CustomerDetailViewModel(customerId, _navigationService, _toastService, _loadingService);
+            var vm = _navigationService.NavigateTo<CustomerDetailViewModel>();
+            vm.Initialize(customerId);
         }
 
         private void OpenFaultTicket()
