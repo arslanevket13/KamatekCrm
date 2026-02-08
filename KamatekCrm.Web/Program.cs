@@ -2,6 +2,7 @@ using KamatekCrm.Web.Components;
 using Blazored.LocalStorage;
 using KamatekCrm.Web.Services;
 using Microsoft.AspNetCore.Components.Authorization;
+using App = KamatekCrm.Web.Components.App;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,7 @@ builder.Services.AddAuthorizationCore();
 // Configure HttpClient
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("http://localhost:5050")
+    BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5050")
 });
 
 var app = builder.Build();
@@ -37,7 +38,7 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-app.MapStaticAssets();
+app.UseStaticFiles();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

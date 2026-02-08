@@ -15,10 +15,7 @@ namespace KamatekCrm.Repositories
         private IDbContextTransaction? _currentTransaction;
         private bool _disposed;
 
-        public UnitOfWork()
-        {
-            _context = new AppDbContext();
-        }
+
 
         public UnitOfWork(AppDbContext context)
         {

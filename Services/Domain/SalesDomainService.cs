@@ -8,6 +8,8 @@ using KamatekCrm.Exceptions;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Repositories;
 
+using KamatekCrm.Data;
+
 namespace KamatekCrm.Services.Domain
 {
     /// <summary>
@@ -25,7 +27,7 @@ namespace KamatekCrm.Services.Domain
         }
 
         /// <summary>
-        /// Satış işlemini gerçekleştirir (Transaction içinde)
+        /// Satış işlemini gerçekleştiri (Transaction içinde)
         /// </summary>
         public SalesResult ProcessSale(SaleRequest request)
         {
@@ -39,7 +41,7 @@ namespace KamatekCrm.Services.Domain
             _salesLock.Wait();
             try
             {
-                using var unitOfWork = new UnitOfWork();
+                using var unitOfWork = new UnitOfWork(new AppDbContext());
                 var context = unitOfWork.Context;
 
                 using var transaction = unitOfWork.BeginTransaction();
@@ -182,7 +184,7 @@ namespace KamatekCrm.Services.Domain
         {
             if (allowNegativeStock) return; // Negatif stok izinliyse validasyon yok
 
-            using var unitOfWork = new UnitOfWork();
+            using var unitOfWork = new UnitOfWork(new AppDbContext());
             var context = unitOfWork.Context;
 
             foreach (var item in items)

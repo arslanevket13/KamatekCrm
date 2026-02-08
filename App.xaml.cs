@@ -55,7 +55,7 @@ namespace KamatekCrm
                         services.AddApplicationServices(context.Configuration);
                         
                         // MainWindow'u DI container'a ekle (Scoped veya Transient)
-                        services.AddSingleton<MainWindow>();
+                        services.AddTransient<MainWindow>();
 
                         // JWT Authentication Configuration
                         var jwtKey = context.Configuration["Jwt:Key"] ?? "KamatekCrm_SecretKey_MinimumLength_32Chars";

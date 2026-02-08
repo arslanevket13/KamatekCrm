@@ -11,8 +11,9 @@
 
 ## Teknoloji Stack'i
 
-- **.NET 8** - Framework
+- **.NET 9** - Framework
 - **WPF (MVVM)** - UI Framework
+- **Blazor (WebAssembly/Server)** - Technician Web Panel
 - **Entity Framework Core** - ORM (Code-First)
 - **SQLite** - Veritabanı
 - **MaterialDesignInXAML** - UI Theme

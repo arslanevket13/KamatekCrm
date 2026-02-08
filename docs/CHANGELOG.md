@@ -1,5 +1,12 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+## 2026-02-08 (v6.8 - Build Fixes & Architectural Improvements)
+- **Compiler Fixes**: `Enums.` prefix removal and namespace standardization.
+- **Null Safety**: `AddProductViewModel` constructor initialization and `EnumToBooleanConverter` null checks.
+- **Architecture**: `UnitOfWork` parameterless constructor removed (enforcing DI). `SalesDomainService` and `InventoryDomainService` updated to use manual context temporarily (transaction isolation).
+- **WPF Stability**: `MainWindow` changed to Transient to fix re-opening crashes.
+- **Web Config**: API BaseUrl moved to `appsettings.json`.
+
 ## 2026-02-08 (v6.7 - Technician App Enhancement & Stability)
 - **Photo Upload**: Blazor üzerinden fotoğraf yükleme ve galeri görünümü. `IPhotoStorageService` ile thumbnail desteği.
 - **Google Maps**: Görev detay sayfasında müşteri konumuna navigasyon ve harita görünümü.

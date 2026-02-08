@@ -18,15 +18,11 @@ namespace KamatekCrm.Helpers
             string? apiExe = FindExeRecursive("KamatekCrm.API.exe");
             string? webExe = FindExeRecursive("KamatekCrm.Web.exe");
 
-            /*
-            if (!string.IsNullOrEmpty(apiExe))
-                StartVisibleProcess(apiExe);
-            else
-                Debug.WriteLine("[ProcessManager] API exe not found!");
-            */
-
             if (!string.IsNullOrEmpty(webExe))
-                StartVisibleProcess(webExe);
+            {
+                // Pass the port argument to the Web App
+                StartVisibleProcess(webExe, $"--urls \"{WEB_URL}\"");
+            }
             else
                 Debug.WriteLine("[ProcessManager] WEB exe not found!");
 
@@ -51,13 +47,14 @@ namespace KamatekCrm.Helpers
             }
         }
 
-        private static void StartVisibleProcess(string exePath)
+        private static void StartVisibleProcess(string exePath, string arguments = "")
         {
             try
             {
                 var psi = new ProcessStartInfo
                 {
                     FileName = exePath,
+                    Arguments = arguments,
                     UseShellExecute = true, // [CRITICAL] Mandatory for visible console
                     WindowStyle = ProcessWindowStyle.Normal, // [CRITICAL] Mandatory for debugging
                     WorkingDirectory = Path.GetDirectoryName(exePath)

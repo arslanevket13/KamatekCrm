@@ -27,6 +27,9 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Yeni ürün eklemek için constructor
         /// </summary>
+        /// <summary>
+        /// Yeni ürün eklemek için constructor
+        /// </summary>
         public AddProductViewModel() : this(null) { }
 
         /// <summary>
@@ -36,6 +39,12 @@ namespace KamatekCrm.ViewModels
         public AddProductViewModel(Product? productToEdit)
         {
             _context = new AppDbContext();
+            
+            // Ensure non-nullable fields are initialized to avoid warnings
+            // They are re-assigned below based on logic
+            // Inline initialization handles defaults, but this satisfies the compiler flow analysis if needed
+            if (_currentSpecs == null) _currentSpecs = new GeneralSpecs();
+            if (_newProduct == null) _newProduct = new Product(); 
 
             if (productToEdit != null && productToEdit.Id > 0)
             {

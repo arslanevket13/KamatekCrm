@@ -5,14 +5,9 @@
 ```
 KamatekCRM/                       # Solution Root
 ├── KamatekCrm/                   # WPF Desktop Application (net9.0-windows)
-│   ├── ... (WPF Files)
-│   ├── Configuration/
-│   │   └── LoggingConfiguration.cs # Serilog Configuration
-│   └── Helpers/ProcessManager.cs # Cleaned (No external processes)
-│
+├── KamatekCrm.Web/               # Blazor Web App (Technician Panel) (net9.0)
+├── KamatekCrm.API/               # Backend Web API (net9.0)
 ├── KamatekCrm.Shared/            # Shared Class Library (net9.0)
-│   ├── Models/User.cs            # Shared Identity Model
-│   └── ...
 ```
 
 ## WPF Proje Detayları

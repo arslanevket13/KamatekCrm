@@ -7,6 +7,8 @@ using KamatekCrm.Exceptions;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Repositories;
 
+using KamatekCrm.Data;
+
 namespace KamatekCrm.Services.Domain
 {
     /// <summary>
@@ -37,7 +39,7 @@ namespace KamatekCrm.Services.Domain
             _stockLock.Wait();
             try
             {
-                using var unitOfWork = new UnitOfWork();
+                using var unitOfWork = new UnitOfWork(new AppDbContext());
                 var context = unitOfWork.Context;
 
                 using var transaction = unitOfWork.BeginTransaction();
@@ -134,7 +136,7 @@ namespace KamatekCrm.Services.Domain
         /// </summary>
         public int GetAvailableStock(int productId, int warehouseId)
         {
-            using var unitOfWork = new UnitOfWork();
+            using var unitOfWork = new UnitOfWork(new AppDbContext());
             var context = unitOfWork.Context;
 
             var inventory = context.Inventories
@@ -151,7 +153,7 @@ namespace KamatekCrm.Services.Domain
             _stockLock.Wait();
             try
             {
-                using var unitOfWork = new UnitOfWork();
+                using var unitOfWork = new UnitOfWork(new AppDbContext());
                 var context = unitOfWork.Context;
 
                 using var transaction = unitOfWork.BeginTransaction();
@@ -224,7 +226,7 @@ namespace KamatekCrm.Services.Domain
              _stockLock.Wait();
             try
             {
-                using var unitOfWork = new UnitOfWork();
+                using var unitOfWork = new UnitOfWork(new AppDbContext());
                 var context = unitOfWork.Context;
 
                 using var transaction = unitOfWork.BeginTransaction();
