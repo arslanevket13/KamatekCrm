@@ -62,24 +62,21 @@ namespace KamatekCrm.Settings
         }
 
         /// <summary>
-        /// SQL Server bağlantı dizesi
+        /// PostgreSQL bağlantı dizesi
         /// </summary>
-        public static string SqlServerConnectionString => 
-            Configuration["DatabaseSettings:ConnectionStrings:SqlServer"] ?? "";
+        public static string PostgreSqlConnectionString => 
+            Configuration["DatabaseSettings:ConnectionStrings:PostgreSQL"] ?? "";
 
         /// <summary>
-        /// Aktif bağlantı dizesi (DatabaseType'a göre)
+        /// Aktif bağlantı dizesi (PostgreSQL enforced)
         /// </summary>
-        public static string ActiveConnectionString => 
-            DatabaseType.Equals("SqlServer", StringComparison.OrdinalIgnoreCase) 
-                ? SqlServerConnectionString 
-                : SqliteConnectionString;
+        public static string ActiveConnectionString => PostgreSqlConnectionString;
 
         /// <summary>
-        /// SQL Server kullanılıyor mu?
+        /// PostgreSQL kullanılıyor mu?
         /// </summary>
-        public static bool UseSqlServer => 
-            DatabaseType.Equals("SqlServer", StringComparison.OrdinalIgnoreCase);
+        public static bool UsePostgreSql => true;
+
 
         /// <summary>
         /// Şirket adı

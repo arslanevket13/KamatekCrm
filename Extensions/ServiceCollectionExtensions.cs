@@ -18,18 +18,11 @@ namespace KamatekCrm.Extensions
             // Assuming configuration is loaded from appsettings.json in App.xaml.cs and passed here
 
             // DbContext
-             services.AddDbContext<AppDbContext>(options =>
+            services.AddDbContext<AppDbContext>(options =>
             {
-                // Use AppSettings logic for Hybrid DB support
-                if (AppSettings.UseSqlServer)
-                {
-                    options.UseSqlServer(AppSettings.SqlServerConnectionString);
-                }
-                else
-                {
-                    options.UseSqlite(AppSettings.SqliteConnectionString);
-                }
-            }, ServiceLifetime.Scoped); // Scoped is default for DbContext
+                 options.UseNpgsql(AppSettings.PostgreSqlConnectionString)
+                        .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+            }, ServiceLifetime.Scoped);
 
              // Services
             services.AddSingleton<NavigationService>(); // Singleton as it holds state

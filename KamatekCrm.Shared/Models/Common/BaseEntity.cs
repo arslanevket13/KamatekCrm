@@ -14,7 +14,7 @@ namespace KamatekCrm.Shared.Models.Common
         public string? DeletedBy { get; set; }
         
         // Audit Trail
-        public DateTime CreatedDate { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public string CreatedBy { get; set; } = string.Empty;
         public DateTime? ModifiedDate { get; set; }
         public string? ModifiedBy { get; set; }

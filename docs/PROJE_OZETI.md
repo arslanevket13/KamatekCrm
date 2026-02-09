@@ -68,6 +68,16 @@
 - **Digital Archive**: Müşteri/ürün/servis belgeleri ve fotoğraflar
 - **RBAC**: Buton seviyesinde yetkilendirme
 
+### 🌐 Teknisyen Web Paneli (YENİ)
+- **Erişim**: Mobil uyumlu Blazor arayüzü (Port 7000)
+- **Özellikler**: Görev listesi, iş detayları, fotoğraf yükleme, navigasyon (Maps)
+- **Teknoloji**: Blazor Server + MudBlazor
+
+### 🌍 Uzaktan Erişim (Remote Access)
+- **Yapı**: `0.0.0.0` binding ile tüm ağlardan erişim
+- **Güvenlik**: JWT Token tabanlı kimlik doğrulama
+- **Kurulum**: Otomatik Firewall scripti (`Enable-RemoteAccess.ps1`)
+
 ## Mevcut Durum
 
 ✅ **Tamamlanan:**
@@ -84,6 +94,8 @@
 - **Greenfield Configuration** (Stable Startup, Visible Console, 5050/7000 Ports)
 - **Gelişmiş Loglama ve Hata Yönetimi** (Serilog, Global Exception Handling)
 - **Professional UI/UX** (Toast Notifications, Loading Overlay, Animations)
+- **Teknisyen Web Paneli** (Blazor Server, MudBlazor)
+- **Uzaktan Erişim** (Firewall Script, Port Forwarding Guide)
 
 🔄 **Devam Eden:**
 - Proforma PDF oluşturma (QuestPDF)

@@ -2,44 +2,69 @@ using KamatekCrm.Web.Components;
 using Blazored.LocalStorage;
 using KamatekCrm.Web.Services;
 using Microsoft.AspNetCore.Components.Authorization;
-using App = KamatekCrm.Web.Components.App;
+using MudBlazor.Services;
+using Microsoft.AspNetCore.Authentication.Cookies; // EKLENDİ
+
+
+// PostgreSQL Legacy Timestamp Behavior
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1. Portu 7000'e Sabitle
+builder.WebHost.UseUrls("http://localhost:7000");
+
+// 2. Temel Razor Bileşenleri
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Add Client Services
+// 3. MudBlazor Servisi
+builder.Services.AddMudServices();
+
+// 4. Kimlik Doğrulama ve Yetkilendirme (Hata Çözümü Burada)
+builder.Services.AddCascadingAuthenticationState();
+
+// HATANIN ÇÖZÜMÜ: Varsayılan şema olarak "Cookies" belirtildi
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/login"; // Yetkisiz girişte yönlendirilecek sayfa
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    });
+
+builder.Services.AddAuthorizationCore();
+
+// 5. Client Servisleri
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<IClientAuthService, ClientAuthService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
-builder.Services.AddAuthorizationCore();
 
-// Configure HttpClient
+// 6. API Bağlantısı (Port 5050)
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5050")
+    BaseAddress = new Uri("http://localhost:5050")
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
+// 7. Hata Yönetimi
+app.UseDeveloperExceptionPage();
+// app.UseHttpsRedirection(); // Localhost hatasını önlemek için kapalı
 
-app.UseHttpsRedirection();
+app.UseStaticFiles();
 
+// Authentication ve Authorization Middleware (Sıralama Önemli)
+app.UseAuthentication(); // Önce kimlik doğrula
+app.UseAuthorization();  // Sonra yetki kontrolü yap
 
 app.UseAntiforgery();
 
-app.UseStaticFiles();
-app.MapRazorComponents<App>()
+app.MapStaticAssets();
+
+app.MapRazorComponents<KamatekCrm.Web.Components.App>()
     .AddInteractiveServerRenderMode();
+
+Console.WriteLine("--> Web Uygulamasi 7000 Portunda (Auth Fix) ile Hazir.");
 
 app.Run();

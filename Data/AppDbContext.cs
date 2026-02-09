@@ -70,17 +70,9 @@ namespace KamatekCrm.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                // Hibrit veritabanı desteği: appsettings.json'dan oku
-                if (AppSettings.UseSqlServer)
-                {
-                    // SQL Server (Production / Multi-user)
-                    optionsBuilder.UseSqlServer(AppSettings.SqlServerConnectionString);
-                }
-                else
-                {
-                    // SQLite (Geliştirme / Tek kullanıcı)
-                    optionsBuilder.UseSqlite(AppSettings.SqliteConnectionString);
-                }
+                // PostgreSQL Migration enforce
+                optionsBuilder.UseNpgsql(AppSettings.PostgreSqlConnectionString)
+                              .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             }
         }
 
@@ -179,6 +171,12 @@ namespace KamatekCrm.Data
                 entity.Property(e => e.ProductName).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.SalePrice).HasColumnType("decimal(18,2)");
+                
+                // PostgreSQL JSONB Support
+                if (AppSettings.UsePostgreSql)
+                {
+                    entity.Property(e => e.TechSpecsJson).HasColumnType("jsonb");
+                }
             });
 
             // Seed Data
@@ -249,7 +247,8 @@ namespace KamatekCrm.Data
         {
             var entries = ChangeTracker.Entries<KamatekCrm.Shared.Models.Common.BaseEntity>();
             var currentUser = GetCurrentUser();
-            var timestamp = DateTime.Now;
+            // PostgreSQL requires UTC
+            var timestamp = DateTime.UtcNow;
 
             foreach (var entry in entries)
             {

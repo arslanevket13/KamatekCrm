@@ -15,6 +15,41 @@ KamatekCRM/                       # Solution Root
 ```
 KamatekCrm/
 │
+...
+```
+
+## Web Proje Detayları (KamatekCrm.Web)
+
+```
+KamatekCrm.Web/
+│
+├── Components/           # Blazor Bileşenleri
+│   ├── Layout/           # Ana sayfa şablonları (MainLayout, LoginLayout)
+│   ├── Pages/            # Sayfalar
+│   │   ├── Home.razor        # Dashboard
+│   │   ├── Login.razor       # Login Form
+│   │   └── Tasks/            # Görev Yönetimi (List & Detail)
+│   └── _Imports.razor    # Global usings
+│
+├── Services/             # İstemci Servisleri (HTTP Client)
+│   ├── IClientAuthService.cs   # Login/Logout yönetim
+│   ├── ClientAuthService.cs
+│   ├── ITaskService.cs         # API ile görev iletişimi
+│   ├── TaskService.cs
+│   └── CustomAuthenticationStateProvider.cs # Blazor Auth State
+│
+├── wwwroot/              # Statik Dosyalar
+│   ├── css/              # Bootstrap & App Styles
+│   └── js/               # App Logic
+│
+└── Program.cs            # Web Host Config (Port 7000)
+```
+
+## WPF Proje Detayları
+
+```
+KamatekCrm/
+│
 ├── ViewModels/           # İş mantığı (MVVM)
 │   ├── MainViewModel.cs          # Ana navigation kontrolü + Logout
 │   ├── LoginViewModel.cs         # Giriş ekranı mantığı
@@ -157,6 +192,11 @@ KamatekCrm/
 ```
 
 ## Kritik Mimariler
+
+### 0. Hibrit Mimari (WPF + Web)
+- **Host**: WPF uygulaması, API (5050) ve Web (7000) sunucularını yönetir.
+- **ProcessManager**: Web uygulamasını (`KamatekCrm.Web.exe`) arka planda başlatır ve portları (`0.0.0.0`) yönetir.
+- **Data Flow**: Web App → API (JWT) → Database.
 
 ### 1. Navigation (Single Window)
 - `NavigationService` → Singleton pattern

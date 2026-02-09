@@ -1,5 +1,16 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+## 2026-02-09 (v6.9 - Remote Access & Documentation)
+- **Remote Access Configuration**:
+    - **Global Bindings**: API (5050) ve Web (7000) artık `0.0.0.0` dinliyor.
+    - **Firewall Script**: `Enable-RemoteAccess.ps1` ile otomatik port açma.
+    - **Documentation**: `REMOTE_ACCESS_GUIDE.md` ve `WEB.md` eklendi.
+- **Web App Hotfixes**:
+    - **MudBlazor Integration**: Eksik servis kayıtları ve paketler eklendi.
+    - **Port Stability**: Web App portu 7000'e sabitlendi.
+    - **Namespace Repair**: `Program.cs` ve Razor dosyalarındaki `CS0234` hataları giderildi.
+- **Project Structure**: `docs/` klasörü güncellendi, `TEKNIK_HARITA` hibrit yapıyı kapsacak şekilde revize edildi.
+
 ## 2026-02-08 (v6.8 - Build Fixes & Architectural Improvements)
 - **Compiler Fixes**: `Enums.` prefix removal and namespace standardization.
 - **Null Safety**: `AddProductViewModel` constructor initialization and `EnumToBooleanConverter` null checks.

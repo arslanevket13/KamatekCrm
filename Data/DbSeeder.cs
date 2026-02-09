@@ -55,7 +55,7 @@ namespace KamatekCrm.Data
             var transaction1 = new Transaction
             {
                 CustomerId = customer1.Id,
-                Date = DateTime.Now.AddDays(-10),
+                Date = DateTime.UtcNow.AddDays(-10),
                 Amount = 5000,
                 Type = TransactionType.Debt,
                 Description = "Geçmiş dönem bakiyesi devri"
@@ -64,7 +64,7 @@ namespace KamatekCrm.Data
             var transaction2 = new Transaction
             {
                 CustomerId = customer1.Id,
-                Date = DateTime.Now.AddDays(-5),
+                Date = DateTime.UtcNow.AddDays(-5),
                 Amount = 1500,
                 Type = TransactionType.Payment,
                 Description = "Nakit ödeme"
@@ -135,7 +135,7 @@ namespace KamatekCrm.Data
                 Status = JobStatus.WaitingForParts,
                 Priority = JobPriority.Normal,
                 Description = "Samsung S21 Ekran Değişimi. Yedek parça siparişi verildi.",
-                CreatedDate = DateTime.Now.AddDays(-2),
+                CreatedDate = DateTime.UtcNow.AddDays(-2),
                 DeviceBrand = "Samsung",
                 DeviceModel = "S21",
                 Price = 3500,
@@ -150,8 +150,8 @@ namespace KamatekCrm.Data
                 Status = JobStatus.Pending,
                 Priority = JobPriority.Urgent,
                 Description = "Şantiye A Blok kamera sistemi keşfi yapılacak. Toplam 32 kamera planlanıyor.",
-                CreatedDate = DateTime.Now,
-                ScheduledDate = DateTime.Now.AddDays(1)
+                CreatedDate = DateTime.UtcNow,
+                ScheduledDate = DateTime.UtcNow.AddDays(1)
             };
 
             context.ServiceJobs.AddRange(job1, job2);

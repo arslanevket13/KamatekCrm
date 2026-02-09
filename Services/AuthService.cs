@@ -91,7 +91,7 @@ namespace KamatekCrm.Services
 
             // Başarılı Giriş
             _currentUser = targetUser;
-            targetUser.LastLoginDate = DateTime.Now;
+            targetUser.LastLoginDate = DateTime.UtcNow;
             context.SaveChanges();
 
             return true;
@@ -125,7 +125,7 @@ namespace KamatekCrm.Services
                     Ad = "Admin",
                     Soyad = "User",
                     IsActive = true,
-                    CreatedDate = DateTime.Now,
+                    CreatedDate = DateTime.UtcNow,
                     // Admin için tüm izinler aktif
                     CanViewFinance = true,
                     CanViewAnalytics = true,

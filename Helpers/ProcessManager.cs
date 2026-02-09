@@ -8,8 +8,13 @@ namespace KamatekCrm.Helpers
 {
     public static class ProcessManager
     {
-        public const string API_URL = "http://localhost:5050";
-        public const string WEB_URL = "http://localhost:7000";
+        // Bind URLs (Listen on all interfaces)
+        public const string API_BIND_URL = "http://0.0.0.0:5050";
+        public const string WEB_BIND_URL = "http://0.0.0.0:7000";
+
+        // Localhost URLs (For opening browser on the server machine)
+        public const string API_LOCAL_URL = "http://localhost:5050";
+        public const string WEB_LOCAL_URL = "http://localhost:7000";
 
         public static void StartServices()
         {
@@ -20,14 +25,14 @@ namespace KamatekCrm.Helpers
 
             if (!string.IsNullOrEmpty(webExe))
             {
-                // Pass the port argument to the Web App
-                StartVisibleProcess(webExe, $"--urls \"{WEB_URL}\"");
+                // Pass the port argument to the Web App (Bind to 0.0.0.0)
+                StartVisibleProcess(webExe, $"--urls \"{WEB_BIND_URL}\" --environment Development");
             }
             else
                 Debug.WriteLine("[ProcessManager] WEB exe not found!");
 
-            // Open Browser after delay
-            Task.Delay(3000).ContinueWith(_ => OpenBrowser(WEB_URL));
+            // Open Browser after delay (Use Localhost URL for the server user)
+            Task.Delay(3000).ContinueWith(_ => OpenBrowser(WEB_LOCAL_URL));
         }
 
         public static void StopServices()
@@ -59,6 +64,7 @@ namespace KamatekCrm.Helpers
                     WindowStyle = ProcessWindowStyle.Normal, // [CRITICAL] Mandatory for debugging
                     WorkingDirectory = Path.GetDirectoryName(exePath)
                 };
+                
                 Process.Start(psi);
             }
             catch (Exception ex)

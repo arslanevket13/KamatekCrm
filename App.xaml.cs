@@ -33,6 +33,9 @@ namespace KamatekCrm
 
         protected override async void OnStartup(StartupEventArgs e)
         {
+            // PostgreSQL Legacy Timestamp Behavior (Fix for Kind=Local error)
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
             // Logging'i ilk iş olarak yapılandır
             LoggingConfiguration.ConfigureLogging();
             
@@ -81,7 +84,7 @@ namespace KamatekCrm
                     })
                     .ConfigureWebHostDefaults(webBuilder =>
                     {
-                        webBuilder.UseUrls(KamatekCrm.Helpers.ProcessManager.API_URL);
+                        webBuilder.UseUrls(KamatekCrm.Helpers.ProcessManager.API_BIND_URL);
                         webBuilder.Configure(app =>
                         {
                             // if (context.HostingEnvironment.IsDevelopment()) // Hard to access context here easily without fuller config
