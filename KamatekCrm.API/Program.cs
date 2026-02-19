@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Serilog;
 using KamatekCrm.Data;
+using KamatekCrm.Shared.Models;
 using KamatekCrm.API.Services;
 
 // Serilog yapılandırması
@@ -75,6 +76,9 @@ try
     // Services
     builder.Services.AddScoped<IPhotoStorageService, PhotoStorageService>();
 
+    // SLA Background Worker — Her 6 saatte bakım sözleşmelerini kontrol eder
+    builder.Services.AddHostedService<SlaBackgroundWorker>();
+
     // Swagger/OpenAPI
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
@@ -138,7 +142,7 @@ try
         Version = "1.0.0"
     }));
 
-    // Veritabanı migration'ını otomatik uygula (opsiyonel)
+    // Veritabanı migration + Seed + Default Admin
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -146,10 +150,29 @@ try
         {
             db.Database.Migrate();
             Log.Information("Database migrations applied successfully");
+
+            // Demo data seed (sadece boş DB'de çalışır)
+            DbSeeder.SeedDemoData(db);
+
+            // Varsayılan admin kullanıcısı oluştur
+            if (!db.Users.Any(u => u.KullaniciAdi == "admin"))
+            {
+                var admin = new User
+                {
+                    KullaniciAdi = "admin",
+                    SifreHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                    AdSoyad = "Sistem Yöneticisi",
+                    Rol = "Admin",
+                    IsActive = true
+                };
+                db.Users.Add(admin);
+                db.SaveChanges();
+                Log.Information("Default admin user created.");
+            }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while migrating the database");
+            Log.Error(ex, "An error occurred while migrating/seeding the database");
         }
     }
 

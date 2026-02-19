@@ -1,5 +1,13 @@
 # KamatekCRM - Değişiklik Günlüğü
 
+## v10.0 — Critical Architectural Refactoring (2026-02-19)
+- **WPF Decoupled**: Removed embedded Kestrel web server, JWT, EF Migrate, SLA from `App.xaml.cs`
+- **API is The Brain**: SLA `BackgroundService`, DbSeeder, default admin → all moved to API `Program.cs`
+- **ProcessManager**: Now launches both `KamatekCrm.API.exe` (port 5050) and `KamatekCrm.Web.exe` (port 7000)
+- **HttpClient**: WPF registers `HttpClient` for API communication at `http://localhost:5050`
+- **Cleanup**: Removed `AddControllers/AddSwaggerGen` from WPF `ServiceCollectionExtensions`
+- **Fix**: Fixed broken `KamatekCrm.Shared` project reference path in API `.csproj`
+
 ## 2026-02-19 (v9.0 - Core Business Modules: POS, Purchasing, Product Images)
 
 ### 🏪 Professional POS (Perakende Satış)

@@ -22,18 +22,32 @@ namespace KamatekCrm.Helpers
             {
                 KillZombieProcesses();
 
-                string? webExe = FindExeRecursive("KamatekCrm.Web.exe");
+                // 1. API Sunucusunu Başlat (Port 5050) — Veritabanı, JWT, SLA hepsi burada
+                string? apiExe = FindExeRecursive("KamatekCrm.API.exe");
+                if (!string.IsNullOrEmpty(apiExe))
+                {
+                    Serilog.Log.Information($"Starting API Server: {apiExe} (Port 5050)");
+                    StartVisibleProcess(apiExe, $"--urls \"{API_BIND_URL}\" --environment Development");
+                }
+                else
+                {
+                    Serilog.Log.Error("[ProcessManager] API exe not found! Backend (Port 5050) will not start.");
+                    System.Windows.MessageBox.Show("API Sunucusu başlatılamadı (KamatekCrm.API.exe bulunamadı).\nVeritabanı işlemleri çalışmayacak.", 
+                        "Kritik Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
 
+                // 2. Web Arayüzünü Başlat (Port 7000) — Teknisyen paneli
+                string? webExe = FindExeRecursive("KamatekCrm.Web.exe");
                 if (!string.IsNullOrEmpty(webExe))
                 {
                     Serilog.Log.Information($"Starting Web App: {webExe} (Port 7000)");
-                    // Pass the port argument to the Web App (Bind to 0.0.0.0)
                     StartVisibleProcess(webExe, $"--urls \"{WEB_BIND_URL}\" --environment Development");
                 }
                 else
                 {
                     Serilog.Log.Error("[ProcessManager] WEB exe not found! Web Interface (Port 7000) will not start.");
-                    System.Windows.MessageBox.Show("Web Arayüzü başlatılamadı (KamatekCrm.Web.exe bulunamadı).", "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    System.Windows.MessageBox.Show("Web Arayüzü başlatılamadı (KamatekCrm.Web.exe bulunamadı).", 
+                        "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 }
 
                 // Open Browser after delay (Use Localhost URL for the server user)

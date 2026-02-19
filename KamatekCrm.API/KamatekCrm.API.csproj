@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <!-- Entity Framework Core -->
+    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
       <PrivateAssets>all</PrivateAssets>
@@ -36,8 +37,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Shared Project Reference -->
-    <ProjectReference Include="..\KamatekCrm\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
+    <!-- Shared Project Reference (Models, DTOs, Enums) -->
+    <ProjectReference Include="..\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
+    
+    <!-- Main WPF Project Reference (AppDbContext, DbSeeder, Services) -->
+    <ProjectReference Include="..\KamatekCrm.csproj">
+      <ExcludeAssets>none</ExcludeAssets>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

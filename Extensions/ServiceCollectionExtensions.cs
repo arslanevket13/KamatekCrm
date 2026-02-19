@@ -59,10 +59,8 @@ namespace KamatekCrm.Extensions
 
             // Views (Register as needed, usually via ViewModel)
             
-            // API Controllers
-            services.AddControllers();
-            services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
+
+            // MainWindow is registered in App.xaml.cs as Singleton
 
             // MainWindow is registered in App.xaml.cs as Singleton
 
