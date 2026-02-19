@@ -15,10 +15,11 @@ namespace KamatekCrm.ViewModels
 {
     public class FinancialHealthViewModel : ViewModelBase
     {
+        private readonly AppDbContext _context;
 
-
-        public FinancialHealthViewModel()
+        public FinancialHealthViewModel(AppDbContext context)
         {
+            _context = context;
             // Initialize non-nullable properties
             MonthlyFinancialSeries = Array.Empty<ISeries>();
             MonthlyXAxes = Array.Empty<Axis>();

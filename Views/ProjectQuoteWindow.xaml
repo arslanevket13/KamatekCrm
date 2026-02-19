@@ -1,15 +1,10 @@
 <Window x:Class="KamatekCrm.Views.ProjectQuoteWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
         Title="🏗️ PROJE &amp; TEKLİF OLUŞTUR" 
         Height="650" Width="900"
         WindowStartupLocation="CenterScreen"
-        Background="#F5F5F5">
-    
-    <Window.DataContext>
-        <vm:ProjectQuoteViewModel/>
-    </Window.DataContext>
+        Background="{DynamicResource ThemeBackground}">
     
     <Grid Margin="20">
         <Grid.RowDefinitions>

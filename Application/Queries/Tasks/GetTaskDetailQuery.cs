@@ -23,7 +23,7 @@ namespace KamatekCrm.Application.Queries.Tasks
             _context = context;
         }
 
-        public async Task<TaskDetailDto> Handle(GetTaskDetailQuery request, CancellationToken cancellationToken)
+        public async Task<TaskDetailDto?> Handle(GetTaskDetailQuery request, CancellationToken cancellationToken)
         {
             var job = await _context.ServiceJobs
                 .Include(j => j.Customer)

@@ -55,6 +55,7 @@ namespace KamatekCrm.Data
         // --- Perakende Satış (POS) ---
         public DbSet<SalesOrder> SalesOrders { get; set; }
         public DbSet<SalesOrderItem> SalesOrderItems { get; set; }
+        public DbSet<SalesOrderPayment> SalesOrderPayments { get; set; }
 
         // --- Kasa / Finans ---
         public DbSet<CashTransaction> CashTransactions { get; set; }
@@ -222,6 +223,16 @@ namespace KamatekCrm.Data
 
                 entity.HasIndex(e => e.ServiceJobId);
                 entity.HasIndex(e => e.PerformedAt);
+            });
+
+            // --- SalesOrderPayment Configuration ---
+            modelBuilder.Entity<SalesOrderPayment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.SalesOrder)
+                    .WithMany(s => s.Payments)
+                    .HasForeignKey(e => e.SalesOrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
 

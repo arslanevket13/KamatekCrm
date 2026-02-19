@@ -200,10 +200,10 @@ namespace KamatekCrm.ViewModels
 
         #region Constructor
 
-        public ProjectQuoteEditorViewModel()
+        public ProjectQuoteEditorViewModel(AppDbContext context, ProjectScopeService scopeService)
         {
-            _context = new AppDbContext();
-            _scopeService = new ProjectScopeService(_context);
+            _context = context;
+            _scopeService = scopeService;
 
             // Commands
             GenerateStructureCommand = new RelayCommand(_ => GenerateStructure());
@@ -229,9 +229,9 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Mevcut projeyi yüklemek için constructor
+        /// Mevcut projeyi yüklemek için - LoadProject metodu DI sonrası çağrılabilir
         /// </summary>
-        public ProjectQuoteEditorViewModel(int projectId) : this()
+        public void LoadExistingProject(int projectId)
         {
             LoadProject(projectId);
         }

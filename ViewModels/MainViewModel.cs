@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
 using KamatekCrm.Commands;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
@@ -154,7 +155,9 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void OpenFaultTicket()
         {
-            var window = new FaultTicketWindow();
+            // Arıza Kaydı — DI ile ViewModel çözümlenir
+            var faultTicketVm = App.ServiceProvider.GetRequiredService<FaultTicketViewModel>();
+            var window = new FaultTicketWindow(faultTicketVm);
             window.ShowDialog();
         }
 

@@ -56,16 +56,19 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                             <TextBlock Text="Bugünün İşleri" FontSize="12" FontWeight="Medium"
-                                       Foreground="{DynamicResource ThemeTextSecondary}"/>
+                                       Foreground="{DynamicResource ThemeTextSecondary}"
+                                       TextTrimming="CharacterEllipsis"/>
                             <TextBlock Text="{Binding TodaysJobsCount}" 
                                        FontSize="42" FontWeight="Bold" 
-                                       Foreground="#3B82F6" Margin="0,4,0,0"/>
+                                       Foreground="{DynamicResource ThemePrimary}" 
+                                       Margin="0,4,0,0"/>
                             <TextBlock Text="planlanmış" FontSize="11" 
-                                       Foreground="{DynamicResource ThemeTextTertiary}"/>
+                                       Foreground="{DynamicResource ThemeTextTertiary}"
+                                       TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
-                        <Border Grid.Column="1" Background="#EFF6FF" 
+                        <Border Grid.Column="1" Background="{DynamicResource ThemePrimaryLight}" 
                                 CornerRadius="16" Width="56" Height="56"
-                                VerticalAlignment="Center">
+                                VerticalAlignment="Center" Opacity="0.2">
                             <TextBlock Text="📆" FontSize="24" 
                                        HorizontalAlignment="Center" 
                                        VerticalAlignment="Center"/>
@@ -82,16 +85,19 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                             <TextBlock Text="Teslime Hazır" FontSize="12" FontWeight="Medium"
-                                       Foreground="{DynamicResource ThemeTextSecondary}"/>
+                                       Foreground="{DynamicResource ThemeTextSecondary}"
+                                       TextTrimming="CharacterEllipsis"/>
                             <TextBlock Text="{Binding ReadyRepairsCount}" 
                                        FontSize="42" FontWeight="Bold" 
-                                       Foreground="#10B981" Margin="0,4,0,0"/>
+                                       Foreground="{DynamicResource ThemeSuccess}" 
+                                       Margin="0,4,0,0"/>
                             <TextBlock Text="cihaz bekliyor" FontSize="11" 
-                                       Foreground="{DynamicResource ThemeTextTertiary}"/>
+                                       Foreground="{DynamicResource ThemeTextTertiary}"
+                                       TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
-                        <Border Grid.Column="1" Background="#ECFDF5" 
+                        <Border Grid.Column="1" Background="{DynamicResource ThemeSuccess}" 
                                 CornerRadius="16" Width="56" Height="56"
-                                VerticalAlignment="Center">
+                                VerticalAlignment="Center" Opacity="0.15">
                             <TextBlock Text="✅" FontSize="24" 
                                        HorizontalAlignment="Center" 
                                        VerticalAlignment="Center"/>
@@ -108,16 +114,19 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                             <TextBlock Text="Stok Uyarısı" FontSize="12" FontWeight="Medium"
-                                       Foreground="{DynamicResource ThemeTextSecondary}"/>
+                                       Foreground="{DynamicResource ThemeTextSecondary}"
+                                       TextTrimming="CharacterEllipsis"/>
                             <TextBlock Text="{Binding LowStockCount}" 
                                        FontSize="42" FontWeight="Bold" 
-                                       Foreground="#EF4444" Margin="0,4,0,0"/>
+                                       Foreground="{DynamicResource ThemeError}" 
+                                       Margin="0,4,0,0"/>
                             <TextBlock Text="düşük stok" FontSize="11" 
-                                       Foreground="{DynamicResource ThemeTextTertiary}"/>
+                                       Foreground="{DynamicResource ThemeTextTertiary}"
+                                       TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
-                        <Border Grid.Column="1" Background="#FEF2F2" 
+                        <Border Grid.Column="1" Background="{DynamicResource ThemeError}" 
                                 CornerRadius="16" Width="56" Height="56"
-                                VerticalAlignment="Center">
+                                VerticalAlignment="Center" Opacity="0.15">
                             <TextBlock Text="🚨" FontSize="24" 
                                        HorizontalAlignment="Center" 
                                        VerticalAlignment="Center"/>
@@ -134,16 +143,19 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
                             <TextBlock Text="Aktif İşler" FontSize="12" FontWeight="Medium"
-                                       Foreground="{DynamicResource ThemeTextSecondary}"/>
+                                       Foreground="{DynamicResource ThemeTextSecondary}"
+                                       TextTrimming="CharacterEllipsis"/>
                             <TextBlock Text="{Binding ActiveJobsCount}" 
                                        FontSize="42" FontWeight="Bold" 
-                                       Foreground="#F59E0B" Margin="0,4,0,0"/>
+                                       Foreground="{DynamicResource ThemeWarning}" 
+                                       Margin="0,4,0,0"/>
                             <TextBlock Text="devam ediyor" FontSize="11" 
-                                       Foreground="{DynamicResource ThemeTextTertiary}"/>
+                                       Foreground="{DynamicResource ThemeTextTertiary}"
+                                       TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
-                        <Border Grid.Column="1" Background="#FFFBEB" 
+                        <Border Grid.Column="1" Background="{DynamicResource ThemeWarning}" 
                                 CornerRadius="16" Width="56" Height="56"
-                                VerticalAlignment="Center">
+                                VerticalAlignment="Center" Opacity="0.15">
                             <TextBlock Text="🔧" FontSize="24" 
                                        HorizontalAlignment="Center" 
                                        VerticalAlignment="Center"/>

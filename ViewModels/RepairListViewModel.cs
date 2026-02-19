@@ -10,6 +10,7 @@ using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KamatekCrm.ViewModels
 {
@@ -512,7 +513,8 @@ namespace KamatekCrm.ViewModels
 
         private async void ExecuteCreateNewRepair(object? parameter)
         {
-            var regWindow = new Views.RepairRegistrationWindow();
+            var repairVm = App.ServiceProvider.GetRequiredService<RepairViewModel>();
+            var regWindow = new Views.RepairRegistrationWindow(repairVm);
             if (regWindow.ShowDialog() == true) 
             {
                  await LoadRepairJobsAsync();

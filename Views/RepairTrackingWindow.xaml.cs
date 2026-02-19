@@ -1,4 +1,5 @@
 using System.Windows;
+using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Views
 {
@@ -7,18 +8,15 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class RepairTrackingWindow : Window
     {
-
-        public RepairTrackingWindow()
+        public RepairTrackingWindow(RepairViewModel viewModel)
         {
             InitializeComponent();
+            DataContext = viewModel;
         }
 
-        public RepairTrackingWindow(int jobId) : this()
+        public RepairTrackingWindow(RepairViewModel viewModel, int jobId) : this(viewModel)
         {
-            if (DataContext is ViewModels.RepairViewModel vm)
-            {
-                vm.SelectJobById(jobId);
-            }
+            viewModel.SelectJobById(jobId);
         }
     }
 }

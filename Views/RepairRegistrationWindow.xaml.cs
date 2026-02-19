@@ -1,4 +1,5 @@
 using System.Windows;
+using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Views
 {
@@ -7,9 +8,10 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class RepairRegistrationWindow : Window
     {
-        public RepairRegistrationWindow()
+        public RepairRegistrationWindow(RepairViewModel viewModel)
         {
             InitializeComponent();
+            DataContext = viewModel;
         }
     }
 }

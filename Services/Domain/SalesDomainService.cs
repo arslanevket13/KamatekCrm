@@ -51,8 +51,15 @@ namespace KamatekCrm.Services.Domain
                     var todayOrders = context.SalesOrders.Count(o => o.Date.Date == DateTime.Today);
                     var orderNumber = $"SO-{DateTime.Now:yyyyMMdd}-{(todayOrders + 1):D3}";
 
-                    // 2. Toplam tutarı hesapla
-                    var totalAmount = request.Items.Sum(i => i.Quantity * i.UnitPrice);
+                    // 2. Toplamları hesapla
+                    var subTotal = request.Items.Sum(i => i.Quantity * i.UnitPrice);
+                    var discountTotal = request.Items.Sum(i => i.DiscountAmount);
+                    var taxTotal = request.Items.Sum(i =>
+                    {
+                        var afterDiscount = (i.Quantity * i.UnitPrice) - i.DiscountAmount;
+                        return afterDiscount * i.TaxRate / 100m;
+                    });
+                    var totalAmount = request.Items.Sum(i => i.LineTotal > 0 ? i.LineTotal : (i.Quantity * i.UnitPrice));
 
                     // 3. SalesOrder oluştur
                     var salesOrder = new SalesOrder
@@ -60,8 +67,12 @@ namespace KamatekCrm.Services.Domain
                         OrderNumber = orderNumber,
                         Date = DateTime.Now,
                         PaymentMethod = request.PaymentMethod.ToString(),
+                        SubTotal = subTotal,
+                        DiscountTotal = discountTotal,
+                        TaxTotal = taxTotal,
                         TotalAmount = totalAmount,
-                        CustomerName = request.CustomerName
+                        CustomerName = request.CustomerName,
+                        Status = SalesOrderStatus.Completed
                     };
                     context.SalesOrders.Add(salesOrder);
                     context.SaveChanges(); // ID almak için
@@ -76,7 +87,11 @@ namespace KamatekCrm.Services.Domain
                             ProductId = item.ProductId,
                             ProductName = item.ProductName,
                             Quantity = item.Quantity,
-                            UnitPrice = item.UnitPrice
+                            UnitPrice = item.UnitPrice,
+                            DiscountPercent = item.DiscountPercent,
+                            DiscountAmount = item.DiscountAmount,
+                            TaxRate = item.TaxRate,
+                            LineTotal = item.LineTotal
                         };
                         context.SalesOrderItems.Add(orderItem);
 

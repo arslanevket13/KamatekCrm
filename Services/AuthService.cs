@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.Services
 {
@@ -12,7 +13,13 @@ namespace KamatekCrm.Services
     /// </summary>
     public class AuthService : IAuthService
     {
+        private readonly AppDbContext _context;
         private User? _currentUser;
+
+        public AuthService(AppDbContext context)
+        {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+        }
 
         /// <summary>
         /// Şu anda oturum açmış kullanıcı
@@ -64,26 +71,24 @@ namespace KamatekCrm.Services
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 throw new Exception("Kullanıcı adı veya şifre boş olamaz.");
 
-            using var context = new AppDbContext();
-
-            // 1. ADIM: Kullanıcıyı sadece ismine göre bul (Debug için)
-            var targetUser = context.Users.FirstOrDefault(u => u.Username.ToLower() == username.ToLower());
+            // Kullanıcıyı bul (case-insensitive)
+            var targetUser = _context.Users
+                .AsNoTracking()
+                .FirstOrDefault(u => EF.Functions.ILike(u.Username, username));
 
             if (targetUser == null)
             {
-                // Veritabanındaki tüm kullanıcıları listele (Debug için)
-                var allUsers = string.Join(", ", context.Users.Select(u => u.Username).ToList());
-                throw new Exception($"Kullanıcı '{username}' bulunamadı.\nVeritabanındaki Kullanıcılar: [{allUsers}]");
+                // Güvenlik: Kullanıcı yoksa bile aynı mesajı göster (user enumeration önlemi)
+                throw new Exception("Kullanıcı adı veya şifre hatalı.");
             }
 
-            // 2. ADIM: Şifre kontrolü
-            var inputHash = HashPassword(password);
-            if (targetUser.PasswordHash != inputHash)
+            // Şifre kontrolü
+            if (!VerifyPassword(password, targetUser.PasswordHash))
             {
-                throw new Exception($"Şifre hatalı!\n\nDB Hash: {targetUser.PasswordHash}\nGirdi Hash: {inputHash}");
+                throw new Exception("Kullanıcı adı veya şifre hatalı.");
             }
 
-            // 3. ADIM: Aktiflik kontrolü
+            // Aktiflik kontrolü
             if (!targetUser.IsActive)
             {
                 throw new Exception("Kullanıcı hesabı pasif durumda.");
@@ -91,8 +96,14 @@ namespace KamatekCrm.Services
 
             // Başarılı Giriş
             _currentUser = targetUser;
-            targetUser.LastLoginDate = DateTime.UtcNow;
-            context.SaveChanges();
+            
+            // Son giriş tarihini güncelle (tracking gerekli)
+            var userToUpdate = _context.Users.Find(targetUser.Id);
+            if (userToUpdate != null)
+            {
+                userToUpdate.LastLoginDate = DateTime.UtcNow;
+                _context.SaveChanges();
+            }
 
             return true;
         }
@@ -106,21 +117,20 @@ namespace KamatekCrm.Services
         }
 
         /// <summary>
-        /// Varsayılan admin kullanıcısını oluştur (eğer yoksa)
+        /// Varsayılan admin kullanıcısını oluştur veya şifresini resetle
         /// </summary>
         public void CreateDefaultUser()
         {
-            using var context = new AppDbContext();
-
             // Admin kullanıcısı var mı diye özel olarak bak
-            var adminUser = context.Users.FirstOrDefault(u => u.Username == "admin");
+            var adminUser = _context.Users.FirstOrDefault(u => u.Username == "admin");
 
             if (adminUser == null)
             {
+                // Admin kullanıcısı yoksa oluştur
                 adminUser = new User
                 {
                     Username = "admin",
-                    PasswordHash = HashPassword("123"),
+                    PasswordHash = HashPassword("123"), // Varsayılan şifre: 123
                     Role = "Admin",
                     Ad = "Admin",
                     Soyad = "User",
@@ -134,32 +144,75 @@ namespace KamatekCrm.Services
                     CanAccessSettings = true
                 };
 
-                context.Users.Add(adminUser);
-                context.SaveChanges();
+                _context.Users.Add(adminUser);
             }
-            else if (!adminUser.CanViewFinance)
+            else
             {
-                // Mevcut admin kullanıcısına izinleri ekle (migration sonrası)
+                // Admin kullanıcısı varsa şifresini her zaman "123" olarak güncelle
+                adminUser.PasswordHash = HashPassword("123");
+                
+                // Eksik izinleri ekle
                 adminUser.CanViewFinance = true;
                 adminUser.CanViewAnalytics = true;
                 adminUser.CanDeleteRecords = true;
                 adminUser.CanApprovePurchase = true;
                 adminUser.CanAccessSettings = true;
-                context.SaveChanges();
             }
+
+            _context.SaveChanges();
         }
 
         /// <summary>
-        /// Şifreyi SHA256 ile hashle
+        /// Şifreyi PBKDF2 ile hashle (güvenli)
         /// </summary>
         /// <param name="password">Plain text şifre</param>
-        /// <returns>Hash string</returns>
+        /// <returns>Hash string (salt:hash formatında)</returns>
         public string HashPassword(string password)
         {
-            using var sha256 = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(password);
-            var hash = sha256.ComputeHash(bytes);
-            return Convert.ToBase64String(hash);
+            // 16 byte rastgele salt
+            byte[] salt = new byte[16];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(salt);
+            }
+
+            // PBKDF2 ile hash (100,000 iterasyon)
+            using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100000, HashAlgorithmName.SHA256);
+            byte[] hash = pbkdf2.GetBytes(32);
+
+            // Salt ve hash'i birleştir: salt(16) + hash(32) = 48 byte
+            byte[] hashBytes = new byte[48];
+            Array.Copy(salt, 0, hashBytes, 0, 16);
+            Array.Copy(hash, 0, hashBytes, 16, 32);
+
+            return Convert.ToBase64String(hashBytes);
+        }
+
+        /// <summary>
+        /// Şifreyi doğrula
+        /// </summary>
+        /// <param name="password">Plain text şifre</param>
+        /// <param name="storedHash">Kayıtlı hash</param>
+        /// <returns>Doğru ise true</returns>
+        private bool VerifyPassword(string password, string storedHash)
+        {
+            byte[] hashBytes = Convert.FromBase64String(storedHash);
+            
+            // Salt'i ayır
+            byte[] salt = new byte[16];
+            Array.Copy(hashBytes, 0, salt, 0, 16);
+
+            // Şifreyi hashle
+            using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100000, HashAlgorithmName.SHA256);
+            byte[] hash = pbkdf2.GetBytes(32);
+
+            // Hash'leri karşılaştır
+            for (int i = 0; i < 32; i++)
+            {
+                if (hashBytes[i + 16] != hash[i])
+                    return false;
+            }
+            return true;
         }
 
         /// <summary>

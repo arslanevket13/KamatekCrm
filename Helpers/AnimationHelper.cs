@@ -52,7 +52,7 @@ namespace KamatekCrm.Helpers
             if (sender is FrameworkElement element)
             {
                 var animationType = GetEntranceAnimation(element);
-                string storyboardKey = animationType switch
+                string? storyboardKey = animationType switch
                 {
                     AnimationType.FadeIn => "FadeInAnimation",
                     AnimationType.SlideInFromRight => "SlideInFromRight",
@@ -61,7 +61,7 @@ namespace KamatekCrm.Helpers
                     _ => null
                 };
 
-                if (storyboardKey != null)
+                if (!string.IsNullOrEmpty(storyboardKey))
                 {
                     try 
                     {

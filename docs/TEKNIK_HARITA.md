@@ -1,11 +1,24 @@
 # KamatekCRM - Teknik Harita
 
+## 📄 Profesyonel Sistem Dokümantasyonu (Technical Guides)
+
+| Doküman | İçerik |
+| :--- | :--- |
+| [📂 README.md](file:///c:/Antigravity%20Proje/KamatekCRM/KamatekCrm/docs/README.md) | **Dokümantasyon Ana Merkezi (Başlangıç Noktası)** |
+| [🏗️ ARCHITECTURE.md](file:///c:/Antigravity%20Proje/KamatekCRM/KamatekCrm/docs/ARCHITECTURE.md) | Hibrit Mimari, DI, MediatR ve CQRS Detayları |
+| [🗄️ DATABASE.md](file:///c:/Antigravity%20Proje/KamatekCRM/KamatekCrm/docs/DATABASE.md) | PostgreSQL, JSONB, Soft Delete ve Audit Mekanizması |
+| [🧮 ALGORITHMS.md](file:///c:/Antigravity%20Proje/KamatekCRM/KamatekCrm/docs/ALGORITHMS.md) | SLA Otomasyonu, WAC Maliyet Hesaplama ve Paging |
+| [🌐 WEB_API_GUIDE.md](file:///c:/Antigravity%20Proje/KamatekCRM/KamatekCrm/docs/WEB_API_GUIDE.md) | API Mimarisi, JWT Güvenlik ve Portal Servisleri |
+| [📜 CHANGELOG.md](file:///c:/Antigravity%20Proje/KamatekCRM/KamatekCrm/docs/CHANGELOG.md) | Yazılım Güncelleme ve Sürüm Notları |
+
+---
+
 ## Solution Yapısı
 
 ```
 KamatekCRM/                       # Solution Root
 ├── KamatekCrm/                   # WPF Desktop Application (net9.0-windows)
-├── KamatekCrm.Web/               # Blazor Web App (Technician Panel) (net9.0)
+├── KamatekCrm.Web/               # Minimal API + HTMX Web App (Technician Panel) (net9.0)
 ├── KamatekCrm.API/               # Backend Web API (net9.0)
 ├── KamatekCrm.Shared/            # Shared Class Library (net9.0)
 ```
@@ -18,31 +31,29 @@ KamatekCrm/
 ...
 ```
 
-## Web Proje Detayları (KamatekCrm.Web)
+## Web Proje Detayları (KamatekCrm.Web — Minimal API + HTMX)
 
 ```
 KamatekCrm.Web/
 │
-├── Components/           # Blazor Bileşenleri
-│   ├── Layout/           # Ana sayfa şablonları (MainLayout, LoginLayout)
-│   ├── Pages/            # Sayfalar
-│   │   ├── Home.razor        # Dashboard
-│   │   ├── Login.razor       # Login Form
-│   │   └── Tasks/            # Görev Yönetimi (List & Detail)
-│   └── _Imports.razor    # Global usings
+├── Features/              # Vertical Slice Endpoints
+│   ├── Auth/
+│   │   └── AuthEndpoints.cs     # GET/POST /login, POST /logout
+│   └── Dashboard/
+│       └── DashboardEndpoints.cs # GET /dashboard (korumalı)
 │
-├── Services/             # İstemci Servisleri (HTTP Client)
-│   ├── IClientAuthService.cs   # Login/Logout yönetim
-│   ├── ClientAuthService.cs
-│   ├── ITaskService.cs         # API ile görev iletişimi
-│   ├── TaskService.cs
-│   └── CustomAuthenticationStateProvider.cs # Blazor Auth State
+├── Shared/                # HTML Şablon Motoru
+│   └── HtmlTemplates.cs   # Layout, Login, Dashboard, Error (C# raw strings)
 │
-├── wwwroot/              # Statik Dosyalar
-│   ├── css/              # Bootstrap & App Styles
-│   └── js/               # App Logic
+├── wwwroot/               # Statik Dosyalar
+│   ├── css/site.css       # Premium dark tema (Bootstrap 5 üzeri)
+│   ├── js/htmx-config.js  # Antiforgery token enjeksiyonu
+│   ├── favicon.png
+│   └── web.config         # IIS Reverse Proxy + Strict CSP
 │
-└── Program.cs            # Web Host Config (Port 7000)
+├── Program.cs             # Minimal API Host (Port 7000, Cookie Auth, Serilog)
+├── appsettings.json
+└── KamatekCrm.Web.csproj  # Serilog.AspNetCore + KamatekCrm.Shared
 ```
 
 ## WPF Proje Detayları

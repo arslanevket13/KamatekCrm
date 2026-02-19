@@ -3,16 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
         xmlns:enums="clr-namespace:KamatekCrm.Shared.Enums;assembly=KamatekCrm.Shared"
         mc:Ignorable="d"
         Title="Arıza Takip &amp; Servis İşlem Merkezi" Height="850" Width="1400"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized">
-
-    <Window.DataContext>
-        <vm:RepairViewModel/>
-    </Window.DataContext>
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -26,7 +21,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- ================= SOL PANEL: LİSTE ================= -->
-        <Border Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="0,0,1,0" Background="#FAFAFA">
+        <Border Grid.Column="0" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,1,0" Background="{DynamicResource ThemeBackground}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -36,8 +31,8 @@
                 </Grid.RowDefinitions>
                 
                 <StackPanel Margin="15">
-                    <TextBlock Text="📋 Aktif İşler" FontWeight="Bold" FontSize="18" Foreground="#333"/>
-                    <TextBlock Text="Bekleyen ve devam eden arızalar" FontSize="12" Foreground="#888"/>
+                    <TextBlock Text="📋 Aktif İşler" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource ThemeTextPrimary}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="Bekleyen ve devam eden arızalar" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}"/>
                 </StackPanel>
 
                 <!-- Status Filter -->
@@ -230,7 +225,7 @@
                       AutoGenerateColumns="False" IsReadOnly="True" 
                       Style="{StaticResource ModernDataGrid}" HeadersVisibility="Column">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat='dd.MM.yyyy HH:mm'}" Width="130"/>
+                    <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Width="130"/>
                     <DataGridTemplateColumn Header="Durum" Width="140">
                          <DataGridTemplateColumn.CellTemplate>
                              <DataTemplate>
@@ -282,12 +277,12 @@
                              
                              <StackPanel Grid.Column="0" Margin="0,0,5,0">
                                  <TextBlock Text="Adet:" FontSize="11" Foreground="#555" Margin="0,0,0,3"/>
-                                 <TextBox Text="{Binding QuantityToAdd}" Height="30" TextAlignment="Center"/>
+                                 <TextBox Text="{Binding QuantityToAdd, UpdateSourceTrigger=PropertyChanged}" Height="30" TextAlignment="Center"/>
                              </StackPanel>
                              
                              <StackPanel Grid.Column="1" Margin="0,0,5,0">
                                  <TextBlock Text="Satış Fiyatı:" FontSize="11" Foreground="#555" Margin="0,0,0,3"/>
-                                 <TextBox Text="{Binding UnitPriceToAdd}" Height="30" TextAlignment="Right"/>
+                                 <TextBox Text="{Binding UnitPriceToAdd, UpdateSourceTrigger=PropertyChanged}" Height="30" TextAlignment="Right"/>
                              </StackPanel>
                              
                              <Button Grid.Column="2" Content="EKLE" Width="60" Height="30" VerticalAlignment="Bottom"

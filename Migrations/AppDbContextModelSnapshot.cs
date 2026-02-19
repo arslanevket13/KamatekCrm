@@ -60,7 +60,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("UserAgent")
                         .HasColumnType("text");
@@ -114,7 +114,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UploadDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("UploadedBy")
                         .IsRequired()
@@ -182,7 +182,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -192,7 +192,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -274,7 +274,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("CustomerCode")
                         .IsRequired()
@@ -282,7 +282,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
@@ -313,7 +313,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Neighborhood")
                         .HasMaxLength(100)
@@ -368,7 +368,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer");
@@ -439,7 +439,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("NextDueDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal>("PricePerVisit")
                         .HasColumnType("numeric");
@@ -478,14 +478,14 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
@@ -508,7 +508,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("ProductCategoryType")
                         .HasColumnType("integer");
@@ -594,13 +594,13 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
@@ -612,10 +612,10 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("OrderDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("ServiceJobId")
                         .HasColumnType("integer");
@@ -697,7 +697,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("OrderNumber")
                         .IsRequired()
@@ -760,7 +760,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ApprovalDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("AssignedTechnician")
                         .HasMaxLength(100)
@@ -777,14 +777,14 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CompletedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("CustomerAssetId")
                         .HasColumnType("integer");
@@ -793,7 +793,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
@@ -831,7 +831,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("PhotoPathsJson")
                         .HasColumnType("text");
@@ -849,13 +849,13 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ProposalSentDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("RepairStatus")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("ScheduledDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("SerialNumber")
                         .HasColumnType("text");
@@ -910,13 +910,13 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
@@ -937,13 +937,13 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("PerformedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("PerformedBy")
                         .HasColumnType("integer");
@@ -1013,7 +1013,7 @@ namespace KamatekCrm.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("CustomerId")
                         .HasColumnType("integer");
@@ -1079,7 +1079,7 @@ namespace KamatekCrm.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1155,10 +1155,10 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
@@ -1177,7 +1177,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1205,10 +1205,10 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
@@ -1238,7 +1238,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("TaskId")
                         .HasColumnType("integer");
@@ -1247,7 +1247,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("UploadedBy")
                         .HasColumnType("integer");
@@ -1278,7 +1278,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1327,10 +1327,10 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
@@ -1342,13 +1342,13 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastLoginDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ModifiedBy")
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1388,10 +1388,10 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
@@ -1406,7 +1406,7 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1424,7 +1424,7 @@ namespace KamatekCrm.Migrations
                         {
                             Id = 1,
                             CreatedBy = "",
-                            CreatedDate = new DateTime(2026, 2, 9, 15, 30, 1, 438, DateTimeKind.Utc).AddTicks(3545),
+                            CreatedDate = new DateTime(2026, 2, 11, 16, 52, 58, 643, DateTimeKind.Utc).AddTicks(4682),
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Merkez Depo",
@@ -1434,7 +1434,7 @@ namespace KamatekCrm.Migrations
                         {
                             Id = 2,
                             CreatedBy = "",
-                            CreatedDate = new DateTime(2026, 2, 9, 15, 30, 1, 438, DateTimeKind.Utc).AddTicks(4212),
+                            CreatedDate = new DateTime(2026, 2, 11, 16, 52, 58, 643, DateTimeKind.Utc).AddTicks(5285),
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Servis Aracı 1",

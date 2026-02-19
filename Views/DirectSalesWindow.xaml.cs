@@ -1,4 +1,5 @@
 using System.Windows;
+using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Views
 {
@@ -8,9 +9,10 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class DirectSalesWindow : Window
     {
-        public DirectSalesWindow()
+        public DirectSalesWindow(DirectSalesViewModel viewModel)
         {
             InitializeComponent();
+            DataContext = viewModel;
         }
     }
 }

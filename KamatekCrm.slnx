@@ -2,4 +2,5 @@
   <Project Path="KamatekCrm.csproj" />
   <Project Path="KamatekCrm.Shared/KamatekCrm.Shared.csproj" />
   <Project Path="KamatekCrm.Web/KamatekCrm.Web.csproj" />
+  <Project Path="../KamatekCrm.API/KamatekCrm.API.csproj" />
 </Solution>

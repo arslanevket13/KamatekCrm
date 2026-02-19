@@ -35,8 +35,8 @@ namespace KamatekCrm.Extensions
             // Registering AuthService. Since it was static, we need to handle it. 
             // We will register IAuthService implementation.
             services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IJwtService, JwtService>();
             services.AddTransient<AttachmentService>();
+            services.AddScoped<ProjectScopeService>();
             
             // Technician App Services
             services.AddSingleton<KamatekCrm.Services.IPhotoStorageService, KamatekCrm.Services.PhotoStorageService>();
@@ -47,17 +47,20 @@ namespace KamatekCrm.Extensions
             // Domain Services
             services.AddScoped<IInventoryDomainService, InventoryDomainService>();
             services.AddScoped<ISalesDomainService, SalesDomainService>();
+            services.AddSingleton<IProductImageService, ProductImageService>();
+            services.AddScoped<IPurchasingDomainService, PurchasingDomainService>();
+            
+            // Background Services
+            services.AddScoped<ISlaService, SlaService>();
+            services.AddScoped<IBackupService, BackupService>();
 
             // MediatR Registration
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(KamatekCrm.App).Assembly));
 
             // Views (Register as needed, usually via ViewModel)
             
-            // Views (Register as needed, usually via ViewModel)
-            
             // API Controllers
-            services.AddControllers()
-                .AddApplicationPart(typeof(KamatekCrm.App).Assembly); // Ensure controllers in this assembly are found
+            services.AddControllers();
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
 
@@ -85,6 +88,34 @@ namespace KamatekCrm.Extensions
             services.AddTransient<RepairViewModel>();
             services.AddTransient<MainContentViewModel>();
             services.AddTransient<SuppliersViewModel>();
+
+            // v8.3 — Missing ViewModel Registrations (Navigation Crash Fix)
+            services.AddTransient<AnalyticsViewModel>();
+            services.AddTransient<PipelineViewModel>();
+            services.AddTransient<SchedulerViewModel>();
+            services.AddTransient<RoutePlanningViewModel>();
+            services.AddTransient<FinancialHealthViewModel>();
+            services.AddTransient<PurchaseOrderViewModel>();
+            services.AddTransient<StockTransferViewModel>();
+            services.AddTransient<AddUserViewModel>();
+
+            // v8.4 — Additional Missing ViewModel Registrations (Complete DI Coverage)
+            services.AddTransient<ProjectQuoteEditorViewModel>();
+            services.AddTransient<ProjectQuoteViewModel>();
+            services.AddTransient<EditUserViewModel>();
+            services.AddTransient<PasswordResetViewModel>();
+            services.AddTransient<PdfImportPreviewViewModel>();
+            services.AddTransient<QuickAssetAddViewModel>();
+            services.AddTransient<GlobalSearchViewModel>();
+            services.AddTransient<RepairListViewModel>();
+            services.AddTransient<FieldJobListViewModel>();
+            
+            // Window'ların da DI container'da kayıtlı olması gerekir
+            services.AddTransient<Views.RepairRegistrationWindow>();
+            services.AddTransient<Views.RepairTrackingWindow>();
+            services.AddTransient<Views.FaultTicketWindow>();
+            services.AddTransient<Views.DirectSalesWindow>();
+            services.AddTransient<Views.ProjectQuoteEditorWindow>();
 
             return services;
         }

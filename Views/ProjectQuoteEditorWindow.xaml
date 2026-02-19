@@ -1,17 +1,12 @@
 <Window x:Class="KamatekCrm.Views.ProjectQuoteEditorWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
         xmlns:dd="urn:gong-wpf-dragdrop"
         Title="🏗️ PROJE TEKLİF EDİTÖRÜ" 
         Height="800" Width="1400"
         MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
-        Background="#F5F5F5">
-    
-    <Window.DataContext>
-        <vm:ProjectQuoteEditorViewModel/>
-    </Window.DataContext>
+        Background="{DynamicResource ThemeBackground}">
     
     <Window.Resources>
         <!-- TreeView Item Template -->

@@ -11,8 +11,14 @@ namespace KamatekCrm.Services
     /// <summary>
     /// SLA (Service Level Agreement) ve Bakım Otomasyon Servisi
     /// </summary>
-    public class SlaService
+    public class SlaService : ISlaService
     {
+        private readonly AppDbContext _context;
+
+        public SlaService(AppDbContext context)
+        {
+            _context = context ?? throw new System.ArgumentNullException(nameof(context));
+        }
         /// <summary>
         /// Günü gelen bakım sözleşmelerini kontrol eder ve otomatik iş emri oluşturur.
         /// Thread-safe çalıştırma için yeni DbContext oluşturur.
@@ -23,12 +29,13 @@ namespace KamatekCrm.Services
             {
                 try
                 {
-                    using (var context = new AppDbContext())
+                    // DbContext thread-safe olmadığı için yeni scope oluştur
+                    using (var scope = _context.Database.BeginTransaction())
                     {
                         var today = DateTime.Today;
 
                         // Günü gelen veya geçen aktif sözleşmeler
-                        var dueContracts = context.MaintenanceContracts
+                        var dueContracts = _context.MaintenanceContracts
                             .Where(c => c.IsActive && c.NextDueDate <= today)
                             .Include(c => c.Customer)
                             .ToList();
@@ -52,7 +59,7 @@ namespace KamatekCrm.Services
                                 Price = contract.PricePerVisit
                             };
 
-                            context.ServiceJobs.Add(job);
+                            _context.ServiceJobs.Add(job);
 
                             // 2. Bir sonraki tarihi güncelle
                             // Eğer NextDueDate çok eskiyse, bugünden itibaren ileriye at
@@ -64,7 +71,8 @@ namespace KamatekCrm.Services
                             contract.NextDueDate = nextDate;
                         }
 
-                        context.SaveChanges();
+                        _context.SaveChanges();
+                        scope.Commit();
                     }
                 }
                 catch (Exception ex)

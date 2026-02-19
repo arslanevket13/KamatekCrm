@@ -85,6 +85,9 @@ namespace KamatekCrm.Shared.Models
         public PurchaseStatus Status { get; set; }
         public DateTime Date { get; set; } = DateTime.Now;
         public DateTime OrderDate { get; set; } = DateTime.Now; // Alias for Date?
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
+        public string Notes { get; set; } = string.Empty;
         [ForeignKey(nameof(SupplierId))]
         public virtual Supplier Supplier { get; set; } = null!;  
         public virtual System.Collections.Generic.ICollection<PurchaseOrderItem> Items { get; set; } = new System.Collections.Generic.List<PurchaseOrderItem>();
@@ -146,6 +149,11 @@ namespace KamatekCrm.Shared.Models
 
         public int MinStockLevel { get; set; }
         public string TechSpecsJson { get; set; } = "{}";
+
+        /// <summary>
+        /// Relative path to compressed product image (e.g., "uploads/products/xxx.webp")
+        /// </summary>
+        public string? ImagePath { get; set; }
 
         [ForeignKey(nameof(BrandId))]
         public virtual Brand? Brand { get; set; } = new Brand();
@@ -210,6 +218,7 @@ namespace KamatekCrm.Shared.Models
         public decimal Amount { get; set; }
         public DateTime Date { get; set; } = DateTime.Now;
         public CashTransactionType TransactionType { get; set; }
+        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
         public string Description { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public string ReferenceNumber { get; set; } = string.Empty;
@@ -229,10 +238,17 @@ namespace KamatekCrm.Shared.Models
         public DateTime Date { get; set; } = DateTime.Now;
         public string PaymentMethod { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
-        public decimal TotalAmount { get; set; } 
+        public decimal SubTotal { get; set; }
+        public decimal DiscountTotal { get; set; }
+        public decimal TaxTotal { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string Notes { get; set; } = string.Empty;
+        public SalesOrderStatus Status { get; set; } = SalesOrderStatus.Completed;
         public virtual Customer Customer { get; set; } = null!; 
         public virtual System.Collections.Generic.ICollection<SalesOrderItem> Items { get; set; } = new System.Collections.Generic.List<SalesOrderItem>(); 
+        public virtual System.Collections.Generic.ICollection<SalesOrderPayment> Payments { get; set; } = new System.Collections.Generic.List<SalesOrderPayment>();
     }
+
     public class SalesOrderItem { 
         public int Id { get; set; } 
         public int SalesOrderId { get; set; } 
@@ -240,7 +256,24 @@ namespace KamatekCrm.Shared.Models
         public string ProductName { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public decimal DiscountPercent { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public int TaxRate { get; set; }
+        public decimal LineTotal { get; set; }
         public virtual SalesOrder SalesOrder { get; set; } = null!; 
+    }
+
+    /// <summary>
+    /// Split-payment kaydı — bir SalesOrder'a birden fazla ödeme yöntemi
+    /// </summary>
+    public class SalesOrderPayment {
+        public int Id { get; set; }
+        public int SalesOrderId { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
+        public decimal Amount { get; set; }
+        public string Reference { get; set; } = string.Empty;
+        [ForeignKey(nameof(SalesOrderId))]
+        public virtual SalesOrder SalesOrder { get; set; } = null!;
     }
     public class Category { public int Id { get; set; } public string Name { get; set; } = ""; public int? ParentId { get; set; } public virtual Category? ParentCategory { get; set; } public virtual System.Collections.Generic.ICollection<Category> SubCategories { get; set; } = new System.Collections.Generic.List<Category>(); }
 

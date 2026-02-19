@@ -8,6 +8,7 @@ using KamatekCrm.Commands;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Repositories;
+using KamatekCrm.Services.Domain;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Views;
 
@@ -16,10 +17,12 @@ namespace KamatekCrm.ViewModels
     public class PurchaseOrderViewModel : ViewModelBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IPurchasingDomainService _purchasingService;
 
-        public PurchaseOrderViewModel(IUnitOfWork unitOfWork)
+        public PurchaseOrderViewModel(IUnitOfWork unitOfWork, IPurchasingDomainService purchasingService)
         {
             _unitOfWork = unitOfWork;
+            _purchasingService = purchasingService;
 
             LoadDataCommand = new RelayCommand(async _ => await LoadData());
             CreateOrderCommand = new RelayCommand(_ => CreateOrder());
@@ -273,68 +276,50 @@ namespace KamatekCrm.ViewModels
             IsBusy = true;
             try
             {
+                // 1. Siparişi kaydet
                 var order = new PurchaseOrder
                 {
                     SupplierId = SelectedSupplier.Id,
                     OrderDate = DateTime.Now,
-                    Status = autoReceive ? PurchaseStatus.Completed : PurchaseStatus.Pending,
+                    Date = DateTime.Now,
+                    Status = autoReceive ? PurchaseStatus.Pending : PurchaseStatus.Pending,
+                    InvoiceNumber = $"INV-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}",
+                    Notes = string.Empty,
                     Items = new ObservableCollection<PurchaseOrderItem>(CurrentOrderItems)
                 };
 
                 _unitOfWork.Context.PurchaseOrders.Add(order);
+                await _unitOfWork.SaveChangesAsync();
 
+                // 2. Otomatik teslim al (stok artır + WAC hesapla + cari borç)
                 if (autoReceive)
                 {
-                    decimal orderTotal = 0;
+                    // Varsayılan depoyu bul
+                    var warehouse = await _unitOfWork.Context.Warehouses
+                        .FirstOrDefaultAsync(w => w.IsActive);
+                    var warehouseId = warehouse?.Id ?? 1;
 
-                    // Update Stocks & Create Transactions
-                    foreach (var item in CurrentOrderItems)
+                    var result = _purchasingService.CompletePurchaseOrder(new PurchaseCompletionRequest
                     {
-                        // Find product
-                        Product? product = null;
-                        if (item.ProductId > 0)
-                            product = await _unitOfWork.Context.Products.FindAsync(item.ProductId);
-                        else
-                            product = await _unitOfWork.Context.Products.FirstOrDefaultAsync(p => p.ProductName.ToLower() == item.ProductName.ToLower());
+                        PurchaseOrderId = order.Id,
+                        WarehouseId = warehouseId,
+                        CreatedBy = "Sistem"
+                    });
 
-                        if (product != null)
-                        {
-                            // 1. Update Product Stock
-                            product.TotalStockQuantity += item.Quantity;
-                            product.PurchasePrice = item.UnitPrice; // Update latest cost
-                            
-                            // 2. Create Stock Transaction
-                            var transaction = new StockTransaction
-                            {
-                                Date = DateTime.Now,
-                                ProductId = product.Id,
-                                Quantity = item.Quantity,
-                                TransactionType = StockTransactionType.Purchase, // Alım
-                                UnitCost = item.UnitPrice,
-                                ReferenceId = $"PO-{order.Id}",
-                                Description = $"Satın Alma: {SelectedSupplier.CompanyName}",
-                                TargetWarehouseId = 1 // Varsayılan Ana Depo (Id=1 kabulü)
-                            };
-                            _unitOfWork.Context.Set<StockTransaction>().Add(transaction);
-                        }
-
-                        orderTotal += item.LineTotal;
+                    if (!result.Success)
+                    {
+                        MessageBox.Show($"Stok işleme hatası: {result.ErrorMessage}", "Uyarı");
                     }
-
-                    // 3. Update Supplier Balance (Account Payable increases)
-                    // Önce mevcut tedarikçiyi context'e attach edelim veya bulalım (zaten tracked olabilir ama garantiye alalım)
-                    var supplier = await _unitOfWork.Context.Suppliers.FindAsync(SelectedSupplier.Id);
-                    if (supplier != null)
+                    else
                     {
-                        supplier.Balance += orderTotal;
+                        MessageBox.Show($"Sipariş kaydedildi ve STOKLARA İŞLENDİ.\nToplam: {result.TotalAmount:C}", "Başarılı");
                     }
                 }
+                else
+                {
+                    MessageBox.Show("Sipariş başarıyla oluşturuldu (Beklemede).", "Bilgi");
+                }
 
-                await _unitOfWork.SaveChangesAsync();
-                
-                string msg = autoReceive ? "Sipariş kaydedildi ve STOKLARA İŞLENDİ." : "Sipariş başarıyla oluşturuldu (Beklemede).";
-                MessageBox.Show(msg, "Bilgi");
-                
                 // Refresh list and clear form
                 CreateOrder();
                 await LoadData();

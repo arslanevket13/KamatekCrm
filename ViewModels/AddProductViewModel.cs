@@ -1,13 +1,17 @@
 using System;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
+using Microsoft.Win32;
 using KamatekCrm.Commands;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Models.Specs;
+using KamatekCrm.Services;
 
 namespace KamatekCrm.ViewModels
 {
@@ -17,12 +21,15 @@ namespace KamatekCrm.ViewModels
     public class AddProductViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
+        private readonly IProductImageService _imageService;
         private ProductCategoryType _selectedCategory = ProductCategoryType.Other;
         private ProductSpecBase _currentSpecs = new GeneralSpecs();
         private Product _newProduct = new Product();
         private bool _isEditMode;
         private int _initialStock;
         private int _stockAdjustment;
+        private string? _pendingImagePath; // Source file path before compression
+        private BitmapImage? _selectedImagePreview;
 
         /// <summary>
         /// Yeni ürün eklemek için constructor
@@ -39,6 +46,7 @@ namespace KamatekCrm.ViewModels
         public AddProductViewModel(Product? productToEdit)
         {
             _context = new AppDbContext();
+            _imageService = new ProductImageService();
             
             // Ensure non-nullable fields are initialized to avoid warnings
             // They are re-assigned below based on logic
@@ -99,6 +107,14 @@ namespace KamatekCrm.ViewModels
             SaveCommand = new RelayCommand(_ => SaveProduct(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => Cancel());
             GenerateSKUCommand = new RelayCommand(_ => RegenerateSKU());
+            BrowseImageCommand = new RelayCommand(_ => BrowseImage());
+            RemoveImageCommand = new RelayCommand(_ => RemoveImage(), _ => !string.IsNullOrEmpty(_pendingImagePath) || !string.IsNullOrEmpty(NewProduct?.ImagePath));
+
+            // Edit modunda mevcut resmi önizle
+            if (_isEditMode && !string.IsNullOrEmpty(_newProduct.ImagePath))
+            {
+                LoadExistingImagePreview();
+            }
         }
 
         private void InitializeNewProduct()
@@ -225,11 +241,27 @@ namespace KamatekCrm.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
         public ICommand GenerateSKUCommand { get; }
+        public ICommand BrowseImageCommand { get; }
+        public ICommand RemoveImageCommand { get; }
 
         /// <summary>
         /// Pencere kapatma olayı
         /// </summary>
         public event Action<bool>? RequestClose;
+
+        /// <summary>
+        /// Seçilen resmin önizlemesi
+        /// </summary>
+        public BitmapImage? SelectedImagePreview
+        {
+            get => _selectedImagePreview;
+            set => SetProperty(ref _selectedImagePreview, value);
+        }
+
+        /// <summary>
+        /// Resim seçilmiş mi?
+        /// </summary>
+        public bool HasImage => _selectedImagePreview != null;
 
         #endregion
 
@@ -319,6 +351,14 @@ namespace KamatekCrm.ViewModels
 
                 if (_isEditMode)
                 {
+                    // Resim işleme (varsa)
+                    if (!string.IsNullOrEmpty(_pendingImagePath))
+                    {
+                        // Eski resmi sil
+                        _imageService.DeleteProductImage(NewProduct.ImagePath);
+                        NewProduct.ImagePath = Task.Run(() => _imageService.SaveProductImageAsync(_pendingImagePath)).Result;
+                    }
+
                     // UPDATE: Mevcut ürünü güncelle
                     _context.Products.Update(NewProduct);
                     _context.SaveChanges();
@@ -334,6 +374,12 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
+                    // Resim işleme (varsa)
+                    if (!string.IsNullOrEmpty(_pendingImagePath))
+                    {
+                        NewProduct.ImagePath = Task.Run(() => _imageService.SaveProductImageAsync(_pendingImagePath)).Result;
+                    }
+
                     // ADD: Yeni ürün ekle
                     _context.Products.Add(NewProduct);
                     _context.SaveChanges();
@@ -488,6 +534,79 @@ namespace KamatekCrm.ViewModels
                 MessageBox.Show($"Stok düzeltme hatası: {ex.Message}", "Uyarı",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        /// <summary>
+        /// Dosya seçici ile resim seç
+        /// </summary>
+        private void BrowseImage()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Ürün Resmi Seç",
+                Filter = "Resim Dosyaları|*.jpg;*.jpeg;*.png;*.bmp;*.webp|Tüm Dosyalar|*.*",
+                Multiselect = false
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                _pendingImagePath = dialog.FileName;
+
+                // Önizleme göster
+                try
+                {
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = new Uri(_pendingImagePath);
+                    bitmap.DecodePixelWidth = 200;
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    SelectedImagePreview = bitmap;
+                    OnPropertyChanged(nameof(HasImage));
+                }
+                catch { /* Önizleme yüklenemezse sessizce atla */ }
+            }
+        }
+
+        /// <summary>
+        /// Seçilen resmi kaldır
+        /// </summary>
+        private void RemoveImage()
+        {
+            _pendingImagePath = null;
+            SelectedImagePreview = null;
+            OnPropertyChanged(nameof(HasImage));
+
+            if (_isEditMode && !string.IsNullOrEmpty(NewProduct?.ImagePath))
+            {
+                _imageService.DeleteProductImage(NewProduct.ImagePath);
+                NewProduct.ImagePath = null;
+            }
+        }
+
+        /// <summary>
+        /// Mevcut ürün resmini önizle (Edit modunda)
+        /// </summary>
+        private void LoadExistingImagePreview()
+        {
+            try
+            {
+                var absolutePath = _imageService.GetAbsolutePath(NewProduct.ImagePath!);
+                if (System.IO.File.Exists(absolutePath))
+                {
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = new Uri(absolutePath);
+                    bitmap.DecodePixelWidth = 200;
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    SelectedImagePreview = bitmap;
+                    OnPropertyChanged(nameof(HasImage));
+                }
+            }
+            catch { /* Resim yüklenemezse sessizce atla */ }
         }
 
         #endregion

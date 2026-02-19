@@ -10,18 +10,10 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class ProjectQuoteEditorWindow : Window
     {
-        public ProjectQuoteEditorWindow()
+        public ProjectQuoteEditorWindow(ProjectQuoteEditorViewModel viewModel)
         {
             InitializeComponent();
-        }
-
-        /// <summary>
-        /// Mevcut projeyi yüklemek için constructor
-        /// </summary>
-        public ProjectQuoteEditorWindow(int projectId)
-        {
-            InitializeComponent();
-            DataContext = new ProjectQuoteEditorViewModel(projectId);
+            DataContext = viewModel;
         }
 
         /// <summary>

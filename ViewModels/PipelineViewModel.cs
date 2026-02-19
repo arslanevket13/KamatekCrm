@@ -28,9 +28,9 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        public PipelineViewModel()
+        public PipelineViewModel(AppDbContext context)
         {
-            _context = new AppDbContext();
+            _context = context;
             LoadData();
         }
 

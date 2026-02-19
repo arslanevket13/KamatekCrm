@@ -1,4 +1,5 @@
 using System.Windows;
+using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Views
 {
@@ -8,9 +9,10 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class FaultTicketWindow : Window
     {
-        public FaultTicketWindow()
+        public FaultTicketWindow(FaultTicketViewModel viewModel)
         {
             InitializeComponent();
+            DataContext = viewModel;
         }
     }
 }

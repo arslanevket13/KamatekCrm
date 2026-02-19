@@ -64,6 +64,26 @@
     <SolidColorBrush x:Key="ThemeError" Color="{StaticResource ThemeErrorColor}"/>
     <SolidColorBrush x:Key="ThemeInfo" Color="{StaticResource ThemeInfoColor}"/>
     
+    <!-- Legacy Color Compatibility (for backward compatibility) -->
+    <SolidColorBrush x:Key="TextPrimary" Color="{StaticResource ThemeTextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="{StaticResource ThemeTextSecondaryColor}"/>
+    <SolidColorBrush x:Key="TextTertiary" Color="{StaticResource ThemeTextTertiaryColor}"/>
+    <SolidColorBrush x:Key="PrimaryHue" Color="{StaticResource ThemePrimaryColor}"/>
+    <SolidColorBrush x:Key="SecondaryHue" Color="{StaticResource ThemeSuccessColor}"/>
+    <SolidColorBrush x:Key="BackgroundColor" Color="{StaticResource ThemeBackgroundColor}"/>
+    <SolidColorBrush x:Key="SurfaceColor" Color="{StaticResource ThemeSurfaceColor}"/>
+    <SolidColorBrush x:Key="CardBackground" Color="{StaticResource ThemeCardColor}"/>
+    <SolidColorBrush x:Key="PrimaryForeground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="DividerColor" Color="{StaticResource ThemeDividerColor}"/>
+    <SolidColorBrush x:Key="ErrorColor" Color="{StaticResource ThemeErrorColor}"/>
+    <SolidColorBrush x:Key="SuccessColor" Color="{StaticResource ThemeSuccessColor}"/>
+    <SolidColorBrush x:Key="WarningColor" Color="{StaticResource ThemeWarningColor}"/>
+    <SolidColorBrush x:Key="PrimaryColor" Color="{StaticResource ThemePrimaryColor}"/>
+    <SolidColorBrush x:Key="PrimaryDarkColor" Color="{StaticResource ThemePrimaryDarkColor}"/>
+    <SolidColorBrush x:Key="AccentColor" Color="{StaticResource ThemeAccentColor}"/>
+    <SolidColorBrush x:Key="TextPrimaryColor" Color="{StaticResource ThemeTextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextSecondaryColor" Color="{StaticResource ThemeTextSecondaryColor}"/>
+    
     <!-- Gradients -->
     <LinearGradientBrush x:Key="ThemePrimaryGradient" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#2196F3" Offset="0"/>

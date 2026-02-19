@@ -17,9 +17,9 @@ namespace KamatekCrm.ViewModels
     {
         private readonly AppDbContext _context;
 
-        public AnalyticsViewModel()
+        public AnalyticsViewModel(AppDbContext context)
         {
-            _context = new AppDbContext();
+            _context = context;
             // Initialize non-nullable fields
             _jobDistributionSeries = Array.Empty<ISeries>();
             _techPerformanceSeries = Array.Empty<ISeries>();

@@ -210,10 +210,36 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Constructor for design-time support or manual usage if needed (Try to avoid)
+        /// Constructor for design-time support
         /// </summary>
-        public DashboardViewModel() : this(new AuthService(), new AppDbContext())
+        public DashboardViewModel()
         {
+            // Design-time için varsayılan değerler
+            _authService = new DesignTimeAuthService();
+            _context = new AppDbContext();
+            LowStockProducts = new ObservableCollection<LowStockItem>();
+            TodaysJobs = new ObservableCollection<TodayJobItem>();
+            ReadyToDeliverRepairs = new ObservableCollection<ReadyRepairItem>();
+            RefreshDashboardCommand = new RelayCommand(_ => { });
+        }
+
+        /// <summary>
+        /// Design-time için basit auth servisi
+        /// </summary>
+        private class DesignTimeAuthService : IAuthService
+        {
+            public User? CurrentUser => new User { Ad = "Test", Soyad = "Kullanıcı", Username = "test" };
+            public bool IsAdmin => true;
+            public bool IsLoggedIn => true;
+            public bool CanViewFinance => true;
+            public bool CanViewAnalytics => true;
+            public bool CanDeleteRecords => true;
+            public bool CanApprovePurchase => true;
+            public bool CanAccessSettings => true;
+            public bool Login(string username, string password) => true;
+            public void Logout() { }
+            public void CreateDefaultUser() { }
+            public string HashPassword(string password) => password;
         }
 
 

@@ -16,9 +16,9 @@ namespace KamatekCrm.ViewModels
     {
         private readonly AppDbContext _context;
 
-        public RoutePlanningViewModel()
+        public RoutePlanningViewModel(AppDbContext context)
         {
-            _context = new AppDbContext();
+            _context = context;
             // Initialize non-nullable fields
             _mapHtmlContent = string.Empty;
             LoadTodaysRoute();

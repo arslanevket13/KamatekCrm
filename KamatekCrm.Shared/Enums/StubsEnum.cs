@@ -33,4 +33,7 @@ namespace KamatekCrm.Shared.Enums
 
 
     // RepairStatus removed (defined in RepairStatus.cs)
+
+    public enum SalesOrderStatus { Draft, Completed, Cancelled, Refunded }
+    public enum DiscountType { Percentage, FlatAmount }
 }

@@ -18,21 +18,31 @@ namespace KamatekCrm.Helpers
 
         public static void StartServices()
         {
-            KillZombieProcesses();
-
-            string? apiExe = FindExeRecursive("KamatekCrm.API.exe");
-            string? webExe = FindExeRecursive("KamatekCrm.Web.exe");
-
-            if (!string.IsNullOrEmpty(webExe))
+            try
             {
-                // Pass the port argument to the Web App (Bind to 0.0.0.0)
-                StartVisibleProcess(webExe, $"--urls \"{WEB_BIND_URL}\" --environment Development");
-            }
-            else
-                Debug.WriteLine("[ProcessManager] WEB exe not found!");
+                KillZombieProcesses();
 
-            // Open Browser after delay (Use Localhost URL for the server user)
-            Task.Delay(3000).ContinueWith(_ => OpenBrowser(WEB_LOCAL_URL));
+                string? webExe = FindExeRecursive("KamatekCrm.Web.exe");
+
+                if (!string.IsNullOrEmpty(webExe))
+                {
+                    Serilog.Log.Information($"Starting Web App: {webExe} (Port 7000)");
+                    // Pass the port argument to the Web App (Bind to 0.0.0.0)
+                    StartVisibleProcess(webExe, $"--urls \"{WEB_BIND_URL}\" --environment Development");
+                }
+                else
+                {
+                    Serilog.Log.Error("[ProcessManager] WEB exe not found! Web Interface (Port 7000) will not start.");
+                    System.Windows.MessageBox.Show("Web Arayüzü başlatılamadı (KamatekCrm.Web.exe bulunamadı).", "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                }
+
+                // Open Browser after delay (Use Localhost URL for the server user)
+                Task.Delay(3000).ContinueWith(_ => OpenBrowser(WEB_LOCAL_URL));
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "Error starting background services");
+            }
         }
 
         public static void StopServices()

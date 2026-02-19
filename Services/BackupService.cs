@@ -3,7 +3,7 @@ using System.IO;
 
 namespace KamatekCrm.Services
 {
-    public class BackupService
+    public class BackupService : IBackupService
     {
         public string BackupDatabase()
         {

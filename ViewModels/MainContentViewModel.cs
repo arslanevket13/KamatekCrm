@@ -1,3 +1,5 @@
+using System;
+using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Input;
 using KamatekCrm.Commands;
 using KamatekCrm.Services;
@@ -17,6 +19,7 @@ namespace KamatekCrm.ViewModels
         private readonly NotificationService _notificationService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
+        private readonly IServiceProvider _serviceProvider; // Added for resolving child VMs
 
         private object? _currentView;
 
@@ -90,7 +93,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Aktif görünüm
+        /// Aktif görünüm (İçerik Alanı)
         /// </summary>
         public object? CurrentView
         {
@@ -137,12 +140,6 @@ namespace KamatekCrm.ViewModels
         public ICommand NavigateToSuppliersCommand { get; } // NEW
         public ICommand NavigateToPipelineCommand { get; }
 
-        // ...
-
-        // Constructor
-        // NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateToPurchaseOrders());
-        // NavigateToSuppliersCommand = new RelayCommand(_ => NavigateToSuppliers()); // NEW
-
         // Methods
 
         public ICommand NavigateToSchedulerCommand { get; }
@@ -169,13 +166,20 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public MainContentViewModel(IUnitOfWork unitOfWork, IAuthService authService, NavigationService navigationService, IToastService toastService, ILoadingService loadingService)
+        public MainContentViewModel(
+            IUnitOfWork unitOfWork, 
+            IAuthService authService, 
+            NavigationService navigationService, 
+            IToastService toastService, 
+            ILoadingService loadingService,
+            IServiceProvider serviceProvider) // Inject IServiceProvider
         {
             _unitOfWork = unitOfWork;
             _authService = authService;
             _navigationService = navigationService;
             _toastService = toastService;
             _loadingService = loadingService;
+            _serviceProvider = serviceProvider;
 
             // Global arama başlat
             SearchViewModel = new GlobalSearchViewModel();
@@ -185,27 +189,27 @@ namespace KamatekCrm.ViewModels
             _isSidebarCollapsed = Properties.Settings.Default.SidebarCollapsed;
             _isDarkMode = Properties.Settings.Default.IsDarkMode;
 
-            NavigateToDashboardCommand = new RelayCommand(_ => NavigateToDashboard());
-            NavigateToCustomersCommand = new RelayCommand(_ => NavigateToCustomers());
-            NavigateToProductsCommand = new RelayCommand(_ => NavigateToProducts());
-            NavigateToServiceJobsCommand = new RelayCommand(_ => NavigateToServiceJobs());
-            NavigateToStockCountCommand = new RelayCommand(_ => NavigateToStockCount());
-            NavigateToReportsCommand = new RelayCommand(_ => NavigateToReports());
-            NavigateToUsersCommand = new RelayCommand(_ => NavigateToUsers(), _ => _authService.IsAdmin);
-            NavigateToSystemLogsCommand = new RelayCommand(_ => NavigateToSystemLogs(), _ => _authService.IsAdmin);
+            NavigateToDashboardCommand = new RelayCommand(_ => NavigateTo<DashboardViewModel>());
+            NavigateToCustomersCommand = new RelayCommand(_ => NavigateTo<CustomersViewModel>());
+            NavigateToProductsCommand = new RelayCommand(_ => NavigateTo<ProductViewModel>());
+            NavigateToServiceJobsCommand = new RelayCommand(_ => NavigateTo<ServiceJobViewModel>());
+            NavigateToStockCountCommand = new RelayCommand(_ => NavigateTo<StockCountViewModel>());
+            NavigateToReportsCommand = new RelayCommand(_ => NavigateTo<StockReportsViewModel>());
+            NavigateToUsersCommand = new RelayCommand(_ => NavigateTo<UsersViewModel>(), _ => _authService.IsAdmin);
+            NavigateToSystemLogsCommand = new RelayCommand(_ => NavigateTo<SystemLogsViewModel>(), _ => _authService.IsAdmin);
             LogoutCommand = new RelayCommand(_ => Logout());
             OpenFaultTicketCommand = new RelayCommand(_ => OpenFaultTicket());
             OpenProjectQuoteCommand = new RelayCommand(_ => OpenProjectQuote());
             OpenRepairTrackingCommand = new RelayCommand(_ => OpenRepairTracking());
             OpenDirectSalesCommand = new RelayCommand(_ => OpenDirectSales());
-            NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
-            NavigateToFieldJobListCommand = new RelayCommand(_ => NavigateToFieldJobList());
-            NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings(), _ => _authService.CanAccessSettings);
-            NavigateToFinanceCommand = new RelayCommand(_ => NavigateToFinance(), _ => _authService.CanViewFinance);
-            NavigateToAnalyticsCommand = new RelayCommand(_ => NavigateToAnalytics(), _ => _authService.CanViewAnalytics);
-            NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateToPurchaseOrders());
-            NavigateToPipelineCommand = new RelayCommand(_ => NavigateToPipeline());
-            NavigateToSchedulerCommand = new RelayCommand(_ => NavigateToScheduler());
+            NavigateToRepairListCommand = new RelayCommand(_ => NavigateTo<RepairListViewModel>());
+            NavigateToFieldJobListCommand = new RelayCommand(_ => NavigateTo<FieldJobListViewModel>());
+            NavigateToSettingsCommand = new RelayCommand(_ => NavigateTo<SettingsViewModel>(), _ => _authService.CanAccessSettings);
+            NavigateToFinanceCommand = new RelayCommand(_ => NavigateTo<FinanceViewModel>(), _ => _authService.CanViewFinance);
+            NavigateToAnalyticsCommand = new RelayCommand(_ => NavigateTo<AnalyticsViewModel>(), _ => _authService.CanViewAnalytics);
+            NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateTo<PurchaseOrderViewModel>());
+            NavigateToPipelineCommand = new RelayCommand(_ => NavigateTo<PipelineViewModel>());
+            NavigateToSchedulerCommand = new RelayCommand(_ => NavigateTo<SchedulerViewModel>());
             ToggleNotificationsCommand = new RelayCommand(_ => IsNotificationsOpen = !IsNotificationsOpen);
             RefreshNotificationsCommand = new RelayCommand(_ => LoadNotifications());
             
@@ -213,80 +217,76 @@ namespace KamatekCrm.ViewModels
             ToggleSidebarCommand = new RelayCommand(_ => IsSidebarCollapsed = !IsSidebarCollapsed);
             ToggleDarkModeCommand = new RelayCommand(_ => IsDarkMode = !IsDarkMode);
             OpenQuickAddCommand = new RelayCommand(_ => OpenQuickAdd());
-            NavigateToFinancialHealthCommand = new RelayCommand(_ => NavigateToFinancialHealth(), _ => _authService.CanViewFinance);
-            NavigateToRoutePlanningCommand = new RelayCommand(_ => NavigateToRoutePlanning());
+            NavigateToFinancialHealthCommand = new RelayCommand(_ => NavigateTo<FinancialHealthViewModel>(), _ => _authService.CanViewFinance);
+            NavigateToRoutePlanningCommand = new RelayCommand(_ => NavigateTo<RoutePlanningViewModel>());
             
-            NavigateToSuppliersCommand = new RelayCommand(_ => NavigateToSuppliers()); // Initialization
+            NavigateToSuppliersCommand = new RelayCommand(_ => NavigateTo<SuppliersViewModel>()); // Initialization
 
             LoadNotifications();
 
-            // Varsayılan olarak Dashboard'u göster
-            NavigateToDashboard();
+            // Varsayılan olarak Dashboard'u göster (Local Navigation)
+            NavigateTo<DashboardViewModel>();
         }
 
         #region Navigation Methods
 
-        private void NavigateToDashboard() => _navigationService.NavigateTo<DashboardViewModel>();
-        private void NavigateToCustomers() => _navigationService.NavigateTo<CustomersViewModel>();
-        private void NavigateToProducts() => _navigationService.NavigateTo<ProductViewModel>();
-        private void NavigateToServiceJobs() => _navigationService.NavigateTo<ServiceJobViewModel>();
-        private void NavigateToStockCount() => _navigationService.NavigateTo<StockCountViewModel>();
-        private void NavigateToReports() => _navigationService.NavigateTo<StockReportsViewModel>();
-        private void NavigateToUsers() => _navigationService.NavigateTo<UsersViewModel>();
-        private void NavigateToSystemLogs() => _navigationService.NavigateTo<SystemLogsViewModel>();
-        private void NavigateToRepairList() => _navigationService.NavigateTo<RepairListViewModel>();
-        private void NavigateToFieldJobList() => _navigationService.NavigateTo<FieldJobListViewModel>();
-
+        /// <summary>
+        /// Sets the inner content view locally, without affecting the global window navigation.
+        /// </summary>
+        /// <typeparam name="TViewModel"></typeparam>
+        private void NavigateTo<TViewModel>() where TViewModel : notnull
+        {
+            try
+            {
+                var vm = _serviceProvider.GetRequiredService<TViewModel>();
+                CurrentView = vm;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Navigation Error to {typeof(TViewModel).Name}: {ex.Message}");
+                _toastService.ShowError($"Sayfa yüklenemedi: {ex.Message}");
+            }
+        }
+        
         /// <summary>
         /// Müşteri detay sayfasına geçiş
         /// </summary>
         public void NavigateToCustomerDetail(int customerId)
         {
-            var vm = _navigationService.NavigateTo<CustomerDetailViewModel>();
+            var vm = _serviceProvider.GetRequiredService<CustomerDetailViewModel>();
             vm.Initialize(customerId);
+            CurrentView = vm;
         }
 
         private void OpenFaultTicket()
         {
-            // Yeni Cihaz Kabul Ekranı (Repair Module)
-            var window = new RepairRegistrationWindow();
+            // Yeni Cihaz Kabul Ekranı (Repair Module) — DI ile ViewModel çözümlenir
+            var repairVm = _serviceProvider.GetRequiredService<RepairViewModel>();
+            var window = new RepairRegistrationWindow(repairVm);
             window.ShowDialog();
         }
 
         private void OpenRepairTracking()
         {
-            // Yeni Arıza Takip Merkezi (Repair Module)
-            // Tracking penceresi genellikle non-modal olabilir ki ana ekran kullanılmaya devam etsin
-            var window = new RepairTrackingWindow();
+            // Yeni Arıza Takip Merkezi (Repair Module) — DI ile ViewModel çözümlenir
+            var repairVm = _serviceProvider.GetRequiredService<RepairViewModel>();
+            var window = new RepairTrackingWindow(repairVm);
             window.Show();
         }
 
         private void OpenProjectQuote()
         {
-            var window = new ProjectQuoteEditorWindow();
+            var window = _serviceProvider.GetRequiredService<ProjectQuoteEditorWindow>();
             window.ShowDialog();
         }
 
         private void OpenDirectSales()
         {
-            var window = new DirectSalesWindow();
+            // Perakende Satış — DI ile ViewModel çözümlenir
+            var directSalesVm = _serviceProvider.GetRequiredService<DirectSalesViewModel>();
+            var window = new DirectSalesWindow(directSalesVm);
             window.Show();
         }
-
-        private void NavigateToSettings() => _navigationService.NavigateTo<SettingsViewModel>();
-        private void NavigateToFinance() => _navigationService.NavigateTo<FinanceViewModel>();
-        private void NavigateToAnalytics() => _navigationService.NavigateTo<AnalyticsViewModel>();
-        private void NavigateToFinancialHealth() => _navigationService.NavigateTo<FinancialHealthViewModel>();
-        // These need DI too! 
-        // If I use _navigationService.NavigateTo<PurchaseOrderViewModel>(), PurchaseOrderViewModel MUST have properties injected.
-        // PurchaseOrderViewModel constructor takes IUnitOfWork currently (line 271 of old file).
-        // DI can resolve it if registered.
-        private void NavigateToPurchaseOrders() => _navigationService.NavigateTo<PurchaseOrderViewModel>();
-        private void NavigateToSuppliers() => _navigationService.NavigateTo<SuppliersViewModel>();
-        private void NavigateToPipeline() => _navigationService.NavigateTo<PipelineViewModel>();
-        private void NavigateToScheduler() => _navigationService.NavigateTo<SchedulerViewModel>();
-        private void NavigateToRoutePlanning() => _navigationService.NavigateTo<RoutePlanningViewModel>();
-
 
         private void LoadNotifications()
         {
@@ -342,28 +342,28 @@ namespace KamatekCrm.ViewModels
                         OpenDirectSales();
                         break;
                     case "NewCustomer":
-                        NavigateToCustomers();
+                        NavigateTo<CustomersViewModel>(); // Fixed
                         break;
                     case "OpenProjectQuote":
                         OpenProjectQuote();
                         break;
                     case "NavigateDashboard":
-                        NavigateToDashboard();
+                        NavigateTo<DashboardViewModel>(); // Fixed
                         break;
                     case "NavigateCustomers":
-                        NavigateToCustomers();
+                        NavigateTo<CustomersViewModel>(); // Fixed
                         break;
                     case "NavigateProducts":
-                        NavigateToProducts();
+                        NavigateTo<ProductViewModel>(); // Fixed
                         break;
                     case "NavigateRepairList":
-                        NavigateToRepairList();
+                        NavigateTo<RepairListViewModel>(); // Fixed
                         break;
                     case "NavigateFinance":
-                        NavigateToFinance();
+                        NavigateTo<FinanceViewModel>(); // Fixed
                         break;
                     case "NavigateSettings":
-                        NavigateToSettings();
+                        NavigateTo<SettingsViewModel>(); // Fixed
                         break;
                 }
             };

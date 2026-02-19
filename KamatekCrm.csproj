@@ -21,14 +21,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3595.46" />
     <PackageReference Include="ClosedXML" Version="0.102.3" />
     <PackageReference Include="PdfPig" Version="0.1.13" />
@@ -37,8 +37,8 @@
     <PackageReference Include="Serilog" Version="4.3.0" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
     <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
-    <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
@@ -59,17 +59,10 @@
     <EmbeddedResource Remove="KamatekCrm.Shared\**" />
     <None Remove="KamatekCrm.Shared\**" />
     <Page Remove="KamatekCrm.Shared\**" />
-    
     <Compile Remove="KamatekCrm.API\**" />
     <EmbeddedResource Remove="KamatekCrm.API\**" />
     <None Remove="KamatekCrm.API\**" />
     <Page Remove="KamatekCrm.API\**" />
-    
-    <Compile Remove="KamatekCrm.API\**" />
-    <EmbeddedResource Remove="KamatekCrm.API\**" />
-    <None Remove="KamatekCrm.API\**" />
-    <Page Remove="KamatekCrm.API\**" />
-    
     <Compile Remove="KamatekCrm.Web\**" />
     <EmbeddedResource Remove="KamatekCrm.Web\**" />
     <None Remove="KamatekCrm.Web\**" />

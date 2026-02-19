@@ -61,7 +61,21 @@ namespace KamatekCrm
                         services.AddTransient<MainWindow>();
 
                         // JWT Authentication Configuration
-                        var jwtKey = context.Configuration["Jwt:Key"] ?? "KamatekCrm_SecretKey_MinimumLength_32Chars";
+                        var jwtKey = context.Configuration["Jwt:Key"];
+                        var jwtIssuer = context.Configuration["Jwt:Issuer"] ?? "KamatekCRM";
+                        var jwtAudience = context.Configuration["Jwt:Audience"] ?? "KamatekCRM-Users";
+                        
+                        // JWT Key validasyonu
+                        if (string.IsNullOrWhiteSpace(jwtKey))
+                        {
+                            throw new InvalidOperationException("JWT Key is not configured. Please set 'Jwt:Key' in appsettings.json with at least 32 characters.");
+                        }
+                        
+                        if (jwtKey.Length < 32)
+                        {
+                            throw new InvalidOperationException($"JWT Key must be at least 32 characters long. Current length: {jwtKey.Length}");
+                        }
+                        
                         services.AddAuthentication(options =>
                         {
                             options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
@@ -75,8 +89,8 @@ namespace KamatekCrm
                                 ValidateAudience = true,
                                 ValidateLifetime = true,
                                 ValidateIssuerSigningKey = true,
-                                ValidIssuer = context.Configuration["Jwt:Issuer"] ?? "KamatekCrm",
-                                ValidAudience = context.Configuration["Jwt:Audience"] ?? "KamatekCrm.TechnicianApp",
+                                ValidIssuer = jwtIssuer,
+                                ValidAudience = jwtAudience,
                                 IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
                                     System.Text.Encoding.UTF8.GetBytes(jwtKey))
                             };
@@ -85,13 +99,14 @@ namespace KamatekCrm
                     .ConfigureWebHostDefaults(webBuilder =>
                     {
                         webBuilder.UseUrls(KamatekCrm.Helpers.ProcessManager.API_BIND_URL);
-                        webBuilder.Configure(app =>
+                        webBuilder.Configure((context, app) =>
                         {
-                            // if (context.HostingEnvironment.IsDevelopment()) // Hard to access context here easily without fuller config
-                            // {
+                            // Swagger sadece Development ortamında
+                            if (context.HostingEnvironment.IsDevelopment())
+                            {
                                 app.UseSwagger();
                                 app.UseSwaggerUI();
-                            // }
+                            }
                             
                             app.UseStaticFiles(); // Enable serving static files (photos)
                             app.UseRouting();
@@ -131,21 +146,24 @@ namespace KamatekCrm
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "Veritabanı güncellenirken hata oluştu");
-                        MessageBox.Show($"Veritabanı güncellenirken hata oluştu: {ex.Message}", "Veritabanı Hatası");
+                        // Detaylı hata bilgisi oluştur
+                        var errorDetails = GetExceptionDetails(ex);
+                        Log.Error(ex, "Veritabanı güncellenirken hata oluştu: {ErrorDetails}", errorDetails);
+                        MessageBox.Show($"Veritabanı güncellenirken hata oluştu:\n\n{errorDetails}", "Veritabanı Hatası", 
+                            MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                     
                     // 5. Varsayılan admin kullanıcısı oluştur
                     var authService = services.GetRequiredService<IAuthService>();
                     authService.CreateDefaultUser(); 
 
-                    // 6. SLA Otomasyon Servisini Başlat
+                    // 6. SLA Otomasyon Servisini Başlat (DI üzerinden)
                     _ = Task.Run(async () =>
                     {
                         try
                         {
-                            // SLA Service manual instantiation for now
-                            var slaService = new SlaService(); 
+                            using var slaScope = _host.Services.CreateScope();
+                            var slaService = slaScope.ServiceProvider.GetRequiredService<ISlaService>();
                             await slaService.CheckAndGenerateJobsAsync();
                         }
                         catch (Exception ex)
@@ -187,15 +205,23 @@ namespace KamatekCrm
             {
                 Log.Information("Application shutting down...");
                 
-                // Uygulama kapanırken otomatik yedek al
-                var backupService = new BackupService();
-                backupService.BackupDatabase();
-
                 // Sunucu süreçlerini kapat
                 ProcessManager.StopServices();
                 
+                // Uygulama kapanırken otomatik yedek al (DI üzerinden)
                 if (_host != null)
                 {
+                    try
+                    {
+                        using var backupScope = _host.Services.CreateScope();
+                        var backupService = backupScope.ServiceProvider.GetRequiredService<IBackupService>();
+                        backupService.BackupDatabase();
+                    }
+                    catch (Exception backupEx)
+                    {
+                        Log.Warning(backupEx, "Yedekleme sırasında hata oluştu (kritik değil)");
+                    }
+                    
                     await _host.StopAsync();
                     _host.Dispose();
                 }
@@ -212,6 +238,35 @@ namespace KamatekCrm
                 Log.CloseAndFlush();
                 base.OnExit(e);
             }
+        }
+
+        /// <summary>
+        /// Exception ve tüm inner exception'ların detaylarını toplar
+        /// </summary>
+        private string GetExceptionDetails(Exception ex)
+        {
+            var sb = new System.Text.StringBuilder();
+            var currentEx = ex;
+            int level = 0;
+
+            while (currentEx != null)
+            {
+                if (level > 0)
+                    sb.AppendLine($"\n--- Inner Exception (Level {level}) ---");
+                
+                sb.AppendLine($"Message: {currentEx.Message}");
+                sb.AppendLine($"Type: {currentEx.GetType().FullName}");
+                
+                if (!string.IsNullOrEmpty(currentEx.StackTrace))
+                {
+                    sb.AppendLine($"\nStackTrace:\n{currentEx.StackTrace}");
+                }
+
+                currentEx = currentEx.InnerException;
+                level++;
+            }
+
+            return sb.ToString();
         }
     }
 }

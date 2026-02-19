@@ -37,9 +37,9 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        public SchedulerViewModel()
+        public SchedulerViewModel(AppDbContext context)
         {
-            _context = new AppDbContext();
+            _context = context;
             LoadData();
         }
 

@@ -117,9 +117,9 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        public ProjectQuoteViewModel()
+        public ProjectQuoteViewModel(AppDbContext context)
         {
-            _context = new AppDbContext();
+            _context = context;
 
             AddToQuoteCommand = new RelayCommand(_ => AddToQuote(), _ => SelectedProduct != null);
             RemoveFromQuoteCommand = new RelayCommand(_ => RemoveFromQuote(), _ => SelectedQuoteItem != null);

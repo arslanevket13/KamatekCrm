@@ -35,6 +35,55 @@
     <sys:Double x:Key="BodySize">14</sys:Double>
     <FontFamily x:Key="MainFont">Segoe UI</FontFamily>
 
+    <!-- ==================== TEXT READABILITY IMPROVEMENTS ==================== -->
+    <!-- Default TextBlock Style for better readability -->
+    <Style TargetType="TextBlock" x:Key="ReadableTextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource MainFont}"/>
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        <Setter Property="TextOptions.TextHintingMode" Value="Auto"/>
+        <Setter Property="TextOptions.TextRenderingMode" Value="Auto"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <!-- Header Text Style -->
+    <Style x:Key="HeaderTextBlock" TargetType="TextBlock" BasedOn="{StaticResource ReadableTextBlock}">
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{StaticResource ThemeTextPrimary}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        <Setter Property="TextWrapping" Value="NoWrap"/>
+    </Style>
+
+    <!-- SubHeader Text Style -->
+    <Style x:Key="SubHeaderTextBlock" TargetType="TextBlock" BasedOn="{StaticResource ReadableTextBlock}">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource ThemeTextPrimary}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <!-- Body Text Style -->
+    <Style x:Key="BodyTextBlock" TargetType="TextBlock" BasedOn="{StaticResource ReadableTextBlock}">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Foreground" Value="{StaticResource ThemeTextSecondary}"/>
+    </Style>
+
+    <!-- Label Text Style -->
+    <Style x:Key="LabelTextBlock" TargetType="TextBlock" BasedOn="{StaticResource ReadableTextBlock}">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource ThemeTextSecondary}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        <Setter Property="TextWrapping" Value="NoWrap"/>
+    </Style>
+
+    <!-- Caption/Muted Text Style -->
+    <Style x:Key="CaptionTextBlock" TargetType="TextBlock" BasedOn="{StaticResource ReadableTextBlock}">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource ThemeTextTertiary}"/>
+    </Style>
+
     <!-- ==================== 1. PRIMARY BUTTON STYLE (Save/Confirm) ==================== -->
     <Style x:Key="BtnPrimary" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource SecondaryHue}"/>
