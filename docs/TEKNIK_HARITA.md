@@ -82,7 +82,7 @@ KamatekCrm/
 │   └── ...
 │
 ├── Views/                # XAML arayüzleri
-│   ├── LoginView.xaml            # Giriş ekranı
+│   ├── LoginView.xaml            # Giriş ekranı (Modern Glassmorphism & Fluent UI)
 │   ├── UsersView.xaml            # Kullanıcı listesi
 │   ├── AddUserView.xaml          # Hızlı kullanıcı ekleme (popup)
 │   ├── DashboardView.xaml        # Ana sayfa dashboard
@@ -105,10 +105,12 @@ KamatekCrm/
 │   ├── Supplier.cs       # Tedarikçi (SupplierType, PaymentTermDays, Website, Balance)
 │   ├── Attachment.cs     # Dijital Arşiv
 │   ├── ServiceJob.cs     # İş emri (JobCategory, Priority)
-│   ├── PurchaseOrder.cs  # Satın alma emri (YENİ)
-│   ├── PurchaseOrderItem.cs # Sipariş kalemi (YENİ)
+│   ├── PurchaseOrder.cs  # Satın alma emri
+│   ├── PurchaseInvoice.cs # Satın alma faturası (YENİ)
+│   ├── PurchaseOrderItem.cs # Sipariş kalemi
 │   ├── ServiceProject.cs # Proje (ProjectScopeJson, TotalCost, TotalProfit)
-│   ├── Product.cs        # Ürün (TechSpecsJson)
+│   ├── Product.cs        # Ürün (TechSpecsJson, ImagePath, AverageCost)
+│   ├── PosTransaction.cs # POS Satış işlemi (YENİ)
 │   ├── ScopeNode.cs      # Kapsam ağacı node (Recursive, JSON)
 │   ├── ScopeNodeItem.cs  # Kapsam kalemi (Finansal alanlar)
 │   ├── Inventory.cs      # Stok (ProductId + WarehouseId)

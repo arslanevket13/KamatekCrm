@@ -1,4 +1,15 @@
-# KamatekCRM - Değişiklik Günlüğü
+## v10.2 — UI Modernization & Premium Glassmorphism (2026-02-20)
+- **Database**: Applied EF Core migration `AddErpMajorUpdateComponents` to sync PostgreSQL schema with new ERP entities and properties (`AverageCost`, `ImagePath`, etc.).
+- **Login UI**: Implemented modern Glassmorphism (Frosted Glass) effect using semi-transparent surfaces and blur.
+- **Fluent Design**: Applied Windows 11 style rounded corners and bottom-accented inputs.
+- **Vector Icons**: Replaced emojis with minimalist `<Path>` vector icons for User and Security (Lock).
+- **UX**: Added dynamic loading state with spinning animation to the Login button.
+
+## v10.1 — ERP Update Verification & Missing Components Recovery (2026-02-20)
+- **Recovered**: Missing `ImagePath` and `AverageCost` properties in `Product` entity.
+- **Restored**: Missing `PosTransaction` and `PosTransactionLine` entities for POS operations.
+- **Restored**: Missing `PurchaseInvoice` and `PurchaseInvoiceLine` entities for Purchasing/Procurement.
+- **Fix**: Re-registered `PosTransactions` and `PurchaseInvoices` DbSets in `AppDbContext` and configured relationships.
 
 ## v10.0 — Critical Architectural Refactoring (2026-02-19)
 - **WPF Decoupled**: Removed embedded Kestrel web server, JWT, EF Migrate, SLA from `App.xaml.cs`

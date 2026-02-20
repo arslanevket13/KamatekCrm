@@ -154,12 +154,65 @@ namespace KamatekCrm.Shared.Models
         /// Relative path to compressed product image (e.g., "uploads/products/xxx.webp")
         /// </summary>
         public string? ImagePath { get; set; }
+        public decimal AverageCost { get; set; }
 
         [ForeignKey(nameof(BrandId))]
         public virtual Brand? Brand { get; set; } = new Brand();
 
         public virtual System.Collections.Generic.ICollection<Inventory> Inventories { get; set; } = new System.Collections.Generic.List<Inventory>();
         public virtual System.Collections.Generic.ICollection<StockTransaction> Transactions { get; set; } = new System.Collections.Generic.List<StockTransaction>();
+    }
+
+    public class PosTransaction : KamatekCrm.Shared.Models.Common.BaseEntity
+    {
+        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public string TransactionNumber { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
+        public int? CustomerId { get; set; }
+        [ForeignKey(nameof(CustomerId))]
+        public virtual Customer? Customer { get; set; }
+        public virtual System.Collections.Generic.ICollection<PosTransactionLine> Lines { get; set; } = new System.Collections.Generic.List<PosTransactionLine>();
+    }
+
+    public class PosTransactionLine
+    {
+        public int Id { get; set; }
+        public int PosTransactionId { get; set; }
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal LineTotal { get; set; }
+        [ForeignKey(nameof(PosTransactionId))]
+        public virtual PosTransaction PosTransaction { get; set; } = null!;
+        [ForeignKey(nameof(ProductId))]
+        public virtual Product Product { get; set; } = null!;
+    }
+
+    public class PurchaseInvoice : KamatekCrm.Shared.Models.Common.BaseEntity
+    {
+        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public string InvoiceNumber { get; set; } = string.Empty;
+        public int SupplierId { get; set; }
+        public decimal TotalAmount { get; set; }
+        public PurchaseStatus Status { get; set; }
+        [ForeignKey(nameof(SupplierId))]
+        public virtual Supplier Supplier { get; set; } = null!;
+        public virtual System.Collections.Generic.ICollection<PurchaseInvoiceLine> Lines { get; set; } = new System.Collections.Generic.List<PurchaseInvoiceLine>();
+    }
+
+    public class PurchaseInvoiceLine
+    {
+        public int Id { get; set; }
+        public int PurchaseInvoiceId { get; set; }
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal LineTotal { get; set; }
+        [ForeignKey(nameof(PurchaseInvoiceId))]
+        public virtual PurchaseInvoice PurchaseInvoice { get; set; } = null!;
+        [ForeignKey(nameof(ProductId))]
+        public virtual Product Product { get; set; } = null!;
     }
 
     public class Brand { public int Id { get; set; } public string BrandName { get; set; } = string.Empty; public string Name { get; set; } = string.Empty; } // Alias Name

@@ -66,6 +66,10 @@ namespace KamatekCrm.Data
         // --- Teknisyen Web App (YENİ) ---
         public DbSet<TaskPhoto> TaskPhotos { get; set; }
 
+        // --- ERP Major Update (POS & Purchasing) ---
+        public DbSet<PosTransaction> PosTransactions { get; set; }
+        public DbSet<PurchaseInvoice> PurchaseInvoices { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -233,6 +237,23 @@ namespace KamatekCrm.Data
                     .WithMany(s => s.Payments)
                     .HasForeignKey(e => e.SalesOrderId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // --- ERP Major Update Configurations ---
+            modelBuilder.Entity<PosTransaction>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasMany(e => e.Lines)
+                      .WithOne(l => l.PosTransaction)
+                      .HasForeignKey(l => l.PosTransactionId);
+            });
+
+            modelBuilder.Entity<PurchaseInvoice>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasMany(e => e.Lines)
+                      .WithOne(l => l.PurchaseInvoice)
+                      .HasForeignKey(l => l.PurchaseInvoiceId);
             });
         }
 
