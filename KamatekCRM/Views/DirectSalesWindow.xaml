@@ -1,0 +1,769 @@
+<Window x:Class="KamatekCrm.Views.DirectSalesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="💰 Perakende Satış (POS)" 
+        Height="740" Width="1280"
+        WindowStartupLocation="CenterScreen"
+        Background="#F1F5F9">
+
+    <Window.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding ClearCartCommand}"/>
+        <KeyBinding Key="F8" Command="{Binding PayFullCashCommand}"/>
+        <KeyBinding Key="F9" Command="{Binding PayFullCardCommand}"/>
+        <KeyBinding Key="F12" Command="{Binding CompleteSaleCommand}"/>
+    </Window.InputBindings>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolVis"/>
+
+        <!-- Large payment button -->
+        <Style x:Key="PayBtn" TargetType="Button">
+            <Setter Property="Height" Value="52"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="10" Padding="16,8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True"><Setter Property="Opacity" Value="0.88"/></Trigger>
+                <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.40"/></Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Small icon button -->
+        <Style x:Key="IconBtn" TargetType="Button">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="6,4">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="14">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="6*"/>
+            <ColumnDefinition Width="12"/>
+            <ColumnDefinition Width="4*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ========================= LEFT: CATALOG ========================= -->
+        <Border Grid.Column="0" Background="White" CornerRadius="14" Padding="16">
+            <Border.Effect><DropShadowEffect BlurRadius="12" Opacity="0.07" ShadowDepth="2"/></Border.Effect>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- barkod -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- search -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- depo -->
+                    <RowDefinition Height="*"/>
+                    <!-- grid -->
+                </Grid.RowDefinitions>
+
+                <!-- Title -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="📦" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="Ürün Kataloğu" FontSize="19" FontWeight="Bold" Foreground="#1E40AF" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Barkod input — distinct, highlighted -->
+                <Border Grid.Row="1" Background="#EFF6FF" CornerRadius="8" Padding="10,8" Margin="0,0,0,10"
+                        BorderBrush="#93C5FD" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="📷 Barkod:" VerticalAlignment="Center" FontWeight="SemiBold"
+                                   Foreground="#2563EB" Margin="0,0,10,0" FontSize="13"/>
+                        <TextBox Grid.Column="1"
+                                 Text="{Binding BarcodeText, UpdateSourceTrigger=PropertyChanged}"
+                                 FontSize="14" BorderThickness="0" Background="Transparent"
+                                 VerticalAlignment="Center">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Return" Command="{Binding BarcodeScanCommand}"/>
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <Button Grid.Column="2" Content="Tara →"
+                                Command="{Binding BarcodeScanCommand}"
+                                Background="#2563EB" Foreground="White"
+                                FontSize="12" FontWeight="SemiBold"
+                                Padding="10,4" BorderThickness="0" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="8,4"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Search + Depo row -->
+                <Grid Grid.Row="2" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="180"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- Search -->
+                    <Border Background="#F8FAFC" CornerRadius="8" Padding="10,7"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="🔍" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     FontSize="14" BorderThickness="0" Background="Transparent"
+                                     VerticalAlignment="Center" TabIndex="0"
+                                     FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Foreground" Value="#334155"/>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                            <TextBlock Grid.Column="1" Text="Ürün adı, model, barkod..."
+                                       Foreground="#94A3B8" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SearchText}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                    <!-- Depo -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Depo:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#64748B" FontSize="12" FontWeight="SemiBold"/>
+                        <ComboBox ItemsSource="{Binding Warehouses}"
+                                  SelectedItem="{Binding SelectedWarehouse}"
+                                  DisplayMemberPath="Name"
+                                  Height="30" Width="130"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Product DataGrid with thumbnail -->
+                <DataGrid Grid.Row="3"
+                          ItemsSource="{Binding FilteredProducts}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          BorderThickness="0"
+                          Background="White"
+                          RowHeight="48"
+                          ColumnHeaderHeight="38">
+
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#EFF6FF"/>
+                            <Setter Property="Foreground" Value="#1E40AF"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="10,7"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#F8FAFC"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#DBEAFE"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+
+                    <DataGrid.Columns>
+                        <!-- Thumbnail -->
+                        <DataGridTemplateColumn Header="" Width="52" CanUserSort="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Width="38" Height="38" CornerRadius="6" Background="#F1F5F9"
+                                            HorizontalAlignment="Center" ClipToBounds="True">
+                                        <Grid>
+                                            <!-- Emoji placeholder — visible when no image -->
+                                            <TextBlock Text="📦" FontSize="20"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       Opacity="0.30">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ImagePath}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <!-- Real image — only shown when ImagePath is set -->
+                                            <Image Stretch="UniformToFill"
+                                                   Source="{Binding ImagePath}">
+                                                <Image.Style>
+                                                    <Style TargetType="Image">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ImagePath}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Image.Style>
+                                            </Image>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Product Name -->
+                        <DataGridTextColumn Header="Ürün Adı" Binding="{Binding ProductName}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Margin" Value="10,0"/>
+                                    <Setter Property="FontWeight" Value="Medium"/>
+                                    <Setter Property="Foreground" Value="#1E293B"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Model -->
+                        <DataGridTextColumn Header="Model" Binding="{Binding ModelName}" Width="110">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="#64748B"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Stock badge -->
+                        <DataGridTemplateColumn Header="Stok" Width="68">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Center">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#DCFCE7"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StockQuantity}" Value="0">
+                                                        <Setter Property="Background" Value="#FEE2E2"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding StockQuantity}" FontWeight="Bold" HorizontalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#16A34A"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding StockQuantity}" Value="0">
+                                                            <Setter Property="Foreground" Value="#DC2626"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Price -->
+                        <DataGridTextColumn Header="Fiyat" Binding="{Binding SalePrice, StringFormat='{}{0:N2} ₺'}" Width="90">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Foreground" Value="#1E40AF"/>
+                                    <Setter Property="Margin" Value="0,0,10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Add button -->
+                        <DataGridTemplateColumn Header="" Width="60">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="➕"
+                                            Command="{Binding DataContext.AddToCartCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Background="#16A34A" Foreground="White"
+                                            FontSize="15" Width="38" Height="30"
+                                            BorderThickness="0" Cursor="Hand" ToolTip="Sepete Ekle">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StockQuantity}" Value="0">
+                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                        <Setter Property="Opacity" Value="0.3"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <!-- ========================= RIGHT: CART ========================= -->
+        <Border Grid.Column="2" Background="White" CornerRadius="14" Padding="16">
+            <Border.Effect><DropShadowEffect BlurRadius="12" Opacity="0.07" ShadowDepth="2"/></Border.Effect>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>  <!-- header -->
+                    <RowDefinition Height="Auto"/>  <!-- customer panel -->
+                    <RowDefinition Height="*"/>     <!-- cart grid -->
+                    <RowDefinition Height="Auto"/>  <!-- global discount -->
+                    <RowDefinition Height="Auto"/>  <!-- totals -->
+                    <RowDefinition Height="Auto"/>  <!-- payment buttons -->
+                    <RowDefinition Height="Auto"/>  <!-- status -->
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBlock Text="🛒" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="Sepetim" FontSize="19" FontWeight="Bold"
+                               Foreground="#EA580C" VerticalAlignment="Center"/>
+                    <Border Background="#FFF7ED" CornerRadius="10" Padding="8,3" Margin="12,0,0,0"
+                            Visibility="{Binding CartItemCount, Converter={StaticResource BoolVis}}">
+                        <TextBlock Text="{Binding CartItemCount, StringFormat='{}{0} ürün'}"
+                                   Foreground="#EA580C" FontWeight="SemiBold" FontSize="12"/>
+                    </Border>
+                    <!-- F Shortcut hints -->
+                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
+                        <Border Background="#F1F5F9" CornerRadius="4" Padding="4,2" Margin="2,0">
+                            <TextBlock Text="F8=Nakit" FontSize="9" Foreground="#64748B"/>
+                        </Border>
+                        <Border Background="#F1F5F9" CornerRadius="4" Padding="4,2" Margin="2,0">
+                            <TextBlock Text="F9=Kart" FontSize="9" Foreground="#64748B"/>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Customer Panel -->
+                <Border Grid.Row="1" Background="#FFFBEB" CornerRadius="8" Padding="10"
+                        Margin="0,0,0,10" BorderBrush="#FDE68A" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <!-- Row 1: selected customer + buttons -->
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="👤" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding CustomerDisplayName}"
+                                       FontSize="12" FontWeight="SemiBold"
+                                       Foreground="#92400E" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <!-- Clear customer -->
+                            <Button Grid.Column="2" Content="✕"
+                                    Command="{Binding ClearCustomerCommand}"
+                                    Foreground="#9CA3AF" FontSize="11"
+                                    Background="Transparent" BorderThickness="0"
+                                    Cursor="Hand" Margin="6,0,2,0"
+                                    ToolTip="Müşteriyi temizle">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedCustomer}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SelectedCustomer}" Value="{x:Null}">
+                                                <!-- nothing — show only when NOT null -->
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <!-- Quick add customer -->
+                            <Button Grid.Column="3" Content="➕ Yeni"
+                                    Command="{Binding QuickAddCustomerCommand}"
+                                    Background="#F59E0B" Foreground="White"
+                                    FontSize="11" FontWeight="SemiBold"
+                                    BorderThickness="0" Cursor="Hand"
+                                    Padding="8,3" ToolTip="Yeni müşteri ekle (F7)">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="6,3"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+                        <!-- Row 2: customer search -->
+                        <Grid Grid.Row="1" Margin="0,7,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}"
+                                     FontSize="12" Padding="7,4"
+                                     BorderBrush="#FCD34D" BorderThickness="1"
+                                     Background="White">
+                                <TextBox.Template>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="6">
+                                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </TextBox.Template>
+                            </TextBox>
+                            <!-- Customer dropdown -->
+                            <Popup Grid.Column="0" IsOpen="{Binding CustomerSearch, Converter={StaticResource BoolVis}}"
+                                   Placement="Bottom" AllowsTransparency="True">
+                                <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="4">
+                                    <Border.Effect><DropShadowEffect BlurRadius="10" Opacity="0.12"/></Border.Effect>
+                                    <ListBox ItemsSource="{Binding FilteredCustomers}"
+                                             Width="220"
+                                             BorderThickness="0"
+                                             Background="Transparent">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Command="{Binding DataContext.SelectCustomerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="Transparent" BorderThickness="0"
+                                                        HorizontalContentAlignment="Left" Cursor="Hand">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="12"/>
+                                                        <TextBlock Text="{Binding PhoneNumber, StringFormat=' · {0}'}"
+                                                                   Foreground="#64748B" FontSize="11" Margin="4,0,0,0"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Cart DataGrid — with editable price + discount -->
+                <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8">
+                    <DataGrid ItemsSource="{Binding CartItems}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="None"
+                              BorderThickness="0"
+                              Background="White"
+                              RowHeight="52">
+
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#FFF7ED"/>
+                                <Setter Property="Foreground" Value="#EA580C"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="Padding" Value="6,5"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.Columns>
+                            <!-- Product name -->
+                            <DataGridTextColumn Header="Ürün" Binding="{Binding ProductName}" Width="*" IsReadOnly="True">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="6,0"/>
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Qty with +/- -->
+                            <DataGridTemplateColumn Header="Adet" Width="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Button Content="−" Width="22" Height="22" FontSize="13" FontWeight="Bold"
+                                                    Background="#FEE2E2" Foreground="#DC2626" BorderThickness="0"
+                                                    Command="{Binding DataContext.DecreaseQuantityCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}" Cursor="Hand">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <TextBlock Text="{Binding Quantity}" Width="26" TextAlignment="Center"
+                                                       FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                                            <Button Content="+" Width="22" Height="22" FontSize="13" FontWeight="Bold"
+                                                    Background="#DCFCE7" Foreground="#16A34A" BorderThickness="0"
+                                                    Command="{Binding DataContext.IncreaseQuantityCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}" Cursor="Hand">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Editable Unit Price -->
+                            <DataGridTemplateColumn Header="B.Fiyat" Width="68">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding UnitPrice, UpdateSourceTrigger=LostFocus, StringFormat='N2'}"
+                                                 FontSize="11" FontWeight="SemiBold"
+                                                 Foreground="#1E40AF"
+                                                 BorderThickness="0" Background="Transparent"
+                                                 TextAlignment="Right" VerticalAlignment="Center"
+                                                 Padding="4,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Editable Discount % -->
+                            <DataGridTemplateColumn Header="İnd.%" Width="48">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBox Text="{Binding DiscountPercent, UpdateSourceTrigger=LostFocus, StringFormat='N1'}"
+                                                 FontSize="11" Foreground="#D97706"
+                                                 BorderThickness="0" Background="#FFFBF0"
+                                                 TextAlignment="Center" VerticalAlignment="Center"
+                                                 Padding="3,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Line Total -->
+                            <DataGridTextColumn Header="Tutar" Binding="{Binding LineTotal, StringFormat='{}{0:N2} ₺'}" Width="72" IsReadOnly="True">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#EA580C"/>
+                                        <Setter Property="Margin" Value="0,0,4,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Remove -->
+                            <DataGridTemplateColumn Header="" Width="30">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="✕"
+                                                Command="{Binding DataContext.RemoveFromCartCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Background="Transparent" Foreground="#DC2626"
+                                                FontSize="12" FontWeight="Bold"
+                                                BorderThickness="0" Cursor="Hand" ToolTip="Sil"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+
+                <!-- Global Discount Row -->
+                <Border Grid.Row="3" Background="#FFFBEB" CornerRadius="6" Padding="10,7" Margin="0,10,0,6"
+                        BorderBrush="#FCD34D" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="70"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="🎯 Genel İndirim (%)" VerticalAlignment="Center"
+                                   FontSize="12" FontWeight="SemiBold" Foreground="#78350F"/>
+                        <TextBlock Grid.Column="1" Text="Tüm ürünlere uygula:"
+                                   VerticalAlignment="Center" FontSize="11" Foreground="#92400E" Margin="0,0,8,0"/>
+                        <TextBox Grid.Column="2"
+                                 Text="{Binding GlobalDiscountPercent, UpdateSourceTrigger=LostFocus, StringFormat='N1'}"
+                                 FontSize="14" FontWeight="Bold" TextAlignment="Center"
+                                 Background="White" BorderBrush="#FCD34D" BorderThickness="1"
+                                 Padding="4,4" Foreground="#D97706">
+                            <TextBox.Template>
+                                <ControlTemplate TargetType="TextBox">
+                                    <Border Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="6">
+                                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </TextBox.Template>
+                        </TextBox>
+                        <TextBlock Grid.Column="3" Text=" %" VerticalAlignment="Center"
+                                   FontSize="13" FontWeight="Bold" Foreground="#92400E"/>
+                    </Grid>
+                </Border>
+
+                <!-- Totals -->
+                <Border Grid.Row="4" Background="#FFF7ED" CornerRadius="10" Padding="14,10" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="4"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <!-- Sub rows -->
+                        <Grid Grid.Row="0">
+                            <TextBlock Text="Ara Toplam" Foreground="#64748B" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding SubTotal, StringFormat='{}{0:N2} ₺'}"
+                                       HorizontalAlignment="Right" Foreground="#64748B" FontSize="12"/>
+                        </Grid>
+                        <Grid Grid.Row="1" Margin="0,3,0,0">
+                            <TextBlock Text="İndirim" Foreground="#D97706" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding DiscountTotal, StringFormat='- {0:N2} ₺'}"
+                                       HorizontalAlignment="Right" Foreground="#D97706" FontSize="12"/>
+                        </Grid>
+                        <Grid Grid.Row="2" Margin="0,3,0,0">
+                            <TextBlock Text="KDV" Foreground="#64748B" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding TaxTotal, StringFormat='{}{0:N2} ₺'}"
+                                       HorizontalAlignment="Right" Foreground="#64748B" FontSize="12"/>
+                        </Grid>
+                        <Separator Grid.Row="3" Background="#FED7AA" Margin="0,6"/>
+                        <!-- Grand Total -->
+                        <Grid Grid.Row="4">
+                            <TextBlock Text="TOPLAM" FontSize="17" FontWeight="Bold"
+                                       Foreground="#C2410C" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding GrandTotal, StringFormat='{}{0:N2} ₺'}"
+                                       HorizontalAlignment="Right" FontSize="26" FontWeight="Bold"
+                                       Foreground="#9A3412"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Payment Buttons -->
+                <StackPanel Grid.Row="5">
+                    <Button Style="{StaticResource PayBtn}"
+                            Command="{Binding PayFullCashCommand}"
+                            Background="#16A34A" Foreground="White"
+                            ToolTip="F8 kısayolu">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💵" FontSize="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="NAKİT ÖDEME (F8)" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PayBtn}"
+                            Command="{Binding PayFullCardCommand}"
+                            Background="#1D4ED8" Foreground="White"
+                            ToolTip="F9 kısayolu">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💳" FontSize="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="KREDİ KARTI (F9)" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Content="🗑️ Sepeti Temizle (F5)"
+                            Command="{Binding ClearCartCommand}"
+                            Background="#FEE2E2" Foreground="#DC2626"
+                            Height="32" FontSize="12" BorderThickness="0"
+                            Margin="0,8,0,0" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="7">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </StackPanel>
+
+                <!-- Status -->
+                <Border Grid.Row="5" Background="#FEF3C7" CornerRadius="6" Padding="10,8" Margin="0,0,0,5"
+                        Visibility="{Binding HasStockWarning, Converter={StaticResource BoolVis}}">
+                    <TextBlock Text="{Binding StockWarningMessage}" FontSize="12" Foreground="#B45309" FontWeight="SemiBold"/>
+                </Border>
+
+                <TextBlock Grid.Row="7"
+                           Text="{Binding StatusMessage}"
+                           Margin="0,8,0,0" FontSize="12" TextWrapping="Wrap">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="#DC2626"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsActionSuccessful}" Value="True">
+                                    <Setter Property="Foreground" Value="#16A34A"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

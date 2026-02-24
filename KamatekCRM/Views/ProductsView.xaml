@@ -1,0 +1,258 @@
+<UserControl x:Class="KamatekCrm.Views.ProductsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:KamatekCrm.Views"
+             xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=viewmodels:ProductViewModel, IsDesignTimeCreatable=False}"
+             d:DesignHeight="600" d:DesignWidth="1000"
+             Background="{DynamicResource ThemeBackground}">
+
+    <UserControl.Resources>
+        <!-- Boolean to Visibility Converter -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Başlık ve Üst Butonlar -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Grid.Column="0" 
+                           Text="Stok ve Envanter Yönetimi" 
+                           FontSize="28" 
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource ThemeTextPrimary}"/>
+                <TextBlock Text="Ürünlerinizi yönetin, stok takibi yapın" 
+                           FontSize="13" 
+                           Foreground="{DynamicResource ThemeTextSecondary}"
+                           Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <ui:Button Content="Excel'den Yükle" 
+                        Icon="{ui:SymbolIcon DocumentTable24}"
+                        Command="{Binding ImportExcelCommand}"
+                        Appearance="Secondary"
+                        ToolTip="Excel dosyasından toplu ürün içe aktar"
+                        Margin="0,0,8,0"/>
+                
+                <ui:Button Content="Yeni Ürün" 
+                        Icon="{ui:SymbolIcon Add24}"
+                        Command="{Binding AddNewProductCommand}"
+                        Appearance="Primary"
+                        Margin="0,0,8,0"/>
+
+                <ui:Button Content="Fotoğraf Yükle" 
+                        Icon="{ui:SymbolIcon Image24}"
+                        Command="{Binding UploadProductPhotoCommand}"
+                        Appearance="Secondary"
+                        ToolTip="Seçili ürüne fotoğraf ekle"
+                        Margin="0,0,8,0"/>
+
+                <ui:Button Content="Fotoğrafı Sil" 
+                        Icon="{ui:SymbolIcon Delete24}"
+                        Command="{Binding DeleteProductPhotoCommand}"
+                        Appearance="Secondary"
+                        ToolTip="Seçili ürünün fotoğrafını sil"
+                        Margin="0,0,8,0"/>
+
+                <ui:Button Content="Transfer Yap" 
+                        Icon="{ui:SymbolIcon ArrowSwap24}"
+                        Command="{Binding TransferStockCommand}"
+                        Appearance="Secondary"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Arama ve Filtreleme -->
+        <Border Grid.Row="1" Background="{DynamicResource CardBrush}" CornerRadius="12" Margin="0,0,0,16" Padding="16">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.1" Color="Black"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Text="Ara:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,12,0" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                
+                <TextBox Grid.Column="1" 
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource ModernTextBox}"
+                         Tag="Ürün Adı, SKU veya Kategori..."/>
+                
+                <!-- Edit Button (Seçili ürün için) -->
+                <Button Grid.Column="3" 
+                        Content="✏️ Düzenle" 
+                        Command="{Binding EditProductCommand}"
+                        Style="{StaticResource SecondaryButton}" 
+                        Width="100"/>
+            </Grid>
+        </Border>
+
+        <!-- Stok Listesi DataGrid -->
+        <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="0">
+            <DataGrid ItemsSource="{Binding ProductsView}"
+                      SelectedItem="{Binding SelectedProduct}"
+                      Style="{StaticResource ModernDataGrid}"
+                      ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      IsReadOnly="True"
+                      GridLinesVisibility="Horizontal">
+                
+                <!-- Double-Click ile Düzenleme -->
+                <DataGrid.InputBindings>
+                    <MouseBinding MouseAction="LeftDoubleClick" 
+                                  Command="{Binding EditProductCommand}"/>
+                    <KeyBinding Key="Delete" Command="{Binding DeleteProductCommand}"/>
+                </DataGrid.InputBindings>
+                
+                <DataGrid.Columns>
+                    <!-- Thumbnail -->
+                    <DataGridTemplateColumn Header="" Width="56" CanUserSort="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Width="44" Height="44" CornerRadius="6"
+                                        Background="#F1F5F9" HorizontalAlignment="Center"
+                                        ClipToBounds="True">
+                                    <Grid>
+                                        <!-- Placeholder icon when no image -->
+                                        <TextBlock Text="📦" FontSize="22" HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" Opacity="0.3">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ImagePath}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <!-- Actual image -->
+                                        <Image Stretch="UniformToFill">
+                                            <Image.Style>
+                                                <Style TargetType="Image">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ImagePath}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                            <Image.Source>
+                                                <PriorityBinding>
+                                                    <Binding Path="ImagePath"/>
+                                                </PriorityBinding>
+                                            </Image.Source>
+                                        </Image>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- SKU / Barkod -->
+                    <DataGridTextColumn Header="SKU / Barkod" 
+                                        Binding="{Binding SKU}" 
+                                        Width="Auto"
+                                        MinWidth="100"/>
+
+                    <!-- Ürün Adı -->
+                    <DataGridTextColumn Header="Ürün Adı" 
+                                        Binding="{Binding ProductName}" 
+                                        Width="*"
+                                        FontWeight="SemiBold"/>
+
+                    <!-- Kategori -->
+                    <DataGridTextColumn Header="Kategori" 
+                                        Binding="{Binding Category.Name}" 
+                                        Width="150"/>
+
+                    <!-- Toplam Stok (Bold) -->
+                    <DataGridTextColumn Header="Toplam Stok" 
+                                        Binding="{Binding TotalStockQuantity}" 
+                                        Width="100">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="{StaticResource PrimaryColor}"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Birim -->
+                    <DataGridTextColumn Header="Birim" 
+                                        Binding="{Binding Unit}" 
+                                        Width="80"/>
+
+                    <!-- Satış Fiyatı -->
+                    <DataGridTextColumn Header="Satış Fiyatı" 
+                                        Binding="{Binding SalePrice, StringFormat='{}{0:C2}'}" 
+                                        Width="100"/>
+
+                    <!-- Ortalama Maliyet (Gizli/Admin) -->
+                    <DataGridTextColumn Header="Ort. Maliyet" 
+                                        Binding="{Binding CurrentAverageCost, StringFormat='{}{0:C2}'}" 
+                                        Width="100"
+                                        Foreground="Gray"/>
+
+                    <!-- Düzenle Butonu -->
+                    <DataGridTemplateColumn Header="" Width="50">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="✏️" 
+                                        Command="{Binding DataContext.EditProductCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        ToolTip="Düzenle"
+                                        FontSize="14"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="3" Margin="0,10,0,0" Padding="5">
+            <TextBlock Text="{Binding StatusMessage}" 
+                       FontWeight="Medium">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="Red"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsActionSuccessful}" Value="True">
+                                <Setter Property="Foreground" Value="Green"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Border>
+    </Grid>
+</UserControl>

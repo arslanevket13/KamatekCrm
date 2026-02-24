@@ -1,0 +1,132 @@
+<UserControl x:Class="KamatekCrm.Views.PurchaseOrderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="1000">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header Card -->
+        <Border Grid.Row="0" Margin="0,0,0,16" Padding="16" CornerRadius="8" Background="{DynamicResource CardBrush}" Effect="{DynamicResource SubtleShadow}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="50" Width="40" Height="40" Margin="0,0,16,0">
+                        <ui:SymbolIcon Symbol="Vehicle24" Foreground="{DynamicResource PrimaryBrush}" FontSize="24"/>
+                    </Border>
+                    <StackPanel>
+                        <TextBlock Text="Satın Alma Siparişi" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Tedarikçi seçimi ve ürün girişi yapınız" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Suppliers}" SelectedItem="{Binding SelectedSupplier}" 
+                          DisplayMemberPath="CompanyName" Margin="32,0"
+                          VerticalAlignment="Center"/>
+                
+                <Button Grid.Column="2" Command="{Binding CreateOrderCommand}"
+                        Content="TEMİZLE / YENİ" Style="{StaticResource {x:Type Button}}"/>
+            </Grid>
+        </Border>
+
+        <!-- Manual Entry Panel -->
+        <Border Grid.Row="1" Margin="0,0,0,16" Padding="16" CornerRadius="8" Background="{DynamicResource CardBrush}" Effect="{DynamicResource SubtleShadow}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Text="MANUEL ÜRÜN EKLE" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12"/>
+                
+                <Grid Grid.Row="1" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <ComboBox Grid.Column="0" ItemsSource="{Binding ProductList}" SelectedItem="{Binding SelectedProduct}"
+                              DisplayMemberPath="ProductName" Margin="0,0,8,0"/>
+                    
+                    <TextBox Grid.Column="1" Text="{Binding Quantity}" Margin="0,0,8,0" Padding="8"/>
+                    
+                    <TextBox Grid.Column="2" Text="{Binding UnitPrice, StringFormat=N2}" Margin="0,0,16,0" Padding="8"/>
+
+                    <Button Grid.Column="3" Command="{Binding AddManualItemCommand}"
+                            Width="40" Height="40" ToolTip="Sepete Ekle">
+                        <ui:SymbolIcon Symbol="Add24"/>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Items List -->
+        <Border Grid.Row="2" CornerRadius="8" Background="{DynamicResource CardBrush}" Effect="{DynamicResource SubtleShadow}" VerticalAlignment="Stretch">
+            <DataGrid ItemsSource="{Binding CurrentOrderItems}" AutoGenerateColumns="False" 
+                      CanUserAddRows="False" 
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Setter Property="Padding" Value="12,8"/>
+                        <Setter Property="Background" Value="{DynamicResource BackgroundSecondaryBrush}"/>
+                    </Style>
+                </DataGrid.Resources>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ÜRÜN ADI" Binding="{Binding ProductName}" Width="*"/>
+                    <DataGridTextColumn Header="MİKTAR" Binding="{Binding Quantity}" Width="100"/>
+                    <DataGridTextColumn Header="BİRİM FİYAT" Binding="{Binding UnitPrice, StringFormat=C2}" Width="140"/>
+                    <DataGridTextColumn Header="TOPLAM" Binding="{Binding LineTotal, StringFormat=C2}" Width="140" FontWeight="Bold"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Footer Actions -->
+        <Grid Grid.Row="3" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Command="{Binding UploadPdfCommand}">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="DocumentPdf24" Margin="0,0,8,0"/>
+                    <TextBlock Text="PDF FATURA OKU"/>
+                </StackPanel>
+            </Button>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button Command="{Binding SaveOrderCommand}" Margin="0,0,16,0">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Save24" Margin="0,0,8,0"/>
+                        <TextBlock Text="TASLAK OLARAK KAYDET"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding SaveAndReceiveCommand}" Height="50">
+                    <StackPanel Orientation="Horizontal" Margin="16,0">
+                        <ui:SymbolIcon Symbol="Checkmark24" Margin="0,0,8,0"/>
+                        <TextBlock Text="ONAYLA VE STOKLARA İŞLE" FontWeight="Bold"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

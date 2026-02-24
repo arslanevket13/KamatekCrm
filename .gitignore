@@ -1,35 +1,24 @@
-# Build outputs
-bin/
-obj/
-
-# Visual Studio
-.vs/
+# .gitignore for KamatekCRM
+[Bb]in/
+[Oo]bj/
 *.user
 *.suo
-
-# IDE specific
+*.userosscache
+*.sln.docstates
+.vs/
 .idea/
-*.swp
-*~
+.vscode/
 
-# OS files
-Thumbs.db
-.DS_Store
+# Logs
+**/logs/*.log
+**/logs/*.txt
 
-# Database files (local development)
+# Database
 *.db
 *.db-shm
 *.db-wal
 
-# NuGet
-packages/
-*.nupkg
-
-# Publish output
-publish/
-
-# Logs and Build Info
-*.log
-*.txt
--Host
-build/
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini

@@ -9,11 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
+    <ProjectReference Include="..\KamatekCRM\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

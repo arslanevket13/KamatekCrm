@@ -51,15 +51,33 @@ public static class AuthEndpoints
                     statusCode: 400);
             }
 
-            // Form verilerini oku
+            // Form verilerini oku - güvenli şekilde
             var form = await ctx.Request.ReadFormAsync();
-            var username = form["username"].ToString().Trim();
-            var password = form["password"].ToString();
-
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            if (!form.TryGetValue("username", out var usernameForm) ||
+                !form.TryGetValue("password", out var passwordForm))
             {
                 return Results.Content(
                     ErrorSnippet("Kullanıcı adı ve şifre gereklidir."),
+                    "text/html; charset=utf-8",
+                    statusCode: 400);
+            }
+
+            var username = usernameForm.ToString().Trim();
+            var password = passwordForm.ToString();
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                return Results.Content(
+                    ErrorSnippet("Kullanıcı adı ve şifre gereklidir."),
+                    "text/html; charset=utf-8",
+                    statusCode: 400);
+            }
+
+            // Input validation - uzunluk kontrolü
+            if (username.Length < 3 || username.Length > 50)
+            {
+                return Results.Content(
+                    ErrorSnippet("Kullanıcı adı 3-50 karakter arasında olmalıdır."),
                     "text/html; charset=utf-8",
                     statusCode: 400);
             }

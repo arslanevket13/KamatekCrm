@@ -1,0 +1,619 @@
+using System;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows;
+using System.Windows.Input;
+using KamatekCrm.Commands;
+using KamatekCrm.Data;
+using KamatekCrm.Services;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace KamatekCrm.ViewModels
+{
+    /// <summary>
+    /// Müşteri detay sayfası ViewModel - 360 Derece Görünüm
+    /// </summary>
+    public class CustomerDetailViewModel : ViewModelBase
+    {
+        private readonly AppDbContext _context;
+        // _customerId removed from here, defined below or used from below
+        private Customer? _customer;
+
+        // Editable Properties
+        private string _fullName = string.Empty;
+        private string _phoneNumber = string.Empty;
+        private string? _email;
+        private string _city = string.Empty;
+        private string? _district;
+        private string? _neighborhood;
+        private string? _street;
+        private string? _buildingNo;
+        private string? _apartmentNo;
+        private string? _notes;
+        private CustomerType _customerType = CustomerType.Individual;
+        private string _customerCode = string.Empty;
+        private string? _tcKimlikNo;
+        private string? _companyName;
+        private string? _taxNumber;
+        private string? _taxOffice;
+
+        // Collections
+        public ObservableCollection<ServiceJob> ServiceJobs { get; set; }
+        public ObservableCollection<ServiceJob> ActiveJobs { get; set; }
+        public ObservableCollection<ServiceJob> PastJobs { get; set; }
+        public ObservableCollection<Transaction> Transactions { get; set; }
+        public ObservableCollection<SalesOrder> SalesOrders { get; set; }
+        public ObservableCollection<CustomerActivity> Activities { get; set; }
+
+        // Yeni Alanlar
+        private string? _tags;
+        private CustomerSegment _segment;
+        private DateTime? _birthDate;
+        private string? _loyaltyLevel;
+
+        // Calculated Properties
+        private decimal _totalSpent;
+        private decimal _totalBalance;
+
+        private readonly NavigationService _navigationService;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
+
+        private int _customerId;
+
+        public CustomerDetailViewModel(NavigationService navigationService, IToastService toastService, ILoadingService loadingService)
+        {
+            _navigationService = navigationService;
+            _toastService = toastService;
+            _loadingService = loadingService;
+            _context = new AppDbContext();
+            
+            ServiceJobs = new ObservableCollection<ServiceJob>();
+            ActiveJobs = new ObservableCollection<ServiceJob>();
+            PastJobs = new ObservableCollection<ServiceJob>();
+            Transactions = new ObservableCollection<Transaction>();
+            SalesOrders = new ObservableCollection<SalesOrder>();
+            Activities = new ObservableCollection<CustomerActivity>();
+
+            SaveCommand = new RelayCommand(_ => SaveCustomer(), _ => CanSaveCustomer());
+            BackCommand = new RelayCommand(_ => NavigateBack());
+            NewServiceJobCommand = new RelayCommand(_ => CreateNewServiceJob());
+            
+            // Financial Commands
+            AddPaymentCommand = new RelayCommand(_ => AddTransaction(TransactionType.Payment));
+            AddDebtCommand = new RelayCommand(_ => AddTransaction(TransactionType.Debt));
+            
+            // Yeni komutlar
+            AddNoteCommand = new RelayCommand(_ => AddNote());
+            SaveTagsCommand = new RelayCommand(_ => SaveTags(), _ => _customer != null);
+            SaveSegmentCommand = new RelayCommand(_ => SaveSegment(), _ => _customer != null);
+        }
+
+        public void Initialize(int customerId)
+        {
+            _customerId = customerId;
+            LoadCustomerData();
+        }
+
+
+        #region Properties
+
+        public string FullName
+        {
+            get => _fullName;
+            set => SetProperty(ref _fullName, value);
+        }
+
+        public string PhoneNumber
+        {
+            get => _phoneNumber;
+            set => SetProperty(ref _phoneNumber, value);
+        }
+
+        public string? Email
+        {
+            get => _email;
+            set => SetProperty(ref _email, value);
+        }
+
+        public string City
+        {
+            get => _city;
+            set => SetProperty(ref _city, value);
+        }
+
+        public string? District
+        {
+            get => _district;
+            set => SetProperty(ref _district, value);
+        }
+
+        public string? Neighborhood
+        {
+            get => _neighborhood;
+            set => SetProperty(ref _neighborhood, value);
+        }
+
+        public string? Street
+        {
+            get => _street;
+            set => SetProperty(ref _street, value);
+        }
+
+        public string? BuildingNo
+        {
+            get => _buildingNo;
+            set => SetProperty(ref _buildingNo, value);
+        }
+
+        public string? ApartmentNo
+        {
+            get => _apartmentNo;
+            set => SetProperty(ref _apartmentNo, value);
+        }
+
+        public string? Notes
+        {
+            get => _notes;
+            set => SetProperty(ref _notes, value);
+        }
+
+        public CustomerType CustomerType
+        {
+            get => _customerType;
+            set => SetProperty(ref _customerType, value);
+        }
+
+        public string CustomerCode
+        {
+            get => _customerCode;
+            set => SetProperty(ref _customerCode, value);
+        }
+
+        public string? TcKimlikNo
+        {
+            get => _tcKimlikNo;
+            set => SetProperty(ref _tcKimlikNo, value);
+        }
+
+        public string? CompanyName
+        {
+            get => _companyName;
+            set => SetProperty(ref _companyName, value);
+        }
+
+        public string? TaxNumber
+        {
+            get => _taxNumber;
+            set => SetProperty(ref _taxNumber, value);
+        }
+
+        public string? TaxOffice
+        {
+            get => _taxOffice;
+            set => SetProperty(ref _taxOffice, value);
+        }
+
+        public decimal TotalSpent
+        {
+            get => _totalSpent;
+            private set => SetProperty(ref _totalSpent, value);
+        }
+
+        public decimal TotalBalance
+        {
+            get => _totalBalance;
+            private set 
+            {
+               if(SetProperty(ref _totalBalance, value))
+               {
+                   OnPropertyChanged(nameof(BalanceColor));
+               }
+            }
+        }
+
+        public string BalanceColor => TotalBalance > 0 ? "#F44336" : (TotalBalance < 0 ? "#2E7D32" : "#757575");
+        
+        /// <summary>
+        /// Aktif iş sayısı
+        /// </summary>
+        public int ActiveJobCount => ActiveJobs?.Count ?? 0;
+
+        // Yeni Alanlar için Property'ler
+        public string? Tags
+        {
+            get => _tags;
+            set => SetProperty(ref _tags, value);
+        }
+
+        public CustomerSegment Segment
+        {
+            get => _segment;
+            set => SetProperty(ref _segment, value);
+        }
+
+        public DateTime? BirthDate
+        {
+            get => _birthDate;
+            set => SetProperty(ref _birthDate, value);
+        }
+
+        public string? LoyaltyLevel
+        {
+            get => _loyaltyLevel;
+            private set => SetProperty(ref _loyaltyLevel, value);
+        }
+
+        /// <summary>
+        /// Doğum günü yaklaşıyor mu?
+        /// </summary>
+        public bool HasUpcomingBirthday
+        {
+            get
+            {
+                if (!BirthDate.HasValue) return false;
+                var today = DateTime.Today;
+                var bday = BirthDate.Value;
+                var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day);
+                var daysUntil = (thisYearBirthday - today).Days;
+                return daysUntil >= 0 && daysUntil <= 30;
+            }
+        }
+
+        #endregion
+
+        #region Commands
+
+        public ICommand SaveCommand { get; }
+        public ICommand BackCommand { get; }
+        public ICommand NewServiceJobCommand { get; }
+        public ICommand AddPaymentCommand { get; }
+        public ICommand AddDebtCommand { get; }
+        public ICommand AddNoteCommand { get; }
+        public ICommand SaveTagsCommand { get; }
+        public ICommand SaveSegmentCommand { get; }
+
+        #endregion
+
+        #region Methods
+
+        private void LoadCustomerData()
+        {
+            try
+            {
+                // EF Core Include ile ilişkili verileri yükle
+                _customer = _context.Customers
+                    .Include(c => c.ServiceJobs)
+                    .Include(c => c.Transactions)
+                    //.Include(c => c.SalesOrders) // SalesOrders ilişkisi Customer modelinde tanımlı olmalı
+                    .FirstOrDefault(c => c.Id == _customerId);
+
+                if (_customer == null)
+                {
+                    MessageBox.Show("Müşteri bulunamadı!", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Customer modelinde SalesOrders koleksiyonu yoksa manuel yükle
+                var salesOrders = _context.SalesOrders.Where(s => s.CustomerId == _customerId).ToList();
+
+                // Editable alanları doldur
+                FullName = _customer.FullName;
+                PhoneNumber = _customer.PhoneNumber;
+                Email = _customer.Email;
+                City = _customer.City;
+                District = _customer.District;
+                Neighborhood = _customer.Neighborhood;
+                Street = _customer.Street;
+                BuildingNo = _customer.BuildingNo;
+                ApartmentNo = _customer.ApartmentNo;
+                Notes = _customer.Notes;
+                CustomerType = _customer.Type;
+                CustomerCode = _customer.CustomerCode;
+                TcKimlikNo = _customer.TcKimlikNo;
+                CompanyName = _customer.CompanyName;
+                TaxNumber = _customer.TaxNumber;
+                TaxOffice = _customer.TaxOffice;
+
+                // Yeni alanları doldur
+                Tags = _customer.Tags;
+                Segment = _customer.Segment;
+                BirthDate = _customer.BirthDate;
+                LoyaltyLevel = _customer.LoyaltyLevel;
+
+                // ServiceJobs koleksiyonlarını doldur
+                ServiceJobs.Clear();
+                ActiveJobs.Clear();
+                PastJobs.Clear();
+
+                foreach (var job in _customer.ServiceJobs.OrderByDescending(j => j.CreatedDate))
+                {
+                    ServiceJobs.Add(job);
+
+                    // Aktif mi tamamlanmış mı ayır
+                    if (job.Status == JobStatus.Completed)
+                    {
+                        PastJobs.Add(job);
+                    }
+                    else
+                    {
+                        ActiveJobs.Add(job);
+                    }
+                }
+
+                OnPropertyChanged(nameof(ActiveJobCount));
+
+                // Transactions koleksiyonunu doldur
+                Transactions.Clear();
+                foreach (var transaction in _customer.Transactions.OrderByDescending(t => t.Date))
+                {
+                    Transactions.Add(transaction);
+                }
+
+                // SalesOrders koleksiyonunu doldur
+                SalesOrders.Clear();
+                foreach(var order in salesOrders.OrderByDescending(o => o.Date))
+                {
+                    SalesOrders.Add(order);
+                }
+
+                // Customer Activities (Timeline) yükle
+                Activities.Clear();
+                var activities = _context.CustomerActivities
+                    .Where(a => a.CustomerId == _customerId)
+                    .OrderByDescending(a => a.CreatedDate)
+                    .Take(50)
+                    .ToList();
+                foreach (var activity in activities)
+                {
+                    Activities.Add(activity);
+                }
+
+                // Hesaplamaları yap
+                CalculateTotals();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Veri yükleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CalculateTotals()
+        {
+            // Toplam harcama (Servis + Satış)
+            var serviceTotal = ServiceJobs.Sum(j => j.Price);
+            var salesTotal = SalesOrders.Sum(s => (decimal)s.TotalAmount); // SalesOrder TotalAmount double olabilir
+            TotalSpent = serviceTotal + salesTotal;
+
+            // Toplam bakiye (Borçlar - Ödemeler)
+            var totalDebts = Transactions.Where(t => t.Type == TransactionType.Debt).Sum(t => t.Amount);
+            var totalPayments = Transactions.Where(t => t.Type == TransactionType.Payment).Sum(t => t.Amount);
+            
+            // Pozitif bakiye = Müşteri Borçlu (Kırmızı)
+            // Negatif bakiye = Müşteri Alacaklı (Yeşil)
+            TotalBalance = totalDebts - totalPayments;
+        }
+
+        private void AddTransaction(TransactionType type)
+        {
+            var title = type == TransactionType.Payment ? "Ödeme/Tahsilat Al" : "Borç Ekle";
+            var label = type == TransactionType.Payment ? "Tahsilat Tutarı:" : "Borç Tutarı:";
+            
+            var input = Microsoft.VisualBasic.Interaction.InputBox(
+                $"{label}\n(Açıklama girmek için '100 - Açıklama' formatını kullanabilirsiniz)", 
+                title, "0");
+
+            if (string.IsNullOrWhiteSpace(input)) return;
+
+            decimal amount = 0;
+            string description = type == TransactionType.Payment ? "Tahsilat" : "Borç Yansıtma";
+
+            // Parse input format "Amount - Description"
+            if (input.Contains("-"))
+            {
+                var parts = input.Split('-', 2);
+                if (decimal.TryParse(parts[0].Trim(), out decimal parsedAmount))
+                {
+                    amount = parsedAmount;
+                    description = parts[1].Trim();
+                }
+            }
+            else
+            {
+                decimal.TryParse(input, out amount);
+            }
+
+            if (amount <= 0)
+            {
+                MessageBox.Show("Geçerli bir tutar giriniz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var transaction = new Transaction
+                {
+                    CustomerId = _customerId,
+                    Type = type,
+                    Amount = amount,
+                    Date = DateTime.Now,
+                    Description = description
+                };
+
+                _context.Transactions.Add(transaction);
+                _context.SaveChanges();
+
+                Transactions.Insert(0, transaction);
+                CalculateTotals();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"İşlem eklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool CanSaveCustomer()
+        {
+            return !string.IsNullOrWhiteSpace(FullName) &&
+                   !string.IsNullOrWhiteSpace(PhoneNumber) &&
+                   !string.IsNullOrWhiteSpace(City);
+        }
+
+        private void SaveCustomer()
+        {
+            if (_customer == null) return;
+
+            try
+            {
+                // Müşteri bilgilerini güncelle
+                _customer.FullName = FullName;
+                _customer.PhoneNumber = PhoneNumber;
+                _customer.Email = Email;
+                _customer.City = City;
+                _customer.District = District;
+                _customer.Neighborhood = Neighborhood;
+                _customer.Street = Street;
+                _customer.BuildingNo = BuildingNo;
+                _customer.ApartmentNo = ApartmentNo;
+                _customer.Notes = Notes;
+                _customer.Type = CustomerType;
+                _customer.TcKimlikNo = TcKimlikNo;
+                _customer.CompanyName = CompanyName;
+                _customer.TaxNumber = TaxNumber;
+                _customer.TaxOffice = TaxOffice;
+
+                _context.Customers.Update(_customer);
+                _context.SaveChanges();
+
+                MessageBox.Show("Müşteri bilgileri başarıyla güncellendi!", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Kaydetme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void NavigateBack()
+        {
+            // CustomersViewModel'e geri dön (DI üzerinden yeniden oluşturulur ve veri yüklenir)
+            _navigationService.NavigateTo<CustomersViewModel>();
+        }
+
+        private void CreateNewServiceJob()
+        {
+            // ServiceJobViewModel'e git ve bu müşteriyi önceden seç
+            // ServiceJobViewModel DI ile çözülemiyor çünkü parametre (SelectedCustomer) aktarmak istiyoruz.
+            // Ancak ServiceJobViewModel property'si set edilebilir.
+            
+            
+            
+            // Refactored to use DI
+            var serviceJobViewModel = _navigationService.NavigateTo<ServiceJobViewModel>();
+
+            // Müşteriyi önceden seç
+            if (_customer != null)
+            {
+                serviceJobViewModel.SelectedCustomer = _customer;
+            }
+        }
+
+        private void AddNote()
+        {
+            var note = Notes;
+            if (string.IsNullOrWhiteSpace(note))
+            {
+                MessageBox.Show("Lütfen bir not girin!", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var activity = new CustomerActivity
+                {
+                    CustomerId = _customerId,
+                    Type = ActivityType.NoteAdded,
+                    Description = note,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = "Kullanıcı"
+                };
+
+                _context.CustomerActivities.Add(activity);
+                _context.SaveChanges();
+
+                // Activity'yi listeye ekle
+                Activities.Insert(0, activity);
+
+                // Müşterinin notlarını da güncelle
+                if (_customer != null)
+                {
+                    _customer.Notes = string.IsNullOrEmpty(_customer.Notes) 
+                        ? note 
+                        : _customer.Notes + "\n" + DateTime.Now.ToString("dd.MM.yyyy") + ": " + note;
+                    _customer.LastInteractionDate = DateTime.UtcNow;
+                    _context.SaveChanges();
+                }
+
+                Notes = string.Empty;
+                _toastService.ShowSuccess("Not başarıyla eklendi!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Not ekleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void SaveTags()
+        {
+            if (_customer == null) return;
+
+            try
+            {
+                _customer.Tags = Tags;
+                _customer.LastInteractionDate = DateTime.UtcNow;
+                _context.SaveChanges();
+
+                // Etiket ekleme aktivitesi kaydet
+                var activity = new CustomerActivity
+                {
+                    CustomerId = _customerId,
+                    Type = ActivityType.TagAdded,
+                    Description = $"Etiketler güncellendi: {Tags}",
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = "Kullanıcı"
+                };
+                _context.CustomerActivities.Add(activity);
+                _context.SaveChanges();
+
+                Activities.Insert(0, activity);
+                _toastService.ShowSuccess("Etiketler kaydedildi!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Etiket kaydetme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void SaveSegment()
+        {
+            if (_customer == null) return;
+
+            try
+            {
+                _customer.Segment = Segment;
+                _customer.LastInteractionDate = DateTime.UtcNow;
+                _context.SaveChanges();
+
+                _toastService.ShowSuccess($"Müşteri segmenti '{Segment}' olarak güncellendi!");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Segment güncelleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+    }
+}

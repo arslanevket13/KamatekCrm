@@ -4,7 +4,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Serilog;
 using KamatekCrm.Data;
-using KamatekCrm.Shared.Models;
 using KamatekCrm.API.Services;
 
 // Serilog yapılandırması
@@ -30,7 +29,7 @@ try
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(connectionString, npgsqlOptions =>
         {
-            npgsqlOptions.MigrationsAssembly("KamatekCrm");
+            npgsqlOptions.MigrationsAssembly("KamatekCrm.API");
         }));
 
     // MediatR - CQRS için
@@ -38,9 +37,20 @@ try
         cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
     // JWT Authentication
-    var jwtKey = builder.Configuration["Jwt:Key"] ?? "your-super-secret-key-min-32-chars-long!";
+    var jwtKey = builder.Configuration["Jwt:Key"];
     var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "KamatekCRM";
     var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "KamatekCRM-Users";
+    
+    // JWT Key validasyonu
+    if (string.IsNullOrWhiteSpace(jwtKey))
+    {
+        throw new InvalidOperationException("JWT Key is not configured. Please set 'Jwt:Key' in appsettings.json with at least 32 characters.");
+    }
+    
+    if (jwtKey.Length < 32)
+    {
+        throw new InvalidOperationException($"JWT Key must be at least 32 characters long. Current length: {jwtKey.Length}");
+    }
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -59,14 +69,18 @@ try
 
     builder.Services.AddAuthorization();
 
-    // CORS - Web ve Mobile erişimi için
+    // CORS - Web ve Mobile erişimi için (Güvenli yapılandırma)
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
+        ?? new[] { "http://localhost:3000", "http://localhost:7000" };
+    
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowAll", policy =>
+        options.AddPolicy("AllowedOrigins", policy =>
         {
-            policy.AllowAnyOrigin()
+            policy.WithOrigins(allowedOrigins)
                   .AllowAnyMethod()
-                  .AllowAnyHeader();
+                  .AllowAnyHeader()
+                  .AllowCredentials();
         });
     });
 
@@ -75,9 +89,6 @@ try
 
     // Services
     builder.Services.AddScoped<IPhotoStorageService, PhotoStorageService>();
-
-    // SLA Background Worker — Her 6 saatte bakım sözleşmelerini kontrol eder
-    builder.Services.AddHostedService<SlaBackgroundWorker>();
 
     // Swagger/OpenAPI
     builder.Services.AddEndpointsApiExplorer();
@@ -130,7 +141,7 @@ try
     }
 
     app.UseSerilogRequestLogging();
-    app.UseCors("AllowAll");
+    app.UseCors("AllowedOrigins");
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
@@ -142,7 +153,7 @@ try
         Version = "1.0.0"
     }));
 
-    // Veritabanı migration + Seed + Default Admin
+    // Veritabanı migration'ını otomatik uygula (opsiyonel)
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -150,29 +161,10 @@ try
         {
             db.Database.Migrate();
             Log.Information("Database migrations applied successfully");
-
-            // Demo data seed (sadece boş DB'de çalışır)
-            DbSeeder.SeedDemoData(db);
-
-            // Varsayılan admin kullanıcısı oluştur
-            if (!db.Users.Any(u => u.KullaniciAdi == "admin"))
-            {
-                var admin = new User
-                {
-                    KullaniciAdi = "admin",
-                    SifreHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
-                    AdSoyad = "Sistem Yöneticisi",
-                    Rol = "Admin",
-                    IsActive = true
-                };
-                db.Users.Add(admin);
-                db.SaveChanges();
-                Log.Information("Default admin user created.");
-            }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "An error occurred while migrating/seeding the database");
+            Log.Error(ex, "An error occurred while migrating the database");
         }
     }
 

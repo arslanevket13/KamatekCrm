@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <!-- Entity Framework Core -->
-    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
       <PrivateAssets>all</PrivateAssets>
@@ -24,6 +23,7 @@
     
     <!-- JWT Authentication -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.1" />
+    <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
     
     <!-- Swagger -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
@@ -33,17 +33,12 @@
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     
     <!-- Image Processing -->
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Shared Project Reference (Models, DTOs, Enums) -->
-    <ProjectReference Include="..\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
-    
-    <!-- Main WPF Project Reference (AppDbContext, DbSeeder, Services) -->
-    <ProjectReference Include="..\KamatekCrm.csproj">
-      <ExcludeAssets>none</ExcludeAssets>
-    </ProjectReference>
+    <!-- Shared Project Reference -->
+    <ProjectReference Include="..\KamatekCrm\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
   </ItemGroup>
 
 </Project>

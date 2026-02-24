@@ -1,0 +1,20 @@
+  Geri yüklenecek projeler belirleniyor...
+  Geri yükleme için tüm projeler güncel.
+  KamatekCrm.Shared -> C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Shared\bin\Debug\net9.0\KamatekCrm.Shared.dll
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Services\CustomAuthenticationStateProvider.cs(5,14): error CS0234: 'IdentityModel' tür veya ad alanı adı 'System' ad alanında yok (bir derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Services\TaskService.cs(8,19): error CS0246: 'TaskDto' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Services\TaskService.cs(22,32): error CS0246: 'TaskDto' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Services\TaskService.cs(34,27): error CS0246: 'TaskDetailDto' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Services\TaskService.cs(9,14): error CS0246: 'TaskDetailDto' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+
+Oluşturma BAŞARISIZ OLDU.
+
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Services\CustomAuthenticationStateProvider.cs(5,14): error CS0234: 'IdentityModel' tür veya ad alanı adı 'System' ad alanında yok (bir derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Services\TaskService.cs(8,19): error CS0246: 'TaskDto' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Services\TaskService.cs(22,32): error CS0246: 'TaskDto' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Services\TaskService.cs(34,27): error CS0246: 'TaskDetailDto' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\Services\TaskService.cs(9,14): error CS0246: 'TaskDetailDto' türü veya ad alanı adı bulunamadı (bir using yönergeniz veya derleme başvurunuz mu eksik?) [C:\Antigravity Proje\KamatekCRM\KamatekCrm\KamatekCrm.Web\KamatekCrm.Web.csproj]
+    0 Uyarı
+    5 Hata
+
+Geçen Süre 00:00:01.30

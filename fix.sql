@@ -1,1 +1,0 @@
-ALTER TABLE "ServiceJobs" ALTER COLUMN "CompletedDate" DROP NOT NULL;

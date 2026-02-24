@@ -1,0 +1,90 @@
+<UserControl x:Class="KamatekCrm.Views.ServiceJobsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:KamatekCrm.Views"
+             xmlns:helpers="clr-namespace:KamatekCrm.Helpers"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d" 
+             d:DesignHeight="500" d:DesignWidth="800"
+             helpers:AnimationHelper.EntranceAnimation="SlideInFromBottom"
+             Background="{DynamicResource ThemeBackground}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ========== MERKEZ İÇERİK ========== -->
+        <Border Background="{DynamicResource CardBrush}" 
+                CornerRadius="16"
+                Margin="40" 
+                MaxWidth="500" 
+                MaxHeight="400"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="5" Opacity="0.15" Color="Black"/>
+            </Border.Effect>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40">
+                
+                <!-- Icon -->
+                <Border Background="{DynamicResource PrimaryBrush}" 
+                        CornerRadius="50" 
+                        Width="80" Height="80"
+                        Margin="0,0,0,24">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.3" Color="#0078D4"/>
+                    </Border.Effect>
+                    <ui:SymbolIcon Symbol="Wrench24" FontSize="36" Foreground="White"/>
+                </Border>
+                
+                <!-- Başlık -->
+                <TextBlock Text="Yeni İş Emri Oluştur" 
+                           FontSize="24" 
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource ThemeTextPrimary}"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,12"/>
+                
+                <!-- Açıklama -->
+                <TextBlock Text="Müşteri için yeni servis, kurulum veya bakım işi kaydı oluşturun." 
+                           FontSize="14" 
+                           Foreground="{DynamicResource ThemeTextSecondary}"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           Margin="0,0,0,30"
+                           MaxWidth="350"/>
+                
+                <!-- Yeni İş Emri Butonu -->
+                <ui:Button Content="Yeni İş Emri Aç"
+                           Icon="{ui:SymbolIcon Add24}"
+                           Command="{Binding OpenNewJobFormCommand}"
+                           Appearance="Primary"
+                           Height="48"
+                           Width="220"
+                           FontSize="15"
+                           HorizontalAlignment="Center"/>
+                
+                <!-- Yönlendirme Bilgisi -->
+                <StackPanel Margin="0,30,0,0" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                        <ui:SymbolIcon Symbol="Lightbulb24" FontSize="16" Foreground="#FF9800" Margin="0,0,8,0"/>
+                        <TextBlock Text="İpucu:" FontWeight="SemiBold" Foreground="#FF9800"/>
+                    </StackPanel>
+                    <TextBlock Text="Mevcut işleri görüntülemek için sidebar'dan" 
+                               Foreground="{DynamicResource ThemeTextSecondary}"
+                               HorizontalAlignment="Center"
+                               FontSize="12"/>
+                    <TextBlock Text="'Tamir Listesi' veya 'Saha İşleri' kullanın." 
+                               Foreground="{DynamicResource ThemeTextSecondary}"
+                               HorizontalAlignment="Center"
+                               FontSize="12"/>
+                </StackPanel>
+                
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
