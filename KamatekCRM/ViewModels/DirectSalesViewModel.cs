@@ -181,6 +181,13 @@ namespace KamatekCrm.ViewModels
 
         public bool HasStockWarning => !string.IsNullOrEmpty(StockWarningMessage);
 
+        private bool _focusBarcodeRequested;
+        public bool FocusBarcodeRequested
+        {
+            get => _focusBarcodeRequested;
+            set => SetProperty(ref _focusBarcodeRequested, value);
+        }
+
         #endregion
 
         #region Commands
@@ -446,6 +453,7 @@ namespace KamatekCrm.ViewModels
             UpdateAllTotals();
             StatusMessage = $"'{productName}' sepete eklendi.";
             IsActionSuccessful = true;
+            FocusBarcodeRequested = true;
         }
 
         private void ExecuteIncreaseQuantity(object? parameter)

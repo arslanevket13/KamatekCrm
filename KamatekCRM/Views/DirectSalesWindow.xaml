@@ -14,6 +14,7 @@
         <KeyBinding Key="F8" Command="{Binding PayFullCashCommand}"/>
         <KeyBinding Key="F9" Command="{Binding PayFullCardCommand}"/>
         <KeyBinding Key="F12" Command="{Binding CompleteSaleCommand}"/>
+        <KeyBinding Key="Escape" Command="{Binding ClearCartCommand}"/>
     </Window.InputBindings>
 
     <Window.Resources>
@@ -23,23 +24,27 @@
         <Style x:Key="PayBtn" TargetType="Button">
             <Setter Property="Height" Value="52"/>
             <Setter Property="FontSize" Value="15"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Margin" Value="0,4"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="10" Padding="16,8">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10" Padding="16,8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.88"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.40"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True"><Setter Property="Opacity" Value="0.88"/></Trigger>
-                <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.40"/></Trigger>
-            </Style.Triggers>
         </Style>
 
         <!-- Small icon button -->
@@ -89,7 +94,7 @@
 
                 <!-- Barkod input — distinct, highlighted -->
                 <Border Grid.Row="1" Background="#EFF6FF" CornerRadius="8" Padding="10,8" Margin="0,0,0,10"
-                        BorderBrush="#93C5FD" BorderThickness="1">
+                        BorderBrush="#93C5FD" BorderThickness="1" x:Name="BarcodeBorder">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -98,10 +103,10 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="📷 Barkod:" VerticalAlignment="Center" FontWeight="SemiBold"
                                    Foreground="#2563EB" Margin="0,0,10,0" FontSize="13"/>
-                        <TextBox Grid.Column="1"
+                        <TextBox Grid.Column="1" x:Name="BarcodeTextBox"
                                  Text="{Binding BarcodeText, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="14" BorderThickness="0" Background="Transparent"
-                                 VerticalAlignment="Center">
+                                 VerticalAlignment="Center" TabIndex="0">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding BarcodeScanCommand}"/>
                             </TextBox.InputBindings>
@@ -141,8 +146,7 @@
                             <TextBox Grid.Column="1"
                                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                      FontSize="14" BorderThickness="0" Background="Transparent"
-                                     VerticalAlignment="Center" TabIndex="0"
-                                     FocusManager.FocusedElement="{Binding RelativeSource={RelativeSource Self}}">
+                                     VerticalAlignment="Center" TabIndex="1">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Foreground" Value="#334155"/>
@@ -170,7 +174,7 @@
                         <ComboBox ItemsSource="{Binding Warehouses}"
                                   SelectedItem="{Binding SelectedWarehouse}"
                                   DisplayMemberPath="Name"
-                                  Height="30" Width="130"/>
+                                  Height="30" Width="130" TabIndex="2"/>
                     </StackPanel>
                 </Grid>
 
@@ -463,7 +467,7 @@
                             <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}"
                                      FontSize="12" Padding="7,4"
                                      BorderBrush="#FCD34D" BorderThickness="1"
-                                     Background="White">
+                                     Background="White" TabIndex="3">
                                 <TextBox.Template>
                                     <ControlTemplate TargetType="TextBox">
                                         <Border Background="{TemplateBinding Background}"
@@ -649,7 +653,7 @@
                                    FontSize="12" FontWeight="SemiBold" Foreground="#78350F"/>
                         <TextBlock Grid.Column="1" Text="Tüm ürünlere uygula:"
                                    VerticalAlignment="Center" FontSize="11" Foreground="#92400E" Margin="0,0,8,0"/>
-                        <TextBox Grid.Column="2"
+                        <TextBox Grid.Column="2" TabIndex="4"
                                  Text="{Binding GlobalDiscountPercent, UpdateSourceTrigger=LostFocus, StringFormat='N1'}"
                                  FontSize="14" FontWeight="Bold" TextAlignment="Center"
                                  Background="White" BorderBrush="#FCD34D" BorderThickness="1"

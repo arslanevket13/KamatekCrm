@@ -22,3 +22,9 @@
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Scratch / Build Logs
+build*.txt
+*.sql
+nul
+**/nul

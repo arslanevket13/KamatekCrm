@@ -1,3 +1,9 @@
+## v11.4 — Architecture Strengthening & UI Polish (2026-02-26)
+- **Dumb Client Enforcement**: Refactored `App.xaml.cs` to strictly operate as a client, removing all legacy server-side logic and ensuring 100% adherence to the Hybrid .NET 9 architecture.
+- **Fluent UI Enhancements**: Added `PulseAnimation` and `ProgressRing` styles to `CustomTheme.xaml` for better asynchronous feedback.
+- **PostgreSQL Stability**: Enforced `Npgsql.EnableLegacyTimestampBehavior` in WPF to match Blazor Server's UTC strictness.
+- **Cleanup**: Purged redundant scratch files and updated root `.gitignore`.
+
 ## v11.3 — Infrastructure Update & Customer Management (2026-02-24)
 - **Git Migration**: Moved repository root to solution level (`C:\Antigravity Proje`) to track WPF, API, and Web projects simultaneously.
 - **Customer Management**: Added `CustomerAddViewModel`, `QuickCustomerAddViewModel` and corresponding Windows for rich CRM functionality.

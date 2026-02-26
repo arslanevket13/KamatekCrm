@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace KamatekCrm.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CustomersController : ControllerBase
     {
         private readonly AppDbContext _context;
