@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
              xmlns:views="clr-namespace:KamatekCrm.Views"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              Background="{DynamicResource ThemeBackground}"
              Focusable="True">
     
@@ -15,7 +16,34 @@
     </UserControl.InputBindings>
     
     <UserControl.Resources>
-        <!-- Animasyonlar -->
+        <!-- Vector Icons -->
+        <Geometry x:Key="HomeIcon">M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z</Geometry>
+        <Geometry x:Key="PeopleIcon">M16,11.78C20.41,12.33 21,16.22 21,18V20H23V18C23,16.22 22.41,13.78 20,12.74C19.58,13.21 19.03,13.57 18.4,13.79C18.16,14.08 17.87,14.32 17.53,14.5C17.15,14.71 16.73,14.83 16.29,14.87C16.19,14.89 16.09,14.9 16,14.89C15.91,14.9 15.81,14.89 15.71,14.87C15.27,14.83 14.85,14.71 14.47,14.5C14.13,14.32 13.84,14.08 13.6,13.79C12.97,13.57 12.42,13.21 12,12.74C11.96,12.75 11.93,14.83 11.93,14.83L11.92,14.85C11.86,14.87 11.79,14.89 11.73,14.89C11.67,14.89 11.6,14.87 11.54,14.85C11.5,14.83 11.45,14.8 11.41,14.77C11.37,14.74 11.34,14.7 11.31,14.66C11.28,14.62 11.26,14.58 11.24,14.53C11.22,14.49 11.21,14.44 11.2,14.4C11.19,14.35 11.18,14.3 11.18,14.25C11.18,14.2 11.19,14.15 11.2,14.1C11.21,14.05 11.23,14 11.25,13.96C11.27,13.92 11.3,13.88 11.33,13.85C11.36,13.82 11.39,13.79 11.43,13.77C11.47,13.75 11.51,13.73 11.55,13.72C11.59,13.71 11.63,13.7 11.67,13.7C11.71,13.7 11.75,13.71 11.79,13.72C11.83,13.73 11.87,13.75 11.9,13.77C12.18,13.97 12.52,14.09 12.88,14.1C12.91,14.1 12.94,14.1 12.97,14.1C13,14.1 13.03,14.1 13.06,14.1C13.09,14.1 13.12,14.1 13.15,14.1C13.18,14.1 13.21,14.1 13.24,14.1C13.27,14.1 13.3,14.1 13.33,14.1C13.36,14.1 13.39,14.1 13.42,14.1C13.45,14.1 13.47,14.1 13.5,14.1C13.53,14.1 13.56,14.1 13.59,14.1H13.6C13.63,14.1 13.66,14.1 13.68,14.09C13.71,14.08 13.74,14.07 13.77,14.05C13.79,14.03 13.82,14.01 13.84,14C13.86,14 13.88,13.95 13.92,13.89C13.96,13.83 14,13.75 14.04,13.67C14.08,13.59 14.12,13.5 14.16,13.41C14.2,13.32 14.24,13.24 14.28,13.16C14.32,13.08 14.35,13 14.38,12.94C14.4,12.9 14.41,12.88 14.42,12.87C14.58,12.67 14.83,12.56 15.12,12.56C15.33,12.56 15.53,12.62 15.71,12.72C15.89,12.82 16,12.95 16,12.95V11.78M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4Z</Geometry>
+        <Geometry x:Key="PackageIcon">M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M6,14V11.5L12.88,4.64C13.07,4.45 13.39,4.45 13.59,4.64L15.35,6.41C15.55,6.61 15.55,6.92 15.35,7.12L8.47,14H6M19,14H16L12.5,10.5L13.91,9.09L16,11.17L19,8.17L20.41,9.58L16,14Z</Geometry>
+        <Geometry x:Key="WrenchIcon">M22.7,19L13.6,9.9C14.5,7.6 14,4.9 12.1,3C10.1,1 7.1,0.6 4.7,1.7L9,6L6,9L1.6,4.7C0.4,7.1 0.9,10.1 2.9,12.1C4.8,14 7.5,14.5 9.8,13.6L18.9,22.7C19.3,23.1 19.9,23.1 20.3,22.7L22.6,20.4C23.1,20 23.1,19.3 22.7,19Z</Geometry>
+        <Geometry x:Key="LightningIcon">M16.5,3C14.66,3 13.06,3.84 12,5.13C10.94,3.84 9.34,3 7.5,3C4.35,3 2,5.42 2,8.5C2,12.28 5.4,15.36 10.55,20.04L12,21.35L13.45,20C18.6,15.36 22,12.28 22,8.5C22,5.42 19.65,3 16.5,3M11,18V13H7.5L13,2V7H16.5L11,18Z</Geometry>
+        <Geometry x:Key="TruckIcon">M18,18.5A1.5,1.5 0 0,1 16.5,17A1.5,1.5 0 0,1 18,15.5A1.5,1.5 0 0,1 19.5,17A1.5,1.5 0 0,1 18,18.5M19.5,9.5L21.46,12H17V9.5H19.5M6,18.5A1.5,1.5 0 0,1 4.5,17A1.5,1.5 0 0,1 6,15.5A1.5,1.5 0 0,1 7.5,17A1.5,1.5 0 0,1 6,18.5M20,8H17V4H3C1.89,4 1,4.89 1,6V17H3A3,3 0 0,0 6,20A3,3 0 0,0 9,17H15A3,3 0 0,0 18,20A3,3 0 0,0 21,17H23V12L20,8Z</Geometry>
+        <Geometry x:Key="MapIcon">M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z</Geometry>
+        <Geometry x:Key="ChartIcon">M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z</Geometry>
+        <Geometry x:Key="CalendarIcon">M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z</Geometry>
+        <Geometry x:Key="ConstructionIcon">M12,2L2,22H22L12,2M12,6L18.5,19H5.5L12,6Z</Geometry>
+        <Geometry x:Key="CartIcon">M17,18A2,2 0 0,1 19,20A2,2 0 0,1 17,22C15.89,22 15,21.1 15,20C15,18.89 15.89,18 17,18M1,2H4.27L5.21,4H20A1,1 0 0,1 21,5C21,5.17 20.95,5.34 20.88,5.5L17.9,11.97C17.44,12.58 16.5,13 15.5,13H8.64L8.35,13.5L7.51,15.5L5.44,13H1V2M7,18C7.56,18 8,18.44 8,19C8,19.56 7.56,20 7,20C6.44,20 6,19.56 6,19C6,18.44 6.44,18 7,18M16,18C16.56,18 17,18.44 17,19C17,19.56 16.56,20 16,20C15.44,20 15,19.56 15,19C15,18.44 15.44,18 16,18M7.17,14.75L7.2,14.63L8.1,13H15.55C16.3,13 16.96,12.59 17.3,11.97L20.88,5.48C20.96,5.34 21,5.17 21,5C21,4.45 20.55,4 20,4H5.21L4.27,2H1V4H3L6.6,11.59L5.25,14.04C5.09,14.32 5,14.65 5,15C5,16.1 5.9,17 7,17H15V16H17V15.27L17.72,14.25C18.12,13.65 18.5,13 18.5,13C18.5,12.72 18.44,12.45 18.35,12.21L17.1,9H7.08L7,9.08L6.63,9.45L7.17,14.75Z</Geometry>
+        <Geometry x:Key="FinanceIcon">M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8Z</Geometry>
+        <Geometry x:Key="AnalyticsIcon">M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M9,17H7V10H9V17M13,17H11V7H13V17M17,17H15V13H17V17Z</Geometry>
+        <Geometry x:Key="ClipboardIcon">M19,3H14.82C14.4,1.84 13.3,1 12,1C10.7,1 9.6,1.84 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3M7,7H17V5H19V19H5V5H7V7M12,17V15H17V17H12M7,17V15H10V17H7M7,13V11H17V13H7Z</Geometry>
+        <Geometry x:Key="ReportIcon">M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M9,13V19H7V13H9M15,15V19H13V15H15M11,11V19H9V11H11Z</Geometry>
+        <Geometry x:Key="UserIcon">M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z</Geometry>
+        <Geometry x:Key="SettingsIcon">M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z</Geometry>
+        <Geometry x:Key="LogoutIcon">M16,17V14H9V10H16V7L21,12L16,17M14,2A2,2 0 0,1 16,4V6H14V4H5V20H14V18H16V20A2,2 0 0,1 14,22H5A2,2 0 0,1 3,20V4A2,2 0 0,1 5,2H14Z</Geometry>
+        <Geometry x:Key="MenuIcon">M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z</Geometry>
+        <Geometry x:Key="SearchIcon">M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z</Geometry>
+        <Geometry x:Key="BellIcon">M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21</Geometry>
+        <Geometry x:Key="SunIcon">M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,2L14.39,5.42C13.65,5.15 12.84,5 12,5C11.16,5 10.35,5.15 9.61,5.42L12,2M3.34,7L7.5,5.29C7.24,6.05 7.06,6.86 7,7.7L3.34,7M3.34,17L7,16.3C7.06,17.14 7.24,17.95 7.5,18.71L3.34,17M20.65,17L16.5,18.71C16.76,17.95 16.94,17.14 17,16.3L20.65,17M20.65,7L17,7.7C16.94,6.86 16.76,6.05 16.5,5.29L20.65,7M12,22L9.61,18.58C10.35,18.85 11.16,19 12,19C12.84,19 13.65,18.85 14.39,18.58L12,22Z</Geometry>
+        <Geometry x:Key="MoonIcon">M17.75,3.42L16.33,4.84L14.92,3.43L16.33,2L17.75,3.42M21.66,4.14L20.25,2.71L18.83,4.14L20.25,5.55L21.66,4.14M12,4A9,9 0 0,0 3,13A9,9 0 0,0 6.2,19.46L5.57,21.33L7.24,20.8L8.71,21.43L9.34,19.57C10.26,19.91 11.26,20.08 12.28,20.08C16.72,20.08 20.28,16.52 20.28,12.08C20.28,9.04 18.08,6.4 15.14,5.26L14.09,7.43C15.69,8.16 16.83,9.88 16.83,12C16.83,14.67 14.67,16.83 12,16.83C10.5,16.83 9.14,16.21 8.24,15.15L8.06,15.36L6.54,16.88L8.06,18.4L9.58,16.88L9.37,16.7C10.43,17.6 11.65,18.16 12.97,18.16C15.8,18.16 18.16,15.8 18.16,12.97C18.16,11.65 17.6,10.43 16.7,9.37L16.88,9.15L15.36,7.63L16.88,6.11L18.4,7.63L18.6,7.42C19.64,8.32 20.43,9.54 20.73,10.93L21.91,10.44C21.54,8.65 20.54,7.07 19.11,6.05L18.5,8.22C19.32,8.78 19.97,9.57 20.38,10.5L21.26,10.03C21.65,10.88 21.79,11.83 21.65,12.76C21.35,14.88 19.79,16.6 17.75,17.5L18.21,19.58C21.1,18.24 22.92,15.15 22.5,11.82C22.23,9.69 21.03,7.83 19.27,6.65L18.73,8.63C19.73,9.35 20.47,10.52 20.72,11.82C20.91,13.42 20.16,14.96 18.84,15.96L19.41,18.03C21.45,16.58 22.75,14.17 22.75,11.46C22.75,7.92 20.96,4.85 18.1,3.45L17.75,3.42Z</Geometry>
+        <Geometry x:Key="RefreshIcon">M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z</Geometry>
+        <Geometry x:Key="CloseIcon">M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z</Geometry>
+
+        <!-- Animations -->
         <Storyboard x:Key="FadeIn">
             <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.3">
                 <DoubleAnimation.EasingFunction>
@@ -24,10 +52,16 @@
             </DoubleAnimation>
         </Storyboard>
         
-        <!-- NavButton Modern Style -->
-        <Style x:Key="ModernNavButton" TargetType="Button">
+        <!-- Glass Effect Background -->
+        <LinearGradientBrush x:Key="GlassGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#10FFFFFF" Offset="0"/>
+            <GradientStop Color="#08FFFFFF" Offset="1"/>
+        </LinearGradientBrush>
+        
+        <!-- NavButton Modern Style with Glass Effect -->
+        <Style x:Key="GlassNavButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource ThemeSidebarText}"/>
+            <Setter Property="Foreground" Value="#C4B5FD"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Height" Value="44"/>
             <Setter Property="Padding" Value="16,0"/>
@@ -39,13 +73,19 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
-                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <Border.RenderTransform>
+                                <TranslateTransform x:Name="slide" X="0"/>
+                            </Border.RenderTransform>
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
                                             VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ThemeSidebarHover}"/>
+                                <Setter TargetName="border" Property="Background" Value="#1FFFFFF0"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#15FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -54,10 +94,34 @@
         </Style>
         
         <!-- Accent NavButton -->
-        <Style x:Key="AccentNavButton" TargetType="Button" BasedOn="{StaticResource ModernNavButton}">
-            <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
+        <Style x:Key="GlassAccentNavButton" TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
+            <Setter Property="Background" Value="#6366F1"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        
+        <!-- Icon Button -->
+        <Style x:Key="GlassIconButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#A78BFA"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1FFFFFF0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
     
@@ -67,10 +131,16 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- ==================== SOL SIDEBAR ==================== -->
-        <Border Grid.Column="0" Background="{DynamicResource ThemeSidebar}">
+        <!-- ==================== GLASS SIDEBAR ==================== -->
+        <Border Grid.Column="0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#1E1E2E" Offset="0"/>
+                    <GradientStop Color="#16161E" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
             <Border.Effect>
-                <DropShadowEffect BlurRadius="20" Opacity="0.15" ShadowDepth="0" Direction="0"/>
+                <DropShadowEffect BlurRadius="30" Opacity="0.4" ShadowDepth="0" Direction="0"/>
             </Border.Effect>
             <Grid>
                 <Grid.RowDefinitions>
@@ -79,36 +149,36 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Logo/Başlık - Modern Gradient -->
-                <Border Grid.Row="0" Padding="12,16">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#3B82F6" Offset="0"/>
-                            <GradientStop Color="#8B5CF6" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Border.Background>
+                <!-- Logo Header - Glass -->
+                <Border Grid.Row="0" Padding="16,20" CornerRadius="12">
                     <Grid>
+                        <Grid.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#6366F1" Offset="0"/>
+                                <GradientStop Color="#8B5CF6" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Grid.Background>
+                        <Grid.Effect>
+                            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="#6366F1" Opacity="0.3"/>
+                        </Grid.Effect>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         
-                        <!-- Hamburger Menu -->
+                        <!-- Hamburger -->
                         <Button Grid.Column="0" 
                                 Command="{Binding ToggleSidebarCommand}"
                                 Background="Transparent" BorderThickness="0"
-                                Width="36" Height="36" Cursor="Hand"
-                                ToolTip="Menüyü Daralt/Genişlet (Ctrl+B)">
+                                Width="40" Height="40" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border x:Name="bg" Background="Transparent" CornerRadius="6">
-                                        <TextBlock Text="☰" FontSize="20" Foreground="{DynamicResource ThemeSidebarText}"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Border x:Name="bg" Background="Transparent" CornerRadius="8">
+                                        <Path Data="{StaticResource MenuIcon}" Fill="White" Width="20" Height="20" Stretch="Uniform"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bg" Property="Background" Value="{DynamicResource ThemeSidebarHover}"/>
+                                            <Setter TargetName="bg" Property="Background" Value="#20FFFFFF"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -116,363 +186,305 @@
                         </Button>
                         
                         <!-- Logo -->
-                        <StackPanel Grid.Column="1" Margin="12,0,0,0"
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center"
                                     Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="KAMATEK" FontSize="18" FontWeight="Bold" 
-                                       Foreground="{DynamicResource ThemeSidebarText}"/>
-                            <TextBlock Text="Teknik Servis" FontSize="10" 
-                                       Foreground="{DynamicResource ThemeSidebarSecondaryText}"/>
+                            <TextBlock Text="KAMATEK" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="Teknik Servis" FontSize="10" Foreground="#C4B5FD"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <!-- Navigasyon Butonları -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="0,8,0,0">
-                        
-                        <!-- Ana Menü -->
-                        <Button Command="{Binding NavigateToDashboardCommand}" Style="{StaticResource ModernNavButton}">
+                <!-- Navigation -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+                    <StackPanel>
+                        <!-- Main Menu -->
+                        <Button Command="{Binding NavigateToDashboardCommand}" Style="{StaticResource GlassNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🏠" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Ana Sayfa" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource HomeIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Ana Sayfa" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
                         
-                        <Button Command="{Binding NavigateToCustomersCommand}" Style="{StaticResource ModernNavButton}">
+                        <Button Command="{Binding NavigateToCustomersCommand}" Style="{StaticResource GlassNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="👥" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Müşteriler" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource PeopleIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Müşteriler" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
                         
-                        <Button Command="{Binding NavigateToProductsCommand}" Style="{StaticResource ModernNavButton}">
+                        <Button Command="{Binding NavigateToProductsCommand}" Style="{StaticResource GlassNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📦" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Stoklar" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource PackageIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Stoklar" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
                         
-                        <Button Command="{Binding NavigateToServiceJobsCommand}" Style="{StaticResource ModernNavButton}">
+                        <Button Command="{Binding NavigateToServiceJobsCommand}" Style="{StaticResource GlassNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🔧" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" İş Emirleri" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource WrenchIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" İş Emirleri" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <!-- Ayırıcı -->
-                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" 
-                                BorderBrush="{DynamicResource ThemeSidebarHover}"
+                        <!-- Separator -->
+                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" BorderBrush="#30FFFFFF"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="HIZLI ERİŞİM" FontSize="10" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource ThemeSidebarSecondaryText}" Margin="20,4,20,8"
+                                   Foreground="#6B7280" Margin="20,4,20,8"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
-                        <Button Command="{Binding OpenFaultTicketCommand}" Style="{StaticResource AccentNavButton}">
+                        <Button Command="{Binding OpenFaultTicketCommand}" Style="{StaticResource GlassAccentNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚡" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Hızlı Kabul" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource LightningIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Hızlı Kabul" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding NavigateToRepairListCommand}" Style="{StaticResource ModernNavButton}">
+                        <Button Command="{Binding NavigateToRepairListCommand}" Style="{StaticResource GlassNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🔧" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Tamir Listesi" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource WrenchIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Tamir Listesi" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding NavigateToFieldJobListCommand}" Style="{StaticResource ModernNavButton}">
+                        <Button Command="{Binding NavigateToFieldJobListCommand}" Style="{StaticResource GlassNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🚜" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Saha İşleri" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource TruckIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Saha İşleri" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding NavigateToRoutePlanningCommand}" Style="{StaticResource ModernNavButton}"
+                        <Button Command="{Binding NavigateToRoutePlanningCommand}" Style="{StaticResource GlassNavButton}"
                                 Background="#D84315">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🗺️" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Rota Planlama" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource MapIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Rota Planlama" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding NavigateToPipelineCommand}" Style="{StaticResource ModernNavButton}">
+                        <Button Command="{Binding NavigateToPipelineCommand}" Style="{StaticResource GlassNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📊" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Satış Pipeline" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource ChartIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Satış Pipeline" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding NavigateToSchedulerCommand}" Style="{StaticResource ModernNavButton}">
+                        <Button Command="{Binding NavigateToSchedulerCommand}" Style="{StaticResource GlassNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📅" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Takvim" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource CalendarIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Takvim" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding OpenProjectQuoteCommand}" Style="{StaticResource ModernNavButton}"
+                        <Button Command="{Binding OpenProjectQuoteCommand}" Style="{StaticResource GlassNavButton}"
                                 Background="#1565C0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🏗️" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Proje &amp; Teklif" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource ConstructionIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Proje &amp; Teklif" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding OpenDirectSalesCommand}" Style="{StaticResource ModernNavButton}"
+                        <Button Command="{Binding OpenDirectSalesCommand}" Style="{StaticResource GlassNavButton}"
                                 Background="#2E7D32">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🛒" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Hızlı Satış" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource CartIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Hızlı Satış" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding NavigateToFinanceCommand}" Style="{StaticResource ModernNavButton}"
+                        <Button Command="{Binding NavigateToFinanceCommand}" Style="{StaticResource GlassNavButton}"
                                 Background="#E65100"
                                 Visibility="{Binding CanViewFinance, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="💰" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Finans" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource FinanceIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Finans" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding NavigateToAnalyticsCommand}" Style="{StaticResource ModernNavButton}"
+                        <Button Command="{Binding NavigateToAnalyticsCommand}" Style="{StaticResource GlassNavButton}"
                                 Background="#9C27B0"
                                 Visibility="{Binding CanViewAnalytics, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📊" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Analitik" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource AnalyticsIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Analitik" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <!-- Satın Alma -->
-                        <Button Command="{Binding NavigateToPurchaseOrdersCommand}" Style="{StaticResource ModernNavButton}"
+                        <Button Command="{Binding NavigateToPurchaseOrdersCommand}" Style="{StaticResource GlassNavButton}"
                                 Background="#00838F">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📦" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Satın Alma" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource PackageIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Satın Alma" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <!-- Tedarikçi Yönetimi (YENİ) -->
-                        <Button Command="{Binding NavigateToSuppliersCommand}" Style="{StaticResource ModernNavButton}"
-                                Background="#8e44ad">
+                        <Button Command="{Binding NavigateToSuppliersCommand}" Style="{StaticResource GlassNavButton}"
+                                Background="#8E44AD">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🏢" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Tedarikçiler" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource PackageIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Tedarikçiler" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-
-
-                         <!-- Envanter & Raporlar -->
-                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" 
-                                BorderBrush="{DynamicResource ThemeSidebarHover}"
+                        <!-- Reports -->
+                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" BorderBrush="#30FFFFFF"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="ZEKA &amp; RAPOR" FontSize="10" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource ThemeSidebarSecondaryText}" Margin="20,4,20,8"
+                                   Foreground="#6B7280" Margin="20,4,20,8"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
-
-
-                       <Button Command="{Binding NavigateToFinancialHealthCommand}" Style="{StaticResource ModernNavButton}"
-                               ToolTip="Finansal Sağlık"
-                               Visibility="{Binding CanViewFinance, Converter={StaticResource BoolToVis}}">
-                           <StackPanel Orientation="Horizontal">
-                               <TextBlock Text="💰" FontSize="18" VerticalAlignment="Center"/>
-                               <TextBlock Text=" Finansal Rapor" VerticalAlignment="Center" Margin="8,0,0,0"
-                                          Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
-                           </StackPanel>
-                       </Button>
-
-                        <Button Command="{Binding NavigateToStockCountCommand}" Style="{StaticResource ModernNavButton}">
+                        <Button Command="{Binding NavigateToFinancialHealthCommand}" Style="{StaticResource GlassNavButton}"
+                                Visibility="{Binding CanViewFinance, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📋" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Stok Sayım" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource FinanceIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Finansal Rapor" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding NavigateToReportsCommand}" Style="{StaticResource ModernNavButton}">
+                        <Button Command="{Binding NavigateToStockCountCommand}" Style="{StaticResource GlassNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📄" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Standart Raporlar" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource ClipboardIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Stok Sayım" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <!-- Yönetim (Admin) -->
-                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" 
-                                BorderBrush="{DynamicResource ThemeSidebarHover}"
+                        <Button Command="{Binding NavigateToReportsCommand}" Style="{StaticResource GlassNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource ReportIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Standart Raporlar" VerticalAlignment="Center" Margin="10,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Admin -->
+                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" BorderBrush="#30FFFFFF"
                                 Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="YÖNETİM" FontSize="10" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource ThemeSidebarSecondaryText}" Margin="20,4,20,8"
+                                   Foreground="#6B7280" Margin="20,4,20,8"
                                    Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
 
-                        <Button Command="{Binding NavigateToUsersCommand}" Style="{StaticResource ModernNavButton}"
+                        <Button Command="{Binding NavigateToUsersCommand}" Style="{StaticResource GlassNavButton}"
                                 Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="👤" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Kullanıcılar" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource UserIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Kullanıcılar" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding NavigateToSystemLogsCommand}" Style="{StaticResource ModernNavButton}"
+                        <Button Command="{Binding NavigateToSystemLogsCommand}" Style="{StaticResource GlassNavButton}"
                                 Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📋" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Loglar" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource ClipboardIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Loglar" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding NavigateToSettingsCommand}" Style="{StaticResource ModernNavButton}"
+                        <Button Command="{Binding NavigateToSettingsCommand}" Style="{StaticResource GlassNavButton}"
                                 Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚙️" FontSize="18" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Ayarlar" VerticalAlignment="Center" Margin="8,0,0,0"
+                                <Path Data="{StaticResource SettingsIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Ayarlar" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- Alt Kısım: Kullanıcı + Tema + Çıkış -->
-                <Border Grid.Row="2" Padding="12" Background="{DynamicResource ThemeSidebarHover}">
+                <!-- Footer -->
+                <Border Grid.Row="2" Padding="12" Background="#0F0F14">
                     <StackPanel>
-                        <!-- Kullanıcı Bilgisi -->
-                        <Border Background="{DynamicResource ThemeSidebar}" CornerRadius="8" Padding="10" Margin="0,0,0,10"
+                        <!-- User Info -->
+                        <Border Background="#1A1A24" CornerRadius="10" Padding="12" Margin="0,0,0,12"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Background="{DynamicResource ThemePrimary}" 
-                                        CornerRadius="20" Width="36" Height="36" Margin="0,0,10,0">
-                                    <TextBlock Text="👤" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Grid.Column="0" Background="#6366F1" CornerRadius="20" Width="36" Height="36" Margin="0,0,12,0">
+                                    <Path Data="{StaticResource UserIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding CurrentUserName}" 
-                                               Foreground="{DynamicResource ThemeSidebarText}" 
-                                               FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding CurrentUserRole}" 
-                                               Foreground="{DynamicResource ThemeSidebarSecondaryText}" FontSize="10"/>
+                                    <TextBlock Text="{Binding CurrentUserName}" Foreground="White" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding CurrentUserRole}" Foreground="#6B7280" FontSize="10"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
 
-                        <!-- Aksiyon Butonları -->
-                        <UniformGrid Columns="3" Margin="0,0,0,8">
-                            <!-- Dark Mode Toggle -->
-                            <Button Command="{Binding ToggleDarkModeCommand}"
-                                    ToolTip="Tema Değiştir"
-                                    Background="Transparent" BorderThickness="0"
-                                    Width="36" Height="36" Cursor="Hand">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bg" Background="Transparent" CornerRadius="6">
-                                            <TextBlock FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Text" Value="🌙"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsDarkMode}" Value="True">
-                                                                <Setter Property="Text" Value="☀️"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource ThemeSidebar}"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
+                        <!-- Action Buttons -->
+                        <UniformGrid Columns="3">
+                            <Button Command="{Binding ToggleDarkModeCommand}" ToolTip="Tema Değiştir" Style="{StaticResource GlassIconButton}">
+                                <Path Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center">
+                                    <Path.Style>
+                                        <Style TargetType="Path">
+                                            <Setter Property="Data" Value="{StaticResource MoonIcon}"/>
+                                            <Setter Property="Fill" Value="#A78BFA"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsDarkMode}" Value="True">
+                                                    <Setter Property="Data" Value="{StaticResource SunIcon}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Path.Style>
+                                </Path>
                             </Button>
 
-                            <!-- Ayarlar -->
-                            <Button Command="{Binding NavigateToSettingsCommand}"
-                                    ToolTip="Ayarlar"
-                                    Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"
-                                    Background="Transparent" BorderThickness="0"
-                                    Width="36" Height="36" Cursor="Hand">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bg" Background="Transparent" CornerRadius="6">
-                                            <TextBlock Text="⚙️" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource ThemeSidebar}"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
+                            <Button Command="{Binding NavigateToSettingsCommand}" ToolTip="Ayarlar" Style="{StaticResource GlassIconButton}"
+                                    Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
+                                <Path Data="{StaticResource SettingsIcon}" Fill="#A78BFA" Width="18" Height="18" Stretch="Uniform"/>
                             </Button>
 
-                            <!-- Çıkış -->
-                            <Button Command="{Binding LogoutCommand}"
-                                    ToolTip="Çıkış Yap"
-                                    Background="Transparent" BorderThickness="0"
-                                    Width="36" Height="36" Cursor="Hand">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bg" Background="Transparent" CornerRadius="6">
-                                            <TextBlock Text="🚪" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bg" Property="Background" Value="#c62828"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
+                            <Button Command="{Binding LogoutCommand}" ToolTip="Çıkış Yap" Style="{StaticResource GlassIconButton}">
+                                <Path Data="{StaticResource LogoutIcon}" Fill="#EF4444" Width="18" Height="18" Stretch="Uniform"/>
                             </Button>
                         </UniformGrid>
 
-                        <!-- Versiyon -->
-                        <TextBlock Text="v2.0.0" FontSize="10" 
-                                   Foreground="{DynamicResource ThemeSidebarSecondaryText}"
-                                   HorizontalAlignment="Center"
+                        <TextBlock Text="v2.0.0" FontSize="10" Foreground="#4B5563" HorizontalAlignment="Center" Margin="0,12,0,0"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                     </StackPanel>
                 </Border>
             </Grid>
         </Border>
 
-        <!-- ==================== SAĞ İÇERİK ALANI ==================== -->
+        <!-- ==================== MAIN CONTENT ==================== -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-
-            <!-- Global Header Bar -->
-            <Border Grid.Row="0" Background="{DynamicResource ThemeSurface}" Padding="20,12" 
-                    BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="5" Opacity="0.05" ShadowDepth="1" Direction="270"/>
-                </Border.Effect>
+            
+            <!-- Background Gradient -->
+            <Border Grid.RowSpan="2">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#0F0F14" Offset="0"/>
+                        <GradientStop Color="#1A1A24" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+            
+            <!-- Glass Header Bar -->
+            <Border Grid.Row="0" Padding="20,16" CornerRadius="16" Background="#1A1A24">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" MaxWidth="500"/>
@@ -480,106 +492,86 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Search Box -->
-                    <Grid Grid.Column="0">
-                        <Border Background="{DynamicResource ThemeBackground}" CornerRadius="20" 
-                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
-                                Padding="4,0">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <TextBlock Grid.Column="0" Text="🔍" FontSize="16" VerticalAlignment="Center"
-                                           Margin="12,0,8,0" Foreground="{DynamicResource ThemeTextTertiary}"/>
-                                
-                                <TextBox Grid.Column="1" x:Name="GlobalSearchBox"
-                                         Text="{Binding SearchViewModel.SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                                         Background="Transparent" BorderThickness="0"
-                                         VerticalAlignment="Center" Height="36" FontSize="14" Padding="0,8"
-                                         Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                
-                                <Button Grid.Column="2" Content="✕" 
-                                        Command="{Binding SearchViewModel.ClearCommand}"
-                                        Visibility="{Binding SearchViewModel.HasResults, Converter={StaticResource BoolToVis}}"
-                                        Background="Transparent" BorderThickness="0"
-                                        Foreground="{DynamicResource ThemeTextTertiary}" FontSize="12"
-                                        Width="30" Height="30" Cursor="Hand"/>
-                            </Grid>
-                        </Border>
-                    </Grid>
+                    <!-- Search Box - Glass Style -->
+                    <Border Grid.Column="0" CornerRadius="24" Background="#27272A">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Path Grid.Column="0" Data="{StaticResource SearchIcon}" Fill="#6B7280" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="16,0,12,0"/>
+                            
+                            <TextBox Grid.Column="1" x:Name="GlobalSearchBox"
+                                     Text="{Binding SearchViewModel.SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                     Background="Transparent" BorderThickness="0"
+                                     VerticalAlignment="Center" Height="40" FontSize="14" Padding="0,8"
+                                     Foreground="White"/>
+                            
+                            <Button Grid.Column="2" Content="✕" 
+                                    Command="{Binding SearchViewModel.ClearCommand}"
+                                    Visibility="{Binding SearchViewModel.HasResults, Converter={StaticResource BoolToVis}}"
+                                    Background="Transparent" BorderThickness="0"
+                                    Foreground="#6B7280" FontSize="12"
+                                    Width="32" Height="32" Cursor="Hand"/>
+                        </Grid>
+                    </Border>
 
                     <!-- Notification Bell -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,10,0" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
                         <Grid>
-                            <Button Command="{Binding ToggleNotificationsCommand}"
-                                    Background="Transparent" BorderThickness="0"
-                                    Foreground="{DynamicResource ThemeTextSecondary}"
-                                    Padding="10" Cursor="Hand">
+                            <Button Command="{Binding ToggleNotificationsCommand}" Background="Transparent" BorderThickness="0" Padding="12" Cursor="Hand">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border x:Name="bg" Background="Transparent" CornerRadius="8" Padding="8">
+                                        <Border x:Name="bg" Background="Transparent" CornerRadius="12" Padding="12">
                                             <Grid>
-                                                <TextBlock Text="🔔" FontSize="20"/>
-                                                <Border Background="{DynamicResource ThemeError}" CornerRadius="10" 
-                                                        Width="18" Height="18" 
+                                                <Path Data="{StaticResource BellIcon}" Fill="#9CA3AF" Width="20" Height="20" Stretch="Uniform"/>
+                                                <Border Background="#EF4444" CornerRadius="10" Width="18" Height="18" 
                                                         HorizontalAlignment="Right" VerticalAlignment="Top" 
-                                                        Margin="0,-4,-4,0"
+                                                        Margin="0,-6,-6,0"
                                                         Visibility="{Binding NotificationCount, Converter={StaticResource IntToVis}}">
-                                                    <TextBlock Text="{Binding NotificationCount}" Foreground="White" 
-                                                               FontSize="10" FontWeight="Bold"
-                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding NotificationCount}" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                             </Grid>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource ThemeBackground}"/>
+                                                <Setter TargetName="bg" Property="Background" Value="#27272A"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Button.Template>
                             </Button>
 
-                            <Popup IsOpen="{Binding IsNotificationsOpen}" StaysOpen="False" 
-                                   Placement="Bottom" AllowsTransparency="True">
-                                <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" 
-                                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" 
-                                        Width="320" MaxHeight="400" Margin="0,8,20,0">
+                            <Popup IsOpen="{Binding IsNotificationsOpen}" StaysOpen="False" Placement="Bottom" AllowsTransparency="True">
+                                <Border Background="#1E1E2E" CornerRadius="16" BorderBrush="#374151" BorderThickness="1" Width="360" MaxHeight="450" Margin="0,12,0,0">
                                     <Border.Effect>
-                                        <DropShadowEffect BlurRadius="20" Opacity="0.15" ShadowDepth="4"/>
+                                        <DropShadowEffect BlurRadius="30" Opacity="0.4" ShadowDepth="8"/>
                                     </Border.Effect>
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
-                                        <Border Padding="16,12" BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,0,0,1">
+                                        <Border Padding="20,16" BorderBrush="#374151" BorderThickness="0,0,0,1">
                                             <DockPanel>
-                                                <TextBlock Text="Bildirimler" FontWeight="Bold" FontSize="14"
-                                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                                <Button Content="🔄" Command="{Binding RefreshNotificationsCommand}" 
-                                                        Width="28" Height="28" Padding="0" 
-                                                        Background="Transparent" BorderThickness="0" 
-                                                        HorizontalAlignment="Right" Cursor="Hand"/>
+                                                <TextBlock Text="Bildirimler" FontWeight="SemiBold" FontSize="16" Foreground="White"/>
+                                                <Button Command="{Binding RefreshNotificationsCommand}" HorizontalAlignment="Right" Cursor="Hand">
+                                                    <Path Data="{StaticResource RefreshIcon}" Fill="#9CA3AF" Width="16" Height="16" Stretch="Uniform"/>
+                                                </Button>
                                             </DockPanel>
                                         </Border>
-                                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="300">
+                                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="350">
                                             <ItemsControl ItemsSource="{Binding Notifications}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border Padding="14,12" BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,0,0,1">
+                                                        <Border Padding="16,14" BorderBrush="#374151" BorderThickness="0,0,0,1">
                                                             <StackPanel>
-                                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12"
-                                                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" 
-                                                                           Margin="0,4,0,8" FontSize="11"
-                                                                           Foreground="{DynamicResource ThemeTextSecondary}"/>
-                                                                <Button Content="{Binding ActionLabel}" Height="28" FontSize="10" 
-                                                                        HorizontalAlignment="Right" Padding="12,0"
-                                                                        Style="{StaticResource ModernButton}"
+                                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" Foreground="White"/>
+                                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,4,0,10" FontSize="12" Foreground="#9CA3AF"/>
+                                                                <Button Content="{Binding ActionLabel}" Height="28" FontSize="11" HorizontalAlignment="Right" Padding="16,0"
+                                                                        Background="#6366F1" Foreground="White" BorderThickness="0"
                                                                         Command="{Binding ActionCommand}"/>
                                                             </StackPanel>
                                                         </Border>
@@ -595,7 +587,7 @@
                 </Grid>
             </Border>
 
-            <!-- Ana içerik -->
+            <!-- Content -->
             <ContentControl Grid.Row="1" Content="{Binding CurrentView}" Margin="0">
                 <ContentControl.Triggers>
                     <EventTrigger RoutedEvent="ContentControl.Loaded">
@@ -603,7 +595,6 @@
                     </EventTrigger>
                 </ContentControl.Triggers>
             </ContentControl>
-
         </Grid>
     </Grid>
 </UserControl>

@@ -16,14 +16,31 @@
         WindowCornerPreference="Round">
 
     <Grid>
-        <!-- Tek ContentControl - NavigationService ile view değişir -->
-        <ContentControl Content="{Binding CurrentView}"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
         
-        <!-- Loading Overlay -->
-        <views:LoadingOverlay x:Name="LoadingControl" />
+        <!-- Title Bar -->
+        <ui:TitleBar Grid.Row="0" Title="Kamatek CRM" ShowMaximize="True" ShowMinimize="True" ShowClose="True">
+            <ui:TitleBar.Header>
+                <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Kamatek CRM" FontWeight="SemiBold" FontSize="13" Foreground="White"/>
+                </StackPanel>
+            </ui:TitleBar.Header>
+        </ui:TitleBar>
 
-        <!-- Toast Notifications Overlay -->
-        <views:ToastNotificationControl x:Name="ToastControl" />
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <!-- Tek ContentControl - NavigationService ile view değişir -->
+            <ContentControl Content="{Binding CurrentView}"/>
+            
+            <!-- Loading Overlay -->
+            <views:LoadingOverlay x:Name="LoadingControl" />
+
+            <!-- Toast Notifications Overlay -->
+            <views:ToastNotificationControl x:Name="ToastControl" />
+        </Grid>
     </Grid>
     
 </ui:FluentWindow>

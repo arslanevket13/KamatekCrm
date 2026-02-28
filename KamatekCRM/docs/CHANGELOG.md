@@ -1,3 +1,8 @@
+## v11.5 — Glassmorphism UI & Port Stability (2026-02-28)
+- **UI/UX: Glassmorphism**: Standardized premium Glassmorphism effect across `DashboardView` and `MainContentView` using semi-transparent surfaces and blurred backgrounds.
+- **Theme Standardization**: Added `ThemeTextPrimary`, `ThemeCardBackground`, and corresponding Dark variants to `CustomTheme.xaml` for consistent dashboard rendering.
+- **API: Port Enforcement**: Updated `KamatekCrm.API/appsettings.json` to explicitly listen on Port 5050 via Kestrel configuration, ensuring WPF-API connectivity.
+
 ## v11.4 — Architecture Strengthening & UI Polish (2026-02-26)
 - **Dumb Client Enforcement**: Refactored `App.xaml.cs` to strictly operate as a client, removing all legacy server-side logic and ensuring 100% adherence to the Hybrid .NET 9 architecture.
 - **Fluent UI Enhancements**: Added `PulseAnimation` and `ProgressRing` styles to `CustomTheme.xaml` for better asynchronous feedback.

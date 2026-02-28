@@ -88,7 +88,7 @@ KamatekCrm/
 │   ├── LoginView.xaml            # Giriş ekranı (Modern Glassmorphism & Fluent UI)
 │   ├── UsersView.xaml            # Kullanıcı listesi
 │   ├── AddUserView.xaml          # Hızlı kullanıcı ekleme (popup)
-│   ├── DashboardView.xaml        # Ana sayfa dashboard
+│   ├── DashboardView.xaml        # Ana sayfa dashboard (Standardized Glassmorphism)
 │   ├── ServiceJobsView.xaml      # Master list (DataGrid)
 │   ├── NewServiceJobWindow.xaml  # Wizard (ayrı pencere)
 │   ├── FaultTicketWindow.xaml    # Arıza kaydı formu

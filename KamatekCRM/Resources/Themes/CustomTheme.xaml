@@ -164,6 +164,21 @@
     <SolidColorBrush x:Key="ThemePrimaryDark" Color="#005A9E"/>
     <SolidColorBrush x:Key="ThemeAccent" Color="#00B7C3"/>
 
+    <!-- ==================== THEME TEXT COLORS (REQUIRED FOR DASHBOARD) ==================== -->
+    <!-- Light Theme Colors -->
+    <SolidColorBrush x:Key="ThemeTextPrimary" Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="ThemeTextSecondary" Color="#666666"/>
+    <SolidColorBrush x:Key="ThemeTextTertiary" Color="#999999"/>
+    <SolidColorBrush x:Key="ThemeBackground" Color="#FAFAFA"/>
+    <SolidColorBrush x:Key="ThemeCardBackground" Color="#FFFFFF"/>
+    
+    <!-- Dark Theme Colors (for Glassmorphism) -->
+    <SolidColorBrush x:Key="ThemeTextPrimaryDark" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ThemeTextSecondaryDark" Color="#B3B3B3"/>
+    <SolidColorBrush x:Key="ThemeTextTertiaryDark" Color="#808080"/>
+    <SolidColorBrush x:Key="ThemeBackgroundDark" Color="#0F0F14"/>
+    <SolidColorBrush x:Key="ThemeCardBackgroundDark" Color="#1E1E2E"/>
+
     <!-- ==================== FLUENT UI STYLES ==================== -->
 
     <!-- Fluent Button Base -->
