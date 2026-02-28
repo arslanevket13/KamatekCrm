@@ -1,3 +1,17 @@
+## v11.7 — Technician Web Dashboard & Auth Rollout (2026-03-01)
+- **NEW**: `TechnicianDtos.cs` — Shared models for Repairs, Projects, Quotes, and Installations.
+- **Web**: Implemented `TechnicianDashboardEndpoints.cs` providing KPI stats and job listings for technicians.
+- **Web**: Added `SchedulePage` and `ProfilePage` to technician features.
+- **Web**: Refactored `HtmlTemplates.cs` with modern Bootstrap 5 UI for customers, products, and sales.
+- **API**: Stabilized `AuthController.cs` for cross-platform JWT authentication.
+
+## v11.6 — JWT Auth Login Endpoint (2026-02-28)
+- **NEW**: `AuthController.cs` — `POST /api/auth/login` endpoint for JWT token generation.
+- **Security**: Password verification uses PBKDF2 (100K iterations, SHA256) — identical to WPF `AuthService`.
+- **Claims**: JWT includes `sub`, `Name`, `Role`, `UserId`, `FullName`.
+- **Hardening**: `CryptographicOperations.FixedTimeEquals` for timing-attack-safe password comparison.
+- **Audit**: `User.LastLoginDate` updated on every successful login.
+
 ## v11.5 — Glassmorphism UI & Port Stability (2026-02-28)
 - **UI/UX: Glassmorphism**: Standardized premium Glassmorphism effect across `DashboardView` and `MainContentView` using semi-transparent surfaces and blurred backgrounds.
 - **Theme Standardization**: Added `ThemeTextPrimary`, `ThemeCardBackground`, and corresponding Dark variants to `CustomTheme.xaml` for consistent dashboard rendering.

@@ -21,6 +21,8 @@ KamatekCRM/                       # Solution Root
 ├── KamatekCrm.Web/               # Minimal API + HTMX Web App (Technician Panel) (net9.0)
 ├── KamatekCrm.API/               # Backend Web API (net9.0)
 ├── KamatekCrm.Shared/            # Shared Class Library (net9.0)
+│   └── DTOs/
+│       └── TechnicianDtos.cs     # Technician Portal Data Transfer Objects
 ```
 
 ## WPF Proje Detayları

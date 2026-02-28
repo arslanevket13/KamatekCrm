@@ -2,6 +2,11 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using KamatekCrm.Web.Features.Auth;
 using KamatekCrm.Web.Features.Dashboard;
+using KamatekCrm.Web.Features.Customers;
+using KamatekCrm.Web.Features.Products;
+using KamatekCrm.Web.Features.Jobs;
+using KamatekCrm.Web.Features.Sales;
+using KamatekCrm.Web.Features.Technician;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -138,6 +143,11 @@ try
     // ─── 9. FEATURE ENDPOINTS ───
     AuthEndpoints.Map(app);
     DashboardEndpoints.Map(app);
+    CustomersEndpoints.Map(app);
+    ProductsEndpoints.Map(app);
+    JobsEndpoints.Map(app);
+    SalesEndpoints.Map(app);
+    TechnicianDashboardEndpoints.Map(app);
 
     // ─── 10. STARTUP ───
     Log.Information("──► KamatekCRM Web | Port 7000 | Minimal API + HTMX | CSP Strict");

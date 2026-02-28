@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Antiforgery;
+using KamatekCrm.Web.Services;
 
 namespace KamatekCrm.Web.Shared;
 
@@ -92,21 +93,41 @@ public static class HtmlTemplates
             </div>
 
             <nav class="sidebar-nav">
-                <a href="/dashboard" class="sidebar-link active">
+                <a href="/dashboard" class="sidebar-link">
                     <i class="bi bi-speedometer2"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="#" class="sidebar-link disabled">
+                <a href="/technician" class="sidebar-link">
+                    <i class="bi bi-wrench"></i>
+                    <span>Teknisyen</span>
+                </a>
+                <a href="/jobs" class="sidebar-link">
                     <i class="bi bi-list-task"></i>
-                    <span>Görevler</span>
+                    <span>İş Emirleri</span>
                 </a>
-                <a href="#" class="sidebar-link disabled">
-                    <i class="bi bi-geo-alt"></i>
-                    <span>Sahalar</span>
+                <a href="/customers" class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Müşteriler</span>
                 </a>
-                <a href="#" class="sidebar-link disabled">
-                    <i class="bi bi-chat-dots"></i>
-                    <span>Mesajlar</span>
+                <a href="/products" class="sidebar-link">
+                    <i class="bi bi-box-seam"></i>
+                    <span>Ürünler</span>
+                </a>
+                <a href="/sales" class="sidebar-link">
+                    <i class="bi bi-cart"></i>
+                    <span>Satış</span>
+                </a>
+                <a href="/sales/history" class="sidebar-link">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Satış Geçmişi</span>
+                </a>
+                <a href="/technician/schedule" class="sidebar-link">
+                    <i class="bi bi-calendar"></i>
+                    <span>Program</span>
+                </a>
+                <a href="/technician/profile" class="sidebar-link">
+                    <i class="bi bi-person"></i>
+                    <span>Profil</span>
                 </a>
             </nav>
 
@@ -331,5 +352,476 @@ public static class HtmlTemplates
         """;
 
         return Layout("Hata", errorContent);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  MÜŞTERİLER
+    // ═══════════════════════════════════════════════════════════════
+
+    public static string CustomersPage(List<CustomerListItem> customers, int total, int page, string userName, string? token, string? search = null)
+    {
+        var rows = string.Join("", customers.Select(c => $"""
+            <tr>
+                <td>{c.FullName}</td>
+                <td>{c.PhoneNumber ?? "-"}</td>
+                <td>{c.Email ?? "-"}</td>
+                <td>{(c.IsVip ? "<span class=\"badge bg-warning\">VIP</span>" : "<span class=\"badge bg-secondary\">Normal</span>")}</td>
+                <td>
+                    <a href="/customers/{c.Id}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                </td>
+            </tr>
+            """));
+
+        var content = $"""
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-people me-2"></i>Müşteriler</h2>
+                <a href="/customers/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i>Yeni Müşteri</a>
+            </div>
+        </div>
+        <div class="content-card">
+            <form class="mb-3" hx-get="/customers" hx-target="tbody">
+                <input type="text" name="search" class="form-control" placeholder="Ara..." value="{search ?? ""}">
+            </form>
+            <table class="table table-hover">
+                <thead>
+                    <tr><th>Firma</th><th>Yetkili</th><th>Telefon</th><th>Durum</th><th>İşlemler</th></tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+        </div>
+        """;
+        return Layout("Müşteriler", content, userName, token);
+    }
+
+    public static string CustomerForm(CustomerListItem? customer, string? token)
+    {
+        var title = customer != null ? "Müşteri Düzenle" : "Yeni Müşteri";
+        var content = $"""
+        <div class="page-header">
+            <h2><i class="bi bi-person-plus me-2"></i>{title}</h2>
+        </div>
+        <div class="content-card">
+            <form hx-post="/customers" hx-swap="outerHTML">
+                <input type="hidden" name="Id" value="{customer?.Id ?? 0}">
+                <div class="mb-3">
+                    <label class="form-label">Ad Soyad</label>
+                    <input type="text" class="form-control" name="FullName" value="{customer?.FullName ?? ""}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Telefon</label>
+                    <input type="tel" class="form-control" name="PhoneNumber" value="{customer?.PhoneNumber ?? ""}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">E-posta</label>
+                    <input type="email" class="form-control" name="Email" value="{customer?.Email ?? ""}">
+                </div>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </form>
+        </div>
+        """;
+        return Layout(title, content, antiforgeryToken: token);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ÜRÜNLER
+    // ═══════════════════════════════════════════════════════════════
+
+    public static string ProductsPage(string? token)
+    {
+        var content = """
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-box-seam me-2"></i>Ürünler</h2>
+                <a href="/products/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i>Yeni Ürün</a>
+            </div>
+        </div>
+        <div class="content-card">
+            <p class="text-muted">Ürün listesi yükleniyor...</p>
+        </div>
+        """;
+        return Layout("Ürünler", content, antiforgeryToken: token);
+    }
+
+    public static string ProductForm(string? token)
+    {
+        var content = """
+        <div class="page-header">
+            <h2><i class="bi bi-box-seam me-2"></i>Yeni Ürün</h2>
+        </div>
+        <div class="content-card">
+            <form>
+                <div class="mb-3">
+                    <label class="form-label">Ürün Adı</label>
+                    <input type="text" class="form-control" name="Name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">SKU</label>
+                    <input type="text" class="form-control" name="Sku">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Fiyat</label>
+                    <input type="number" class="form-control" name="Price">
+                </div>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </form>
+        </div>
+        """;
+        return Layout("Ürün Form", content, antiforgeryToken: token);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  İŞ EMİRLERİ
+    // ═══════════════════════════════════════════════════════════════
+
+    public static string JobsPage(List<JobListItem> jobs, int total, int page, string userName, string? token, string? status = null, string? search = null)
+    {
+        var rows = string.Join("", jobs.Select(j => $"""
+            <tr>
+                <td>{j.Title}</td>
+                <td>{j.CustomerName ?? "-"}</td>
+                <td><span class="badge bg-secondary">{j.Status}</span></td>
+                <td>{j.ScheduledDate?.ToString("dd.MM.yyyy") ?? "-"}</td>
+                <td>
+                    <a href="/jobs/{j.Id}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                </td>
+            </tr>
+            """));
+
+        var content = $"""
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-list-task me-2"></i>İş Emirleri</h2>
+                <a href="/jobs/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i>Yeni İş</a>
+            </div>
+        </div>
+        <div class="content-card">
+            <table class="table table-hover">
+                <thead>
+                    <tr><th>Başlık</th><th>Müşteri</th><th>Durum</th><th>Tarih</th><th>İşlemler</th></tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+        </div>
+        """;
+        return Layout("İş Emirleri", content, userName, token);
+    }
+
+    public static string JobForm(JobListItem? job, string? token)
+    {
+        var title = job != null ? "İş Düzenle" : "Yeni İş Emri";
+        var content = $"""
+        <div class="page-header">
+            <h2><i class="bi bi-plus-circle me-2"></i>{title}</h2>
+        </div>
+        <div class="content-card">
+            <form>
+                <input type="hidden" name="Id" value="{job?.Id ?? 0}">
+                <div class="mb-3">
+                    <label class="form-label">Başlık</label>
+                    <input type="text" class="form-control" name="Title" value="{job?.Title ?? ""}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Açıklama</label>
+                    <textarea class="form-control" name="Description" rows="3">{job?.Description ?? ""}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </form>
+        </div>
+        """;
+        return Layout(title, content, antiforgeryToken: token);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  ÜRÜNLER
+    // ═══════════════════════════════════════════════════════════════
+
+    public static string ProductsPage(List<ProductListItem> products, int total, int page, string userName, string? token, string? search = null)
+    {
+        var rows = string.Join("", products.Select(p => $"""
+            <tr>
+                <td>{p.ProductName}</td>
+                <td>{p.SKU}</td>
+                <td>{p.SalePrice:C2}</td>
+                <td>{p.TotalStockQuantity}</td>
+                <td>
+                    <a href="/products/{p.Id}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                </td>
+            </tr>
+            """));
+
+        var content = $"""
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-box-seam me-2"></i>Ürünler</h2>
+                <a href="/products/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i>Yeni Ürün</a>
+            </div>
+        </div>
+        <div class="content-card">
+            <table class="table table-hover">
+                <thead>
+                    <tr><th>Ürün</th><th>SKU</th><th>Fiyat</th><th>Stok</th><th>İşlemler</th></tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+        </div>
+        """;
+        return Layout("Ürünler", content, userName, token);
+    }
+
+    public static string ProductForm(ProductListItem? product, string? token)
+    {
+        var title = product != null ? "Ürün Düzenle" : "Yeni Ürün";
+        var content = $"""
+        <div class="page-header">
+            <h2><i class="bi bi-box-seam me-2"></i>{title}</h2>
+        </div>
+        <div class="content-card">
+            <form>
+                <input type="hidden" name="Id" value="{product?.Id ?? 0}">
+                <div class="mb-3">
+                    <label class="form-label">Ürün Adı</label>
+                    <input type="text" class="form-control" name="ProductName" value="{product?.ProductName ?? ""}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">SKU</label>
+                    <input type="text" class="form-control" name="SKU" value="{product?.SKU ?? ""}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Satış Fiyatı</label>
+                    <input type="number" class="form-control" name="SalePrice" value="{product?.SalePrice}">
+                </div>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </form>
+        </div>
+        """;
+        return Layout(title, content, antiforgeryToken: token);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  SATIŞ
+    // ═══════════════════════════════════════════════════════════════
+
+    public static string SalesPage(List<ProductListItem> products, string userName, string? token)
+    {
+        var productOptions = string.Join("", products.Select(p => $"""
+            <option value="{p.Id}" data-price="{p.SalePrice}">{p.ProductName} - {p.SalePrice:C2}</option>
+            """));
+
+        var content = $"""
+        <div class="page-header">
+            <h2><i class="bi bi-cart me-2"></i>Satış</h2>
+        </div>
+        <div class="content-card">
+            <form hx-post="/sales" hx-swap="outerHTML">
+                <div class="mb-3">
+                    <label class="form-label">Ürün</label>
+                    <select class="form-select" name="ProductId">{productOptions}</select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Adet</label>
+                    <input type="number" class="form-control" name="Quantity" value="1" min="1">
+                </div>
+                <button type="submit" class="btn btn-primary">Satış Yap</button>
+            </form>
+        </div>
+        """;
+        return Layout("Satış", content, userName, token);
+    }
+
+    public static string SalesHistoryPage(List<object> sales, int total, int page, string userName, string? token)
+    {
+        var content = $"""
+        <div class="page-header">
+            <h2><i class="bi bi-clock-history me-2"></i>Satış Geçmişi</h2>
+        </div>
+        <div class="content-card">
+            <p class="text-muted">Satış geçmişi yükleniyor...</p>
+        </div>
+        """;
+        return Layout("Satış Geçmişi", content, userName, token);
+    }
+
+    public static string JobDetail(string? token)
+    {
+        var content = """
+        <div class="page-header">
+            <h2><i class="bi bi-info-circle me-2"></i>İş Detayı</h2>
+        </div>
+        <div class="content-card">
+            <p class="text-muted">İş detayları yükleniyor...</p>
+        </div>
+        """;
+        return Layout("İş Detay", content, antiforgeryToken: token);
+    }
+
+    public static string JobForm(string? token)
+    {
+        var content = """
+        <div class="page-header">
+            <h2><i class="bi bi-plus-circle me-2"></i>Yeni İş Emri</h2>
+        </div>
+        <div class="content-card">
+            <form>
+                <div class="mb-3">
+                    <label class="form-label">Başlık</label>
+                    <input type="text" class="form-control" name="Title" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Müşteri</label>
+                    <select class="form-select" name="CustomerId"></select>
+                </div>
+                <button type="submit" class="btn btn-primary">Kaydet</button>
+            </form>
+        </div>
+        """;
+        return Layout("İş Form", content, antiforgeryToken: token);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  SATIŞ
+    // ═══════════════════════════════════════════════════════════════
+
+    public static string SalesPage(string? token)
+    {
+        var content = """
+        <div class="page-header">
+            <h2><i class="bi bi-cart me-2"></i>Satış</h2>
+        </div>
+        <div class="content-card">
+            <p class="text-muted">Satış sayfası yükleniyor...</p>
+        </div>
+        """;
+        return Layout("Satış", content, antiforgeryToken: token);
+    }
+
+    public static string SalesHistoryPage(string? token)
+    {
+        var content = """
+        <div class="page-header">
+            <h2><i class="bi bi-clock-history me-2"></i>Satış Geçmişi</h2>
+        </div>
+        <div class="content-card">
+            <p class="text-muted">Satış geçmişi yükleniyor...</p>
+        </div>
+        """;
+        return Layout("Satış Geçmişi", content, antiforgeryToken: token);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  TEKNİSYEN PANELİ
+    // ═══════════════════════════════════════════════════════════════
+
+    public static string TechnicianDashboard(string userName, string role, List<JobListItem> todayJobs, List<JobListItem> pendingJobs, DashboardStats stats, string? token)
+    {
+        var todayJobsHtml = string.Join("", todayJobs.Select(j => $"""
+            <div class="card mb-2">
+                <div class="card-body">
+                    <h6>{j.Title}</h6>
+                    <p class="mb-0 text-muted">{j.CustomerName ?? "-"}</p>
+                </div>
+            </div>
+            """));
+
+        var pendingJobsHtml = string.Join("", pendingJobs.Select(j => $"""
+            <div class="card mb-2">
+                <div class="card-body">
+                    <h6>{j.Title}</h6>
+                    <p class="mb-0 text-muted">{j.CustomerName ?? "-"}</p>
+                </div>
+            </div>
+            """));
+
+        var content = $"""
+        <div class="page-header">
+            <h2><i class="bi bi-wrench me-2"></i>Teknisyen Panel</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white mb-3">
+                    <div class="card-body">
+                        <h5>{stats.ActiveJobs}</h5>
+                        <p class="mb-0">Aktif İşler</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white mb-3">
+                    <div class="card-body">
+                        <h5>{stats.CompletedToday}</h5>
+                        <p class="mb-0">Bugün Tamamlanan</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark mb-3">
+                    <div class="card-body">
+                        <h5>{stats.PendingJobs}</h5>
+                        <p class="mb-0">Bekleyen</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white mb-3">
+                    <div class="card-body">
+                        <h5>{stats.FieldVisits}</h5>
+                        <p class="mb-0">Saha Ziyareti</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="content-card">
+                    <h5>Bugünkü İşler</h5>
+                    {todayJobsHtml}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="content-card">
+                    <h5>Bekleyen İşler</h5>
+                    {pendingJobsHtml}
+                </div>
+            </div>
+        </div>
+        """;
+        return Layout("Teknisyen Panel", content, userName, token);
+    }
+
+    public static string SchedulePage(List<JobListItem> jobs, DateTime date, string userName, string? token)
+    {
+        var jobsHtml = string.Join("", jobs.Select(j => $"""
+            <div class="card mb-2">
+                <div class="card-body">
+                    <h6>{j.Title}</h6>
+                    <p class="mb-0 text-muted">{j.CustomerName ?? "-"} - {j.Status}</p>
+                </div>
+            </div>
+            """));
+
+        var content = $"""
+        <div class="page-header">
+            <h2><i class="bi bi-calendar me-2"></i>Program - {date:dd.MM.yyyy}</h2>
+        </div>
+        <div class="content-card">
+            {jobsHtml}
+        </div>
+        """;
+        return Layout("Program", content, userName, token);
+    }
+
+    public static string TechnicianProfile(string userName, string role, string username, string? token)
+    {
+        var content = $"""
+        <div class="page-header">
+            <h2><i class="bi bi-person me-2"></i>Profil</h2>
+        </div>
+        <div class="content-card">
+            <p><strong>Kullanıcı:</strong> {userName}</p>
+            <p><strong>Rol:</strong> {role}</p>
+            <p><strong>Kullanıcı Adı:</strong> {username}</p>
+        </div>
+        """;
+        return Layout("Profil", content, userName, token);
     }
 }
