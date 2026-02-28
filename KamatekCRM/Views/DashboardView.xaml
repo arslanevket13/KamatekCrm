@@ -672,12 +672,21 @@
                         </Grid.RowDefinitions>
 
                         <!-- Header -->
-                        <Border Grid.Row="0" Background="#FEF2F2" CornerRadius="10" Padding="14" Margin="-16,-16,-16,16">
+                        <Border Grid.Row="0" CornerRadius="10" Padding="14" Margin="-16,-16,-16,16">
+                            <Border.Background>
+                                <SolidColorBrush Color="#DC2626" Opacity="0.15"/>
+                            </Border.Background>
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="#DC2626" Opacity="0.3"/>
+                            </Border.BorderBrush>
+                            <Border.BorderThickness>
+                                <Thickness>0,0,0,1</Thickness>
+                            </Border.BorderThickness>
                             <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Warning24" FontSize="22" Foreground="#DC2626" VerticalAlignment="Center"/>
+                                <ui:SymbolIcon Symbol="Warning24" FontSize="22" Foreground="#EF4444" VerticalAlignment="Center"/>
                                 <StackPanel Margin="12,0,0,0">
                                     <TextBlock Text="Kritik Uyarılar" FontSize="15" FontWeight="Bold" 
-                                               Foreground="#DC2626"/>
+                                               Foreground="#EF4444"/>
                                     <TextBlock Text="Stok seviyeleri" FontSize="11" 
                                                Foreground="#F87171"/>
                                 </StackPanel>
@@ -691,8 +700,10 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Padding="12" Margin="0,0,0,8" 
-                                                    Background="{DynamicResource ThemeBackground}"
                                                     CornerRadius="8">
+                                                <Border.Background>
+                                                    <SolidColorBrush Color="White" Opacity="0.05"/>
+                                                </Border.Background>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
@@ -707,10 +718,18 @@
                                                             <Border CornerRadius="4" Padding="8,3">
                                                                 <Border.Style>
                                                                     <Style TargetType="Border">
-                                                                        <Setter Property="Background" Value="#FFFBEB"/>
+                                                                        <Setter Property="Background">
+                                                                            <Setter.Value>
+                                                                                <SolidColorBrush Color="#F59E0B" Opacity="0.15"/>
+                                                                            </Setter.Value>
+                                                                        </Setter>
                                                                         <Style.Triggers>
                                                                             <DataTrigger Binding="{Binding UrgencyLevel}" Value="Kritik">
-                                                                                <Setter Property="Background" Value="#FEF2F2"/>
+                                                                                <Setter Property="Background">
+                                                                                    <Setter.Value>
+                                                                                        <SolidColorBrush Color="#DC2626" Opacity="0.15"/>
+                                                                                    </Setter.Value>
+                                                                                </Setter>
                                                                             </DataTrigger>
                                                                         </Style.Triggers>
                                                                     </Style>
@@ -796,14 +815,23 @@
                         </Grid.RowDefinitions>
 
                         <!-- Header: Bugünün İşleri -->
-                        <Border Grid.Row="0" Background="#EFF6FF" CornerRadius="10" Padding="14" Margin="-16,-16,-16,16">
+                        <Border Grid.Row="0" CornerRadius="10" Padding="14" Margin="-16,-16,-16,16">
+                            <Border.Background>
+                                <SolidColorBrush Color="#3B82F6" Opacity="0.15"/>
+                            </Border.Background>
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="#3B82F6" Opacity="0.3"/>
+                            </Border.BorderBrush>
+                            <Border.BorderThickness>
+                                <Thickness>0,0,0,1</Thickness>
+                            </Border.BorderThickness>
                             <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Wrench24" FontSize="22" Foreground="#1D4ED8" VerticalAlignment="Center"/>
+                                <ui:SymbolIcon Symbol="Wrench24" FontSize="22" Foreground="#60A5FA" VerticalAlignment="Center"/>
                                 <StackPanel Margin="12,0,0,0">
                                     <TextBlock Text="Bugünün İşleri" FontSize="15" FontWeight="Bold" 
-                                               Foreground="#1D4ED8"/>
-                                    <TextBlock Text="Arıza &amp; Saha Operasyonları" FontSize="11" 
                                                Foreground="#60A5FA"/>
+                                    <TextBlock Text="Arıza &amp; Saha Operasyonları" FontSize="11" 
+                                               Foreground="#93C5FD"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -815,8 +843,10 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Padding="10" Margin="0,0,0,6"
-                                                    Background="{DynamicResource ThemeBackground}"
                                                     CornerRadius="8">
+                                                <Border.Background>
+                                                    <SolidColorBrush Color="White" Opacity="0.05"/>
+                                                </Border.Background>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto"/>
@@ -864,12 +894,21 @@
                         </ScrollViewer>
 
                         <!-- Separator: Teslime Hazır -->
-                        <Border Grid.Row="2" Background="#ECFDF5" CornerRadius="10" Padding="14" 
+                        <Border Grid.Row="2" CornerRadius="10" Padding="14" 
                                 Margin="-16,12,-16,12">
+                            <Border.Background>
+                                <SolidColorBrush Color="#10B981" Opacity="0.15"/>
+                            </Border.Background>
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="#10B981" Opacity="0.3"/>
+                            </Border.BorderBrush>
+                            <Border.BorderThickness>
+                                <Thickness>0,0,0,1</Thickness>
+                            </Border.BorderThickness>
                             <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="18" Foreground="#059669" VerticalAlignment="Center"/>
+                                <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="18" Foreground="#34D399" VerticalAlignment="Center"/>
                                 <TextBlock Text="Teslime Hazır Tamirler" FontSize="13" FontWeight="Bold" 
-                                           Foreground="#059669" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                           Foreground="#34D399" Margin="10,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
 
@@ -880,8 +919,10 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Border Padding="10" Margin="0,0,0,6"
-                                                    Background="{DynamicResource ThemeBackground}"
                                                     CornerRadius="8">
+                                                <Border.Background>
+                                                    <SolidColorBrush Color="White" Opacity="0.05"/>
+                                                </Border.Background>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="Auto"/>
@@ -956,14 +997,23 @@
                         </Grid.RowDefinitions>
 
                         <!-- Header -->
-                        <Border Grid.Row="0" Background="#FFFBEB" CornerRadius="10" Padding="14" Margin="-16,-16,-16,16">
+                        <Border Grid.Row="0" CornerRadius="10" Padding="14" Margin="-16,-16,-16,16">
+                            <Border.Background>
+                                <SolidColorBrush Color="#F59E0B" Opacity="0.15"/>
+                            </Border.Background>
+                            <Border.BorderBrush>
+                                <SolidColorBrush Color="#F59E0B" Opacity="0.3"/>
+                            </Border.BorderBrush>
+                            <Border.BorderThickness>
+                                <Thickness>0,0,0,1</Thickness>
+                            </Border.BorderThickness>
                             <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Money24" FontSize="22" Foreground="#D97706" VerticalAlignment="Center"/>
+                                <ui:SymbolIcon Symbol="Money24" FontSize="22" Foreground="#FBBF24" VerticalAlignment="Center"/>
                                 <StackPanel Margin="12,0,0,0">
                                     <TextBlock Text="Aylık Özet" FontSize="15" FontWeight="Bold" 
-                                               Foreground="#D97706"/>
-                                    <TextBlock Text="{Binding CurrentMonthName}" FontSize="11" 
                                                Foreground="#FBBF24"/>
+                                    <TextBlock Text="{Binding CurrentMonthName}" FontSize="11" 
+                                               Foreground="#FCD34D"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -972,7 +1022,10 @@
                         <StackPanel Grid.Row="1" VerticalAlignment="Top">
                             
                             <!-- Total Sales -->
-                            <Border Background="{DynamicResource ThemeBackground}" CornerRadius="14" Padding="20" Margin="0,0,0,16">
+                            <Border CornerRadius="14" Padding="20" Margin="0,0,0,16">
+                                <Border.Background>
+                                    <SolidColorBrush Color="White" Opacity="0.06"/>
+                                </Border.Background>
                                 <StackPanel HorizontalAlignment="Center">
                                     <TextBlock Text="TOPLAM SATIŞ" FontSize="11" FontWeight="Bold"
                                                Foreground="{DynamicResource DashTextSecondary}"
@@ -999,7 +1052,10 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <!-- Completed Jobs -->
-                                <Border Grid.Column="0" Background="#ECFDF5" CornerRadius="12" Padding="14" Margin="0,0,6,0">
+                                <Border Grid.Column="0" CornerRadius="12" Padding="14" Margin="0,0,6,0">
+                                    <Border.Background>
+                                        <SolidColorBrush Color="#10B981" Opacity="0.12"/>
+                                    </Border.Background>
                                     <StackPanel HorizontalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                             <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="10" Foreground="#059669" VerticalAlignment="Center"/>
@@ -1014,7 +1070,10 @@
                                 </Border>
 
                                 <!-- Active Jobs -->
-                                <Border Grid.Column="1" Background="#FFFBEB" CornerRadius="12" Padding="14" Margin="6,0,0,0">
+                                <Border Grid.Column="1" CornerRadius="12" Padding="14" Margin="6,0,0,0">
+                                    <Border.Background>
+                                        <SolidColorBrush Color="#F59E0B" Opacity="0.12"/>
+                                    </Border.Background>
                                     <StackPanel HorizontalAlignment="Center">
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                             <ui:SymbolIcon Symbol="Timer24" FontSize="10" Foreground="#D97706" VerticalAlignment="Center"/>
@@ -1030,7 +1089,10 @@
                             </Grid>
 
                             <!-- Daily Summary -->
-                            <Border Background="{DynamicResource ThemeBackground}" CornerRadius="12" Padding="14" Margin="0,16,0,0">
+                            <Border CornerRadius="12" Padding="14" Margin="0,16,0,0">
+                                <Border.Background>
+                                    <SolidColorBrush Color="White" Opacity="0.06"/>
+                                </Border.Background>
                                 <StackPanel>
                                     <TextBlock Text="BUGÜN" FontSize="10" FontWeight="Bold"
                                                Foreground="{DynamicResource DashTextSecondary}"

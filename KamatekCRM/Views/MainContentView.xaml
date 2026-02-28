@@ -509,12 +509,13 @@
                                      VerticalAlignment="Center" Height="40" FontSize="14" Padding="0,8"
                                      Foreground="White"/>
                             
-                            <Button Grid.Column="2" Content="✕" 
+                            <Button Grid.Column="2"
                                     Command="{Binding SearchViewModel.ClearCommand}"
                                     Visibility="{Binding SearchViewModel.HasResults, Converter={StaticResource BoolToVis}}"
                                     Background="Transparent" BorderThickness="0"
-                                    Foreground="#6B7280" FontSize="12"
-                                    Width="32" Height="32" Cursor="Hand"/>
+                                    Width="32" Height="32" Cursor="Hand">
+                                <Path Data="{StaticResource CloseIcon}" Fill="#6B7280" Width="12" Height="12" Stretch="Uniform"/>
+                            </Button>
                         </Grid>
                     </Border>
 
