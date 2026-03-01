@@ -18,8 +18,12 @@ namespace KamatekCrm.ViewModels
         private bool _rememberMe;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
         private bool _isSearchingForServer;
+
+        partial void OnIsSearchingForServerChanged(bool value)
+        {
+            CommandManager.InvalidateRequerySuggested();
+        }
 
         [ObservableProperty]
         private string _serverStatusMessage = string.Empty;
