@@ -580,7 +580,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Final sale completion — delegates to SalesDomainService
         /// </summary>
-        private void ExecuteCompleteSale()
+        private async void ExecuteCompleteSale()
         {
             if (!CanCompleteSale || SelectedWarehouse == null) return;
 
@@ -617,7 +617,7 @@ namespace KamatekCrm.ViewModels
                 }).ToList()
             };
 
-            var saleResult = _salesDomainService.ProcessSale(request);
+            var saleResult = await _salesDomainService.ProcessSaleAsync(request);
 
             if (saleResult.Success)
             {

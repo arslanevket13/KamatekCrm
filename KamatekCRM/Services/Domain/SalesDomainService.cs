@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Events;
 using KamatekCrm.Exceptions;
@@ -29,7 +31,7 @@ namespace KamatekCrm.Services.Domain
         /// <summary>
         /// Satış işlemini gerçekleştiri (Transaction içinde)
         /// </summary>
-        public SalesResult ProcessSale(SaleRequest request)
+        public async Task<SalesResult> ProcessSaleAsync(SaleRequest request)
         {
             if (request.Items.Count == 0)
                 return SalesResult.Fail("Sepet boş. Satış yapılamaz.");
@@ -38,17 +40,17 @@ namespace KamatekCrm.Services.Domain
                 return SalesResult.Fail("Geçerli bir depo seçilmedi.");
 
             // Thread safety: Eşzamanlı satışları sıraya al
-            _salesLock.Wait();
+            await _salesLock.WaitAsync();
             try
             {
                 using var unitOfWork = new UnitOfWork(new AppDbContext());
                 var context = unitOfWork.Context;
 
-                using var transaction = unitOfWork.BeginTransaction();
+                using var transaction = await unitOfWork.BeginTransactionAsync();
                 try
                 {
                     // 1. Sipariş numarası oluştur
-                    var todayOrders = context.SalesOrders.Count(o => o.Date.Date == DateTime.Today);
+                    var todayOrders = await context.SalesOrders.CountAsync(o => o.Date.Date == DateTime.Today);
                     var orderNumber = $"SO-{DateTime.Now:yyyyMMdd}-{(todayOrders + 1):D3}";
 
                     // 2. Toplamları hesapla
@@ -76,7 +78,7 @@ namespace KamatekCrm.Services.Domain
                         Status = SalesOrderStatus.Completed
                     };
                     context.SalesOrders.Add(salesOrder);
-                    context.SaveChanges(); // ID almak için
+                    await context.SaveChangesAsync(); // ID almak için
 
                     // 4. Sipariş kalemleri ve stok işlemleri
                     foreach (var item in request.Items)
@@ -97,8 +99,8 @@ namespace KamatekCrm.Services.Domain
                         context.SalesOrderItems.Add(orderItem);
 
                         // Stok düş
-                        var inventory = context.Inventories
-                            .FirstOrDefault(i => i.ProductId == item.ProductId && i.WarehouseId == request.WarehouseId);
+                        var inventory = await context.Inventories
+                            .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.WarehouseId == request.WarehouseId);
 
                         int oldQty = 0;
                         if (inventory != null)
@@ -165,7 +167,7 @@ namespace KamatekCrm.Services.Domain
                     context.CashTransactions.Add(cashTransaction);
 
                     // 6. Commit
-                    unitOfWork.Commit();
+                    await unitOfWork.CommitAsync();
 
                     // 7. Event yayınla
                     EventAggregator.Instance.Publish(new SaleCompletedEvent(
@@ -181,7 +183,7 @@ namespace KamatekCrm.Services.Domain
                     // ======================== Müşteri İstatistiklerini Güncelle ========================
                     if (request.CustomerId.HasValue)
                     {
-                        var customer = context.Customers.Find(request.CustomerId.Value);
+                        var customer = await context.Customers.FindAsync(request.CustomerId.Value);
                         if (customer != null)
                         {
                             customer.LastPurchaseDate = DateTime.Now;
@@ -192,7 +194,7 @@ namespace KamatekCrm.Services.Domain
                             int earnedPoints = (int)(totalAmount / 100);
                             customer.LoyaltyPoints += earnedPoints;
                             
-                            context.SaveChanges();
+                            await context.SaveChangesAsync();
                             
                             _ = AuditService.LogAsync(AuditActionType.Update, "Customer", customer.Id.ToString(), 
                                 $"Müşteri istatistikleri güncellendi. Toplam: {customer.TotalSpent:C}, Puan: +{earnedPoints}");
@@ -203,7 +205,7 @@ namespace KamatekCrm.Services.Domain
                 }
                 catch (Exception ex)
                 {
-                    unitOfWork.Rollback();
+                    await unitOfWork.RollbackAsync();
                     _ = AuditService.LogAsync(AuditActionType.Create, "Sale", null, $"Satış hatası: {ex.Message}");
                     return SalesResult.Fail($"Satış işlemi başarısız: {ex.Message}");
                 }

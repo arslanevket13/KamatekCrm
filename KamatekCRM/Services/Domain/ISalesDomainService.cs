@@ -15,7 +15,7 @@ namespace KamatekCrm.Services.Domain
         /// </summary>
         /// <param name="request">Satış isteği detayları</param>
         /// <returns>Satış sonucu</returns>
-        SalesResult ProcessSale(SaleRequest request);
+        Task<SalesResult> ProcessSaleAsync(SaleRequest request);
 
         /// <summary>
         /// Sepet öğelerini stok durumuna göre doğrular

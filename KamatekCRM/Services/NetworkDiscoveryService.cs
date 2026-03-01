@@ -118,6 +118,35 @@ public class NetworkDiscoveryService
         return _lastKnownServer;
     }
 
+    public async Task<ServerInfo?> DiscoverServerAsync(int timeoutMilliseconds = 5000)
+    {
+        if (IsServerAvailable() && _lastKnownServer != null)
+        {
+            return _lastKnownServer;
+        }
+
+        var tcs = new TaskCompletionSource<ServerInfo?>();
+        using var cts = new CancellationTokenSource(timeoutMilliseconds);
+
+        void OnServerDiscovered(object? sender, ServerInfo info)
+        {
+            tcs.TrySetResult(info);
+        }
+
+        ServerDiscovered += OnServerDiscovered;
+
+        if (_cts == null || _udpClient == null)
+        {
+            Start();
+        }
+
+        using var ctr = cts.Token.Register(() => tcs.TrySetResult(null));
+
+        var result = await tcs.Task;
+        ServerDiscovered -= OnServerDiscovered;
+        return result;
+    }
+
     public bool IsServerAvailable()
     {
         if (_lastKnownServer == null) return false;

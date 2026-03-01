@@ -168,6 +168,7 @@ KamatekCrm/
 │       └── LightTheme.xaml   # Aydınlık tema
 │
 ├── Services/             # İş servisleri
+│   ├── ApiClient.cs          # Merkezi HTTP API Müşterisi (YENİ - 401 Intercept, ApiResponse)
 │   ├── NetworkDiscoveryService.cs # UDP üzerinden API sunucusunu otomatik bulma (YENİ)
 │   ├── AddressService.cs     # Adres veri yönetimi
 │   ├── PdfService.cs         # PDF oluşturma (QuestPDF)

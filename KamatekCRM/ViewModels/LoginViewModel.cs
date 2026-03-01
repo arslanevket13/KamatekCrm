@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 using KamatekCrm.Commands;
 using KamatekCrm.Services;
 
@@ -8,13 +9,23 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Login ekranı ViewModel (UserControl için)
     /// </summary>
-    public class LoginViewModel : ViewModelBase
+    public partial class LoginViewModel : ViewModelBase
     {
         private string _username = string.Empty;
         private string _password = string.Empty;
         private string _errorMessage = string.Empty;
         private bool _isLoading;
         private bool _rememberMe;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
+        private bool _isSearchingForServer;
+
+        [ObservableProperty]
+        private string _serverStatusMessage = string.Empty;
+
+        [ObservableProperty]
+        private bool _isServerFound;
 
         /// <summary>
         /// Kullanıcı adı
@@ -85,18 +96,47 @@ namespace KamatekCrm.ViewModels
 
         private readonly IAuthService _authService;
         private readonly NavigationService _navigationService;
+        private readonly NetworkDiscoveryService _discoveryService;
+        private readonly ApiClient _apiClient;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public LoginViewModel(IAuthService authService, NavigationService navigationService)
+        public LoginViewModel(IAuthService authService, NavigationService navigationService, NetworkDiscoveryService discoveryService, ApiClient apiClient)
         {
             _authService = authService;
             _navigationService = navigationService;
+            _discoveryService = discoveryService;
+            _apiClient = apiClient;
             LoginCommand = new RelayCommand(async param => await ExecuteLoginAsync(param), _ => CanLogin());
             
             // Load saved settings
             LoadSavedCredentials();
+            
+            _ = InitializeDiscoveryAsync();
+        }
+
+        public async Task InitializeDiscoveryAsync()
+        {
+            IsSearchingForServer = true;
+            ServerStatusMessage = "Ağda Sunucu Aranıyor...";
+            IsServerFound = false;
+
+            var server = await _discoveryService.DiscoverServerAsync(5000);
+
+            if (server != null && !string.IsNullOrWhiteSpace(server.ApiUrl))
+            {
+                _apiClient.SetBaseUrl(server.ApiUrl);
+                IsServerFound = true;
+                ServerStatusMessage = $"Sunucu Bulundu: {server.ApiUrl}";
+            }
+            else
+            {
+                IsServerFound = false;
+                ServerStatusMessage = "Sunucu bulunamadı. Lütfen manuel IP girin veya localhost kullanın.";
+            }
+
+            IsSearchingForServer = false;
         }
 
         // Default constructor REMOVED as we heavily rely on DI now and manual instantiation is error prone.
@@ -107,7 +147,7 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private bool CanLogin()
         {
-            return !string.IsNullOrWhiteSpace(Username) && !IsLoading;
+            return !string.IsNullOrWhiteSpace(Username) && !IsLoading && !IsSearchingForServer;
         }
 
         /// <summary>

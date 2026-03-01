@@ -80,6 +80,9 @@ namespace KamatekCrm
                             client.DefaultRequestHeaders.Add("Accept", "application/json");
                         })
                         .AddHttpMessageHandler<AuthHeaderHandler>();
+
+                        // ApiClient kaydı
+                        services.AddHttpClient<ApiClient>("KamatekAPI");
                     })
                     .Build();
 

@@ -1,3 +1,12 @@
+## v14.1 — Enterprise Phase 2: UDP Network Discovery Integration (2026-03-01)
+- **NEW**: `NetworkDiscoveryService` integrated entirely into the WPF `LoginViewModel`.
+  - Scans for `ServerDiscoveryMessage` on port 5051 via UDP Broadcasts.
+  - Features real-time UI binding (Spinner + Status Text) while verifying server availability.
+- **ENHANCED**: `ApiClient.cs` now exposes `SetBaseUrl()` to dynamically reroute all endpoints based on the discovered API server IP, completely eliminating hardcoded `localhost` issues for field desktop clients.
+- **ENHANCED**: `LoginView` prevents premature login attempts by binding command states to network discovery progress.
+
+## v14.0 — Enterprise Phase 1: Core Stability & Communication (2026-03-01)
+
 ## v13.2 — Web Teknisyen App: PWA + Mobile-First (2026-03-01)
 - **PWA**: `manifest.json` + Service Worker (offline cache, offline page) → Mobil cihazlarda kurulabilir uygulama.
 - **MOBILE**: Hamburger sidebar, bottom navigation bar (5 item), touch-friendly (44px tap target).

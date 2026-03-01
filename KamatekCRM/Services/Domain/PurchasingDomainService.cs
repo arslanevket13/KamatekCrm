@@ -2,10 +2,13 @@ using System;
 using System.Linq;
 using System.Threading;
 using KamatekCrm.Data;
+using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Events;
 using KamatekCrm.Repositories;
+
+using System.Threading.Tasks;
 
 namespace KamatekCrm.Services.Domain
 {
@@ -14,7 +17,7 @@ namespace KamatekCrm.Services.Domain
     /// </summary>
     public interface IPurchasingDomainService
     {
-        PurchaseResult CompletePurchaseOrder(PurchaseCompletionRequest request);
+        Task<PurchaseResult> CompletePurchaseOrderAsync(PurchaseCompletionRequest request);
     }
 
     public class PurchasingDomainService : IPurchasingDomainService
@@ -34,23 +37,23 @@ namespace KamatekCrm.Services.Domain
         /// 3) WAC (Moving Average Cost) yeniden hesapla
         /// 4) Tedarikçi borç kaydı (CashTransaction → CashExpense)
         /// </summary>
-        public PurchaseResult CompletePurchaseOrder(PurchaseCompletionRequest request)
+        public async Task<PurchaseResult> CompletePurchaseOrderAsync(PurchaseCompletionRequest request)
         {
             if (request.PurchaseOrderId <= 0)
                 return PurchaseResult.Fail("Geçersiz sipariş ID.");
 
-            _lock.Wait();
+            await _lock.WaitAsync();
             try
             {
                 using var unitOfWork = new UnitOfWork(new AppDbContext());
                 var context = unitOfWork.Context;
 
-                using var transaction = unitOfWork.BeginTransaction();
+                using var transaction = await unitOfWork.BeginTransactionAsync();
                 try
                 {
                     // 1. PurchaseOrder'ı yükle
-                    var po = context.PurchaseOrders
-                        .FirstOrDefault(p => p.Id == request.PurchaseOrderId);
+                    var po = await context.PurchaseOrders
+                        .FirstOrDefaultAsync(p => p.Id == request.PurchaseOrderId);
 
                     if (po == null)
                         return PurchaseResult.Fail("Satın alma siparişi bulunamadı.");
@@ -59,9 +62,9 @@ namespace KamatekCrm.Services.Domain
                         return PurchaseResult.Fail("Bu sipariş zaten tamamlanmış.");
 
                     // Kalemleri yükle
-                    var items = context.PurchaseOrderItems
+                    var items = await context.PurchaseOrderItems
                         .Where(i => i.PurchaseOrderId == po.Id)
-                        .ToList();
+                        .ToListAsync();
 
                     if (items.Count == 0)
                         return PurchaseResult.Fail("Sipariş kalemleri bulunamadı.");
@@ -72,8 +75,8 @@ namespace KamatekCrm.Services.Domain
                     foreach (var item in items)
                     {
                         // Stok artış
-                        var inventory = context.Inventories
-                            .FirstOrDefault(i => i.ProductId == item.ProductId && i.WarehouseId == request.WarehouseId);
+                        var inventory = await context.Inventories
+                            .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.WarehouseId == request.WarehouseId);
 
                         int oldQty = 0;
                         if (inventory != null)
@@ -106,7 +109,7 @@ namespace KamatekCrm.Services.Domain
                         }
 
                         // Ürün toplam stok güncelle
-                        var product = context.Products.Find(item.ProductId);
+                        var product = await context.Products.FindAsync(item.ProductId);
                         if (product != null)
                         {
                             product.TotalStockQuantity += item.Quantity;
@@ -168,8 +171,8 @@ namespace KamatekCrm.Services.Domain
                     };
                     context.CashTransactions.Add(cashTx);
 
-                    // 5. Commit
-                    unitOfWork.Commit();
+                    // 5. Commit Async
+                    await unitOfWork.CommitAsync();
 
                     // Audit log
                     _ = AuditService.LogAsync(AuditActionType.Create, "Purchase",
@@ -180,7 +183,7 @@ namespace KamatekCrm.Services.Domain
                 }
                 catch (Exception ex)
                 {
-                    unitOfWork.Rollback();
+                    await unitOfWork.RollbackAsync();
                     _ = AuditService.LogAsync(AuditActionType.Create, "Purchase", null,
                         $"Satın alma hatası: {ex.Message}");
                     return PurchaseResult.Fail($"Satın alma hatası: {ex.Message}");

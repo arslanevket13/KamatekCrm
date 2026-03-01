@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Serilog;
 
 namespace KamatekCrm.API.Middleware
@@ -7,7 +9,7 @@ namespace KamatekCrm.API.Middleware
     /// <summary>
     /// Global exception handler — tüm unhandled exception'ları yakalar,
     /// Serilog ile loglar ve istemciye standart JSON error response döner.
-    /// Production'da stack trace gizlenir; Development'ta gösterilir.
+    /// DbUpdateException ve PostgresException'ları yakalayarak Türkçe mesajlar üretir.
     /// </summary>
     public class GlobalExceptionMiddleware
     {
@@ -34,16 +36,45 @@ namespace KamatekCrm.API.Middleware
 
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            var (statusCode, errorType) = exception switch
+            var statusCode = HttpStatusCode.InternalServerError;
+            var errorType = "Internal Server Error";
+            var uiMessage = "Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.";
+
+            // PostgreSQL / EF Core DB Error Parsing
+            if (exception is DbUpdateException dbEx && dbEx.InnerException is PostgresException pgEx)
             {
-                ArgumentNullException => (HttpStatusCode.BadRequest, "Validation Error"),
-                ArgumentException => (HttpStatusCode.BadRequest, "Validation Error"),
-                KeyNotFoundException => (HttpStatusCode.NotFound, "Not Found"),
-                UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized"),
-                InvalidOperationException => (HttpStatusCode.Conflict, "Conflict"),
-                TimeoutException => (HttpStatusCode.RequestTimeout, "Timeout"),
-                _ => (HttpStatusCode.InternalServerError, "Internal Server Error")
-            };
+                statusCode = HttpStatusCode.Conflict;
+                errorType = "Database Constraint Violation";
+                
+                uiMessage = pgEx.SqlState switch
+                {
+                    "23505" => "Bu kayıt zaten mevcut. Lütfen benzersiz bir değer girin. (Unique Constraint)",
+                    "23503" => "Bu işlem yapılamaz çünkü ilişkili kayıtlar mevcut. (Foreign Key Violation)",
+                    "23502" => "Zorunlu bir alan boş bırakılmış. (Not Null Violation)",
+                    _ => "Veritabanı kayıt işlemi sırasında kural ihlali oluştu."
+                };
+            }
+            else if (exception is PostgresException rawPgEx)
+            {
+                statusCode = HttpStatusCode.ServiceUnavailable;
+                errorType = "Database Connection Error";
+                uiMessage = "Veritabanı sunucusuna erişilemiyor. Lütfen sistem yöneticisi ile iletişime geçin.";
+            }
+            else
+            {
+                (statusCode, errorType) = exception switch
+                {
+                    ArgumentNullException => (HttpStatusCode.BadRequest, "Validation Error"),
+                    ArgumentException => (HttpStatusCode.BadRequest, "Validation Error"),
+                    KeyNotFoundException => (HttpStatusCode.NotFound, "Not Found"),
+                    UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized"),
+                    InvalidOperationException => (HttpStatusCode.Conflict, "Conflict"),
+                    TimeoutException => (HttpStatusCode.RequestTimeout, "Timeout"),
+                    _ => (HttpStatusCode.InternalServerError, "Internal Server Error")
+                };
+                
+                uiMessage = GetUserFriendlyMessage(statusCode);
+            }
 
             // Log with correlation
             var correlationId = context.TraceIdentifier;
@@ -57,13 +88,8 @@ namespace KamatekCrm.API.Middleware
             var response = new
             {
                 Success = false,
-                Error = new
-                {
-                    Type = errorType,
-                    Message = _env.IsDevelopment() ? exception.Message : GetUserFriendlyMessage(statusCode),
-                    CorrelationId = correlationId,
-                    StackTrace = _env.IsDevelopment() ? exception.StackTrace : null
-                }
+                Message = uiMessage, // Now using our mapped Turkish message
+                Errors = new List<string> { _env.IsDevelopment() ? exception.Message : uiMessage }
             };
 
             var json = JsonSerializer.Serialize(response, new JsonSerializerOptions

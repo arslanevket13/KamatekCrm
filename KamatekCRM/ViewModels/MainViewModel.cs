@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using KamatekCrm.Commands;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace KamatekCrm.ViewModels
 {
@@ -111,6 +112,15 @@ namespace KamatekCrm.ViewModels
             _toastService = toastService;
             _loadingService = loadingService;
 
+            // 401 Unauthorized yakalama
+            WeakReferenceMessenger.Default.Register<UnauthorizedMessage>(this, (r, m) =>
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    ForceLogout();
+                });
+            });
+
             // Komutları tanımla
             NavigateToDashboardCommand = new RelayCommand(_ => NavigateToDashboard());
             NavigateToCustomersCommand = new RelayCommand(_ => NavigateToCustomers());
@@ -189,6 +199,14 @@ namespace KamatekCrm.ViewModels
                 System.Diagnostics.Process.Start(System.Windows.Application.ResourceAssembly.Location.Replace(".dll", ".exe"));
                 System.Windows.Application.Current.Shutdown();
             }
+        }
+
+        private void ForceLogout()
+        {
+            _authService.Logout();
+            MessageBox.Show("Oturum süreniz doldu veya yetkiniz yok. Tekrar giriş yapın.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+            System.Diagnostics.Process.Start(System.Windows.Application.ResourceAssembly.Location.Replace(".dll", ".exe"));
+            System.Windows.Application.Current.Shutdown();
         }
 
         /// <summary>

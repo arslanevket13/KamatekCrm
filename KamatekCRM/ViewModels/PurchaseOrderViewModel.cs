@@ -343,7 +343,7 @@ namespace KamatekCrm.ViewModels
                         .FirstOrDefaultAsync(w => w.IsActive);
                     var warehouseId = warehouse?.Id ?? 1;
 
-                    var result = _purchasingService.CompletePurchaseOrder(new PurchaseCompletionRequest
+                    var result = await _purchasingService.CompletePurchaseOrderAsync(new PurchaseCompletionRequest
                     {
                         PurchaseOrderId = order.Id,
                         WarehouseId = warehouseId,
