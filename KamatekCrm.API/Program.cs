@@ -90,6 +90,13 @@ try
     // Services
     builder.Services.AddScoped<IPhotoStorageService, PhotoStorageService>();
 
+    // Network Discovery Service - UDP Broadcast
+    var discoveryEnabled = builder.Configuration.GetValue<bool>("NetworkDiscovery:Enabled", true);
+    if (discoveryEnabled)
+    {
+        builder.Services.AddHostedService<NetworkDiscoveryService>();
+    }
+
     // Swagger/OpenAPI
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>

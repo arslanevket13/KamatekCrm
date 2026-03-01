@@ -1,3 +1,8 @@
+## v11.8 — Network Discovery Service & Auto-Configuration (2026-03-01)
+- **NEW**: `NetworkDiscoveryService.cs` in API — Broadcasts server coordinates (API URL, Web URL, Database Host) via UDP port 5051 every 5 seconds.
+- **NEW**: `NetworkDiscoveryService.cs` in Desktop (WPF) — Listens for UDP broadcasts on port 5051 to zero-config auto-discover the API on the local network.
+- **Config**: Added `NetworkDiscovery` properties to `appsettings.json` for both KamatekCrm.API and KamatekCRM(WPF).
+
 ## v11.7 — Technician Web Dashboard & Auth Rollout (2026-03-01)
 - **NEW**: `TechnicianDtos.cs` — Shared models for Repairs, Projects, Quotes, and Installations.
 - **Web**: Implemented `TechnicianDashboardEndpoints.cs` providing KPI stats and job listings for technicians.

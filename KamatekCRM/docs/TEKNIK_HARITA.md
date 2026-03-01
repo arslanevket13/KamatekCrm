@@ -149,6 +149,7 @@ KamatekCrm/
 │   └── AppDbContext.cs   # EF Core DbContext
 │
 ├── Services/             # İş servisleri
+│   ├── NetworkDiscoveryService.cs # UDP üzerinden API sunucusunu otomatik bulma (YENİ)
 │   ├── AddressService.cs     # Adres veri yönetimi
 │   ├── PdfService.cs         # PDF oluşturma (QuestPDF)
 │   ├── ProjectScopeService.cs # Proje ağacı ve veri yönetimi
