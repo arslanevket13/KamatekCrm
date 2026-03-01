@@ -14,13 +14,17 @@
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
 
-                <!-- Custom Theme - Light -->
+                <!-- Design Tokens (Single Source of Truth) -->
+                <ResourceDictionary Source="Resources/DesignTokens.xaml"/>
+                <!-- Custom Theme -->
                 <ResourceDictionary Source="Resources/Themes/CustomTheme.xaml"/>
                 
                 <!-- Animations -->
                 <ResourceDictionary Source="Resources/Animations.xaml"/>
                 <!-- Stiller -->
                 <ResourceDictionary Source="Resources/Styles.xaml"/>
+                <!-- Premium Component Styles -->
+                <ResourceDictionary Source="Resources/ComponentStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Navigation Views -->

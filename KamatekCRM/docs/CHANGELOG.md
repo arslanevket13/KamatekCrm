@@ -1,3 +1,95 @@
+## v13.2 — Web Teknisyen App: PWA + Mobile-First (2026-03-01)
+- **PWA**: `manifest.json` + Service Worker (offline cache, offline page) → Mobil cihazlarda kurulabilir uygulama.
+- **MOBILE**: Hamburger sidebar, bottom navigation bar (5 item), touch-friendly (44px tap target).
+- **CSS**: 450+ satır Midnight Blue CSS — KPI glow cards, glassmorphism, skeleton loading, responsive breakpoints.
+- **ENHANCED**: TechnicianDashboard → real KPI data, greeting, empty states, quick actions.
+- **ENHANCED**: SchedulePage → zaman çizelgesi (08:00-17:00 timeline), tarih navigasyonu, planlanmamış işler.
+- **ENHANCED**: TechnicianProfile → avatar kartı, bilgi grid, ayarlar bölümü.
+- **ENHANCED**: JobsPage → durum renk badge'leri, filtre dropdown.
+- **NEW**: `JobWorkflowEndpoints.cs` → İş detay, işe başla, işi tamamla, not ekleme (HTMX partial).
+- **FIX**: Duplicate method tanımları temizlendi, tüm tablo `table-responsive` wraplendi.
+
+## v13.1 — Midnight Blue Dark Theme (2026-03-01)
+- **THEME**: Complete dark mode conversion — `CustomTheme.xaml`, `Styles.xaml`, `DesignTokens.xaml` all unified to Midnight Blue palette.
+- **PALETTE**: Surfaces (#0B0E14/#141821), Text (#F1F5F9/#94A3B8), Borders (#1E293B), Accent (#3B82F6→#06B6D4).
+- **COMPONENTS**: All buttons, cards, DataGrid (rows/headers/cells/alternating), TextBox, ComboBox, DatePicker, ToggleButton, NavButton, FilterBar — dark-native with glassmorphism and neon glow.
+- **FIX**: Resolved Light/Dark theme conflict that caused visual inconsistencies.
+
+## v13.0 — CRM Pipeline & Customer Analytics (2026-03-01)
+- **ENHANCED**: `CustomersController` — From 5 basic endpoints to 10 enterprise endpoints.
+- **NEW**: Advanced search (segment/city/multi-sort), customer detail with job+sales history, customer notes/activity timeline (9 types), RFM scoring (Champions/Loyal/Potential/AtRisk/Hibernating), city distribution analytics, churn risk detection with potential lost revenue.
+- **NEW**: `CustomerNote` model — CRM activity types: Note, PhoneCall, Visit, Email, Proposal, Complaint, Payment, ServiceRequest, Follow_Up.
+
+## v12.9 — PDF Report Engine (2026-03-01)
+- **NEW**: `PdfReportService` — QuestPDF-based professional PDF engine with shared components (company header, section titles, KPI cards, footer with pagination).
+- **TEMPLATES**: ServiceJob Report (job + customer + parts table + pricing), Invoice (dual-column + KDV details), Monthly Summary (KPI cards + top products).
+- **NEW**: `PdfController` — 3 download endpoints: `/api/pdf/service-job/{id}`, `/api/pdf/invoice/{orderId}`, `/api/pdf/monthly-summary`.
+- **DEP**: Added `QuestPDF 2024.12.3`.
+
+## v12.8 — GPS Tracking & Map Infrastructure (2026-03-01)
+- **NEW**: `TechnicianLocation` model — GPS coords, accuracy, speed, heading, battery level, background flag.
+- **NEW**: `RoutePoint` model — Daily route planning with ordered stops and ETA.
+- **NEW**: `LocationController` — 7 endpoints: single/batch GPS update, active technicians map (last 30 min), location history with Haversine total distance, nearest technicians (for smart job assignment), daily route plan CRUD.
+
+## v12.7 — Sales, Purchases & Finance (2026-03-01)
+- **NEW**: `SalesController` — Sales orders with search/filter/pagination, order detail with items+payments, daily summary (revenue/discount/tax/cash flow/payment breakdown), Excel export.
+- **NEW**: `PurchasesController` — Purchase orders and invoices (filtered by supplier/status/payment, paginated), payment recording with auto status update (Unpaid→PartiallyPaid→Paid), supplier payment summary.
+- **NEW**: `FinanceController` — Cash position (cash/card/total, today's income/expense, 30s cache), filterable cash transactions, create cash transaction, accounts summary (receivable vs payable vs unpaid = net position).
+
+## v12.6 — Products, Inventory & Report Engine (2026-03-01)
+- **NEW**: `AppDbContext` — 13 ERP entity DbSets (Product, Brand, Inventory, Warehouse, StockTransaction, SalesOrder, CashTransaction, Supplier, PurchaseOrder, etc.)
+- **NEW**: `ProductsController` — Full CRUD + search (name/SKU/barcode) + category/brand filter + low-stock endpoint + brands dropdown.
+- **NEW**: `InventoryController` — Stock levels by warehouse, stock transactions (in/out/transfer) with auto quantity update, real-time SignalR stock alerts.
+- **NEW**: `SuppliersController` — CRUD + search + soft-deactivation + supplier balance summary with open order count.
+- **NEW**: `ReportsController` — 5 analytical endpoints: Technician Performance, Monthly Revenue (sales+service-expenses, profit margin), Stock Valuation (value + potential profit), Customer Segments, SLA Performance.
+
+## v12.5 — WPF Premium Components R2 + Keyboard Shortcuts (2026-03-01)
+- **NEW**: `KmAvatar` — Initials/image avatar with deterministic color per person, 4 sizes (S/M/L/XL), online status dot.
+- **NEW**: `KmNotificationCenter` — Bell icon with unread badge, popup panel, 7 notification types with emoji icons, Turkish relative time, max 50 notifications.
+- **NEW**: `KmSplitButton` — Primary action + dropdown alternatives (5 styles: Primary/Secondary/Success/Danger/Warning).
+- **NEW**: `KmWizardStepper` — Multi-step form wizard with progress bar, step validation states, auto CanGoNext/Previous.
+- **NEW**: `KeyboardShortcutService` — Global shortcut infrastructure: Ctrl+N/S/F, F5, Esc, Ctrl+E/P, module hotkeys. Smart TextBox awareness.
+
+## v12.4 — Excel Engine & SignalR Real-time (2026-03-01)
+- **NEW**: `ExcelService` — Generic ClosedXML export engine. Reflection-based column mapping, styled headers, zebra striping, auto-filter, frozen header row. Pre-built templates for ServiceJobs and Customers with Turkish column names.
+- **NEW**: `NotificationHub` — SignalR real-time hub at `/hubs/notifications`. Role-based groups, online/offline status, GPS location relay to Admin, typed event system (JobStatusChanged, NewJobAssigned, StockAlert, DashboardRefresh).
+- **NEW**: `INotificationService` — Server-side notification dispatch. Controllers inject this to push events to connected clients.
+- **NEW**: `ExportController` — 3 download endpoints: ServiceJobs (date-filtered), Customers (with job count), Categories. Returns timestamped .xlsx files.
+- **DEPS**: Added `ClosedXML 0.104.2` package.
+
+## v12.3 — Validation, Result Pattern & Rate Limiting (2026-03-01)
+- **NEW**: `Result<T>` + `PagedResult<T>` + `ErrorCodes` — Clean return types for service layer, replaces exception-based control flow.
+- **NEW**: Rate Limiting — 3-tier strategy: Global (100 req/10s sliding window), Auth (10 req/min brute-force), Heavy (30 req/min token bucket).
+- **NEW**: `ValidationFilter` — DataAnnotation errors → structured JSON with field-level detail.
+- **NEW**: `RequestTimingFilter` — Measures every request, logs slow calls (>1s), adds `X-Response-Time-Ms` header.
+- **IMPROVED**: `Program.cs` — ValidationFilter + RequestTimingFilter globally registered, RateLimiter middleware in pipeline.
+
+## v12.2 — API Infrastructure & Enterprise Middleware (2026-03-01)
+- **NEW**: `GlobalExceptionMiddleware` — Unhandled exception → structured JSON response. Exception→HTTP status mapping, Serilog correlation ID logging, Turkish user-friendly messages in production, stack trace in development only.
+- **NEW**: `ApiResponse<T>` — Standardized API response envelope with Success/Data/Error/Meta. `PaginationMeta` with auto-calculated TotalPages, HasPrevious/HasNext.
+- **NEW**: `CacheService` — IMemoryCache cache-aside pattern. GetOrCreateAsync factory, prefix-based invalidation (`dashboard:*`), TTL strategy (Dashboard 30s, Lists 5m, Reports 15m).
+- **IMPROVED**: `DashboardController` — All 4 endpoints now cached (30s TTL). New `POST /invalidate-cache` endpoint for admin refresh. Responses use `ApiResponse<T>` envelope.
+- **IMPROVED**: `Program.cs` — Registered IMemoryCache, ICacheService (singleton), GlobalExceptionMiddleware (first in pipeline).
+
+## v12.1 — Full CRUD API Controllers (2026-03-01)
+- **NEW**: `ServiceJobsController` — Full CRUD with multi-filter (search, status, customer, technician, date range), sorting, pagination headers, automatic history tracking on status changes, partial status update (PATCH).
+- **NEW**: `CategoriesController` — Full CRUD with duplicate name prevention.
+- **NEW**: `DashboardController` — Parallel-query KPI stats, weekly trend data (fills empty days), job category distribution, status distribution.
+- **NEW**: `UsersController` — Search/role/technician filter, detail projection (excludes PasswordHash), partial update, soft-deactivation.
+- API endpoints expanded from 8 to 23+.
+
+## v12.0 — Design System & Premium Component Library (2026-03-01)
+- **NEW**: `DesignTokens.xaml` — Semantic design token system: surfaces, elevations (0-5), animation easings, KPI gradients, status tint colors, interactive states, and component-specific dimensions.
+- **NEW**: `ComponentStyles.xaml` — 540+ lines of XAML ControlTemplates for all Km* premium components.
+- **NEW**: `KmStatusBadge` — Auto-colored status labels with pulsing dot indicator (Success/Warning/Error/Info/Neutral).
+- **NEW**: `KmKpiCard` — Animated KPI card with ease-out cubic counter animation, trend arrows (▲/▼), gradient accent icon, prefix/suffix, subtitle.
+- **NEW**: `KmSearchBox` — Debounced search input (configurable delay), clear button, placeholder, focus ring animation.
+- **NEW**: `KmEmptyState` — Centered empty-state display with icon circle, title, message, and optional CTA button.
+- **NEW**: `KmBreadcrumb` — Hierarchical page navigation with chevron separators.
+- **NEW**: `KmTimeline` — Vertical event timeline with color-coded status dots, relative time display ("3 saat önce").
+- **NEW**: `KmFilterPanel` — Multi-filter panel: date range, status dropdown, category dropdown, filter count badge, clear-all.
+- **DI**: All components registered in `App.xaml` resource dictionaries.
+
 ## v11.8 — Network Discovery Service & Auto-Configuration (2026-03-01)
 - **NEW**: `NetworkDiscoveryService.cs` in API — Broadcasts server coordinates (API URL, Web URL, Database Host) via UDP port 5051 every 5 seconds.
 - **NEW**: `NetworkDiscoveryService.cs` in Desktop (WPF) — Listens for UDP broadcasts on port 5051 to zero-config auto-discover the API on the local network.

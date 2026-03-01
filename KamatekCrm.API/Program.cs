@@ -5,6 +5,8 @@ using System.Text;
 using Serilog;
 using KamatekCrm.Data;
 using KamatekCrm.API.Services;
+using KamatekCrm.API.Middleware;
+using KamatekCrm.API.Hubs;
 
 // Serilog yapılandırması
 Log.Logger = new LoggerConfiguration()
@@ -84,11 +86,32 @@ try
         });
     });
 
-    // Controllers
-    builder.Services.AddControllers();
+    // Controllers + Action Filters
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<KamatekCrm.API.Middleware.ValidationFilter>();
+        options.Filters.Add<KamatekCrm.API.Middleware.RequestTimingFilter>();
+    });
+
+    // Rate Limiting
+    builder.Services.AddRateLimiting();
 
     // Services
     builder.Services.AddScoped<IPhotoStorageService, PhotoStorageService>();
+
+    // Caching
+    builder.Services.AddMemoryCache();
+    builder.Services.AddSingleton<ICacheService, CacheService>();
+
+    // Excel Export
+    builder.Services.AddScoped<IExcelService, ExcelService>();
+
+    // PDF Report Engine
+    builder.Services.AddScoped<IPdfReportService, PdfReportService>();
+
+    // SignalR Real-time
+    builder.Services.AddSignalR();
+    builder.Services.AddScoped<INotificationService, NotificationService>();
 
     // Network Discovery Service - UDP Broadcast
     var discoveryEnabled = builder.Configuration.GetValue<bool>("NetworkDiscovery:Enabled", true);
@@ -147,11 +170,16 @@ try
         });
     }
 
+    // Global Exception Handler — En dış katman, her şeyi yakalar
+    app.UseGlobalExceptionHandler();
+
     app.UseSerilogRequestLogging();
     app.UseCors("AllowedOrigins");
+    app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    app.MapHub<NotificationHub>("/hubs/notifications");
 
     // Health check endpoint
     app.MapGet("/health", () => Results.Ok(new { 

@@ -19,6 +19,28 @@ namespace KamatekCrm.Data
         public DbSet<TaskPhoto> TaskPhotos { get; set; }
         public DbSet<Category> Categories { get; set; }
 
+        // ERP Entity'ler
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Brand> Brands { get; set; }
+        public DbSet<Inventory> Inventories { get; set; }
+        public DbSet<Warehouse> Warehouses { get; set; }
+        public DbSet<StockTransaction> StockTransactions { get; set; }
+        public DbSet<ServiceJobItem> ServiceJobItems { get; set; }
+        public DbSet<SalesOrder> SalesOrders { get; set; }
+        public DbSet<SalesOrderItem> SalesOrderItems { get; set; }
+        public DbSet<CashTransaction> CashTransactions { get; set; }
+        public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+        public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
+        public DbSet<PurchaseInvoice> PurchaseInvoices { get; set; }
+
+        // GPS / Harita
+        public DbSet<TechnicianLocation> TechnicianLocations { get; set; }
+        public DbSet<RoutePoint> RoutePoints { get; set; }
+
+        // CRM
+        public DbSet<CustomerNote> CustomerNotes { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

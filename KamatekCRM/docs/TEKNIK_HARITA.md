@@ -148,6 +148,25 @@ KamatekCrm/
 ├── Data/
 │   └── AppDbContext.cs   # EF Core DbContext
 │
+├── Components/           # Premium Reusable UI Components (YENİ)
+│   ├── KmStatusBadge.cs      # Renk kodlu durum etiketi (pulsing dot)
+│   ├── KmKpiCard.cs          # Animasyonlu KPI kartı (sayaç, trend okları)
+│   ├── KmSearchBox.cs        # Debounced arama kutusu
+│   ├── KmEmptyState.cs       # Boş veri ekranı (icon + CTA)
+│   ├── KmBreadcrumb.cs       # Sayfa navigasyon bread crumb
+│   ├── KmTimeline.cs         # Dikey olay tarihçesi
+│   └── KmFilterPanel.cs      # Çoklu filtre paneli
+│
+├── Resources/            # Tasarım Sistemi
+│   ├── DesignTokens.xaml     # Semantic token'lar (surfaces, elevations, animations)
+│   ├── ComponentStyles.xaml  # Km* component ControlTemplate'leri
+│   ├── Animations.xaml       # Geçiş animasyonları
+│   ├── Styles.xaml           # Genel stil tanımları
+│   └── Themes/
+│       ├── CustomTheme.xaml  # Ana tema (renk, tipografi, buton stilleri)
+│       ├── DarkTheme.xaml    # Karanlık tema
+│       └── LightTheme.xaml   # Aydınlık tema
+│
 ├── Services/             # İş servisleri
 │   ├── NetworkDiscoveryService.cs # UDP üzerinden API sunucusunu otomatik bulma (YENİ)
 │   ├── AddressService.cs     # Adres veri yönetimi

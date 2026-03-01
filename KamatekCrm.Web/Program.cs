@@ -148,6 +148,7 @@ try
     JobsEndpoints.Map(app);
     SalesEndpoints.Map(app);
     TechnicianDashboardEndpoints.Map(app);
+    JobWorkflowEndpoints.Map(app);
 
     // ─── 10. STARTUP ───
     Log.Information("──► KamatekCRM Web | Port 7000 | Minimal API + HTMX | CSP Strict");
