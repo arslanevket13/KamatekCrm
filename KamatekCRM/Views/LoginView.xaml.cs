@@ -17,6 +17,24 @@ namespace KamatekCrm.Views
             InitializeComponent();
 
             Loaded += (s, e) => UsernameTextBox?.Focus();
+            PasswordBox.PasswordChanged += PasswordBox_PasswordChanged;
+            PasswordTextBox.TextChanged += PasswordTextBox_TextChanged;
+        }
+
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (!_isPasswordVisible && DataContext is LoginViewModel vm)
+            {
+                vm.Password = PasswordBox.Password;
+            }
+        }
+
+        private void PasswordTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isPasswordVisible && DataContext is LoginViewModel vm)
+            {
+                vm.Password = PasswordTextBox.Text;
+            }
         }
 
         private void ForgotPassword_Click(object sender, MouseButtonEventArgs e)

@@ -404,7 +404,6 @@
                             <Button x:Name="LoginBtn"
                                     Content="Giriş Yap"
                                     Command="{Binding LoginCommand}"
-                                    CommandParameter="{Binding ElementName=PasswordBox}"
                                     Style="{StaticResource LoginButtonFluent}"
                                     Height="48"
                                     Cursor="Hand"/>

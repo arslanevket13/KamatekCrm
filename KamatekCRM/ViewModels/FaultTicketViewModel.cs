@@ -63,6 +63,9 @@ namespace KamatekCrm.ViewModels
         // Save spinner
         private bool _isSaving;
 
+        // Fotoğraflar
+        public ObservableCollection<string> TempPhotoPaths { get; } = new();
+
         // Window close event
         public event Action<bool>? RequestClose;
 
@@ -229,6 +232,8 @@ namespace KamatekCrm.ViewModels
 
         public ICommand SaveFaultTicketCommand { get; }
         public ICommand CancelCommand { get; }
+        public ICommand AddPhotoCommand { get; }
+        public ICommand RemovePhotoCommand { get; }
 
         #endregion
 
@@ -241,6 +246,8 @@ namespace KamatekCrm.ViewModels
 
             SaveFaultTicketCommand = new RelayCommand(async _ => await SaveFaultTicketAsync(), _ => CanSave());
             CancelCommand = new RelayCommand(_ => Cancel());
+            AddPhotoCommand = new RelayCommand(_ => ExecuteAddPhoto());
+            RemovePhotoCommand = new RelayCommand<string>(ExecuteRemovePhoto);
 
             _ = LoadCustomersAsync();
             UpdateDeviceTypeOptions();
@@ -437,6 +444,24 @@ namespace KamatekCrm.ViewModels
                     CreatedBy = App.CurrentUser?.Username ?? "System"
                 };
 
+                // Fotoğraf kaydet
+                if (TempPhotoPaths.Any())
+                {
+                    string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    string photoDir = System.IO.Path.Combine(appData, "KamatekCrm", "Photos");
+                    if (!System.IO.Directory.Exists(photoDir)) System.IO.Directory.CreateDirectory(photoDir);
+
+                    var finalPaths = new System.Collections.Generic.List<string>();
+                    foreach (var src in TempPhotoPaths)
+                    {
+                        string fileName = $"NewJob_{Guid.NewGuid()}{System.IO.Path.GetExtension(src)}";
+                        string destPath = System.IO.Path.Combine(photoDir, fileName);
+                        System.IO.File.Copy(src, destPath);
+                        finalPaths.Add(destPath);
+                    }
+                    faultTicket.PhotoPathsJson = System.Text.Json.JsonSerializer.Serialize(finalPaths);
+                }
+
                 ctx.ServiceJobs.Add(faultTicket);
                 await ctx.SaveChangesAsync();
 
@@ -483,6 +508,31 @@ namespace KamatekCrm.ViewModels
             IsQuickAddCustomer = false;
             QuickCustomerName = string.Empty;
             QuickCustomerPhone = string.Empty;
+            TempPhotoPaths.Clear();
+        }
+
+        private void ExecuteAddPhoto()
+        {
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Resim Dosyaları|*.jpg;*.jpeg;*.png;*.bmp",
+                Multiselect = true
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                foreach (var file in openFileDialog.FileNames)
+                {
+                    if (!TempPhotoPaths.Contains(file)) TempPhotoPaths.Add(file);
+                }
+            }
+        }
+
+        private void ExecuteRemovePhoto(string? path)
+        {
+            if (path != null && TempPhotoPaths.Contains(path))
+            {
+                TempPhotoPaths.Remove(path);
+            }
         }
 
         #endregion

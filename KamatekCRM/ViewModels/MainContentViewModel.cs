@@ -137,7 +137,9 @@ namespace KamatekCrm.ViewModels
         public ICommand NavigateToFinanceCommand { get; }
         public ICommand NavigateToAnalyticsCommand { get; }
         public ICommand NavigateToPurchaseOrdersCommand { get; }
-        public ICommand NavigateToSuppliersCommand { get; } // NEW
+        public ICommand NavigateToSuppliersCommand { get; }
+        public ICommand NavigateToPipelineCommand { get; }
+        public ICommand NavigateToSchedulerCommand { get; }
 
         // Methods
 
@@ -216,7 +218,9 @@ namespace KamatekCrm.ViewModels
             NavigateToFinancialHealthCommand = new RelayCommand(_ => NavigateTo<FinancialHealthViewModel>(), _ => _authService.CanViewFinance);
             NavigateToRoutePlanningCommand = new RelayCommand(_ => NavigateTo<RoutePlanningViewModel>());
             
-            NavigateToSuppliersCommand = new RelayCommand(_ => NavigateTo<SuppliersViewModel>()); // Initialization
+            NavigateToSuppliersCommand = new RelayCommand(_ => NavigateTo<SuppliersViewModel>());
+            NavigateToPipelineCommand = new RelayCommand(_ => _toastService.ShowInfo("Satış Pipeline modülü yapım aşamasındadır."));
+            NavigateToSchedulerCommand = new RelayCommand(_ => _toastService.ShowInfo("Takvim modülü yapım aşamasındadır."));
 
             LoadNotifications();
 

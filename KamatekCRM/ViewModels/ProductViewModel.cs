@@ -102,6 +102,11 @@ namespace KamatekCrm.ViewModels
         public ICommand ImportExcelCommand { get; }
 
         /// <summary>
+        /// Ürün Sil Komutu
+        /// </summary>
+        public ICommand DeleteProductCommand { get; }
+
+        /// <summary>
         /// Stok Transfer Komutu
         /// </summary>
         public ICommand TransferStockCommand { get; }
@@ -130,6 +135,7 @@ namespace KamatekCrm.ViewModels
             AddNewProductCommand = new RelayCommand(_ => AddNewProduct());
             EditProductCommand = new RelayCommand(_ => EditProduct(), _ => SelectedProduct != null);
             ImportExcelCommand = new RelayCommand(_ => ImportFromExcel());
+            DeleteProductCommand = new RelayCommand(_ => ExecuteDeleteProduct(), _ => SelectedProduct != null);
             TransferStockCommand = new RelayCommand(_ => TransferStock(), _ => SelectedProduct != null);
             UploadProductPhotoCommand = new RelayCommand(_ => ExecuteUploadProductPhoto(), _ => SelectedProduct != null);
             DeleteProductPhotoCommand = new RelayCommand(_ => ExecuteDeleteProductPhoto(), _ => SelectedProduct?.ImagePath != null);
@@ -211,6 +217,37 @@ namespace KamatekCrm.ViewModels
                 RefreshProductList();
                 StatusMessage = "Ürün güncellendi.";
                 IsActionSuccessful = true;
+            }
+        }
+
+        /// <summary>
+        /// Seçili ürünü sil
+        /// </summary>
+        private void ExecuteDeleteProduct()
+        {
+            if (SelectedProduct == null) return;
+
+            var result = MessageBox.Show($"'{SelectedProduct.ProductName}' ürününü silmek istediğinize emin misiniz?", "Ürün Sil", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result == MessageBoxResult.Yes)
+            {
+                try
+                {
+                    var productToDelete = _context.Products.Find(SelectedProduct.Id);
+                    if (productToDelete != null)
+                    {
+                        _context.Products.Remove(productToDelete);
+                        _context.SaveChanges();
+
+                        RefreshProductList();
+                        StatusMessage = "Ürün başarıyla silindi.";
+                        IsActionSuccessful = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    StatusMessage = $"Ürün silinirken hata oluştu: {ex.Message}";
+                    IsActionSuccessful = false;
+                }
             }
         }
 

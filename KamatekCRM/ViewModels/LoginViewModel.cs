@@ -202,13 +202,8 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public async Task ExecuteLoginAsync(object? parameter = null)
         {
-            // Determine if we are auto-logging in with a token or manual login with PasswordBox
+            // Determine if we are auto-logging in with a token
             string? autoToken = parameter as string;
-            
-            if (parameter is System.Windows.Controls.PasswordBox passwordBox)
-            {
-                Password = passwordBox.Password;
-            }
 
             if (string.IsNullOrEmpty(autoToken) && (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password)))
             {

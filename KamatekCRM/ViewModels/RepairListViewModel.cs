@@ -751,7 +751,7 @@ namespace KamatekCrm.ViewModels
             _ => RepairStatus.ToString()
         };
 
-        public string StatusColor => RepairStatus switch
+        public System.Windows.Media.Brush StatusColor => (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString(RepairStatus switch
         {
             RepairStatus.Registered => "#9E9E9E",
             RepairStatus.Diagnosing => "#2196F3",
@@ -764,9 +764,9 @@ namespace KamatekCrm.ViewModels
             RepairStatus.Delivered => "#8BC34A",
             RepairStatus.Unrepairable => "#F44336",
             _ => "#757575"
-        };
+        })!;
 
-        public string StatusBgColor => RepairStatus switch
+        public System.Windows.Media.Brush StatusBgColor => (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString(RepairStatus switch
         {
             RepairStatus.Registered => "#269E9E9E",
             RepairStatus.Diagnosing => "#262196F3",
@@ -779,7 +779,7 @@ namespace KamatekCrm.ViewModels
             RepairStatus.Delivered => "#268BC34A",
             RepairStatus.Unrepairable => "#26F44336",
             _ => "#26757575"
-        };
+        })!;
     }
 
     /// <summary>

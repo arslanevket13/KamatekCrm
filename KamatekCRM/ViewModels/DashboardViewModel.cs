@@ -58,8 +58,16 @@ namespace KamatekCrm.ViewModels
         public int LowStockCount
         {
             get => _lowStockCount;
-            set => SetProperty(ref _lowStockCount, value);
+            set
+            {
+                if (SetProperty(ref _lowStockCount, value))
+                {
+                    OnPropertyChanged(nameof(IsLowStockEmpty));
+                }
+            }
         }
+
+        public bool IsLowStockEmpty => LowStockCount == 0;
 
         #endregion
 
@@ -82,8 +90,16 @@ namespace KamatekCrm.ViewModels
         public int TodaysJobsCount
         {
             get => _todaysJobsCount;
-            set => SetProperty(ref _todaysJobsCount, value);
+            set
+            {
+                if (SetProperty(ref _todaysJobsCount, value))
+                {
+                    OnPropertyChanged(nameof(IsTodaysJobsEmpty));
+                }
+            }
         }
+
+        public bool IsTodaysJobsEmpty => TodaysJobsCount == 0;
 
         private int _readyRepairsCount;
         /// <summary>
@@ -92,8 +108,16 @@ namespace KamatekCrm.ViewModels
         public int ReadyRepairsCount
         {
             get => _readyRepairsCount;
-            set => SetProperty(ref _readyRepairsCount, value);
+            set
+            {
+                if (SetProperty(ref _readyRepairsCount, value))
+                {
+                    OnPropertyChanged(nameof(IsReadyRepairsEmpty));
+                }
+            }
         }
+
+        public bool IsReadyRepairsEmpty => ReadyRepairsCount == 0;
 
         #endregion
 
@@ -190,8 +214,16 @@ namespace KamatekCrm.ViewModels
         public int TodaySalesCount
         {
             get => _todaySalesCount;
-            set => SetProperty(ref _todaySalesCount, value);
+            set
+            {
+                if (SetProperty(ref _todaySalesCount, value))
+                {
+                    OnPropertyChanged(nameof(TodaySalesCountText));
+                }
+            }
         }
+        
+        public string TodaySalesCountText => $"{TodaySalesCount} işlem";
 
         private decimal _weekSalesTotal;
         public decimal WeekSalesTotal

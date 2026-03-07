@@ -344,7 +344,10 @@
                                      
                             <Border Background="{DynamicResource ThemeBackground}" BorderBrush="{DynamicResource ThemeBorder}" 
                                     BorderThickness="1" CornerRadius="8" Padding="16" Cursor="Hand"
-                                    ToolTip="Kamera entegrasyonu veya dosya seçici açılacak">
+                                    ToolTip="Fotoğraf seçmek için tıklayın">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick" Command="{Binding AddPhotoCommand}"/>
+                                </Border.InputBindings>
                                 <StackPanel HorizontalAlignment="Center">
                                     <TextBlock Text="📸" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                     <TextBlock Text="Cihazın ve Teslimatın Fotoğrafını Çek/Ekle" 
@@ -352,6 +355,35 @@
                                                FontWeight="Medium"/>
                                 </StackPanel>
                             </Border>
+
+                            <!-- Eklenen Fotoğraflar -->
+                            <ItemsControl ItemsSource="{Binding TempPhotoPaths}" Margin="0,12,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="80" Height="80" CornerRadius="6" Margin="0,0,8,8"
+                                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
+                                                ClipToBounds="True">
+                                            <Grid>
+                                                <Image Source="{Binding}" Stretch="UniformToFill"/>
+                                                <!-- Silme Butonu -->
+                                                <Button Content="✕" 
+                                                        Command="{Binding DataContext.RemovePhotoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="#B2000000" Foreground="White" 
+                                                        Width="20" Height="20" FontSize="10" Padding="0"
+                                                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                        Margin="4" BorderThickness="0" Cursor="Hand"
+                                                        ToolTip="Fotoğrafı Kaldır"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
                     </Border>
                 </StackPanel>

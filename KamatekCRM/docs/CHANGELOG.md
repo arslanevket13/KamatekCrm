@@ -1,4 +1,9 @@
 ## v14.6 — Repair List & Fault Ticket Overhaul (2026-03-07)
+- **FIX**: `LoginView`'de 123 şifresinin 131'e dönme bug'ı (PasswordBox senkronizasyonu) `PasswordChanged` event'leri ile çift yönlü bağlanarak kökten çözüldü.
+- **FIX**: `RepairListView`'de kaybolan scrollbar'lar (ScrollViewer stil ezilmesi) düzeltildi. Hardcoded hex renkler `DynamicResource ThemePrimary` olarak standardize edildi.
+- **FIX**: `RepairListViewModel`'deki durum renkleri `SolidColorBrush` hatasını düzeltmek için `Brush` döndürecek şekilde refactored edildi (Görünmez/Tutarsız renk problemi çözüldü).
+- **NEW**: Hızlı Kabul (`FaultTicketWindow`) sistemine fotoğraf ekleme/silme (`TempPhotoPaths`) entegre edildi ve dosyaların yerel klasöre kopyalanması sağlandı.
+- **NEW**: Hızlı Kabul ekranındaki cihaz tipi için "Diğer" kategorisi ve serbest metin girişi özelliği (`ComboBox IsEditable="True"`) eklendi.
 - **ARCHITECTURE**: `RepairListViewModel` ve `FaultTicketViewModel` tamamen DI, async ve `IToastService` kullanacak şekilde yeniden yazıldı.
 - **ARCHITECTURE**: Senkron veritabanı sorguları `async/await` yapısına çevrildi, `AppDbContext` direct usage kaldırıldı. Zaman işlemlerinde `DateTime.UtcNow` standardı getirildi.
 - **NEW**: `RepairListView.xaml` premium tasarım — Status filter çipleri, KPI header kartları, GridSplitter, detaylı workflow haritası, cihaz fotoğraf galerisi ve maliyet özeti (ThemeColors kullanılarak).
