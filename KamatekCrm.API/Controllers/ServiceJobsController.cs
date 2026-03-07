@@ -28,6 +28,7 @@ namespace KamatekCrm.API.Controllers
         public async Task<ActionResult<IEnumerable<ServiceJob>>> GetServiceJobs(
             [FromQuery] string? search,
             [FromQuery] JobStatus? status,
+            [FromQuery] ServiceJobType? type, // YENİ: ServiceJobType filtresi eklendi (Arıza/Montaj vd. ayırmak için)
             [FromQuery] int? customerId,
             [FromQuery] int? assignedUserId,
             [FromQuery] DateTime? startDate,
@@ -41,6 +42,10 @@ namespace KamatekCrm.API.Controllers
                 .Include(s => s.Customer)
                 .Include(s => s.AssignedUser)
                 .AsQueryable();
+
+            // Type filtresi
+            if (type.HasValue)
+                query = query.Where(s => s.ServiceJobType == type.Value);
 
             // Arama filtresi
             if (!string.IsNullOrEmpty(search))
@@ -101,6 +106,8 @@ namespace KamatekCrm.API.Controllers
             var job = await _context.ServiceJobs
                 .Include(s => s.Customer)
                 .Include(s => s.AssignedUser)
+                .Include(s => s.ServiceJobItems)
+                .ThenInclude(i => i.Product)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (job == null) return NotFound(new { Message = $"ServiceJob #{id} bulunamadı." });
@@ -119,6 +126,27 @@ namespace KamatekCrm.API.Controllers
                 .ToListAsync();
 
             return Ok(histories);
+        }
+
+        /// <summary>
+        /// Servis işine tarihçe / not ekle
+        /// </summary>
+        [HttpPost("{id}/history")]
+        public async Task<IActionResult> AddServiceJobHistory(int id, ServiceJobHistory history)
+        {
+            if (id != history.ServiceJobId) history.ServiceJobId = id;
+
+            var job = await _context.ServiceJobs.FindAsync(id);
+            if (job == null) return NotFound();
+
+            if (history.Date == default) history.Date = DateTime.UtcNow;
+            if (history.PerformedAt == default) history.PerformedAt = DateTime.UtcNow;
+            history.PerformedBy = GetCurrentUserId();
+
+            _context.ServiceJobHistories.Add(history);
+            await _context.SaveChangesAsync();
+
+            return Ok(history);
         }
 
         /// <summary>
@@ -241,6 +269,43 @@ namespace KamatekCrm.API.Controllers
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("ServiceJob #{Id} silindi", id);
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Servis işine parça (ürün) ekle
+        /// </summary>
+        [HttpPost("{id}/items")]
+        public async Task<ActionResult<ServiceJobItem>> AddJobItem(int id, ServiceJobItem item)
+        {
+            if (id != item.ServiceJobId) item.ServiceJobId = id;
+
+            var job = await _context.ServiceJobs.FindAsync(id);
+            if (job == null) return NotFound(new { Message = "İş kaydı bulunamadı." });
+
+            _context.ServiceJobItems.Add(item);
+            await _context.SaveChangesAsync();
+
+            // Ürünü Include ile dönmek isterseniz
+            var savedItem = await _context.ServiceJobItems
+                .Include(i => i.Product)
+                .FirstOrDefaultAsync(i => i.Id == item.Id);
+
+            return Ok(savedItem);
+        }
+
+        /// <summary>
+        /// Servis işinden parça çıkar
+        /// </summary>
+        [HttpDelete("{id}/items/{itemId}")]
+        public async Task<IActionResult> RemoveJobItem(int id, int itemId)
+        {
+            var item = await _context.ServiceJobItems.FirstOrDefaultAsync(i => i.Id == itemId && i.ServiceJobId == id);
+            if (item == null) return NotFound();
+
+            _context.ServiceJobItems.Remove(item);
+            await _context.SaveChangesAsync();
+
             return NoContent();
         }
 

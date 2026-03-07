@@ -15,6 +15,8 @@ namespace KamatekCrm.Data
         public DbSet<ServiceJob> ServiceJobs { get; set; }
         public DbSet<ServiceJobHistory> ServiceJobHistories { get; set; }
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<CustomerAsset> CustomerAssets { get; set; }
+        public DbSet<ServiceProject> ServiceProjects { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<TaskPhoto> TaskPhotos { get; set; }
         public DbSet<Category> Categories { get; set; }

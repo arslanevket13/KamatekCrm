@@ -7,6 +7,8 @@ using KamatekCrm.Web.Features.Products;
 using KamatekCrm.Web.Features.Jobs;
 using KamatekCrm.Web.Features.Sales;
 using KamatekCrm.Web.Features.Technician;
+using KamatekCrm.Web.Features.Location;
+using KamatekCrm.Web.Features.Route;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -149,6 +151,8 @@ try
     SalesEndpoints.Map(app);
     TechnicianDashboardEndpoints.Map(app);
     JobWorkflowEndpoints.Map(app);
+    LocationEndpoints.Map(app);
+    RouteEndpoints.Map(app);
 
     // ─── 10. STARTUP ───
     Log.Information("──► KamatekCRM Web | Port 7000 | Minimal API + HTMX | CSP Strict");

@@ -29,7 +29,7 @@ namespace KamatekCrm.API.Models
     /// </summary>
     public class ApiResponse : ApiResponse<object>
     {
-        public new static ApiResponse Ok(string? message = null)
+        public static ApiResponse Ok(string? message = null)
             => new() { Success = true, Message = message };
 
         public new static ApiResponse Fail(string message, string? errorType = null)

@@ -217,11 +217,118 @@ namespace KamatekCrm.API.Controllers
 
             var route = await _context.RoutePoints
                 .Include(r => r.ServiceJob)
+                    .ThenInclude(j => j!.Customer)
                 .Where(r => r.UserId == userId && r.Date == targetDate)
                 .OrderBy(r => r.OrderIndex)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.UserId,
+                    r.ServiceJobId,
+                    r.CustomerId,
+                    r.Latitude,
+                    r.Longitude,
+                    r.Address,
+                    r.OrderIndex,
+                    r.EstimatedArrival,
+                    r.ActualArrival,
+                    r.IsVisited,
+                    r.Date,
+                    JobTitle = r.ServiceJob != null ? r.ServiceJob.Title : null,
+                    JobStatus = r.ServiceJob != null ? (int?)r.ServiceJob.Status : null,
+                    JobPriority = r.ServiceJob != null ? (int?)r.ServiceJob.Priority : null,
+                    CustomerName = r.ServiceJob != null && r.ServiceJob.Customer != null 
+                        ? r.ServiceJob.Customer.FullName : null,
+                    CustomerPhone = r.ServiceJob != null && r.ServiceJob.Customer != null 
+                        ? r.ServiceJob.Customer.PhoneNumber : null
+                })
                 .ToListAsync();
 
             return Ok(ApiResponse<object>.Ok(route));
+        }
+
+        /// <summary>
+        /// Tüm teknisyenlerin günlük rota planları — Admin ekranı
+        /// </summary>
+        [HttpGet("route-plan/all")]
+        public async Task<IActionResult> GetAllRoutePlans([FromQuery] DateTime? date)
+        {
+            var targetDate = date?.Date ?? DateTime.UtcNow.Date;
+
+            var routes = await _context.RoutePoints
+                .Include(r => r.User)
+                .Include(r => r.ServiceJob)
+                .Where(r => r.Date == targetDate)
+                .GroupBy(r => r.UserId)
+                .Select(g => new
+                {
+                    UserId = g.Key,
+                    TechnicianName = g.First().User.Ad + " " + g.First().User.Soyad,
+                    PointCount = g.Count(),
+                    CompletedCount = g.Count(r => r.IsVisited),
+                    Points = g.OrderBy(r => r.OrderIndex).Select(r => new
+                    {
+                        r.Id, r.Latitude, r.Longitude, r.Address, r.OrderIndex, r.IsVisited,
+                        JobTitle = r.ServiceJob != null ? r.ServiceJob.Title : null
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            return Ok(ApiResponse<object>.Ok(routes));
+        }
+
+        /// <summary>
+        /// Rota noktası sırasını güncelle
+        /// </summary>
+        [HttpPut("route-plan/reorder")]
+        public async Task<IActionResult> ReorderRoute([FromBody] List<RouteReorderRequest> reorderList)
+        {
+            foreach(var item in reorderList)
+            {
+                var point = await _context.RoutePoints.FindAsync(item.PointId);
+                if (point != null)
+                {
+                    point.OrderIndex = item.NewIndex;
+                }
+            }
+            await _context.SaveChangesAsync();
+            return Ok(ApiResponse.Ok("Rota sırası güncellendi."));
+        }
+
+        /// <summary>
+        /// Noktayı ziyaret edildi olarak işaretle
+        /// </summary>
+        [HttpPut("route-plan/point/{pointId}/visit")]
+        public async Task<IActionResult> MarkPointVisited(int pointId)
+        {
+            var point = await _context.RoutePoints.FindAsync(pointId);
+            if (point == null) return NotFound(ApiResponse.Fail("Rota noktası bulunamadı."));
+
+            point.IsVisited = true;
+            point.ActualArrival = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(ApiResponse.Ok("Nokta ziyaret edildi olarak işaretlendi."));
+        }
+
+        /// <summary>
+        /// Teknisyenin günlük rotasını sil
+        /// </summary>
+        [HttpDelete("route-plan/{userId}")]
+        public async Task<IActionResult> DeleteRoutePlan(int userId, [FromQuery] DateTime? date)
+        {
+            var targetDate = date?.Date ?? DateTime.UtcNow.Date;
+            
+            var points = await _context.RoutePoints
+                .Where(r => r.UserId == userId && r.Date == targetDate)
+                .ToListAsync();
+
+            if (!points.Any()) return NotFound(ApiResponse.Fail("Silinecek rota bulunamadı."));
+
+            _context.RoutePoints.RemoveRange(points);
+            await _context.SaveChangesAsync();
+
+            return Ok(ApiResponse.Ok($"{points.Count} rota noktası silindi."));
         }
 
         /// <summary>Haversine mesafe hesabı (km)</summary>
@@ -252,5 +359,11 @@ namespace KamatekCrm.API.Controllers
         public bool IsBackground { get; set; }
         public string? Source { get; set; }
         public DateTime? Timestamp { get; set; }
+    }
+
+    public class RouteReorderRequest
+    {
+        public int PointId { get; set; }
+        public int NewIndex { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using KamatekCrm.Web.Services;
 using KamatekCrm.Web.Shared;
 using Microsoft.AspNetCore.Antiforgery;
+using KamatekCrm.Shared.Enums;
 
 namespace KamatekCrm.Web.Features.Technician;
 
@@ -30,7 +31,7 @@ public static class JobWorkflowEndpoints
             try
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
-                var job = await client.GetFromJsonAsync<JobListItem>($"api/tasks/{id}");
+                var job = await client.GetFromJsonAsync<JobListItem>($"api/servicejobs/{id}");
 
                 if (job == null)
                     return Results.Redirect("/technician/dashboard");
@@ -58,7 +59,7 @@ public static class JobWorkflowEndpoints
             try
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
-                var response = await client.PatchAsJsonAsync($"api/tasks/{id}/status", new { Status = "Devam Ediyor" });
+                var response = await client.PatchAsJsonAsync($"api/servicejobs/{id}/status", new { Status = JobStatus.InProgress });
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -87,7 +88,7 @@ public static class JobWorkflowEndpoints
             try
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
-                var response = await client.PatchAsJsonAsync($"api/tasks/{id}/status", new { Status = "Tamamlandı" });
+                var response = await client.PatchAsJsonAsync($"api/servicejobs/{id}/status", new { Status = JobStatus.Completed });
 
                 if (response.IsSuccessStatusCode)
                 {

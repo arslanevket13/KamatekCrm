@@ -16,13 +16,19 @@ namespace KamatekCrm.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly INotificationService _notifications;
+        private readonly KamatekCrm.API.Services.ISalesDomainService _salesDomainService;
         private readonly ILogger<SalesController> _logger;
 
-        public SalesController(AppDbContext context, INotificationService notifications, ILogger<SalesController> logger)
+        public SalesController(
+            AppDbContext context, 
+            INotificationService notifications, 
+            ILogger<SalesController> logger,
+            KamatekCrm.API.Services.ISalesDomainService salesDomainService)
         {
             _context = context;
             _notifications = notifications;
             _logger = logger;
+            _salesDomainService = salesDomainService;
         }
 
         /// <summary>Satış siparişleri (filtrelenebilir, sayfalı)</summary>
@@ -57,6 +63,18 @@ namespace KamatekCrm.API.Controllers
 
             var pagination = new PaginationMeta { Page = page, PageSize = pageSize, TotalCount = total };
             return Ok(ApiResponse<object>.Ok(orders, pagination));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProcessSale([FromBody] SaleRequest request)
+        {
+            var result = await _salesDomainService.ProcessSaleAsync(request);
+            if (result.Success)
+            {
+                return Ok(ApiResponse<SaleResult>.Ok(result));
+            }
+            
+            return BadRequest(ApiResponse.Fail(result.ErrorMessage));
         }
 
         [HttpGet("{id}")]

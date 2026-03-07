@@ -3,6 +3,7 @@ using System.Security.Claims;
 using KamatekCrm.Web.Services;
 using KamatekCrm.Web.Shared;
 using Microsoft.AspNetCore.Antiforgery;
+using KamatekCrm.Shared.Enums;
 
 namespace KamatekCrm.Web.Features.Technician;
 
@@ -20,7 +21,8 @@ public static class TechnicianDashboardEndpoints
             IAntiforgery antiforgery) =>
         {
             var userName = ctx.User.FindFirst(ClaimTypes.Name)?.Value ?? "Teknisyen";
-            var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userIdStr = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = int.TryParse(userIdStr, out var uid) ? uid : 0;
             var role = ctx.User.FindFirst(ClaimTypes.Role)?.Value ?? "Technician";
             var tokens = antiforgery.GetAndStoreTokens(ctx);
 
@@ -28,14 +30,15 @@ public static class TechnicianDashboardEndpoints
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
                 
-                // Bugünkü işler
-                var todayResponse = await client.GetAsync("api/tasks/today");
+                // Bugünkü işler (bugün oluşturulan veya bugüne atanan)
+                var today = DateTime.Today.ToString("yyyy-MM-dd");
+                var todayResponse = await client.GetAsync($"api/servicejobs?startDate={today}&pageSize=10");
                 var todayJobs = todayResponse.IsSuccessStatusCode 
                     ? await todayResponse.Content.ReadFromJsonAsync<List<JobListItem>>() 
                     : new List<JobListItem>();
 
-                // Bekleyen işler
-                var pendingResponse = await client.GetAsync("api/tasks?status=Bekliyor&pageSize=10");
+                // Bekleyen işler (Pending status)
+                var pendingResponse = await client.GetAsync($"api/servicejobs?status={JobStatus.Pending}&pageSize=10");
                 var pendingJobs = pendingResponse.IsSuccessStatusCode 
                     ? await pendingResponse.Content.ReadFromJsonAsync<List<JobListItem>>() 
                     : new List<JobListItem>();
@@ -46,7 +49,7 @@ public static class TechnicianDashboardEndpoints
                     ? await statsResponse.Content.ReadFromJsonAsync<DashboardStats>() 
                     : new DashboardStats();
 
-                var html = HtmlTemplates.TechnicianDashboard(userName, role, todayJobs, pendingJobs, stats, tokens.RequestToken);
+                var html = HtmlTemplates.TechnicianDashboard(userName, role, todayJobs ?? new List<JobListItem>(), pendingJobs ?? new List<JobListItem>(), stats ?? new DashboardStats(), tokens.RequestToken);
                 return Results.Content(html, "text/html; charset=utf-8");
             }
             catch
@@ -67,16 +70,17 @@ public static class TechnicianDashboardEndpoints
             var userName = ctx.User.FindFirst(ClaimTypes.Name)?.Value ?? "Teknisyen";
             var tokens = antiforgery.GetAndStoreTokens(ctx);
             var targetDate = string.IsNullOrEmpty(date) ? DateTime.Today : DateTime.Parse(date);
+            var nextDay = targetDate.AddDays(1);
 
             try
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
-                var response = await client.GetAsync($"api/tasks/schedule?date={targetDate:yyyy-MM-dd}");
+                var response = await client.GetAsync($"api/servicejobs?startDate={targetDate:yyyy-MM-dd}&endDate={nextDay:yyyy-MM-dd}&pageSize=50");
                 var jobs = response.IsSuccessStatusCode 
                     ? await response.Content.ReadFromJsonAsync<List<JobListItem>>() 
                     : new List<JobListItem>();
 
-                var html = HtmlTemplates.SchedulePage(jobs, targetDate, userName, tokens.RequestToken);
+                var html = HtmlTemplates.SchedulePage(jobs ?? new List<JobListItem>(), targetDate, userName, tokens.RequestToken);
                 return Results.Content(html, "text/html; charset=utf-8");
             }
             catch

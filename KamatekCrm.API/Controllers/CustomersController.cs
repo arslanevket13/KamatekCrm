@@ -29,6 +29,7 @@ namespace KamatekCrm.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCustomers(
             [FromQuery] string? search,
+            [FromQuery] CustomerType? type,
             [FromQuery] CustomerSegment? segment,
             [FromQuery] string? city,
             [FromQuery] string? sortBy = "FullName",
@@ -49,6 +50,7 @@ namespace KamatekCrm.API.Controllers
             }
 
             if (segment.HasValue) query = query.Where(c => c.Segment == segment.Value);
+            if (type.HasValue) query = query.Where(c => c.Type == type.Value);
             if (!string.IsNullOrEmpty(city)) query = query.Where(c => c.City == city);
 
             query = sortBy?.ToLower() switch
@@ -64,6 +66,24 @@ namespace KamatekCrm.API.Controllers
 
             var pagination = new PaginationMeta { Page = page, PageSize = pageSize, TotalCount = total };
             return Ok(ApiResponse<object>.Ok(customers, pagination));
+        }
+
+        /// <summary>Genel müşteri istatistiklerini getirir</summary>
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetCustomerStats()
+        {
+            var total = await _context.Customers.CountAsync();
+            var individual = await _context.Customers.CountAsync(c => c.Type == CustomerType.Individual);
+            var corporate = await _context.Customers.CountAsync(c => c.Type == CustomerType.Corporate);
+            var walkIn = await _context.Customers.CountAsync(c => c.Type == CustomerType.WalkIn);
+
+            return Ok(ApiResponse<object>.Ok(new
+            {
+                TotalCustomers = total,
+                IndividualCount = individual,
+                CorporateCount = corporate,
+                WalkInCount = walkIn
+            }));
         }
 
         /// <summary>Müşteri detay — iş geçmişi dahil</summary>
@@ -111,6 +131,13 @@ namespace KamatekCrm.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateCustomer(Customer customer)
         {
+            if (string.IsNullOrWhiteSpace(customer.CustomerCode))
+            {
+                int year = DateTime.UtcNow.Year;
+                int count = await _context.Customers.CountAsync(c => c.CustomerCode != null && c.CustomerCode.StartsWith($"MŞ-{year}-"));
+                customer.CustomerCode = $"MŞ-{year}-{(count + 1):D4}";
+            }
+
             customer.CreatedDate = DateTime.UtcNow;
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
@@ -143,6 +170,71 @@ namespace KamatekCrm.API.Controllers
             await _context.SaveChangesAsync();
             _cache.RemoveByPrefix("lists:customers");
             return NoContent();
+        }
+
+        /// <summary>Müşterinin cihazları</summary>
+        [HttpGet("{id}/assets")]
+        public async Task<IActionResult> GetCustomerAssets(int id)
+        {
+            var assets = await _context.CustomerAssets
+                .Where(a => a.CustomerId == id)
+                .OrderBy(a => a.Category)
+                .ThenBy(a => a.Brand)
+                .ToListAsync();
+
+            return Ok(ApiResponse<object>.Ok(assets));
+        }
+
+        /// <summary>Müşteriye yeni cihaz ekle</summary>
+        [HttpPost("{id}/assets")]
+        public async Task<IActionResult> AddCustomerAsset(int id, [FromBody] CustomerAsset asset)
+        {
+            if (id != asset.CustomerId)
+            {
+                asset.CustomerId = id;
+            }
+
+            try
+            {
+                if (asset.CreatedDate == default)
+                {
+                    asset.CreatedDate = DateTime.UtcNow;
+                }
+
+                _context.CustomerAssets.Add(asset);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Yeni cihaz eklendi: {Model} (Müşteri: {Id})", asset.Model, id);
+                return Ok(ApiResponse<CustomerAsset>.Ok(asset));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Cihaz eklenirken hata: {Id}", id);
+                return StatusCode(500, ApiResponse<object>.Fail($"Cihaz eklenirken hata oluştu: {ex.Message}"));
+            }
+        }
+
+        /// <summary>Müşterinin projeleri</summary>
+        [HttpGet("{id}/projects")]
+        public async Task<IActionResult> GetCustomerProjects(int id)
+        {
+            try
+            {
+                var projects = await _context.ServiceProjects
+                    .Where(p => p.CustomerId == id &&
+                               (p.Status == ProjectStatus.Draft ||
+                                p.Status == ProjectStatus.Active ||
+                                p.Status == ProjectStatus.PendingApproval))
+                    .OrderByDescending(p => p.CreatedDate)
+                    .ToListAsync();
+
+                return Ok(ApiResponse<object>.Ok(projects));
+            }
+            catch
+            {
+                // Fallback for when ServiceProjects table might not be initialized
+                return Ok(ApiResponse<object>.Ok(new List<ServiceProject>()));
+            }
         }
 
         /// <summary>Müşteri notları / etkinlik timeline'ı</summary>

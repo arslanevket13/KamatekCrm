@@ -98,6 +98,7 @@ try
 
     // Services
     builder.Services.AddScoped<IPhotoStorageService, PhotoStorageService>();
+    builder.Services.AddScoped<ISalesDomainService, SalesDomainService>();
 
     // Caching
     builder.Services.AddMemoryCache();

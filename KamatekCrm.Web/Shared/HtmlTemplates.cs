@@ -105,6 +105,7 @@ public static class HtmlTemplates
                 <a href="/sales" class="sidebar-link"><i class="bi bi-cart"></i><span>Satış</span></a>
                 <a href="/sales/history" class="sidebar-link"><i class="bi bi-clock-history"></i><span>Satış Geçmişi</span></a>
                 <a href="/technician/schedule" class="sidebar-link"><i class="bi bi-calendar"></i><span>Program</span></a>
+                <a href="/technician/route" class="sidebar-link"><i class="bi bi-map"></i><span>Rota Planı</span></a>
                 <a href="/technician/profile" class="sidebar-link"><i class="bi bi-person"></i><span>Profil</span></a>
             </nav>
             <div class="sidebar-footer">
@@ -462,6 +463,63 @@ public static class HtmlTemplates
         return Layout(title, content, antiforgeryToken: token);
     }
 
+    public static string JobDetailPage(JobListItem? job, string userName, string? token)
+    {
+        if (job == null)
+        {
+            var notFoundContent = """
+            <div class="content-card">
+                <div class="alert alert-warning">İş bulunamadı.</div>
+                <a href="/jobs" class="btn btn-secondary">İş Listesine Dön</a>
+            </div>
+            """;
+            return Layout("İş Bulunamadı", notFoundContent, userName, token);
+        }
+
+        var statusBadge = job.Status switch
+        {
+            "Pending" or "Bekliyor" => "<span class=\"badge bg-warning\">Bekliyor</span>",
+            "InProgress" or "Devam Ediyor" => "<span class=\"badge bg-primary\">Devam Ediyor</span>",
+            "Completed" or "Tamamlandı" => "<span class=\"badge bg-success\">Tamamlandı</span>",
+            "Cancelled" or "İptal" => "<span class=\"badge bg-danger\">İptal</span>",
+            _ => $"<span class=\"badge bg-secondary\">{job.Status}</span>"
+        };
+
+        var content = $"""
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="bi bi-info-circle me-2"></i>{job.Title}</h2>
+                <a href="/jobs" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Geri</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="content-card mb-3">
+                    <h5>İş Detayları</h5>
+                    <p><strong>Durum:</strong> {statusBadge}</p>
+                    <p><strong>Müşteri:</strong> {job.CustomerName ?? "-"}</p>
+                    <p><strong>Açıklama:</strong></p>
+                    <p>{job.Description ?? "Açıklama yok"}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="content-card mb-3">
+                    <h5>İşlemler</h5>
+                    <div class="d-grid gap-2">
+                        <form hx-post="/technician/job/{job.Id}/start" hx-swap="outerHTML">
+                            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-play"></i> İşe Başla</button>
+                        </form>
+                        <form hx-post="/technician/job/{job.Id}/complete" hx-swap="outerHTML">
+                            <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-lg"></i> Tamamla</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """;
+        return Layout("İş Detay", content, userName, token);
+    }
+
     // ═══════════════════════════════════════════════════════════════
     //  SATIŞ
     // ═══════════════════════════════════════════════════════════════
@@ -743,5 +801,158 @@ public static class HtmlTemplates
         </div>
         """;
         return Layout("Profil", content, userName, token);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  ROTA PLANLAMA SAYFASI — Leaflet + HTMX
+    // ══════════════════════════════════════════════════════════════
+
+    public static string RoutePlanningPage(List<KamatekCrm.Web.Features.Route.RoutePointDto> points, DateTime date, string userName, int userId, string? token)
+    {
+        var prevDate = date.AddDays(-1).ToString("yyyy-MM-dd");
+        var nextDate = date.AddDays(1).ToString("yyyy-MM-dd");
+        var isToday = date.Date == DateTime.Today;
+
+        var totalPoints = points.Count;
+        var completedPoints = points.Count(p => p.IsVisited);
+        var progressPercent = totalPoints > 0 ? (int)(completedPoints * 100.0 / totalPoints) : 0;
+
+        var markersJson = totalPoints > 0
+            ? string.Join(",", points.Select(p =>
+                $"{{\"lat\":{p.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
+                $"\"lng\":{p.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
+                $"\"title\":\"{EscapeJson(p.JobTitle ?? p.Address)}\"," +
+                $"\"customer\":\"{EscapeJson(p.CustomerName ?? "")}\"," +
+                $"\"order\":{p.OrderIndex}," +
+                $"\"visited\":{(p.IsVisited ? "true" : "false")}}}"))
+            : "";
+
+        var routeCardsHtml = totalPoints > 0
+            ? string.Join("", points.OrderBy(p => p.OrderIndex).Select(p =>
+            {
+                var statusClass = p.IsVisited ? "bg-success" : "bg-warning";
+                var statusText = p.IsVisited ? "Ziyaret Edildi" : "Bekliyor";
+                var statusIcon = p.IsVisited ? "check-circle" : "clock";
+                var phoneLink = !string.IsNullOrEmpty(p.CustomerPhone)
+                    ? $"""<a href="tel:{p.CustomerPhone}" class="btn btn-sm btn-outline-success"><i class="bi bi-telephone"></i></a>"""
+                    : "";
+                var visitBtnHtml = !p.IsVisited
+                    ? $"""<button class="btn btn-sm btn-success ms-1" hx-post="/technician/route/visit/{p.Id}" hx-target="#status-{p.Id}" hx-swap="innerHTML" title="Ziyaret Edildi"><i class="bi bi-check-lg"></i></button>"""
+                    : "";
+                var navBtn = p.Latitude != 0 && p.Longitude != 0
+                    ? $"""<a href="https://www.google.com/maps/dir/?api=1&destination={p.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)},{p.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}" target="_blank" class="btn btn-sm btn-outline-primary" title="Navigasyon"><i class="bi bi-cursor"></i></a>"""
+                    : "";
+
+                return $"""
+                <div class="card mb-2" style="border-left:4px solid var(--bs-{(p.IsVisited ? "success" : "warning")})">
+                    <div class="card-body py-2 px-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="d-flex align-items-start gap-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width:28px;height:28px;min-width:28px;font-size:0.8rem;background:{(p.IsVisited ? "var(--bs-success)" : "var(--bs-primary)")}">{p.OrderIndex}</div>
+                                <div>
+                                    <h6 class="mb-0" style="font-size:0.9rem">{p.JobTitle ?? p.Address}</h6>
+                                    <small class="text-muted"><i class="bi bi-person me-1"></i>{p.CustomerName ?? "-"}</small>
+                                    {(p.Address != "" ? $"<br><small class=\"text-muted\"><i class=\"bi bi-geo-alt me-1\"></i>{p.Address}</small>" : "")}
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                {phoneLink}
+                                {navBtn}
+                                {visitBtnHtml}
+                            </div>
+                        </div>
+                        <div class="mt-1" id="status-{p.Id}">
+                            <span class="badge {statusClass}"><i class="bi bi-{statusIcon} me-1"></i>{statusText}</span>
+                        </div>
+                    </div>
+                </div>
+                """;
+            }))
+            : """<div class="text-center py-5"><i class="bi bi-map text-muted" style="font-size:3rem"></i><p class="text-muted mt-2">Bu tarih için planlanmış rota yok</p></div>""";
+
+        var centerLat = totalPoints > 0 ? points.Average(p => p.Latitude).ToString(System.Globalization.CultureInfo.InvariantCulture) : "39.7766";
+        var centerLng = totalPoints > 0 ? points.Average(p => p.Longitude).ToString(System.Globalization.CultureInfo.InvariantCulture) : "30.5206";
+
+        var content = $$"""
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h2><i class="bi bi-map me-2"></i>Rota Planı</h2>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="/technician/route?date={{prevDate}}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-left"></i></a>
+                    <span class="fw-semibold">{{date:dd MMMM yyyy, dddd}}</span>
+                    <a href="/technician/route?date={{nextDate}}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-chevron-right"></i></a>
+                </div>
+            </div>
+            {{(isToday ? "<span class=\"badge bg-primary mt-2\">Bugün</span>" : "")}}
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-4">
+                <div class="kpi-card kpi-blue">
+                    <div class="kpi-icon"><i class="bi bi-geo-alt"></i></div>
+                    <div class="kpi-body"><span class="kpi-value">{{totalPoints}}</span><span class="kpi-label">Toplam</span></div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="kpi-card kpi-green">
+                    <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
+                    <div class="kpi-body"><span class="kpi-value">{{completedPoints}}</span><span class="kpi-label">Tamamlanan</span></div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="kpi-card kpi-orange">
+                    <div class="kpi-icon"><i class="bi bi-percent"></i></div>
+                    <div class="kpi-body"><span class="kpi-value">%{{progressPercent}}</span><span class="kpi-label">İlerleme</span></div>
+                </div>
+            </div>
+        </div>
+
+        {{(totalPoints > 0 ? $"<div class=\"progress mb-3\" style=\"height:6px\"><div class=\"progress-bar bg-success\" style=\"width:{progressPercent}%\"></div></div>" : "")}}
+
+        <div class="content-card mb-3 p-0" style="overflow:hidden;border-radius:12px">
+            <div id="route-map" style="height:350px;width:100%"></div>
+        </div>
+
+        <div class="content-card">
+            <h5 class="card-section-title"><i class="bi bi-signpost-2 text-primary me-2"></i>Rota Durakları ({{totalPoints}})</h5>
+            {{routeCardsHtml}}
+        </div>
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+            .route-marker{background:none;border:none;}
+            .route-pin{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+                color:#fff;font-weight:700;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.3);border:2px solid #fff;}
+            .pin-pending{background:linear-gradient(135deg,#f59e0b,#d97706);}
+            .pin-visited{background:linear-gradient(135deg,#10b981,#059669);}
+        </style>
+        <script>
+        document.addEventListener('DOMContentLoaded',function(){
+            var map=L.map('route-map').setView([{{centerLat}},{{centerLng}}],13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM'}).addTo(map);
+            var markers=[{{markersJson}}];
+            var latlngs=[];
+            markers.forEach(function(m){
+                var cls=m.visited?'pin-visited':'pin-pending';
+                var icon=L.divIcon({className:'route-marker',html:'<div class="route-pin '+cls+'">'+m.order+'</div>',iconSize:[28,28],iconAnchor:[14,14]});
+                var mk=L.marker([m.lat,m.lng],{icon:icon}).addTo(map);
+                mk.bindPopup('<b>#'+m.order+' '+m.title+'</b><br>'+m.customer);
+                latlngs.push([m.lat,m.lng]);
+            });
+            if(latlngs.length>1){
+                L.polyline(latlngs,{color:'#3b82f6',weight:3,opacity:0.7,dashArray:'10,6'}).addTo(map);
+                map.fitBounds(L.latLngBounds(latlngs).pad(0.15));
+            }else if(latlngs.length===1){map.setView(latlngs[0],15);}
+        });
+        </script>
+        """;
+        return Layout("Rota Planı", content, userName, token);
+    }
+
+    private static string EscapeJson(string? s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", " ").Replace("\r", "");
     }
 }

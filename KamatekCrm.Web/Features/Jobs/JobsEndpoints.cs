@@ -25,7 +25,7 @@ public static class JobsEndpoints
             try
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
-                var url = $"api/tasks?page={page}&pageSize=20";
+                var url = $"api/servicejobs?page={page}&pageSize=20";
                 if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
                 if (!string.IsNullOrEmpty(status)) url += $"&status={status}";
                 
@@ -70,7 +70,7 @@ public static class JobsEndpoints
             try
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
-                var job = await client.GetFromJsonAsync<JobListItem>($"api/tasks/{id}");
+                var job = await client.GetFromJsonAsync<JobListItem>($"api/servicejobs/{id}");
                 var html = HtmlTemplates.JobForm(job, tokens.RequestToken);
                 return Results.Content(html, "text/html; charset=utf-8");
             }
@@ -104,7 +104,7 @@ public static class JobsEndpoints
             try
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
-                var response = await client.PostAsJsonAsync("api/tasks", job);
+                var response = await client.PostAsJsonAsync("api/servicejobs", job);
                 if (response.IsSuccessStatusCode)
                 {
                     ctx.Response.Headers["HX-Redirect"] = "/jobs";
@@ -143,7 +143,7 @@ public static class JobsEndpoints
             try
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
-                var response = await client.PutAsJsonAsync($"api/tasks/{id}", job);
+                var response = await client.PutAsJsonAsync($"api/servicejobs/{id}", job);
                 if (response.IsSuccessStatusCode)
                 {
                     ctx.Response.Headers["HX-Redirect"] = "/jobs";
@@ -174,7 +174,7 @@ public static class JobsEndpoints
             try
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
-                var response = await client.PatchAsJsonAsync($"api/tasks/{id}/status", new { Status = status });
+                var response = await client.PatchAsJsonAsync($"api/servicejobs/{id}/status", new { Status = status });
                 return Results.Ok(new { success = response.IsSuccessStatusCode });
             }
             catch
@@ -193,7 +193,7 @@ public static class JobsEndpoints
             try
             {
                 var client = httpClientFactory.CreateClient("ApiClient");
-                var response = await client.DeleteAsync($"api/tasks/{id}");
+                var response = await client.DeleteAsync($"api/servicejobs/{id}");
                 return Results.Ok(new { success = response.IsSuccessStatusCode });
             }
             catch
