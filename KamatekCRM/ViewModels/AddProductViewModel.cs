@@ -337,7 +337,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Ürünü kaydet veya güncelle
         /// </summary>
-        private void SaveProduct()
+        private async void SaveProduct()
         {
             try
             {
@@ -356,7 +356,7 @@ namespace KamatekCrm.ViewModels
                     {
                         // Eski resmi sil
                         _imageService.DeleteProductImage(NewProduct.ImagePath);
-                        NewProduct.ImagePath = Task.Run(() => _imageService.SaveProductImageAsync(_pendingImagePath)).Result;
+                        NewProduct.ImagePath = await _imageService.SaveProductImageAsync(_pendingImagePath);
                     }
 
                     // UPDATE: Mevcut ürünü güncelle
@@ -377,7 +377,7 @@ namespace KamatekCrm.ViewModels
                     // Resim işleme (varsa)
                     if (!string.IsNullOrEmpty(_pendingImagePath))
                     {
-                        NewProduct.ImagePath = Task.Run(() => _imageService.SaveProductImageAsync(_pendingImagePath)).Result;
+                        NewProduct.ImagePath = await _imageService.SaveProductImageAsync(_pendingImagePath);
                     }
 
                     // ADD: Yeni ürün ekle

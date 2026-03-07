@@ -21,8 +21,11 @@ KamatekCRM/                       # Solution Root
 ├── KamatekCrm.Web/               # Minimal API + HTMX Web App (Technician Panel) (net9.0)
 ├── KamatekCrm.API/               # Backend Web API (net9.0)
 ├── KamatekCrm.Shared/            # Shared Class Library (net9.0)
-│   └── DTOs/
-│       └── TechnicianDtos.cs     # Technician Portal Data Transfer Objects
+│   ├── DTOs/                     # Technician Portal Data Transfer Objects
+│   │   └── TechnicianDtos.cs     
+│   ├── Models/
+│   │   └── SalesModels.cs        # API ve WPF arası iletişim sözleşmeleri
+│   └── Enums/                    # Ortak Enum'lar (JobStatus, vb.)
 ```
 
 ## WPF Proje Detayları
@@ -68,11 +71,12 @@ KamatekCrm/
 │   ├── LoginViewModel.cs         # Giriş ekranı mantığı
 │   ├── UsersViewModel.cs         # Kullanıcı listesi + yönetimi
 │   ├── AddUserViewModel.cs       # Hızlı kullanıcı ekleme
-│   ├── DashboardViewModel.cs     # Dashboard KPI ve özet verileri
-│   ├── ServiceJobViewModel.cs    # İş emri wizard + liste mantığı
-│   ├── FaultTicketViewModel.cs   # Arıza kaydı (hibrit cihaz seçici)
+│   ├── DashboardViewModel.cs     # Dashboard KPI ve özet verileri (ApiClient üzerinden /api/dashboard/summary)
+│   ├── ServiceJobViewModel.cs    # İş emri wizard + liste mantığı (ApiClient /api/servicejobs)
+│   ├── FaultTicketViewModel.cs   # Cihaz Kabul ve Arıza Kaydı (Hibrit)
 │   ├── ProjectQuoteEditorViewModel.cs  # Üç Panelli Teklif Editörü
-│   ├── RepairListViewModel.cs    # Tamir Listesi (Profesyonel UI)
+│   ├── RepairListViewModel.cs    # Tamir Listesi (ApiClient)
+│   ├── RepairStatusHelper.cs     # XAML CommandParameter Yardımcısı
 │   ├── FieldJobListViewModel.cs  # Saha İşleri Listesi
 │   ├── CustomerDetailViewModel.cs # Müşteri profili (tabs)
 │   ├── AnalyticsViewModel.cs     # BI Dashboard (LiveCharts) (YENİ)
@@ -84,7 +88,7 @@ KamatekCrm/
 │   ├── CustomerAddViewModel.cs    # Müşteri ekleme (Full form)
 │   ├── QuickCustomerAddViewModel.cs # Hızlı müşteri kaydı (Popup)
 │   ├── QuickNewProductForPurchaseViewModel.cs # Satın alma sırasında hızlı ürün tanımı
-│   └── ...
+│   ├── DirectSalesViewModel.cs   # POS Hızlı Satış (ApiClient /api/sales)
 │
 ├── Views/                # XAML arayüzleri
 │   ├── LoginView.xaml            # Giriş ekranı (Modern Glassmorphism & Fluent UI)
@@ -93,7 +97,7 @@ KamatekCrm/
 │   ├── DashboardView.xaml        # Ana sayfa dashboard (Standardized Glassmorphism)
 │   ├── ServiceJobsView.xaml      # Master list (DataGrid)
 │   ├── NewServiceJobWindow.xaml  # Wizard (ayrı pencere)
-│   ├── FaultTicketWindow.xaml    # Arıza kaydı formu
+│   ├── FaultTicketWindow.xaml    # Yeni Cihaz Kabul ve Arıza formu (Birleştirilmiş)
 │   ├── ProjectQuoteEditorWindow.xaml  # Üç Panelli Teklif Editörü
 │   ├── CustomerDetailView.xaml   # 4 Tab yapısı
 │   ├── AnalyticsView.xaml        # BI Dashboard charts (YENİ)
@@ -137,6 +141,7 @@ KamatekCrm/
 │   ├── IntToVisibilityConverter.cs               # int → Visibility
 │   ├── InvertedBooleanToVisibilityConverter.cs   # bool (ters) → Visibility
 │   ├── GreaterThanZeroConverter.cs               # Sayı > 0 kontrolü (DataTrigger)
+│   ├── ImagePathConverter.cs                     # Relative/absolute image path → BitmapImage (YENİ)
 │
 ├── Helpers/              # Yardımcı sınıflar
 │   ├── WebViewHelper.cs  # WebView2 HTML binding

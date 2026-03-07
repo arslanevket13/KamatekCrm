@@ -83,6 +83,9 @@ namespace KamatekCrm
 
                         // ApiClient kaydı
                         services.AddHttpClient<ApiClient>("KamatekAPI");
+
+                        // NetworkDiscoveryService kaydı
+                        services.AddSingleton<NetworkDiscoveryService>();
                     })
                     .Build();
 

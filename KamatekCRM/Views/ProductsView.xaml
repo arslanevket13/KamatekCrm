@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:KamatekCrm.Views"
              xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:converters="clr-namespace:KamatekCrm.Converters"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=viewmodels:ProductViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="600" d:DesignWidth="1000"
@@ -14,6 +15,7 @@
     <UserControl.Resources>
         <!-- Boolean to Visibility Converter -->
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:ImagePathConverter x:Key="ImagePathConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="20">
@@ -139,32 +141,34 @@
                                                    VerticalAlignment="Center" Opacity="0.3">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
-                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding ImagePath}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding ImagePath}" Value="">
                                                             <Setter Property="Visibility" Value="Visible"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-                                        <!-- Actual image -->
-                                        <Image Stretch="UniformToFill">
+                                        <!-- Actual image — only shown when ImagePath has value -->
+                                        <Image Stretch="UniformToFill"
+                                               Source="{Binding ImagePath, Converter={StaticResource ImagePathConverter}}">
                                             <Image.Style>
                                                 <Style TargetType="Image">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Setter Property="Visibility" Value="Visible"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding ImagePath}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding ImagePath}" Value="">
                                                             <Setter Property="Visibility" Value="Collapsed"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Image.Style>
-                                            <Image.Source>
-                                                <PriorityBinding>
-                                                    <Binding Path="ImagePath"/>
-                                                </PriorityBinding>
-                                            </Image.Source>
                                         </Image>
                                     </Grid>
                                 </Border>

@@ -19,12 +19,12 @@ using Microsoft.Extensions.Logging;
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
-    /// M��teri y�netimi ViewModel
+    /// Mteri ynetimi ViewModel
     /// </summary>
-    // D�ZELTME 1: S�n�f ad� 'CustomersViewModel' yap�ld� (Sonunda 's' var)
+    // DZELTME 1: Snf ad 'CustomersViewModel' yapld (Sonunda 's' var)
     public class CustomersViewModel : KamatekCrm.ViewModels.Common.PaginationViewModel
     {
-        private readonly AppDbContext _context;
+        private readonly ApiClient _apiClient;
         private Customer? _selectedCustomer;
         private string _fullName = string.Empty;
         private string _phoneNumber = string.Empty;
@@ -297,13 +297,13 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
 
-        public CustomersViewModel(NavigationService navigationService, ILogger<CustomersViewModel> logger, IToastService toastService, ILoadingService loadingService)
+        public CustomersViewModel(NavigationService navigationService, ILogger<CustomersViewModel> logger, IToastService toastService, ILoadingService loadingService, ApiClient apiClient)
         {
             _navigationService = navigationService;
             _logger = logger;
             _toastService = toastService;
             _loadingService = loadingService;
-            _context = new AppDbContext();
+            _apiClient = apiClient;
             Customers = new ObservableCollection<Customer>();
             Cities = new ObservableCollection<City>();
             Districts = new ObservableCollection<District>();
@@ -332,54 +332,48 @@ namespace KamatekCrm.ViewModels
             try
             {
                 _loadingService.Show("Müşteriler yükleniyor...");
-                await Task.Delay(1000); // Overlay testi için gecikme
 
-                _logger.LogDebug("Refreshing customer data. Page: {Page}, Search: {Search}, TypeFilter: {TypeFilter}", CurrentPage, SearchText, SelectedTypeFilter);
-                
                 // İstatistikleri yükle
-                TotalCustomers = await _context.Customers.CountAsync();
-                IndividualCount = await _context.Customers.CountAsync(c => c.Type == CustomerType.Individual);
-                CorporateCount = await _context.Customers.CountAsync(c => c.Type == CustomerType.Corporate);
-                WalkInCount = await _context.Customers.CountAsync(c => c.Type == CustomerType.WalkIn);
-
-                var query = _context.Customers.AsQueryable();
-
-                // 1. Filtreleme - Müşteri tipi
-                if (SelectedTypeFilter.HasValue)
+                var statsResponse = await _apiClient.GetAsync<dynamic>("api/customers/stats");
+                if (statsResponse != null && statsResponse.Success && statsResponse.Data != null)
                 {
-                    query = query.Where(c => c.Type == SelectedTypeFilter.Value);
+                    try
+                    {
+                        var json = (System.Text.Json.JsonElement)statsResponse.Data!;
+                        TotalCustomers = json.GetProperty("TotalCustomers").GetInt32();
+                        IndividualCount = json.GetProperty("IndividualCount").GetInt32();
+                        CorporateCount = json.GetProperty("CorporateCount").GetInt32();
+                        WalkInCount = json.GetProperty("WalkInCount").GetInt32();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Could not parse customer stats");
+                    }
                 }
 
-                // 2. Filtreleme - Arama metni
-                if (!string.IsNullOrWhiteSpace(SearchText))
-                {
-                    var search = SearchText.ToLower();
-                    query = query.Where(c => c.FullName.ToLower().Contains(search) 
-                                          || c.PhoneNumber.Contains(search)
-                                          || (c.CustomerCode != null && c.CustomerCode.ToLower().Contains(search)));
-                }
-
-                // 3. Toplam Sayı
-                TotalCount = await query.CountAsync();
-
-                // 4. Sayfalama
-                var items = await query
-                    .OrderByDescending(c => c.Id)
-                    .Skip((CurrentPage - 1) * PageSize)
-                    .Take(PageSize)
-                    .ToListAsync();
-
-                // 5. UI Güncelleme
-                Customers.Clear();
-                foreach (var item in items) Customers.Add(item);
+                // Listeyi yükle
+                var url = $"api/customers?page={CurrentPage}&pageSize={PageSize}";
+                if (SelectedTypeFilter.HasValue) 
+                    url += $"&type={(int)SelectedTypeFilter.Value}";
+                if (!string.IsNullOrWhiteSpace(SearchText)) 
+                    url += $"&search={Uri.EscapeDataString(SearchText)}";
                 
-                _logger.LogInformation("Loaded {Count} customers", items.Count);
-                _toastService.ShowSuccess("Müşteri verileri güncellendi.");
+                var customersResponse = await _apiClient.GetAsync<List<Customer>>(url);
+                
+                if (customersResponse != null && customersResponse.Success)
+                {
+                    TotalCount = customersResponse.Meta?.Pagination?.TotalCount ?? 0;
+                    Customers.Clear();
+                    if (customersResponse.Data != null)
+                    {
+                        foreach (var item in customersResponse.Data) Customers.Add(item);
+                    }
+                    _toastService.ShowSuccess("Müşteri verileri güncellendi.");
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error refreshing customer data");
-                MessageBox.Show($"Veri yüklenirken hata: {ex.Message}", "Hata");
                 _toastService.ShowError($"Veriler yenilenirken hata oluştu: {ex.Message}");
             }
             finally
@@ -399,10 +393,12 @@ namespace KamatekCrm.ViewModels
                    !string.IsNullOrWhiteSpace(City);
         }
 
-        private void SaveCustomer()
+        private async void SaveCustomer()
         {
             try
             {
+                _loadingService.Show("Müşteri kaydediliyor...");
+
                 if (SelectedCustomer != null)
                 {
                     SelectedCustomer.FullName = FullName;
@@ -414,16 +410,14 @@ namespace KamatekCrm.ViewModels
                     SelectedCustomer.Street = Street;
                     SelectedCustomer.BuildingNo = BuildingNo;
                     SelectedCustomer.ApartmentNo = ApartmentNo;
-                    _context.Customers.Update(SelectedCustomer);
+
+                    var response = await _apiClient.PutAsync<Customer>($"api/customers/{SelectedCustomer.Id}", SelectedCustomer);
+                    if (!response.Success) throw new Exception(response.Message);
                 }
                 else
                 {
-                    // Benzersiz CustomerCode oluştur
-                    string customerCode = GenerateCustomerCode();
-                    
                     var newCustomer = new Customer
                     {
-                        CustomerCode = customerCode,
                         Type = NewCustomerType,
                         FullName = FullName,
                         PhoneNumber = PhoneNumber,
@@ -443,21 +437,26 @@ namespace KamatekCrm.ViewModels
                         TaxNumber = NewCustomerType == CustomerType.Corporate ? NewTaxNumber : null,
                         TaxOffice = NewCustomerType == CustomerType.Corporate ? NewTaxOffice : null
                     };
-                    _context.Customers.Add(newCustomer);
+
+                    var response = await _apiClient.PostAsync<Customer>("api/customers", newCustomer);
+                    if (!response.Success) throw new Exception(response.Message);
                 }
 
-                _context.SaveChanges();
                 _ = RefreshDataAsync();
                 ClearForm();
-                MessageBox.Show("Müşteri başarıyla kaydedildi!", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                _toastService.ShowSuccess("Müşteri başarıyla kaydedildi!");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"Hata: {ex.Message}");
+            }
+            finally
+            {
+                _loadingService.Hide();
             }
         }
 
-        private void DeleteCustomer()
+        private async void DeleteCustomer()
         {
             if (SelectedCustomer == null) return;
 
@@ -468,15 +467,21 @@ namespace KamatekCrm.ViewModels
             {
                 try
                 {
-                    _context.Customers.Remove(SelectedCustomer);
-                    _context.SaveChanges();
+                    _loadingService.Show("Müşteri siliniyor...");
+                    var response = await _apiClient.DeleteAsync<object>($"api/customers/{SelectedCustomer.Id}");
+                    if (!response.Success) throw new Exception(response.Message);
+
                     _ = RefreshDataAsync();
                     ClearForm();
-                    MessageBox.Show("Müşteri başarıyla silindi!", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _toastService.ShowSuccess("Müşteri başarıyla silindi!");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService.ShowError($"Hata: {ex.Message}");
+                }
+                finally
+                {
+                    _loadingService.Hide();
                 }
             }
         }
@@ -614,22 +619,6 @@ namespace KamatekCrm.ViewModels
             _ = RefreshDataAsync();
         }
 
-        /// <summary>
-        /// Benzersiz müşteri kodu oluşturur
-        /// Format: MŞ-YYYY-XXXX (örn: MŞ-2025-0001)
-        /// </summary>
-        private string GenerateCustomerCode()
-        {
-            int year = DateTime.Now.Year;
-            
-            // Bu yıl eklenen müşteri sayısını bul
-            int customerCount = _context.Customers
-                .Count(c => c.CustomerCode.StartsWith($"MŞ-{year}-"));
-            
-            int nextNumber = customerCount + 1;
-            
-            return $"MŞ-{year}-{nextNumber:D4}";
-        }
 
     }
 }

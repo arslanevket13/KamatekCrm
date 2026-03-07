@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using KamatekCrm.Commands;
-using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
-using Microsoft.EntityFrameworkCore;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
@@ -21,9 +20,10 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class DashboardViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
-
+        private readonly ILoadingService _loadingService;
+        private readonly IToastService _toastService;
 
         #region Display Properties
 
@@ -47,9 +47,9 @@ namespace KamatekCrm.ViewModels
         #region Widget 1: Kritik Uyarılar (Stok & Bakım)
 
         /// <summary>
-        /// Düşük stoklu ürünler (Quantity <= 5)
+        /// Düşük stoklu ürünler
         /// </summary>
-        public ObservableCollection<LowStockItem> LowStockProducts { get; set; } = new();
+        public ObservableCollection<LowStockItemDto> LowStockProducts { get; set; } = new();
 
         private int _lowStockCount;
         /// <summary>
@@ -68,12 +68,12 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Bugün planlanan işler
         /// </summary>
-        public ObservableCollection<TodayJobItem> TodaysJobs { get; set; } = new();
+        public ObservableCollection<TodayJobItemDto> TodaysJobs { get; set; } = new();
 
         /// <summary>
         /// Teslime hazır tamirler
         /// </summary>
-        public ObservableCollection<ReadyRepairItem> ReadyToDeliverRepairs { get; set; } = new();
+        public ObservableCollection<ReadyRepairItemDto> ReadyToDeliverRepairs { get; set; } = new();
 
         private int _todaysJobsCount;
         /// <summary>
@@ -100,9 +100,6 @@ namespace KamatekCrm.ViewModels
         #region Widget 3: Aylık Özet (Finans)
 
         private decimal _monthlySalesTotal;
-        /// <summary>
-        /// Bu ay toplam satış
-        /// </summary>
         public decimal MonthlySalesTotal
         {
             get => _monthlySalesTotal;
@@ -110,9 +107,6 @@ namespace KamatekCrm.ViewModels
         }
 
         private int _monthlySalesCount;
-        /// <summary>
-        /// Bu ay satış sayısı
-        /// </summary>
         public int MonthlySalesCount
         {
             get => _monthlySalesCount;
@@ -120,9 +114,6 @@ namespace KamatekCrm.ViewModels
         }
 
         private int _monthlyJobsCompleted;
-        /// <summary>
-        /// Bu ay tamamlanan iş sayısı
-        /// </summary>
         public int MonthlyJobsCompleted
         {
             get => _monthlyJobsCompleted;
@@ -130,9 +121,6 @@ namespace KamatekCrm.ViewModels
         }
 
         private int _activeJobsCount;
-        /// <summary>
-        /// Aktif iş sayısı
-        /// </summary>
         public int ActiveJobsCount
         {
             get => _activeJobsCount;
@@ -264,15 +252,15 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public DashboardViewModel(IAuthService authService, AppDbContext context)
+        public DashboardViewModel(IAuthService authService, ApiClient apiClient, ILoadingService loadingService, IToastService toastService)
         {
             _authService = authService;
-            _context = context;
-            RefreshDashboardCommand = new RelayCommand(_ => LoadDashboardData());
-            LoadDashboardData();
+            _apiClient = apiClient;
+            _loadingService = loadingService;
+            _toastService = toastService;
+            
+            RefreshDashboardCommand = new RelayCommand(async _ => await LoadDashboardDataAsync());
+            _ = LoadDashboardDataAsync();
         }
 
         /// <summary>
@@ -282,10 +270,12 @@ namespace KamatekCrm.ViewModels
         {
             // Design-time için varsayılan değerler
             _authService = new DesignTimeAuthService();
-            _context = new AppDbContext();
-            LowStockProducts = new ObservableCollection<LowStockItem>();
-            TodaysJobs = new ObservableCollection<TodayJobItem>();
-            ReadyToDeliverRepairs = new ObservableCollection<ReadyRepairItem>();
+            _apiClient = null!;
+            _loadingService = null!;
+            _toastService = null!;
+            LowStockProducts = new ObservableCollection<LowStockItemDto>();
+            TodaysJobs = new ObservableCollection<TodayJobItemDto>();
+            ReadyToDeliverRepairs = new ObservableCollection<ReadyRepairItemDto>();
             RefreshDashboardCommand = new RelayCommand(_ => { });
         }
 
@@ -308,348 +298,134 @@ namespace KamatekCrm.ViewModels
             public string HashPassword(string password) => password;
         }
 
-
         /// <summary>
-        /// Tüm dashboard verilerini yükle
+        /// Tüm dashboard verilerini yükle (API'den)
         /// </summary>
-        private void LoadDashboardData()
+        private async Task LoadDashboardDataAsync()
         {
-            LoadLowStockAlerts();
-            LoadTodaysJobs();
-            LoadReadyRepairs();
-            LoadMonthlyFinancials();
-            LoadFinancialSummary();
-            LoadChartData();
-            LoadCustomerStatistics();
-            LoadSalesReports();
-        }
-
-        private void LoadFinancialSummary()
-        {
-            try 
+            _loadingService?.Show();
+            try
             {
-                var today = DateTime.Today;
+                var response = await _apiClient.GetAsync<DashboardSummaryDto>("api/dashboard/summary");
+                if (response != null && response.Data != null)
+                {
+                    var dto = response.Data;
+                    
+                    // 1. Low Stocks
+                    LowStockProducts.Clear();
+                    foreach(var item in dto.LowStockProducts) LowStockProducts.Add(item);
+                    LowStockCount = dto.LowStockProducts.Count;
+                    
+                    // 2. Todays Jobs
+                    TodaysJobs.Clear();
+                    foreach(var item in dto.TodaysJobs)
+                    {
+                        item.Category = GetCategoryIcon(item.Category) + " " + GetCategoryName(item.Category);
+                        TodaysJobs.Add(item);
+                    }
+                    TodaysJobsCount = dto.TodaysJobs.Count;
+                    
+                    // 3. Ready Repairs
+                    ReadyToDeliverRepairs.Clear();
+                    foreach(var item in dto.ReadyToDeliverRepairs) ReadyToDeliverRepairs.Add(item);
+                    ReadyRepairsCount = dto.ReadyToDeliverRepairs.Count;
+                    
+                    // 4. Financials
+                    DailyIncome = dto.Financials.DailyIncome;
+                    DailyExpense = dto.Financials.DailyExpense;
+                    MonthlySalesTotal = dto.Financials.MonthlySalesTotal;
+                    MonthlySalesCount = dto.Financials.MonthlySalesCount;
+                    MonthlyJobsCompleted = dto.Financials.MonthlyJobsCompleted;
+                    ActiveJobsCount = dto.Financials.ActiveJobsCount;
+                    
+                    // 5. Customer Stats
+                    TotalCustomers = dto.CustomerStats.TotalCustomers;
+                    NewCustomersThisMonth = dto.CustomerStats.NewCustomersThisMonth;
+                    VipCustomers = dto.CustomerStats.VipCustomers;
+                    UpcomingBirthdays = dto.CustomerStats.UpcomingBirthdays;
+                    BirthdayCustomers.Clear();
+                    foreach(var bday in dto.CustomerStats.BirthdayCustomers) BirthdayCustomers.Add(bday);
+                    
+                    // 6. Sales Reports
+                    TodaySalesTotal = dto.SalesReports.TodaySalesTotal;
+                    TodaySalesCount = dto.SalesReports.TodaySalesCount;
+                    WeekSalesTotal = dto.SalesReports.WeekSalesTotal;
+                    AverageSaleAmount = dto.SalesReports.AverageSaleAmount;
 
-                // REPLACE DailyIncome QUERY WITH explicit Enum checks
-                DailyIncome = _context.CashTransactions.Where(t => t.Date >= today && 
-                    (t.TransactionType == CashTransactionType.CashIncome || 
-                     t.TransactionType == CashTransactionType.CardIncome || 
-                     t.TransactionType == CashTransactionType.TransferIncome))
-                     .Select(t => t.Amount)
-                     .AsEnumerable()
-                     .Sum();
-
-                // REPLACE DailyExpense QUERY WITH explicit Enum checks
-                DailyExpense = _context.CashTransactions.Where(t => t.Date >= today && 
-                    (t.TransactionType == CashTransactionType.Expense || 
-                     t.TransactionType == CashTransactionType.TransferExpense))
-                     .Select(t => t.Amount)
-                     .AsEnumerable()
-                     .Sum();
+                    // 7. Chart Data
+                    LoadWeeklyTrendChart(dto.ChartData.WeeklyTrend);
+                    LoadJobCategoryPieChart(dto.ChartData.JobCategoryDistribution);
+                }
             }
             catch (Exception ex)
             {
-                // Silent fail or log
-                System.Diagnostics.Debug.WriteLine($"Dashboard Finance Error: {ex.Message}");
+                _toastService?.ShowError($"Dashboard veri yükleme hatası: {ex.Message}");
             }
-        }
-
-        /// <summary>
-        /// Widget 1: Düşük stok uyarılarını yükle
-        /// </summary>
-        private void LoadLowStockAlerts()
-        {
-            var lowStockThreshold = 5;
-            var lowStocks = _context.Products
-                .Where(p => p.TotalStockQuantity <= lowStockThreshold && p.TotalStockQuantity >= 0)
-                .OrderBy(p => p.TotalStockQuantity)
-                .Take(10)
-                .Select(p => new LowStockItem
-                {
-                    ProductId = p.Id,
-                    ProductName = p.ProductName ?? "Bilinmeyen Ürün",
-                    CurrentStock = p.TotalStockQuantity,
-                    MinStockLevel = p.MinStockLevel,
-                    UrgencyLevel = p.TotalStockQuantity == 0 ? "Kritik" : 
-                                   p.TotalStockQuantity <= 2 ? "Çok Düşük" : "Düşük"
-                })
-                .ToList();
-
-            LowStockProducts.Clear();
-            foreach (var item in lowStocks)
+            finally
             {
-                LowStockProducts.Add(item);
-            }
-            LowStockCount = _context.Products.Count(p => p.TotalStockQuantity <= lowStockThreshold);
-        }
-
-        /// <summary>
-        /// Widget 2: Bugünün işlerini yükle
-        /// </summary>
-        private void LoadTodaysJobs()
-        {
-            var today = DateTime.Today;
-            var todaysJobs = _context.ServiceJobs
-                .Include(j => j.Customer)
-                .Where(j => j.ScheduledDate.HasValue && 
-                           j.ScheduledDate.Value.Date == today &&
-                           j.Status != JobStatus.Completed)
-                .OrderBy(j => j.ScheduledDate)
-                .Take(10)
-                .ToList()
-                .Select(j => new TodayJobItem
-                {
-                    JobId = j.Id,
-                    CustomerName = j.Customer?.FullName ?? "Bilinmeyen Müşteri",
-                    Category = GetCategoryIcon(j.JobCategory) + " " + GetCategoryName(j.JobCategory),
-                    ScheduledTime = j.ScheduledDate?.ToString("HH:mm") ?? "--:--",
-                    Priority = j.Priority.ToString(),
-                    Address = j.Customer?.FullAddress ?? ""
-                })
-                .ToList();
-
-            TodaysJobs.Clear();
-            foreach (var job in todaysJobs)
-            {
-                TodaysJobs.Add(job);
-            }
-            TodaysJobsCount = _context.ServiceJobs.Count(j => 
-                j.ScheduledDate.HasValue && 
-                j.ScheduledDate.Value.Date == today &&
-                j.Status != JobStatus.Completed);
-        }
-
-        /// <summary>
-        /// Widget 2b: Teslime hazır tamirleri yükle
-        /// </summary>
-        private void LoadReadyRepairs()
-        {
-            var readyRepairs = _context.ServiceJobs
-                .Include(j => j.Customer)
-                .Where(j => j.WorkOrderType == WorkOrderType.Repair && 
-                           j.RepairStatus == RepairStatus.ReadyForPickup)
-                .OrderBy(j => j.CreatedDate)
-                .Take(10)
-                .ToList()
-                .Select(j => new ReadyRepairItem
-                {
-                    JobId = j.Id,
-                    TicketNo = $"T-{j.Id}",
-                    CustomerName = j.Customer?.FullName ?? "Bilinmeyen Müşteri",
-                    DeviceInfo = $"{j.DeviceBrand} {j.DeviceModel}",
-                    DaysWaiting = (DateTime.Now - (j.CompletedDate ?? j.CreatedDate)).Days,
-                    CustomerPhone = j.Customer?.PhoneNumber ?? ""
-                })
-                .ToList();
-
-            ReadyToDeliverRepairs.Clear();
-            foreach (var repair in readyRepairs)
-            {
-                ReadyToDeliverRepairs.Add(repair);
-            }
-            ReadyRepairsCount = _context.ServiceJobs.Count(j => 
-                j.WorkOrderType == WorkOrderType.Repair && 
-                j.RepairStatus == RepairStatus.ReadyForPickup);
-        }
-
-        /// <summary>
-        /// Widget 3: Aylık finansal özeti yükle
-        /// </summary>
-        private void LoadMonthlyFinancials()
-        {
-            var startOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-            var endOfMonth = startOfMonth.AddMonths(1);
-
-            // Bu ay satış toplamı
-            // Bu ay satış toplamı
-            var salesAmounts = _context.SalesOrders
-                .Where(o => o.Date >= startOfMonth && o.Date < endOfMonth)
-                .Select(o => o.TotalAmount)
-                .ToList();
-
-            MonthlySalesTotal = salesAmounts.Sum();
-
-            MonthlySalesCount = salesAmounts.Count;
-
-            // Bu ay tamamlanan işler
-            MonthlyJobsCompleted = _context.ServiceJobs
-                .Count(j => j.CompletedDate.HasValue && 
-                           j.CompletedDate.Value >= startOfMonth && 
-                           j.CompletedDate.Value < endOfMonth);
-
-            // Aktif işler
-            ActiveJobsCount = _context.ServiceJobs
-                .Count(j => j.Status != JobStatus.Completed);
-        }
-
-        /// <summary>
-        /// Müşteri istatistiklerini yükle
-        /// </summary>
-        private void LoadCustomerStatistics()
-        {
-            try
-            {
-                var today = DateTime.Today;
-
-                // Toplam müşteri sayısı
-                TotalCustomers = _context.Customers.Count();
-
-                // Bu ay yeni müşteriler
-                var startOfMonth = new DateTime(today.Year, today.Month, 1);
-                NewCustomersThisMonth = _context.Customers.Count(c => c.CreatedDate >= startOfMonth);
-
-                // VIP müşteriler (LoyaltyPoints >= 500)
-                VipCustomers = _context.Customers.Count(c => c.LoyaltyPoints >= 500);
-
-                // Yaklaşan doğum günleri (önümüzdeki 30 gün)
-                var upcomingBirthdaysList = _context.Customers
-                    .Where(c => c.BirthDate.HasValue)
-                    .ToList()
-                    .Where(c =>
-                    {
-                        var bday = c.BirthDate.Value;
-                        var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day);
-                        var daysUntil = (thisYearBirthday - today).Days;
-                        return daysUntil >= 0 && daysUntil <= 30;
-                    })
-                    .OrderBy(c =>
-                    {
-                        var bday = c.BirthDate.Value;
-                        var thisYear = new DateTime(today.Year, bday.Month, bday.Day);
-                        return (thisYear - today).Days;
-                    })
-                    .Take(10)
-                    .ToList();
-
-                BirthdayCustomers.Clear();
-                foreach (var customer in upcomingBirthdaysList)
-                {
-                    BirthdayCustomers.Add(customer);
-                }
-
-                UpcomingBirthdays = BirthdayCustomers.Count;
-            }
-            catch (Exception)
-            {
-                // Hata durumunda sessizce geç
-            }
-        }
-
-        /// <summary>
-        /// Satış raporlarını yükle
-        /// </summary>
-        private void LoadSalesReports()
-        {
-            try
-            {
-                var today = DateTime.Today;
-                var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
-
-                // Bugünkü satışlar
-                var todaySales = _context.SalesOrders
-                    .Where(o => o.Date.Date == today)
-                    .ToList();
-                TodaySalesTotal = todaySales.Sum(o => (decimal)o.TotalAmount);
-                TodaySalesCount = todaySales.Count;
-
-                // Haftalık satışlar
-                var weekSales = _context.SalesOrders
-                    .Where(o => o.Date.Date >= startOfWeek)
-                    .ToList();
-                WeekSalesTotal = weekSales.Sum(o => (decimal)o.TotalAmount);
-
-                // Ortalama satış tutarı
-                var allSales = _context.SalesOrders.ToList();
-                if (allSales.Any())
-                {
-                    AverageSaleAmount = allSales.Average(o => (decimal)o.TotalAmount);
-                }
-            }
-            catch (Exception)
-            {
-                // Hata durumunda sessizce geç
+                _loadingService?.Hide();
             }
         }
 
         #region Helper Methods
 
-        private string GetCategoryIcon(JobCategory category)
+        private string GetCategoryIcon(string categoryStr)
         {
-            return category switch
+            if (Enum.TryParse<JobCategory>(categoryStr, out var category))
             {
-                JobCategory.CCTV => "📹",
-                JobCategory.VideoIntercom => "📞",
-                JobCategory.FireAlarm => "🔥",
-                JobCategory.BurglarAlarm => "🚨",
-                JobCategory.SmartHome => "🏠",
-                JobCategory.AccessControl => "🔐",
-                JobCategory.SatelliteSystem => "📡",
-                JobCategory.FiberOptic => "🔌",
-                _ => "🔧"
-            };
+                return category switch
+                {
+                    JobCategory.CCTV => "📹",
+                    JobCategory.VideoIntercom => "📞",
+                    JobCategory.FireAlarm => "🔥",
+                    JobCategory.BurglarAlarm => "🚨",
+                    JobCategory.SmartHome => "🏠",
+                    JobCategory.AccessControl => "🔐",
+                    JobCategory.SatelliteSystem => "📡",
+                    JobCategory.FiberOptic => "🔌",
+                    _ => "🔧"
+                };
+            }
+            return "🔧";
         }
 
-        private string GetCategoryName(JobCategory category)
+        private string GetCategoryName(string categoryStr)
         {
-            return category switch
+            if (Enum.TryParse<JobCategory>(categoryStr, out var category))
             {
-                JobCategory.CCTV => "CCTV",
-                JobCategory.VideoIntercom => "Diafon",
-                JobCategory.FireAlarm => "Yangın",
-                JobCategory.BurglarAlarm => "Alarm",
-                JobCategory.SmartHome => "Akıllı Ev",
-                JobCategory.AccessControl => "PDKS",
-                JobCategory.SatelliteSystem => "Uydu",
-                JobCategory.FiberOptic => "Fiber",
-                _ => "Diğer"
-            };
-        }
-
-        /// <summary>
-        /// Grafik verilerini yükle
-        /// </summary>
-        private void LoadChartData()
-        {
-            try
-            {
-                LoadWeeklyTrendChart();
-                LoadJobCategoryPieChart();
+                return category switch
+                {
+                    JobCategory.CCTV => "CCTV",
+                    JobCategory.VideoIntercom => "Diafon",
+                    JobCategory.FireAlarm => "Yangın",
+                    JobCategory.BurglarAlarm => "Alarm",
+                    JobCategory.SmartHome => "Akıllı Ev",
+                    JobCategory.AccessControl => "PDKS",
+                    JobCategory.SatelliteSystem => "Uydu",
+                    JobCategory.FiberOptic => "Fiber",
+                    _ => "Diğer"
+                };
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Chart loading error: {ex.Message}");
-            }
+            return "Diğer";
         }
 
         /// <summary>
         /// 7 günlük gelir trend grafiği
         /// </summary>
-        private void LoadWeeklyTrendChart()
+        private void LoadWeeklyTrendChart(List<WeeklyTrendItemDto> trendData)
         {
             var labels = new List<string>();
             var incomeData = new List<double>();
             var jobsData = new List<double>();
 
-            for (int i = 6; i >= 0; i--)
+            if (trendData != null)
             {
-                var date = DateTime.Today.AddDays(-i);
-                labels.Add(date.ToString("ddd", new System.Globalization.CultureInfo("tr-TR")));
-
-                // Günlük gelir
-                var dailyIncome = _context.CashTransactions
-                    .Where(t => t.Date.Date == date.Date && 
-                        (t.TransactionType == CashTransactionType.CashIncome || 
-                         t.TransactionType == CashTransactionType.CardIncome || 
-                         t.TransactionType == CashTransactionType.TransferIncome))
-                    .Select(t => (double)t.Amount)
-                    .AsEnumerable()
-                    .Sum();
-                incomeData.Add(dailyIncome);
-
-                // Günlük tamamlanan iş sayısı
-                var dailyJobs = _context.ServiceJobs
-                    .Count(j => j.CompletedDate.HasValue && j.CompletedDate.Value.Date == date.Date);
-                jobsData.Add(dailyJobs);
+                foreach(var day in trendData)
+                {
+                    labels.Add(day.DayName);
+                    incomeData.Add((double)day.Income);
+                    jobsData.Add((double)day.CompletedJobs);
+                }
             }
 
             WeeklyTrendSeries = new ISeries[]
@@ -706,15 +482,9 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İş kategorileri dağılım grafiği
         /// </summary>
-        private void LoadJobCategoryPieChart()
+        private void LoadJobCategoryPieChart(List<JobCategoryItemDto> distributionData)
         {
-            var categoryData = _context.ServiceJobs
-                .Where(j => j.Status != JobStatus.Completed)
-                .GroupBy(j => j.JobCategory)
-                .Select(g => new { Category = g.Key, Count = g.Count() })
-                .ToList();
-
-            if (categoryData.Count == 0)
+            if (distributionData == null || distributionData.Count == 0)
             {
                 JobCategoryPieSeries = Array.Empty<ISeries>();
                 OnPropertyChanged(nameof(JobCategoryPieSeries));
@@ -735,7 +505,7 @@ namespace KamatekCrm.ViewModels
 
             var series = new List<ISeries>();
             int colorIndex = 0;
-            foreach (var item in categoryData)
+            foreach (var item in distributionData)
             {
                 series.Add(new PieSeries<int>
                 {
@@ -753,46 +523,4 @@ namespace KamatekCrm.ViewModels
 
         #endregion
     }
-
-    #region Display Models
-
-    /// <summary>
-    /// Düşük stok ürün görüntüleme modeli
-    /// </summary>
-    public class LowStockItem
-    {
-        public int ProductId { get; set; }
-        public string ProductName { get; set; } = string.Empty;
-        public int CurrentStock { get; set; }
-        public int MinStockLevel { get; set; }
-        public string UrgencyLevel { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-    /// Bugünün işleri görüntüleme modeli
-    /// </summary>
-    public class TodayJobItem
-    {
-        public int JobId { get; set; }
-        public string CustomerName { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
-        public string ScheduledTime { get; set; } = string.Empty;
-        public string Priority { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-    /// Teslime hazır tamir görüntüleme modeli
-    /// </summary>
-    public class ReadyRepairItem
-    {
-        public int JobId { get; set; }
-        public string TicketNo { get; set; } = string.Empty;
-        public string CustomerName { get; set; } = string.Empty;
-        public string DeviceInfo { get; set; } = string.Empty;
-        public int DaysWaiting { get; set; }
-        public string CustomerPhone { get; set; } = string.Empty;
-    }
-
-    #endregion
 }

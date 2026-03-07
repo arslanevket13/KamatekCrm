@@ -135,8 +135,8 @@ namespace KamatekCrm.Components
         {
             DateFrom = null;
             DateTo = null;
-            SelectedStatus = null;
-            SelectedCategory = null;
+            SelectedStatus = string.Empty;
+            SelectedCategory = string.Empty;
             HasActiveFilters = false;
             ActiveFilterCount = 0;
             ApplyCommand?.Execute(null);

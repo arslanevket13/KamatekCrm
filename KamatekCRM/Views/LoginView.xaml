@@ -326,11 +326,15 @@
                                        Margin="4,20,0,8"/>
                             <Grid>
                                 <PasswordBox x:Name="PasswordBox"
-                                             Style="{StaticResource FluentInput}"
-                                             Tag="{StaticResource LockIcon}"
+                                             Background="#1AFFFFFF"
+                                             BorderBrush="#33FFFFFF"
+                                             BorderThickness="1"
+                                             Foreground="White"
                                              Height="44"
                                              FontSize="14"
-                                             VerticalContentAlignment="Center"/>
+                                             Padding="12,8"
+                                             VerticalContentAlignment="Center"
+                                             CaretBrush="White"/>
                                 <TextBox x:Name="PasswordTextBox"
                                          Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
                                          Style="{StaticResource FluentInput}"

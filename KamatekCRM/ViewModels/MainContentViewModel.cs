@@ -239,7 +239,7 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Navigation Error to {typeof(TViewModel).Name}: {ex.Message}");
+                // System.Diagnostics.Debug.WriteLine($"Navigation Error to {typeof(TViewModel).Name}: {ex.Message}");
                 _toastService.ShowError($"Sayfa yüklenemedi: {ex.Message}");
             }
         }
@@ -257,8 +257,8 @@ namespace KamatekCrm.ViewModels
         private void OpenFaultTicket()
         {
             // Yeni Cihaz Kabul Ekranı (Repair Module) — DI ile ViewModel çözümlenir
-            var repairVm = _serviceProvider.GetRequiredService<RepairViewModel>();
-            var window = new RepairRegistrationWindow(repairVm);
+            var faultVm = _serviceProvider.GetRequiredService<FaultTicketViewModel>();
+            var window = new Views.FaultTicketWindow(faultVm);
             window.ShowDialog();
         }
 
@@ -272,8 +272,7 @@ namespace KamatekCrm.ViewModels
 
         private void OpenProjectQuote()
         {
-            var window = _serviceProvider.GetRequiredService<ProjectQuoteEditorWindow>();
-            window.ShowDialog();
+            NavigateTo<QuoteListViewModel>();
         }
 
         private void OpenDirectSales()

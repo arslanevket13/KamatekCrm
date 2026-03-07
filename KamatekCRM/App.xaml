@@ -110,6 +110,10 @@
                 <views:RoutePlanningView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:QuoteListViewModel}">
+                <views:QuoteListView/>
+            </DataTemplate>
+
             <!-- Global Converters -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
             <converters:IntToVisibilityConverter x:Key="IntToVis"/>
@@ -118,6 +122,9 @@
             <converters:NullToVisibilityConverter x:Key="NullToVis"/>
             <converters:GreaterThanZeroConverter x:Key="GreaterThanZero"/>
             <converters:BalanceColorConverter x:Key="BalanceColorConverter"/>
+            <converters:QuoteStatusTextConverter x:Key="QuoteStatusText"/>
+            <converters:QuoteStatusColorConverter x:Key="QuoteStatusColor"/>
+            <converters:DateDisplayConverter x:Key="DateDisplay"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

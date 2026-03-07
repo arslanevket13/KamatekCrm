@@ -2,11 +2,13 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using KamatekCrm.Commands;
 using KamatekCrm.Data;
+using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +17,13 @@ using Microsoft.Extensions.DependencyInjection;
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
-    /// Cihaz Kabul & Tamir Listesi ViewModel
+    /// Cihaz Kabul & Tamir Listesi ViewModel — DI + Async + Toast
     /// </summary>
     public class RepairListViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IToastService _toastService;
+
         private string _searchText = string.Empty;
         private RepairStatus? _selectedStatus;
         private DateTime? _startDate;
@@ -27,7 +31,6 @@ namespace KamatekCrm.ViewModels
 
         public ObservableCollection<RepairJobDisplayItem> AllRepairJobs { get; set; }
         public ICollectionView FilteredRepairJobs { get; private set; }
-
         public ObservableCollection<RepairStatusOption> StatusOptions { get; set; }
 
         public string SearchText
@@ -71,6 +74,9 @@ namespace KamatekCrm.ViewModels
         }
 
         public int TotalCount => FilteredRepairJobs?.Cast<object>().Count() ?? 0;
+        public int PendingCount => AllRepairJobs.Count(j => j.RepairStatus == RepairStatus.Registered || j.RepairStatus == RepairStatus.WaitingForParts);
+        public int InProgressCount => AllRepairJobs.Count(j => j.RepairStatus == RepairStatus.Diagnosing || j.RepairStatus == RepairStatus.InRepair || j.RepairStatus == RepairStatus.Testing || j.RepairStatus == RepairStatus.SentToFactory || j.RepairStatus == RepairStatus.ReturnedFromFactory);
+        public int DeliveredCount => AllRepairJobs.Count(j => j.RepairStatus == RepairStatus.Delivered || j.RepairStatus == RepairStatus.ReadyForPickup);
 
         private bool _isBusy;
         public bool IsBusy
@@ -85,8 +91,7 @@ namespace KamatekCrm.ViewModels
         public ICommand PrintTicketCommand { get; }
         public ICommand CreateNewRepairCommand { get; }
 
-        // ===== DETAY & İŞLEM PROPERTIES =====
-        // ===== DETAY & İŞLEM PROPERTIES =====
+        // ===== DETAY & İŞLEM =====
         private RepairJobDisplayItem? _selectedDisplayItem;
         public RepairJobDisplayItem? SelectedDisplayItem
         {
@@ -96,13 +101,9 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedDisplayItem, value))
                 {
                     if (value != null)
-                    {
-                        LoadFullJob(value.Id);
-                    }
+                        _ = LoadFullJobAsync(value.Id);
                     else
-                    {
                         SelectedJob = null;
-                    }
                 }
             }
         }
@@ -120,23 +121,13 @@ namespace KamatekCrm.ViewModels
                 }
             }
         }
-        
-        private void LoadFullJob(int id)
-        {
-             var job = _context.ServiceJobs.Include(j => j.Customer).FirstOrDefault(j => j.Id == id);
-             if (job != null)
-             {
-                 SelectedJob = job;
-                 LoadHistory(job.Id);
-                 LoadJobItems(job.Id);
-             }
-        }
 
         public bool IsJobSelected => SelectedJob != null;
 
-        public ObservableCollection<ServiceJobHistory> JobHistory { get; set; } = new ObservableCollection<ServiceJobHistory>();
-        public ObservableCollection<ServiceJobItem> CurrentJobItems { get; set; } = new ObservableCollection<ServiceJobItem>();
-        public ObservableCollection<Product> Products { get; set; } = new ObservableCollection<Product>();
+        public ObservableCollection<ServiceJobHistory> JobHistory { get; set; } = new();
+        public ObservableCollection<ServiceJobItem> CurrentJobItems { get; set; } = new();
+        public ObservableCollection<Product> Products { get; set; } = new();
+        public ObservableCollection<string> PhotoPaths { get; set; } = new();
 
         // Yeni Not
         private string _newNoteText = string.Empty;
@@ -144,10 +135,10 @@ namespace KamatekCrm.ViewModels
 
         // Parça Ekleme
         private Product? _selectedProductToAdd;
-        public Product? SelectedProductToAdd 
-        { 
-            get => _selectedProductToAdd; 
-            set { if (SetProperty(ref _selectedProductToAdd, value) && value != null) UnitPriceToAdd = value.SalePrice; } 
+        public Product? SelectedProductToAdd
+        {
+            get => _selectedProductToAdd;
+            set { if (SetProperty(ref _selectedProductToAdd, value) && value != null) UnitPriceToAdd = value.SalePrice; }
         }
         private int _quantityToAdd = 1;
         public int QuantityToAdd { get => _quantityToAdd; set => SetProperty(ref _quantityToAdd, value); }
@@ -167,61 +158,158 @@ namespace KamatekCrm.ViewModels
         public ICommand AddPhotoCommand { get; }
         public ICommand OpenPhotoCommand { get; }
 
-        public RepairListViewModel()
+        public RepairListViewModel(IServiceProvider serviceProvider, IToastService toastService)
         {
-            _context = new AppDbContext();
+            _serviceProvider = serviceProvider;
+            _toastService = toastService;
+
             AllRepairJobs = new ObservableCollection<RepairJobDisplayItem>();
             StatusOptions = new ObservableCollection<RepairStatusOption>();
 
             InitializeStatusOptions();
 
-            // Navigation Commands
+            // Commands
             RefreshCommand = new RelayCommand(async _ => await LoadRepairJobsAsync());
             ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
             CreateNewRepairCommand = new RelayCommand(ExecuteCreateNewRepair);
-            
-            // Action Commands
-            UpdateStatusCommand = new RelayCommand<RepairStatus?>(UpdateStatus);
-            AddNoteCommand = new RelayCommand(AddNote);
-            AddItemToJobCommand = new RelayCommand(AddItemToJob);
-            RemoveItemFromJobCommand = new RelayCommand(RemoveItemFromJob);
-            CompleteJobCommand = new RelayCommand(CompleteJob);
-            AddPhotoCommand = new RelayCommand(AddPhoto);
+
+            // Workflow Commands
+            UpdateStatusCommand = new RelayCommand<RepairStatus?>(async s => await UpdateStatusAsync(s));
+            AddNoteCommand = new RelayCommand(async _ => await AddNoteAsync());
+            AddItemToJobCommand = new RelayCommand(async _ => await AddItemToJobAsync());
+            RemoveItemFromJobCommand = new RelayCommand(async p => await RemoveItemFromJobAsync(p));
+            CompleteJobCommand = new RelayCommand(async _ => await CompleteJobAsync());
+            AddPhotoCommand = new RelayCommand(async _ => await AddPhotoAsync());
             OpenPhotoCommand = new RelayCommand<string>(OpenPhoto);
             PrintTicketCommand = new RelayCommand(ExecutePrintTicket);
 
             // CollectionView
             FilteredRepairJobs = CollectionViewSource.GetDefaultView(AllRepairJobs);
             FilteredRepairJobs.Filter = FilterRepairJobs;
-            FilteredRepairJobs.CollectionChanged += (s, e) => OnPropertyChanged(nameof(TotalCount));
+            FilteredRepairJobs.CollectionChanged += (s, e) => 
+            {
+                OnPropertyChanged(nameof(TotalCount));
+                OnPropertyChanged(nameof(PendingCount));
+                OnPropertyChanged(nameof(InProgressCount));
+                OnPropertyChanged(nameof(DeliveredCount));
+            };
 
             // Load Initial Data
-            _ = LoadRepairJobsAsync();
-            LoadProducts();
+            _ = InitializeAsync();
         }
 
-        // ... (InitializeStatusOptions & LoadRepairJobsAsync - Existing)
-
-        private void LoadProducts()
+        private async Task InitializeAsync()
         {
-            Products.Clear();
-            var products = _context.Products.OrderBy(p => p.ProductName).ToList();
-            foreach (var p in products) Products.Add(p);
+            await LoadProductsAsync();
+            await LoadRepairJobsAsync();
         }
 
-        private void LoadHistory(int jobId)
+        // ===== DATA LOADING (Async + Scoped DbContext) =====
+
+        private async Task LoadProductsAsync()
         {
-            JobHistory.Clear();
-            var history = _context.ServiceJobHistories.Where(h => h.ServiceJobId == jobId).OrderByDescending(h => h.Date).ToList();
-            foreach(var h in history) JobHistory.Add(h);
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var products = await ctx.Products.OrderBy(p => p.ProductName).ToListAsync();
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Products.Clear();
+                    foreach (var p in products) Products.Add(p);
+                });
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Ürünler yüklenemedi: {ex.Message}");
+            }
         }
 
-        private void LoadJobItems(int jobId)
+        private async Task LoadFullJobAsync(int id)
         {
-            CurrentJobItems.Clear();
-            var items = _context.ServiceJobItems.Include(i => i.Product).Where(i => i.ServiceJobId == jobId).ToList();
-            foreach(var item in items) CurrentJobItems.Add(item);
-            NotifyCostChanged();
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var job = await ctx.ServiceJobs.Include(j => j.Customer).FirstOrDefaultAsync(j => j.Id == id);
+                if (job != null)
+                {
+                    SelectedJob = job;
+                    await LoadHistoryAsync(id);
+                    await LoadJobItemsAsync(id);
+                    LoadPhotoGallery();
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"İş detayı yüklenemedi: {ex.Message}");
+            }
+        }
+
+        private async Task LoadHistoryAsync(int jobId)
+        {
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var history = await ctx.ServiceJobHistories
+                    .Where(h => h.ServiceJobId == jobId)
+                    .OrderByDescending(h => h.Date)
+                    .ToListAsync();
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    JobHistory.Clear();
+                    foreach (var h in history) JobHistory.Add(h);
+                });
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Geçmiş yüklenemedi: {ex.Message}");
+            }
+        }
+
+        private async Task LoadJobItemsAsync(int jobId)
+        {
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var items = await ctx.ServiceJobItems
+                    .Include(i => i.Product)
+                    .Where(i => i.ServiceJobId == jobId)
+                    .ToListAsync();
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    CurrentJobItems.Clear();
+                    foreach (var item in items) CurrentJobItems.Add(item);
+                    NotifyCostChanged();
+                });
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Parça listesi yüklenemedi: {ex.Message}");
+            }
+        }
+
+        private void LoadPhotoGallery()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                PhotoPaths.Clear();
+                if (SelectedJob == null || string.IsNullOrEmpty(SelectedJob.PhotoPathsJson)) return;
+
+                try
+                {
+                    var paths = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(SelectedJob.PhotoPathsJson);
+                    if (paths != null)
+                        foreach (var p in paths) PhotoPaths.Add(p);
+                }
+                catch { /* Invalid JSON — ignore */ }
+            });
         }
 
         private void NotifyCostChanged()
@@ -230,146 +318,246 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(GrandTotal));
         }
 
-        // ===== WORKFLOW ACTIONS =====
+        // ===== WORKFLOW ACTIONS (Async) =====
 
-        private async void UpdateStatus(RepairStatus? newStatus)
+        private async Task UpdateStatusAsync(RepairStatus? newStatus)
         {
             if (SelectedJob == null || newStatus == null) return;
-            
-            var oldStatus = SelectedJob.RepairStatus;
-            SelectedJob.RepairStatus = newStatus.Value;
 
-            // Mapping ServiceJob.Status
-            if (newStatus == RepairStatus.Delivered) SelectedJob.Status = JobStatus.Completed;
-            else if (newStatus == RepairStatus.Unrepairable) SelectedJob.Status = JobStatus.Cancelled;
-            else SelectedJob.Status = JobStatus.InProgress;
-
-            _context.ServiceJobs.Update(SelectedJob);
-            
-            // Add History
-            var history = new ServiceJobHistory
+            try
             {
-                ServiceJobId = SelectedJob.Id,
-                Date = DateTime.Now,
-                StatusChange = newStatus.Value,
-                TechnicianNote = !string.IsNullOrWhiteSpace(NewNoteText) ? NewNoteText : $"Durum değişikliği: {oldStatus} -> {newStatus}",
-                UserId = "Technician"
-            };
-            _context.ServiceJobHistories.Add(history);
-            await _context.SaveChangesAsync();
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            // Refresh UI
-            NewNoteText = string.Empty;
-            LoadHistory(SelectedJob.Id);
-            
-            // Update List Item (UI Sync)
-            var listItem = AllRepairJobs.FirstOrDefault(x => x.Id == SelectedJob.Id);
-            if (listItem != null) 
+                var job = await ctx.ServiceJobs.FindAsync(SelectedJob.Id);
+                if (job == null) return;
+
+                var oldStatus = job.RepairStatus;
+                job.RepairStatus = newStatus.Value;
+                job.ModifiedDate = DateTime.UtcNow;
+
+                // Map to ServiceJob.Status
+                if (newStatus == RepairStatus.Delivered) job.Status = JobStatus.Completed;
+                else if (newStatus == RepairStatus.Unrepairable) job.Status = JobStatus.Cancelled;
+                else job.Status = JobStatus.InProgress;
+
+                ctx.ServiceJobs.Update(job);
+
+                // History
+                var history = new ServiceJobHistory
+                {
+                    ServiceJobId = job.Id,
+                    Date = DateTime.UtcNow,
+                    StatusChange = newStatus.Value,
+                    TechnicianNote = !string.IsNullOrWhiteSpace(NewNoteText)
+                        ? NewNoteText
+                        : $"Durum değişikliği: {oldStatus} → {newStatus}",
+                    UserId = App.CurrentUser?.Username ?? "System"
+                };
+                ctx.ServiceJobHistories.Add(history);
+
+                await ctx.SaveChangesAsync();
+
+                // Refresh
+                SelectedJob.RepairStatus = newStatus.Value;
+                SelectedJob.Status = job.Status;
+                NewNoteText = string.Empty;
+                await LoadHistoryAsync(job.Id);
+
+                var listItem = AllRepairJobs.FirstOrDefault(x => x.Id == job.Id);
+                if (listItem != null)
+                {
+                    listItem.RepairStatus = newStatus.Value;
+                    FilteredRepairJobs.Refresh();
+                }
+
+                _toastService.ShowSuccess($"Durum güncellendi: {listItem?.StatusDisplay}");
+            }
+            catch (Exception ex)
             {
-                listItem.RepairStatus = newStatus.Value;
-                // Force Refresh to update colors
-                FilteredRepairJobs.Refresh();
+                _toastService.ShowError($"Durum güncellenemedi: {ex.Message}");
             }
         }
 
-        private void AddNote(object? param)
+        private async Task AddNoteAsync()
         {
             if (SelectedJob == null || string.IsNullOrWhiteSpace(NewNoteText)) return;
-            UpdateStatus(SelectedJob.RepairStatus); // Log note with current status
+            await UpdateStatusAsync(SelectedJob.RepairStatus);
         }
 
-        private void AddItemToJob(object? param)
+        private async Task AddItemToJobAsync()
         {
             if (SelectedJob == null || SelectedProductToAdd == null) return;
 
-            var newItem = new ServiceJobItem
+            try
             {
-                ServiceJobId = SelectedJob.Id,
-                ProductId = SelectedProductToAdd.Id,
-                Product = SelectedProductToAdd,
-                QuantityUsed = QuantityToAdd,
-                UnitPrice = UnitPriceToAdd,
-                UnitCost = SelectedProductToAdd.PurchasePrice
-            };
-            _context.ServiceJobItems.Add(newItem);
-            _context.SaveChanges();
-            
-            CurrentJobItems.Add(newItem);
-            NotifyCostChanged();
-            
-            SelectedProductToAdd = null;
-            QuantityToAdd = 1;
-        }
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        private void RemoveItemFromJob(object? param)
-        {
-            if (param is ServiceJobItem item)
-            {
-                _context.ServiceJobItems.Remove(item);
-                _context.SaveChanges();
-                CurrentJobItems.Remove(item);
+                var newItem = new ServiceJobItem
+                {
+                    ServiceJobId = SelectedJob.Id,
+                    ProductId = SelectedProductToAdd.Id,
+                    Product = SelectedProductToAdd,
+                    QuantityUsed = QuantityToAdd,
+                    UnitPrice = UnitPriceToAdd,
+                    UnitCost = SelectedProductToAdd.PurchasePrice
+                };
+                ctx.ServiceJobItems.Add(newItem);
+                await ctx.SaveChangesAsync();
+
+                CurrentJobItems.Add(newItem);
                 NotifyCostChanged();
+
+                _toastService.ShowSuccess($"{SelectedProductToAdd.ProductName} eklendi");
+                SelectedProductToAdd = null;
+                QuantityToAdd = 1;
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Parça eklenemedi: {ex.Message}");
             }
         }
 
-        private void CompleteJob(object? param)
+        private async Task RemoveItemFromJobAsync(object? param)
         {
-            // Stock deduction logic + Mark as Delivered
-             foreach(var item in CurrentJobItems)
-             {
-                 var product = _context.Products.Find(item.ProductId);
-                 if (product != null) product.TotalStockQuantity -= item.QuantityUsed;
-             }
-             _context.SaveChanges();
-             UpdateStatus(RepairStatus.Delivered);
+            if (param is not ServiceJobItem item) return;
+
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var dbItem = await ctx.ServiceJobItems.FindAsync(item.Id);
+                if (dbItem != null)
+                {
+                    ctx.ServiceJobItems.Remove(dbItem);
+                    await ctx.SaveChangesAsync();
+                }
+
+                CurrentJobItems.Remove(item);
+                NotifyCostChanged();
+                _toastService.ShowSuccess("Parça kaldırıldı");
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Parça kaldırılamadı: {ex.Message}");
+            }
         }
 
-        // ===== PHOTO MANAGEMENT =====
-        
-        private void AddPhoto(object? param)
+        private async Task CompleteJobAsync()
         {
             if (SelectedJob == null) return;
 
-            var openFileDialog = new Microsoft.Win32.OpenFileDialog();
-            openFileDialog.Filter = "Resim Dosyaları|*.jpg;*.jpeg;*.png;*.bmp";
-            openFileDialog.Multiselect = true;
-            if (openFileDialog.ShowDialog() == true)
+            try
             {
-                try 
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                await using var transaction = await ctx.Database.BeginTransactionAsync();
+                try
                 {
-                    // Dosyayı AppData'ya kopyala
-                    string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                    string photoDir = System.IO.Path.Combine(appData, "KamatekCrm", "Photos");
-                    if (!System.IO.Directory.Exists(photoDir)) System.IO.Directory.CreateDirectory(photoDir);
-
-                    // JSON listesini al
-                    var photos = string.IsNullOrEmpty(SelectedJob.PhotoPathsJson) 
-                        ? new System.Collections.Generic.List<string>() 
-                        : System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(SelectedJob.PhotoPathsJson);
-
-                    foreach (var filePath in openFileDialog.FileNames)
+                    // Stok düşümü
+                    foreach (var item in CurrentJobItems)
                     {
-                        string fileName = $"Job_{SelectedJob.Id}_{Guid.NewGuid()}{System.IO.Path.GetExtension(filePath)}";
-                        string destPath = System.IO.Path.Combine(photoDir, fileName);
-                        System.IO.File.Copy(filePath, destPath);
-                        photos?.Add(destPath);
+                        var product = await ctx.Products.FindAsync(item.ProductId);
+                        if (product != null) product.TotalStockQuantity -= item.QuantityUsed;
                     }
+
+                    var job = await ctx.ServiceJobs.FindAsync(SelectedJob.Id);
+                    if (job != null)
+                    {
+                        job.RepairStatus = RepairStatus.Delivered;
+                        job.Status = JobStatus.Completed;
+                        job.CompletedDate = DateTime.UtcNow;
+                        job.ModifiedDate = DateTime.UtcNow;
+                    }
+
+                    // History
+                    ctx.ServiceJobHistories.Add(new ServiceJobHistory
+                    {
+                        ServiceJobId = SelectedJob.Id,
+                        Date = DateTime.UtcNow,
+                        StatusChange = RepairStatus.Delivered,
+                        TechnicianNote = "İş tamamlandı — stok düşümü yapıldı",
+                        UserId = App.CurrentUser?.Username ?? "System"
+                    });
+
+                    await ctx.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _toastService.ShowSuccess("İş tamamlandı ve stok güncellendi!");
+                    await LoadFullJobAsync(SelectedJob.Id);
                     
-                    SelectedJob.PhotoPathsJson = System.Text.Json.JsonSerializer.Serialize(photos);
-                    _context.ServiceJobs.Update(SelectedJob);
-                    _context.SaveChanges();
-
-                    // UI'ı yenile
-                    var jobId = SelectedJob.Id;
-                    LoadFullJob(jobId);
-                    OnPropertyChanged(nameof(SelectedJob));
-
-                    MessageBox.Show($"{openFileDialog.FileNames.Length} fotoğraf eklendi!", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                    var listItem = AllRepairJobs.FirstOrDefault(x => x.Id == SelectedJob.Id);
+                    if (listItem != null)
+                    {
+                        listItem.RepairStatus = RepairStatus.Delivered;
+                        FilteredRepairJobs.Refresh();
+                    }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    MessageBox.Show($"Hata: {ex.Message}");
+                    await transaction.RollbackAsync();
+                    throw;
                 }
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Tamamlama hatası: {ex.Message}");
+            }
+        }
+
+        // ===== PHOTO MANAGEMENT =====
+
+        private async Task AddPhotoAsync()
+        {
+            if (SelectedJob == null) return;
+
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Resim Dosyaları|*.jpg;*.jpeg;*.png;*.bmp",
+                Multiselect = true
+            };
+
+            if (openFileDialog.ShowDialog() != true) return;
+
+            try
+            {
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                string photoDir = System.IO.Path.Combine(appData, "KamatekCrm", "Photos");
+                if (!System.IO.Directory.Exists(photoDir)) System.IO.Directory.CreateDirectory(photoDir);
+
+                var photos = string.IsNullOrEmpty(SelectedJob.PhotoPathsJson)
+                    ? new System.Collections.Generic.List<string>()
+                    : System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(SelectedJob.PhotoPathsJson) ?? new();
+
+                foreach (var filePath in openFileDialog.FileNames)
+                {
+                    string fileName = $"Job_{SelectedJob.Id}_{Guid.NewGuid()}{System.IO.Path.GetExtension(filePath)}";
+                    string destPath = System.IO.Path.Combine(photoDir, fileName);
+                    System.IO.File.Copy(filePath, destPath);
+                    photos.Add(destPath);
+                }
+
+                SelectedJob.PhotoPathsJson = System.Text.Json.JsonSerializer.Serialize(photos);
+
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                
+                var jobInDb = await ctx.ServiceJobs.FindAsync(SelectedJob.Id);
+                if (jobInDb != null)
+                {
+                    jobInDb.PhotoPathsJson = SelectedJob.PhotoPathsJson;
+                    await ctx.SaveChangesAsync();
+                }
+
+                LoadPhotoGallery();
+                _toastService.ShowSuccess($"{openFileDialog.FileNames.Length} fotoğraf eklendi");
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Fotoğraf eklenemedi: {ex.Message}");
             }
         }
 
@@ -377,12 +565,14 @@ namespace KamatekCrm.ViewModels
         {
             if (!string.IsNullOrEmpty(path) && System.IO.File.Exists(path))
             {
-                new System.Diagnostics.Process 
-                { 
-                    StartInfo = new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true } 
+                new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true }
                 }.Start();
             }
         }
+
+        // ===== INITIALIZATION & FILTERS =====
 
         private void InitializeStatusOptions()
         {
@@ -395,47 +585,56 @@ namespace KamatekCrm.ViewModels
             StatusOptions.Add(new RepairStatusOption { Status = RepairStatus.Testing, DisplayName = "Test Aşaması", Icon = "✔️" });
             StatusOptions.Add(new RepairStatusOption { Status = RepairStatus.ReadyForPickup, DisplayName = "Teslimata Hazır", Icon = "✅" });
             StatusOptions.Add(new RepairStatusOption { Status = RepairStatus.Delivered, DisplayName = "Teslim Edildi", Icon = "🚗" });
+            StatusOptions.Add(new RepairStatusOption { Status = RepairStatus.Unrepairable, DisplayName = "İade/Hurda", Icon = "❌" });
         }
 
         private async Task LoadRepairJobsAsync()
         {
             if (IsBusy) return;
-
             IsBusy = true;
-            AllRepairJobs.Clear();
 
             try
             {
-                var repairJobs = await _context.ServiceJobs
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                var repairJobs = await ctx.ServiceJobs
                     .Include(j => j.Customer)
                     .Where(j => j.WorkOrderType == WorkOrderType.Repair)
                     .OrderByDescending(j => j.CreatedDate)
+                    .Take(500) // Limit
                     .ToListAsync();
 
-                foreach (var job in repairJobs)
+                Application.Current.Dispatcher.Invoke(() =>
                 {
-                    AllRepairJobs.Add(new RepairJobDisplayItem
+                    AllRepairJobs.Clear();
+                    foreach (var job in repairJobs)
                     {
-                        Id = job.Id,
-                        TicketNo = $"#TK-{job.Id:D4}",
-                        CustomerName = job.Customer?.FullName ?? "Bilinmiyor",
-                        CustomerPhone = job.Customer?.PhoneNumber ?? "",
-                        DeviceBrand = job.DeviceBrand ?? "",
-                        DeviceModel = job.DeviceModel ?? "",
-                        SerialNumber = job.SerialNumber ?? "",
-                        RepairStatus = job.RepairStatus,
-                        CreatedDate = job.CreatedDate,
-                        Price = job.Price,
-                        Description = job.Description,
-                        PhotoPathsJson = job.PhotoPathsJson
-                    });
-                }
-
-                OnPropertyChanged(nameof(TotalCount));
+                        AllRepairJobs.Add(new RepairJobDisplayItem
+                        {
+                            Id = job.Id,
+                            TicketNo = $"#TK-{job.Id:D4}",
+                            CustomerName = job.Customer?.FullName ?? "Bilinmiyor",
+                            CustomerPhone = job.Customer?.PhoneNumber ?? "",
+                            DeviceBrand = job.DeviceBrand ?? "",
+                            DeviceModel = job.DeviceModel ?? "",
+                            SerialNumber = job.SerialNumber ?? "",
+                            RepairStatus = job.RepairStatus,
+                            CreatedDate = job.CreatedDate,
+                            Price = job.Price,
+                            Description = job.Description,
+                            PhotoPathsJson = job.PhotoPathsJson
+                        });
+                    }
+                    OnPropertyChanged(nameof(TotalCount));
+                    OnPropertyChanged(nameof(PendingCount));
+                    OnPropertyChanged(nameof(InProgressCount));
+                    OnPropertyChanged(nameof(DeliveredCount));
+                });
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Veriler yüklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"Veriler yüklenirken hata: {ex.Message}");
             }
             finally
             {
@@ -445,21 +644,12 @@ namespace KamatekCrm.ViewModels
 
         private bool FilterRepairJobs(object obj)
         {
-            if (obj is not RepairJobDisplayItem job)
-                return false;
+            if (obj is not RepairJobDisplayItem job) return false;
 
-            // Status filtresi
-            if (SelectedStatus.HasValue && job.RepairStatus != SelectedStatus.Value)
-                return false;
+            if (SelectedStatus.HasValue && job.RepairStatus != SelectedStatus.Value) return false;
+            if (StartDate.HasValue && job.CreatedDate.Date < StartDate.Value.Date) return false;
+            if (EndDate.HasValue && job.CreatedDate.Date > EndDate.Value.Date) return false;
 
-            // Tarih filtresi
-            if (StartDate.HasValue && job.CreatedDate.Date < StartDate.Value.Date)
-                return false;
-
-            if (EndDate.HasValue && job.CreatedDate.Date > EndDate.Value.Date)
-                return false;
-
-            // Metin araması (Seri no, Model, Marka, Müşteri)
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
                 var search = SearchText.ToLower();
@@ -484,10 +674,10 @@ namespace KamatekCrm.ViewModels
         private void ExecutePrintTicket(object? parameter)
         {
             if (SelectedJob == null) return;
-            
+
             try
             {
-                 var saveDialog = new Microsoft.Win32.SaveFileDialog
+                var saveDialog = new Microsoft.Win32.SaveFileDialog
                 {
                     Title = "Servis Fişini Kaydet",
                     Filter = "PDF Dosyası (*.pdf)|*.pdf",
@@ -499,25 +689,27 @@ namespace KamatekCrm.ViewModels
                     var pdfService = new Services.PdfService();
                     pdfService.GenerateServiceForm(SelectedJob, saveDialog.FileName);
 
-                     new System.Diagnostics.Process
+                    new System.Diagnostics.Process
                     {
                         StartInfo = new System.Diagnostics.ProcessStartInfo(saveDialog.FileName) { UseShellExecute = true }
                     }.Start();
+
+                    _toastService.ShowSuccess("PDF oluşturuldu");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Yazdırma hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"Yazdırma hatası: {ex.Message}");
             }
         }
 
         private async void ExecuteCreateNewRepair(object? parameter)
         {
-            var repairVm = App.ServiceProvider.GetRequiredService<RepairViewModel>();
-            var regWindow = new Views.RepairRegistrationWindow(repairVm);
-            if (regWindow.ShowDialog() == true) 
+            var faultVm = _serviceProvider.GetRequiredService<FaultTicketViewModel>();
+            var regWindow = new Views.FaultTicketWindow(faultVm);
+            if (regWindow.ShowDialog() == true)
             {
-                 await LoadRepairJobsAsync();
+                await LoadRepairJobsAsync();
             }
         }
     }
@@ -543,7 +735,7 @@ namespace KamatekCrm.ViewModels
         // Computed
         public string DeviceDisplay => $"{DeviceBrand} {DeviceModel}".Trim();
         public int DaysInShop => (DateTime.Now - CreatedDate).Days;
-        
+
         public string StatusDisplay => RepairStatus switch
         {
             RepairStatus.Registered => "Kayıt Açıldı",
@@ -576,17 +768,17 @@ namespace KamatekCrm.ViewModels
 
         public string StatusBgColor => RepairStatus switch
         {
-            RepairStatus.Registered => "#F5F5F5",
-            RepairStatus.Diagnosing => "#E3F2FD",
-            RepairStatus.WaitingForParts => "#FFF3E0",
-            RepairStatus.SentToFactory => "#F3E5F5",
-            RepairStatus.ReturnedFromFactory => "#EDE7F6",
-            RepairStatus.InRepair => "#E1F5FE",
-            RepairStatus.Testing => "#E0F7FA",
-            RepairStatus.ReadyForPickup => "#E8F5E9",
-            RepairStatus.Delivered => "#F1F8E9",
-            RepairStatus.Unrepairable => "#FFEBEE",
-            _ => "#FAFAFA"
+            RepairStatus.Registered => "#269E9E9E",
+            RepairStatus.Diagnosing => "#262196F3",
+            RepairStatus.WaitingForParts => "#26FF9800",
+            RepairStatus.SentToFactory => "#269C27B0",
+            RepairStatus.ReturnedFromFactory => "#26673AB7",
+            RepairStatus.InRepair => "#2603A9F4",
+            RepairStatus.Testing => "#2600BCD4",
+            RepairStatus.ReadyForPickup => "#264CAF50",
+            RepairStatus.Delivered => "#268BC34A",
+            RepairStatus.Unrepairable => "#26F44336",
+            _ => "#26757575"
         };
     }
 

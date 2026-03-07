@@ -531,7 +531,7 @@ namespace KamatekCrm.Services
                         Level = level + 1,
                         Category = GetCategoryForNode(node),
                         ProductCode = item.ProductName,
-                        ImagePath = null
+                        ImagePath = ResolveImageAbsolutePath(item.ImagePath)
                     });
                 }
 
@@ -551,6 +551,28 @@ namespace KamatekCrm.Services
             if (node.Type == NodeType.Flat) return "Daire";
             if (node.Type == NodeType.Zone) return "Bölge";
             return "Diğer";
+        }
+
+        /// <summary>
+        /// Relative DB path'ini absolute dosya yoluna çözer.
+        /// Hem relative format (uploads/products/xxx.webp) hem absolute format desteklenir.
+        /// </summary>
+        private string? ResolveImageAbsolutePath(string? imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath)) return null;
+
+            // Zaten absolute path ise direkt kontrol et
+            if (Path.IsPathRooted(imagePath))
+            {
+                return File.Exists(imagePath) ? imagePath : null;
+            }
+
+            // Relative path → absolute path (uygulama kök dizinine göre)
+            var absolutePath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                imagePath.Replace('/', Path.DirectorySeparatorChar));
+
+            return File.Exists(absolutePath) ? absolutePath : null;
         }
 
         public void GenerateServiceForm(ServiceJob job, string filePath)

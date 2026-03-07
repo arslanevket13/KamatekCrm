@@ -102,16 +102,18 @@ namespace KamatekCrm.ViewModels
         private readonly NavigationService _navigationService;
         private readonly NetworkDiscoveryService _discoveryService;
         private readonly ApiClient _apiClient;
+        private readonly IToastService _toastService;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public LoginViewModel(IAuthService authService, NavigationService navigationService, NetworkDiscoveryService discoveryService, ApiClient apiClient)
+        public LoginViewModel(IAuthService authService, NavigationService navigationService, NetworkDiscoveryService discoveryService, ApiClient apiClient, IToastService toastService)
         {
             _authService = authService;
             _navigationService = navigationService;
             _discoveryService = discoveryService;
             _apiClient = apiClient;
+            _toastService = toastService;
             LoginCommand = new RelayCommand(async param => await ExecuteLoginAsync(param), _ => CanLogin());
             
             // Load saved settings
@@ -170,7 +172,10 @@ namespace KamatekCrm.ViewModels
                     // Burada basitlik için sadece kullanıcı adı hatırlanıyor.
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Kayıtlı bilgiler yüklenemedi: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -186,7 +191,10 @@ namespace KamatekCrm.ViewModels
                 // Token saklama mekanizması eklenebilir
                 props.Save();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Kayıt bilgileri saklanamadı: {ex.Message}");
+            }
         }
 
         /// <summary>

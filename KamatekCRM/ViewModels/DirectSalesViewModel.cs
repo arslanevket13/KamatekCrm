@@ -11,8 +11,7 @@ using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
-using KamatekCrm.Services.Domain;
-using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace KamatekCrm.ViewModels
 {
@@ -23,9 +22,10 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class DirectSalesViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
-        private readonly ISalesDomainService _salesDomainService;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
 
         private string _searchText = string.Empty;
         private string _barcodeText = string.Empty;
@@ -211,17 +211,21 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        public DirectSalesViewModel(IAuthService authService, ISalesDomainService salesDomainService)
+        public DirectSalesViewModel(
+            IAuthService authService,
+            ApiClient apiClient,
+            IToastService toastService,
+            ILoadingService loadingService)
         {
             _authService = authService;
-            _salesDomainService = salesDomainService;
-            _context = new AppDbContext();
+            _apiClient = apiClient;
+            _toastService = toastService;
+            _loadingService = loadingService;
+
             AllProducts = new ObservableCollection<PosProductItem>();
             CartItems = new ObservableCollection<PosCartItem>();
-            Warehouses = new ObservableCollection<Warehouse>(_context.Warehouses.Where(w => w.IsActive).ToList());
+            Warehouses = new ObservableCollection<Warehouse>();
             Payments = new ObservableCollection<PosPaymentEntry>();
-
-            SelectedWarehouse = Warehouses.FirstOrDefault();
 
             FilteredProducts = CollectionViewSource.GetDefaultView(AllProducts);
             FilteredProducts.Filter = FilterProducts;
@@ -251,49 +255,75 @@ namespace KamatekCrm.ViewModels
             SelectCustomerCommand = new RelayCommand(p => { if (p is Customer c) SelectedCustomer = c; });
             ClearCustomerCommand = new RelayCommand(_ => { SelectedCustomer = null; CustomerSearch = string.Empty; });
 
-            LoadRecentCustomers();
+            InitializeAsync();
+        }
+
+        private async void InitializeAsync()
+        {
+            _loadingService?.Show();
+            try
+            {
+                var whResponse = await _apiClient.GetAsync<IEnumerable<Warehouse>>("api/inventory/warehouses");
+                if (whResponse?.Data != null)
+                {
+                    Warehouses.Clear();
+                    foreach (var w in whResponse.Data) Warehouses.Add(w);
+                    SelectedWarehouse = Warehouses.FirstOrDefault();
+                }
+
+                LoadRecentCustomers();
+            }
+            finally
+            {
+                _loadingService?.Hide();
+            }
         }
 
         #region Product Loading
 
-        private void LoadProducts()
+        private async void LoadProducts()
         {
             AllProducts.Clear();
             if (SelectedWarehouse == null) return;
 
             try
             {
-                var products = _context.Products
-                    .Include(p => p.Inventories)
-                    .ToList();
+                _loadingService?.Show();
+                var response = await _apiClient.GetAsync<IEnumerable<Inventory>>($"api/inventory?warehouseId={SelectedWarehouse.Id}&pageSize=2000");
 
-                foreach (var product in products)
+                if (response?.Data != null)
                 {
-                    var inventory = product.Inventories
-                        .FirstOrDefault(i => i.WarehouseId == SelectedWarehouse.Id);
-
-                    AllProducts.Add(new PosProductItem
+                    foreach (var inventory in response.Data.Where(i => i.Product != null))
                     {
-                        ProductId = product.Id,
-                        ProductName = product.ProductName,
-                        ModelName = product.ModelName ?? string.Empty,
-                        SKU = product.SKU ?? string.Empty,
-                        Barcode = product.Barcode ?? string.Empty,
-                        SalePrice = product.SalePrice,
-                        VatRate = product.VatRate,
-                        StockQuantity = inventory?.Quantity ?? 0,
-                        Unit = product.Unit,
-                        ImagePath = product.ImagePath
-                    });
-                }
+                        var product = inventory.Product;
+                        AllProducts.Add(new PosProductItem
+                        {
+                            ProductId = product.Id,
+                            ProductName = product.ProductName,
+                            ModelName = product.ModelName ?? string.Empty,
+                            SKU = product.SKU ?? string.Empty,
+                            Barcode = product.Barcode ?? string.Empty,
+                            SalePrice = product.SalePrice,
+                            VatRate = product.VatRate,
+                            StockQuantity = inventory.Quantity,
+                            Unit = product.Unit,
+                            ImagePath = product.ImagePath
+                        });
+                    }
 
-                StatusMessage = $"{AllProducts.Count} ürün yüklendi.";
-                IsActionSuccessful = true;
+                    StatusMessage = $"{AllProducts.Count} ürün yüklendi.";
+                    IsActionSuccessful = true;
+                }
             }
             catch (Exception ex)
             {
                 StatusMessage = $"Yükleme hatası: {ex.Message}";
                 IsActionSuccessful = false;
+                _toastService?.ShowError("Ürünler yüklenirken hata oluştu.");
+            }
+            finally
+            {
+                _loadingService?.Hide();
             }
         }
 
@@ -314,17 +344,17 @@ namespace KamatekCrm.ViewModels
 
         #region Customer
 
-        private void LoadRecentCustomers()
+        private async void LoadRecentCustomers()
         {
             try
             {
                 RecentCustomers.Clear();
-                var list = _context.Customers
-                    .OrderByDescending(c => c.CreatedDate)
-                    .Take(25)
-                    .ToList();
-                foreach (var c in list) RecentCustomers.Add(c);
-                FilterCustomers();
+                var response = await _apiClient.GetAsync<IEnumerable<Customer>>("api/customers?sortBy=CreatedDate&sortDir=desc&pageSize=25");
+                if (response?.Data != null)
+                {
+                    foreach (var c in response.Data) RecentCustomers.Add(c);
+                    FilterCustomers();
+                }
             }
             catch { /* не критично */ }
         }
@@ -577,9 +607,6 @@ namespace KamatekCrm.ViewModels
             ExecuteCompleteSale();
         }
 
-        /// <summary>
-        /// Final sale completion — delegates to SalesDomainService
-        /// </summary>
         private async void ExecuteCompleteSale()
         {
             if (!CanCompleteSale || SelectedWarehouse == null) return;
@@ -617,33 +644,40 @@ namespace KamatekCrm.ViewModels
                 }).ToList()
             };
 
-            var saleResult = await _salesDomainService.ProcessSaleAsync(request);
-
-            if (saleResult.Success)
+            _loadingService?.Show();
+            try
             {
-                StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {saleResult.OrderNumber}";
-                IsActionSuccessful = true;
+                var apiResponse = await _apiClient.PostAsync<KamatekCrm.Shared.Models.SaleResult>("api/sales", request);
 
-                CartItems.Clear();
-                Payments.Clear();
-                UpdateAllTotals();
-                LoadProducts();
+                if (apiResponse != null && apiResponse.Success && apiResponse.Data != null && apiResponse.Data.Success)
+                {
+                    var saleResult = apiResponse.Data;
+                    StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {saleResult.OrderNumber}";
+                    IsActionSuccessful = true;
 
-                MessageBox.Show(
-                    $"Satış Başarılı!\n\n" +
-                    $"Sipariş No: {saleResult.OrderNumber}\n" +
-                    $"Toplam: {saleResult.TotalAmount:C}\n" +
-                    $"Ödeme: {paymentDesc}",
-                    "Satış Tamamlandı",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                    CartItems.Clear();
+                    Payments.Clear();
+                    UpdateAllTotals();
+                    LoadProducts(); // Reload stock quantities
+
+                    _toastService?.ShowSuccess($"Satış başarıyla tamamlandı: Sipariş #{saleResult.OrderNumber}");
+                }
+                else
+                {
+                    StatusMessage = $"Satış hatası: {apiResponse?.Message ?? apiResponse?.Data?.ErrorMessage}";
+                    IsActionSuccessful = false;
+                    _toastService?.ShowError($"Satış hatası:\n{StatusMessage}");
+                }
             }
-            else
+            catch(Exception ex)
             {
-                StatusMessage = $"Satış hatası: {saleResult.ErrorMessage}";
+                StatusMessage = $"Beklenmeyen hata: {ex.Message}";
                 IsActionSuccessful = false;
-                MessageBox.Show($"Satış hatası:\n{saleResult.ErrorMessage}", "Hata",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError($"Satış sırasında beklenmeyen hata:\n{ex.Message}");
+            }
+            finally
+            {
+                _loadingService?.Hide();
             }
         }
 

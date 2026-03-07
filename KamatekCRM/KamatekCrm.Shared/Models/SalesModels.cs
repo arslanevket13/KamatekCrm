@@ -1,51 +1,9 @@
+using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using KamatekCrm.Shared.Enums;
-using KamatekCrm.Shared.Models;
 
-namespace KamatekCrm.Services.Domain
+namespace KamatekCrm.Shared.Models
 {
-    /// <summary>
-    /// Satış işlemlerini yöneten domain service interface
-    /// </summary>
-    public interface ISalesDomainService
-    {
-        /// <summary>
-        /// Satış işlemini gerçekleştirir (Transaction içinde)
-        /// </summary>
-        /// <param name="request">Satış isteği detayları</param>
-        /// <returns>Satış sonucu</returns>
-        Task<SalesResult> ProcessSaleAsync(SaleRequest request);
-
-        /// <summary>
-        /// Sepet öğelerini stok durumuna göre doğrular
-        /// </summary>
-        /// <param name="items">Sepet öğeleri</param>
-        /// <param name="warehouseId">Depo ID</param>
-        /// <param name="allowNegativeStock">Negatif stoğa izin ver</param>
-        void ValidateCartItems(IEnumerable<SaleItemRequest> items, int warehouseId, bool allowNegativeStock = true);
-
-        /// <summary>
-        /// Müşterinin alışveriş geçmişini getirir
-        /// </summary>
-        List<CustomerPurchaseHistory> GetCustomerPurchaseHistory(int customerId);
-
-        /// <summary>
-        /// Müşteri istatistiklerini getirir
-        /// </summary>
-        CustomerStatistics GetCustomerStatistics(int customerId);
-
-        /// <summary>
-        /// Günlük POS raporu getirir
-        /// </summary>
-        DailyPosReport GetDailyPosReport(DateTime date);
-
-        /// <summary>
-        /// Fiş tekrar yazdır
-        /// </summary>
-        bool ReprintReceipt(int transactionId);
-    }
-
     /// <summary>
     /// Satış isteği DTO
     /// </summary>
@@ -77,17 +35,17 @@ namespace KamatekCrm.Services.Domain
     /// <summary>
     /// Satış sonucu DTO
     /// </summary>
-    public class SalesResult
+    public class SaleResult
     {
         public bool Success { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
         public decimal TotalAmount { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
 
-        public static SalesResult Ok(string orderNumber, decimal totalAmount)
+        public static SaleResult Ok(string orderNumber, decimal totalAmount)
             => new() { Success = true, OrderNumber = orderNumber, TotalAmount = totalAmount };
 
-        public static SalesResult Fail(string error)
+        public static SaleResult Fail(string error)
             => new() { Success = false, ErrorMessage = error };
     }
 

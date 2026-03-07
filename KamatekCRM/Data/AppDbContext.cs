@@ -78,6 +78,10 @@ namespace KamatekCrm.Data
         // --- Müşteri Aktiviteleri (Timeline) ---
         public DbSet<CustomerActivity> CustomerActivities { get; set; }
 
+        // --- Rota Planlama & Teknisyen Konum ---
+        public DbSet<RoutePoint> RoutePoints { get; set; }
+        public DbSet<TechnicianLocation> TechnicianLocations { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

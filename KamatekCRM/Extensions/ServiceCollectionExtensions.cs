@@ -18,6 +18,7 @@ namespace KamatekCrm.Extensions
             // Assuming configuration is loaded from appsettings.json in App.xaml.cs and passed here
 
             // DbContext
+
             services.AddDbContext<AppDbContext>(options =>
             {
                  options.UseNpgsql(AppSettings.PostgreSqlConnectionString)
@@ -38,12 +39,22 @@ namespace KamatekCrm.Extensions
             services.AddTransient<AttachmentService>();
             services.AddScoped<ProjectScopeService>();
             
+            // NEW Services added during Absolute System Audit
+            services.AddTransient<EmailService>();
+            services.AddSingleton<EventAggregator>();
+            services.AddTransient<InvoiceScannerService>();
+            services.AddTransient<NotificationService>();
+            services.AddTransient<PdfInvoiceParserService>();
+            services.AddTransient<PdfService>();
+            services.AddTransient<ReportService>();
+            services.AddTransient<SmsService>();
+            services.AddTransient<StructureGeneratorService>();
+            
             // Repositories
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Domain Services
             services.AddScoped<IInventoryDomainService, InventoryDomainService>();
-            services.AddScoped<ISalesDomainService, SalesDomainService>();
             services.AddSingleton<IProductImageService, ProductImageService>();
             services.AddScoped<IPurchasingDomainService, PurchasingDomainService>();
 
@@ -92,16 +103,21 @@ namespace KamatekCrm.Extensions
             // v8.4 — Additional Missing ViewModel Registrations (Complete DI Coverage)
             services.AddTransient<ProjectQuoteEditorViewModel>();
             services.AddTransient<ProjectQuoteViewModel>();
+            services.AddTransient<QuoteListViewModel>();
             services.AddTransient<EditUserViewModel>();
             services.AddTransient<PasswordResetViewModel>();
             services.AddTransient<PdfImportPreviewViewModel>();
             services.AddTransient<QuickAssetAddViewModel>();
             services.AddTransient<GlobalSearchViewModel>();
-            services.AddTransient<RepairListViewModel>();
-            services.AddTransient<FieldJobListViewModel>();
             
+            // Absolute System Audit - Missing ViewModels
+            services.AddTransient<CustomerAddViewModel>();
+            services.AddTransient<CustomersViewModel>();
+            services.AddTransient<QuickCustomerAddViewModel>();
+            services.AddTransient<QuickNewProductForPurchaseViewModel>();
+            services.AddTransient<LoadingViewModel>();
+
             // Window'ların da DI container'da kayıtlı olması gerekir
-            services.AddTransient<Views.RepairRegistrationWindow>();
             services.AddTransient<Views.RepairTrackingWindow>();
             services.AddTransient<Views.FaultTicketWindow>();
             services.AddTransient<Views.DirectSalesWindow>();

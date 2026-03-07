@@ -17,13 +17,21 @@ namespace KamatekCrm.ViewModels
 {
     public class RepairViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
 
-        public RepairViewModel(IAuthService authService)
+        public RepairViewModel(
+            IAuthService authService,
+            ApiClient apiClient,
+            IToastService toastService,
+            ILoadingService loadingService)
         {
             _authService = authService;
-            _context = new AppDbContext();
+            _apiClient = apiClient;
+            _toastService = toastService;
+            _loadingService = loadingService;
             
             // Komutlar
             SaveNewRepairCommand = new RelayCommand(SaveNewRepair, CanSaveNewRepair);
@@ -289,34 +297,50 @@ namespace KamatekCrm.ViewModels
 
         #region Methods
 
-        private void LoadData()
+        private async void LoadData()
         {
-            var repairs = _context.ServiceJobs
-                .Include(j => j.Customer)
-                .Where(j => j.ServiceJobType == ServiceJobType.Fault) // Sadece Arıza kayıtları
-                .OrderByDescending(j => j.CreatedDate)
-                .ToList();
+            _loadingService?.Show();
+            try
+            {
+                var response = await _apiClient.GetAsync<IEnumerable<ServiceJob>>("api/servicejobs?type=Fault&pageSize=1000");
+                if (response?.Data != null)
+                {
+                    AllRepairs = new ObservableCollection<ServiceJob>(response.Data);
+                }
 
-            AllRepairs = new ObservableCollection<ServiceJob>(repairs);
-            
-            // Müşterileri de yükle (Registration için)
-            var customers = _context.Customers.OrderBy(c => c.FullName).ToList();
-            Customers.Clear();
-            foreach(var c in customers) Customers.Add(c);
+                // Müşterileri de yükle (Registration için)
+                var customersResponse = await _apiClient.GetAsync<IEnumerable<Customer>>("api/customers?pageSize=1000");
+                if (customersResponse?.Data != null)
+                {
+                    Customers.Clear();
+                    foreach(var c in customersResponse.Data.OrderBy(x => x.FullName)) Customers.Add(c);
+                }
 
-            // Ürünleri yükle (Parça değişimi için)
-            LoadProducts();
+                // Ürünleri yükle (Parça değişimi için)
+                LoadProducts();
 
-            OnPropertyChanged(nameof(PendingRepairs));
-            OnPropertyChanged(nameof(InProgressRepairs));
-            OnPropertyChanged(nameof(CompletedRepairs));
+                OnPropertyChanged(nameof(PendingRepairs));
+                OnPropertyChanged(nameof(InProgressRepairs));
+                OnPropertyChanged(nameof(CompletedRepairs));
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError("Veriler yüklenirken bir hata oluştu: " + ex.Message);
+            }
+            finally
+            {
+                _loadingService?.Hide();
+            }
         }
 
-        private void LoadProducts()
+        private async void LoadProducts()
         {
-            Products.Clear();
-            var products = _context.Products.OrderBy(p => p.ProductName).ToList();
-            foreach (var p in products) Products.Add(p);
+            var productsResponse = await _apiClient.GetAsync<IEnumerable<Product>>("api/products?pageSize=1000");
+            if (productsResponse?.Data != null)
+            {
+                Products.Clear();
+                foreach (var p in productsResponse.Data.OrderBy(x => x.ProductName)) Products.Add(p);
+            }
         }
 
         private void UpdateDeviceTypeOptions()
@@ -343,7 +367,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void LoadHistory(int jobId)
+        private async void LoadHistory(int jobId)
         {
             if (jobId == 0)
             {
@@ -352,33 +376,29 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            var history = _context.ServiceJobHistories
-                .Where(h => h.ServiceJobId == jobId)
-                .OrderByDescending(h => h.Date)
-                .ToList();
-
-            JobHistory = new ObservableCollection<ServiceJobHistory>(history);
+            var historyResponse = await _apiClient.GetAsync<IEnumerable<ServiceJobHistory>>($"api/servicejobs/{jobId}/history");
+            if (historyResponse?.Data != null)
+            {
+                JobHistory = new ObservableCollection<ServiceJobHistory>(historyResponse.Data);
+            }
 
             // Parçaları yükle
             LoadJobItems(jobId);
         }
 
-        private void LoadJobItems(int jobId)
+        private async void LoadJobItems(int jobId)
         {
             CurrentJobItems.Clear();
-            var items = _context.ServiceJobItems
-                .Include(i => i.Product)
-                .Where(i => i.ServiceJobId == jobId)
-                .ToList();
-
-            foreach(var item in items) CurrentJobItems.Add(item);
+            var jobResponse = await _apiClient.GetAsync<ServiceJob>($"api/servicejobs/{jobId}");
+            if (jobResponse?.Data?.ServiceJobItems != null)
+            {
+                foreach(var item in jobResponse.Data.ServiceJobItems) CurrentJobItems.Add(item);
+            }
             
             // Fiyatları güncelle
             if (SelectedJob != null)
             {
-                 // Eğer DB'de kayıtlı değerler 0 ise hesapla, yoksa kaydet
-                 // Basitlik için UI'da gösterilen değerleri SelectedJob üzerinden alıyoruz
-                 // Değişiklikler Save/Update ile kaydedilmeli
+                 // Zaten seçili, UI üzerinden veriler görünüyor.
             }
             UpdateTotals();
         }
@@ -410,37 +430,33 @@ namespace KamatekCrm.ViewModels
                 && !string.IsNullOrWhiteSpace(NewJob.DeviceModel);
         }
 
-        private void SaveNewRepair(object? parameter)
+        private async void SaveNewRepair(object? parameter)
         {
             try
             {
-                _context.ServiceJobs.Add(NewJob);
-                _context.SaveChanges(); // ID oluşması için
+                _loadingService?.Show();
+                NewJob.CreatedDate = DateTime.UtcNow;
 
-                // İlk tarihçe kaydı
-                var history = new ServiceJobHistory
+                var result = await _apiClient.PostAsync<ServiceJob>("api/servicejobs", NewJob);
+                if (result != null && result.Success && result.Data != null)
                 {
-                    ServiceJobId = NewJob.Id,
-                    Date = DateTime.Now,
-                    StatusChange = RepairStatus.Registered,
-                    TechnicianNote = "Cihaz kabul edildi.",
-                    UserId = "System" // Mevcut kullanıcı sistemi entegre edilebilir
-                };
-                _context.ServiceJobHistories.Add(history);
-                _context.SaveChanges();
-
-                MessageBox.Show($"Cihaz kabul edildi! Takip No: {NewJob.Id}", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
-                
-                // Formu sıfırla ve listeyi güncelle
-                ResetNewJobForm();
-                LoadData();
-
-                // Eğer pencere ise kapat (parametre Window ise)
-                if (parameter is Window w) w.Close();
+                    _toastService?.ShowSuccess($"Cihaz kabul edildi! Takip No: {result.Data.Id}");
+                    ResetNewJobForm();
+                    LoadData();
+                    if (parameter is Window w) w.Close();
+                }
+                else
+                {
+                    _toastService?.ShowError($"Kayıt hatası: {result?.Message}");
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError($"Hata: {ex.Message}");
+            }
+            finally
+            {
+                _loadingService?.Hide();
             }
         }
 
@@ -463,88 +479,97 @@ namespace KamatekCrm.ViewModels
                 SelectedJob.DiscountAmount = DiscountAmount;
             }
 
-            _context.ServiceJobs.Update(SelectedJob);
-
-            // Tarihçe ekle
-            var history = new ServiceJobHistory
+            try
             {
-                ServiceJobId = SelectedJob.Id,
-                Date = DateTime.Now,
-                StatusChange = newStatus.Value,
-                TechnicianNote = !string.IsNullOrWhiteSpace(NewNoteText) ? NewNoteText : $"Durum değişikliği: {oldStatus} -> {newStatus}",
-                UserId = _authService.CurrentUser?.Username ?? "Technician"
-            };
-            _context.ServiceJobHistories.Add(history);
-            _context.SaveChanges();
+                _loadingService?.Show();
+                var updateResult = await _apiClient.PutAsync<object>($"api/servicejobs/{SelectedJob.Id}", SelectedJob);
 
-            // ═══════════════════════════════════════════════════════════════════
-            // KASA ENTEGRASYONU: Teslim edildiğinde geliri CashTransaction'a kaydet
-            // ═══════════════════════════════════════════════════════════════════
-            if (newStatus == RepairStatus.Delivered && SelectedJob.TotalAmount > 0)
-            {
-                var cashTransaction = new CashTransaction
+                if (!string.IsNullOrWhiteSpace(NewNoteText))
                 {
-                    Date = DateTime.Now,
-                    Amount = SelectedJob.TotalAmount,
-                    TransactionType = CashTransactionType.CashIncome, // Varsayılan nakit
-                    Description = $"Tamir Teslimi - İş #{SelectedJob.Id}",
-                    Category = "Teknik Servis",
-                    ReferenceNumber = $"REP-{SelectedJob.Id}",
-                    CustomerId = SelectedJob.CustomerId,
-                    CreatedBy = _authService.CurrentUser?.AdSoyad ?? "Teknisyen",
-                    CreatedAt = DateTime.Now
-                };
-                _context.CashTransactions.Add(cashTransaction);
-                _context.SaveChanges();
-            }
+                    var history = new ServiceJobHistory
+                    {
+                        ServiceJobId = SelectedJob.Id,
+                        StatusChange = newStatus.Value,
+                        TechnicianNote = NewNoteText
+                    };
+                    await _apiClient.PostAsync<object>($"api/servicejobs/{SelectedJob.Id}/history", history);
+                }
 
-            // SMS Bildirimi (Otomatik)
-            if (newStatus == RepairStatus.ReadyForPickup && SelectedJob.Customer != null)
-            {
-                if (!string.IsNullOrWhiteSpace(SelectedJob.Customer.PhoneNumber))
+                if (newStatus == RepairStatus.Delivered && SelectedJob.TotalAmount > 0)
                 {
-                    try
+                    var cashTransaction = new CashTransaction
+                    {
+                        Amount = SelectedJob.TotalAmount,
+                        TransactionType = CashTransactionType.CashIncome,
+                        PaymentMethod = PaymentMethod.Cash,
+                        Description = $"Tamir Teslimi - İş #{SelectedJob.Id}",
+                        Category = "Teknik Servis",
+                        ReferenceNumber = $"REP-{SelectedJob.Id}",
+                        CustomerId = SelectedJob.CustomerId,
+                        CreatedBy = _authService.CurrentUser?.AdSoyad ?? "Teknisyen"
+                    };
+                    await _apiClient.PostAsync<object>("api/finance/cash-transactions", cashTransaction);
+                }
+
+                if (newStatus == RepairStatus.ReadyForPickup && SelectedJob.Customer != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(SelectedJob.Customer.PhoneNumber))
                     {
                         var smsService = new SmsService();
                         string msg = $"Sayın {SelectedJob.Customer.FullName}, cihazınızın (Takip No: {SelectedJob.Id}) tamir işlemleri tamamlanmıştır. Teslim alabilirsiniz. Kamatek Teknik Servis";
                         await smsService.SendSmsAsync(SelectedJob.Customer.PhoneNumber, msg);
-                        MessageBox.Show("Müşteriye otomatik SMS bildirimi gönderildi.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"SMS gönderimi başarısız: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        _toastService?.ShowSuccess("Müşteriye otomatik SMS bildirimi gönderildi.");
                     }
                 }
-            }
 
-            NewNoteText = string.Empty; // Notu temizle
-            LoadHistory(SelectedJob.Id);
-            LoadData(); // Listeleri güncelle (Gruplama değiştiği için)
+                NewNoteText = string.Empty; // Notu temizle
+                LoadHistory(SelectedJob.Id);
+                LoadData(); // Listeleri güncelle
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Durum güncellenirken hata: {ex.Message}");
+            }
+            finally
+            {
+                _loadingService?.Hide();
+            }
         }
 
-        private void AddNote(object? parameter)
+        private async void AddNote(object? parameter)
         {
             if (SelectedJob == null) return;
 
-            var history = new ServiceJobHistory
+            try
             {
-                ServiceJobId = SelectedJob.Id,
-                Date = DateTime.Now,
-                TechnicianNote = NewNoteText,
-                UserId = "Technician"
-            };
-            _context.ServiceJobHistories.Add(history);
-            _context.SaveChanges();
-
-            NewNoteText = string.Empty;
-            LoadHistory(SelectedJob.Id);
+                var history = new ServiceJobHistory
+                {
+                    ServiceJobId = SelectedJob.Id,
+                    TechnicianNote = NewNoteText
+                };
+                
+                var result = await _apiClient.PostAsync<object>($"api/servicejobs/{SelectedJob.Id}/history", history);
+                if (result != null && result.Success)
+                {
+                    NewNoteText = string.Empty;
+                    LoadHistory(SelectedJob.Id);
+                }
+                else
+                {
+                    _toastService?.ShowError("Not eklenemedi.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError("Not eklenirken hata: " + ex.Message);
+            }
         }
 
         // ==========================================
         // PARÇA VE MALİYET YÖNETİMİ
         // ==========================================
 
-        private void AddItemToJob(object? parameter)
+        private async void AddItemToJob(object? parameter)
         {
             if (SelectedJob == null || SelectedProductToAdd == null) return;
 
@@ -552,68 +577,66 @@ namespace KamatekCrm.ViewModels
             {
                 ServiceJobId = SelectedJob.Id,
                 ProductId = SelectedProductToAdd.Id,
-                Product = SelectedProductToAdd, // Navigation prop
                 QuantityUsed = QuantityToAdd,
                 UnitPrice = UnitPriceToAdd,
                 UnitCost = SelectedProductToAdd.PurchasePrice
             };
 
-            _context.ServiceJobItems.Add(newItem);
-            _context.SaveChanges(); // DB'ye hemen ekle
-
-            CurrentJobItems.Add(newItem);
+            var result = await _apiClient.PostAsync<ServiceJobItem>($"api/servicejobs/{SelectedJob.Id}/items", newItem);
             
-            // Stok güncellemesi (opsiyonel hemen düşülmesi gerekiyorsa)
-            // Şimdilik "Complete" aşamasında düşme mantığı korunabilir veya burada düşülebilir.
-            // ServiceJobViewModel'da CompleteJob'da düşülüyordu. Burada da aynısını yapalım.
-
-            SelectedProductToAdd = null;
-            QuantityToAdd = 1;
-            UnitPriceToAdd = 0;
-            UpdateTotals();
-        }
-
-        private void RemoveItemFromJob(object? parameter)
-        {
-            if (parameter is ServiceJobItem item)
+            if (result != null && result.Success && result.Data != null)
             {
-                _context.ServiceJobItems.Remove(item);
-                _context.SaveChanges();
-                CurrentJobItems.Remove(item);
+                CurrentJobItems.Add(result.Data);
+                SelectedProductToAdd = null;
+                QuantityToAdd = 1;
+                UnitPriceToAdd = 0;
                 UpdateTotals();
+            }
+            else
+            {
+                _toastService?.ShowError("Parça eklenirken hata: " + result?.Message);
             }
         }
 
-        private void UpdateTotals()
+        private async void RemoveItemFromJob(object? parameter)
+        {
+            if (parameter is ServiceJobItem item && SelectedJob != null)
+            {
+                var result = await _apiClient.DeleteAsync<object>($"api/servicejobs/{SelectedJob.Id}/items/{item.Id}");
+                if (result != null && result.Success)
+                {
+                    CurrentJobItems.Remove(item);
+                    UpdateTotals();
+                }
+            }
+        }
+
+        private async void UpdateTotals()
         {
             if (SelectedJob == null) return;
 
             OnPropertyChanged(nameof(MaterialTotal));
             OnPropertyChanged(nameof(GrandTotal));
             
-            // DB Update (Fiyatlar değiştikçe kaydetmek iyi olabilir)
             SelectedJob.LaborCost = LaborCost;
             SelectedJob.DiscountAmount = DiscountAmount;
-            _context.ServiceJobs.Update(SelectedJob);
-            _context.SaveChanges();
+            
+            await _apiClient.PutAsync<object>($"api/servicejobs/{SelectedJob.Id}", SelectedJob);
         }
 
-        private void CompleteJob(object? parameter)
+        private async void CompleteJob(object? parameter)
         {
-            // Stok düşme işlemi ve 'Delivered' statüsüne çekme
-            // Mevcut UpdateStatus('Delivered') çağrılabilir
             UpdateStatus(RepairStatus.Delivered);
 
-             // Stok düşme işlemini buraya da ekleyebiliriz
-             foreach(var item in CurrentJobItems)
-             {
-                 var product = _context.Products.Find(item.ProductId);
-                 if (product != null)
-                 {
-                     product.TotalStockQuantity -= item.QuantityUsed;
-                 }
-             }
-             _context.SaveChanges();
+            foreach(var item in CurrentJobItems)
+            {
+                var productResp = await _apiClient.GetAsync<Product>($"api/products/{item.ProductId}");
+                if (productResp?.Data != null)
+                {
+                    productResp.Data.TotalStockQuantity -= item.QuantityUsed;
+                    await _apiClient.PutAsync<object>($"api/products/{item.ProductId}", productResp.Data);
+                }
+            }
         }
 
         private void PrintServiceForm(object? parameter)

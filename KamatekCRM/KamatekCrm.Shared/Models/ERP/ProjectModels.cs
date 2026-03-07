@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using KamatekCrm.Shared.Enums;
@@ -6,6 +7,11 @@ using KamatekCrm.Shared.Enums;
 namespace KamatekCrm.Shared.Models
 {
     public enum ProjectStatus { Active, Completed, Cancelled, Pending, Draft, PendingApproval }
+
+    /// <summary>
+    /// Teklif durumu yaşam döngüsü
+    /// </summary>
+    public enum QuoteStatus { Draft, Sent, Approved, Rejected, Expired, Revised }
 
     public class ServiceProject
     {
@@ -19,14 +25,42 @@ namespace KamatekCrm.Shared.Models
         public decimal TotalCost { get; set; }
         public decimal TotalProfit { get; set; }
         public decimal DiscountPercent { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public PipelineStage PipelineStage { get; set; }
         public ProjectStatus Status { get; set; }
         public int TotalUnitCount { get; set; }
         public string SurveyNotes { get; set; } = "";
         public string QuoteItemsJson { get; set; } = "";
+
+        // ── Teklif Yönetimi Alanları ──
+        public string? QuoteNumber { get; set; }
+        public QuoteStatus QuoteStatus { get; set; } = QuoteStatus.Draft;
+        public int RevisionNumber { get; set; } = 1;
+        public DateTime? SentDate { get; set; }
+        public DateTime? ValidUntil { get; set; }
+        public DateTime? ApprovedDate { get; set; }
+        public DateTime? RejectedDate { get; set; }
+        public string? RejectionReason { get; set; }
+        public decimal KdvRate { get; set; } = 20;
+        public string? Notes { get; set; }
+        public string? PaymentTerms { get; set; }
+        public string? RevisionsJson { get; set; }
+
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer? Customer { get; set; }
+    }
+
+    /// <summary>
+    /// Teklif revizyon geçmişi (JSON olarak ServiceProject.RevisionsJson'da saklanır)
+    /// </summary>
+    public class QuoteRevision
+    {
+        public int RevisionNumber { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public string ChangeDescription { get; set; } = "";
+        public decimal TotalBudget { get; set; }
+        public decimal DiscountPercent { get; set; }
+        public string ScopeSnapshotJson { get; set; } = "";
     }
 
     public class ScopeNode : INotifyPropertyChanged
@@ -126,6 +160,8 @@ namespace KamatekCrm.Shared.Models
                     Id = _idCounter++,
                     Name = item.Name,
                     ProductName = item.ProductName,
+                    ProductId = item.ProductId,
+                    ImagePath = item.ImagePath,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,
                     TotalPrice = item.TotalPrice
@@ -157,6 +193,8 @@ namespace KamatekCrm.Shared.Models
                     Id = _idCounter++,
                     Name = item.Name,
                     ProductName = item.ProductName,
+                    ProductId = item.ProductId,
+                    ImagePath = item.ImagePath,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,
                     TotalPrice = item.TotalPrice
@@ -193,6 +231,8 @@ namespace KamatekCrm.Shared.Models
 
         public int Id { get; set; }
         public string Name { get; set; } = "";
+        public int? ProductId { get; set; }
+        public string? ImagePath { get; set; }
 
         public static ScopeNodeItem FromProduct(Product p)
         {
@@ -201,6 +241,8 @@ namespace KamatekCrm.Shared.Models
                 Id = _idCounter++,
                 Name = p.ProductName,
                 ProductName = p.ProductName,
+                ProductId = p.Id,
+                ImagePath = p.ImagePath,
                 Quantity = 1,
                 UnitPrice = p.SalePrice,
                 TotalPrice = p.SalePrice
@@ -250,12 +292,4 @@ namespace KamatekCrm.Shared.Models
         }
     }
 
-    public class StructureTreeItem
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = "";
-        public NodeType Type { get; set; }
-        public void AddChild(StructureTreeItem item) { }
-        public StructureTreeItem AddChild(string name, NodeType type) { return new StructureTreeItem(); }
-    }
 }

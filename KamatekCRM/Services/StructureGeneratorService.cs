@@ -6,18 +6,20 @@ namespace KamatekCrm.Services
 {
     /// <summary>
     /// Yapı ağacı otomatik oluşturucu servisi
+    /// (ScopeNode tabanlı — eski StructureTreeItem kaldırıldı)
     /// </summary>
     public class StructureGeneratorService
     {
         /// <summary>
         /// Tek birim projesi oluştur
         /// </summary>
-        public StructureTreeItem GenerateSingleUnit(string projectName)
+        public ScopeNode GenerateSingleUnit(string projectName)
         {
-            var root = new StructureTreeItem
+            var root = new ScopeNode
             {
                 Name = projectName,
-                Type = NodeType.Project
+                Type = NodeType.Project,
+                IsExpanded = true
             };
 
             root.AddChild("Ana Birim", NodeType.Flat);
@@ -27,7 +29,7 @@ namespace KamatekCrm.Services
         /// <summary>
         /// Apartman yapısı oluştur
         /// </summary>
-        public StructureTreeItem GenerateApartment(
+        public ScopeNode GenerateApartment(
             string projectName,
             int floorCount,
             int unitsPerFloor,
@@ -35,10 +37,11 @@ namespace KamatekCrm.Services
             bool includeGarden = false,
             bool includeParking = false)
         {
-            var root = new StructureTreeItem
+            var root = new ScopeNode
             {
                 Name = projectName,
-                Type = NodeType.Project
+                Type = NodeType.Project,
+                IsExpanded = true
             };
 
             // Giriş
@@ -77,7 +80,7 @@ namespace KamatekCrm.Services
         /// <summary>
         /// Site yapısı oluştur
         /// </summary>
-        public StructureTreeItem GenerateSite(
+        public ScopeNode GenerateSite(
             string projectName,
             List<string> blockNames,
             int floorsPerBlock,
@@ -85,10 +88,11 @@ namespace KamatekCrm.Services
             bool includeSiteGarden = false,
             bool includeSiteParking = false)
         {
-            var root = new StructureTreeItem
+            var root = new ScopeNode
             {
                 Name = projectName,
-                Type = NodeType.Project
+                Type = NodeType.Project,
+                IsExpanded = true
             };
 
             foreach (var blockName in blockNames)
@@ -129,14 +133,15 @@ namespace KamatekCrm.Services
         /// <summary>
         /// Ticari/Fabrika yapısı oluştur
         /// </summary>
-        public StructureTreeItem GenerateCommercial(
+        public ScopeNode GenerateCommercial(
             string projectName,
             List<(string name, NodeType type)> zones)
         {
-            var root = new StructureTreeItem
+            var root = new ScopeNode
             {
                 Name = projectName,
-                Type = NodeType.Project
+                Type = NodeType.Project,
+                IsExpanded = true
             };
 
             foreach (var (name, type) in zones)

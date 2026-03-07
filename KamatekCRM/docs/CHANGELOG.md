@@ -1,3 +1,58 @@
+## v14.6 — Repair List & Fault Ticket Overhaul (2026-03-07)
+- **ARCHITECTURE**: `RepairListViewModel` ve `FaultTicketViewModel` tamamen DI, async ve `IToastService` kullanacak şekilde yeniden yazıldı.
+- **ARCHITECTURE**: Senkron veritabanı sorguları `async/await` yapısına çevrildi, `AppDbContext` direct usage kaldırıldı. Zaman işlemlerinde `DateTime.UtcNow` standardı getirildi.
+- **NEW**: `RepairListView.xaml` premium tasarım — Status filter çipleri, KPI header kartları, GridSplitter, detaylı workflow haritası, cihaz fotoğraf galerisi ve maliyet özeti (ThemeColors kullanılarak).
+- **NEW**: `FaultTicketWindow.xaml` 3 kolonlu modern premium form (chip toggle, input feedback vs.) olarak yeniden tasarlandı. `RepairRegistrationWindow` silindi ve kullanımdan kaldırıldı.
+- **NEW**: `RepairStatusHelper` XAML CommandParameter statik binding'leri için oluşturuldu.
+- **WORKFLOW**: Stok güncellemeleri işlemi `CompleteJobAsync` fonksiyonuna ACID tam transaction ile entegre edildi. Timeline geçmiş kayıtları oluşturuldu.
+
+## v14.5 — Route Planning System Overhaul (2026-03-06)
+- **NEW**: `RoutePlanningViewModel` tamamen yeniden yazıldı — teknisyen seçimi, iş atama, sıralama, nearest-neighbor optimizasyon, mesafe/süre hesaplama, DB kayıt.
+- **NEW**: `RoutePlanningView.xaml` premium tasarım — split panel, istatistik kartları, tab'lı iş/rota listeleri, WebView2 Leaflet harita.
+- **NEW**: API `LocationController` — 4 yeni endpoint: `GET route-plan/all`, `PUT route-plan/reorder`, `PUT route-plan/point/{id}/visit`, `DELETE route-plan/{userId}`.
+- **FIX**: WebView2 race condition — harita artık `_isWebViewReady` flag ile doğru zamanda yükleniyor.
+- **FIX**: WPF `AppDbContext` → `RoutePoints` ve `TechnicianLocations` DbSet'leri eklendi.
+- **FIX**: `RepairListViewModel` — `NpgsqlOperationInProgressException` (eşzamanlı DbContext kullanımı) düzeltildi.
+- **NEW**: Web `RouteEndpoints.cs` — `/technician/route` ve `/technician/route/visit/{id}` (HTMX) endpoint'leri.
+- **NEW**: Web `RoutePlanningPage` — Leaflet harita, KPI kartları, HTMX ziyaret işaretleme, Google Maps navigasyon, ilerleme çubuğu.
+- **NEW**: Web sidebar'a "Rota Planı" navigasyon linki eklendi.
+
+## v14.4 — Quote Management System (2026-03-05)
+- **NEW**: `QuoteListView` + `QuoteListViewModel` — Tüm tekliflerin listelenmesi, aranması, filtrelenmesi ve yönetilmesi.
+- **NEW**: KPI dashboard kartları — Toplam, Taslak, Gönderildi, Onaylandı, Reddedildi adet ve tutarları.
+- **NEW**: `QuoteStatus` enum — Teklif yaşam döngüsü (Draft → Sent → Approved/Rejected/Expired/Revised).
+- **NEW**: `QuoteRevision` modeli — Revizyon geçmişi JSON olarak saklanır.
+- **NEW**: `QuoteStatusConverters.cs` — QuoteStatus → Türkçe metin ve badge renk dönüştürücüleri.
+- **NEW**: Teklif editöründe iskonto (%) ve KDV (%) hesaplama + Grand Total görünümü.
+- **NEW**: Teklif editöründe otomatik `QuoteNumber` (TEK-YYYY-NNN) ve revizyon kaydı.
+- **FIX**: `ServiceProject` modeli 12 yeni alanla genişletildi (QuoteNumber, RevisionNumber, SentDate, ValidUntil, KdvRate, Notes, PaymentTerms, ApprovedDate, RejectedDate, RejectionReason, RevisionsJson, QuoteStatus).
+- **FIX**: `StructureGeneratorService` → `ScopeNode` tabanlı olarak refactored (eski `StructureTreeItem` kaldırıldı).
+- **FIX**: Sidebar'dan "Proje & Teklif" butonu artık `QuoteListView`'e inline navigasyon yapıyor.
+- **CLEANUP**: `StructureTreeItem` ölü kodu silindi.
+
+## v14.3 — Product Image & BOM PDF Fix (2026-03-05)
+- **FIX**: Ürün fotoğraf yükleme artık `ProductImageService` ile tutarlı relative path kaydediyor. Eski AppData absolute path stratejisi kaldırıldı.
+- **FIX**: `ProductsView.xaml` thumbnail trigger mantığı düzeltildi — resim artık DataGrid'de doğru gösteriliyor.
+- **NEW**: `ImagePathConverter.cs` — Relative/absolute image path'leri WPF Image kaynağına dönüştüren IValueConverter.
+- **FIX**: `PdfService.FlattenScopeNodesWithImages()` artık ürün resimlerini PDF'e aktarıyor (`ImagePath = null` hard-code kaldırıldı).
+- **FIX**: `ScopeNodeItem` modeline `ProductId` ve `ImagePath` alanları eklendi (Clone/CopyTo destekli).
+- **FIX**: `AddProductViewModel.SaveProduct()` — `Task.Run().Result` deadlock riski `async/await` ile giderildi.
+
+## v14.2 — Absolute System Audit & Restoration (2026-03-03)
+- **CRITICAL**: Fixed entire WPF, Web and API project compilation errors to achieve a flawless 0-warning build.
+- **AUDIT Phase 5**: CS8618 & CS8604 Null Reference Prevention: Eradicated nullable property warnings across `DashboardViewModel`, `CustomerViewModel`, `KmFilterPanel`, and Blazor Web `TechnicianDashboardEndpoints`.
+- **AUDIT Phase 5**: API Integrity Restoration: Injected missing `CustomerAssets` and `ServiceProjects` DbSets into `AppDbContext`. Fixed missing DI scoped registration for `ISalesDomainService` in `Program.cs` and purged the invalid WPF container link. Fixed `CS1955` and `CS8629` bugs in `CustomersController` and `DashboardController`.
+- **CRITICAL**: Fixed entire WPF project compilation errors and eliminated silent failures.
+- **AUDIT Phase 1**: Dependency Injection Purge: Correctly registered missing ViewModels (`CustomerAddViewModel`, `CustomersViewModel`, etc.) and cleaned up static service DI crashes.
+- **AUDIT Phase 2**: MVVM Binding Integrity: Restored missing `[ObservableProperty]` bindings (`BlockCount`, `FlatCount`, `TotalUnitCount`) in `ServiceJobViewModel` bridging XAML gaps.
+- **AUDIT Phase 3**: The Bridge (WPF -> API E2E Verification): Completely migrated `ServiceJobViewModel` away from direct `AppDbContext` usage. Implemented full `ApiClient` integration for `GetAsync`, `PostAsync`, `PatchAsync`. Added required `POST /api/servicejobs` and `PATCH /api/servicejobs/{id}/status` endpoints to `ServiceJobsController`. Added `POST /api/customers/{id}/assets` to `CustomersController` to support on-the-fly asset creation in Service Job Wizard. Added missing `PatchAsync` method to `ApiClient.cs`.
+- **AUDIT Phase 3**: The Bridge (WPF -> API E2E Verification): Completely migrated `RepairViewModel` and `DirectSalesViewModel` (POS) from direct `AppDbContext` to `ApiClient`. Added `POST /api/servicejobs/{id}/history` endpoint for adding job histories. Added `POST /api/sales` endpoint to offload domain logic to the API instead of processing it on the WPF client.
+- **AUDIT Phase 3**: The Bridge (WPF -> API E2E Verification): Completely migrated `DashboardViewModel` away from direct DB dependencies. Centralized dashboard stats/charts processing in API under `GET /api/dashboard/summary`. Used LiveChartsCore effectively with API payload data.
+- **AUDIT Phase 3**: API E2E Verification: Initiated eradication of direct `AppDbContext` usage in WPF. Fully ported `CustomersViewModel` to standard `ApiClient`.
+  - Backed by adding `/api/customers/stats` endpoint to API.
+  - Moved `CustomerCode` generation payload to the backend to eliminate race conditions.
+- **AUDIT Phase 4**: UX & Silent Failure Prevention: Swept `KamatekCRM/ViewModels` for empty `catch {}` blocks and generic `Console.WriteLine`/`Debug.WriteLine` usages. Converted missing error handling in `ServiceJobViewModel`, `LoginViewModel`, and `MainContentViewModel` to explicitly utilize `IToastService.ShowError()` and `ILoadingService` ensuring no background API exceptions are silently swallowed.
+
 ## v14.1 — Enterprise Phase 2: UDP Network Discovery Integration (2026-03-01)
 - **NEW**: `NetworkDiscoveryService` integrated entirely into the WPF `LoginViewModel`.
   - Scans for `ServerDiscoveryMessage` on port 5051 via UDP Broadcasts.

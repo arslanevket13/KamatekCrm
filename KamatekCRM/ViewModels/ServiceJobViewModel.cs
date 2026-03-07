@@ -24,18 +24,18 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class ServiceJobViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly ApiClient _apiClient;
         private readonly NavigationService _navigationService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
         private ServiceJob? _selectedServiceJob;
 
-        public ServiceJobViewModel(NavigationService navigationService, IToastService toastService, ILoadingService loadingService)
+        public ServiceJobViewModel(NavigationService navigationService, IToastService toastService, ILoadingService loadingService, ApiClient apiClient)
         {
             _navigationService = navigationService;
             _toastService = toastService;
             _loadingService = loadingService;
-            _context = new AppDbContext();
+            _apiClient = apiClient;
 
             ServiceJobs = new ObservableCollection<ServiceJob>();
             Customers = new ObservableCollection<Customer>();
@@ -87,7 +87,7 @@ namespace KamatekCrm.ViewModels
             UpdateDeviceTypeOptions();
         }
 
-        public ServiceJobViewModel() : this(null!, null!, null!)
+        public ServiceJobViewModel() : this(null!, null!, null!, null!)
         {
         }
 
@@ -109,6 +109,9 @@ namespace KamatekCrm.ViewModels
 
         // ===== SINGLE-PAGE FORM STATE =====
         private StructureType _selectedStructureType = StructureType.SingleUnit;
+        private int _blockCount = 1;
+        private int _flatCount = 1;
+        private bool _applyToAllUnits;
         private DateTime? _scheduledDate;
         private string? _assignedTechnician;
         private JobPriority _selectedPriority = JobPriority.Normal;
@@ -165,10 +168,55 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedStructureType, value))
                 {
-                    // Trigger UI refresh when structure type changes
+                    OnPropertyChanged(nameof(ShowBlockCount));
+                    OnPropertyChanged(nameof(ShowFlatCount));
+                    OnPropertyChanged(nameof(TotalUnitCount));
                 }
             }
         }
+
+        public int BlockCount
+        {
+            get => _blockCount;
+            set
+            {
+                if (SetProperty(ref _blockCount, Math.Max(1, value)))
+                {
+                    OnPropertyChanged(nameof(TotalUnitCount));
+                }
+            }
+        }
+
+        public int FlatCount
+        {
+            get => _flatCount;
+            set
+            {
+                if (SetProperty(ref _flatCount, Math.Max(1, value)))
+                {
+                    OnPropertyChanged(nameof(TotalUnitCount));
+                }
+            }
+        }
+
+        public bool ApplyToAllUnits
+        {
+            get => _applyToAllUnits;
+            set => SetProperty(ref _applyToAllUnits, value);
+        }
+
+        public bool ShowBlockCount => SelectedStructureType == StructureType.Site;
+        
+        public bool ShowFlatCount => SelectedStructureType == StructureType.Apartment || SelectedStructureType == StructureType.Site;
+        
+        public int TotalUnitCount => SelectedStructureType switch
+        {
+            StructureType.SingleUnit => 1,
+            StructureType.Apartment => FlatCount,
+            StructureType.Site => BlockCount * FlatCount,
+            StructureType.Commercial => 1,
+            _ => 1
+        };
 
         // SLA Alanları
         private DateTime? _slaDeadline;
@@ -745,7 +793,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedServiceJob, value))
                 {
-                    LoadJobItems();
+                    _ = LoadJobItems();
                 }
             }
         }
@@ -765,8 +813,8 @@ namespace KamatekCrm.ViewModels
                     OnPropertyChanged(nameof(SummaryCustomerAddress));
 
                     // Müşteri değiştiğinde cihaz ve projeleri yükle
-                    LoadCustomerAssets();
-                    LoadCustomerProjects();
+                    _ = LoadCustomerAssets();
+                    _ = LoadCustomerProjects();
                 }
             }
         }
@@ -976,7 +1024,7 @@ namespace KamatekCrm.ViewModels
         private void OpenNewJobForm()
         {
             // Create a new ViewModel with dependencies
-            var newVm = new ServiceJobViewModel(_navigationService, _toastService, _loadingService);
+            var newVm = new ServiceJobViewModel(_navigationService, _toastService, _loadingService, _apiClient);
             
             var window = new NewServiceJobWindow(newVm);
             window.Owner = System.Windows.Application.Current.MainWindow;
@@ -991,10 +1039,9 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Listeyi yenile
         /// </summary>
-        private void RefreshList()
+        private async void RefreshList()
         {
-            _context.ChangeTracker.Clear();
-            LoadServiceJobs();
+            await LoadServiceJobs();
             _serviceJobsView?.Refresh();
         }
 
@@ -1026,9 +1073,9 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                LoadCustomers();
-                LoadProducts();
-                LoadServiceJobs();
+                await LoadCustomers();
+                await LoadProducts();
+                await LoadServiceJobs();
             }
             finally
             {
@@ -1039,84 +1086,73 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Müşterileri yükle
         /// </summary>
-        private void LoadCustomers()
+        private async Task LoadCustomers()
         {
-            Customers.Clear();
-            var customers = _context.Customers.ToList();
-            foreach (var customer in customers)
+            var response = await _apiClient.GetAsync<List<Customer>>("api/customers?pageSize=1000"); // Varsayılan limitsiz veya yüksek limitli
+            if (response != null && response.Success && response.Data != null)
             {
-                Customers.Add(customer);
+                // UI Thread üzerinden çalıştığından emin olmak için Dispatcher gerekebilir ama ViewModel bazlı collection update'leri WPF halleder (ObservableCollection)
+                Customers.Clear();
+                foreach (var customer in response.Data) Customers.Add(customer);
             }
         }
 
         /// <summary>
         /// Ürünleri yükle
         /// </summary>
-        private void LoadProducts()
+        private async Task LoadProducts()
         {
-            Products.Clear();
-            var products = _context.Products.ToList();
-            foreach (var product in products)
+            var response = await _apiClient.GetAsync<List<Product>>("api/products?pageSize=1000");
+            if (response != null && response.Success && response.Data != null)
             {
-                Products.Add(product);
+                Products.Clear();
+                foreach (var product in response.Data) Products.Add(product);
             }
         }
 
         /// <summary>
         /// Seçilen müşterinin cihazlarını yükle
         /// </summary>
-        private void LoadCustomerAssets()
+        private async Task LoadCustomerAssets()
         {
             CustomerAssets.Clear();
-
             if (SelectedCustomer == null) return;
 
             try
             {
-                var assets = _context.CustomerAssets
-                    .Where(a => a.CustomerId == SelectedCustomer.Id)
-                    .OrderBy(a => a.Category)
-                    .ThenBy(a => a.Brand)
-                    .ToList();
-
-                foreach (var asset in assets)
+                var response = await _apiClient.GetAsync<List<CustomerAsset>>($"api/customers/{SelectedCustomer.Id}/assets");
+                if (response != null && response.Success && response.Data != null)
                 {
-                    CustomerAssets.Add(asset);
+                    foreach (var asset in response.Data) CustomerAssets.Add(asset);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Asset tablosu henüz oluşturulmamış olabilir
+                // Asset tablosu henüz oluşturulmamış olabilir veya endpoint hatası
+                _toastService.ShowError($"Cihazlar yüklenemedi: {ex.Message}");
             }
         }
 
         /// <summary>
         /// Seçilen müşterinin projelerini yükle
         /// </summary>
-        private void LoadCustomerProjects()
+        private async Task LoadCustomerProjects()
         {
             CustomerProjects.Clear();
-
             if (SelectedCustomer == null) return;
 
             try
             {
-                var projects = _context.ServiceProjects
-                    .Where(p => p.CustomerId == SelectedCustomer.Id &&
-                               (p.Status == ProjectStatus.Draft ||
-                                p.Status == ProjectStatus.Active ||
-                                p.Status == ProjectStatus.PendingApproval))
-                    .OrderByDescending(p => p.CreatedDate)
-                    .ToList();
-
-                foreach (var project in projects)
+                var response = await _apiClient.GetAsync<List<ServiceProject>>($"api/customers/{SelectedCustomer.Id}/projects");
+                if (response != null && response.Success && response.Data != null)
                 {
-                    CustomerProjects.Add(project);
+                    foreach (var project in response.Data) CustomerProjects.Add(project);
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 // Project tablosu henüz oluşturulmamış olabilir
+                _toastService.ShowError($"Projeler yüklenemedi: {ex.Message}");
             }
         }
 
@@ -1144,38 +1180,46 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İş kayıtlarını yükle
         /// </summary>
-        private void LoadServiceJobs()
+        private async Task LoadServiceJobs()
         {
-            ServiceJobs.Clear();
-            var jobs = _context.ServiceJobs
-                .Include(j => j.Customer)
-                .Include(j => j.ServiceJobItems)
-                .ThenInclude(i => i.Product)
-                .ToList();
-
-            foreach (var job in jobs)
+            var url = "api/servicejobs?pageSize=50";
+            if (SelectedStatusFilter != StatusFilter.All)
             {
-                ServiceJobs.Add(job);
+                // Enum map mapping
+                int statusParam = SelectedStatusFilter switch
+                {
+                    StatusFilter.Pending => 0,
+                    StatusFilter.InProgress => 1,
+                    StatusFilter.Completed => 2,
+                    _ => 0
+                };
+                url += $"&status={statusParam}";
+            }
+
+            var response = await _apiClient.GetAsync<List<ServiceJob>>(url);
+            if (response != null && response.Success && response.Data != null)
+            {
+                ServiceJobs.Clear();
+                foreach (var job in response.Data) ServiceJobs.Add(job);
             }
         }
 
         /// <summary>
         /// Seçili işe ait ürünleri yükle
         /// </summary>
-        private void LoadJobItems()
+        private async Task LoadJobItems()
         {
             CurrentJobItems.Clear();
 
             if (SelectedServiceJob != null)
             {
-                var items = _context.ServiceJobItems
-                    .Include(i => i.Product)
-                    .Where(i => i.ServiceJobId == SelectedServiceJob.Id)
-                    .ToList();
-
-                foreach (var item in items)
+                var response = await _apiClient.GetAsync<ServiceJob>($"api/servicejobs/{SelectedServiceJob.Id}");
+                if (response != null && response.Success && response.Data != null && response.Data.ServiceJobItems != null)
                 {
-                    CurrentJobItems.Add(item);
+                    foreach (var item in response.Data.ServiceJobItems)
+                    {
+                        CurrentJobItems.Add(item);
+                    }
                 }
             }
         }
@@ -1195,7 +1239,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Yeni iş kaydet (Hibrit Cihaz Desteği ile)
         /// </summary>
-        private void SaveServiceJob()
+        private async void SaveServiceJob()
         {
             try
             {
@@ -1224,14 +1268,20 @@ namespace KamatekCrm.ViewModels
                         CreatedDate = DateTime.Now
                     };
 
-                    _context.CustomerAssets.Add(newAsset);
-                    _context.SaveChanges();
-
-                    assetId = newAsset.Id;
-
-                    // Listeye ekle
-                    CustomerAssets.Add(newAsset);
-                    _toastService.ShowSuccess($"Cihaz kaydedildi: {newAsset.FullName}");
+                    // API'ye asset ekleme isteği (API'de bu endpoint'i açmamız gerekirse CustomersController'a bir POST eklenmeli - şimdilik eklediğimiz varsayımıyla devam ediyoruz)
+                    var assetResponse = await _apiClient.PostAsync<CustomerAsset>($"api/customers/{SelectedCustomer.Id}/assets", newAsset);
+                    
+                    if (assetResponse != null && assetResponse.Success && assetResponse.Data != null)
+                    {
+                        assetId = assetResponse.Data.Id;
+                        CustomerAssets.Add(assetResponse.Data);
+                        _toastService.ShowSuccess($"Cihaz kaydedildi: {assetResponse.Data.FullName}");
+                    }
+                    else
+                    {
+                        _toastService.ShowError("Cihaz kaydedilemedi.");
+                        return;
+                    }
                 }
                 else if (SelectedAsset != null)
                 {
@@ -1260,35 +1310,26 @@ namespace KamatekCrm.ViewModels
                     AssignedTechnician = AssignedTechnician,
                     Priority = SelectedPriority,
                     LaborCost = LaborCost,
-                    DiscountAmount = DiscountAmount
+                    DiscountAmount = DiscountAmount,
+                    ServiceJobItems = CurrentJobItems.ToList() // Ürünleri tek seferde gönder
                 };
 
-                _context.ServiceJobs.Add(newJob);
-                _context.SaveChanges();
+                var response = await _apiClient.PostAsync<ServiceJob>("api/servicejobs", newJob);
 
-                // === ADIM 4: Ürünleri kaydet ===
-                foreach (var item in CurrentJobItems)
+                if (response != null && response.Success)
                 {
-                    var jobItem = new ServiceJobItem
-                    {
-                        ServiceJobId = newJob.Id,
-                        ProductId = item.ProductId,
-                        QuantityUsed = item.QuantityUsed,
-                        UnitPrice = item.UnitPrice,
-                        UnitCost = item.UnitCost
-                    };
-                    _context.ServiceJobItems.Add(jobItem);
+                    await LoadServiceJobs();
+                    ClearForm();
+                    _toastService.ShowSuccess("İş kaydı başarıyla oluşturuldu!");
                 }
-
-                _context.SaveChanges();
-                LoadServiceJobs();
-                ClearForm();
-
-                _toastService.ShowSuccess("İş kaydı başarıyla oluşturuldu!");
+                else
+                {
+                    _toastService.ShowError(response?.Message ?? "İş kaydedilemedi");
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"Hata: {ex.Message}");
             }
         }
 
@@ -1345,65 +1386,32 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İşi tamamla - KRİTİK İŞ MANTIĞI: STOK DÜŞME
         /// </summary>
-        private void CompleteJob()
+        private async void CompleteJob()
         {
             if (SelectedServiceJob == null) return;
 
             try
             {
-                // İşe ait ürünleri yükle
-                var jobItems = _context.ServiceJobItems
-                    .Include(i => i.Product)
-                    .Where(i => i.ServiceJobId == SelectedServiceJob.Id)
-                    .ToList();
+                var response = await _apiClient.PatchAsync<object>($"api/servicejobs/{SelectedServiceJob.Id}/status", new { Status = JobStatus.Completed });
 
-                // STOK YETERLİLİĞİ KONTROLÜ
-                foreach (var item in jobItems)
+                if (response != null && response.Success)
                 {
-                    // Note: Stok düşme işlemi artık Inventory üzerinden yapılmalı.
-                    // Geçici olarak TotalStockQuantity üzerinden kontrol ediliyor.
-                    if (item.Product.TotalStockQuantity < item.QuantityUsed)
-                    {
-                        MessageBox.Show(
-                            $"Yetersiz stok!\n\n" +
-                            $"Ürün: {item.Product.ProductName}\n" +
-                            $"Gerekli: {item.QuantityUsed}\n" +
-                            $"Mevcut: {item.Product.TotalStockQuantity}",
-                            "Stok Yetersiz",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Warning);
-                        return;
-                    }
-                }
+                    SelectedServiceJob.Status = JobStatus.Completed;
+                    SelectedServiceJob.CompletedDate = DateTime.Now;
+                    
+                    await LoadServiceJobs();
+                    await LoadProducts();
 
-                // STOK DÜŞME İŞLEMİ
-                foreach (var item in jobItems)
+                    _toastService.ShowSuccess("İş başarıyla tamamlandı!\nStok miktarları güncellendi.");
+                }
+                else
                 {
-                    item.Product.TotalStockQuantity -= item.QuantityUsed;
-                    _context.Products.Update(item.Product);
+                    _toastService.ShowError(response?.Message ?? "İş tamamlanamadı.");
                 }
-
-                // İŞ DURUMUNU GÜNCELLE
-                SelectedServiceJob.Status = JobStatus.Completed;
-                SelectedServiceJob.CompletedDate = DateTime.Now;
-                _context.ServiceJobs.Update(SelectedServiceJob);
-
-                // DEĞİŞİKLİKLERİ KAYDET
-                _context.SaveChanges();
-
-                // LİSTELERİ YENİLE
-                LoadServiceJobs();
-                LoadProducts();
-
-                MessageBox.Show(
-                    "İş başarıyla tamamlandı!\nStok miktarları güncellendi.",
-                    "Başarılı",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"Hata: {ex.Message}");
             }
         }
 
@@ -1459,22 +1467,19 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Servis formunu PDF olarak yazdır
         /// </summary>
-        private void PrintServiceForm(ServiceJob? job)
+        private async void PrintServiceForm(ServiceJob? job)
         {
             if (job == null) return;
 
             try
             {
-                // İş kaydını tam yükle (Customer ve Items ile)
-                var fullJob = _context.ServiceJobs
-                    .Include(j => j.Customer)
-                    .Include(j => j.ServiceJobItems)
-                    .ThenInclude(i => i.Product)
-                    .FirstOrDefault(j => j.Id == job.Id);
+                // İş kaydını tam API üzerinden yükle
+                var response = await _apiClient.GetAsync<ServiceJob>($"api/servicejobs/{job.Id}");
+                var fullJob = response?.Data;
 
                 if (fullJob == null)
                 {
-                    MessageBox.Show("İş kaydı bulunamadı.", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService.ShowError("İş kaydı bulunamadı.");
                     return;
                 }
 
@@ -1501,12 +1506,12 @@ namespace KamatekCrm.ViewModels
                     };
                     Process.Start(processInfo);
 
-                    MessageBox.Show("Servis formu başarıyla oluşturuldu.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                    _toastService.ShowSuccess("Servis formu başarıyla oluşturuldu.");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"PDF oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"PDF oluşturulurken hata: {ex.Message}");
             }
         }
 

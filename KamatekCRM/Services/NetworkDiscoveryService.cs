@@ -25,7 +25,6 @@ public class NetworkDiscoveryService
     private readonly Dispatcher _dispatcher;
 
     public event EventHandler<ServerInfo>? ServerDiscovered;
-    public event EventHandler<ServerInfo>? ServerLost;
 
     private ServerInfo? _lastKnownServer;
     private readonly TimeSpan _serverTimeout = TimeSpan.FromSeconds(15);
@@ -87,7 +86,7 @@ public class NetworkDiscoveryService
                         var isNew = _lastKnownServer?.ApiUrl != serverInfo.ApiUrl;
                         _lastKnownServer = serverInfo;
 
-                        _dispatcher.BeginInvoke(() =>
+                        _ = _dispatcher.BeginInvoke(() =>
                         {
                             if (isNew)
                             {

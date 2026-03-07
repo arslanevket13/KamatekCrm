@@ -79,6 +79,24 @@ namespace KamatekCrm.Services
             }
         }
 
+        public async Task<ApiResponse<T>> PatchAsync<T>(string endpoint, object data)
+        {
+            try
+            {
+                // PatchAsJsonAsync is not always available in older .NET Standard, but we can do SendAsync
+                var request = new HttpRequestMessage(new HttpMethod("PATCH"), endpoint)
+                {
+                    Content = JsonContent.Create(data, null, _jsonOptions)
+                };
+                var response = await _httpClient.SendAsync(request);
+                return await ProcessResponseAsync<T>(response);
+            }
+            catch (Exception ex)
+            {
+                return CreateErrorResponse<T>(ex);
+            }
+        }
+
         public async Task<ApiResponse<T>> DeleteAsync<T>(string endpoint)
         {
             try

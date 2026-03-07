@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -13,6 +14,7 @@ using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services.Domain;
+using KamatekCrm.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 
@@ -25,6 +27,7 @@ namespace KamatekCrm.ViewModels
     {
         private readonly AppDbContext _context;
         private readonly IInventoryDomainService _inventoryDomainService;
+        private readonly IProductImageService _imageService;
         private Product? _selectedProduct;
         private string _searchText = string.Empty;
         private ICollectionView? _productsView;
@@ -120,6 +123,7 @@ namespace KamatekCrm.ViewModels
         {
             _inventoryDomainService = inventoryDomainService;
             _context = new AppDbContext();
+            _imageService = new ProductImageService();
             Products = new ObservableCollection<Product>();
 
             // Komutları tanımla
@@ -433,10 +437,10 @@ namespace KamatekCrm.ViewModels
         #region Product Photo Management
 
         /// <summary>
-        /// Dosya seçici açar, seçilen görseli ürün fotoğrafı klasörüne kopyalar
+        /// Dosya seçici açar, seçilen görseli ProductImageService ile sıkıştırıp kaydeder
         /// ve Product.ImagePath'i günceller.
         /// </summary>
-        private void ExecuteUploadProductPhoto()
+        private async void ExecuteUploadProductPhoto()
         {
             if (SelectedProduct == null) return;
 
@@ -451,33 +455,23 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                // Hedef klasör: %AppData%\KamatekCRM\ProductImages
-                var appDataDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "KamatekCRM", "ProductImages");
-                Directory.CreateDirectory(appDataDir);
-
-                // Dosya adı: {productId}_{guid}{ext}
-                var ext = Path.GetExtension(dialog.FileName).ToLowerInvariant();
-                var fileName = $"{SelectedProduct.Id}_{Guid.NewGuid():N}{ext}";
-                var destPath = Path.Combine(appDataDir, fileName);
-
-                File.Copy(dialog.FileName, destPath, overwrite: true);
-
                 // Eski görseli sil
-                if (!string.IsNullOrEmpty(SelectedProduct.ImagePath) && File.Exists(SelectedProduct.ImagePath))
-                    File.Delete(SelectedProduct.ImagePath);
+                _imageService.DeleteProductImage(SelectedProduct.ImagePath);
+
+                // Yeni görseli sıkıştırıp kaydet (relative path döner)
+                var relativePath = await _imageService.SaveProductImageAsync(dialog.FileName);
 
                 // DB güncelle
                 var dbProduct = _context.Products.Find(SelectedProduct.Id);
                 if (dbProduct != null)
                 {
-                    dbProduct.ImagePath = destPath;
+                    dbProduct.ImagePath = relativePath;
                     _context.SaveChanges();
                 }
 
-                SelectedProduct.ImagePath = destPath;
+                SelectedProduct.ImagePath = relativePath;
 
+                var fileName = Path.GetFileName(relativePath);
                 StatusMessage = $"✅ Fotoğraf güncellendi: {fileName}";
                 IsActionSuccessful = true;
 
@@ -507,8 +501,8 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                if (File.Exists(SelectedProduct.ImagePath))
-                    File.Delete(SelectedProduct.ImagePath);
+                // ProductImageService ile sil (relative path destekli)
+                _imageService.DeleteProductImage(SelectedProduct.ImagePath);
 
                 var dbProduct = _context.Products.Find(SelectedProduct.Id);
                 if (dbProduct != null)

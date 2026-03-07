@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using GongSolutions.Wpf.DragDrop;
@@ -161,14 +163,59 @@ namespace KamatekCrm.ViewModels
 
         public decimal TotalRevenue => RootNodes.Sum(n => n.RecursiveTotal);
         public decimal TotalCost => RootNodes.Sum(n => n.RecursiveTotalCost);
-        public decimal TotalProfit => TotalRevenue - TotalCost;
-        public decimal OverallMargin => TotalRevenue > 0 ? (TotalProfit / TotalRevenue) * 100 : 0;
+
+        // İskonto hesaplaması
+        private decimal _discountPercent;
+        public decimal DiscountPercent
+        {
+            get => _discountPercent;
+            set
+            {
+                if (SetProperty(ref _discountPercent, Math.Clamp(value, 0, 100)))
+                {
+                    CurrentProject.DiscountPercent = _discountPercent;
+                    NotifyFinancialsChanged();
+                }
+            }
+        }
+
+        public decimal DiscountAmount => TotalRevenue * (DiscountPercent / 100);
+        public decimal SubTotalAfterDiscount => TotalRevenue - DiscountAmount;
+
+        // KDV hesaplaması
+        private decimal _kdvRate = 20;
+        public decimal KdvRate
+        {
+            get => _kdvRate;
+            set
+            {
+                if (SetProperty(ref _kdvRate, Math.Clamp(value, 0, 100)))
+                {
+                    CurrentProject.KdvRate = _kdvRate;
+                    NotifyFinancialsChanged();
+                }
+            }
+        }
+
+        public decimal KdvAmount => SubTotalAfterDiscount * (KdvRate / 100);
+        public decimal GrandTotal => SubTotalAfterDiscount + KdvAmount;
+
+        public decimal TotalProfit => SubTotalAfterDiscount - TotalCost;
+        public decimal OverallMargin => SubTotalAfterDiscount > 0 ? (TotalProfit / SubTotalAfterDiscount) * 100 : 0;
 
         public string TotalRevenueDisplay => $"₺{TotalRevenue:N0}";
         public string TotalCostDisplay => $"₺{TotalCost:N0}";
+        public string DiscountAmountDisplay => $"-₺{DiscountAmount:N0}";
+        public string SubTotalDisplay => $"₺{SubTotalAfterDiscount:N0}";
+        public string KdvAmountDisplay => $"+₺{KdvAmount:N0}";
+        public string GrandTotalDisplay => $"₺{GrandTotal:N0}";
         public string TotalProfitDisplay => $"₺{TotalProfit:N0}";
         public string OverallMarginDisplay => $"%{OverallMargin:N1}";
         public string ProfitColor => TotalProfit >= 0 ? "#4CAF50" : "#F44336";
+
+        // Durum
+        public string QuoteStatusDisplay => QuoteListViewModel.GetStatusText(CurrentProject.QuoteStatus);
+        public string RevisionDisplay => $"R{CurrentProject.RevisionNumber}";
 
         #endregion
 
@@ -270,6 +317,12 @@ namespace KamatekCrm.ViewModels
                 CurrentProject = project;
                 ProjectName = project.Title;
                 SelectedCustomer = Customers.FirstOrDefault(c => c.Id == project.CustomerId);
+
+                // İskonto ve KDV değerlerini yükle
+                _discountPercent = project.DiscountPercent;
+                OnPropertyChanged(nameof(DiscountPercent));
+                _kdvRate = project.KdvRate > 0 ? project.KdvRate : 20;
+                OnPropertyChanged(nameof(KdvRate));
 
                 RootNodes.Clear();
                 foreach (var node in nodes)
@@ -581,14 +634,24 @@ namespace KamatekCrm.ViewModels
         {
             OnPropertyChanged(nameof(TotalRevenue));
             OnPropertyChanged(nameof(TotalCost));
+            OnPropertyChanged(nameof(DiscountAmount));
+            OnPropertyChanged(nameof(SubTotalAfterDiscount));
+            OnPropertyChanged(nameof(KdvAmount));
+            OnPropertyChanged(nameof(GrandTotal));
             OnPropertyChanged(nameof(TotalProfit));
             OnPropertyChanged(nameof(OverallMargin));
             OnPropertyChanged(nameof(TotalRevenueDisplay));
             OnPropertyChanged(nameof(TotalCostDisplay));
+            OnPropertyChanged(nameof(DiscountAmountDisplay));
+            OnPropertyChanged(nameof(SubTotalDisplay));
+            OnPropertyChanged(nameof(KdvAmountDisplay));
+            OnPropertyChanged(nameof(GrandTotalDisplay));
             OnPropertyChanged(nameof(TotalProfitDisplay));
             OnPropertyChanged(nameof(OverallMarginDisplay));
             OnPropertyChanged(nameof(ProfitColor));
             OnPropertyChanged(nameof(SelectedNodeSubTotal));
+            OnPropertyChanged(nameof(QuoteStatusDisplay));
+            OnPropertyChanged(nameof(RevisionDisplay));
         }
 
         #endregion
@@ -609,12 +672,45 @@ namespace KamatekCrm.ViewModels
                 CurrentProject.Title = ProjectName;
                 CurrentProject.CustomerId = SelectedCustomer!.Id;
 
+                // QuoteNumber ataması (ilk kayıtta)
+                if (string.IsNullOrEmpty(CurrentProject.QuoteNumber))
+                {
+                    var year = DateTime.UtcNow.Year;
+                    var count = _context.ServiceProjects.Count(p => p.QuoteNumber != null && p.CreatedDate.Year == year) + 1;
+                    CurrentProject.QuoteNumber = $"TEK-{year}-{count:D3}";
+                }
+
+                // Revizyon kaydı (güncelleme durumunda)
+                if (CurrentProject.Id > 0)
+                {
+                    var revisions = new List<QuoteRevision>();
+                    if (!string.IsNullOrEmpty(CurrentProject.RevisionsJson))
+                    {
+                        revisions = JsonSerializer.Deserialize<List<QuoteRevision>>(CurrentProject.RevisionsJson) ?? new();
+                    }
+
+                    revisions.Add(new QuoteRevision
+                    {
+                        RevisionNumber = CurrentProject.RevisionNumber,
+                        CreatedDate = DateTime.UtcNow,
+                        ChangeDescription = $"R{CurrentProject.RevisionNumber} kaydedildi",
+                        TotalBudget = SubTotalAfterDiscount,
+                        DiscountPercent = DiscountPercent,
+                        ScopeSnapshotJson = ProjectScopeService.Serialize(RootNodes.ToList())
+                    });
+
+                    CurrentProject.RevisionsJson = JsonSerializer.Serialize(revisions);
+                    CurrentProject.RevisionNumber++;
+                }
+
                 _scopeService.SaveProject(CurrentProject, RootNodes.ToList());
 
                 MessageBox.Show(
                     $"Proje başarıyla kaydedildi!\n\n" +
                     $"Proje Kodu: {CurrentProject.ProjectCode}\n" +
-                    $"Toplam: {TotalRevenueDisplay}\n" +
+                    $"Teklif No: {CurrentProject.QuoteNumber}\n" +
+                    $"Revizyon: R{CurrentProject.RevisionNumber}\n" +
+                    $"Toplam: {GrandTotalDisplay}\n" +
                     $"Kar: {TotalProfitDisplay} ({OverallMarginDisplay})",
                     "Başarılı",
                     MessageBoxButton.OK,

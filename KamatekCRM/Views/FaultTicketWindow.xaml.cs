@@ -13,6 +13,13 @@ namespace KamatekCrm.Views
         {
             InitializeComponent();
             DataContext = viewModel;
+
+            viewModel.RequestClose += (result) =>
+            {
+                DialogResult = result;
+                Close();
+            };
         }
     }
 }
+
