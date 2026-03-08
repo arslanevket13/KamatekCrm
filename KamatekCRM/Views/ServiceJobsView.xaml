@@ -9,7 +9,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="800"
              helpers:AnimationHelper.EntranceAnimation="SlideInFromBottom"
-             Background="{DynamicResource ApplicationBackgroundBrush}">
+             Background="{DynamicResource SurfacePageBrush}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -17,7 +17,9 @@
         </Grid.RowDefinitions>
 
         <!-- ========== MERKEZ İÇERİK ========== -->
-        <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+        <Border Background="{DynamicResource ThemeSurface}" 
+                BorderBrush="{DynamicResource ThemeBorder}"
+                BorderThickness="1"
                 CornerRadius="16"
                 Margin="40" 
                 MaxWidth="500" 
@@ -25,7 +27,7 @@
                 VerticalAlignment="Center"
                 HorizontalAlignment="Center">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="30" ShadowDepth="5" Opacity="0.15" Color="{DynamicResource ThemeShadowColor}"/>
+                <DropShadowEffect BlurRadius="40" ShadowDepth="10" Opacity="0.08" Color="Black"/>
             </Border.Effect>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40">
                 
@@ -44,14 +46,14 @@
                 <TextBlock Text="Yeni İş Emri Oluştur" 
                            FontSize="24" 
                            FontWeight="Bold"
-                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                           Foreground="{DynamicResource ThemeTextPrimary}"
                            HorizontalAlignment="Center"
                            Margin="0,0,0,12"/>
                 
                 <!-- Açıklama -->
                 <TextBlock Text="Müşteri için yeni servis, kurulum veya bakım işi kaydı oluşturun." 
                            FontSize="14" 
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Foreground="{DynamicResource ThemeTextSecondary}"
                            HorizontalAlignment="Center"
                            TextWrapping="Wrap"
                            TextAlignment="Center"
@@ -75,11 +77,11 @@
                         <TextBlock Text="İpucu:" FontWeight="SemiBold" Foreground="{DynamicResource ThemeWarning}"/>
                     </StackPanel>
                     <TextBlock Text="Mevcut işleri görüntülemek için sidebar'dan" 
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Foreground="{DynamicResource ThemeTextSecondary}"
                                HorizontalAlignment="Center"
                                FontSize="12"/>
                     <TextBlock Text="'Tamir Listesi' veya 'Saha İşleri' kullanın." 
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Foreground="{DynamicResource ThemeTextSecondary}"
                                HorizontalAlignment="Center"
                                FontSize="12"/>
                 </StackPanel>

@@ -10,18 +10,19 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- WPF-UI Theme - Runtime'da ThemeService ile değişir -->
-                <ui:ThemesDictionary Theme="Dark" />
-                <ui:ControlsDictionary />
-
-                <!-- Design Tokens (Tema Runtime'da ThemeService ile değişir) -->
+                <!-- 1. BASE DESIGN TOKENS (Sadece Yapısal ve Düzen) -->
                 <ResourceDictionary Source="Resources/DesignTokens.xaml"/>
                 
-                <!-- Animations -->
+                <!-- 2. ACTIVE THEME COLORS (Ultimate PURE WHITE Theme) -->
+                <ResourceDictionary Source="Resources/Themes/LightTheme.xaml"/>
+                
+                <!-- 3. WPF-UI COMPONENTS -->
+                <ui:ThemesDictionary Theme="Light" />
+                <ui:ControlsDictionary />
+                
+                <!-- 4. ANIMATIONS & PREMIUM STYLES -->
                 <ResourceDictionary Source="Resources/Animations.xaml"/>
-                <!-- Stiller -->
                 <ResourceDictionary Source="Resources/Styles.xaml"/>
-                <!-- Premium Component Styles -->
                 <ResourceDictionary Source="Resources/ComponentStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 

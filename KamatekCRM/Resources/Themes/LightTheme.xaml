@@ -1,163 +1,234 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- ==================== LIGHT THEME COLOR PALETTE ==================== -->
+    <!-- ═══════════════════════════════════════════════════════════════════
+         KAMATEK CRM — ULTIMATE LIGHT THEME v3.0 (PURE WHITE EDITION)
+         Rule 1: ALL Backgrounds are Pure White (#FFFFFF), Page is #F5F7FA
+         Rule 2: ALL Text is Pure Black (#000000) or very dark (#1A1A1A)
+         Rule 3: NO White Overlays on White Backgrounds
+    ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- ─────────── PAGE & SURFACE (The Pure White Rule) ─────────── -->
+    <Color x:Key="SurfacePageColor">#F5F7FA</Color>
+    <SolidColorBrush x:Key="SurfacePageBrush" Color="#F5F7FA"/>
+    <Color x:Key="ThemeBackgroundColor">#F5F7FA</Color>
+    <SolidColorBrush x:Key="ThemeBackground" Color="#F5F7FA"/>
+
+    <Color x:Key="SurfaceCardColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="SurfaceCardBrush" Color="#FFFFFF"/>
+    <Color x:Key="ThemeSurfaceColor">#FFFFFF</Color>
+    <Color x:Key="ThemeCardColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="ThemeSurface" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ThemeCard" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="CardBackground" Color="#FFFFFF"/>
+
+    <Color x:Key="SurfaceOverlayColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="SurfaceOverlayBrush" Color="#FFFFFF"/>
+
+    <Color x:Key="SurfaceSidebarColor">#FFFFFF</Color>
+    <SolidColorBrush x:Key="SurfaceSidebarBrush" Color="#FFFFFF"/>
     
-    <!-- Primary Colors -->
+    <Color x:Key="ThemeSidebarColor">#FFFFFF</Color>
+    <Color x:Key="ThemeSidebarHoverColor">#F0F3F7</Color>
+    <Color x:Key="ThemeSidebarActiveColor">#E2E8F0</Color>
+    <!-- CRITICAL RULE: Pure Black typography regardless of sidebar -->
+    <Color x:Key="ThemeSidebarTextColor">#000000</Color>
+    <Color x:Key="ThemeSidebarSecondaryTextColor">#4A5568</Color>
+
+    <SolidColorBrush x:Key="ThemeSidebar" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ThemeSidebarHover" Color="#F0F3F7"/>
+    <SolidColorBrush x:Key="ThemeSidebarActive" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="ThemeSidebarText" Color="#000000"/>
+    <SolidColorBrush x:Key="ThemeSidebarSecondaryText" Color="#4A5568"/>
+
+    <Color x:Key="CardShadowColor">#15000000</Color>
+    <SolidColorBrush x:Key="CardShadowBrush" Color="#15000000"/>
+
+    <!-- ─────────── TEXT COLORS (The Pure Black Rule) ─────────── -->
+    <Color x:Key="ThemeTextPrimaryColor">#000000</Color>
+    <Color x:Key="ThemeTextSecondaryColor">#1A1A1A</Color>
+    <Color x:Key="ThemeTextTertiaryColor">#4A5568</Color>
+
+    <SolidColorBrush x:Key="ThemeTextPrimary" Color="#000000"/>
+    <SolidColorBrush x:Key="ThemeTextSecondary" Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="ThemeTextTertiary" Color="#4A5568"/>
+
+    <SolidColorBrush x:Key="TextHeadingBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="TextBodyBrush" Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#4A5568"/>
+    <!-- Inverse is only for inside filled color chips like Blue button -->
+    <SolidColorBrush x:Key="TextInverseBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TextLinkBrush" Color="#2196F3"/>
+    <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="PrimaryForeground" Color="#FFFFFF"/>
+
+    <!-- ─────────── METİN LEGACY COMPATIBILITY ─────────── -->
+    <SolidColorBrush x:Key="TextPrimary" Color="#000000"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="TextTertiary" Color="#4A5568"/>
+    <SolidColorBrush x:Key="TextPrimaryColor" Color="#000000"/>
+    <SolidColorBrush x:Key="TextSecondaryColor" Color="#1A1A1A"/>
+
+    <!-- ─────────── BORDERS (High Contrast Outlines) ─────────── -->
+    <Color x:Key="ThemeBorderColor">#E2E8F0</Color>
+    <Color x:Key="ThemeDividerColor">#EDF2F7</Color>
+    <SolidColorBrush x:Key="ThemeBorder" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="ThemeDivider" Color="#EDF2F7"/>
+    <SolidColorBrush x:Key="DividerColor" Color="#EDF2F7"/>
+
+    <!-- Subtles vs Strongs (White borders on White bg are invisible. Using Black Alpha) -->
+    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#000000" Opacity="0.08"/>
+    <SolidColorBrush x:Key="BorderDefaultBrush" Color="#000000" Opacity="0.12"/>
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="#000000" Opacity="0.25"/>
+
+    <!-- ─────────── GLASSMORPHISM (Light Theme = Black-based Transparents) ─────────── -->
+    <!-- Opacities optimized to not wash out the UI with gray, just provide separation -->
+    <SolidColorBrush x:Key="GlassBrush" Color="#FFFFFF" Opacity="0.95"/>
+    <SolidColorBrush x:Key="GlassBrushLow" Color="#000000" Opacity="0.03"/>
+    <SolidColorBrush x:Key="GlassBrushMedium" Color="#000000" Opacity="0.06"/>
+    <SolidColorBrush x:Key="GlassBorderBrush" Color="#000000" Opacity="0.05"/>
+    <SolidColorBrush x:Key="GlassBorderBrushStrong" Color="#000000" Opacity="0.15"/>
+    <SolidColorBrush x:Key="GlassOverlayBrush" Color="#000000" Opacity="0.08"/>
+
+    <SolidColorBrush x:Key="HoverOverlayBrush" Color="#000000" Opacity="0.04"/>
+    <SolidColorBrush x:Key="PressedOverlayBrush" Color="#000000" Opacity="0.08"/>
+    <SolidColorBrush x:Key="FocusRingBrush" Color="#2196F3"/>
+    <!-- Row highlights are kept visible through light primary tint -->
+    <SolidColorBrush x:Key="SelectedRowBrush" Color="#2196F3" Opacity="0.10"/>
+
+    <!-- ─────────── THEME COLORS (Vibrant Core) ─────────── -->
     <Color x:Key="ThemePrimaryColor">#2196F3</Color>
     <Color x:Key="ThemePrimaryDarkColor">#1976D2</Color>
     <Color x:Key="ThemePrimaryLightColor">#BBDEFB</Color>
     <Color x:Key="ThemeAccentColor">#FF4081</Color>
     
-    <!-- Background Colors -->
-    <Color x:Key="ThemeBackgroundColor">#F5F7FA</Color>
-    <Color x:Key="ThemeSurfaceColor">#FFFFFF</Color>
-    <Color x:Key="ThemeCardColor">#FFFFFF</Color>
-    
-    <!-- Sidebar Colors -->
-    <Color x:Key="ThemeSidebarColor">#1A2332</Color>
-    <Color x:Key="ThemeSidebarHoverColor">#2A3A4F</Color>
-    <Color x:Key="ThemeSidebarActiveColor">#3A5068</Color>
-    <Color x:Key="ThemeSidebarTextColor">#E8EDF3</Color>
-    <Color x:Key="ThemeSidebarSecondaryTextColor">#8BA3BC</Color>
-    
-    <!-- Text Colors -->
-    <Color x:Key="ThemeTextPrimaryColor">#1A1A2E</Color>
-    <Color x:Key="ThemeTextSecondaryColor">#5C6B7A</Color>
-    <Color x:Key="ThemeTextTertiaryColor">#9AA5B1</Color>
-    
-    <!-- Border & Divider -->
-    <Color x:Key="ThemeBorderColor">#E2E8F0</Color>
-    <Color x:Key="ThemeDividerColor">#EDF2F7</Color>
-    
+    <SolidColorBrush x:Key="ThemePrimary" Color="#2196F3"/>
+    <SolidColorBrush x:Key="ThemePrimaryDark" Color="#1976D2"/>
+    <SolidColorBrush x:Key="ThemePrimaryLight" Color="#BBDEFB"/>
+    <SolidColorBrush x:Key="ThemeAccent" Color="#FF4081"/>
+
+    <SolidColorBrush x:Key="PrimaryColor" Color="#2196F3"/>
+    <SolidColorBrush x:Key="PrimaryDarkColor" Color="#1976D2"/>
+    <SolidColorBrush x:Key="AccentColor" Color="#FF4081"/>
+    <SolidColorBrush x:Key="PrimaryHue" Color="#2196F3"/>
+    <SolidColorBrush x:Key="SecondaryHue" Color="#10B981"/>
+
     <!-- Status Colors -->
     <Color x:Key="ThemeSuccessColor">#10B981</Color>
     <Color x:Key="ThemeWarningColor">#F59E0B</Color>
     <Color x:Key="ThemeErrorColor">#EF4444</Color>
     <Color x:Key="ThemeInfoColor">#3B82F6</Color>
-    
-    <!-- Extended Palette Colors -->
+
+    <SolidColorBrush x:Key="ThemeSuccess" Color="#10B981"/>
+    <SolidColorBrush x:Key="ThemeWarning" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="ThemeError" Color="#EF4444"/>
+    <SolidColorBrush x:Key="ThemeInfo" Color="#3B82F6"/>
+
+    <SolidColorBrush x:Key="SuccessColor" Color="#10B981"/>
+    <SolidColorBrush x:Key="WarningColor" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="ErrorColor" Color="#EF4444"/>
+
+    <!-- Extended Theme Colors -->
     <Color x:Key="ThemePurpleColor">#8B5CF6</Color>
     <Color x:Key="ThemePinkColor">#EC4899</Color>
     <Color x:Key="ThemeCyanColor">#06B6D4</Color>
     <Color x:Key="ThemeIndigoColor">#6366F1</Color>
     <Color x:Key="ThemeTealColor">#14B8A6</Color>
     <Color x:Key="ThemeOrangeColor">#F97316</Color>
+
+    <SolidColorBrush x:Key="ThemePurple" Color="#8B5CF6"/>
+    <SolidColorBrush x:Key="ThemePink" Color="#EC4899"/>
+    <SolidColorBrush x:Key="ThemeCyan" Color="#06B6D4"/>
+    <SolidColorBrush x:Key="ThemeIndigo" Color="#6366F1"/>
+    <SolidColorBrush x:Key="ThemeTeal" Color="#14B8A6"/>
+    <SolidColorBrush x:Key="ThemeOrange" Color="#F97316"/>
     
-    <!-- Gradient Start/End Colors -->
-    <Color x:Key="GradientBlueStartColor">#6366F1</Color>
-    <Color x:Key="GradientBlueEndColor">#3B82F6</Color>
-    <Color x:Key="GradientGreenStartColor">#10B981</Color>
-    <Color x:Key="GradientGreenEndColor">#059669</Color>
-    <Color x:Key="GradientPurpleStartColor">#8B5CF6</Color>
-    <Color x:Key="GradientPurpleEndColor">#A855F7</Color>
-    <Color x:Key="GradientOrangeStartColor">#F97316</Color>
-    <Color x:Key="GradientOrangeEndColor">#FB923C</Color>
-    <Color x:Key="GradientPinkStartColor">#EC4899</Color>
-    <Color x:Key="GradientPinkEndColor">#F472B6</Color>
-    <Color x:Key="GradientCyanStartColor">#06B6D4</Color>
-    <Color x:Key="GradientCyanEndColor">#22D3EE</Color>
-    
-    <!-- Brush Resources -->
-    <SolidColorBrush x:Key="ThemePrimary" Color="{StaticResource ThemePrimaryColor}"/>
-    <SolidColorBrush x:Key="ThemePrimaryDark" Color="{StaticResource ThemePrimaryDarkColor}"/>
-    <SolidColorBrush x:Key="ThemePrimaryLight" Color="{StaticResource ThemePrimaryLightColor}"/>
-    <SolidColorBrush x:Key="ThemeAccent" Color="{StaticResource ThemeAccentColor}"/>
-    
-    <SolidColorBrush x:Key="ThemeBackground" Color="{StaticResource ThemeBackgroundColor}"/>
-    <SolidColorBrush x:Key="ThemeSurface" Color="{StaticResource ThemeSurfaceColor}"/>
-    <SolidColorBrush x:Key="ThemeCard" Color="{StaticResource ThemeCardColor}"/>
-    
-    <SolidColorBrush x:Key="ThemeSidebar" Color="{StaticResource ThemeSidebarColor}"/>
-    <SolidColorBrush x:Key="ThemeSidebarHover" Color="{StaticResource ThemeSidebarHoverColor}"/>
-    <SolidColorBrush x:Key="ThemeSidebarActive" Color="{StaticResource ThemeSidebarActiveColor}"/>
-    <SolidColorBrush x:Key="ThemeSidebarText" Color="{StaticResource ThemeSidebarTextColor}"/>
-    <SolidColorBrush x:Key="ThemeSidebarSecondaryText" Color="{StaticResource ThemeSidebarSecondaryTextColor}"/>
-    
-    <SolidColorBrush x:Key="ThemeTextPrimary" Color="{StaticResource ThemeTextPrimaryColor}"/>
-    <SolidColorBrush x:Key="ThemeTextSecondary" Color="{StaticResource ThemeTextSecondaryColor}"/>
-    <SolidColorBrush x:Key="ThemeTextTertiary" Color="{StaticResource ThemeTextTertiaryColor}"/>
-    
-    <SolidColorBrush x:Key="ThemeBorder" Color="{StaticResource ThemeBorderColor}"/>
-    <SolidColorBrush x:Key="ThemeDivider" Color="{StaticResource ThemeDividerColor}"/>
-    
-    <SolidColorBrush x:Key="ThemeSuccess" Color="{StaticResource ThemeSuccessColor}"/>
-    <SolidColorBrush x:Key="ThemeWarning" Color="{StaticResource ThemeWarningColor}"/>
-    <SolidColorBrush x:Key="ThemeError" Color="{StaticResource ThemeErrorColor}"/>
-    <SolidColorBrush x:Key="ThemeInfo" Color="{StaticResource ThemeInfoColor}"/>
-    
-    <!-- Extended Palette Brushes -->
-    <SolidColorBrush x:Key="ThemePurple" Color="{StaticResource ThemePurpleColor}"/>
-    <SolidColorBrush x:Key="ThemePink" Color="{StaticResource ThemePinkColor}"/>
-    <SolidColorBrush x:Key="ThemeCyan" Color="{StaticResource ThemeCyanColor}"/>
-    <SolidColorBrush x:Key="ThemeIndigo" Color="{StaticResource ThemeIndigoColor}"/>
-    <SolidColorBrush x:Key="ThemeTeal" Color="{StaticResource ThemeTealColor}"/>
-    <SolidColorBrush x:Key="ThemeOrange" Color="{StaticResource ThemeOrangeColor}"/>
-    
-    <!-- Gradient Brushes -->
-    <LinearGradientBrush x:Key="GradientBlue" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource GradientBlueStartColor}" Offset="0"/>
-        <GradientStop Color="{StaticResource GradientBlueEndColor}" Offset="1"/>
-    </LinearGradientBrush>
-    
-    <LinearGradientBrush x:Key="GradientGreen" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource GradientGreenStartColor}" Offset="0"/>
-        <GradientStop Color="{StaticResource GradientGreenEndColor}" Offset="1"/>
-    </LinearGradientBrush>
-    
-    <LinearGradientBrush x:Key="GradientPurple" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource GradientPurpleStartColor}" Offset="0"/>
-        <GradientStop Color="{StaticResource GradientPurpleEndColor}" Offset="1"/>
-    </LinearGradientBrush>
-    
-    <LinearGradientBrush x:Key="GradientOrange" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource GradientOrangeStartColor}" Offset="0"/>
-        <GradientStop Color="{StaticResource GradientOrangeEndColor}" Offset="1"/>
-    </LinearGradientBrush>
-    
-    <LinearGradientBrush x:Key="GradientPink" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource GradientPinkStartColor}" Offset="0"/>
-        <GradientStop Color="{StaticResource GradientPinkEndColor}" Offset="1"/>
-    </LinearGradientBrush>
-    
-    <LinearGradientBrush x:Key="GradientCyan" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource GradientCyanStartColor}" Offset="0"/>
-        <GradientStop Color="{StaticResource GradientCyanEndColor}" Offset="1"/>
-    </LinearGradientBrush>
-    
-    <!-- Card Shadow Colors -->
-    <Color x:Key="CardShadowColor">#1A000000</Color>
-    <Color x:Key="CardShadowHoverColor">#33000000</Color>
-    
-    <!-- Legacy Color Compatibility (for backward compatibility) -->
-    <SolidColorBrush x:Key="TextPrimary" Color="{StaticResource ThemeTextPrimaryColor}"/>
-    <SolidColorBrush x:Key="TextSecondary" Color="{StaticResource ThemeTextSecondaryColor}"/>
-    <SolidColorBrush x:Key="TextTertiary" Color="{StaticResource ThemeTextTertiaryColor}"/>
-    <SolidColorBrush x:Key="PrimaryHue" Color="{StaticResource ThemePrimaryColor}"/>
-    <SolidColorBrush x:Key="SecondaryHue" Color="{StaticResource ThemeSuccessColor}"/>
-    <SolidColorBrush x:Key="BackgroundColor" Color="{StaticResource ThemeBackgroundColor}"/>
-    <SolidColorBrush x:Key="SurfaceColor" Color="{StaticResource ThemeSurfaceColor}"/>
-    <SolidColorBrush x:Key="CardBackground" Color="{StaticResource ThemeCardColor}"/>
-    <SolidColorBrush x:Key="PrimaryForeground" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="DividerColor" Color="{StaticResource ThemeDividerColor}"/>
-    <SolidColorBrush x:Key="ErrorColor" Color="{StaticResource ThemeErrorColor}"/>
-    <SolidColorBrush x:Key="SuccessColor" Color="{StaticResource ThemeSuccessColor}"/>
-    <SolidColorBrush x:Key="WarningColor" Color="{StaticResource ThemeWarningColor}"/>
-    <SolidColorBrush x:Key="PrimaryColor" Color="{StaticResource ThemePrimaryColor}"/>
-    <SolidColorBrush x:Key="PrimaryDarkColor" Color="{StaticResource ThemePrimaryDarkColor}"/>
-    <SolidColorBrush x:Key="AccentColor" Color="{StaticResource ThemeAccentColor}"/>
-    <SolidColorBrush x:Key="TextPrimaryColor" Color="{StaticResource ThemeTextPrimaryColor}"/>
-    <SolidColorBrush x:Key="TextSecondaryColor" Color="{StaticResource ThemeTextSecondaryColor}"/>
-    
-    <!-- Gradients -->
+    <!-- ─────────── STATUS TINTS (Dark enough to pop out on white) ─────────── -->
+    <SolidColorBrush x:Key="StatusSuccessBg" Color="#10B981" Opacity="0.12"/>
+    <SolidColorBrush x:Key="StatusSuccessFg" Color="#059669"/>
+    <SolidColorBrush x:Key="StatusWarningBg" Color="#F59E0B" Opacity="0.15"/>
+    <SolidColorBrush x:Key="StatusWarningFg" Color="#D97706"/>
+    <SolidColorBrush x:Key="StatusErrorBg"   Color="#EF4444" Opacity="0.12"/>
+    <SolidColorBrush x:Key="StatusErrorFg"   Color="#DC2626"/>
+    <SolidColorBrush x:Key="StatusInfoBg"    Color="#3B82F6" Opacity="0.12"/>
+    <SolidColorBrush x:Key="StatusInfoFg"    Color="#2563EB"/>
+    <SolidColorBrush x:Key="StatusNeutralBg" Color="#000000" Opacity="0.08"/>
+    <!-- Muted text must also be blackish/grayish to ensure readability above light gray chip -->
+    <SolidColorBrush x:Key="StatusNeutralFg" Color="#1A1A1A"/>
+
+    <!-- ─────────── KPI GRADIENTS (Beautiful pops of color against white) ─────────── -->
     <LinearGradientBrush x:Key="ThemePrimaryGradient" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#2196F3" Offset="0"/>
         <GradientStop Color="#1976D2" Offset="1"/>
     </LinearGradientBrush>
     
+    <!-- Header is White/Trace-gray for modern Light Theme Sidebar feeling -->
     <LinearGradientBrush x:Key="ThemeHeaderGradient" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#1A2332" Offset="0"/>
-        <GradientStop Color="#2A3A4F" Offset="1"/>
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#F0F3F7" Offset="1"/>
     </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientBlue" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#6366F1" Offset="0"/>
+        <GradientStop Color="#3B82F6" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GradientBlue" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#6366F1" Offset="0"/>
+        <GradientStop Color="#3B82F6" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientGreen" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#10B981" Offset="0"/>
+        <GradientStop Color="#059669" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GradientGreen" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#10B981" Offset="0"/>
+        <GradientStop Color="#059669" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientPurple" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#8B5CF6" Offset="0"/>
+        <GradientStop Color="#A855F7" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GradientPurple" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#8B5CF6" Offset="0"/>
+        <GradientStop Color="#A855F7" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientOrange" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F97316" Offset="0"/>
+        <GradientStop Color="#FB923C" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GradientOrange" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F97316" Offset="0"/>
+        <GradientStop Color="#FB923C" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientCyan" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#06B6D4" Offset="0"/>
+        <GradientStop Color="#22D3EE" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GradientCyan" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#06B6D4" Offset="0"/>
+        <GradientStop Color="#22D3EE" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientRed" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#EC4899" Offset="0"/>
+        <GradientStop Color="#F472B6" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GradientPink" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#EC4899" Offset="0"/>
+        <GradientStop Color="#F472B6" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- ─────────── OPACITY ADJUSTED ELEVATIONS FOR LIGHT THEME ─────────── -->
+    <DropShadowEffect x:Key="ElevationPrimary" BlurRadius="20" ShadowDepth="4" Direction="270" Color="#2196F3" Opacity="0.15"/>
+    <DropShadowEffect x:Key="ElevationSuccess" BlurRadius="20" ShadowDepth="4" Direction="270" Color="#10B981" Opacity="0.15"/>
+    <DropShadowEffect x:Key="ElevationWarning" BlurRadius="20" ShadowDepth="4" Direction="270" Color="#F59E0B" Opacity="0.15"/>
+    <DropShadowEffect x:Key="ElevationDanger"  BlurRadius="20" ShadowDepth="4" Direction="270" Color="#EF4444" Opacity="0.15"/>
+
+    <!-- Legacy / Fail-safe Base Color property -->
+    <SolidColorBrush x:Key="BackgroundColor" Color="#FFFFFF"/>
 
 </ResourceDictionary>

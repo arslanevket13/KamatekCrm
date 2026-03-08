@@ -33,9 +33,9 @@
         </Grid>
 
         <!-- ========== HEADER DASHBOARD ========== -->
-        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20" Margin="0,0,0,20">
+        <Border Grid.Row="1" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,0,0,20">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Color="{DynamicResource ThemeShadowColor}"/>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.08" Color="Black"/>
             </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -52,9 +52,9 @@
                     </Border>
                     
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding FullName}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                        <TextBlock Text="{Binding FullName}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding CompanyName}" FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            <TextBlock Text="{Binding CompanyName}" FontSize="14" Foreground="{DynamicResource ThemeTextSecondary}"
                                        Visibility="{Binding CustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Corporate}"/>
                             <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="4" Padding="6,2" Margin="8,0,0,0">
                                 <TextBlock Text="{Binding CustomerCode}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFgDark}"/>
@@ -73,7 +73,7 @@
                             <!-- Sadakat Seviyesi -->
                             <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0" Background="{DynamicResource ThemeWarning}"
                                     Visibility="{Binding LoyaltyLevel, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}">
-                                <TextBlock Text="{Binding LoyaltyLevel, FallbackValue=VIP}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                <TextBlock Text="{Binding LoyaltyLevel, FallbackValue=VIP}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}"/>
                             </Border>
                             
                             <!-- Doğum Günü Yaklaşıyor -->
@@ -84,21 +84,21 @@
                         </StackPanel>
                         
                         <!-- Etiketler -->
-                        <TextBlock Text="{Binding Tags}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"
+                        <TextBlock Text="{Binding Tags}" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,4,0,0"
                                    Visibility="{Binding Tags, Converter={StaticResource NullToVisibilityConverter}}"/>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- Balance Widget -->
-                <Border Grid.Column="2" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="20,10" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                <Border Grid.Column="2" Background="{DynamicResource ThemeSidebarHover}" CornerRadius="8" Padding="20,10" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                     <StackPanel HorizontalAlignment="Right">
-                        <TextBlock Text="GÜNCEL BAKİYE" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontWeight="Bold" HorizontalAlignment="Right"/>
+                        <TextBlock Text="GÜNCEL BAKİYE" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" FontWeight="Bold" HorizontalAlignment="Right"/>
                         <TextBlock Text="{Binding TotalBalance, StringFormat=c2}" 
                                    FontSize="28" FontWeight="Bold" 
                                    Foreground="{Binding BalanceColor}" 
                                    HorizontalAlignment="Right"/>
                         <TextBlock Text="{Binding TotalSpent, StringFormat='Toplam Harcama: {0:c2}'}" 
-                                   FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+                                   FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" HorizontalAlignment="Right" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -146,11 +146,11 @@
                               CanUserAddRows="False"
                               IsReadOnly="True"
                               RowHeight="45"
-                              AlternatingRowBackground="{DynamicResource ApplicationBackgroundBrush}"
+                              AlternatingRowBackground="{DynamicResource ThemeSidebarHover}"
                               GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="{DynamicResource BorderDefaultBrush}">
+                              HorizontalGridLinesBrush="{DynamicResource ThemeBorder}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="140" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="140" Foreground="{DynamicResource ThemeTextSecondary}"/>
                             
                             <DataGridTemplateColumn Header="İşlem Türü" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>

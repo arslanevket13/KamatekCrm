@@ -19,10 +19,10 @@
 
         <!-- Input Style -->
         <Style x:Key="FluentInput" TargetType="Control">
-            <Setter Property="Background" Value="{DynamicResource GlassBrushLow}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -41,7 +41,7 @@
                                 <Path x:Name="IconPath"
                                       Grid.Column="0"
                                       Data="{TemplateBinding Tag}"
-                                      Fill="{DynamicResource GlassOverlayBrush}"
+                                      Fill="{DynamicResource ThemeTextTertiary}"
                                       Width="18" Height="18"
                                       Stretch="Uniform"
                                       VerticalAlignment="Center"
@@ -65,13 +65,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource GlassBorderBrushStrong}"/>
-                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource GlassBrushMedium}"/>
-                                <Setter TargetName="AccentBorder" Property="Opacity" Value="1"/>
-                                <Setter TargetName="IconPath" Property="Fill" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
+                                <Setter TargetName="IconPath" Property="Fill" Value="{DynamicResource ThemePrimary}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource GlassBrushLow}"/>
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource ThemeSidebarHover}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -88,7 +86,7 @@
         <!-- Loading Animation -->
         <Style x:Key="LoginButtonFluent" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="15"/>
             <Setter Property="Template">
@@ -105,7 +103,7 @@
                                             Orientation="Horizontal" 
                                             HorizontalAlignment="Center" 
                                             Visibility="Collapsed">
-                                    <Ellipse Width="18" Height="18" Stroke="{DynamicResource TextFillColorPrimaryBrush}" StrokeThickness="2" StrokeDashArray="3 1">
+                                    <Ellipse Width="18" Height="18" Stroke="{DynamicResource TextInverseBrush}" StrokeThickness="2" StrokeDashArray="3 1">
                                         <Ellipse.RenderTransform>
                                             <RotateTransform x:Name="Rotate" CenterX="9" CenterY="9"/>
                                         </Ellipse.RenderTransform>
@@ -122,7 +120,7 @@
                                             </EventTrigger>
                                         </Ellipse.Triggers>
                                     </Ellipse>
-                                    <TextBlock Text="Giriş Yapılıyor..." Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Giriş Yapılıyor..." Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextInverseBrush}"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -146,13 +144,13 @@
                                 <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="10" Opacity="0.7">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <Canvas Width="18" Height="18" VerticalAlignment="Center">
-                                            <Ellipse Width="18" Height="18" Stroke="{DynamicResource TextFillColorPrimaryBrush}" StrokeThickness="2" StrokeDashArray="3 1">
+                                            <Ellipse Width="18" Height="18" Stroke="{DynamicResource TextInverseBrush}" StrokeThickness="2" StrokeDashArray="3 1">
                                                 <Ellipse.RenderTransform>
                                                     <RotateTransform x:Name="Rotate" CenterX="9" CenterY="9"/>
                                                 </Ellipse.RenderTransform>
                                             </Ellipse>
                                         </Canvas>
-                                        <TextBlock Text="Giriş Yapılıyor..." Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="Giriş Yapılıyor..." Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextInverseBrush}" FontWeight="SemiBold"/>
                                     </StackPanel>
                                     <Border.Triggers>
                                         <EventTrigger RoutedEvent="Loaded">
@@ -175,7 +173,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid x:Name="MainGrid">
+    <Grid x:Name="MainGrid" Background="{DynamicResource SurfacePageBrush}">
         <!-- Language Selector -->
         <StackPanel Orientation="Horizontal" 
                     HorizontalAlignment="Right" 
@@ -184,9 +182,9 @@
             <ComboBox x:Name="LanguageCombo"
                       Width="100"
                       SelectedIndex="0"
-                      Background="{DynamicResource GlassBrushLow}"
-                      Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                      BorderBrush="{DynamicResource GlassBorderBrushStrong}"
+                      Background="{DynamicResource ThemeSurface}"
+                      Foreground="{DynamicResource ThemeTextPrimary}"
+                      BorderBrush="{DynamicResource ThemeBorder}"
                       FontSize="12"
                       Cursor="Hand">
                 <ComboBoxItem Content="🇹🇷 Türkçe" Tag="tr-TR"/>
@@ -195,89 +193,26 @@
             </ComboBox>
         </StackPanel>
 
-        <!-- Modern Mesh Gradient Background -->
-        <Grid x:Name="BackgroundMesh">
-            <Rectangle Fill="{DynamicResource SurfacePageBrush}"/>
-            <Ellipse Margin="-200,-300,0,0" Width="800" Height="800" HorizontalAlignment="Left" VerticalAlignment="Top">
-                <Ellipse.Fill>
-                    <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
-                        <GradientStop Color="{DynamicResource KpiPurpleStartColor}" Offset="0"/>
-                        <GradientStop Color="{DynamicResource KpiCyanStartColor}" Offset="1"/>
-                    </RadialGradientBrush>
-                </Ellipse.Fill>
-            </Ellipse>
-            <Ellipse Margin="0,0,-300,-400" Width="1000" Height="1000" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-                <Ellipse.Fill>
-                    <RadialGradientBrush Center="0.5,0.5" GradientOrigin="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
-                        <GradientStop Color="{DynamicResource KpiPurpleEndColor}" Offset="0"/>
-                        <GradientStop Color="{DynamicResource KpiCyanEndColor}" Offset="1"/>
-                    </RadialGradientBrush>
-                </Ellipse.Fill>
-            </Ellipse>
-        </Grid>
+        <!-- PURE WHITE THEME BACKGROUND (MESH GRADIENT VE KARMAŞIK EFEKTLER TEMİZLENDİ) -->
 
-        <!-- Login Card with Glassmorphism -->
+        <!-- Login Card -->
         <Border x:Name="LoginCard"
-                Width="400" Height="520" 
+                Width="420" Height="520" 
                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                CornerRadius="24"
-                ClipToBounds="True"
+                CornerRadius="16"
+                Background="{DynamicResource SurfaceCardBrush}"
+                BorderBrush="{DynamicResource ThemeBorder}"
+                BorderThickness="1"
+                ClipToBounds="False"
                 Opacity="0"
                 RenderTransformOrigin="0.5,0.5">
-            <Border.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform ScaleX="0.9" ScaleY="0.9"/>
-                </TransformGroup>
-            </Border.RenderTransform>
-            <Border.Triggers>
-                <EventTrigger RoutedEvent="Loaded">
-                    <BeginStoryboard>
-                        <Storyboard>
-                            <DoubleAnimation Storyboard.TargetName="LoginCard"
-                                             Storyboard.TargetProperty="Opacity"
-                                             From="0" To="1"
-                                             Duration="0:0:0.6">
-                                <DoubleAnimation.EasingFunction>
-                                    <CubicEase EasingMode="EaseOut"/>
-                                </DoubleAnimation.EasingFunction>
-                            </DoubleAnimation>
-                            <DoubleAnimation Storyboard.TargetName="LoginCard"
-                                             Storyboard.TargetProperty="(Border.RenderTransform).(TransformGroup.Children)[0].ScaleX"
-                                             From="0.9" To="1"
-                                             Duration="0:0:0.5">
-                                <DoubleAnimation.EasingFunction>
-                                    <BackEase EasingMode="EaseOut" Amplitude="0.2"/>
-                                </DoubleAnimation.EasingFunction>
-                            </DoubleAnimation>
-                            <DoubleAnimation Storyboard.TargetName="LoginCard"
-                                             Storyboard.TargetProperty="(Border.RenderTransform).(TransformGroup.Children)[0].ScaleY"
-                                             From="0.9" To="1"
-                                             Duration="0:0:0.5">
-                                <DoubleAnimation.EasingFunction>
-                                    <BackEase EasingMode="EaseOut" Amplitude="0.2"/>
-                                </DoubleAnimation.EasingFunction>
-                            </DoubleAnimation>
-                        </Storyboard>
-                    </BeginStoryboard>
-                </EventTrigger>
-            </Border.Triggers>
-            
-            <Grid>
-                <!-- Backdrop Blur Simulation -->
-                <Border Background="{DynamicResource GlassBrushLow}">
-                    <Border.Effect>
-                        <BlurEffect Radius="40"/>
-                    </Border.Effect>
-                </Border>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="40" Opacity="0.08" ShadowDepth="10" Direction="270" Color="Black"/>
+            </Border.Effect>
 
-                <!-- Glass Surface -->
-                <Border Background="{DynamicResource GlassBrushMedium}" 
-                        BorderBrush="{DynamicResource GlassBorderBrushStrong}" 
-                        BorderThickness="1.5"
-                        CornerRadius="24">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="40" Opacity="0.4" ShadowDepth="0" Color="{DynamicResource CardShadowColor}"/>
-                    </Border.Effect>
+                <!-- Classic Flat Surface -->
+                <Border Background="{DynamicResource ThemeSurface}" 
+                        CornerRadius="16">
                     
                     <Grid Margin="40">
                         <Grid.RowDefinitions>
@@ -308,7 +243,7 @@
                             <TextBlock Text="Kullanıcı Adı" 
                                        FontSize="12"
                                        FontWeight="SemiBold" 
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       Foreground="{DynamicResource ThemeTextSecondary}"
                                        Margin="4,0,0,8"/>
                             <TextBox x:Name="UsernameTextBox"
                                      Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
@@ -322,19 +257,19 @@
                             <TextBlock Text="Şifre" 
                                        FontSize="12"
                                        FontWeight="SemiBold" 
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       Foreground="{DynamicResource ThemeTextSecondary}"
                                        Margin="4,20,0,8"/>
                             <Grid>
                                 <PasswordBox x:Name="PasswordBox"
-                                             Background="{DynamicResource GlassBrushLow}"
-                                             BorderBrush="{DynamicResource GlassBorderBrush}"
+                                             Background="{DynamicResource ThemeSurface}"
+                                             BorderBrush="{DynamicResource ThemeBorder}"
                                              BorderThickness="1"
-                                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                             Foreground="{DynamicResource ThemeTextPrimary}"
                                              Height="44"
                                              FontSize="14"
                                              Padding="12,8"
                                              VerticalContentAlignment="Center"
-                                             CaretBrush="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                             CaretBrush="{DynamicResource ThemeTextPrimary}"/>
                                 <TextBox x:Name="PasswordTextBox"
                                          Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
                                          Style="{StaticResource FluentInput}"
@@ -349,12 +284,12 @@
                                         Margin="0,0,10,0"
                                         Width="30" Height="30"
                                         Cursor="Hand"
-                                        Background="{DynamicResource GlassBrushLow}"
+                                        Background="Transparent"
                                         BorderThickness="0"
                                         Click="PasswordToggle_Click">
                                     <Path x:Name="EyePath"
                                           Data="{StaticResource EyeIcon}"
-                                          Fill="{DynamicResource GlassOverlayBrush}"
+                                          Fill="{DynamicResource ThemeTextTertiary}"
                                           Width="18" Height="18"
                                           Stretch="Uniform"/>
                                 </Button>
@@ -370,13 +305,13 @@
                                 <CheckBox Grid.Column="0"
                                           Content="Beni Hatırla" 
                                           IsChecked="{Binding RememberMe}"
-                                          Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                          Foreground="{DynamicResource ThemeTextSecondary}"
                                           FontSize="13"
                                           Cursor="Hand"/>
                                 
                                 <TextBlock Grid.Column="1"
                                            Text="Şifremi Unuttum"
-                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                           Foreground="{DynamicResource TextLinkBrush}"
                                            FontSize="13"
                                            Cursor="Hand"
                                            TextDecorations="Underline"
@@ -393,7 +328,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Path Data="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z" Fill="{DynamicResource StatusErrorFg}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,10,0"/>
                                     <TextBlock Text="{Binding ErrorMessage}" 
-                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                                               Foreground="{DynamicResource StatusErrorFg}" 
                                                FontSize="12"
                                                FontWeight="Medium"
                                                VerticalAlignment="Center"
@@ -413,12 +348,12 @@
                         <TextBlock Grid.Row="3" 
                                    Text="v1.0.1 © 2026 Kamatek"
                                    HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   Foreground="{DynamicResource ThemeTextTertiary}"
                                    FontSize="11"
                                    Margin="0,30,0,0"/>
                     </Grid>
                 </Border>
-            </Grid>
+            
         </Border>
     </Grid>
 </UserControl>

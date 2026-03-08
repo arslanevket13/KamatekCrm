@@ -12,7 +12,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="1200"
              helpers:AnimationHelper.EntranceAnimation="FadeIn"
-             Background="{DynamicResource ApplicationBackgroundBrush}">
+             Background="{DynamicResource SurfacePageBrush}">
 
     <UserControl.Resources>
         <helpers:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter"/>
@@ -30,7 +30,7 @@
                    Text="Müşteri Yönetimi" 
                    FontSize="28" 
                    FontWeight="Bold"
-                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                   Foreground="{DynamicResource ThemeTextPrimary}"
                    Margin="0,0,0,16"/>
 
         <!-- İstatistik Kartları -->
@@ -116,9 +116,9 @@
         </Grid>
 
         <!-- Filtreleme ve Yeni Müşteri Butonu -->
-        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Margin="0,0,0,16" Padding="20">
+        <Border Grid.Row="2" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" CornerRadius="12" Margin="0,0,0,16" Padding="20">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.1" Color="{DynamicResource ThemeShadowColor}"/>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.08" Color="Black"/>
             </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -155,7 +155,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Müşteri Listesi" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{DynamicResource TextHeadingBrush}"/>
+                    <TextBlock Grid.Row="0" Text="Müşteri Listesi" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{DynamicResource ThemeTextPrimary}"/>
 
                     <!-- Filtre Butonları -->
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
@@ -249,7 +249,7 @@
                         <TextBlock Text="{Binding TotalPages}" VerticalAlignment="Center" FontWeight="Bold"/>
                         <Button Content="&gt;" Command="{Binding NextPageCommand}" Style="{StaticResource ModernButton}" Width="40" Margin="10,0,0,0"/>
                         
-                        <TextBlock Text="{Binding TotalCount, StringFormat='Toplam: {0}'}" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Text="{Binding TotalCount, StringFormat='Toplam: {0}'}" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{DynamicResource ThemeTextSecondary}"/>
                     </StackPanel>
                 </Grid>
             </Border>

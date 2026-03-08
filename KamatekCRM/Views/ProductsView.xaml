@@ -10,7 +10,7 @@
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=viewmodels:ProductViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="600" d:DesignWidth="1000"
-             Background="{DynamicResource ApplicationBackgroundBrush}">
+             Background="{DynamicResource SurfacePageBrush}">
 
     <UserControl.Resources>
         <!-- Boolean to Visibility Converter -->
@@ -38,10 +38,10 @@
                            Text="Stok ve Envanter Yönetimi" 
                            FontSize="28" 
                            FontWeight="Bold"
-                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                           Foreground="{DynamicResource ThemeTextPrimary}"/>
                 <TextBlock Text="Ürünlerinizi yönetin, stok takibi yapın" 
                            FontSize="13" 
-                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Foreground="{DynamicResource ThemeTextSecondary}"
                            Margin="0,4,0,0"/>
             </StackPanel>
 
@@ -81,9 +81,9 @@
         </Grid>
 
         <!-- Arama ve Filtreleme -->
-        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Margin="0,0,0,16" Padding="16">
+        <Border Grid.Row="1" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" CornerRadius="12" Margin="0,0,0,16" Padding="16">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.1" Color="{DynamicResource ThemeShadowColor}"/>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.08" Color="Black"/>
             </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -93,7 +93,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <TextBlock Text="Ara:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,12,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                <TextBlock Text="Ara:" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,12,0" Foreground="{DynamicResource ThemeTextPrimary}"/>
                 
                 <TextBox Grid.Column="1" 
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
@@ -133,7 +133,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Border Width="44" Height="44" CornerRadius="6"
-                                        Background="{DynamicResource ApplicationBackgroundBrush}" HorizontalAlignment="Center"
+                                        Background="{DynamicResource ThemeSidebarHover}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" HorizontalAlignment="Center"
                                         ClipToBounds="True">
                                     <Grid>
                                         <!-- Placeholder icon when no image -->
@@ -220,7 +220,7 @@
                     <DataGridTextColumn Header="Ort. Maliyet" 
                                         Binding="{Binding CurrentAverageCost, StringFormat='{}{0:C2}'}" 
                                         Width="100"
-                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        Foreground="{DynamicResource ThemeTextSecondary}"/>
 
                     <!-- Düzenle Butonu -->
                     <DataGridTemplateColumn Header="" Width="50">

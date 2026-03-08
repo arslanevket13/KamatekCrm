@@ -21,7 +21,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- ================= SOL PANEL: LİSTE ================= -->
-        <Border Grid.Column="0" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,1,0" Background="{DynamicResource ApplicationBackgroundBrush}">
+        <Border Grid.Column="0" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,1,0" Background="{DynamicResource ThemeSurface}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -53,17 +53,17 @@
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">
-                                        <Border Name="Border" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,0,0,1" Padding="15,10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+                                        <Border Name="Border" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1" Padding="15,10" Background="{DynamicResource ThemeSurface}">
                                             <ContentPresenter/>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
+                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource ThemeSidebarHover}"/>
                                                 <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
                                                 <Setter TargetName="Border" Property="BorderThickness" Value="4,0,0,0"/>
                                             </Trigger>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}"/>
+                                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource ThemeSidebarHover}"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -80,7 +80,7 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <!-- Icon/Badge -->
-                                <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource BorderDefaultBrush}" Margin="0,0,10,0">
+                                <Border Width="40" Height="40" CornerRadius="20" Background="{DynamicResource ThemeSidebarHover}" Margin="0,0,10,0">
                                     <TextBlock Text="🔧" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="18"/>
                                 </Border>
                                 
@@ -120,9 +120,9 @@
             </Grid.RowDefinitions>
 
             <!-- 1. Cihaz & Müşteri Kartı -->
-            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20" Margin="0,0,0,20">
+            <Border Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" CornerRadius="8" Padding="20" Margin="0,0,0,20">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" Opacity="0.1" ShadowDepth="2"/>
+                    <DropShadowEffect BlurRadius="20" Opacity="0.08" ShadowDepth="4" Color="Black"/>
                 </Border.Effect>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -167,9 +167,9 @@
                     
                     <!-- Sol: Beyan -->
                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,10">
-                        <TextBlock Text="Müşteri Şikayeti:" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBlock Text="Müşteri Şikayeti:" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,5"/>
                         <TextBox Text="{Binding SelectedJob.Description}" IsReadOnly="True" 
-                                 Background="{DynamicResource ApplicationBackgroundBrush}" BorderThickness="0" Padding="8" TextWrapping="Wrap" MinHeight="60"/>
+                                 Background="{DynamicResource ThemeSidebarHover}" Foreground="{DynamicResource ThemeTextPrimary}" BorderThickness="0" Padding="8" TextWrapping="Wrap" MinHeight="60"/>
                         
                         <TextBlock Text="Aksesuarlar &amp; Fiziksel Durum:" FontWeight="Bold" Margin="0,15,0,5"/>
                         <TextBlock>
@@ -242,7 +242,7 @@
         </Grid>
         
         <!-- ================= SAĞ PANEL: MALİYET & PARÇA ================= -->
-        <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1,0,0,0"
+        <Border Grid.Column="2" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1,0,0,0"
                 Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid Margin="15">
                 <Grid.RowDefinitions>
@@ -259,7 +259,7 @@
                 </StackPanel>
 
                 <!-- Parça Ekleme -->
-                <GroupBox Grid.Row="1" Header="Parça Ekle" BorderBrush="{DynamicResource BorderDefaultBrush}" Padding="10" Margin="0,0,0,15">
+                <GroupBox Grid.Row="1" Header="Parça Ekle" BorderBrush="{DynamicResource ThemeBorder}" Padding="10" Margin="0,0,0,15">
                      <StackPanel>
                          <TextBlock Text="Ürün Seçimi:" FontSize="11" Foreground="{DynamicResource TextBodyBrush}" Margin="0,0,0,3"/>
                          <ComboBox ItemsSource="{Binding Products}" 
@@ -367,11 +367,11 @@
         </Border>
 
         <!-- Empty State (No selection) -->
-        <Border Grid.Column="1" Grid.ColumnSpan="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+        <Border Grid.Column="1" Grid.ColumnSpan="2" Background="{DynamicResource ThemeSurface}" 
                 Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverted}">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="🔍" FontSize="60" HorizontalAlignment="Center" Foreground="{DynamicResource BorderDefaultBrush}"/>
-                <TextBlock Text="Lütfen soldaki listeden bir iş seçin." FontSize="20" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,20,0,0"/>
+                <TextBlock Text="🔍" FontSize="60" HorizontalAlignment="Center" Foreground="{DynamicResource ThemeDivider}"/>
+                <TextBlock Text="Lütfen soldaki listeden bir iş seçin." FontSize="20" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,20,0,0"/>
             </StackPanel>
         </Border>
     </Grid>

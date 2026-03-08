@@ -1,3 +1,23 @@
+## v14.9 — Ultimate UI Refactoring & Crash Prevention (2026-03-08)
+- **UI/UX**: `LoginView` tamamen yeniden tasarlandı. Siyah-Beyaz ağırlıklı, Mesh Gradient'ten arındırılmış yüksek kontrastlı kurumsal bir görünüm elde edildi. Yüzeylerde `ThemeSurface`, metinlerde `#000000` (Kesin Siyah) standardı zorunlu kılındı.
+- **FIX**: Çoklu ekranlarda (`RoutePlanningView`, `RepairTrackingWindow`, `SettingsView`, `ServiceJobsView`, `ProductsView`, `CustomerDetailView`, `CustomersView`) koyu temadan kalan ve ParseException fırlatan `ThemeShadowColor` ile uyumsuzluk yaratan `CardBackgroundFillColorDefaultBrush` kaynakları silindi.
+- **DESIGN**: Tüm ekranlardaki "havada uçan 3 boyutlu elements / Floating Cards" sorunu, her Border'a `ThemeBorder` etiketli 1px kalınlığında kenarlık ve Black tabanlı daha keskin, az yoğunluklu (Opacity: 0.08) gölgeler verilerek Materyal tasarımdan Modern Flat UX'e geçirildi.
+
+## v14.8 — The Ultimate Light Theme & Death of Darkness (2026-03-08)
+- **ARCHITECTURE**: Koyu Tema (Dark Theme) mimarisi, dosyalarıyla birlikte (`DarkTheme.xaml`, `DesignTokens.Dark.xaml`) sonsuza dek projeden silindi.
+- **THEME**: "Saf Beyaz" (*Pure White*) teması inşa edildi. `LightTheme.xaml` üzerindeki tüm yüzeyler ve kartlar `#FFFFFF` (Kesin Beyaz) koduna çekildi.
+- **TYPOGRAPHY**: Tüm beyaz veya silik metin fırçaları (Örn: `ThemeTextPrimaryColor`, `TextInverseBrush`) kaldırıldı; tüm başlık/gövde/panel metinleri `#000000` (Kesin Siyah) yapıldı (Saf Siyah Kuralı).
+- **UX/ACCESSIBILITY**: Glassmorphism ve Border referanslarında yer alan beyaz fırçalar, "beyaz zemin üzerine beyaz cisim görünmezliği" kuralı gereği siyahın %5~%20 transparan tonlarıyla yeniden kodlandı (Mükemmel kontrast).
+- **FIX**: App.xaml, runtime hatalarını önlemek amacıyla hardcoded olarak sadece `LightTheme.xaml` ve WPF-UI'nin Light temasına bağlandı.
+
+## v14.7 — Design System Architecture Refactoring (2026-03-08)
+- **ARCHITECTURE**: `DesignTokens.xaml` salt yapısal jetonlara (boşluk, boyut, animasyon) indirgenip tüm renk fırçalarından arındırıldı.
+- **THEME (Light)**: `LightTheme.xaml` ve `DesignTokens.Light.xaml` birleştirilerek tek kaynak (`LightTheme.xaml`) oluşturuldu. `SurfacePageColor` (`#F5F7FA`) ve kontrast okunaklılığı (`#1A1A2E`) artırılıp, beyaz üzerine şeffaf beyaz kullanımındaki UX hatası şeffaf siyaha çevrilerek giderildi.
+- **THEME (Dark)**: `DarkTheme.xaml` ile `DesignTokens.Dark.xaml` birleştirilerek mükerrer (duplicate key) "Öğe zaten eklendi" çökme sorunları tamamen çözüldü.
+- **REFACTOR**: `<App.xaml>` içerisindeki `MergedDictionaries` sıralaması `BaseTokens -> ActiveTheme -> WPF-UI` şeklinde doğru çalışma hiyerarşisine oturtuldu.
+- **GUIDE**: Tema değişiminin runtimeda algılanabilmesi adına `<StaticResource>` etiketlerinin `<DynamicResource>` olarak kullanılmasını zorunlu kılan refactor prosedürü onay mekanizmasına hazırlandı.
+- **FIX**: `StockCountView` ve `FaultTicketWindow` üzerinde meydana gelen `InvalidOperationException: '#FF000000', 'Background' özelliği için geçerli bir değer değil.` çökmeleri engellendi (`CardShadowColor` -> `CardShadowBrush` uyarlaması).
+
 ## v14.6 — Repair List & Fault Ticket Overhaul (2026-03-07)
 - **FIX**: `LoginView`'de 123 şifresinin 131'e dönme bug'ı (PasswordBox senkronizasyonu) `PasswordChanged` event'leri ile çift yönlü bağlanarak kökten çözüldü.
 - **FIX**: `RepairListView`'de kaybolan scrollbar'lar (ScrollViewer stil ezilmesi) düzeltildi. Hardcoded hex renkler `DynamicResource ThemePrimary` olarak standardize edildi.

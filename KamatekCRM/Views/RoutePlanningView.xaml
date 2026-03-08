@@ -11,12 +11,14 @@
         
         <!-- Card Style -->
         <Style x:Key="CardBorder" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="Padding" Value="14"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect ShadowDepth="1" BlurRadius="6" Opacity="0.1"/>
+                    <DropShadowEffect ShadowDepth="2" BlurRadius="10" Opacity="0.08" Color="Black"/>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -160,7 +162,7 @@
                                     <DataTemplate>
                                         <Border Margin="2" CornerRadius="8" Padding="10,8" 
                                                 Background="{Binding StatusBgColor}" 
-                                                BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="30"/>
@@ -216,8 +218,8 @@
                             <ItemsControl ItemsSource="{Binding AvailableJobs}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Margin="2" CornerRadius="8" Padding="10,8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                                                BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                                        <Border Margin="2" CornerRadius="8" Padding="10,8" Background="{DynamicResource ThemeSurface}" 
+                                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
@@ -255,15 +257,15 @@
         
         <!-- ============ SAĞ PANEL: HARİTA ============ -->
         <Border Grid.Column="1" CornerRadius="10" ClipToBounds="True" 
-                BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
             <Border.Effect>
-                <DropShadowEffect ShadowDepth="1" BlurRadius="8" Opacity="0.1"/>
+                <DropShadowEffect ShadowDepth="4" BlurRadius="20" Opacity="0.08" Color="Black"/>
             </Border.Effect>
             <Grid>
                 <wv2:WebView2 x:Name="MapWebView"/>
                 
                 <!-- Yükleniyor -->
-                <Border x:Name="LoadingOverlay" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" 
+                <Border x:Name="LoadingOverlay" Background="{DynamicResource ThemeSurface}" CornerRadius="10" 
                         Visibility="Visible">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock Text="🗺️" FontSize="48" HorizontalAlignment="Center"/>
