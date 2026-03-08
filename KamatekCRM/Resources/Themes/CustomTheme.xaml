@@ -164,35 +164,35 @@
     <SolidColorBrush x:Key="BorderColor" Color="#1E293B"/>
     <SolidColorBrush x:Key="PrimaryColorKey" Color="#3B82F6"/>
     <SolidColorBrush x:Key="SecondaryColorKey" Color="#64748B"/>
-    <SolidColorBrush x:Key="BackgroundColor" Color="#0B0E14"/>
+    <SolidColorBrush x:Key="BackgroundColor" Color="#000000"/>
 
     <DropShadowEffect x:Key="DropShadow" BlurRadius="15" ShadowDepth="2" Direction="270" Color="#000000" Opacity="0.35"/>
 
-    <!-- Legacy Theme Colors -->
+    <!-- Legacy Theme Colors - PURE BLACK -->
     <Color x:Key="ThemePrimaryColor">#3B82F6</Color>
     <Color x:Key="ThemePrimaryDarkColor">#2563EB</Color>
     <Color x:Key="ThemeAccentColor">#06B6D4</Color>
-    <Color x:Key="ThemeBackgroundColor">#0B0E14</Color>
-    <Color x:Key="ThemeTextPrimaryColor">#F1F5F9</Color>
-    <Color x:Key="ThemeTextSecondaryColor">#94A3B8</Color>
-    <Color x:Key="ThemeTextTertiaryColor">#64748B</Color>
+    <Color x:Key="ThemeBackgroundColor">#000000</Color>
+    <Color x:Key="ThemeTextPrimaryColor">#D4D4D4</Color>
+    <Color x:Key="ThemeTextSecondaryColor">#A0A0A0</Color>
+    <Color x:Key="ThemeTextTertiaryColor">#606060</Color>
 
     <SolidColorBrush x:Key="ThemePrimary" Color="#3B82F6"/>
     <SolidColorBrush x:Key="ThemePrimaryDark" Color="#2563EB"/>
     <SolidColorBrush x:Key="ThemeAccent" Color="#06B6D4"/>
 
-    <!-- Theme Text (Dark) -->
-    <SolidColorBrush x:Key="ThemeTextPrimary" Color="#F1F5F9"/>
-    <SolidColorBrush x:Key="ThemeTextSecondary" Color="#94A3B8"/>
-    <SolidColorBrush x:Key="ThemeTextTertiary" Color="#64748B"/>
-    <SolidColorBrush x:Key="ThemeBackground" Color="#0B0E14"/>
-    <SolidColorBrush x:Key="ThemeCardBackground" Color="#141821"/>
+    <!-- Theme Text (Dark) - SOFT WHITE -->
+    <SolidColorBrush x:Key="ThemeTextPrimary" Color="#D4D4D4"/>
+    <SolidColorBrush x:Key="ThemeTextSecondary" Color="#A0A0A0"/>
+    <SolidColorBrush x:Key="ThemeTextTertiary" Color="#606060"/>
+    <SolidColorBrush x:Key="ThemeBackground" Color="#000000"/>
+    <SolidColorBrush x:Key="ThemeCardBackground" Color="#0D0D0D"/>
     
-    <SolidColorBrush x:Key="ThemeTextPrimaryDark" Color="#F1F5F9"/>
-    <SolidColorBrush x:Key="ThemeTextSecondaryDark" Color="#94A3B8"/>
-    <SolidColorBrush x:Key="ThemeTextTertiaryDark" Color="#64748B"/>
-    <SolidColorBrush x:Key="ThemeBackgroundDark" Color="#0B0E14"/>
-    <SolidColorBrush x:Key="ThemeCardBackgroundDark" Color="#141821"/>
+    <SolidColorBrush x:Key="ThemeTextPrimaryDark" Color="#D4D4D4"/>
+    <SolidColorBrush x:Key="ThemeTextSecondaryDark" Color="#A0A0A0"/>
+    <SolidColorBrush x:Key="ThemeTextTertiaryDark" Color="#606060"/>
+    <SolidColorBrush x:Key="ThemeBackgroundDark" Color="#000000"/>
+    <SolidColorBrush x:Key="ThemeCardBackgroundDark" Color="#0D0D0D"/>
 
     <!-- ═══════════════════════════════════════════════════════════════
          FLUENT UI CONTROL STYLES — DARK MODE

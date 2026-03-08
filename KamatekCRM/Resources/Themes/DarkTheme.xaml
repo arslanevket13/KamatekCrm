@@ -25,30 +25,30 @@
     <Color x:Key="GradientMiddleColor">#A78BFA</Color>
     <Color x:Key="GradientEndColor">#22D3EE</Color>
 
-    <!-- Neutral Colors -->
-    <Color x:Key="WhiteColor">#FFFFFF</Color>
+    <!-- Neutral Colors - PURE BLACK THEME -->
+    <Color x:Key="WhiteColor">#E0E0E0</Color>
     <Color x:Key="BlackColor">#000000</Color>
-    <Color x:Key="BackgroundPrimaryColor">#1C1C1C</Color>
-    <Color x:Key="BackgroundSecondaryColor">#2D2D2D</Color>
-    <Color x:Key="BackgroundTertiaryColor">#3D3D3D</Color>
-    <Color x:Key="SurfaceColor">#282828</Color>
-    <Color x:Key="CardColor">#323232</Color>
+    <Color x:Key="BackgroundPrimaryColor">#000000</Color>
+    <Color x:Key="BackgroundSecondaryColor">#0D0D0D</Color>
+    <Color x:Key="BackgroundTertiaryColor">#141414</Color>
+    <Color x:Key="SurfaceColor">#0D0D0D</Color>
+    <Color x:Key="CardColor">#141414</Color>
 
-    <!-- Text Colors -->
-    <Color x:Key="TextPrimaryColor">#FFFFFF</Color>
-    <Color x:Key="TextSecondaryColor">#B3B3B3</Color>
-    <Color x:Key="TextTertiaryColor">#808080</Color>
-    <Color x:Key="TextDisabledColor">#4D4D4D</Color>
+    <!-- Text Colors - SOFT WHITE (Eye Friendly) -->
+    <Color x:Key="TextPrimaryColor">#D4D4D4</Color>
+    <Color x:Key="TextSecondaryColor">#A0A0A0</Color>
+    <Color x:Key="TextTertiaryColor">#606060</Color>
+    <Color x:Key="TextDisabledColor">#404040</Color>
 
-    <!-- Border Colors -->
-    <Color x:Key="BorderPrimaryColor">#404040</Color>
-    <Color x:Key="BorderSecondaryColor">#505050</Color>
-    <Color x:Key="BorderFocusColor">#60CDFF</Color>
+    <!-- Border Colors - Subtle -->
+    <Color x:Key="BorderPrimaryColor">#1A1A1A</Color>
+    <Color x:Key="BorderSecondaryColor">#252525</Color>
+    <Color x:Key="BorderFocusColor">#4080C0</Color>
 
     <!-- State Colors -->
-    <Color x:Key="HoverColor">#3D3D3D</Color>
-    <Color x:Key="ActiveColor">#4D4D4D</Color>
-    <Color x:Key="SelectedColor">#0A3D5C</Color>
+    <Color x:Key="HoverColor">#151515</Color>
+    <Color x:Key="ActiveColor">#1A1A1A</Color>
+    <Color x:Key="SelectedColor">#0A1A2A</Color>
 
     <!-- BRUSHES - Doğrudan Renk Kullan -->
     <SolidColorBrush x:Key="PrimaryBrush" Color="#60CDFF"/>
@@ -65,24 +65,24 @@
     <SolidColorBrush x:Key="ErrorBrush" Color="#FF99A4"/>
     <SolidColorBrush x:Key="InfoBrush" Color="#60CDFF"/>
 
-    <SolidColorBrush x:Key="BackgroundPrimaryBrush" Color="#1C1C1C"/>
-    <SolidColorBrush x:Key="BackgroundSecondaryBrush" Color="#2D2D2D"/>
-    <SolidColorBrush x:Key="BackgroundTertiaryBrush" Color="#3D3D3D"/>
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#282828"/>
-    <SolidColorBrush x:Key="CardBrush" Color="#323232"/>
+    <SolidColorBrush x:Key="BackgroundPrimaryBrush" Color="#000000"/>
+    <SolidColorBrush x:Key="BackgroundSecondaryBrush" Color="#0D0D0D"/>
+    <SolidColorBrush x:Key="BackgroundTertiaryBrush" Color="#141414"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#0D0D0D"/>
+    <SolidColorBrush x:Key="CardBrush" Color="#141414"/>
 
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B3B3B3"/>
-    <SolidColorBrush x:Key="TextTertiaryBrush" Color="#808080"/>
-    <SolidColorBrush x:Key="TextDisabledBrush" Color="#4D4D4D"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#D4D4D4"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#A0A0A0"/>
+    <SolidColorBrush x:Key="TextTertiaryBrush" Color="#606060"/>
+    <SolidColorBrush x:Key="TextDisabledBrush" Color="#404040"/>
 
-    <SolidColorBrush x:Key="BorderPrimaryBrush" Color="#404040"/>
-    <SolidColorBrush x:Key="BorderSecondaryBrush" Color="#505050"/>
-    <SolidColorBrush x:Key="BorderFocusBrush" Color="#60CDFF"/>
+    <SolidColorBrush x:Key="BorderPrimaryBrush" Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="BorderSecondaryBrush" Color="#252525"/>
+    <SolidColorBrush x:Key="BorderFocusBrush" Color="#4080C0"/>
 
-    <SolidColorBrush x:Key="HoverBrush" Color="#3D3D3D"/>
-    <SolidColorBrush x:Key="ActiveBrush" Color="#4D4D4D"/>
-    <SolidColorBrush x:Key="SelectedBrush" Color="#0A3D5C"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#151515"/>
+    <SolidColorBrush x:Key="ActiveBrush" Color="#1A1A1A"/>
+    <SolidColorBrush x:Key="SelectedBrush" Color="#0A1A2A"/>
 
     <!-- GRADIENTS -->
     <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0,0" EndPoint="1,1">

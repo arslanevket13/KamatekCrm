@@ -9,7 +9,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="500" d:DesignWidth="800"
              helpers:AnimationHelper.EntranceAnimation="SlideInFromBottom"
-             Background="{DynamicResource ThemeBackground}">
+             Background="{DynamicResource ApplicationBackgroundBrush}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
 
         <!-- ========== MERKEZ İÇERİK ========== -->
-        <Border Background="{DynamicResource CardBrush}" 
+        <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
                 CornerRadius="16"
                 Margin="40" 
                 MaxWidth="500" 
@@ -25,7 +25,7 @@
                 VerticalAlignment="Center"
                 HorizontalAlignment="Center">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="30" ShadowDepth="5" Opacity="0.15" Color="Black"/>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="5" Opacity="0.15" Color="{DynamicResource ThemeShadowColor}"/>
             </Border.Effect>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40">
                 
@@ -35,23 +35,23 @@
                         Width="80" Height="80"
                         Margin="0,0,0,24">
                     <Border.Effect>
-                        <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.3" Color="#0078D4"/>
+                        <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.3" Color="{DynamicResource ThemePrimaryColor}"/>
                     </Border.Effect>
-                    <ui:SymbolIcon Symbol="Wrench24" FontSize="36" Foreground="White"/>
+                    <ui:SymbolIcon Symbol="Wrench24" FontSize="36" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                 </Border>
                 
                 <!-- Başlık -->
                 <TextBlock Text="Yeni İş Emri Oluştur" 
                            FontSize="24" 
                            FontWeight="Bold"
-                           Foreground="{DynamicResource ThemeTextPrimary}"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                            HorizontalAlignment="Center"
                            Margin="0,0,0,12"/>
                 
                 <!-- Açıklama -->
                 <TextBlock Text="Müşteri için yeni servis, kurulum veya bakım işi kaydı oluşturun." 
                            FontSize="14" 
-                           Foreground="{DynamicResource ThemeTextSecondary}"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                            HorizontalAlignment="Center"
                            TextWrapping="Wrap"
                            TextAlignment="Center"
@@ -71,15 +71,15 @@
                 <!-- Yönlendirme Bilgisi -->
                 <StackPanel Margin="0,30,0,0" HorizontalAlignment="Center">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
-                        <ui:SymbolIcon Symbol="Lightbulb24" FontSize="16" Foreground="#FF9800" Margin="0,0,8,0"/>
-                        <TextBlock Text="İpucu:" FontWeight="SemiBold" Foreground="#FF9800"/>
+                        <ui:SymbolIcon Symbol="Lightbulb24" FontSize="16" Foreground="{DynamicResource ThemeWarning}" Margin="0,0,8,0"/>
+                        <TextBlock Text="İpucu:" FontWeight="SemiBold" Foreground="{DynamicResource ThemeWarning}"/>
                     </StackPanel>
                     <TextBlock Text="Mevcut işleri görüntülemek için sidebar'dan" 
-                               Foreground="{DynamicResource ThemeTextSecondary}"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                HorizontalAlignment="Center"
                                FontSize="12"/>
                     <TextBlock Text="'Tamir Listesi' veya 'Saha İşleri' kullanın." 
-                               Foreground="{DynamicResource ThemeTextSecondary}"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                HorizontalAlignment="Center"
                                FontSize="12"/>
                 </StackPanel>
@@ -88,3 +88,5 @@
         </Border>
     </Grid>
 </UserControl>
+
+

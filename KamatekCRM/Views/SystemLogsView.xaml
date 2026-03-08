@@ -1,7 +1,7 @@
 <UserControl x:Class="KamatekCrm.Views.SystemLogsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="{DynamicResource ThemeBackground}">
+             Background="{DynamicResource ApplicationBackgroundBrush}">
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
@@ -14,9 +14,9 @@
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock Text="📋 Sistem Logları" 
                        FontSize="28" FontWeight="Bold"
-                       Foreground="{DynamicResource ThemeTextPrimary}"/>
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
             <TextBlock Text="Tüm kullanıcı işlemlerini görüntüle ve denetle"
-                       FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,4,0,0"/>
+                       FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
         </StackPanel>
 
         <!-- Filters -->
@@ -42,7 +42,7 @@
 
                 <!-- Action Filter -->
                 <StackPanel Grid.Column="1" Margin="0,0,12,0">
-                    <TextBlock Text="İşlem Tipi" FontSize="10" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,0,2"/>
+                    <TextBlock Text="İşlem Tipi" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                     <ComboBox ItemsSource="{Binding ActionTypes}"
                               SelectedItem="{Binding SelectedActionFilter}"
                               Width="120" Height="36"/>
@@ -50,7 +50,7 @@
 
                 <!-- Entity Filter -->
                 <StackPanel Grid.Column="2" Margin="0,0,12,0">
-                    <TextBlock Text="Entity" FontSize="10" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,0,2"/>
+                    <TextBlock Text="Entity" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                     <ComboBox ItemsSource="{Binding EntityTypes}"
                               SelectedItem="{Binding SelectedEntityFilter}"
                               Width="120" Height="36"/>
@@ -58,12 +58,12 @@
 
                 <!-- Date Range -->
                 <StackPanel Grid.Column="3" Margin="0,0,12,0">
-                    <TextBlock Text="Başlangıç" FontSize="10" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,0,2"/>
+                    <TextBlock Text="Başlangıç" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                     <DatePicker SelectedDate="{Binding StartDate}" Width="120" Height="36"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="4" Margin="0,0,12,0">
-                    <TextBlock Text="Bitiş" FontSize="10" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,0,2"/>
+                    <TextBlock Text="Bitiş" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                     <DatePicker SelectedDate="{Binding EndDate}" Width="120" Height="36"/>
                 </StackPanel>
 
@@ -100,7 +100,7 @@
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                 <Setter Property="Margin" Value="12,0"/>
-                                <Setter Property="Foreground" Value="{DynamicResource ThemeTextSecondary}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                                 <Setter Property="FontFamily" Value="Consolas"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
@@ -126,25 +126,25 @@
                                 <Border CornerRadius="12" Padding="8,4" HorizontalAlignment="Left" Margin="12,0">
                                     <Border.Style>
                                         <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#E0E0E0"/>
+                                            <Setter Property="Background" Value="{DynamicResource BorderDefaultBrush}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ActionType}" Value="Login">
-                                                    <Setter Property="Background" Value="#E8F5E9"/>
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeSuccessLight}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding ActionType}" Value="Logout">
-                                                    <Setter Property="Background" Value="#FFF3E0"/>
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeWarningLight}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding ActionType}" Value="Create">
-                                                    <Setter Property="Background" Value="#E3F2FD"/>
+                                                    <Setter Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding ActionType}" Value="Delete">
-                                                    <Setter Property="Background" Value="#FFEBEE"/>
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeErrorLight}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding ActionType}" Value="PasswordChange">
-                                                    <Setter Property="Background" Value="#F3E5F5"/>
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeInfoLight}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding ActionType}" Value="PasswordReset">
-                                                    <Setter Property="Background" Value="#FCE4EC"/>
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeErrorLight}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -167,7 +167,7 @@
                             <Style TargetType="TextBlock">
                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                 <Setter Property="Margin" Value="12,0"/>
-                                <Setter Property="Foreground" Value="#9E9E9E"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
@@ -181,7 +181,7 @@
                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                 <Setter Property="Margin" Value="12,0"/>
                                 <Setter Property="FontFamily" Value="Consolas"/>
-                                <Setter Property="Foreground" Value="#9E9E9E"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
@@ -203,3 +203,4 @@
         </Border>
     </Grid>
 </UserControl>
+

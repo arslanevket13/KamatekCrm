@@ -6,9 +6,9 @@
         SizeToContent="WidthAndHeight"
         MinWidth="400"
         ResizeMode="NoResize"
-        Background="#F5F5F5">
+        Background="{DynamicResource SurfacePageBrush}">
 
-    <Border Margin="20" Background="White" CornerRadius="8" Padding="24">
+    <Border Margin="20" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="24">
         <Border.Effect>
             <DropShadowEffect BlurRadius="10" Opacity="0.1" ShadowDepth="2"/>
         </Border.Effect>
@@ -17,10 +17,10 @@
             <!-- Header -->
             <TextBlock Text="🔧 Yeni Cihaz Kaydı" 
                        FontSize="18" FontWeight="SemiBold"
-                       Foreground="#1976D2" Margin="0,0,0,20"/>
+                       Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,20"/>
 
             <!-- Kategori -->
-            <TextBlock Text="Kategori *" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+            <TextBlock Text="Kategori *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
             <ComboBox x:Name="CategoryCombo" 
                       SelectedValuePath="Tag"
                       SelectedValue="{Binding SelectedCategoryTag}"
@@ -37,7 +37,7 @@
             </ComboBox>
 
             <!-- Marka -->
-            <TextBlock Text="Marka *" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+            <TextBlock Text="Marka *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
             <ComboBox x:Name="BrandCombo" 
                       IsEditable="True"
                       Text="{Binding Brand, UpdateSourceTrigger=PropertyChanged}"
@@ -54,21 +54,21 @@
             </ComboBox>
 
             <!-- Model -->
-            <TextBlock Text="Model *" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+            <TextBlock Text="Model *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
             <TextBox x:Name="ModelBox" 
                      Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}"
                      Style="{StaticResource ModernTextBox}"
                      Height="40" Margin="0,0,0,16"/>
 
             <!-- Seri No -->
-            <TextBlock Text="Seri Numarası" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+            <TextBlock Text="Seri Numarası" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
             <TextBox x:Name="SerialBox" 
                      Text="{Binding SerialNumber, UpdateSourceTrigger=PropertyChanged}"
                      Style="{StaticResource ModernTextBox}"
                      Height="40" Margin="0,0,0,16"/>
 
             <!-- Konum -->
-            <TextBlock Text="Konum (Örn: Giriş Kapısı)" FontWeight="SemiBold" Foreground="#424242" Margin="0,0,0,6"/>
+            <TextBlock Text="Konum (Örn: Giriş Kapısı)" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
             <TextBox x:Name="LocationBox" 
                      Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"
                      Style="{StaticResource ModernTextBox}"
@@ -95,3 +95,4 @@
         </StackPanel>
     </Border>
 </Window>
+

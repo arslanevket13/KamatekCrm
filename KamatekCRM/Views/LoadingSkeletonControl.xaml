@@ -5,10 +5,10 @@
     <UserControl.Resources>
         <!-- Shimmer Brush -->
         <LinearGradientBrush x:Key="ShimmerBrush" StartPoint="0,0.5" EndPoint="1,0.5">
-            <GradientStop Color="#E8E8E8" Offset="0"/>
-            <GradientStop Color="#F8F8F8" Offset="0.4"/>
-            <GradientStop Color="#F8F8F8" Offset="0.6"/>
-            <GradientStop Color="#E8E8E8" Offset="1"/>
+            <GradientStop Color="{DynamicResource BorderDefaultColorValue}" Offset="0"/>
+            <GradientStop Color="{DynamicResource SurfaceCardColorValue}" Offset="0.4"/>
+            <GradientStop Color="{DynamicResource SurfaceCardColorValue}" Offset="0.6"/>
+            <GradientStop Color="{DynamicResource BorderDefaultColorValue}" Offset="1"/>
 
             <LinearGradientBrush.RelativeTransform>
                 <TranslateTransform x:Name="ShimmerTransform" X="-1"/>

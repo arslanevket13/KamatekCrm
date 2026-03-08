@@ -12,7 +12,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </UserControl.Resources>
 
-    <Grid Background="{DynamicResource ThemeBackground}">
+    <Grid Background="{DynamicResource ApplicationBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -50,7 +50,7 @@
                         <Button Content="📋 Yeni Kayıt" 
                                 Command="{Binding CreateNewRepairCommand}"
                                 Style="{StaticResource ModernButton}"
-                                Background="{DynamicResource ThemePrimary}" Foreground="White"
+                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                 Height="36" Padding="16,0" Margin="0,0,8,0"/>
                         <Button Content="🔄" 
                                 Command="{Binding RefreshCommand}"
@@ -78,7 +78,7 @@
                             Padding="16,12" Margin="4,0"
                             BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="⏳ BEKLEYEN" FontSize="10" FontWeight="SemiBold" Foreground="#F57F17" Margin="0,0,0,4"/>
+                            <TextBlock Text="⏳ BEKLEYEN" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFgDark}" Margin="0,0,0,4"/>
                             <TextBlock Text="{Binding PendingCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ThemeForeground}"/>
                         </StackPanel>
                     </Border>
@@ -87,7 +87,7 @@
                             Padding="16,12" Margin="4,0"
                             BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="🔧 TAMİRDE" FontSize="10" FontWeight="SemiBold" Foreground="#2196F3" Margin="0,0,0,4"/>
+                            <TextBlock Text="🔧 TAMİRDE" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFg}" Margin="0,0,0,4"/>
                             <TextBlock Text="{Binding InProgressCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ThemeForeground}"/>
                         </StackPanel>
                     </Border>
@@ -96,7 +96,7 @@
                             Padding="16,12" Margin="8,0,0,0"
                             BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="✅ TESLİM" FontSize="10" FontWeight="SemiBold" Foreground="#4CAF50" Margin="0,0,0,4"/>
+                            <TextBlock Text="✅ TESLİM" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" Margin="0,0,0,4"/>
                             <TextBlock Text="{Binding DeliveredCount}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ThemeForeground}"/>
                         </StackPanel>
                     </Border>
@@ -159,7 +159,7 @@
                                         <RadioButton.Template>
                                             <ControlTemplate TargetType="RadioButton">
                                                 <Border x:Name="ChipBorder" 
-                                                        Background="{DynamicResource ThemeBackground}" 
+                                                        Background="{DynamicResource ApplicationBackgroundBrush}" 
                                                         CornerRadius="14" Padding="10,5"
                                                         BorderBrush="{DynamicResource ThemeBorder}" 
                                                         BorderThickness="1">
@@ -377,41 +377,41 @@
                                 <WrapPanel>
                                     <Button Content="🔍 Arıza Tespiti" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
-                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource ThemeBackground}"
+                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.Diagnosing}"/>
                                     <Button Content="📦 Parça Bekliyor" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
-                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource ThemeBackground}"
+                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.WaitingForParts}"/>
                                     <Button Content="🏭 Fabrikaya Gönder" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
-                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource ThemeBackground}"
+                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.SentToFactory}"/>
                                     <Button Content="🔧 Tamire Başla" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
-                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource ThemeBackground}"
+                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.InRepair}"/>
                                     <Button Content="✔️ Test" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
-                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource ThemeBackground}"
+                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.Testing}"/>
                                     <Button Content="✅ Teslimata Hazır" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
-                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource ThemeBackground}"
+                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.ReadyForPickup}"/>
                                     <Button Content="🚗 Teslim Edildi" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
-                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource ThemeBackground}"
+                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding CompleteJobCommand}"/>
                                     <Button Content="❌ İade/Hurda" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
-                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource ThemeBackground}"
+                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.Unrepairable}"/>
                                 </WrapPanel>
@@ -476,7 +476,7 @@
                                 <ItemsControl ItemsSource="{Binding CurrentJobItems}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="{DynamicResource ThemeBackground}" CornerRadius="6" 
+                                            <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" 
                                                     Padding="10,8" Margin="0,0,0,4">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
@@ -508,7 +508,7 @@
                                                             Command="{Binding DataContext.RemoveItemFromJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                             CommandParameter="{Binding}"
                                                             Background="Transparent" BorderThickness="0"
-                                                            Foreground="#F44336" Cursor="Hand" FontSize="12"
+                                                            Foreground="{DynamicResource ThemeError}" Cursor="Hand" FontSize="12"
                                                             Width="28" Height="28" Padding="0"/>
                                                 </Grid>
                                             </Border>
@@ -517,7 +517,7 @@
                                 </ItemsControl>
 
                                 <!-- Cost Summary -->
-                                <Border Background="{DynamicResource ThemeBackground}" CornerRadius="8" Padding="12" Margin="0,8,0,0">
+                                <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="12" Margin="0,8,0,0">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition/>
@@ -604,3 +604,5 @@
         </Grid>
     </Grid>
 </UserControl>
+
+

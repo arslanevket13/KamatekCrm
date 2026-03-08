@@ -4,6 +4,8 @@
 - **FIX**: `RepairListViewModel`'deki durum renkleri `SolidColorBrush` hatasını düzeltmek için `Brush` döndürecek şekilde refactored edildi (Görünmez/Tutarsız renk problemi çözüldü).
 - **NEW**: Hızlı Kabul (`FaultTicketWindow`) sistemine fotoğraf ekleme/silme (`TempPhotoPaths`) entegre edildi ve dosyaların yerel klasöre kopyalanması sağlandı.
 - **NEW**: Hızlı Kabul ekranındaki cihaz tipi için "Diğer" kategorisi ve serbest metin girişi özelliği (`ComboBox IsEditable="True"`) eklendi.
+- **NEW**: Tüm arayüzlerdeki (Login, RepairList, FaultTicket) hardcoded hex renkler `DynamicResource` (`GlassBrush`, `TextOnPrimaryBrush`, `ThemeSuccess` vb.) ile değiştirilerek tasarım bütünlüğü ve Dark Mode desteği mükemmelleştirildi.
+- **FIX**: `ProductViewModel` içinde `StockTransferView` açılırken DI uyumluluğu sağlandı (Parametresiz constructor bağımlılığı kaldırıldı).
 - **ARCHITECTURE**: `RepairListViewModel` ve `FaultTicketViewModel` tamamen DI, async ve `IToastService` kullanacak şekilde yeniden yazıldı.
 - **ARCHITECTURE**: Senkron veritabanı sorguları `async/await` yapısına çevrildi, `AppDbContext` direct usage kaldırıldı. Zaman işlemlerinde `DateTime.UtcNow` standardı getirildi.
 - **NEW**: `RepairListView.xaml` premium tasarım — Status filter çipleri, KPI header kartları, GridSplitter, detaylı workflow haritası, cihaz fotoğraf galerisi ve maliyet özeti (ThemeColors kullanılarak).

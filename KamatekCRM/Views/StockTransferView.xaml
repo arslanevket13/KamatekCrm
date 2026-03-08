@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="Stok Transferi" Height="500" Width="600"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource BackgroundColor}">
+        Background="{DynamicResource SurfacePageBrush}">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -24,7 +24,7 @@
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="Depolar Arası Stok Transferi" 
                    FontSize="24" FontWeight="Bold"
-                   Foreground="{StaticResource TextPrimaryColor}"
+                   Foreground="{DynamicResource TextHeadingBrush}"
                    Margin="0,0,0,20"/>
 
         <!-- Content -->
@@ -48,7 +48,7 @@
 
                     <TextBlock Grid.Column="1" Text="➜" 
                                FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Bottom" 
-                               Margin="0,0,0,10" Foreground="{StaticResource PrimaryColor}"/>
+                               Margin="0,0,0,10" Foreground="{DynamicResource ThemePrimary}"/>
 
                     <StackPanel Grid.Column="2">
                         <Label Content="Hedef Depo" Style="{StaticResource ModernLabel}"/>
@@ -83,9 +83,9 @@
 
                     <StackPanel Grid.Column="1" Margin="10,0,0,0">
                         <Label Content="Mevcut Stok (Kaynak)" Style="{StaticResource ModernLabel}"/>
-                        <Border Background="#f0f0f0" CornerRadius="4" Padding="10,8">
+                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="10,8">
                             <TextBlock Text="{Binding AvailableStock, StringFormat='{}{0} adet'}" 
-                                       FontWeight="Bold" Foreground="{StaticResource TextSecondaryColor}"/>
+                                       FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         </Border>
                     </StackPanel>
                 </Grid>
@@ -98,10 +98,10 @@
                            FontWeight="Medium">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="Red"/>
+                            <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsActionSuccessful}" Value="True">
-                                    <Setter Property="Foreground" Value="Green"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -119,3 +119,4 @@
         </StackPanel>
     </Grid>
 </Window>
+

@@ -4,7 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             Background="{DynamicResource ThemeBackground}"
+             Background="{DynamicResource ApplicationBackgroundBrush}"
              d:DesignHeight="600" d:DesignWidth="900">
 
     <Grid Margin="20">
@@ -21,9 +21,9 @@
             <TextBlock Text="🚜" FontSize="28" VerticalAlignment="Center" Margin="0,0,12,0"/>
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="SAHA OPERASYON &amp; MONTAJ LİSTESİ" 
-                           FontSize="22" FontWeight="Bold" Foreground="#2E7D32"/>
+                           FontSize="22" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}"/>
                 <TextBlock Text="Kurulum, bakım ve keşif işleri" 
-                           FontSize="12" Foreground="{StaticResource TextSecondaryColor}"/>
+                           FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
             </StackPanel>
             
             <Button Content="🔄 Yenile" 
@@ -34,12 +34,12 @@
         </StackPanel>
 
         <!-- ===== KATEGORİ TOGGLE BUTONLARI ===== -->
-        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16,12" Margin="0,0,0,12">
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,12" Margin="0,0,0,12">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="6" Opacity="0.04" ShadowDepth="1"/>
             </Border.Effect>
             <StackPanel>
-                <TextBlock Text="Kategori Filtresi" FontSize="11" Foreground="#888" Margin="0,0,0,8"/>
+                <TextBlock Text="Kategori Filtresi" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
                 <ItemsControl ItemsSource="{Binding CategoryFilters}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -71,7 +71,7 @@
 
                 <!-- Başlangıç Tarihi -->
                 <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                    <TextBlock Text="Başlangıç" FontSize="11" Foreground="#888" Margin="0,0,0,4"/>
+                    <TextBlock Text="Başlangıç" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
                     <DatePicker SelectedDate="{Binding StartDate}"
                                 Width="130"
                                 Style="{StaticResource ModernDatePicker}"/>
@@ -79,14 +79,14 @@
 
                 <!-- Bitiş Tarihi -->
                 <StackPanel Grid.Column="1" Margin="0,0,20,0">
-                    <TextBlock Text="Bitiş" FontSize="11" Foreground="#888" Margin="0,0,0,4"/>
+                    <TextBlock Text="Bitiş" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
                     <DatePicker SelectedDate="{Binding EndDate}"
                                 Width="130"
                                 Style="{StaticResource ModernDatePicker}"/>
                 </StackPanel>
 
                 <!-- Arama (Adres) -->
-                <Border Grid.Column="2" Background="#F5F5F5" CornerRadius="6" Padding="10,0" 
+                <Border Grid.Column="2" Background="{DynamicResource SurfacePageBrush}" CornerRadius="6" Padding="10,0" 
                         VerticalAlignment="Bottom" Height="34" Margin="0,0,12,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -94,7 +94,7 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="🔍" FontSize="14" VerticalAlignment="Center" 
-                                   Foreground="#999" Margin="0,0,8,0"/>
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,8,0"/>
                         <TextBox Grid.Column="1" 
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                  BorderThickness="0"
@@ -113,7 +113,7 @@
         </Border>
 
         <!-- ===== DATA GRID ===== -->
-        <Border Grid.Row="3" Background="White" CornerRadius="8" Padding="0">
+        <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="0">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="10" Opacity="0.08" ShadowDepth="2"/>
             </Border.Effect>
@@ -126,7 +126,7 @@
 
                 <DataGrid.ColumnHeaderStyle>
                     <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource ModernDataGridColumnHeader}">
-                        <Setter Property="Background" Value="#2E7D32"/>
+                        <Setter Property="Background" Value="{DynamicResource ThemeSuccess}"/>
                     </Style>
                 </DataGrid.ColumnHeaderStyle>
 
@@ -135,10 +135,10 @@
                         <Setter Property="Cursor" Value="Hand"/>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#F5F5F5"/>
+                                <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="#E8F5E9"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeSuccessLight}"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
@@ -155,11 +155,11 @@
                     <DataGridTemplateColumn Header="İş No" Width="90">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border Background="#E8F5E9" CornerRadius="4" Padding="8,4"
+                                <Border Background="{DynamicResource ThemeSuccessLight}" CornerRadius="4" Padding="8,4"
                                         HorizontalAlignment="Left" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding JobNo}" 
                                                FontWeight="Bold" FontSize="11"
-                                               Foreground="#2E7D32"/>
+                                               Foreground="{DynamicResource ThemeSuccess}"/>
                                 </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -186,7 +186,7 @@
                                 <StackPanel VerticalAlignment="Center" Margin="8,0">
                                     <TextBlock Text="{Binding CustomerName}" FontWeight="SemiBold"/>
                                     <TextBlock Text="{Binding LocationDisplay}" 
-                                               FontSize="11" Foreground="#888"
+                                               FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -202,10 +202,10 @@
                                            Margin="8,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#333"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ScheduledDate}" Value="{x:Null}">
-                                                    <Setter Property="Foreground" Value="#FF9800"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource ThemeWarning}"/>
                                                     <Setter Property="FontStyle" Value="Italic"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -221,7 +221,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
-                                    <Border Background="#E3F2FD" CornerRadius="12" Width="24" Height="24" Margin="0,0,6,0">
+                                    <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="12" Width="24" Height="24" Margin="0,0,6,0">
                                         <TextBlock Text="👤" FontSize="12" 
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
@@ -272,7 +272,7 @@
         </Border>
 
         <!-- ===== FOOTER ===== -->
-        <Border Grid.Row="4" Background="White" CornerRadius="6" Padding="16,10" Margin="0,12,0,0">
+        <Border Grid.Row="4" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="6" Padding="16,10" Margin="0,12,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -280,11 +280,12 @@
                 </Grid.ColumnDefinitions>
                 
                 <TextBlock VerticalAlignment="Center">
-                    <Run Text="Toplam:" Foreground="#888"/>
-                    <Run Text="{Binding TotalCount, Mode=OneWay}" FontWeight="Bold" Foreground="#2E7D32"/>
-                    <Run Text="saha işi" Foreground="#888"/>
+                    <Run Text="Toplam:" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <Run Text="{Binding TotalCount, Mode=OneWay}" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}"/>
+                    <Run Text="saha işi" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                 </TextBlock>
             </Grid>
         </Border>
     </Grid>
 </UserControl>
+

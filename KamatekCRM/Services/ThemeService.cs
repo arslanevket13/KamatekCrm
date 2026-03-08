@@ -5,7 +5,7 @@ using Wpf.Ui.Appearance;
 namespace KamatekCrm.Services
 {
     /// <summary>
-    /// Tema yönetim servisi - WPF-UI entegrasyonlu basit versiyon
+    /// Tema yönetim servisi - Aydınlık/Karanlık tema desteği
     /// </summary>
     public static class ThemeService
     {

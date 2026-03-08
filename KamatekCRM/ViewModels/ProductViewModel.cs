@@ -446,9 +446,8 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedProduct == null) return;
 
-            var window = new Views.StockTransferView();
             var vm = new StockTransferViewModel(_inventoryDomainService);
-            window.DataContext = vm;
+            var window = new Views.StockTransferView(vm);
 
             // ViewModel'deki SelectedProduct'ı set et
             vm.SelectedProduct = SelectedProduct;

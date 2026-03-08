@@ -17,8 +17,8 @@
         <!-- Header -->
         <Border Grid.Row="0" Margin="0,0,0,20">
             <StackPanel>
-                <TextBlock Text="⚙️ AYARLAR" FontSize="26" FontWeight="Bold" Foreground="#333"/>
-                <TextBlock Text="Uygulama yapılandırması ve veritabanı yönetimi" FontSize="14" Foreground="#777"/>
+                <TextBlock Text="⚙️ AYARLAR" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                <TextBlock Text="Uygulama yapılandırması ve veritabanı yönetimi" FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
             </StackPanel>
         </Border>
 
@@ -26,8 +26,8 @@
         <ScrollViewer Grid.Row="1">
             <WrapPanel>
                 <!-- Backup Card -->
-                <Border Width="300" Margin="0,0,20,20" Background="White" CornerRadius="8"
-                        BorderBrush="#E0E0E0" BorderThickness="1" Padding="15">
+                <Border Width="300" Margin="0,0,20,20" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8"
+                        BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Padding="15">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="10" Direction="270" ShadowDepth="2" Opacity="0.1"/>
                     </Border.Effect>
@@ -38,12 +38,12 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Background="#E8F5E9" CornerRadius="20" Width="40" Height="40" Margin="0,0,10,0">
+                            <Border Background="{DynamicResource StatusSuccessBg}" CornerRadius="20" Width="40" Height="40" Margin="0,0,10,0">
                                 <TextBlock Text="💾" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="Veritabanı &amp; Yedekleme" FontWeight="Bold" FontSize="14"/>
-                                <TextBlock Text="Veri güvenliği" FontSize="11" Foreground="Gray"/>
+                                <TextBlock Text="Veri güvenliği" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                             </StackPanel>
                         </Grid>
 
@@ -51,14 +51,14 @@
 
                         <!-- Info -->
                         <StackPanel Margin="0,0,0,15">
-                            <TextBlock Text="SON YEDEKLEME" FontSize="10" FontWeight="Bold" Foreground="#757575"/>
+                            <TextBlock Text="SON YEDEKLEME" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                             <TextBlock Text="{Binding LastBackupText}" FontSize="16" FontWeight="SemiBold" Margin="0,2,0,0"/>
                         </StackPanel>
 
                         <!-- Backup Action -->
                         <Button Content="💾 ŞİMDİ YEDEK AL" 
                                 Command="{Binding TakeBackupCommand}"
-                                Background="#4CAF50" Foreground="White"
+                                Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                 FontWeight="Bold" Padding="15,10"
                                 BorderThickness="0" Cursor="Hand" Margin="0,0,0,10">
                             <Button.Style>
@@ -76,7 +76,7 @@
                         <!-- Restore Action -->
                         <Button Content="📂 YEDEKTEN YÜKLE" 
                                 Command="{Binding RestoreBackupCommand}"
-                                Background="#FF9800" Foreground="White"
+                                Background="{DynamicResource ThemeWarning}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                 FontWeight="Bold" Padding="15,10"
                                 BorderThickness="0" Cursor="Hand">
                             <Button.Style>
@@ -92,20 +92,21 @@
                         </Button>
 
                         <TextBlock Text="* Uygulama kapanırken otomatik yedek alınır." 
-                                   FontSize="10" Foreground="#9E9E9E" Margin="0,10,0,0" 
+                                   FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,10,0,0" 
                                    TextWrapping="Wrap" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
                 
                 <!-- Placeholder for future settings -->
-                <Border Width="300" Margin="0,0,20,20" Background="White" CornerRadius="8"
-                        BorderBrush="#E0E0E0" BorderThickness="1" Padding="15" Opacity="0.5">
+                <Border Width="300" Margin="0,0,20,20" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8"
+                        BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Padding="15" Opacity="0.5">
                     <StackPanel>
                         <TextBlock Text="👤 Kullanıcı Ayarları" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
-                        <TextBlock Text="Yakında eklenecek..." Foreground="Gray"/>
+                        <TextBlock Text="Yakında eklenecek..." Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
                 </Border>
             </WrapPanel>
         </ScrollViewer>
     </Grid>
 </UserControl>
+

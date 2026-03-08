@@ -14,7 +14,7 @@
         MaxWidth="1000"
         MaxHeight="800"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource BackgroundColor}">
+        Background="{DynamicResource SurfacePageBrush}">
 
     <Window.Resources>
         <!-- Boolean to Visibility Converter -->
@@ -471,14 +471,14 @@
             <!-- Header -->
             <TextBlock Grid.Row="0" Text="Yeni Stok Kartı Oluştur" 
                        FontSize="28" FontWeight="Bold"
-                       Foreground="{StaticResource TextPrimaryColor}"
+                       Foreground="{DynamicResource TextHeadingBrush}"
                        Margin="0,0,0,20"/>
 
             <!-- Section 1: Identity -->
             <Border Grid.Row="1" Style="{StaticResource CardPanel}" Margin="0,0,0,15" Padding="15">
                 <StackPanel>
                     <TextBlock Text="Ürün Kimliği" FontSize="16" FontWeight="SemiBold" 
-                               Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,15"/>
+                               Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,15"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
@@ -538,7 +538,7 @@
             <Border Grid.Row="2" Style="{StaticResource CardPanel}" Margin="0,0,0,15" Padding="15">
                 <StackPanel>
                     <TextBlock Text="Finansal Bilgiler" FontSize="16" FontWeight="SemiBold" 
-                               Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,15"/>
+                               Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,15"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
@@ -604,7 +604,7 @@
                             <TextBox Text="{Binding CurrentTotalStock, Mode=OneWay}" 
                                      Style="{StaticResource ModernTextBox}"
                                      IsReadOnly="True"
-                                     Background="#F5F5F5"
+                                     Background="{DynamicResource SurfacePageBrush}"
                                      ToolTip="Toplam mevcut stok miktarı"/>
                         </StackPanel>
 
@@ -624,7 +624,7 @@
             <Border Grid.Row="3" Style="{StaticResource CardPanel}" Margin="0,0,0,15" Padding="15">
                 <StackPanel>
                     <TextBlock Text="Teknik Özellikler" FontSize="16" FontWeight="SemiBold" 
-                               Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,15"/>
+                               Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,15"/>
                     
                     <!-- Dynamic Content based on Category -->
                     <ContentControl Content="{Binding CurrentSpecs}"/>

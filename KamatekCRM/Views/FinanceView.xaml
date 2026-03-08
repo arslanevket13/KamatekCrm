@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             Background="{DynamicResource ThemeBackground}">
+             Background="{DynamicResource ApplicationBackgroundBrush}">
 
     <UserControl.Resources>
         <!-- Kart Stili -->
@@ -22,13 +22,13 @@
         <Style x:Key="BigAmount" TargetType="TextBlock">
             <Setter Property="FontSize" Value="28"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
         </Style>
 
         <!-- Kart Başlığı -->
         <Style x:Key="CardLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#B0BEC5"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
             <Setter Property="Margin" Value="0,0,0,8"/>
         </Style>
     </UserControl.Resources>
@@ -52,35 +52,35 @@
                 <StackPanel Orientation="Horizontal">
                     <ui:SymbolIcon Symbol="Money24" FontSize="28" Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,12,0"/>
                     <TextBlock Text="KASA / FİNANS" 
-                               FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                               FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                 </StackPanel>
                 <TextBlock Text="Günlük gelir-gider takibi ve kasa raporu" 
-                           FontSize="13" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,4,0,0"/>
+                           FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
             </StackPanel>
 
             <!-- Tarih Kontrolleri -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Content="◀" Command="{Binding PreviousDayCommand}"
                         Width="32" Height="32" FontSize="14"
-                        Background="#2a3f54" Foreground="White" BorderThickness="0"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
                         Margin="0,0,4,0" Cursor="Hand"/>
                 
                 <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}" 
                             Width="140" VerticalAlignment="Center"
-                            Background="#1a2a3a" Foreground="White" BorderThickness="0"/>
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"/>
                 
                 <Button Content="▶" Command="{Binding NextDayCommand}"
                         Width="32" Height="32" FontSize="14"
-                        Background="#2a3f54" Foreground="White" BorderThickness="0"
+                        Background="{DynamicResource ThemePrimaryDark}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
                         Margin="4,0,12,0" Cursor="Hand"/>
 
                 <Button Content="📅 Bugün" Command="{Binding GoToTodayCommand}"
-                        Padding="12,6" Background="#1976D2" Foreground="White"
+                        Padding="12,6" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                         BorderThickness="0" Cursor="Hand" Margin="0,0,12,0"/>
 
                 <CheckBox Content="Aylık Görünüm" 
                           IsChecked="{Binding ShowMonthly}" 
-                          Foreground="White" VerticalAlignment="Center"/>
+                          Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
             </StackPanel>
         </Grid>
 
@@ -88,48 +88,48 @@
         <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,16">
             
             <!-- Nakit Gelir -->
-            <Border Style="{StaticResource SummaryCard}" Background="#1B5E20">
+            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource ThemeSuccessDark}">
                 <StackPanel>
                     <TextBlock Text="NAKİT GELİR" Style="{StaticResource CardLabel}"/>
                     <TextBlock Text="{Binding CashIncome, StringFormat='₺{0:N2}'}" 
                                Style="{StaticResource BigAmount}"/>
-                    <TextBlock Text="💵 Nakit Ödemeler" Foreground="#81C784" FontSize="11" Margin="0,8,0,0"/>
+                    <TextBlock Text="💵 Nakit Ödemeler" Foreground="{DynamicResource ThemeSuccessLight}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Kredi Kartı Gelir -->
-            <Border Style="{StaticResource SummaryCard}" Background="#0D47A1">
+            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource ThemePrimaryDark}">
                 <StackPanel>
                     <TextBlock Text="KREDİ KARTI" Style="{StaticResource CardLabel}"/>
                     <TextBlock Text="{Binding CardIncome, StringFormat='₺{0:N2}'}" 
                                Style="{StaticResource BigAmount}"/>
-                    <TextBlock Text="💳 Kart Ödemeleri" Foreground="#64B5F6" FontSize="11" Margin="0,8,0,0"/>
+                    <TextBlock Text="💳 Kart Ödemeleri" Foreground="{DynamicResource ThemePrimaryLight}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Giderler -->
-            <Border Style="{StaticResource SummaryCard}" Background="#B71C1C">
+            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource ThemeErrorDark}">
                 <StackPanel>
                     <TextBlock Text="GİDERLER" Style="{StaticResource CardLabel}"/>
                     <TextBlock Text="{Binding TotalExpense, StringFormat='₺{0:N2}'}" 
                                Style="{StaticResource BigAmount}"/>
-                    <TextBlock Text="📤 Masraflar" Foreground="#EF9A9A" FontSize="11" Margin="0,8,0,0"/>
+                    <TextBlock Text="📤 Masraflar" Foreground="{DynamicResource ThemeErrorLight}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Net Kasa -->
-            <Border Style="{StaticResource SummaryCard}" Background="#4A148C">
+            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource ThemeInfoDark}">
                 <StackPanel>
                     <TextBlock Text="NET KASA" Style="{StaticResource CardLabel}"/>
                     <TextBlock Text="{Binding NetBalanceDisplay}" 
                                Style="{StaticResource BigAmount}"/>
-                    <TextBlock Text="📊 Gün Sonu Bakiye" Foreground="#CE93D8" FontSize="11" Margin="0,8,0,0"/>
+                    <TextBlock Text="📊 Gün Sonu Bakiye" Foreground="{DynamicResource ThemeInfoLight}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
         </UniformGrid>
 
         <!-- GİDER EKLEME BÖLÜMÜ -->
-        <Border Grid.Row="2" Background="#1a2a3a" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20" Margin="0,0,0,16">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -140,24 +140,24 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Text="➖ GİDER EKLE:" 
-                           FontSize="14" FontWeight="SemiBold" Foreground="White"
+                           FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                            VerticalAlignment="Center" Margin="0,0,16,0"/>
 
                 <StackPanel Grid.Column="1" Margin="0,0,12,0">
-                    <TextBlock Text="Tutar (₺)" Foreground="#78909C" FontSize="11" Margin="0,0,0,4"/>
+                    <TextBlock Text="Tutar (₺)" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding NewExpenseAmount, UpdateSourceTrigger=PropertyChanged}"
                              Padding="10,8" FontSize="14"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Margin="0,0,12,0">
-                    <TextBlock Text="Kategori" Foreground="#78909C" FontSize="11" Margin="0,0,0,4"/>
+                    <TextBlock Text="Kategori" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
                     <ComboBox ItemsSource="{Binding ExpenseCategories}"
                               SelectedItem="{Binding NewExpenseCategory}"
                               Padding="10,8" FontSize="12"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Margin="0,0,12,0">
-                    <TextBlock Text="Açıklama" Foreground="#78909C" FontSize="11" Margin="0,0,0,4"/>
+                    <TextBlock Text="Açıklama" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding NewExpenseDescription, UpdateSourceTrigger=PropertyChanged}"
                              Padding="10,8" FontSize="14" 
                              ToolTip="Örn: Elektrik faturası, Malzeme alımı..."/>
@@ -166,7 +166,7 @@
                 <Button Grid.Column="4" Content="💾 KAYDET" 
                         Command="{Binding AddExpenseCommand}"
                         Padding="20,12" FontSize="14" FontWeight="Bold"
-                        Background="#E65100" Foreground="White" BorderThickness="0"
+                        Background="{DynamicResource ThemeWarning}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
                         VerticalAlignment="Bottom" Cursor="Hand">
                     <Button.Style>
                         <Style TargetType="Button">
@@ -182,7 +182,7 @@
         </Border>
 
         <!-- İŞLEM LİSTESİ -->
-        <Border Grid.Row="3" Background="#1a2a3a" CornerRadius="12" Padding="16">
+        <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="16">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -197,18 +197,18 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Text="📋 KASA HAREKETLERİ" 
-                               FontSize="14" FontWeight="SemiBold" Foreground="White"
+                               FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                VerticalAlignment="Center"/>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
                                  Width="200" Padding="10,8" Margin="0,0,8,0"
-                                 Background="#0d1821" Foreground="White" BorderBrush="#3a5a7c">
+                                 Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}">
                             <TextBox.Style>
                                 <Style TargetType="TextBox">
                                     <Style.Triggers>
                                         <Trigger Property="Text" Value="">
-                                            <Setter Property="Background" Value="#0d1821"/>
+                                            <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
@@ -217,7 +217,7 @@
                         
                         <Button Content="🔄" Command="{Binding RefreshCommand}"
                                 Width="36" Height="36" FontSize="16"
-                                Background="#2a3f54" Foreground="White" BorderThickness="0"
+                                Background="{DynamicResource ThemePrimaryDark}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
                                 ToolTip="Yenile" Cursor="Hand"/>
                     </StackPanel>
                 </Grid>
@@ -228,11 +228,11 @@
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           Background="Transparent"
-                          RowBackground="#1e3a4f"
-                          AlternatingRowBackground="#162a3a"
+                          RowBackground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                          AlternatingRowBackground="{DynamicResource SurfacePageBrush}"
                           BorderThickness="0"
                           GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="#2a4a5f"
+                          HorizontalGridLinesBrush="{DynamicResource BorderDefaultBrush}"
                           SelectionMode="Single"
                           HeadersVisibility="Column"
                           RowHeight="45"
@@ -240,24 +240,24 @@
 
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#0d1821"/>
-                            <Setter Property="Foreground" Value="#90CAF9"/>
+                            <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimaryLight}"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
                             <Setter Property="Padding" Value="12,10"/>
                             <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="BorderBrush" Value="#2a4a5f"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
                         </Style>
                     </DataGrid.ColumnHeaderStyle>
 
                     <DataGrid.CellStyle>
                         <Style TargetType="DataGridCell">
-                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <Setter Property="BorderThickness" Value="0"/>
                             <Setter Property="Padding" Value="12,0"/>
                             <Setter Property="VerticalAlignment" Value="Center"/>
                             <Style.Triggers>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#2196F3"/>
+                                    <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -275,15 +275,15 @@
                                             <Style TargetType="Border">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsIncome}" Value="True">
-                                                        <Setter Property="Background" Value="#1B5E20"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeSuccessDark}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding IsExpense}" Value="True">
-                                                        <Setter Property="Background" Value="#B71C1C"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeErrorDark}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock Foreground="White" FontSize="11" FontWeight="SemiBold">
+                                        <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="11" FontWeight="SemiBold">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Style.Triggers>
@@ -329,10 +329,10 @@
                                                 <Setter Property="Text" Value="{Binding Amount, StringFormat='₺{0:N2}'}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsIncome}" Value="True">
-                                                        <Setter Property="Foreground" Value="#4CAF50"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding IsExpense}" Value="True">
-                                                        <Setter Property="Foreground" Value="#F44336"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -349,7 +349,7 @@
                                             Command="{Binding DataContext.DeleteTransactionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Background="Transparent" BorderThickness="0"
-                                            Foreground="#F44336" FontSize="14" Cursor="Hand"
+                                            Foreground="{DynamicResource ThemeError}" FontSize="14" Cursor="Hand"
                                             ToolTip="Sil (Sadece Admin)"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -360,3 +360,5 @@
         </Border>
     </Grid>
 </UserControl>
+
+

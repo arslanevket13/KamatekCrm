@@ -4,7 +4,8 @@
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
              xmlns:views="clr-namespace:KamatekCrm.Views"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             Background="{DynamicResource ThemeBackground}"
+             xmlns:converters="clr-namespace:KamatekCrm.Converters"
+             Background="{DynamicResource SurfacePageBrush}"
              Focusable="True">
     
     <!-- Keyboard Shortcuts -->
@@ -16,6 +17,9 @@
     </UserControl.InputBindings>
     
     <UserControl.Resources>
+        <!-- Converters -->
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:IntToVisibilityConverter x:Key="IntToVis"/>
         <!-- Vector Icons -->
         <Geometry x:Key="HomeIcon">M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z</Geometry>
         <Geometry x:Key="PeopleIcon">M16,11.78C20.41,12.33 21,16.22 21,18V20H23V18C23,16.22 22.41,13.78 20,12.74C19.58,13.21 19.03,13.57 18.4,13.79C18.16,14.08 17.87,14.32 17.53,14.5C17.15,14.71 16.73,14.83 16.29,14.87C16.19,14.89 16.09,14.9 16,14.89C15.91,14.9 15.81,14.89 15.71,14.87C15.27,14.83 14.85,14.71 14.47,14.5C14.13,14.32 13.84,14.08 13.6,13.79C12.97,13.57 12.42,13.21 12,12.74C11.96,12.75 11.93,14.83 11.93,14.83L11.92,14.85C11.86,14.87 11.79,14.89 11.73,14.89C11.67,14.89 11.6,14.87 11.54,14.85C11.5,14.83 11.45,14.8 11.41,14.77C11.37,14.74 11.34,14.7 11.31,14.66C11.28,14.62 11.26,14.58 11.24,14.53C11.22,14.49 11.21,14.44 11.2,14.4C11.19,14.35 11.18,14.3 11.18,14.25C11.18,14.2 11.19,14.15 11.2,14.1C11.21,14.05 11.23,14 11.25,13.96C11.27,13.92 11.3,13.88 11.33,13.85C11.36,13.82 11.39,13.79 11.43,13.77C11.47,13.75 11.51,13.73 11.55,13.72C11.59,13.71 11.63,13.7 11.67,13.7C11.71,13.7 11.75,13.71 11.79,13.72C11.83,13.73 11.87,13.75 11.9,13.77C12.18,13.97 12.52,14.09 12.88,14.1C12.91,14.1 12.94,14.1 12.97,14.1C13,14.1 13.03,14.1 13.06,14.1C13.09,14.1 13.12,14.1 13.15,14.1C13.18,14.1 13.21,14.1 13.24,14.1C13.27,14.1 13.3,14.1 13.33,14.1C13.36,14.1 13.39,14.1 13.42,14.1C13.45,14.1 13.47,14.1 13.5,14.1C13.53,14.1 13.56,14.1 13.59,14.1H13.6C13.63,14.1 13.66,14.1 13.68,14.09C13.71,14.08 13.74,14.07 13.77,14.05C13.79,14.03 13.82,14.01 13.84,14C13.86,14 13.88,13.95 13.92,13.89C13.96,13.83 14,13.75 14.04,13.67C14.08,13.59 14.12,13.5 14.16,13.41C14.2,13.32 14.24,13.24 14.28,13.16C14.32,13.08 14.35,13 14.38,12.94C14.4,12.9 14.41,12.88 14.42,12.87C14.58,12.67 14.83,12.56 15.12,12.56C15.33,12.56 15.53,12.62 15.71,12.72C15.89,12.82 16,12.95 16,12.95V11.78M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4Z</Geometry>
@@ -54,14 +58,14 @@
         
         <!-- Glass Effect Background -->
         <LinearGradientBrush x:Key="GlassGradient" StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#10FFFFFF" Offset="0"/>
-            <GradientStop Color="#08FFFFFF" Offset="1"/>
+            <GradientStop Color="{DynamicResource GlassOverlayColorValue}" Offset="0"/>
+            <GradientStop Color="{DynamicResource GlassBrushLowColorValue}" Offset="1"/>
         </LinearGradientBrush>
         
         <!-- NavButton Modern Style with Glass Effect -->
         <Style x:Key="GlassNavButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#C4B5FD"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Height" Value="44"/>
             <Setter Property="Padding" Value="16,0"/>
@@ -82,10 +86,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#1FFFFFF0"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#15FFFFFF"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource BorderSubtleBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -95,15 +99,15 @@
         
         <!-- Accent NavButton -->
         <Style x:Key="GlassAccentNavButton" TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
-            <Setter Property="Background" Value="#6366F1"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
         
         <!-- Icon Button -->
         <Style x:Key="GlassIconButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#A78BFA"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
             <Setter Property="Width" Value="36"/>
             <Setter Property="Height" Value="36"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -116,7 +120,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#1FFFFFF0"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -135,8 +139,8 @@
         <Border Grid.Column="0">
             <Border.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#1E1E2E" Offset="0"/>
-                    <GradientStop Color="#16161E" Offset="1"/>
+                    <GradientStop Color="{DynamicResource SurfaceSidebarColorValue}" Offset="0"/>
+                    <GradientStop Color="{DynamicResource SurfaceCardColorValue}" Offset="1"/>
                 </LinearGradientBrush>
             </Border.Background>
             <Border.Effect>
@@ -154,12 +158,12 @@
                     <Grid>
                         <Grid.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#6366F1" Offset="0"/>
-                                <GradientStop Color="#8B5CF6" Offset="1"/>
+                                <GradientStop Color="{DynamicResource KpiPurpleStartColor}" Offset="0"/>
+                                <GradientStop Color="{DynamicResource KpiPurpleEndColor}" Offset="1"/>
                             </LinearGradientBrush>
                         </Grid.Background>
                         <Grid.Effect>
-                            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="#6366F1" Opacity="0.3"/>
+                            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Color="{DynamicResource ThemePrimaryColor}" Opacity="0.3"/>
                         </Grid.Effect>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -174,11 +178,11 @@
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="bg" Background="Transparent" CornerRadius="8">
-                                        <Path Data="{StaticResource MenuIcon}" Fill="White" Width="20" Height="20" Stretch="Uniform"/>
+                                        <Path Data="{StaticResource MenuIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="20" Height="20" Stretch="Uniform"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="bg" Property="Background" Value="#20FFFFFF"/>
+                                            <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -188,8 +192,8 @@
                         <!-- Logo -->
                         <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center"
                                     Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="KAMATEK" FontSize="18" FontWeight="Bold" Foreground="White"/>
-                            <TextBlock Text="Teknik Servis" FontSize="10" Foreground="#C4B5FD"/>
+                            <TextBlock Text="KAMATEK" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Teknik Servis" FontSize="10" Foreground="{DynamicResource TextBodyBrush}"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -231,15 +235,15 @@
                         </Button>
 
                         <!-- Separator -->
-                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" BorderBrush="#30FFFFFF"
+                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource GlassBorderBrush}"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="HIZLI ERİŞİM" FontSize="10" FontWeight="SemiBold"
-                                   Foreground="#6B7280" Margin="20,4,20,8"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="20,4,20,8"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
                         <Button Command="{Binding OpenFaultTicketCommand}" Style="{StaticResource GlassAccentNavButton}">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource LightningIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource LightningIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Hızlı Kabul" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
@@ -262,9 +266,9 @@
                         </Button>
 
                         <Button Command="{Binding NavigateToRoutePlanningCommand}" Style="{StaticResource GlassNavButton}"
-                                Background="#D84315">
+                                Background="{DynamicResource ThemeError}">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource MapIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource MapIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Rota Planlama" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
@@ -287,66 +291,66 @@
                         </Button>
 
                         <Button Command="{Binding OpenProjectQuoteCommand}" Style="{StaticResource GlassNavButton}"
-                                Background="#1565C0">
+                                Background="{DynamicResource ThemePrimary}">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource ConstructionIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource ConstructionIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Proje &amp; Teklif" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
                         <Button Command="{Binding OpenDirectSalesCommand}" Style="{StaticResource GlassNavButton}"
-                                Background="#2E7D32">
+                                Background="{DynamicResource ThemeSuccess}">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource CartIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource CartIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Hızlı Satış" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
                         <Button Command="{Binding NavigateToFinanceCommand}" Style="{StaticResource GlassNavButton}"
-                                Background="#E65100"
+                                Background="{DynamicResource ThemeWarning}"
                                 Visibility="{Binding CanViewFinance, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource FinanceIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource FinanceIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Finans" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
                         <Button Command="{Binding NavigateToAnalyticsCommand}" Style="{StaticResource GlassNavButton}"
-                                Background="#9C27B0"
+                                Background="{DynamicResource ThemeInfo}"
                                 Visibility="{Binding CanViewAnalytics, Converter={StaticResource BoolToVis}}">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource AnalyticsIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource AnalyticsIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Analitik" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
                         <Button Command="{Binding NavigateToPurchaseOrdersCommand}" Style="{StaticResource GlassNavButton}"
-                                Background="#00838F">
+                                Background="{DynamicResource ThemeInfo}">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource PackageIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource PackageIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Satın Alma" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
                         <Button Command="{Binding NavigateToSuppliersCommand}" Style="{StaticResource GlassNavButton}"
-                                Background="#8E44AD">
+                                Background="{DynamicResource ThemeInfo}">
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource PackageIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource PackageIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Tedarikçiler" VerticalAlignment="Center" Margin="10,0,0,0"
                                            Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
 
                         <!-- Reports -->
-                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" BorderBrush="#30FFFFFF"
+                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="ZEKA &amp; RAPOR" FontSize="10" FontWeight="SemiBold"
-                                   Foreground="#6B7280" Margin="20,4,20,8"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="20,4,20,8"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
                         <Button Command="{Binding NavigateToFinancialHealthCommand}" Style="{StaticResource GlassNavButton}"
@@ -375,10 +379,10 @@
                         </Button>
 
                         <!-- Admin -->
-                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" BorderBrush="#30FFFFFF"
+                        <Border Margin="16,16,16,8" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}"
                                 Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="YÖNETİM" FontSize="10" FontWeight="SemiBold"
-                                   Foreground="#6B7280" Margin="20,4,20,8"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="20,4,20,8"
                                    Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
 
                         <Button Command="{Binding NavigateToUsersCommand}" Style="{StaticResource GlassNavButton}"
@@ -411,22 +415,22 @@
                 </ScrollViewer>
 
                 <!-- Footer -->
-                <Border Grid.Row="2" Padding="12" Background="#0F0F14">
+                <Border Grid.Row="2" Padding="12" Background="{DynamicResource SurfacePageBrush}">
                     <StackPanel>
                         <!-- User Info -->
-                        <Border Background="#1A1A24" CornerRadius="10" Padding="12" Margin="0,0,0,12"
+                        <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="12" Margin="0,0,0,12"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Background="#6366F1" CornerRadius="20" Width="36" Height="36" Margin="0,0,12,0">
-                                    <Path Data="{StaticResource UserIcon}" Fill="White" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <Border Grid.Column="0" Background="{DynamicResource ThemePrimary}" CornerRadius="20" Width="36" Height="36" Margin="0,0,12,0">
+                                    <Path Data="{StaticResource UserIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding CurrentUserName}" Foreground="White" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding CurrentUserRole}" Foreground="#6B7280" FontSize="10"/>
+                                    <TextBlock Text="{Binding CurrentUserName}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding CurrentUserRole}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="10"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -438,7 +442,7 @@
                                     <Path.Style>
                                         <Style TargetType="Path">
                                             <Setter Property="Data" Value="{StaticResource MoonIcon}"/>
-                                            <Setter Property="Fill" Value="#A78BFA"/>
+                                            <Setter Property="Fill" Value="{DynamicResource ThemePrimaryLight}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsDarkMode}" Value="True">
                                                     <Setter Property="Data" Value="{StaticResource SunIcon}"/>
@@ -451,15 +455,15 @@
 
                             <Button Command="{Binding NavigateToSettingsCommand}" ToolTip="Ayarlar" Style="{StaticResource GlassIconButton}"
                                     Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
-                                <Path Data="{StaticResource SettingsIcon}" Fill="#A78BFA" Width="18" Height="18" Stretch="Uniform"/>
+                                <Path Data="{StaticResource SettingsIcon}" Fill="{DynamicResource ThemePrimaryLight}" Width="18" Height="18" Stretch="Uniform"/>
                             </Button>
 
                             <Button Command="{Binding LogoutCommand}" ToolTip="Çıkış Yap" Style="{StaticResource GlassIconButton}">
-                                <Path Data="{StaticResource LogoutIcon}" Fill="#EF4444" Width="18" Height="18" Stretch="Uniform"/>
+                                <Path Data="{StaticResource LogoutIcon}" Fill="{DynamicResource ThemeError}" Width="18" Height="18" Stretch="Uniform"/>
                             </Button>
                         </UniformGrid>
 
-                        <TextBlock Text="v2.0.0" FontSize="10" Foreground="#4B5563" HorizontalAlignment="Center" Margin="0,12,0,0"
+                        <TextBlock Text="v2.0.0" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,12,0,0"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                     </StackPanel>
                 </Border>
@@ -477,14 +481,14 @@
             <Border Grid.RowSpan="2">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#0F0F14" Offset="0"/>
-                        <GradientStop Color="#1A1A24" Offset="1"/>
+                        <GradientStop Color="{DynamicResource SurfacePageColorValue}" Offset="0"/>
+                        <GradientStop Color="{DynamicResource SurfaceCardColorValue}" Offset="1"/>
                     </LinearGradientBrush>
                 </Border.Background>
             </Border>
             
             <!-- Glass Header Bar -->
-            <Border Grid.Row="0" Padding="20,16" CornerRadius="16" Background="#1A1A24">
+            <Border Grid.Row="0" Padding="20,16" CornerRadius="16" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" MaxWidth="500"/>
@@ -493,7 +497,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Search Box - Glass Style -->
-                    <Border Grid.Column="0" CornerRadius="24" Background="#27272A">
+                    <Border Grid.Column="0" CornerRadius="24" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -501,20 +505,20 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             
-                            <Path Grid.Column="0" Data="{StaticResource SearchIcon}" Fill="#6B7280" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="16,0,12,0"/>
+                            <Path Grid.Column="0" Data="{StaticResource SearchIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="16,0,12,0"/>
                             
                             <TextBox Grid.Column="1" x:Name="GlobalSearchBox"
                                      Text="{Binding SearchViewModel.SearchQuery, UpdateSourceTrigger=PropertyChanged}"
                                      Background="Transparent" BorderThickness="0"
                                      VerticalAlignment="Center" Height="40" FontSize="14" Padding="0,8"
-                                     Foreground="White"/>
+                                     Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                             
                             <Button Grid.Column="2"
                                     Command="{Binding SearchViewModel.ClearCommand}"
                                     Visibility="{Binding SearchViewModel.HasResults, Converter={StaticResource BoolToVis}}"
                                     Background="Transparent" BorderThickness="0"
                                     Width="32" Height="32" Cursor="Hand">
-                                <Path Data="{StaticResource CloseIcon}" Fill="#6B7280" Width="12" Height="12" Stretch="Uniform"/>
+                                <Path Data="{StaticResource CloseIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="12" Height="12" Stretch="Uniform"/>
                             </Button>
                         </Grid>
                     </Border>
@@ -527,18 +531,18 @@
                                     <ControlTemplate TargetType="Button">
                                         <Border x:Name="bg" Background="Transparent" CornerRadius="12" Padding="12">
                                             <Grid>
-                                                <Path Data="{StaticResource BellIcon}" Fill="#9CA3AF" Width="20" Height="20" Stretch="Uniform"/>
-                                                <Border Background="#EF4444" CornerRadius="10" Width="18" Height="18" 
+                                                <Path Data="{StaticResource BellIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="20" Height="20" Stretch="Uniform"/>
+                                                <Border Background="{DynamicResource ThemeError}" CornerRadius="10" Width="18" Height="18" 
                                                         HorizontalAlignment="Right" VerticalAlignment="Top" 
                                                         Margin="0,-6,-6,0"
                                                         Visibility="{Binding NotificationCount, Converter={StaticResource IntToVis}}">
-                                                    <TextBlock Text="{Binding NotificationCount}" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding NotificationCount}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                             </Grid>
                                         </Border>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="bg" Property="Background" Value="#27272A"/>
+                                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -546,7 +550,7 @@
                             </Button>
 
                             <Popup IsOpen="{Binding IsNotificationsOpen}" StaysOpen="False" Placement="Bottom" AllowsTransparency="True">
-                                <Border Background="#1E1E2E" CornerRadius="16" BorderBrush="#374151" BorderThickness="1" Width="360" MaxHeight="450" Margin="0,12,0,0">
+                                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="16" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Width="360" MaxHeight="450" Margin="0,12,0,0">
                                     <Border.Effect>
                                         <DropShadowEffect BlurRadius="30" Opacity="0.4" ShadowDepth="8"/>
                                     </Border.Effect>
@@ -555,11 +559,11 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
-                                        <Border Padding="20,16" BorderBrush="#374151" BorderThickness="0,0,0,1">
+                                        <Border Padding="20,16" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,0,0,1">
                                             <DockPanel>
-                                                <TextBlock Text="Bildirimler" FontWeight="SemiBold" FontSize="16" Foreground="White"/>
+                                                <TextBlock Text="Bildirimler" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                 <Button Command="{Binding RefreshNotificationsCommand}" HorizontalAlignment="Right" Cursor="Hand">
-                                                    <Path Data="{StaticResource RefreshIcon}" Fill="#9CA3AF" Width="16" Height="16" Stretch="Uniform"/>
+                                                    <Path Data="{StaticResource RefreshIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="16" Height="16" Stretch="Uniform"/>
                                                 </Button>
                                             </DockPanel>
                                         </Border>
@@ -567,12 +571,12 @@
                                             <ItemsControl ItemsSource="{Binding Notifications}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border Padding="16,14" BorderBrush="#374151" BorderThickness="0,0,0,1">
+                                                        <Border Padding="16,14" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,0,0,1">
                                                             <StackPanel>
-                                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" Foreground="White"/>
-                                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,4,0,10" FontSize="12" Foreground="#9CA3AF"/>
+                                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,4,0,10" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                                 <Button Content="{Binding ActionLabel}" Height="28" FontSize="11" HorizontalAlignment="Right" Padding="16,0"
-                                                                        Background="#6366F1" Foreground="White" BorderThickness="0"
+                                                                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
                                                                         Command="{Binding ActionCommand}"/>
                                                             </StackPanel>
                                                         </Border>
@@ -599,3 +603,5 @@
         </Grid>
     </Grid>
 </UserControl>
+
+

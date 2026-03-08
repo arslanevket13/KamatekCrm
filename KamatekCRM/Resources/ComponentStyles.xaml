@@ -61,7 +61,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type km:KmKpiCard}">
                     <Border x:Name="CardRoot"
-                            Background="{DynamicResource SurfaceCardBrush}"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                             CornerRadius="14"
                             Padding="20,18"
                             MinWidth="{DynamicResource KpiCardMinWidth}"
@@ -99,7 +99,7 @@
                                                Foreground="White"/>
                                 </Border>
                                 <TextBlock Text="{TemplateBinding Title}"
-                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                            FontSize="13"
                                            FontWeight="Medium"
                                            VerticalAlignment="Top"
@@ -110,7 +110,7 @@
                             <StackPanel Grid.Row="1" Orientation="Horizontal" 
                                         VerticalAlignment="Center" Margin="0,4,0,0">
                                 <TextBlock Text="{TemplateBinding Prefix}"
-                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                            FontSize="22"
                                            FontWeight="Light"
                                            VerticalAlignment="Bottom"
@@ -121,7 +121,7 @@
                                            FontWeight="Bold"
                                            VerticalAlignment="Bottom"/>
                                 <TextBlock Text="{TemplateBinding Suffix}"
-                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                            FontSize="14"
                                            FontWeight="Normal"
                                            VerticalAlignment="Bottom"
@@ -149,7 +149,7 @@
                                 </Border>
                                 <!-- Subtitle -->
                                 <TextBlock Text="{TemplateBinding Subtitle}"
-                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                            FontSize="11"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>
@@ -224,7 +224,7 @@
                                            FontSize="36"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
-                                           Foreground="{DynamicResource TextMutedBrush}"/>
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                             </Border>
                             <!-- Title -->
                             <TextBlock Text="{TemplateBinding Title}"
@@ -235,7 +235,7 @@
                                        Margin="0,0,0,8"/>
                             <!-- Message -->
                             <TextBlock Text="{TemplateBinding Message}"
-                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                        FontSize="13"
                                        TextAlignment="Center"
                                        TextWrapping="Wrap"
@@ -261,7 +261,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type km:KmSearchBox}">
                     <Border x:Name="SearchBorder"
-                            Background="{DynamicResource SurfaceCardBrush}"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                             CornerRadius="10"
                             Padding="12,0"
                             BorderThickness="1"
@@ -278,7 +278,7 @@
                             <!-- Search icon -->
                             <Path Grid.Column="0"
                                   Data="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"
-                                  Fill="{DynamicResource TextMutedBrush}"
+                                  Fill="{DynamicResource TextFillColorSecondaryBrush}"
                                   Width="16" Height="16"
                                   Stretch="Uniform"
                                   VerticalAlignment="Center"
@@ -298,7 +298,7 @@
                             <!-- Placeholder -->
                             <TextBlock Grid.Column="1"
                                        Text="{TemplateBinding Placeholder}"
-                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                        FontSize="13"
                                        VerticalAlignment="Center"
                                        IsHitTestVisible="False"
@@ -338,7 +338,7 @@
                                     </Style>
                                 </Button.Style>
                                 <Path Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-                                      Fill="{DynamicResource TextMutedBrush}"
+                                      Fill="{DynamicResource TextFillColorSecondaryBrush}"
                                       Width="12" Height="12"
                                       Stretch="Uniform"/>
                             </Button>
@@ -371,7 +371,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="›"
-                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                FontSize="14"
                                                Margin="6,0"
                                                VerticalAlignment="Center">
@@ -431,7 +431,7 @@
                                         <DockPanel>
                                             <TextBlock DockPanel.Dock="Right"
                                                        Text="{Binding TimeAgo}"
-                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                        FontSize="11"
                                                        VerticalAlignment="Center"/>
                                             <TextBlock Text="{Binding Title}"
@@ -441,7 +441,7 @@
                                                        TextTrimming="CharacterEllipsis"/>
                                         </DockPanel>
                                         <TextBlock Text="{Binding Description}"
-                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                    FontSize="12"
                                                    TextWrapping="Wrap"
                                                    TextTrimming="CharacterEllipsis"
@@ -461,7 +461,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type km:KmFilterPanel}">
-                    <Border Background="{DynamicResource SurfaceCardBrush}"
+                    <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                             CornerRadius="10"
                             Padding="16,12"
                             BorderThickness="1"
@@ -469,7 +469,7 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <!-- Filter icon -->
                             <Path Data="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"
-                                  Fill="{DynamicResource TextMutedBrush}"
+                                  Fill="{DynamicResource TextFillColorSecondaryBrush}"
                                   Width="16" Height="16"
                                   Stretch="Uniform"
                                   VerticalAlignment="Center"
@@ -478,7 +478,7 @@
                             <!-- Date From -->
                             <StackPanel Margin="0,0,12,0">
                                 <TextBlock Text="Başlangıç" FontSize="10"
-                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,2"/>
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                                 <DatePicker SelectedDate="{Binding DateFrom, RelativeSource={RelativeSource TemplatedParent}}"
                                             Width="130" FontSize="12"/>
                             </StackPanel>
@@ -486,7 +486,7 @@
                             <!-- Date To -->
                             <StackPanel Margin="0,0,12,0">
                                 <TextBlock Text="Bitiş" FontSize="10"
-                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,2"/>
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                                 <DatePicker SelectedDate="{Binding DateTo, RelativeSource={RelativeSource TemplatedParent}}"
                                             Width="130" FontSize="12"/>
                             </StackPanel>
@@ -494,7 +494,7 @@
                             <!-- Status dropdown -->
                             <StackPanel Margin="0,0,12,0">
                                 <TextBlock Text="Durum" FontSize="10"
-                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,2"/>
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox ItemsSource="{TemplateBinding StatusItems}"
                                           SelectedItem="{Binding SelectedStatus, RelativeSource={RelativeSource TemplatedParent}}"
                                           Width="120" FontSize="12"/>
@@ -503,7 +503,7 @@
                             <!-- Category dropdown -->
                             <StackPanel Margin="0,0,16,0">
                                 <TextBlock Text="Kategori" FontSize="10"
-                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,2"/>
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                                 <ComboBox ItemsSource="{TemplateBinding CategoryItems}"
                                           SelectedItem="{Binding SelectedCategory, RelativeSource={RelativeSource TemplatedParent}}"
                                           Width="120" FontSize="12"/>
@@ -522,7 +522,7 @@
                             <Button Content="Temizle"
                                     Command="{TemplateBinding ClearAllCommand}"
                                     Background="Transparent"
-                                    Foreground="{DynamicResource TextMutedBrush}"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                     BorderThickness="0"
                                     FontSize="12"
                                     Cursor="Hand"
@@ -536,4 +536,5 @@
     </Style>
 
 </ResourceDictionary>
+
 

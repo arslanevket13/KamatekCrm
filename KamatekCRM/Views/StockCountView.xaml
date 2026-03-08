@@ -7,7 +7,7 @@
              xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1000"
-             Background="{StaticResource BackgroundColor}">
+             Background="{DynamicResource SurfacePageBrush}">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -34,7 +34,7 @@
                 <TextBlock Text="📦" FontSize="28" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <TextBlock Text="Fiziksel Stok Sayımı" 
                            FontSize="24" FontWeight="Bold"
-                           Foreground="{StaticResource TextPrimaryColor}"
+                           Foreground="{DynamicResource TextHeadingBrush}"
                            VerticalAlignment="Center"/>
             </StackPanel>
             
@@ -121,17 +121,17 @@
                                   HeadersVisibility="Column"
                                   GridLinesVisibility="Horizontal"
                                   BorderThickness="0"
-                                  Background="White"
+                                  Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                   RowHeight="40"
                                   ColumnHeaderHeight="45">
 
                             <DataGrid.ColumnHeaderStyle>
                                 <Style TargetType="DataGridColumnHeader">
-                                    <Setter Property="Background" Value="#F8F9FA"/>
-                                    <Setter Property="Foreground" Value="#495057"/>
+                                    <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
                                     <Setter Property="FontWeight" Value="SemiBold"/>
                                     <Setter Property="Padding" Value="12,10"/>
-                                    <Setter Property="BorderBrush" Value="#DEE2E6"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
                                     <Setter Property="BorderThickness" Value="0,0,0,2"/>
                                 </Style>
                             </DataGrid.ColumnHeaderStyle>
@@ -143,8 +143,8 @@
                                     <Setter Property="VerticalAlignment" Value="Center"/>
                                     <Style.Triggers>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="#E3F2FD"/>
-                                            <Setter Property="Foreground" Value="Black"/>
+                                            <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
@@ -200,7 +200,7 @@
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="FontWeight" Value="SemiBold"/>
-                                            <Setter Property="Foreground" Value="#6C757D"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                         </Style>
@@ -214,18 +214,18 @@
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="FontWeight" Value="Bold"/>
-                                            <Setter Property="Foreground" Value="{StaticResource PrimaryColor}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="Background" Value="#FFFDE7"/>
+                                            <Setter Property="Background" Value="{DynamicResource StatusWarningBgLight}"/>
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                     <DataGridTextColumn.EditingElementStyle>
                                         <Style TargetType="TextBox">
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="TextAlignment" Value="Center"/>
-                                            <Setter Property="Background" Value="#FFF3E0"/>
-                                            <Setter Property="BorderBrush" Value="#FF9800"/>
+                                            <Setter Property="Background" Value="{DynamicResource StatusWarningBg}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource ThemeWarning}"/>
                                             <Setter Property="Padding" Value="5,3"/>
                                         </Style>
                                     </DataGridTextColumn.EditingElementStyle>
@@ -238,13 +238,13 @@
                                             <Border CornerRadius="4" Padding="8,4" HorizontalAlignment="Center">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#F5F5F5"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Difference, Converter={x:Static local:IsPositiveConverter.Instance}}" Value="True">
-                                                                <Setter Property="Background" Value="#E8F5E9"/>
+                                                                <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Difference, Converter={x:Static local:IsNegativeConverter.Instance}}" Value="True">
-                                                                <Setter Property="Background" Value="#FFEBEE"/>
+                                                                <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -254,13 +254,13 @@
                                                            HorizontalAlignment="Center">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#9E9E9E"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Difference, Converter={x:Static local:IsPositiveConverter.Instance}}" Value="True">
-                                                                    <Setter Property="Foreground" Value="#4CAF50"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding Difference, Converter={x:Static local:IsNegativeConverter.Instance}}" Value="True">
-                                                                    <Setter Property="Foreground" Value="#F44336"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -284,38 +284,38 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Total Items -->
-                        <Border Grid.Column="0" Background="#FFF3E0" CornerRadius="8" Padding="15" Margin="0,0,7,0">
+                        <Border Grid.Column="0" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="15" Margin="0,0,7,0">
                             <StackPanel>
-                                <TextBlock Text="Toplam Ürün" Foreground="#E65100" FontWeight="Medium"/>
+                                <TextBlock Text="Toplam Ürün" Foreground="{DynamicResource StatusWarningFg}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding TotalItemCount, StringFormat='{}{0} kalem'}" 
-                                           FontSize="20" FontWeight="Bold" Foreground="#BF360C"/>
+                                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFgDark}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Positive Difference -->
-                        <Border Grid.Column="1" Background="#E8F5E9" CornerRadius="8" Padding="15" Margin="7,0,7,0">
+                        <Border Grid.Column="1" Background="{DynamicResource StatusSuccessBg}" CornerRadius="8" Padding="15" Margin="7,0,7,0">
                             <StackPanel>
-                                <TextBlock Text="Sayım Fazlası" Foreground="#388E3C" FontWeight="Medium"/>
+                                <TextBlock Text="Sayım Fazlası" Foreground="{DynamicResource StatusSuccessFgDark}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding TotalPositiveDifference, StringFormat='+{0} adet'}" 
-                                           FontSize="20" FontWeight="Bold" Foreground="#2E7D32"/>
+                                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Negative Difference -->
-                        <Border Grid.Column="2" Background="#FFEBEE" CornerRadius="8" Padding="15" Margin="7,0,7,0">
+                        <Border Grid.Column="2" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="15" Margin="7,0,7,0">
                             <StackPanel>
-                                <TextBlock Text="Sayım Eksiği" Foreground="#D32F2F" FontWeight="Medium"/>
+                                <TextBlock Text="Sayım Eksiği" Foreground="{DynamicResource StatusErrorFgDark}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding TotalNegativeDifference, StringFormat='{}{0} adet'}" 
-                                           FontSize="20" FontWeight="Bold" Foreground="#C62828"/>
+                                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusErrorFg}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Items with Difference -->
-                        <Border Grid.Column="3" Background="#E3F2FD" CornerRadius="8" Padding="15" Margin="7,0,0,0">
+                        <Border Grid.Column="3" Background="{DynamicResource StatusInfoBgLight}" CornerRadius="8" Padding="15" Margin="7,0,0,0">
                             <StackPanel>
-                                <TextBlock Text="Farklı Ürün" Foreground="#1976D2" FontWeight="Medium"/>
+                                <TextBlock Text="Farklı Ürün" Foreground="{DynamicResource StatusInfoFg}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding TotalDifferenceCount, StringFormat='{}{0} kalem'}" 
-                                           FontSize="20" FontWeight="Bold" Foreground="#1565C0"/>
+                                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusInfoFgDark}"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -335,10 +335,10 @@
                                    FontWeight="Medium">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="Red"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsActionSuccessful}" Value="True">
-                                            <Setter Property="Foreground" Value="Green"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -447,17 +447,17 @@
                                   HeadersVisibility="Column"
                                   GridLinesVisibility="Horizontal"
                                   BorderThickness="0"
-                                  Background="White"
+                                  Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                   RowHeight="45"
                                   ColumnHeaderHeight="45">
 
                             <DataGrid.ColumnHeaderStyle>
                                 <Style TargetType="DataGridColumnHeader">
-                                    <Setter Property="Background" Value="#E3F2FD"/>
-                                    <Setter Property="Foreground" Value="#1565C0"/>
+                                    <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
                                     <Setter Property="FontWeight" Value="Bold"/>
                                     <Setter Property="Padding" Value="12,10"/>
-                                    <Setter Property="BorderBrush" Value="#90CAF9"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimaryLight}"/>
                                     <Setter Property="BorderThickness" Value="0,0,0,2"/>
                                 </Style>
                             </DataGrid.ColumnHeaderStyle>
@@ -469,8 +469,8 @@
                                     <Setter Property="VerticalAlignment" Value="Center"/>
                                     <Style.Triggers>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="#BBDEFB"/>
-                                            <Setter Property="Foreground" Value="Black"/>
+                                            <Setter Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
                                         </Trigger>
                                     </Style.Triggers>
                                 </Style>
@@ -526,7 +526,7 @@
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="FontWeight" Value="SemiBold"/>
-                                            <Setter Property="Foreground" Value="#6C757D"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                         </Style>
@@ -541,7 +541,7 @@
                                         <Style TargetType="TextBlock">
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="FontSize" Value="14"/>
-                                            <Setter Property="Foreground" Value="#1976D2"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                         </Style>
@@ -551,8 +551,8 @@
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="FontSize" Value="14"/>
                                             <Setter Property="TextAlignment" Value="Center"/>
-                                            <Setter Property="Background" Value="#E3F2FD"/>
-                                            <Setter Property="BorderBrush" Value="#1976D2"/>
+                                            <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
                                             <Setter Property="Padding" Value="5,3"/>
                                         </Style>
                                     </DataGridTextColumn.EditingElementStyle>
@@ -565,13 +565,13 @@
                                             <Border CornerRadius="4" Padding="8,4" HorizontalAlignment="Center">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
-                                                        <Setter Property="Background" Value="#F5F5F5"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Difference, Converter={x:Static local:IsPositiveConverter.Instance}}" Value="True">
-                                                                <Setter Property="Background" Value="#E8F5E9"/>
+                                                                <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Difference, Converter={x:Static local:IsNegativeConverter.Instance}}" Value="True">
-                                                                <Setter Property="Background" Value="#FFEBEE"/>
+                                                                <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -582,13 +582,13 @@
                                                            HorizontalAlignment="Center">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#9E9E9E"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Difference, Converter={x:Static local:IsPositiveConverter.Instance}}" Value="True">
-                                                                    <Setter Property="Foreground" Value="#4CAF50"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding Difference, Converter={x:Static local:IsNegativeConverter.Instance}}" Value="True">
-                                                                    <Setter Property="Foreground" Value="#F44336"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -628,38 +628,38 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Toplam Ürün -->
-                        <Border Grid.Column="0" Background="#E3F2FD" CornerRadius="8" Padding="15" Margin="0,0,7,0">
+                        <Border Grid.Column="0" Background="{DynamicResource StatusInfoBg}" CornerRadius="8" Padding="15" Margin="0,0,7,0">
                             <StackPanel>
-                                <TextBlock Text="Toplam Ürün" Foreground="#1565C0" FontWeight="Medium"/>
+                                <TextBlock Text="Toplam Ürün" Foreground="{DynamicResource StatusInfoFg}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding ManualTotalItemCount, StringFormat='{}{0} kalem'}" 
-                                           FontSize="20" FontWeight="Bold" Foreground="#0D47A1"/>
+                                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Sayım Fazlası -->
-                        <Border Grid.Column="1" Background="#E8F5E9" CornerRadius="8" Padding="15" Margin="7,0,7,0">
+                        <Border Grid.Column="1" Background="{DynamicResource StatusSuccessBg}" CornerRadius="8" Padding="15" Margin="7,0,7,0">
                             <StackPanel>
-                                <TextBlock Text="Sayım Fazlası" Foreground="#388E3C" FontWeight="Medium"/>
+                                <TextBlock Text="Sayım Fazlası" Foreground="{DynamicResource StatusSuccessFgDark}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding ManualTotalPositiveDifference, StringFormat='+{0} adet'}" 
-                                           FontSize="20" FontWeight="Bold" Foreground="#2E7D32"/>
+                                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Sayım Eksiği -->
-                        <Border Grid.Column="2" Background="#FFEBEE" CornerRadius="8" Padding="15" Margin="7,0,7,0">
+                        <Border Grid.Column="2" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="15" Margin="7,0,7,0">
                             <StackPanel>
-                                <TextBlock Text="Sayım Eksiği" Foreground="#D32F2F" FontWeight="Medium"/>
+                                <TextBlock Text="Sayım Eksiği" Foreground="{DynamicResource StatusErrorFgDark}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding ManualTotalNegativeDifference, StringFormat='{}{0} adet'}" 
-                                           FontSize="20" FontWeight="Bold" Foreground="#C62828"/>
+                                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusErrorFg}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Farklı Ürün -->
-                        <Border Grid.Column="3" Background="#FFF3E0" CornerRadius="8" Padding="15" Margin="7,0,0,0">
+                        <Border Grid.Column="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="15" Margin="7,0,0,0">
                             <StackPanel>
-                                <TextBlock Text="Farklı Ürün" Foreground="#E65100" FontWeight="Medium"/>
+                                <TextBlock Text="Farklı Ürün" Foreground="{DynamicResource StatusWarningFgDark}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding ManualTotalDifferenceCount, StringFormat='{}{0} kalem'}" 
-                                           FontSize="20" FontWeight="Bold" Foreground="#BF360C"/>
+                                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFgDark}"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -679,10 +679,10 @@
                                    FontWeight="Medium">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="Red"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsActionSuccessful}" Value="True">
-                                            <Setter Property="Foreground" Value="Green"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -710,9 +710,9 @@
 
         <!-- History Popup Overlay -->
         <Border Grid.RowSpan="2" 
-                Background="#80000000" 
+                Background="{DynamicResource CardShadowColor}" 
                 Visibility="{Binding IsHistoryVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Border Background="White" 
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
                     CornerRadius="12" 
                     MaxWidth="700" 
                     MaxHeight="500"
@@ -735,7 +735,7 @@
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
                         <TextBlock Text="📋" FontSize="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <TextBlock Text="Sayım Geçmişi" FontSize="20" FontWeight="Bold" 
-                                   Foreground="{StaticResource TextPrimaryColor}"/>
+                                   Foreground="{DynamicResource TextHeadingBrush}"/>
                     </StackPanel>
                     
                     <!-- History DataGrid -->
@@ -748,7 +748,7 @@
                               HeadersVisibility="Column"
                               GridLinesVisibility="Horizontal"
                               BorderThickness="1"
-                              BorderBrush="#E0E0E0"
+                              BorderBrush="{DynamicResource BorderDefaultBrush}"
                               RowHeight="35">
                         
                         <DataGrid.Columns>
@@ -775,13 +775,13 @@
                                                    FontWeight="SemiBold">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="#9E9E9E"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding TotalDifference, Converter={x:Static local:IsPositiveConverter.Instance}}" Value="True">
-                                                            <Setter Property="Foreground" Value="#4CAF50"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding TotalDifference, Converter={x:Static local:IsNegativeConverter.Instance}}" Value="True">
-                                                            <Setter Property="Foreground" Value="#F44336"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -796,7 +796,7 @@
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontFamily" Value="Consolas"/>
-                                        <Setter Property="Foreground" Value="#757575"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -816,3 +816,4 @@
         </Border>
     </Grid>
 </UserControl>
+

@@ -10,14 +10,12 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- WPF-UI Theme -->
+                <!-- WPF-UI Theme - Runtime'da ThemeService ile değişir -->
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
 
-                <!-- Design Tokens (Single Source of Truth) -->
+                <!-- Design Tokens (Tema Runtime'da ThemeService ile değişir) -->
                 <ResourceDictionary Source="Resources/DesignTokens.xaml"/>
-                <!-- Custom Theme -->
-                <ResourceDictionary Source="Resources/Themes/CustomTheme.xaml"/>
                 
                 <!-- Animations -->
                 <ResourceDictionary Source="Resources/Animations.xaml"/>

@@ -13,7 +13,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Left Panel: List -->
-        <Border Grid.Column="0" Margin="0,0,16,0" CornerRadius="8" Background="{DynamicResource CardBrush}" Effect="{DynamicResource SubtleShadow}">
+        <Border Grid.Column="0" Margin="0,0,16,0" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource SubtleShadow}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -48,8 +48,8 @@
                                     <ui:SymbolIcon Symbol="Person24" Foreground="{DynamicResource PrimaryBrush}"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding CompanyName}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    <TextBlock Text="{Binding ContactPerson}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding CompanyName}" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                    <TextBlock Text="{Binding ContactPerson}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>
@@ -62,7 +62,7 @@
         </Border>
 
         <!-- Right Panel: Details -->
-        <Border Grid.Column="1" CornerRadius="8" Background="{DynamicResource CardBrush}" Effect="{DynamicResource SubtleShadow}">
+        <Border Grid.Column="1" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource SubtleShadow}">
             <Grid Margin="24">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -73,11 +73,11 @@
                 <!-- Header -->
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,24">
                     <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="50" Width="48" Height="48" Margin="0,0,16,0">
-                        <ui:SymbolIcon Symbol="Building24" Foreground="White" FontSize="24"/>
+                        <ui:SymbolIcon Symbol="Building24" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="24"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Tedarikçi Detayları" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="Tedarikçi bilgilerini düzenleyin" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="Tedarikçi Detayları" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="Tedarikçi bilgilerini düzenleyin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -128,3 +128,5 @@
         </Border>
     </Grid>
 </UserControl>
+
+

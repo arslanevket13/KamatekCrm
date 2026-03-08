@@ -9,21 +9,21 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </UserControl.Resources>
     
-    <Grid Background="#80000000" 
+    <Grid Background="{DynamicResource SurfaceOverlayBrush}" 
           Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
           d:Visibility="Visible">
         
-        <Border Background="White" 
+        <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
                 CornerRadius="10" 
                 Padding="20" 
                 HorizontalAlignment="Center" 
                 VerticalAlignment="Center"
-                Effect="{StaticResource DropShadow}">
+                Effect="{DynamicResource DropShadow}">
             <StackPanel>
                 <!-- Spinner (Simple rotating circle using Path) -->
                 <Viewbox Width="50" Height="50" HorizontalAlignment="Center">
                     <Grid Width="100" Height="100">
-                        <Path Fill="{StaticResource PrimaryColor}" 
+                        <Path Fill="{DynamicResource ThemePrimary}" 
                               Data="M 50,0 A 50,50 0 1,1 0,50 L 10,50 A 40,40 0 1,0 50,10 Z"
                               RenderTransformOrigin="0.5,0.5">
                             <Path.RenderTransform>
@@ -50,8 +50,9 @@
                            FontSize="16" 
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"
-                           Foreground="{StaticResource TextPrimary}"/>
+                           Foreground="{DynamicResource TextHeadingBrush}"/>
             </StackPanel>
         </Border>
     </Grid>
 </UserControl>
+

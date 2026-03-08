@@ -9,14 +9,14 @@
         Title="🔧 Profesyonel İş Emri Formu" 
         Width="1100" Height="720"
         WindowStartupLocation="CenterOwner"
-        Background="#1a1a2e">
+        Background="{DynamicResource SurfacePageBrush}">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         
         <!-- Modern Card Style with Shadow -->
         <Style x:Key="ModernCard" TargetType="Border">
-            <Setter Property="Background" Value="#252541"/>
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
             <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Padding" Value="20"/>
             <Setter Property="Effect">
@@ -31,7 +31,7 @@
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,0,10,0"/>
-            <Setter Property="Foreground" Value="#3498db"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
         </Style>
     </Window.Resources>
 
@@ -55,19 +55,19 @@
                 <StackPanel Grid.Column="0">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                         <TextBlock Text="👤" Style="{StaticResource FieldIcon}"/>
-                        <TextBlock Text="MÜŞTERİ SEÇİMİ" FontSize="13" FontWeight="Bold" Foreground="#3498db"/>
+                        <TextBlock Text="MÜŞTERİ SEÇİMİ" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
                     </StackPanel>
                     <ComboBox ItemsSource="{Binding Customers}"
                              SelectedItem="{Binding SelectedCustomer}"
                              DisplayMemberPath="FullName"
                              IsEditable="True"
                              IsTextSearchEnabled="True"
-                             Background="#1a1a2e" Foreground="White"
-                             BorderBrush="#3498db" BorderThickness="1"
+                             Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                             BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1"
                              TabIndex="0" Height="38" Padding="10,8"/>
                 </StackPanel>
                 
-                <Border Grid.Column="1" Width="1" Background="#3d3d5c" Margin="20,0"/>
+                <Border Grid.Column="1" Width="1" Background="{DynamicResource BorderDefaultBrush}" Margin="20,0"/>
                 
                 <!-- Öncelik ve Tarih -->
                 <Grid Grid.Column="2">
@@ -79,12 +79,12 @@
                     <StackPanel Grid.Column="0" Margin="0,0,10,0">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Text="🚨" Style="{StaticResource FieldIcon}"/>
-                            <TextBlock Text="ÖNCELİK" FontSize="13" FontWeight="Bold" Foreground="#e74c3c"/>
+                            <TextBlock Text="ÖNCELİK" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource ThemeError}"/>
                         </StackPanel>
                         <ComboBox ItemsSource="{Binding Priorities}"
                                  SelectedItem="{Binding SelectedPriority}"
-                                 Background="#1a1a2e" Foreground="White"
-                                 BorderBrush="#e74c3c" BorderThickness="1"
+                                 Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                 BorderBrush="{DynamicResource ThemeError}" BorderThickness="1"
                                  TabIndex="1" Height="38" Padding="10,8">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -116,11 +116,11 @@
                     <StackPanel Grid.Column="1" Margin="10,0,0,0">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Text="📅" Style="{StaticResource FieldIcon}"/>
-                            <TextBlock Text="PLANLANAN" FontSize="13" FontWeight="Bold" Foreground="#27ae60"/>
+                            <TextBlock Text="PLANLANAN" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}"/>
                         </StackPanel>
                         <DatePicker SelectedDate="{Binding ScheduledDate}" 
-                                   Background="#1a1a2e" Foreground="White"
-                                   BorderBrush="#27ae60" BorderThickness="1"
+                                   Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                   BorderBrush="{DynamicResource ThemeSuccess}" BorderThickness="1"
                                    Height="38" TabIndex="2"/>
                     </StackPanel>
                 </Grid>
@@ -141,21 +141,21 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                             <TextBlock Text="🏗️" FontSize="20" Margin="0,0,10,0"/>
-                            <TextBlock Text="YAPI VE İŞ DETAYLARI" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                            <TextBlock Text="YAPI VE İŞ DETAYLARI" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                         </StackPanel>
 
                         <!-- Yapı Türü Seçimi -->
-                        <Border Background="#1a1a2e" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                        <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                     <TextBlock Text="🏠" Style="{StaticResource FieldIcon}"/>
-                                    <TextBlock Text="YAPI TÜRÜ" FontSize="12" FontWeight="SemiBold" Foreground="#9b59b6"/>
+                                    <TextBlock Text="YAPI TÜRÜ" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ThemeInfo}"/>
                                 </StackPanel>
                                 
                                 <ComboBox ItemsSource="{Binding StructureTypes}"
                                          SelectedItem="{Binding SelectedStructureType}"
-                                         Background="#252541" Foreground="White"
-                                         BorderBrush="#9b59b6" BorderThickness="1"
+                                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                         BorderBrush="{DynamicResource ThemeInfo}" BorderThickness="1"
                                          TabIndex="3" Height="36" Padding="10,8">
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
@@ -190,38 +190,38 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                        <TextBlock Text="Blok Sayısı" Foreground="#888" FontSize="11" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Blok Sayısı" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
                                         <TextBox Text="{Binding BlockCount, UpdateSourceTrigger=PropertyChanged}" 
-                                                Background="#252541" Foreground="White" BorderBrush="#444"
+                                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}"
                                                 TabIndex="4" Height="32" Padding="8"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="8,0,0,0" Visibility="{Binding ShowFlatCount, Converter={StaticResource BoolToVis}}">
-                                        <TextBlock Text="Daire Sayısı" Foreground="#888" FontSize="11" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Daire Sayısı" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
                                         <TextBox Text="{Binding FlatCount, UpdateSourceTrigger=PropertyChanged}" 
-                                                Background="#252541" Foreground="White" BorderBrush="#444"
+                                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}"
                                                 TabIndex="5" Height="32" Padding="8"/>
                                     </StackPanel>
                                 </Grid>
                                 
                                 <!-- Total Units Badge -->
-                                <Border Background="#3498db" CornerRadius="4" Padding="10,6" Margin="0,12,0,0" 
+                                <Border Background="{DynamicResource ThemePrimary}" CornerRadius="4" Padding="10,6" Margin="0,12,0,0" 
                                         HorizontalAlignment="Left"
                                         Visibility="{Binding ShowFlatCount, Converter={StaticResource BoolToVis}}">
                                     <TextBlock>
-                                        <Run Text="Toplam: " Foreground="#BBDEFB"/>
-                                        <Run Text="{Binding TotalUnitCount, Mode=OneWay}" FontWeight="Bold" Foreground="White"/>
-                                        <Run Text=" birim" Foreground="#BBDEFB"/>
+                                        <Run Text="Toplam: " Foreground="{DynamicResource ThemePrimaryLight}"/>
+                                        <Run Text="{Binding TotalUnitCount, Mode=OneWay}" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                        <Run Text=" birim" Foreground="{DynamicResource ThemePrimaryLight}"/>
                                     </TextBlock>
                                 </Border>
                             </StackPanel>
                         </Border>
 
                         <!-- KATEGORİ SEÇİMİ -->
-                        <Border Background="#2d2d52" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                        <Border Background="{DynamicResource SurfaceCardBrushAlt}" CornerRadius="8" Padding="15" Margin="0,0,0,15">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                     <TextBlock Text="📂" Style="{StaticResource FieldIcon}"/>
-                                    <TextBlock Text="İŞ KATEGORİLERİ" FontSize="12" FontWeight="SemiBold" Foreground="#f39c12"/>
+                                    <TextBlock Text="İŞ KATEGORİLERİ" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ThemeWarning}"/>
                                 </StackPanel>
                                 
                                 <ItemsControl ItemsSource="{Binding CategoryItems}">
@@ -234,7 +234,7 @@
                                         <DataTemplate>
                                             <CheckBox Content="{Binding DisplayName}"
                                                      IsChecked="{Binding IsSelected}"
-                                                     Foreground="White"
+                                                     Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                                      Margin="0,4,16,4" FontSize="12"/>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -246,16 +246,16 @@
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                 <TextBlock Text="📝" Style="{StaticResource FieldIcon}"/>
-                                <TextBlock Text="İŞ AÇIKLAMASI / TEKNİK NOTLAR" FontSize="12" FontWeight="SemiBold" Foreground="#1abc9c"/>
+                                <TextBlock Text="İŞ AÇIKLAMASI / TEKNİK NOTLAR" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ThemeSuccess}"/>
                             </StackPanel>
                             <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
-                                    Background="#1a1a2e" Foreground="White" 
-                                    BorderBrush="#1abc9c" BorderThickness="1"
+                                    Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                                    BorderBrush="{DynamicResource ThemeSuccess}" BorderThickness="1"
                                     TabIndex="6" Height="120"
                                     TextWrapping="Wrap" AcceptsReturn="True"
                                     VerticalScrollBarVisibility="Auto" Padding="12"/>
                             <TextBlock Text="💡 Kamera sayısı, dedektör adedi, kablo metrajı gibi teknik detayları yazın." 
-                                      FontSize="10" Foreground="#666" Margin="0,6,0,0"/>
+                                      FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,6,0,0"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
@@ -273,18 +273,18 @@
 
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
                         <TextBlock Text="📦" FontSize="20" Margin="0,0,10,0"/>
-                        <TextBlock Text="MALZEME VE MALİYET" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="MALZEME VE MALİYET" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                     </StackPanel>
 
                     <!-- Ürün Ekleme -->
-                    <Border Grid.Row="1" Background="#1a1a2e" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                    <Border Grid.Row="1" Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,12">
                         <StackPanel>
                             <ComboBox ItemsSource="{Binding Products}"
                                      SelectedItem="{Binding SelectedProductToAdd}"
                                      DisplayMemberPath="ProductName"
                                      IsEditable="True" IsTextSearchEnabled="True"
-                                     Background="#252541" Foreground="White"
-                                     BorderBrush="#3498db" BorderThickness="1"
+                                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                     BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1"
                                      TabIndex="7" Height="36" Margin="0,0,0,8"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -296,21 +296,21 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBox Grid.Column="0"
                                         Text="{Binding QuantityToAdd, UpdateSourceTrigger=PropertyChanged}"
-                                        Background="#252541" Foreground="White" BorderBrush="#444"
+                                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}"
                                         TabIndex="8" Height="32" Padding="8"/>
                                 <TextBox Grid.Column="2"
                                         Text="{Binding UnitPriceToAdd, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
-                                        Background="#252541" Foreground="White" BorderBrush="#444"
+                                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}"
                                         TabIndex="9" Height="32" Padding="8"/>
                                 <Button Grid.Column="4" Content="➕" 
                                        Command="{Binding AddItemToJobCommand}"
-                                       Background="#27ae60" Foreground="White" BorderThickness="0"
+                                       Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
                                        TabIndex="10" Width="40" Height="32" Cursor="Hand"/>
                             </Grid>
                             
                             <CheckBox Content="🔄 Tüm birimlere uygula" 
                                      IsChecked="{Binding ApplyToAllUnits}"
-                                     Foreground="#888" FontSize="11" Margin="0,10,0,0"
+                                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,10,0,0"
                                      TabIndex="11"/>
                         </StackPanel>
                     </Border>
@@ -320,11 +320,11 @@
                              ItemsSource="{Binding CurrentJobItems}"
                              AutoGenerateColumns="False"
                              CanUserAddRows="False"
-                             Background="#1a1a2e"
+                             Background="{DynamicResource SurfacePageBrush}"
                              BorderThickness="0"
-                             Foreground="White"
-                             RowBackground="#1a1a2e"
-                             AlternatingRowBackground="#252541"
+                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                             RowBackground="{DynamicResource SurfacePageBrush}"
+                             AlternatingRowBackground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                              GridLinesVisibility="Horizontal"
                              HeadersVisibility="Column"
                              TabIndex="12">
@@ -336,32 +336,32 @@
                     </DataGrid>
 
                     <!-- Maliyet Özeti -->
-                    <Border Grid.Row="3" Background="#1a1a2e" CornerRadius="8" Padding="15" Margin="0,12,0,0">
+                    <Border Grid.Row="3" Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="15" Margin="0,12,0,0">
                         <StackPanel>
                             <Grid Margin="0,0,0,8">
-                                <TextBlock Text="Malzeme:" Foreground="#888" FontSize="13"/>
+                                <TextBlock Text="Malzeme:" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="13"/>
                                 <TextBlock Text="{Binding MaterialTotal, StringFormat=₺{0:N2}}" 
-                                          Foreground="White" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Right"/>
+                                          Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Right"/>
                             </Grid>
                             <Grid Margin="0,0,0,8">
-                                <TextBlock Text="İşçilik:" Foreground="#888" FontSize="13"/>
+                                <TextBlock Text="İşçilik:" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="13"/>
                                 <TextBox Text="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
-                                        Background="Transparent" BorderThickness="0" Foreground="White" 
+                                        Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
                                         FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Right"
                                         Width="80" TextAlignment="Right" TabIndex="13"/>
                             </Grid>
                             <Grid Margin="0,0,0,8">
-                                <TextBlock Text="İndirim:" Foreground="#e74c3c" FontSize="13"/>
+                                <TextBlock Text="İndirim:" Foreground="{DynamicResource ThemeError}" FontSize="13"/>
                                 <TextBox Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
-                                        Background="Transparent" BorderThickness="0" Foreground="#e74c3c" 
+                                        Background="Transparent" BorderThickness="0" Foreground="{DynamicResource ThemeError}" 
                                         FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Right"
                                         Width="80" TextAlignment="Right" TabIndex="14"/>
                             </Grid>
-                            <Border BorderBrush="#3d3d5c" BorderThickness="0,1,0,0" Padding="0,10,0,0">
+                            <Border BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0">
                                 <Grid>
-                                    <TextBlock Text="TOPLAM:" Foreground="White" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="TOPLAM:" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="15" FontWeight="Bold"/>
                                     <TextBlock Text="{Binding GrandTotal, StringFormat=₺{0:N2}}" 
-                                              Foreground="#27ae60" FontWeight="Bold" FontSize="22" HorizontalAlignment="Right"/>
+                                              Foreground="{DynamicResource ThemeSuccess}" FontWeight="Bold" FontSize="22" HorizontalAlignment="Right"/>
                                 </Grid>
                             </Border>
                         </StackPanel>
@@ -371,18 +371,18 @@
         </Grid>
 
         <!-- ========== FOOTER: ACTIONS ========== -->
-        <Border Grid.Row="2" Background="#252541" Padding="20,15">
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="20,15">
             <Grid>
                 <Button Content="❌ İptal" 
                        Command="{Binding CancelCommand}"
-                       Background="#e74c3c" Foreground="White" BorderThickness="0"
+                       Background="{DynamicResource ThemeError}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
                        IsCancel="True" TabIndex="16"
                        HorizontalAlignment="Left"
                        Width="100" Height="40" Cursor="Hand" FontSize="13"/>
 
                 <Button Content="💾 İŞ EMRİNİ KAYDET" 
                        Command="{Binding SaveServiceJobCommand}"
-                       Background="#27ae60" Foreground="White" BorderThickness="0"
+                       Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
                        IsDefault="True" TabIndex="15"
                        HorizontalAlignment="Right"
                        Width="180" Height="40" Cursor="Hand"
@@ -391,3 +391,5 @@
         </Border>
     </Grid>
 </Window>
+
+

@@ -8,7 +8,7 @@
         Title="📋 Hızlı Kabul &amp; Arıza Kaydı" 
         Width="1200" Height="750"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource ThemeBackground}">
+        Background="{DynamicResource ApplicationBackgroundBrush}">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -44,15 +44,15 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="border" Background="{DynamicResource ThemeBackground}" 
+                        <Border x:Name="border" Background="{DynamicResource ApplicationBackgroundBrush}" 
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" 
                                 CornerRadius="8" Padding="16,12" Cursor="Hand">
                             <ContentPresenter HorizontalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#E3F2FD"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#2196F3"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource StatusInfoBg}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource StatusInfoFg}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{DynamicResource ThemeHover}"/>
@@ -69,7 +69,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
                         <Border x:Name="chipBorder" 
-                                Background="{DynamicResource ThemeBackground}" 
+                                Background="{DynamicResource ApplicationBackgroundBrush}" 
                                 CornerRadius="16" Padding="14,6" Margin="0,0,8,8"
                                 BorderBrush="{DynamicResource ThemeBorder}" 
                                 BorderThickness="1" Cursor="Hand">
@@ -79,9 +79,9 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="chipBorder" Property="Background" Value="#E8F5E9"/>
-                                <Setter TargetName="chipBorder" Property="BorderBrush" Value="#4CAF50"/>
-                                <Setter TargetName="chipText" Property="Foreground" Value="#2E7D32"/>
+                                <Setter TargetName="chipBorder" Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
+                                <Setter TargetName="chipBorder" Property="BorderBrush" Value="{DynamicResource StatusSuccessFg}"/>
+                                <Setter TargetName="chipText" Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
                                 <Setter TargetName="chipText" Property="FontWeight" Value="SemiBold"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -162,7 +162,7 @@
                                           Height="44" Margin="0,0,0,12"/>
                                 
                                 <!-- Müşteri Adres Box -->
-                                <Border Background="{DynamicResource ThemeBackground}" CornerRadius="8" Padding="12" MinHeight="60"
+                                <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="12" MinHeight="60"
                                         BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                     <TextBlock Text="{Binding CustomerAddress}" 
                                                TextWrapping="Wrap" FontSize="12" 
@@ -227,8 +227,8 @@
                                             <TextBlock>
                                                 <Run Text="{Binding Brand}" FontWeight="SemiBold"/>
                                                 <Run Text="{Binding Model}"/>
-                                                <Run Text=" - SN:" Foreground="Gray"/>
-                                                <Run Text="{Binding SerialNumber}" Foreground="Gray"/>
+                                                <Run Text=" - SN:" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                <Run Text="{Binding SerialNumber}" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                             </TextBlock>
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
@@ -342,7 +342,7 @@
                                      VerticalScrollBarVisibility="Auto"
                                      Height="100" Margin="0,0,0,16"/>
                                      
-                            <Border Background="{DynamicResource ThemeBackground}" BorderBrush="{DynamicResource ThemeBorder}" 
+                            <Border Background="{DynamicResource ApplicationBackgroundBrush}" BorderBrush="{DynamicResource ThemeBorder}" 
                                     BorderThickness="1" CornerRadius="8" Padding="16" Cursor="Hand"
                                     ToolTip="Fotoğraf seçmek için tıklayın">
                                 <Border.InputBindings>
@@ -374,7 +374,7 @@
                                                 <Button Content="✕" 
                                                         Command="{Binding DataContext.RemovePhotoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}"
-                                                        Background="#B2000000" Foreground="White" 
+                                                        Background="{DynamicResource CardShadowColor}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
                                                         Width="20" Height="20" FontSize="10" Padding="0"
                                                         HorizontalAlignment="Right" VerticalAlignment="Top"
                                                         Margin="4" BorderThickness="0" Cursor="Hand"
@@ -397,13 +397,13 @@
             <Grid>
                 <Button Content="İptal Et" 
                         Command="{Binding CancelCommand}"
-                        Style="{StaticResource ModernButton}" Background="{DynamicResource ThemeBackground}" 
+                        Style="{StaticResource ModernButton}" Background="{DynamicResource ApplicationBackgroundBrush}" 
                         Foreground="{DynamicResource ThemeForeground}" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorder}"
                         HorizontalAlignment="Left"
                         Width="120" Height="44" FontSize="14"/>
                 
                 <Button Command="{Binding SaveFaultTicketCommand}"
-                        Background="#2E7D32" Foreground="White"
+                        Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                         HorizontalAlignment="Right"
                         Width="240" Height="48" FontSize="15" FontWeight="SemiBold">
                     <Button.Content>
@@ -427,3 +427,5 @@
         </Border>
     </Grid>
 </Window>
+
+

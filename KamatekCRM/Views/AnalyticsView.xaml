@@ -2,7 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
-             Background="#F5F5F5">
+             Background="{DynamicResource SurfacePageBrush}">
     
     <Grid Margin="20">
         <Grid.RowDefinitions>
@@ -12,7 +12,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <TextBlock Text="Analitik &amp; Raporlar 📈" FontSize="24" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,20"/>
+        <TextBlock Text="Analitik &amp; Raporlar 📈" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,20"/>
 
         <!-- KPI Cards -->
         <Grid Grid.Row="1" Margin="0,0,0,20">
@@ -25,26 +25,26 @@
             </Grid.ColumnDefinitions>
 
             <!-- Card 1 -->
-            <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <StackPanel>
-                    <TextBlock Text="Toplam İşler" Foreground="#546E7A" FontSize="14"/>
-                    <TextBlock Text="{Binding TotalJobs}" FontSize="28" FontWeight="Bold" Foreground="#2196F3"/>
+                    <TextBlock Text="Toplam İşler" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="14"/>
+                    <TextBlock Text="{Binding TotalJobs}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
                 </StackPanel>
             </Border>
 
             <!-- Card 2 -->
-            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <StackPanel>
-                    <TextBlock Text="Tamamlanan" Foreground="#546E7A" FontSize="14"/>
-                    <TextBlock Text="{Binding CompletedJobs}" FontSize="28" FontWeight="Bold" Foreground="#4CAF50"/>
+                    <TextBlock Text="Tamamlanan" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="14"/>
+                    <TextBlock Text="{Binding CompletedJobs}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}"/>
                 </StackPanel>
             </Border>
 
             <!-- Card 3 -->
-            <Border Grid.Column="4" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="4" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <StackPanel>
-                    <TextBlock Text="Başarı Oranı" Foreground="#546E7A" FontSize="14"/>
-                    <TextBlock Text="{Binding SuccessRate, StringFormat={}{0:N1}%}" FontSize="28" FontWeight="Bold" Foreground="#FF9800"/>
+                    <TextBlock Text="Başarı Oranı" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="14"/>
+                    <TextBlock Text="{Binding SuccessRate, StringFormat={}{0:N1}%}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource ThemeWarning}"/>
                 </StackPanel>
             </Border>
         </Grid>
@@ -63,40 +63,41 @@
             </Grid.RowDefinitions>
 
             <!-- 1. Pie Chart: İş Türü Dağılımı -->
-            <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="0" Grid.Row="0" Grid.RowSpan="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Arıza Türü Dağılımı" FontWeight="Bold" Foreground="#455A64" Margin="0,0,0,10"/>
+                    <TextBlock Text="Arıza Türü Dağılımı" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,10"/>
                     <lvc:PieChart Grid.Row="1" Series="{Binding JobDistributionSeries}" LegendPosition="Right"/>
                 </Grid>
             </Border>
 
             <!-- 2. Column Chart: Teknisyen Performansı -->
-            <Border Grid.Column="2" Grid.Row="0" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="2" Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="En İyi Teknisyenler (Top 5)" FontWeight="Bold" Foreground="#455A64" Margin="0,0,0,10"/>
+                    <TextBlock Text="En İyi Teknisyenler (Top 5)" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,10"/>
                     <lvc:CartesianChart Grid.Row="1" Series="{Binding TechPerformanceSeries}" XAxes="{Binding TechXAxes}"/>
                 </Grid>
             </Border>
 
             <!-- 3. Line Chart: Aylık Trend -->
-            <Border Grid.Column="2" Grid.Row="2" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="2" Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Son 6 Ay İş Trendi" FontWeight="Bold" Foreground="#455A64" Margin="0,0,0,10"/>
+                    <TextBlock Text="Son 6 Ay İş Trendi" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,10"/>
                     <lvc:CartesianChart Grid.Row="1" Series="{Binding TrendSeries}" XAxes="{Binding TrendXAxes}"/>
                 </Grid>
             </Border>
         </Grid>
     </Grid>
 </UserControl>
+

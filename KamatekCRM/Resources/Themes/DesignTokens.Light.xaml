@@ -52,129 +52,78 @@
     <BackEase x:Key="EaseOutBack" EasingMode="EaseOut" Amplitude="0.3"/>
     <ElasticEase x:Key="EaseOutElastic" EasingMode="EaseOut" Oscillations="1" Springiness="5"/>
 
-    <!-- ─────────── SEMANTIC SURFACE COLORS (Pure Black Dark Theme) ─────────── -->
-    <!-- Page background - PURE BLACK -->
-    <Color x:Key="SurfacePageColor">#000000</Color>
-    <SolidColorBrush x:Key="SurfacePageBrush" Color="#000000"/>
-    <SolidColorBrush x:Key="ThemeBackground" Color="#000000"/>
+    <!-- ─────────── SEMANTIC SURFACE COLORS (Dark Theme Default) ─────────── -->
+    <!-- Page background -->
+    <Color x:Key="SurfacePageColor">#0B0E14</Color>
+    <SolidColorBrush x:Key="SurfacePageBrush" Color="#0B0E14"/>
 
-    <!-- Cards / panels - Slightly lighter black -->
-    <Color x:Key="SurfaceCardColor">#0D0D0D</Color>
-    <SolidColorBrush x:Key="SurfaceCardBrush" Color="#0D0D0D"/>
+    <!-- Cards / Panels -->
+    <Color x:Key="SurfaceCardColor">#141821</Color>
+    <SolidColorBrush x:Key="SurfaceCardBrush" Color="#141821"/>
 
     <!-- Elevated surfaces (modals, dropdowns) -->
-    <Color x:Key="SurfaceOverlayColor">#141414</Color>
-    <SolidColorBrush x:Key="SurfaceOverlayBrush" Color="#141414"/>
+    <Color x:Key="SurfaceOverlayColor">#1E293B</Color>
+    <SolidColorBrush x:Key="SurfaceOverlayBrush" Color="#1E293B"/>
 
-    <!-- Sidebar - PURE BLACK -->
-    <Color x:Key="SurfaceSidebarColor">#000000</Color>
-    <SolidColorBrush x:Key="SurfaceSidebarBrush" Color="#000000"/>
+    <!-- Sidebar -->
+    <Color x:Key="SurfaceSidebarColor">#0D1117</Color>
+    <SolidColorBrush x:Key="SurfaceSidebarBrush" Color="#0D1117"/>
 
-    <!-- Glassmorphism (Black theme) -->
-    <SolidColorBrush x:Key="GlassBrush" Color="#0D0D0D" Opacity="0.90"/>
-    <SolidColorBrush x:Key="GlassBrushLow" Color="#FFFFFF" Opacity="0.05"/>
-    <SolidColorBrush x:Key="GlassBrushMedium" Color="#FFFFFF" Opacity="0.08"/>
-    <SolidColorBrush x:Key="GlassBorderBrush" Color="#FFFFFF" Opacity="0.05"/>
-    <SolidColorBrush x:Key="GlassBorderBrushStrong" Color="#FFFFFF" Opacity="0.15"/>
-    <SolidColorBrush x:Key="GlassOverlayBrush" Color="#FFFFFF" Opacity="0.05"/>
+    <!-- Glassmorphism -->
+    <SolidColorBrush x:Key="GlassBrush" Color="#141821" Opacity="0.85"/>
+    <SolidColorBrush x:Key="GlassBrushLow" Color="#FFFFFF" Opacity="0.10"/>
+    <SolidColorBrush x:Key="GlassBrushMedium" Color="#FFFFFF" Opacity="0.15"/>
+    <SolidColorBrush x:Key="GlassBorderBrush" Color="#FFFFFF" Opacity="0.08"/>
+    <SolidColorBrush x:Key="GlassBorderBrushStrong" Color="#FFFFFF" Opacity="0.30"/>
+    <SolidColorBrush x:Key="GlassOverlayBrush" Color="#FFFFFF" Opacity="0.08"/>
     
     <!-- Card Shadow Color -->
     <Color x:Key="CardShadowColor">#000000</Color>
-    <Color x:Key="ThemeShadowColor">#000000</Color>
-    
-    <!-- Theme Primary Colors (for GradientStop.Color) -->
-    <Color x:Key="ThemePrimaryColor">#60CDFF</Color>
-    <Color x:Key="ThemePrimaryDarkColor">#0078D4</Color>
-    <Color x:Key="ThemePrimaryLightColor">#99E5FF</Color>
-    <Color x:Key="ThemeAccentColor">#00D4E5</Color>
-    <Color x:Key="ThemeSuccessColor">#6CCB5F</Color>
-    <Color x:Key="ThemeWarningColor">#FCE100</Color>
-    <Color x:Key="ThemeErrorColor">#FF99A4</Color>
-    <Color x:Key="ThemeInfoColor">#60CDFF</Color>
-    
-    <!-- Surface Colors (for use in GradientStop.Color and other Color properties) -->
-    <Color x:Key="SurfacePageColorValue">#000000</Color>
-    <Color x:Key="SurfaceCardColorValue">#0D0D0D</Color>
-    <Color x:Key="SurfaceOverlayColorValue">#141414</Color>
-    <Color x:Key="SurfaceSidebarColorValue">#000000</Color>
-    
-    <!-- Glass Colors (for GradientStop) -->
-    <Color x:Key="GlassBrushColorValue">#0D0D0D</Color>
-    <Color x:Key="GlassBrushLowColorValue">#FFFFFF</Color>
-    <Color x:Key="GlassBrushMediumColorValue">#FFFFFF</Color>
-    <Color x:Key="GlassOverlayColorValue">#FFFFFF</Color>
-    
-    <!-- Border Colors (for GradientStop) -->
-    <Color x:Key="BorderDefaultColorValue">#FFFFFF</Color>
-    <Color x:Key="BorderSubtleColorValue">#FFFFFF</Color>
 
-    <!-- ─────────── SEMANTIC TEXT COLORS (Soft White - Eye Friendly) ─────────── -->
-    <SolidColorBrush x:Key="TextHeadingBrush" Color="#D4D4D4"/>
-    <SolidColorBrush x:Key="TextBodyBrush" Color="#B0B0B0"/>
-    <SolidColorBrush x:Key="TextMutedBrush" Color="#707070"/>
+    <!-- ─────────── SEMANTIC TEXT COLORS ─────────── -->
+    <SolidColorBrush x:Key="TextHeadingBrush" Color="#F0F0F5"/>
+    <SolidColorBrush x:Key="TextBodyBrush" Color="#C8C8D0"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#8888A0"/>
     <SolidColorBrush x:Key="TextInverseBrush" Color="#0D0D12"/>
-    <SolidColorBrush x:Key="TextLinkBrush" Color="#6BA3E0"/>
-    <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="TextLinkBrush" Color="#4BA0E8"/>
+    <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#FFFFFF"/>
 
-    <!-- ─────────── SEMANTIC BORDER COLORS (Subtle - Dark Theme) ─────────── -->
-    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#FFFFFF" Opacity="0.03"/>
-    <SolidColorBrush x:Key="BorderDefaultBrush" Color="#FFFFFF" Opacity="0.06"/>
-    <SolidColorBrush x:Key="BorderStrongBrush" Color="#FFFFFF" Opacity="0.10"/>
+    <!-- ─────────── SEMANTIC BORDER COLORS ─────────── -->
+    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#FFFFFF" Opacity="0.06"/>
+    <SolidColorBrush x:Key="BorderDefaultBrush" Color="#FFFFFF" Opacity="0.10"/>
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="#FFFFFF" Opacity="0.18"/>
 
     <!-- ─────────── SEMANTIC STATUS BACKGROUNDS (soft tints) ─────────── -->
     <SolidColorBrush x:Key="StatusSuccessBg" Color="#107C10" Opacity="0.12"/>
-    <SolidColorBrush x:Key="StatusSuccessBgDark" Color="#107C10" Opacity="0.20"/>
-    <SolidColorBrush x:Key="StatusSuccessFgDark" Color="#107C10"/>
     <SolidColorBrush x:Key="StatusSuccessFg" Color="#5CD65C"/>
     <SolidColorBrush x:Key="StatusWarningBg" Color="#FF8C00" Opacity="0.12"/>
-    <SolidColorBrush x:Key="StatusWarningBgDark" Color="#FF8C00" Opacity="0.20"/>
-    <SolidColorBrush x:Key="StatusWarningFgDark" Color="#FF8C00"/>
     <SolidColorBrush x:Key="StatusWarningFg" Color="#FFB74D"/>
     <SolidColorBrush x:Key="StatusErrorBg"   Color="#E81123" Opacity="0.12"/>
-    <SolidColorBrush x:Key="StatusErrorBgDark"   Color="#E81123" Opacity="0.20"/>
-    <SolidColorBrush x:Key="StatusErrorFgDark"   Color="#E81123"/>
     <SolidColorBrush x:Key="StatusErrorFg"   Color="#FF6B6B"/>
     <SolidColorBrush x:Key="StatusInfoBg"    Color="#0078D4" Opacity="0.12"/>
-    <SolidColorBrush x:Key="StatusInfoBgLight" Color="#0078D4" Opacity="0.08"/>
-    <SolidColorBrush x:Key="StatusInfoBgDark"  Color="#0078D4" Opacity="0.20"/>
-    <SolidColorBrush x:Key="StatusInfoFgDark"  Color="#0078D4"/>
     <SolidColorBrush x:Key="StatusInfoFg"    Color="#64B5F6"/>
     <SolidColorBrush x:Key="StatusNeutralBg" Color="#FFFFFF" Opacity="0.06"/>
     <SolidColorBrush x:Key="StatusNeutralFg" Color="#A0A0B0"/>
 
-    <!-- ─────────── KPI CARD ACCENT COLORS (For GradientStop) ─────────── -->
-    <Color x:Key="KpiBlueStartColor">#0078D4</Color>
-    <Color x:Key="KpiBlueEndColor">#00B7C3</Color>
-    <Color x:Key="KpiGreenStartColor">#107C10</Color>
-    <Color x:Key="KpiGreenEndColor">#00C853</Color>
-    <Color x:Key="KpiOrangeStartColor">#FF8C00</Color>
-    <Color x:Key="KpiOrangeEndColor">#FFB74D</Color>
-    <Color x:Key="KpiPurpleStartColor">#6366F1</Color>
-    <Color x:Key="KpiPurpleEndColor">#A78BFA</Color>
-    <Color x:Key="KpiRedStartColor">#E81123</Color>
-    <Color x:Key="KpiRedEndColor">#FF6B6B</Color>
-    <Color x:Key="KpiCyanStartColor">#00B7C3</Color>
-    <Color x:Key="KpiCyanEndColor">#00E5FF</Color>
-
     <!-- ─────────── KPI CARD ACCENT GRADIENTS ─────────── -->
     <LinearGradientBrush x:Key="KpiGradientBlue" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource KpiBlueStartColor}" Offset="0"/>
-        <GradientStop Color="{StaticResource KpiBlueEndColor}" Offset="1"/>
+        <GradientStop Color="#0078D4" Offset="0"/>
+        <GradientStop Color="#00B7C3" Offset="1"/>
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="KpiGradientGreen" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource KpiGreenStartColor}" Offset="0"/>
-        <GradientStop Color="{StaticResource KpiGreenEndColor}" Offset="1"/>
+        <GradientStop Color="#107C10" Offset="0"/>
+        <GradientStop Color="#00C853" Offset="1"/>
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="KpiGradientOrange" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource KpiOrangeStartColor}" Offset="0"/>
-        <GradientStop Color="{StaticResource KpiOrangeEndColor}" Offset="1"/>
+        <GradientStop Color="#FF8C00" Offset="0"/>
+        <GradientStop Color="#FFB74D" Offset="1"/>
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="KpiGradientPurple" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource KpiPurpleStartColor}" Offset="0"/>
-        <GradientStop Color="{StaticResource KpiPurpleEndColor}" Offset="1"/>
+        <GradientStop Color="#6366F1" Offset="0"/>
+        <GradientStop Color="#A78BFA" Offset="1"/>
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="KpiGradientRed" StartPoint="0,0" EndPoint="1,1">
@@ -192,15 +141,6 @@
     <SolidColorBrush x:Key="PressedOverlayBrush" Color="#FFFFFF" Opacity="0.08"/>
     <SolidColorBrush x:Key="FocusRingBrush" Color="#4BA0E8"/>
     <SolidColorBrush x:Key="SelectedRowBrush" Color="#0078D4" Opacity="0.10"/>
-
-    <!-- ─────────── DROP SHADOWS ─────────── -->
-    <DropShadowEffect x:Key="DropShadow" BlurRadius="15" ShadowDepth="2" Direction="315" Color="#000000" Opacity="0.5"/>
-    <DropShadowEffect x:Key="DropShadowLight" BlurRadius="8" ShadowDepth="1" Direction="270" Color="#000000" Opacity="0.3"/>
-    <DropShadowEffect x:Key="DropShadowHeavy" BlurRadius="30" ShadowDepth="4" Direction="315" Color="#000000" Opacity="0.6"/>
-
-    <!-- ─────────── LEGACY COMPATIBILITY (View'ların kullandığı eski key'ler) ─────────── -->
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F0F0F5"/>
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#8888A0"/>
 
     <!-- ─────────── COMPONENT-SPECIFIC DIMENSIONS ─────────── -->
     <!-- DataGrid -->

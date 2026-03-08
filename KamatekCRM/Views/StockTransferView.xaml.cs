@@ -1,4 +1,5 @@
 using System.Windows;
+using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Views
 {
@@ -7,11 +8,10 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class StockTransferView : Window
     {
-        public StockTransferView()
+        public StockTransferView(StockTransferViewModel viewModel)
         {
             InitializeComponent();
+            DataContext = viewModel;
         }
-
-
     }
 }

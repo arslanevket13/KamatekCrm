@@ -2,7 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
-             Background="#F5F5F5">
+             Background="{DynamicResource SurfacePageBrush}">
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
@@ -13,7 +13,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <TextBlock Text="Finansal Sağlık &amp; Kârlılık 💰" FontSize="24" FontWeight="Bold" Foreground="#37474F" Margin="0,0,0,20"/>
+        <TextBlock Text="Finansal Sağlık &amp; Kârlılık 💰" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,20"/>
 
         <!-- KPI Cards -->
         <Grid Grid.Row="1" Margin="0,0,0,20">
@@ -25,24 +25,24 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <StackPanel>
-                    <TextBlock Text="Toplam Ciro (Revenue)" Foreground="#546E7A" FontSize="14"/>
-                    <TextBlock Text="{Binding TotalRevenue, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="#2E7D32"/>
+                    <TextBlock Text="Toplam Ciro (Revenue)" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="14"/>
+                    <TextBlock Text="{Binding TotalRevenue, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}"/>
                 </StackPanel>
             </Border>
 
-            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <StackPanel>
-                    <TextBlock Text="Toplam Maliyet (Cost)" Foreground="#546E7A" FontSize="14"/>
-                    <TextBlock Text="{Binding TotalCost, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="#C62828"/>
+                    <TextBlock Text="Toplam Maliyet (Cost)" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="14"/>
+                    <TextBlock Text="{Binding TotalCost, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ThemeError}"/>
                 </StackPanel>
             </Border>
 
-            <Border Grid.Column="4" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="4" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <StackPanel>
-                    <TextBlock Text="Net Kâr (Profit)" Foreground="#546E7A" FontSize="14"/>
-                    <TextBlock Text="{Binding NetProfit, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="#FF8F00"/>
+                    <TextBlock Text="Net Kâr (Profit)" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="14"/>
+                    <TextBlock Text="{Binding NetProfit, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ThemeWarning}"/>
                 </StackPanel>
             </Border>
         </Grid>
@@ -56,41 +56,41 @@
             </Grid.ColumnDefinitions>
 
             <!-- Line Chart: Income vs Expense -->
-            <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Aylık Gelir / Gider Analizi" FontWeight="Bold" Foreground="#455A64" Margin="0,0,0,10"/>
+                    <TextBlock Text="Aylık Gelir / Gider Analizi" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,10"/>
                     <lvc:CartesianChart Grid.Row="1" Series="{Binding MonthlyFinancialSeries}" XAxes="{Binding MonthlyXAxes}"/>
                 </Grid>
             </Border>
 
             <!-- Pie Chart: Cost Breakdown -->
-            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+            <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="Tahmini Maliyet Dağılımı" FontWeight="Bold" Foreground="#455A64" Margin="0,0,0,10"/>
+                    <TextBlock Text="Tahmini Maliyet Dağılımı" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,10"/>
                     <lvc:PieChart Grid.Row="1" Series="{Binding CostBreakdownSeries}" LegendPosition="Bottom"/>
                 </Grid>
             </Border>
         </Grid>
 
         <!-- DataGrid: Project Profitability -->
-        <Border Grid.Row="3" Background="White" CornerRadius="8" Padding="15" Effect="{StaticResource DropShadow}">
+        <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="15" Effect="{DynamicResource DropShadow}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Text="Proje Bazlı Kârlılık Raporu (Top 20)" FontWeight="Bold" Foreground="#455A64" Margin="0,0,0,10"/>
+                <TextBlock Text="Proje Bazlı Kârlılık Raporu (Top 20)" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,10"/>
                 
                 <DataGrid Grid.Row="1" ItemsSource="{Binding ProjectProfits}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                          HeadersVisibility="Column" GridLinesVisibility="Horizontal" Background="White" BorderThickness="0">
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0">
                     <DataGrid.Resources>
                          <Style TargetType="DataGridColumnHeader">
                             <Setter Property="Background" Value="Transparent"/>
@@ -125,3 +125,4 @@
         </Border>
     </Grid>
 </UserControl>
+

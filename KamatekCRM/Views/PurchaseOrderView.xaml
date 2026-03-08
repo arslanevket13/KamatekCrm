@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header Card -->
-        <Border Grid.Row="0" Margin="0,0,0,16" Padding="16" CornerRadius="8" Background="{DynamicResource CardBrush}" Effect="{DynamicResource SubtleShadow}">
+        <Border Grid.Row="0" Margin="0,0,0,16" Padding="16" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource SubtleShadow}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -28,8 +28,8 @@
                         <ui:SymbolIcon Symbol="Cart24" Foreground="{DynamicResource PrimaryBrush}" FontSize="24"/>
                     </Border>
                     <StackPanel>
-                        <TextBlock Text="Satın Alma Siparişi" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="Tedarikçi seçimi ve ürün girişi yapınız" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="Satın Alma Siparişi" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="Tedarikçi seçimi ve ürün girişi yapınız" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -43,14 +43,14 @@
         </Border>
 
         <!-- Manual Entry Panel -->
-        <Border Grid.Row="1" Margin="0,0,0,16" Padding="16" CornerRadius="8" Background="{DynamicResource CardBrush}" Effect="{DynamicResource SubtleShadow}">
+        <Border Grid.Row="1" Margin="0,0,0,16" Padding="16" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource SubtleShadow}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 
-                <TextBlock Text="MANUEL ÜRÜN EKLE" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12"/>
+                <TextBlock Text="MANUEL ÜRÜN EKLE" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,0,12"/>
                 
                 <Grid Grid.Row="1" Margin="0,8,0,0">
                     <Grid.ColumnDefinitions>
@@ -76,14 +76,14 @@
         </Border>
 
         <!-- Items List -->
-        <Border Grid.Row="2" CornerRadius="8" Background="{DynamicResource CardBrush}" Effect="{DynamicResource SubtleShadow}" VerticalAlignment="Stretch">
+        <Border Grid.Row="2" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource SubtleShadow}" VerticalAlignment="Stretch">
             <DataGrid ItemsSource="{Binding CurrentOrderItems}" AutoGenerateColumns="False" 
                       CanUserAddRows="False" 
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal">
                 <DataGrid.Resources>
                     <Style TargetType="DataGridColumnHeader">
                         <Setter Property="FontWeight" Value="Bold"/>
-                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                         <Setter Property="Padding" Value="12,8"/>
                         <Setter Property="Background" Value="{DynamicResource BackgroundSecondaryBrush}"/>
                     </Style>
@@ -130,3 +130,4 @@
         </Grid>
     </Grid>
 </UserControl>
+

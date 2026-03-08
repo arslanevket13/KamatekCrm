@@ -10,7 +10,7 @@
              d:DataContext="{d:DesignInstance Type=viewmodels:CustomerDetailViewModel, IsDesignTimeCreatable=False}"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
-             Background="{StaticResource BackgroundColor}">
+             Background="{DynamicResource SurfacePageBrush}">
 
     <UserControl.Resources>
         <helpers:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter"/>
@@ -33,9 +33,9 @@
         </Grid>
 
         <!-- ========== HEADER DASHBOARD ========== -->
-        <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,20">
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20" Margin="0,0,0,20">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Color="Black"/>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Color="{DynamicResource ThemeShadowColor}"/>
             </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -47,58 +47,58 @@
                 <!-- Avatar & Basic Info -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Avatar Placeholder -->
-                    <Border Width="64" Height="64" CornerRadius="32" Background="#E3F2FD" BorderBrush="#2196F3" BorderThickness="2" Margin="0,0,16,0">
+                    <Border Width="64" Height="64" CornerRadius="32" Background="{DynamicResource StatusInfoBg}" BorderBrush="{DynamicResource StatusInfoFg}" BorderThickness="2" Margin="0,0,16,0">
                         <TextBlock Text="👤" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding FullName}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryColor}"/>
+                        <TextBlock Text="{Binding FullName}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding CompanyName}" FontSize="14" Foreground="{StaticResource TextSecondaryColor}"
+                            <TextBlock Text="{Binding CompanyName}" FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                        Visibility="{Binding CustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Corporate}"/>
-                            <Border Background="#E0F7FA" CornerRadius="4" Padding="6,2" Margin="8,0,0,0">
-                                <TextBlock Text="{Binding CustomerCode}" FontSize="11" FontWeight="SemiBold" Foreground="#006064"/>
+                            <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="4" Padding="6,2" Margin="8,0,0,0">
+                                <TextBlock Text="{Binding CustomerCode}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFgDark}"/>
                             </Border>
                         </StackPanel>
-                        <TextBlock Text="{Binding City}" FontSize="12" Foreground="{StaticResource TextSecondaryColor}" Margin="0,4,0,0"/>
+                        <TextBlock Text="{Binding City}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
                         
                         <!-- Yeni Alanlar: Segment, Etiketler, Doğum Günü -->
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <!-- Segment -->
                             <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0"
-                                    Background="{Binding Segment, Converter={StaticResource SegmentToColorConverter}, FallbackValue=#E0E0E0}">
-                                <TextBlock Text="{Binding Segment, FallbackValue='Segment Yok'}" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                    Background="{Binding Segment, Converter={StaticResource SegmentToColorConverter}, FallbackValue={DynamicResource ThemeBorder}}">
+                                <TextBlock Text="{Binding Segment, FallbackValue='Segment Yok'}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                             </Border>
                             
                             <!-- Sadakat Seviyesi -->
-                            <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0" Background="#FFD700"
+                            <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0" Background="{DynamicResource ThemeWarning}"
                                     Visibility="{Binding LoyaltyLevel, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}">
-                                <TextBlock Text="{Binding LoyaltyLevel, FallbackValue=VIP}" FontSize="11" FontWeight="SemiBold" Foreground="#333"/>
+                                <TextBlock Text="{Binding LoyaltyLevel, FallbackValue=VIP}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}"/>
                             </Border>
                             
                             <!-- Doğum Günü Yaklaşıyor -->
-                            <Border CornerRadius="4" Padding="8,4" Background="#E91E63"
+                            <Border CornerRadius="4" Padding="8,4" Background="{DynamicResource ThemeError}"
                                     Visibility="{Binding HasUpcomingBirthday, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <TextBlock Text="🎂 Doğum Günü Yaklaşıyor!" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                <TextBlock Text="🎂 Doğum Günü Yaklaşıyor!" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
                             </Border>
                         </StackPanel>
                         
                         <!-- Etiketler -->
-                        <TextBlock Text="{Binding Tags}" FontSize="11" Foreground="#9E9E9E" Margin="0,4,0,0"
+                        <TextBlock Text="{Binding Tags}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"
                                    Visibility="{Binding Tags, Converter={StaticResource NullToVisibilityConverter}}"/>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- Balance Widget -->
-                <Border Grid.Column="2" Background="#FAFAFA" CornerRadius="8" Padding="20,10" BorderBrush="#EEEEEE" BorderThickness="1">
+                <Border Grid.Column="2" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="20,10" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                     <StackPanel HorizontalAlignment="Right">
-                        <TextBlock Text="GÜNCEL BAKİYE" FontSize="11" Foreground="#757575" FontWeight="Bold" HorizontalAlignment="Right"/>
+                        <TextBlock Text="GÜNCEL BAKİYE" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontWeight="Bold" HorizontalAlignment="Right"/>
                         <TextBlock Text="{Binding TotalBalance, StringFormat=c2}" 
                                    FontSize="28" FontWeight="Bold" 
                                    Foreground="{Binding BalanceColor}" 
                                    HorizontalAlignment="Right"/>
                         <TextBlock Text="{Binding TotalSpent, StringFormat='Toplam Harcama: {0:c2}'}" 
-                                   FontSize="11" Foreground="#9E9E9E" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+                                   FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Right" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -118,7 +118,7 @@
                     <!-- Actions Toolbar -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16" HorizontalAlignment="Right">
                         <Button Content="➕ Tahsilat Al" Command="{Binding AddPaymentCommand}"
-                                Background="#dcedc8" Foreground="#33691E" BorderThickness="0"
+                                Background="{DynamicResource StatusSuccessBg}" Foreground="{DynamicResource StatusSuccessFgDark}" BorderThickness="0"
                                 Padding="15,8" FontSize="13" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,10,0">
                             <Button.Resources>
                                 <Style TargetType="Border">
@@ -127,7 +127,7 @@
                             </Button.Resources>
                         </Button>
                         <Button Content="➖ Borç Ekle" Command="{Binding AddDebtCommand}"
-                                Background="#ffccbc" Foreground="#BF360C" BorderThickness="0"
+                                Background="{DynamicResource StatusErrorBg}" Foreground="{DynamicResource StatusErrorFgDark}" BorderThickness="0"
                                 Padding="15,8" FontSize="13" FontWeight="SemiBold" Cursor="Hand">
                             <Button.Resources>
                                 <Style TargetType="Border">
@@ -146,11 +146,11 @@
                               CanUserAddRows="False"
                               IsReadOnly="True"
                               RowHeight="45"
-                              AlternatingRowBackground="#FAFAFA"
+                              AlternatingRowBackground="{DynamicResource ApplicationBackgroundBrush}"
                               GridLinesVisibility="Horizontal"
-                              HorizontalGridLinesBrush="#EEEEEE">
+                              HorizontalGridLinesBrush="{DynamicResource BorderDefaultBrush}">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="140" Foreground="#616161"/>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="140" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                             
                             <DataGridTemplateColumn Header="İşlem Türü" Width="120">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -160,10 +160,10 @@
                                                 <Style TargetType="Border">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Type}" Value="{x:Static enums:TransactionType.Payment}">
-                                                            <Setter Property="Background" Value="#E8F5E9"/>
+                                                            <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Type}" Value="{x:Static enums:TransactionType.Debt}">
-                                                            <Setter Property="Background" Value="#FFEBEE"/>
+                                                            <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -174,11 +174,11 @@
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Type}" Value="{x:Static enums:TransactionType.Payment}">
                                                                 <Setter Property="Text" Value="⬇️ Tahsilat"/>
-                                                                <Setter Property="Foreground" Value="#2E7D32"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource ThemeSuccess}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Type}" Value="{x:Static enums:TransactionType.Debt}">
                                                                 <Setter Property="Text" Value="⬆️ Borç"/>
-                                                                <Setter Property="Foreground" Value="#C62828"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource ThemeError}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -189,7 +189,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="*" Foreground="#424242"/>
+                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="*" Foreground="{DynamicResource TextBodyBrush}"/>
                             
                             <DataGridTextColumn Header="Tutar" Binding="{Binding Amount, StringFormat=c2}" Width="120">
                                 <DataGridTextColumn.ElementStyle>
@@ -198,10 +198,10 @@
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Type}" Value="{x:Static enums:TransactionType.Payment}">
-                                                <Setter Property="Foreground" Value="#2E7D32"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource ThemeSuccess}"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Type}" Value="{x:Static enums:TransactionType.Debt}">
-                                                <Setter Property="Foreground" Value="#C62828"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource ThemeError}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -232,7 +232,7 @@
                               CanUserAddRows="False"
                               IsReadOnly="True"
                               RowHeight="50"
-                              AlternatingRowBackground="#FAFAFA">
+                              AlternatingRowBackground="{DynamicResource ApplicationBackgroundBrush}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="50"/>
                             <DataGridTextColumn Header="Tarih" Binding="{Binding CreatedDate, StringFormat=dd.MM.yyyy}" Width="90"/>
@@ -245,16 +245,16 @@
                                                 <Style TargetType="Border">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.Pending}">
-                                                            <Setter Property="Background" Value="#FFF3E0"/>
+                                                            <Setter Property="Background" Value="{DynamicResource StatusWarningBg}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.InProgress}">
-                                                            <Setter Property="Background" Value="#E3F2FD"/>
+                                                            <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.Completed}">
-                                                            <Setter Property="Background" Value="#E8F5E9"/>
+                                                            <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.Cancelled}">
-                                                            <Setter Property="Background" Value="#FFEBEE"/>
+                                                            <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -265,19 +265,19 @@
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.Pending}">
                                                                 <Setter Property="Text" Value="BEKLİYOR"/>
-                                                                <Setter Property="Foreground" Value="#EF6C00"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource StatusWarningFgDark}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.InProgress}">
                                                                 <Setter Property="Text" Value="İŞLEMDE"/>
-                                                                <Setter Property="Foreground" Value="#1565C0"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource StatusInfoFgDark}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.Completed}">
                                                                 <Setter Property="Text" Value="TAMAMLANDI"/>
-                                                                <Setter Property="Foreground" Value="#2E7D32"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource ThemeSuccess}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Status}" Value="{x:Static enums:JobStatus.Cancelled}">
                                                                 <Setter Property="Text" Value="İPTAL"/>
-                                                                <Setter Property="Foreground" Value="#C62828"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource ThemeError}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -290,7 +290,7 @@
 
                             <DataGridTextColumn Header="Kategori" Binding="{Binding JobCategory}" Width="120" FontWeight="SemiBold"/>
                             <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="*"/>
-                            <DataGridTextColumn Header="Tutar" Binding="{Binding Price, StringFormat=c2}" Width="100" FontWeight="Bold" Foreground="#424242"/>
+                            <DataGridTextColumn Header="Tutar" Binding="{Binding Price, StringFormat=c2}" Width="100" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -306,7 +306,7 @@
                               CanUserAddRows="False"
                               IsReadOnly="True"
                               RowHeight="45"
-                              AlternatingRowBackground="#FAFAFA">
+                              AlternatingRowBackground="{DynamicResource ApplicationBackgroundBrush}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Satış No" Binding="{Binding OrderNumber}" Width="100" FontWeight="Bold"/>
                             <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat=dd.MM.yyyy}" Width="100"/>
@@ -317,14 +317,14 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Toplam Tutar" Binding="{Binding TotalAmount, StringFormat=c2}" Width="120" FontWeight="Bold" Foreground="#2E7D32"/>
+                            <DataGridTextColumn Header="Toplam Tutar" Binding="{Binding TotalAmount, StringFormat=c2}" Width="120" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
                             <DataGridTextColumn Header="Ödeme Tipi" Binding="{Binding PaymentMethod}" Width="100"/>
                         </DataGrid.Columns>
                     </DataGrid>
                     
                     <TextBlock Text="Henüz satış kaydı bulunmamaktadır." 
                                Visibility="{Binding SalesOrders.Count, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverse}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#BDBDBD" FontSize="16"/>
+                               HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="16"/>
                 </Grid>
             </TabItem>
 
@@ -363,7 +363,7 @@
                         <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16"
                                 Visibility="{Binding CustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Individual}">
                             <StackPanel>
-                                <TextBlock Text="Bireysel Müşteri Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Bireysel Müşteri Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,12"/>
                                 <Label Content="TC Kimlik No" Style="{StaticResource ModernLabel}"/>
                                 <TextBox Text="{Binding TcKimlikNo, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernTextBox}" MaxLength="11" Width="200" HorizontalAlignment="Left"/>
@@ -374,7 +374,7 @@
                         <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16"
                                 Visibility="{Binding CustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Corporate}">
                             <StackPanel>
-                                <TextBlock Text="Kurumsal Müşteri Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Kurumsal Müşteri Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,12"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -405,7 +405,7 @@
                         <!-- Contact Info -->
                         <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="İletişim Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,12"/>
+                                <TextBlock Text="İletişim Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,12"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -436,7 +436,7 @@
                         <!-- Address Info -->
                         <Border Grid.Row="3" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="Adres Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource PrimaryColor}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Adres Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,12"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -502,3 +502,5 @@
         </TabControl>
     </Grid>
 </UserControl>
+
+

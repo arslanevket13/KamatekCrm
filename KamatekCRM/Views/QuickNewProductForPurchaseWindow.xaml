@@ -8,7 +8,7 @@
         Height="580" Width="520"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="#F5F7FA">
+        Background="{DynamicResource SurfacePageBrush}">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolVis"/>
@@ -16,7 +16,7 @@
         <Style x:Key="Label" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
             <Setter Property="Margin" Value="0,10,0,3"/>
         </Style>
 
@@ -24,9 +24,9 @@
             <Setter Property="Height" Value="34"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Padding" Value="9,5"/>
-            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Background" Value="White"/>
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
@@ -41,7 +41,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="#2563EB"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -50,12 +50,12 @@
             <Setter Property="Height" Value="34"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="BorderBrush" Value="#CBD5E1"/>
-            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
         </Style>
     </Window.Resources>
 
-    <Border Margin="20" Background="White" CornerRadius="12">
+    <Border Margin="20" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
         <Border.Effect>
             <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.08"/>
         </Border.Effect>
@@ -69,10 +69,10 @@
 
             <!-- Header -->
             <StackPanel Grid.Row="0">
-                <TextBlock Text="Yeni Ürün Oluştur" FontSize="20" FontWeight="Bold" Foreground="#1E293B"/>
+                <TextBlock Text="Yeni Ürün Oluştur" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                 <TextBlock Text="Siparişe eklenecek ürün bilgilerini girin." 
-                           FontSize="11" Foreground="#94A3B8" Margin="0,3,0,0"/>
-                <Separator Margin="0,12,0,0" Background="#E2E8F0"/>
+                           FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,3,0,0"/>
+                <Separator Margin="0,12,0,0" Background="{DynamicResource BorderDefaultBrush}"/>
             </StackPanel>
 
             <!-- Two-column form -->
@@ -131,9 +131,9 @@
                                  Style="{StaticResource Field}"/>
 
                         <!-- Info note -->
-                        <Border Background="#EFF6FF" CornerRadius="6" Padding="10,8" Margin="0,14,0,0">
+                        <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="6" Padding="10,8" Margin="0,14,0,0">
                             <TextBlock Text="💡 SKU boş bırakılırsa otomatik tanımlanır. Satış fiyatı boş bırakılırsa alış × 1.20 uygulanır."
-                                       FontSize="11" Foreground="#3B82F6" TextWrapping="Wrap"/>
+                                       FontSize="11" Foreground="{DynamicResource ThemePrimary}" TextWrapping="Wrap"/>
                         </Border>
                     </StackPanel>
                 </Grid>
@@ -142,9 +142,9 @@
             <!-- Footer -->
             <StackPanel Grid.Row="2" Margin="0,14,0,0">
                 <!-- Error -->
-                <Border Background="#FEF2F2" CornerRadius="6" Padding="10,8" Margin="0,0,0,10"
+                <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="6" Padding="10,8" Margin="0,0,0,10"
                         Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
-                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#DC2626" FontSize="12" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"/>
                 </Border>
 
                 <Grid>
@@ -157,8 +157,8 @@
                     <Button Grid.Column="0" Content="İptal"
                             Command="{Binding CancelCommand}"
                             Height="38" FontSize="13"
-                            Background="#F8FAFC" Foreground="#64748B"
-                            BorderBrush="#CBD5E1" BorderThickness="1" Cursor="Hand">
+                            Background="{DynamicResource ApplicationBackgroundBrush}" Foreground="{DynamicResource TextBodyBrush}"
+                            BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Cursor="Hand">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border Background="{TemplateBinding Background}"
@@ -176,16 +176,16 @@
                             Command="{Binding SaveProductCommand}"
                             IsDefault="True"
                             Height="38" FontSize="13" FontWeight="SemiBold"
-                            Foreground="White" BorderThickness="0" Cursor="Hand">
+                            Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0" Cursor="Hand">
                         <Button.Style>
                             <Style TargetType="Button">
-                                <Setter Property="Background" Value="#2563EB"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
                                 <Style.Triggers>
                                     <Trigger Property="IsEnabled" Value="False">
-                                        <Setter Property="Background" Value="#93C5FD"/>
+                                        <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
                                     </Trigger>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#1D4ED8"/>
+                                        <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
@@ -203,3 +203,4 @@
         </Grid>
     </Border>
 </Window>
+

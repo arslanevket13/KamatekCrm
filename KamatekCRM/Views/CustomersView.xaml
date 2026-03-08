@@ -12,7 +12,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="1200"
              helpers:AnimationHelper.EntranceAnimation="FadeIn"
-             Background="{DynamicResource ThemeBackground}">
+             Background="{DynamicResource ApplicationBackgroundBrush}">
 
     <UserControl.Resources>
         <helpers:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter"/>
@@ -30,7 +30,7 @@
                    Text="Müşteri Yönetimi" 
                    FontSize="28" 
                    FontWeight="Bold"
-                   Foreground="{DynamicResource ThemeTextPrimary}"
+                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                    Margin="0,0,0,16"/>
 
         <!-- İstatistik Kartları -->
@@ -43,82 +43,82 @@
             </Grid.ColumnDefinitions>
             
             <!-- Toplam Müşteri -->
-            <Border Grid.Column="0" Background="#1A237E" CornerRadius="12" Margin="0,0,8,0" Padding="20" Cursor="Hand">
+            <Border Grid.Column="0" Background="{DynamicResource ThemePrimaryDark}" CornerRadius="12" Margin="0,0,8,0" Padding="20" Cursor="Hand">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="#1A237E"/>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="{DynamicResource ThemePrimaryDarkColor}"/>
                 </Border.Effect>
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding ClearTypeFilterCommand}"/>
                 </Border.InputBindings>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <ui:SymbolIcon Symbol="People24" FontSize="16" Foreground="#B3E5FC" Margin="0,0,8,0"/>
-                        <TextBlock Text="Toplam" FontSize="12" Foreground="#B3E5FC"/>
+                        <ui:SymbolIcon Symbol="People24" FontSize="16" Foreground="{DynamicResource ThemePrimaryLight}" Margin="0,0,8,0"/>
+                        <TextBlock Text="Toplam" FontSize="12" Foreground="{DynamicResource ThemePrimaryLight}"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding TotalCustomers}" FontSize="32" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="Müşteri" FontSize="11" Foreground="#B3E5FC"/>
+                    <TextBlock Text="{Binding TotalCustomers}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="Müşteri" FontSize="11" Foreground="{DynamicResource ThemePrimaryLight}"/>
                 </StackPanel>
             </Border>
             
             <!-- Bireysel -->
-            <Border Grid.Column="1" Background="#4CAF50" CornerRadius="12" Margin="8,0,8,0" Padding="20" Cursor="Hand">
+            <Border Grid.Column="1" Background="{DynamicResource ThemeSuccess}" CornerRadius="12" Margin="8,0,8,0" Padding="20" Cursor="Hand">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="#4CAF50"/>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="{DynamicResource ThemeSuccessColor}"/>
                 </Border.Effect>
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding ClearTypeFilterCommand}"/>
                 </Border.InputBindings>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <ui:SymbolIcon Symbol="Person24" FontSize="16" Foreground="#C8E6C9" Margin="0,0,8,0"/>
-                        <TextBlock Text="Bireysel" FontSize="12" Foreground="#C8E6C9"/>
+                        <ui:SymbolIcon Symbol="Person24" FontSize="16" Foreground="{DynamicResource ThemeSuccessLight}" Margin="0,0,8,0"/>
+                        <TextBlock Text="Bireysel" FontSize="12" Foreground="{DynamicResource ThemeSuccessLight}"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding IndividualCount}" FontSize="32" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="Müşteri" FontSize="11" Foreground="#C8E6C9"/>
+                    <TextBlock Text="{Binding IndividualCount}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="Müşteri" FontSize="11" Foreground="{DynamicResource ThemeSuccessLight}"/>
                 </StackPanel>
             </Border>
             
             <!-- Kurumsal -->
-            <Border Grid.Column="2" Background="#FF9800" CornerRadius="12" Margin="8,0,8,0" Padding="20" Cursor="Hand">
+            <Border Grid.Column="2" Background="{DynamicResource ThemeWarning}" CornerRadius="12" Margin="8,0,8,0" Padding="20" Cursor="Hand">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="#FF9800"/>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="{DynamicResource ThemeWarningColor}"/>
                 </Border.Effect>
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding ClearTypeFilterCommand}"/>
                 </Border.InputBindings>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <ui:SymbolIcon Symbol="Building24" FontSize="16" Foreground="#FFE0B2" Margin="0,0,8,0"/>
-                        <TextBlock Text="Kurumsal" FontSize="12" Foreground="#FFE0B2"/>
+                        <ui:SymbolIcon Symbol="Building24" FontSize="16" Foreground="{DynamicResource ThemeWarningLight}" Margin="0,0,8,0"/>
+                        <TextBlock Text="Kurumsal" FontSize="12" Foreground="{DynamicResource ThemeWarningLight}"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding CorporateCount}" FontSize="32" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="Müşteri" FontSize="11" Foreground="#FFE0B2"/>
+                    <TextBlock Text="{Binding CorporateCount}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="Müşteri" FontSize="11" Foreground="{DynamicResource ThemeWarningLight}"/>
                 </StackPanel>
             </Border>
             
             <!-- WalkIn -->
-            <Border Grid.Column="3" Background="#9C27B0" CornerRadius="12" Margin="8,0,0,0" Padding="20" Cursor="Hand">
+            <Border Grid.Column="3" Background="{DynamicResource ThemeInfoDark}" CornerRadius="12" Margin="8,0,0,0" Padding="20" Cursor="Hand">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="#9C27B0"/>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="{DynamicResource ThemeInfoColor}"/>
                 </Border.Effect>
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding ClearTypeFilterCommand}"/>
                 </Border.InputBindings>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <ui:SymbolIcon Symbol="Cart24" FontSize="16" Foreground="#E1BEE7" Margin="0,0,8,0"/>
-                        <TextBlock Text="Perakende" FontSize="12" Foreground="#E1BEE7"/>
+                        <ui:SymbolIcon Symbol="Cart24" FontSize="16" Foreground="{DynamicResource ThemeInfoLight}" Margin="0,0,8,0"/>
+                        <TextBlock Text="Perakende" FontSize="12" Foreground="{DynamicResource ThemeInfoLight}"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding WalkInCount}" FontSize="32" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="Müşteri" FontSize="11" Foreground="#E1BEE7"/>
+                    <TextBlock Text="{Binding WalkInCount}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="Müşteri" FontSize="11" Foreground="{DynamicResource ThemeInfoLight}"/>
                 </StackPanel>
             </Border>
         </Grid>
 
         <!-- Filtreleme ve Yeni Müşteri Butonu -->
-        <Border Grid.Row="2" Background="{DynamicResource CardBrush}" CornerRadius="12" Margin="0,0,0,16" Padding="20">
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Margin="0,0,0,16" Padding="20">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.1" Color="Black"/>
+                <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.1" Color="{DynamicResource ThemeShadowColor}"/>
             </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -155,7 +155,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Müşteri Listesi" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{StaticResource TextPrimaryColor}"/>
+                    <TextBlock Grid.Row="0" Text="Müşteri Listesi" FontWeight="SemiBold" Margin="0,0,0,10" Foreground="{DynamicResource TextHeadingBrush}"/>
 
                     <!-- Filtre Butonları -->
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
@@ -163,11 +163,11 @@
                                 Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5"/>
                         <Button Content="Bireysel" 
                                 Command="{Binding ClearTypeFilterCommand}"
-                                Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5" Background="#4CAF50"/>
+                                Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5" Background="{DynamicResource ThemeSuccess}"/>
                         <Button Content="Kurumsal" 
-                                Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5" Background="#FF9800"/>
+                                Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5" Background="{DynamicResource ThemeWarning}"/>
                         <Button Content="Perakende" 
-                                Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5" Background="#9C27B0"/>
+                                Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5" Background="{DynamicResource ThemeInfoDark}"/>
                     </StackPanel>
 
                     <!-- Arama Kutusu -->
@@ -205,13 +205,13 @@
                                                 <Style TargetType="TextBlock">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Type}" Value="Individual">
-                                                            <Setter Property="Foreground" Value="#4CAF50"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource ThemeSuccess}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Type}" Value="Corporate">
-                                                            <Setter Property="Foreground" Value="#FF9800"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource ThemeWarning}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Type}" Value="WalkIn">
-                                                            <Setter Property="Foreground" Value="#9C27B0"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource ThemeInfo}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -249,7 +249,7 @@
                         <TextBlock Text="{Binding TotalPages}" VerticalAlignment="Center" FontWeight="Bold"/>
                         <Button Content="&gt;" Command="{Binding NextPageCommand}" Style="{StaticResource ModernButton}" Width="40" Margin="10,0,0,0"/>
                         
-                        <TextBlock Text="{Binding TotalCount, StringFormat='Toplam: {0}'}" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="Gray"/>
+                        <TextBlock Text="{Binding TotalCount, StringFormat='Toplam: {0}'}" VerticalAlignment="Center" Margin="20,0,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -257,3 +257,5 @@
 
     </Grid>
 </UserControl>
+
+

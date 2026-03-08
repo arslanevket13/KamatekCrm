@@ -8,7 +8,7 @@
         Title="Müşteri Profili"
         Height="800" Width="1100"
         WindowStartupLocation="CenterOwner"
-        Background="#F5F7FA">
+        Background="{DynamicResource SurfacePageBrush}">
 
     <Grid>
         <views:CustomerDetailView x:Name="DetailView"/>
