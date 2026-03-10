@@ -18,6 +18,10 @@ namespace KamatekCrm.ViewModels
             _backupService = new BackupService();
             TakeBackupCommand = new RelayCommand(_ => TakeBackup(), _ => !IsBusy);
             RestoreBackupCommand = new RelayCommand(_ => RestoreBackup(), _ => !IsBusy);
+            
+            // Mevcut temayı yükle
+            _selectedTheme = AvailableThemes.FirstOrDefault(t => t.Id == ThemeService.CurrentTheme) ?? AvailableThemes.First();
+            
             LoadLastBackupInfo();
         }
 
@@ -35,6 +39,39 @@ namespace KamatekCrm.ViewModels
         {
             get => _lastBackupText;
             set => SetProperty(ref _lastBackupText, value);
+        }
+
+        #endregion
+
+        #region Theme Properties
+
+        public class ThemeOption
+        {
+            public string Id { get; set; } = string.Empty;
+            public string Title { get; set; } = string.Empty;
+            public string Description { get; set; } = string.Empty;
+            public string Icon { get; set; } = string.Empty;
+            public string ColorHex { get; set; } = string.Empty;
+        }
+
+        public System.Collections.ObjectModel.ObservableCollection<ThemeOption> AvailableThemes { get; } = new()
+        {
+            new ThemeOption { Id = "PremiumLight", Title = "Premium Light", Description = "Ultra-temiz beyaz tasarım", Icon = "☀️", ColorHex = "#FFFFFF" },
+            new ThemeOption { Id = "MidnightDark", Title = "Midnight Dark", Description = "Göz yormayan koyu tema", Icon = "🌙", ColorHex = "#0B0E14" },
+            new ThemeOption { Id = "Glassmorphism", Title = "Glassmorphism", Description = "Modern şeffaf akrilik", Icon = "✨", ColorHex = "#6366F1" }
+        };
+
+        private ThemeOption _selectedTheme;
+        public ThemeOption SelectedTheme
+        {
+            get => _selectedTheme;
+            set
+            {
+                if (SetProperty(ref _selectedTheme, value) && value != null)
+                {
+                    ThemeService.ChangeTheme(value.Id);
+                }
+            }
         }
 
         #endregion

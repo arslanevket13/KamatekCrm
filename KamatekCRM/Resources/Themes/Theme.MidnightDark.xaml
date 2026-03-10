@@ -1,0 +1,118 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         KAMATEK CRM — THE MASTERPIECE PALETTE (MIDNIGHT DARK THEME)
+         Ultra-Deep Navy (#0B0E14) & Glowing Accents.
+    ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- ─────────── PAGE & BACKGROUNDS (The Canvas) ─────────── -->
+    <Color x:Key="SurfacePageColor">#0B0E14</Color>
+    <SolidColorBrush x:Key="SurfacePageBrush" Color="#0B0E14"/>
+    <Color x:Key="ThemeBackgroundColor">#0B0E14</Color>
+    <SolidColorBrush x:Key="ThemeBackground" Color="#0B0E14"/>
+    <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="#0B0E14"/>
+
+    <!-- ─────────── SURFACES & CARDS (Slightly Lighter for Depth) ─────────── -->
+    <Color x:Key="SurfaceCardColor">#141821</Color>
+    <Color x:Key="ThemeSurfaceColor">#141821</Color>
+    <SolidColorBrush x:Key="ThemeSurface" Color="#141821"/>
+    <SolidColorBrush x:Key="SurfaceCardBrush" Color="#141821"/>
+    <SolidColorBrush x:Key="CardBackground" Color="#141821"/>
+    <SolidColorBrush x:Key="ThemeCard" Color="#141821"/>
+    <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#141821"/>
+
+    <Color x:Key="SurfaceSidebarColor">#141821</Color>
+    <SolidColorBrush x:Key="SurfaceSidebarBrush" Color="#141821"/>
+    <SolidColorBrush x:Key="ThemeSidebar" Color="#141821"/>
+    <SolidColorBrush x:Key="ThemeSidebarHover" Color="#1E293B"/>
+    <SolidColorBrush x:Key="ThemeSidebarActive" Color="#334155"/>
+
+    <!-- ─────────── CORE TYPOGRAPHY (Absolute readability) ─────────── -->
+    <!-- TextHeadingBrush: Soft slate white -->
+    <Color x:Key="ThemeTextPrimaryColor">#F1F5F9</Color>
+    <SolidColorBrush x:Key="ThemeTextPrimary" Color="#F1F5F9"/>
+    <SolidColorBrush x:Key="TextHeadingBrush" Color="#F1F5F9"/>
+
+    <!-- TextBodyBrush: Dimmer slate (#94A3B8) -->
+    <Color x:Key="ThemeTextSecondaryColor">#94A3B8</Color>
+    <SolidColorBrush x:Key="ThemeTextSecondary" Color="#94A3B8"/>
+    <SolidColorBrush x:Key="TextBodyBrush" Color="#CBD5E1"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#64748B"/>
+    <SolidColorBrush x:Key="ThemeTextTertiary" Color="#475569"/>
+    
+    <!-- Legacy Mappings -->
+    <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#F1F5F9"/>
+    <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#94A3B8"/>
+
+    <SolidColorBrush x:Key="TextInverseBrush" Color="#020617"/>
+    <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="PrimaryForeground" Color="#020617"/>
+    <SolidColorBrush x:Key="TextLinkBrush" Color="#60A5FA"/>
+
+    <!-- ─────────── BORDERS & DIVIDERS (Premium Subtlety) ─────────── -->
+    <Color x:Key="ThemeBorderColor">#1E293B</Color>
+    <SolidColorBrush x:Key="ThemeBorder" Color="#1E293B" Opacity="0.8"/>
+    <SolidColorBrush x:Key="ThemeDivider" Color="#1E293B"/>
+    <SolidColorBrush x:Key="BorderDefaultBrush" Color="#1E293B"/>
+
+    <!-- ─────────── BRAND COLORS & ACCENTS ─────────── -->
+    <Color x:Key="ThemePrimaryColor">#3B82F6</Color>
+    <Color x:Key="ThemeAccentColor">#0ea5e9</Color>
+    
+    <SolidColorBrush x:Key="ThemePrimary" Color="#3B82F6"/>
+    <SolidColorBrush x:Key="ThemeAccent" Color="#0ea5e9"/>
+    
+    <SolidColorBrush x:Key="PrimaryColor" Color="#3B82F6"/>
+    <SolidColorBrush x:Key="AccentColor" Color="#0ea5e9"/>
+
+    <!-- ─────────── STATUS COLORS (Success, Warning, Error) ─────────── -->
+    <Color x:Key="ThemeSuccessColor">#10B981</Color>
+    <Color x:Key="ThemeWarningColor">#F59E0B</Color>
+    <Color x:Key="ThemeErrorColor">#EF4444</Color>
+    <Color x:Key="ThemeInfoColor">#3B82F6</Color>
+
+    <SolidColorBrush x:Key="ThemeSuccess" Color="#10B981"/>
+    <SolidColorBrush x:Key="ThemeWarning" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="ThemeError" Color="#EF4444"/>
+    <SolidColorBrush x:Key="ThemeInfo" Color="#3B82F6"/>
+
+    <SolidColorBrush x:Key="StatusSuccessBg" Color="#10B981" Opacity="0.15"/>
+    <SolidColorBrush x:Key="StatusSuccessFg" Color="#34D399"/>
+    <SolidColorBrush x:Key="StatusWarningBg" Color="#F59E0B" Opacity="0.15"/>
+    <SolidColorBrush x:Key="StatusWarningFg" Color="#FBBF24"/>
+    <SolidColorBrush x:Key="StatusErrorBg"   Color="#EF4444" Opacity="0.15"/>
+    <SolidColorBrush x:Key="StatusErrorFg"   Color="#F87171"/>
+    <SolidColorBrush x:Key="StatusInfoBg"    Color="#3B82F6" Opacity="0.15"/>
+    <SolidColorBrush x:Key="StatusInfoFg"    Color="#60A5FA"/>
+
+    <!-- ─────────── WORLD-CLASS LINEAR GRADIENTS (KPIs) ─────────── -->
+    <LinearGradientBrush x:Key="KpiGradientPrimary" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#3B82F6" Offset="0"/>
+        <GradientStop Color="#0ea5e9" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <LinearGradientBrush x:Key="KpiGradientSuccess" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#059669" Offset="0"/>
+        <GradientStop Color="#10B981" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientWarning" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E11D48" Offset="0"/>
+        <GradientStop Color="#F59E0B" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Legacy Gradient Mappings -->
+    <LinearGradientBrush x:Key="ThemePrimaryGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#3B82F6" Offset="0"/>
+        <GradientStop Color="#60A5FA" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- ─────────── GLASSMORPHISM (Subtle Hover / Overlay states) ─────────── -->
+    <SolidColorBrush x:Key="GlassBrushLow" Color="#E2E8F0" Opacity="0.03"/>
+    <SolidColorBrush x:Key="GlassBrushMedium" Color="#E2E8F0" Opacity="0.06"/>
+    <SolidColorBrush x:Key="HoverOverlayBrush" Color="#E2E8F0" Opacity="0.06"/>
+    <SolidColorBrush x:Key="PressedOverlayBrush" Color="#E2E8F0" Opacity="0.10"/>
+    <SolidColorBrush x:Key="SelectedRowBrush" Color="#3B82F6" Opacity="0.15"/>
+
+</ResourceDictionary>

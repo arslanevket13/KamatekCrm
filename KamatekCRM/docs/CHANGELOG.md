@@ -1,3 +1,17 @@
+## v14.11 — Zero-Crash Runtime Theme Engine (2026-03-10)
+- **NEW**: Çalışma zamanında (runtime) uygulama kapanmadan tema değiştirme motoru geliştirildi.
+- **THEMES**: `Premium Light`, `Midnight Dark` ve `Glassmorphism` temaları için özel XAML sözlükleri oluşturuldu.
+- **PERSISTENCE**: Seçilen temanın `AppSettings.cs` üzerinden `%AppData%` katmanında kalıcı olarak saklanması sağlandı.
+- **UI/UX**: `SettingsView` üzerinde modern radyo-kart (Radio Card) tasarımlı tema seçici arayüzü eklendi.
+- **REFACTOR**: `ThemeService.cs` sıfır-hata (zero-crash) prensibiyle yeniden yazıldı; `MergedDictionaries` yönetimi dinamik hale getirildi.
+- **FIX**: `MainContentViewModel`, `CustomerViewModel`, `FaultTicketViewModel` ve `LoginView` üzerindeki kritik derleme hataları (CS0117) ve nullable uyarıları (CS8602, CS8601, CS0414) düzeltildi.
+
+## v14.10 — Login Screen Contrast & Theme Polish (2026-03-10)
+- **UI/UX**: `LoginView` üzerinde yüksek kontrastlı "Saf Beyaz" (Pure White) teması mükemmelleştirildi.
+- **DESIGN**: `DesignTokens.xaml` ve `LightTheme.xaml` üzerinde modern SaaS (Stripe/Linear) esintili renk paleti ve gölge hiyerarşisi uygulandı.
+- **REFACTOR**: `LoginView.xaml.cs` temizlendi, gereksiz kod-behind mantığı kaldırıldı ve `Wpf.Ui` bileşenleri ile tam uyum sağlandı.
+- **COMPATIBILITY**: Eski XAML referanslarının kırılmaması için `DesignTokens.xaml` ve `LightTheme.xaml` dosyalarına "Legacy Mappings" (SpaceXXS, DropShadow vb.) eklendi.
+
 ## v14.9 — Ultimate UI Refactoring & Crash Prevention (2026-03-08)
 - **UI/UX**: `LoginView` tamamen yeniden tasarlandı. Siyah-Beyaz ağırlıklı, Mesh Gradient'ten arındırılmış yüksek kontrastlı kurumsal bir görünüm elde edildi. Yüzeylerde `ThemeSurface`, metinlerde `#000000` (Kesin Siyah) standardı zorunlu kılındı.
 - **FIX**: Çoklu ekranlarda (`RoutePlanningView`, `RepairTrackingWindow`, `SettingsView`, `ServiceJobsView`, `ProductsView`, `CustomerDetailView`, `CustomersView`) koyu temadan kalan ve ParseException fırlatan `ThemeShadowColor` ile uyumsuzluk yaratan `CardBackgroundFillColorDefaultBrush` kaynakları silindi.

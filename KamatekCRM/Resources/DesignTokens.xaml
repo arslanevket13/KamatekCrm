@@ -3,21 +3,36 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <!-- ═══════════════════════════════════════════════════════════════════
-         KAMATEK CRM — DESIGN TOKENS v2.0 (STRUCTURAL / BASE)
+         KAMATEK CRM — THE PHYSICS ENGINE (DESIGN TOKENS v3.0)
          Semantic design system: Layout, typography scales, animations, forms.
-         COLORS are now completely managed by Themes/LightTheme.xaml and Themes/DarkTheme.xaml
+         STRICT RULE: NO COLORS OR BRUSHES ALLOWED IN THIS FILE.
     ═══════════════════════════════════════════════════════════════════ -->
 
-    <!-- ─────────── SPACING SCALE (4px base unit) ─────────── -->
-    <sys:Double x:Key="SpaceXXS">2</sys:Double>
-    <sys:Double x:Key="SpaceXS">4</sys:Double>
-    <sys:Double x:Key="SpaceSM">8</sys:Double>
-    <sys:Double x:Key="SpaceMD">12</sys:Double>
-    <sys:Double x:Key="SpaceLG">16</sys:Double>
-    <sys:Double x:Key="SpaceXL">24</sys:Double>
-    <sys:Double x:Key="SpaceXXL">32</sys:Double>
-    <sys:Double x:Key="Space3XL">48</sys:Double>
-    <sys:Double x:Key="Space4XL">64</sys:Double>
+    <!-- ─────────── SPACING SCALE ─────────── -->
+    <sys:Double x:Key="Space4">4</sys:Double>
+    <sys:Double x:Key="Space8">8</sys:Double>
+    <sys:Double x:Key="Space12">12</sys:Double>
+    <sys:Double x:Key="Space16">16</sys:Double>
+    <sys:Double x:Key="Space24">24</sys:Double>
+    <sys:Double x:Key="Space32">32</sys:Double>
+    <sys:Double x:Key="Space48">48</sys:Double>
+    <sys:Double x:Key="Space64">64</sys:Double>
+
+    <!-- Legacy Mappings -->
+    <sys:Double x:Key="SpaceXXS">4</sys:Double>
+    <sys:Double x:Key="SpaceXS">8</sys:Double>
+    <sys:Double x:Key="SpaceSM">12</sys:Double>
+    <sys:Double x:Key="SpaceMD">16</sys:Double>
+    <sys:Double x:Key="SpaceLG">24</sys:Double>
+    <sys:Double x:Key="SpaceXL">32</sys:Double>
+    <sys:Double x:Key="SpaceXXL">48</sys:Double>
+    <sys:Double x:Key="Space3XL">64</sys:Double>
+
+    <!-- ─────────── GEOMETRY (CORNER RADIUS) ─────────── -->
+    <CornerRadius x:Key="RadiusSmall">6</CornerRadius>
+    <CornerRadius x:Key="RadiusMedium">12</CornerRadius>
+    <CornerRadius x:Key="RadiusLarge">16</CornerRadius>
+    <CornerRadius x:Key="RadiusXL">24</CornerRadius>
 
     <!-- ─────────── ICON SIZES ─────────── -->
     <sys:Double x:Key="IconXS">12</sys:Double>
@@ -27,13 +42,28 @@
     <sys:Double x:Key="IconXL">32</sys:Double>
     <sys:Double x:Key="IconXXL">48</sys:Double>
 
-    <!-- ─────────── ELEVATION (Shadow System) ─────────── -->
+    <!-- ─────────── WORLD-CLASS ELEVATION (FLOATING SHADOW PHYSICS) ─────────── -->
     <DropShadowEffect x:Key="Elevation0" BlurRadius="0" ShadowDepth="0" Opacity="0"/>
-    <DropShadowEffect x:Key="Elevation1" BlurRadius="4"  ShadowDepth="1"  Direction="270" Color="#000000" Opacity="0.08"/>
-    <DropShadowEffect x:Key="Elevation2" BlurRadius="8"  ShadowDepth="2"  Direction="270" Color="#000000" Opacity="0.12"/>
-    <DropShadowEffect x:Key="Elevation3" BlurRadius="16" ShadowDepth="4"  Direction="270" Color="#000000" Opacity="0.16"/>
-    <DropShadowEffect x:Key="Elevation4" BlurRadius="24" ShadowDepth="8"  Direction="270" Color="#000000" Opacity="0.20"/>
-    <DropShadowEffect x:Key="Elevation5" BlurRadius="40" ShadowDepth="16" Direction="270" Color="#000000" Opacity="0.24"/>
+    
+    <!-- Elevation 1: Buttons, Inputs, very subtle lift -->
+    <DropShadowEffect x:Key="Elevation1" BlurRadius="6" ShadowDepth="2" Direction="270" Color="#0F172A" Opacity="0.04"/>
+    
+    <!-- Elevation 2: Main Cards, Hover States -->
+    <DropShadowEffect x:Key="Elevation2" BlurRadius="12" ShadowDepth="4" Direction="270" Color="#0F172A" Opacity="0.06"/>
+    
+    <!-- Elevation 3: Modals, Popovers, Dropdowns -->
+    <DropShadowEffect x:Key="Elevation3" BlurRadius="24" ShadowDepth="8" Direction="270" Color="#0F172A" Opacity="0.08"/>
+    
+    <!-- Elevation 4: Dialogs, High-altitude float -->
+    <DropShadowEffect x:Key="Elevation4" BlurRadius="32" ShadowDepth="12" Direction="270" Color="#0F172A" Opacity="0.10"/>
+    
+    <!-- Elevation 5: Maximum focus, Full-screen overlays -->
+    <DropShadowEffect x:Key="Elevation5" BlurRadius="48" ShadowDepth="16" Direction="270" Color="#0F172A" Opacity="0.12"/>
+
+    <!-- Legacy shadow mappings to prevent compilation errors -->
+    <DropShadowEffect x:Key="DropShadow" BlurRadius="12" ShadowDepth="4" Direction="270" Color="#0F172A" Opacity="0.06"/>
+    <DropShadowEffect x:Key="DropShadowLight" BlurRadius="6" ShadowDepth="2" Direction="270" Color="#0F172A" Opacity="0.04"/>
+    <DropShadowEffect x:Key="DropShadowHeavy" BlurRadius="24" ShadowDepth="8" Direction="270" Color="#0F172A" Opacity="0.08"/>
 
     <!-- ─────────── DURATION & EASING (Animation Tokens) ─────────── -->
     <Duration x:Key="DurationFast">0:0:0.15</Duration>
@@ -46,25 +76,15 @@
     <BackEase x:Key="EaseOutBack" EasingMode="EaseOut" Amplitude="0.3"/>
     <ElasticEase x:Key="EaseOutElastic" EasingMode="EaseOut" Oscillations="1" Springiness="5"/>
 
-    <!-- ─────────── DROP SHADOWS ─────────── -->
-    <DropShadowEffect x:Key="DropShadow" BlurRadius="15" ShadowDepth="2" Direction="315" Color="#000000" Opacity="0.5"/>
-    <DropShadowEffect x:Key="DropShadowLight" BlurRadius="8" ShadowDepth="1" Direction="270" Color="#000000" Opacity="0.3"/>
-    <DropShadowEffect x:Key="DropShadowHeavy" BlurRadius="30" ShadowDepth="4" Direction="315" Color="#000000" Opacity="0.6"/>
-
     <!-- ─────────── COMPONENT-SPECIFIC DIMENSIONS ─────────── -->
-    <!-- DataGrid -->
     <sys:Double x:Key="DataGridRowHeight">48</sys:Double>
     <sys:Double x:Key="DataGridHeaderHeight">44</sys:Double>
-
-    <!-- Sidebar -->
     <sys:Double x:Key="SidebarWidth">260</sys:Double>
     <sys:Double x:Key="SidebarCollapsedWidth">68</sys:Double>
-
-    <!-- KPI Cards -->
     <sys:Double x:Key="KpiCardMinWidth">240</sys:Double>
     <sys:Double x:Key="KpiCardHeight">120</sys:Double>
-
-    <!-- Avatar -->
+    
+    <!-- Avatar Defaults -->
     <sys:Double x:Key="AvatarSizeSM">28</sys:Double>
     <sys:Double x:Key="AvatarSizeMD">36</sys:Double>
     <sys:Double x:Key="AvatarSizeLG">48</sys:Double>

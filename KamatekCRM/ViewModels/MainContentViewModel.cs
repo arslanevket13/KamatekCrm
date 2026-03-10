@@ -87,7 +87,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _isDarkMode, value))
                 {
-                    ThemeService.ApplyTheme(value);
+                    ThemeService.ChangeTheme(value ? "MidnightDark" : "PremiumLight");
                 }
             }
         }

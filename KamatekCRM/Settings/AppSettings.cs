@@ -89,5 +89,43 @@ namespace KamatekCrm.Settings
         /// </summary>
         public static string Version => 
             Configuration["AppSettings:Version"] ?? "1.0.0";
+
+        /// <summary>
+        /// Dinamik tema yönetimi için geçerli temanın kaydedilmesi (PremiumLight, MidnightDark, Glassmorphism)
+        /// Crashleri önlemek adına AppData içine kaydedilir.
+        /// </summary>
+        public static string CurrentTheme
+        {
+            get
+            {
+                try
+                {
+                    var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    var folder = Path.Combine(appData, "KamatekCRM");
+                    var themeFile = Path.Combine(folder, "theme.txt");
+                    if (File.Exists(themeFile))
+                    {
+                        var savedTheme = File.ReadAllText(themeFile).Trim();
+                        if (!string.IsNullOrEmpty(savedTheme))
+                            return savedTheme;
+                    }
+                }
+                catch { }
+
+                return Configuration["AppSettings:CurrentTheme"] ?? "PremiumLight";
+            }
+            set
+            {
+                try
+                {
+                    var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    var folder = Path.Combine(appData, "KamatekCRM");
+                    if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                    var themeFile = Path.Combine(folder, "theme.txt");
+                    File.WriteAllText(themeFile, value);
+                }
+                catch { }
+            }
+        }
     }
 }

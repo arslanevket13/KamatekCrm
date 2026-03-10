@@ -2,13 +2,12 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ═══════════════════════════════════════════════════════════════════
-         KAMATEK CRM — THE MASTERPIECE PALETTE (LIGHT THEME v4.0)
+         KAMATEK CRM — THE MASTERPIECE PALETTE (PREMIUM LIGHT THEME)
          Elite SaaS Design (Stripe/Linear/Apple macOS inspired).
          STRICT RULE: Only Colors and Brushes.
     ═══════════════════════════════════════════════════════════════════ -->
 
     <!-- ─────────── PAGE & BACKGROUNDS (The Canvas) ─────────── -->
-    <!-- App_Background: Highly premium, soft slate-white -->
     <Color x:Key="SurfacePageColor">#F8FAFC</Color>
     <SolidColorBrush x:Key="SurfacePageBrush" Color="#F8FAFC"/>
     <Color x:Key="ThemeBackgroundColor">#F8FAFC</Color>
@@ -27,16 +26,14 @@
     <Color x:Key="SurfaceSidebarColor">#FFFFFF</Color>
     <SolidColorBrush x:Key="SurfaceSidebarBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="ThemeSidebar" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ThemeSidebarHover" Color="#F1F5F9"/> <!-- Soft hover slate -->
+    <SolidColorBrush x:Key="ThemeSidebarHover" Color="#F1F5F9"/>
     <SolidColorBrush x:Key="ThemeSidebarActive" Color="#E2E8F0"/>
 
     <!-- ─────────── CORE TYPOGRAPHY (Absolute readability) ─────────── -->
-    <!-- TextHeadingBrush: Deep slate, richer than pure black -->
     <Color x:Key="ThemeTextPrimaryColor">#020617</Color>
     <SolidColorBrush x:Key="ThemeTextPrimary" Color="#020617"/>
     <SolidColorBrush x:Key="TextHeadingBrush" Color="#020617"/>
 
-    <!-- TextBodyBrush: Perfect readability (#334155 / #475569) -->
     <Color x:Key="ThemeTextSecondaryColor">#475569</Color>
     <SolidColorBrush x:Key="ThemeTextSecondary" Color="#475569"/>
     <SolidColorBrush x:Key="TextBodyBrush" Color="#334155"/>
@@ -54,7 +51,6 @@
 
     <!-- ─────────── BORDERS & DIVIDERS (Premium Subtlety) ─────────── -->
     <Color x:Key="ThemeBorderColor">#E2E8F0</Color>
-    <!-- Border Brush with opacity for that premium fade effect on white cards -->
     <SolidColorBrush x:Key="ThemeBorder" Color="#E2E8F0" Opacity="0.8"/>
     <SolidColorBrush x:Key="ThemeDivider" Color="#F1F5F9"/>
     <SolidColorBrush x:Key="BorderDefaultBrush" Color="#E2E8F0"/>
@@ -90,19 +86,16 @@
     <SolidColorBrush x:Key="StatusInfoFg"    Color="#2563EB"/>
 
     <!-- ─────────── WORLD-CLASS LINEAR GRADIENTS (KPIs) ─────────── -->
-    <!-- Indigo to Cyan -->
     <LinearGradientBrush x:Key="KpiGradientPrimary" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#4F46E5" Offset="0"/>
         <GradientStop Color="#06B6D4" Offset="1"/>
     </LinearGradientBrush>
     
-    <!-- Emerald to Teal (Success/Growth) -->
     <LinearGradientBrush x:Key="KpiGradientSuccess" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#10B981" Offset="0"/>
         <GradientStop Color="#14B8A6" Offset="1"/>
     </LinearGradientBrush>
 
-    <!-- Rose to Orange (Alerts/Hot) -->
     <LinearGradientBrush x:Key="KpiGradientWarning" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#F43F5E" Offset="0"/>
         <GradientStop Color="#F97316" Offset="1"/>

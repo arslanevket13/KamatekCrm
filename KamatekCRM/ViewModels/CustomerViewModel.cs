@@ -339,11 +339,13 @@ namespace KamatekCrm.ViewModels
                 {
                     try
                     {
-                        var json = (System.Text.Json.JsonElement)statsResponse.Data!;
-                        TotalCustomers = json.GetProperty("TotalCustomers").GetInt32();
-                        IndividualCount = json.GetProperty("IndividualCount").GetInt32();
-                        CorporateCount = json.GetProperty("CorporateCount").GetInt32();
-                        WalkInCount = json.GetProperty("WalkInCount").GetInt32();
+                        if (statsResponse.Data is System.Text.Json.JsonElement json)
+                        {
+                            TotalCustomers = json.GetProperty("TotalCustomers").GetInt32();
+                            IndividualCount = json.GetProperty("IndividualCount").GetInt32();
+                            CorporateCount = json.GetProperty("CorporateCount").GetInt32();
+                            WalkInCount = json.GetProperty("WalkInCount").GetInt32();
+                        }
                     }
                     catch (Exception ex)
                     {

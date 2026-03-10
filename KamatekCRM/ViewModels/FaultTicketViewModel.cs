@@ -365,7 +365,7 @@ namespace KamatekCrm.ViewModels
                     var newCustomer = new Customer
                     {
                         FullName = QuickCustomerName.Trim(),
-                        PhoneNumber = QuickCustomerPhone?.Trim(),
+                        PhoneNumber = QuickCustomerPhone?.Trim() ?? string.Empty,
                         CreatedDate = DateTime.UtcNow
                     };
                     ctx.Customers.Add(newCustomer);

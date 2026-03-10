@@ -168,9 +168,9 @@ KamatekCrm/
 │   ├── Animations.xaml       # Geçiş animasyonları
 │   ├── Styles.xaml           # Genel stil tanımları
 │   └── Themes/
-│       ├── CustomTheme.xaml  # Ana tema (renk, tipografi, buton stilleri)
-│       ├── DarkTheme.xaml    # Karanlık tema
-│       └── LightTheme.xaml   # Aydınlık tema
+│       ├── Theme.PremiumLight.xaml  # Premium Açık Tema (YENİ)
+│       ├── Theme.MidnightDark.xaml   # Gece Mavisi Karanlık Tema (YENİ)
+│       └── Theme.Glassmorphism.xaml # Cam Efektli Modern Tema (YENİ)
 │
 ├── Services/             # İş servisleri
 │   ├── ApiClient.cs          # Merkezi HTTP API Müşterisi (YENİ - 401 Intercept, ApiResponse)
@@ -194,7 +194,7 @@ KamatekCrm/
 │       └── InventoryDomainService.cs   # Thread-safe stok işlemleri
 │   ├── LoadingService.cs     # Global Loading Overlay yönetimi (YENİ)
 │   ├── ToastService.cs       # Toast Bildirim yönetimi (YENİ)
-│
+│   ├── ThemeService.cs       # Çalışma Zamanı Tema Yönetim Motoru (YENİ)
 ├── Repositories/         # Data Access Layer (YENİ)
 │   ├── IUnitOfWork.cs    # Unit of Work interface
 │   └── UnitOfWork.cs     # Transaction yönetimi

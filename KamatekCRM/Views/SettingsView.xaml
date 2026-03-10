@@ -97,6 +97,128 @@
                     </StackPanel>
                 </Border>
                 
+                <!-- THEME SELECTOR CARD -->
+                <Border Width="620" Margin="0,0,20,20" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
+                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="20">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="20" Direction="270" ShadowDepth="4" Opacity="0.08" Color="Black"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <!-- Header -->
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{DynamicResource ThemePrimary}" CornerRadius="20" Width="40" Height="40" Margin="0,0,10,0">
+                                <TextBlock Text="🎨" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Görünüm &amp; Tema" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                <TextBlock Text="Sistemin arayüz tasarımını anında değiştirin" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Separator Margin="0,0,0,15" Background="{DynamicResource ThemeDivider}"/>
+
+                        <!-- Radio Cards ListBox -->
+                        <ListBox ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}" 
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            
+                            <!-- Hide default selection highlight style -->
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0,0,10,0"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <ContentPresenter/>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- Radio Card -->
+                                    <Border x:Name="ThemeCardBorder" Width="180" Height="100" Margin="0,0,10,10" 
+                                            CornerRadius="8" BorderThickness="2" BorderBrush="{DynamicResource ThemeBorder}"
+                                            Background="{DynamicResource ThemeSurface}" Cursor="Hand">
+                                        
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
+                                                    </DataTrigger>
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsMouseOver}" Value="True"/>
+                                                            <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="False"/>
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
+                                                        <Setter Property="Opacity" Value="0.8"/>
+                                                    </MultiDataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        
+                                        <Grid Margin="12">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                <TextBlock Text="{Binding Icon}" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="13" 
+                                                           Foreground="{DynamicResource ThemeTextPrimary}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            
+                                            <TextBlock Grid.Row="1" Text="{Binding Description}" FontSize="11" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource ThemeTextSecondary}"/>
+                                            
+                                            <!-- Color Hint Badge -->
+                                            <Border Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                                                    Width="16" Height="16" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorder}">
+                                                <Border.Background>
+                                                    <SolidColorBrush Color="{Binding ColorHex}"/>
+                                                </Border.Background>
+                                            </Border>
+                                            
+                                            <!-- Selected Indicator Badge -->
+                                            <Border Grid.Row="0" HorizontalAlignment="Right" Width="16" Height="16" CornerRadius="8" 
+                                                    Background="{DynamicResource ThemePrimary}">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+                
                 <!-- Placeholder for future settings -->
                 <Border Width="300" Margin="0,0,20,20" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
                         BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="15" Opacity="0.5">
