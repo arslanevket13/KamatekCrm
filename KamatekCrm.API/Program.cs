@@ -91,6 +91,10 @@ try
     {
         options.Filters.Add<KamatekCrm.API.Middleware.ValidationFilter>();
         options.Filters.Add<KamatekCrm.API.Middleware.RequestTimingFilter>();
+    })
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
     // Rate Limiting

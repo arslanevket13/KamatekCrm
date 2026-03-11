@@ -43,6 +43,10 @@
     <!-- Legacy Mappings -->
     <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#020617"/>
     <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#475569"/>
+    
+    <SolidColorBrush x:Key="ThemeForeground" Color="#020617"/>
+    <SolidColorBrush x:Key="ThemeForegroundMuted" Color="#475569"/>
+    <SolidColorBrush x:Key="ThemeHover" Color="#0F172A" Opacity="0.04"/>
 
     <SolidColorBrush x:Key="TextInverseBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#FFFFFF"/>
@@ -64,6 +68,10 @@
     
     <SolidColorBrush x:Key="PrimaryColor" Color="#4F46E5"/>
     <SolidColorBrush x:Key="AccentColor" Color="#06B6D4"/>
+    
+    <!-- Legacy Brand Mappings -->
+    <SolidColorBrush x:Key="ThemePrimaryLight" Color="#4F46E5" Opacity="0.10"/>
+    <SolidColorBrush x:Key="ThemePrimaryDark" Color="#3730A3"/>
 
     <!-- ─────────── STATUS COLORS (Success, Warning, Error) ─────────── -->
     <Color x:Key="ThemeSuccessColor">#10B981</Color>
@@ -80,6 +88,7 @@
     <SolidColorBrush x:Key="StatusSuccessFg" Color="#059669"/>
     <SolidColorBrush x:Key="StatusWarningBg" Color="#F59E0B" Opacity="0.15"/>
     <SolidColorBrush x:Key="StatusWarningFg" Color="#D97706"/>
+    <SolidColorBrush x:Key="StatusWarningFgDark" Color="#D97706"/>
     <SolidColorBrush x:Key="StatusErrorBg"   Color="#EF4444" Opacity="0.12"/>
     <SolidColorBrush x:Key="StatusErrorFg"   Color="#DC2626"/>
     <SolidColorBrush x:Key="StatusInfoBg"    Color="#3B82F6" Opacity="0.12"/>

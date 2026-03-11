@@ -1,3 +1,33 @@
+## v14.17 — Serialization Integrity & Object Cycle Prevention (2026-03-11)
+- **FIX**: Proje ve teklif kaydetme ekranlarında karşılaşılan "A possible object cycle was detected" (`JsonException`) hatası global olarak giderildi.
+- **ARCHITECTURE**: `KamatekCrm.API` (Minimal API), `KamatekCrm.Web` (Minimal API) ve Masaüstü `ApiClient.cs` içerisindeki tüm JSON serileştirme motorlarına `ReferenceHandler.IgnoreCycles` kuralı enjekte edildi.
+- **DATA INTEGRITY**: Entity Framework Core tabanlı iç içe geçmiş hiyerarşik (Parent/Children) modellerin API üzerinden transfer edilirken StackOverflow / 64-depth sınırına çarpması kalıcı olarak engellendi.
+
+## v14.16 — Global Theme Sync & Backward Compatibility Injection (2026-03-11)
+- **THEME**: `FaultTicketWindow` (Hızlı Kabul) ve `RepairListView` (Tamir Listesi) dahil olmak üzere eski sisteme ait 25'ten fazla arayüzün (View) UI Motoruyla temassızlık sorunu kökten çözüldü.
+- **ARCHITECTURE (Alias Mapping)**: XAML yüzeylerindeki `ThemeForeground`, `ThemePrimaryDark`, `StatusWarningFgDark` gibi eski kalıtımsal kodlar (Legacy Tokens), 3 ana tema (`Theme.PremiumLight`, `Theme.MidnightDark`, `Theme.Glassmorphism`) içerisine "Legacy Mappings" adı altında yeni hex kodlarıyla tescillendi. Tüm pencereler artık %100 çalışma zamanı tema değişimine tepki verebiliyor.
+- **BUILD**: Legacy Mapping enjeksiyonu sayesinde `0 Error` ve `sıfır kayıp` ile eksiksiz senkronizasyon doğrulandı. 
+
+## v14.15 — Perfect Runtime Contrast & Login Refinements (2026-03-11)
+- **THEME**: `Styles.xaml` içerisine özel `ModernPasswordBox` stili eklendi, giriş ekranında (LoginView) şifre yazarken karşılaşılan "görünmez metin" hatası kalıcı olarak giderildi.
+- **THEME**: `BtnSecondary` sınıfının hover durumundaki arkaplan rengine eşlik etmesi için `Foreground` bağlantısı eklendi. Butonların üzerine gelindiğinde metin görünmezliği problemi çözüldü.
+- **THEME**: `ModernDataGrid` için satır seçimi (IsSelected) ve Hover (IsMouseOver) durumlarında text zıtlığı (`TextHeadingBrush` / `TextInverseBrush`) eklendi, veri okunamaması engellendi.
+- **THEME**: Uygulama ayağa kalkarken (App.xaml) temaların yüklenme sırası `DesignTokens -> Theme.PremiumLight -> Styles` olarak standartlaştırıldı; tasarım sistemi ezilmeleri önlendi.
+
+## v14.14 — Premium PDF Redesign & Identity Injection (2026-03-11)
+- **DESIGN**: PDF motoru (QuestPDF) arayüzleri baştan inşa edildi. Sol üste entegre logo ve sağ köşeye hizalanmış modern Doküman Başlığı ile şık, "premium" bir kurumsal görünüm elde edildi.
+- **COLORS**: Tüm tablo başlıkları, özet kutuları ve öne çıkan alanlar için `BrandColors.Primary` (#1A237E) ve vurgu alanları (Ara Toplam/KDV) için `BrandColors.Secondary` (#C61F25) aktif olarak kullanıma alındı. Tablo ve satır arası kontrastlar "Göz Alıcı" (Eye-Catching) hale getirildi.
+- **FIX**: `GetLogoBytes()` metodu, `pack://application:,,,/` Windows Resource Stream kullanılarak yeniden yazıldı. WPF projelerinde logonun `bin/Debug`'a kopyalanmama sorunu (Build Action: Resource) %100 oranında çözüldü, logoların PDF'te çıkmama bug'ı giderildi.
+
+## v14.13 — Professional PDF Engine Branding & Identity (2026-03-11)
+- **DESIGN**: `PdfService.cs` içerisindeki tüm PDF çıktıları (Proje Teklifleri ve Servis Formları) için "Kırmızı ve Koyu Lacivert" Kamatek kurumsal renk paleti (`#C61F25` / `#1A237E`) uygulandı.
+- **BRANDING**: `KamatekLogo.png` dosyası otomatik olarak taranıp, tüm teklif ve servis formlarının sol üst köşesine dinamik olarak eklendi.
+- **INFO**: PDF alt/üst (Header/Footer) bilgilerindeki varsayılan kalıtsal veriler kaldırılarak firmanın güncel ünvanı, Eskişehir adresi, ve iletişim bilgileri eklendi.
+
+## v14.12 — Perfect Theme Synchronization & Readability (2026-03-11)
+- **THEME**: `Styles.xaml` içerisindeki tüm hardcoded Hex renk özellikleri (DataGrid, TextBox, Button vb.) Wpf.Ui `DynamicResource` Theme Token'ları ile (ör. `CardBackgroundFillColorDefaultBrush`, `TextHeadingBrush`) değiştirildi.
+- **UI/UX**: Koyu ve Açık temalar arası geçişlerde oluşan "okunmaz metin" ve "arkaplan uyumsuzluğu" sorunları tamamen çözüldü.
+
 ## v14.11 — Zero-Crash Runtime Theme Engine (2026-03-10)
 - **NEW**: Çalışma zamanında (runtime) uygulama kapanmadan tema değiştirme motoru geliştirildi.
 - **THEMES**: `Premium Light`, `Midnight Dark` ve `Glassmorphism` temaları için özel XAML sözlükleri oluşturuldu.

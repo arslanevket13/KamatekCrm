@@ -1,4 +1,4 @@
-﻿<Application x:Class="KamatekCrm.App"
+<Application x:Class="KamatekCrm.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:KamatekCrm"
@@ -13,8 +13,8 @@
                 <!-- 1. BASE DESIGN TOKENS (Sadece Yapısal ve Düzen) -->
                 <ResourceDictionary Source="Resources/DesignTokens.xaml"/>
                 
-                <!-- 2. ACTIVE THEME COLORS (Ultimate PURE WHITE Theme) -->
-                <ResourceDictionary Source="Resources/Themes/LightTheme.xaml"/>
+                <!-- 2. ACTIVE THEME COLORS (Varsayılan olarak Premium Light yüklenir, çalışma zamanında değişir) -->
+                <ResourceDictionary Source="Resources/Themes/Theme.PremiumLight.xaml"/>
                 
                 <!-- 3. WPF-UI COMPONENTS -->
                 <ui:ThemesDictionary Theme="Light" />

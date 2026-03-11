@@ -19,10 +19,10 @@ namespace KamatekCrm.Services
 
         private static class BrandColors
         {
-            public static string Primary = "#1A237E";
-            public static string Secondary = "#3949AB";
-            public static string Accent = "#F57C00";
-            public static string TextPrimary = "#212121";
+            public static string Primary = "#1A237E"; // Dark Navy Blue
+            public static string Secondary = "#C61F25"; // Kamatek Red
+            public static string Accent = "#C61F25";
+            public static string TextPrimary = "#1A237E";
             public static string TextSecondary = "#757575";
             public static string LightGray = "#F5F5F5";
             public static string TableHeader = "#E8EAF6";
@@ -31,14 +31,33 @@ namespace KamatekCrm.Services
             public static string Danger = "#F44336";
         }
 
+        private byte[]? GetLogoBytes()
+        {
+            try
+            {
+                var uri = new Uri("pack://application:,,,/Assets/Images/KamatekLogo.png");
+                var streamInfo = System.Windows.Application.GetResourceStream(uri);
+                if (streamInfo != null)
+                {
+                    using var ms = new MemoryStream();
+                    streamInfo.Stream.CopyTo(ms);
+                    return ms.ToArray();
+                }
+            }
+            catch { }
+
+            var pngPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "KamatekLogo.png");
+            var jpgPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "KamatekLogo.jpg");
+
+            if (File.Exists(pngPath)) return File.ReadAllBytes(pngPath);
+            if (File.Exists(jpgPath)) return File.ReadAllBytes(jpgPath);
+            
+            return null;
+        }
+
         public void GenerateProjectQuote(ServiceProject project, List<ScopeNode> rootNodes, string filePath)
         {
-            var logoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "KamatekLogo.jpg");
-            byte[]? logoBytes = null;
-            if (File.Exists(logoPath))
-            {
-                logoBytes = File.ReadAllBytes(logoPath);
-            }
+            var logoBytes = GetLogoBytes();
 
             var flattenedItems = FlattenScopeNodesWithImages(rootNodes);
             var totalAmount = flattenedItems.Where(i => !i.IsSectionHeader).Sum(i => i.TotalPrice);
@@ -66,47 +85,47 @@ namespace KamatekCrm.Services
         {
             container.Column(col =>
             {
-                // Üst Banner
-                col.Item().Background(BrandColors.Primary).Padding(20).Row(row =>
+                // Üst Banner - Beyaz / Modern Tasarım
+                col.Item().Padding(20).PaddingBottom(10).Row(row =>
                 {
-                    if (logoBytes != null)
-                    {
-                        row.ConstantItem(180).Image(logoBytes).FitArea();
-                    }
-                    else
-                    {
-                        row.ConstantItem(180).Column(c =>
-                        {
-                            c.Item().Text("KAMATEK").FontSize(28).Bold().FontColor(Colors.White);
-                            c.Item().Text("Teknik Çözümler").FontSize(12).FontColor("#B3E5FC");
-                        });
-                    }
-
+                    // Sol: Kamera / Güvenlik Logosu
                     row.RelativeItem().Column(c =>
                     {
-                        c.Item().AlignRight().Text("TEKNİK VE TİCARİ TEKLİF").FontSize(20).Bold().FontColor(Colors.White);
-                        c.Item().AlignRight().Text($"Teklif No: {project.ProjectCode ?? "TEK-" + DateTime.Now:yyyyMMdd}").FontColor("#B3E5FC").FontSize(9);
-                        c.Item().AlignRight().Text($"Tarih: {DateTime.Now:dd MMMM yyyy}").FontColor("#B3E5FC").FontSize(9);
+                        if (logoBytes != null)
+                        {
+                            c.Item().Width(240).Image(logoBytes).FitArea();
+                        }
+                        else
+                        {
+                            c.Item().Text("KAMATEK").FontSize(32).Bold().FontColor(BrandColors.Primary);
+                            c.Item().Text("ELEKTRİK VE GÜVENLİK SİSTEMLERİ").FontSize(10).FontColor(BrandColors.Secondary);
+                        }
+                    });
+
+                    // Sağ: Başlık ve Tarih
+                    row.ConstantItem(250).AlignRight().Column(c =>
+                    {
+                        c.Item().AlignRight().Text("Teklif No: " + (project.ProjectCode ?? "TEK-" + DateTime.Now.ToString("yyyyMMdd"))).FontSize(10).FontColor(BrandColors.TextSecondary);
+                        c.Item().AlignRight().Text("Tarih: " + DateTime.Now.ToString("dd MMMM yyyy")).FontSize(10).FontColor(BrandColors.TextSecondary);
+                        c.Item().PaddingTop(10).AlignRight().Text("TEKNİK VE TİCARİ TEKLİF").FontSize(18).Bold().FontColor(BrandColors.Primary);
                     });
                 });
 
-                // İkinci Satır - Hızlı Özet
-                col.Item().Background("#F5F5F5").Padding(15).Row(row =>
+                // Kırmızı Accent Çizgi
+                col.Item().LineHorizontal(3).LineColor(BrandColors.Secondary);
+
+                // İkinci Satır - Hızlı Özet (Kutu İçinde)
+                col.Item().PaddingTop(15).PaddingHorizontal(20).Background("#F8F9FA").Border(1).BorderColor("#E9ECEF").Padding(15).Row(row =>
                 {
                     row.RelativeItem().Column(c =>
                     {
-                        c.Item().Text("Müşteri").FontSize(8).FontColor(BrandColors.TextSecondary);
-                        c.Item().Text(project.Customer?.FullName ?? "Sayın Müşteri").Bold();
+                        c.Item().Text("SAYIN:").FontSize(8).FontColor(BrandColors.TextSecondary);
+                        c.Item().Text(project.Customer?.FullName ?? "Değerli Müşterimiz").FontSize(12).Bold().FontColor(BrandColors.Primary);
                     });
                     row.RelativeItem().Column(c =>
                     {
-                        c.Item().AlignRight().Text("Proje").FontSize(8).FontColor(BrandColors.TextSecondary);
-                        c.Item().AlignRight().Text(project.Title ?? "Proje Teklifi").Bold();
-                    });
-                    row.RelativeItem().Column(c =>
-                    {
-                        c.Item().AlignRight().Text("Toplam Tutar").FontSize(8).FontColor(BrandColors.TextSecondary);
-                        c.Item().AlignRight().Text($"{totalAmount:N2} ₺").FontSize(16).Bold().FontColor(BrandColors.Primary);
+                        c.Item().AlignRight().Text("PROJE:").FontSize(8).FontColor(BrandColors.TextSecondary);
+                        c.Item().AlignRight().Text(project.Title ?? "Sistem Kurulum Projesi").FontSize(11).Bold().FontColor(BrandColors.Primary);
                     });
                 });
             });
@@ -180,25 +199,29 @@ namespace KamatekCrm.Services
 
         private void ComposeCompanyProfile(IContainer container)
         {
-            container.Background("#FAFAFA").Border(1).BorderColor("#E0E0E0").Padding(15).Column(c =>
+            container.Background("#FFFFFF").BorderLeft(4).BorderColor(BrandColors.Secondary).BorderTop(1).BorderRight(1).BorderBottom(1).BorderColor("#E0E0E0").Padding(15).Column(c =>
             {
                 c.Item().Row(row =>
                 {
-                    row.ConstantItem(40).Text("🏢").FontSize(24);
                     row.RelativeItem().Column(col =>
                     {
-                        col.Item().Text("KAMATEK ELEKTRONİK").FontSize(12).Bold().FontColor(BrandColors.Primary);
-                        col.Item().Text("Teknik Sistemler ve Çözümler").FontSize(9).FontColor(BrandColors.TextSecondary);
+                        col.Item().Text("KAMATEK ELEKTRİK VE GÜVENLİK SİSTEMLERİ").FontSize(12).Bold().FontColor(BrandColors.Primary);
+                        col.Item().Text("Eskişehir Diafon Merkezi").FontSize(9).FontColor(BrandColors.Secondary).Italic();
                     });
                 });
-                c.Item().PaddingTop(8).Text(
-                    "1995 yılından bu yana elektronik güvenlik, otomasyon ve teknik servis alanlarında hizmet vermekteyiz. " +
-                    "Alanında uzman mühendis ve teknisyen kadromuzla, müşterilerimize kaliteli ve güvenilir çözümler sunmaktayız.").FontSize(9).FontColor(BrandColors.TextSecondary);
-                c.Item().PaddingTop(5).Row(row =>
+                c.Item().PaddingTop(8).Row(r => 
                 {
-                    row.RelativeItem().Text("📞 +90 212 123 45 67").FontSize(8);
-                    row.RelativeItem().Text("✉️ info@kamatek.com").FontSize(8);
-                    row.RelativeItem().Text("🌐 www.kamatek.com").FontSize(8);
+                    r.RelativeItem().Column(col => 
+                    {
+                        col.Item().Text("📍 Kurtuluş, Ziya Paşa Cd. 72/A Odunpazarı / Eskişehir").FontSize(9).FontColor(BrandColors.TextSecondary);
+                        col.Item().PaddingTop(2).Text("📞 +90 222 240 4060  |  📱 +90 545 545 8226").FontSize(9).Bold().FontColor(BrandColors.Primary);
+                    });
+                    
+                    r.RelativeItem().AlignRight().Column(col => 
+                    {
+                        col.Item().AlignRight().Text("✉️ info@kamatekelektrik.com").FontSize(9);
+                        col.Item().AlignRight().Text("🌐 www.kamatekelektrik.com").FontSize(9).FontColor(BrandColors.Primary);
+                    });
                 });
             });
         }
@@ -350,7 +373,7 @@ namespace KamatekCrm.Services
                             .Text($"{item.UnitPrice:N2} ₺").FontSize(8);
 
                         table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Background(bgColor).Padding(5).AlignRight()
-                            .Text($"{item.TotalPrice:N2} ₺").FontSize(9).Bold();
+                            .Text($"{item.TotalPrice:N2} ₺").FontSize(10).Bold().FontColor(BrandColors.Primary);
 
                         index++;
                     }
@@ -384,32 +407,29 @@ namespace KamatekCrm.Services
             var vatTotal = subTotal * 0.20m;
             var grandTotal = subTotal + vatTotal;
 
-            container.Background("#E8EAF6").Padding(15).Column(col =>
+            container.PaddingTop(10).Row(r =>
             {
-                col.Item().Row(r =>
+                r.RelativeItem(); // Sağ tarafa yaslamak için boşluk
+                r.ConstantItem(250).Background("#F8F9FA").Border(1).BorderColor("#E0E0E0").Padding(15).Column(col =>
                 {
-                    r.RelativeItem();
-                    r.ConstantItem(200).Column(c =>
+                    col.Item().Row(row =>
                     {
-                        c.Item().Row(row =>
-                        {
-                            row.RelativeItem().Text("Ara Toplam:").FontSize(11);
-                            row.RelativeItem().AlignRight().Text($"{subTotal:N2} ₺").FontSize(11).Bold();
-                        });
+                        row.RelativeItem().Text("Ara Toplam:").FontSize(11).FontColor(BrandColors.TextSecondary);
+                        row.RelativeItem().AlignRight().Text($"{subTotal:N2} ₺").FontSize(11).Bold().FontColor(BrandColors.Primary);
+                    });
 
-                        c.Item().Row(row =>
-                        {
-                            row.RelativeItem().Text("KDV (%20):").FontSize(11);
-                            row.RelativeItem().AlignRight().Text($"{vatTotal:N2} ₺").FontSize(11);
-                        });
+                    col.Item().PaddingTop(5).Row(row =>
+                    {
+                        row.RelativeItem().Text("KDV (%20):").FontSize(11).FontColor(BrandColors.TextSecondary);
+                        row.RelativeItem().AlignRight().Text($"{vatTotal:N2} ₺").FontSize(11).FontColor(BrandColors.Primary);
+                    });
 
-                        c.Item().PaddingTop(5).LineHorizontal(1).LineColor(BrandColors.Primary);
+                    col.Item().PaddingTop(10).PaddingBottom(10).LineHorizontal(1).LineColor("#CCCCCC");
 
-                        c.Item().PaddingTop(5).Row(row =>
-                        {
-                            row.RelativeItem().Text("GENEL TOPLAM:").FontSize(14).Bold().FontColor(BrandColors.Primary);
-                            row.RelativeItem().AlignRight().Text($"{grandTotal:N2} ₺").FontSize(14).Bold().FontColor(BrandColors.Primary);
-                        });
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Text("GENEL TOPLAM").FontSize(14).Bold().FontColor(BrandColors.Primary);
+                        row.RelativeItem().AlignRight().Text($"{grandTotal:N2} ₺").FontSize(18).Bold().FontColor(BrandColors.Secondary);
                     });
                 });
             });
@@ -458,7 +478,7 @@ namespace KamatekCrm.Services
                     row.RelativeItem().Column(c =>
                     {
                         c.Item().Border(1).BorderColor("#CCCCCC").Height(60).AlignCenter()
-                            .Text("MÜŞTERİ İMZA VE KAŞE").FontSize(8).FontColor(BrandColors.TextSecondary);
+                            .Text("MÜŞTERİ İMZA VE KAŞE").FontSize(9).FontColor(BrandColors.Primary);
                         c.Item().PaddingTop(5).Text("Tarih: ....................").FontSize(9);
                     });
 
@@ -467,7 +487,7 @@ namespace KamatekCrm.Services
                     row.RelativeItem().Column(c =>
                     {
                         c.Item().Border(1).BorderColor("#CCCCCC").Height(60).AlignCenter()
-                            .Text("KAMATEK İMZA VE KAŞE").FontSize(8).FontColor(BrandColors.TextSecondary);
+                            .Text("KAMATEK İMZA VE KAŞE").FontSize(9).FontColor(BrandColors.Secondary);
                         c.Item().PaddingTop(5).Text("Tarih: ....................").FontSize(9);
                     });
                 });
@@ -482,17 +502,26 @@ namespace KamatekCrm.Services
         {
             container.Column(col =>
             {
-                col.Item().Background("#263238").Padding(15).Row(row =>
+                // İnce Kırmızı Çizgi
+                col.Item().LineHorizontal(2).LineColor(BrandColors.Secondary);
+
+                col.Item().Background(BrandColors.Primary).Padding(15).Row(row =>
                 {
                     row.RelativeItem().Column(c =>
                     {
-                        c.Item().Text("KAMATEK ELEKTRONİK").FontSize(10).Bold().FontColor(Colors.White);
-                        c.Item().Text("İstanbul, Türkiye").FontSize(8).FontColor("#B0BEC5");
+                        c.Item().Text("KAMATEK ELEKTRİK VE GÜVENLİK SİSTEMLERİ").FontSize(9).Bold().FontColor(Colors.White);
+                        c.Item().Text("Kurtuluş, Ziya Paşa Cd. 72/A Odunpazarı/Eskişehir").FontSize(8).FontColor("#B0BEC5");
                     });
                     row.RelativeItem().AlignRight().Column(c =>
                     {
-                        c.Item().AlignRight().Text("Bu teklif otomatik olarak oluşturulmuştur").FontSize(8).FontColor("#B0BEC5");
-                        c.Item().AlignRight().Text($"Sayfa {0} / {0}").FontSize(8).FontColor("#B0BEC5");
+                        c.Item().AlignRight().Text("Bu doküman sistem üzerinden otomatik oluşturulmuştur.").FontSize(7).FontColor("#B0BEC5");
+                        c.Item().AlignRight().Text(text =>
+                        {
+                            text.Span("Sayfa ").FontSize(8).FontColor(Colors.White);
+                            text.CurrentPageNumber().FontSize(8).FontColor(Colors.White);
+                            text.Span(" / ").FontSize(8).FontColor(Colors.White);
+                            text.TotalPages().FontSize(8).FontColor(Colors.White);
+                        });
                     });
                 });
             });
@@ -577,23 +606,66 @@ namespace KamatekCrm.Services
 
         public void GenerateServiceForm(ServiceJob job, string filePath)
         {
+            var logoBytes = GetLogoBytes();
+
              Document.Create(container =>
             {
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4);
-                    page.Margin(30);
+                    page.Margin(0);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
                     
-                    page.Header().Text("SERVİS FORMU").AlignCenter().FontSize(20).Bold();
-                    
-                    page.Content().PaddingVertical(20).Column(col => 
+                    page.Header().Column(col => 
                     {
-                        col.Item().Text($"İş Emri No: {job.Id}").FontSize(14).Bold();
-                        col.Item().Text($"Müşteri: {job.Customer?.FullName ?? "-"}");
-                        col.Item().Text($"Tarih: {job.CreatedDate:dd.MM.yyyy}");
-                        col.Item().PaddingTop(20).Text("Detaylar:");
-                        col.Item().Text(job.Description ?? "Açıklama yok.");
+                        col.Item().Padding(20).PaddingBottom(10).Row(r => 
+                        {
+                            // Logo 
+                            r.RelativeItem().Column(c => 
+                            {
+                                if (logoBytes != null)
+                                {
+                                    c.Item().Width(240).Image(logoBytes).FitArea();
+                                }
+                                else 
+                                {
+                                    c.Item().Text("KAMATEK").FontSize(32).Bold().FontColor(BrandColors.Primary);
+                                    c.Item().Text("ELEKTRİK VE GÜVENLİK SİSTEMLERİ").FontSize(10).FontColor(BrandColors.Secondary);
+                                }
+                            });
+
+                            r.ConstantItem(200).AlignRight().Column(c => 
+                            {
+                                c.Item().AlignRight().Text("TEKNİK SERVİS FORMU").FontSize(18).Bold().FontColor(BrandColors.Primary);
+                                c.Item().AlignRight().Text($"Kayıt No: {job.Id}").FontSize(10).FontColor(BrandColors.TextSecondary);
+                                c.Item().AlignRight().Text($"Tarih: {job.CreatedDate:dd.MM.yyyy HH:mm}").FontSize(10).FontColor(BrandColors.TextSecondary);
+                            });
+                        });
+
+                        col.Item().LineHorizontal(3).LineColor(BrandColors.Secondary);
                     });
+                    
+                    page.Content().Padding(20).Column(col => 
+                    {
+                        col.Spacing(15);
+                        
+                        // Müşteri Bilgisi Kartı
+                        col.Item().Background("#F8F9FA").Border(1).BorderColor("#E9ECEF").Padding(15).Row(r => 
+                        {
+                            r.RelativeItem().Column(c => {
+                                c.Item().Text("MÜŞTERİ:").FontSize(8).FontColor(BrandColors.TextSecondary);
+                                c.Item().Text(job.Customer?.FullName ?? "-").FontSize(14).Bold().FontColor(BrandColors.Primary);
+                            });
+                        });
+
+                        col.Item().Text("İŞLEM DETAYLARI").FontSize(12).Bold().FontColor(BrandColors.Primary);
+                        col.Item().Background("#FFFFFF").Border(1).BorderColor("#E0E0E0").Padding(15).Text(job.Description ?? "Açıklama yok.").FontSize(10);
+                        
+                        col.Item().PaddingTop(20).Element(ComposeCompanyProfile); // Firma bilgilerini alt kısma ekle
+                        col.Item().Element(ComposeSignatures);
+                    });
+
+                    page.Footer().Element(ComposeProfessionalFooter);
                 });
             })
             .GeneratePdf(filePath);

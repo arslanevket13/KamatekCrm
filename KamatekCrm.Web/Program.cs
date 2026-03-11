@@ -91,6 +91,12 @@ try
             new MediaTypeWithQualityHeaderValue("application/json"));
     });
 
+    // ─── JSON OPTIONS (Object Cycle Prevention) ───
+    builder.Services.ConfigureHttpJsonOptions(options =>
+    {
+        options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
+
     // ═══════════════════════════════════════════
     //  BUILD
     // ═══════════════════════════════════════════
