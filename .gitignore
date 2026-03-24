@@ -25,6 +25,8 @@ Desktop.ini
 
 # Scratch / Build Logs
 build*.txt
+build_error.log
+keys_*.txt
 *.sql
 nul
 **/nul
