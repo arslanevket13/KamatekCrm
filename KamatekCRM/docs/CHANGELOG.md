@@ -1,3 +1,17 @@
+## v14.19 — Professional Service Job Module Overhaul (2026-03-23)
+- **DASHBOARD**: `ServiceJobsView.xaml` tamamen yeniden yazıldı. 5 KPI kartı (Toplam, Bekleyen, Devam Eden, Tamamlanan, SLA Aşan), akıllı toolbar (arama, durum filtresi, tarih aralığı), tam DataGrid ile profesyonel iş emri merkezi.
+- **WIZARD**: `NewServiceJobWindow.xaml` 4 adımlı wizard yapısına dönüştürüldü: Müşteri & Konum → İş Detayları → Malzeme & Maliyet (KDV dahil) → Özet & Onay. Stepper progress bar ve adım validasyonu eklendi.
+- **VIEWMODEL**: `ServiceJobViewModel.cs` genişletildi — KPI dashboard, wizard adım yönetimi, KDV hesaplama sistemi (SubTotal/KdvAmount/GrandTotalWithKdv), teknisyen listesi, tarihçe yükleme, durum değiştirme ve silme komutları.
+- **API**: `GET /api/servicejobs/stats` endpoint'i eklendi — toplam, bekleyen, devam eden, tamamlanan, SLA aşan, bugün oluşturulan ve ortalama tamamlanma süresi istatistikleri.
+- **CONTEXT MENU**: DataGrid'de sağ tık menüsüyle durum değiştirme, PDF yazdırma ve silme aksiyonları.
+
+## v14.18 — Professional User Management & RBAC Refactor (2026-03-11)
+- **UI/UX**: `AddUserView` ve `EditUserView` pencereleri 3 sekmeli (TabControl) modern yapıya kavuşturuldu: "Temel Bilgiler", "Yetkiler" ve "Saha Bilgileri".
+- **RBAC**: Kullanıcılara modül bazlı (Finans, Analiz, Silme, Onay, Ayarlar) granüler yetkilendirme yeteneği eklendi.
+- **TECHNICIAN**: Teknisyenler için araç plakası, hizmet bölgesi ve uzmanlık alanları gibi saha bilgileri sekmeli yapıda ayrıştırıldı.
+- **ARCHITECTURE**: `AddUserViewModel` ve `EditUserViewModel` tamamen `ApiClient` üzerinden API tabanlı çalışacak şekilde refactored edildi. Doğrudan `AppDbContext` bağımlılığı kaldırıldı.
+- **FIX**: `UsersViewModel` üzerindeki komut bağlamları ve pencere açma mantığındaki DI çakışmaları ve tip uyumsuzlukları giderildi.
+
 ## v14.17 — Serialization Integrity & Object Cycle Prevention (2026-03-11)
 - **FIX**: Proje ve teklif kaydetme ekranlarında karşılaşılan "A possible object cycle was detected" (`JsonException`) hatası global olarak giderildi.
 - **ARCHITECTURE**: `KamatekCrm.API` (Minimal API), `KamatekCrm.Web` (Minimal API) ve Masaüstü `ApiClient.cs` içerisindeki tüm JSON serileştirme motorlarına `ReferenceHandler.IgnoreCycles` kuralı enjekte edildi.
@@ -7,6 +21,19 @@
 - **THEME**: `FaultTicketWindow` (Hızlı Kabul) ve `RepairListView` (Tamir Listesi) dahil olmak üzere eski sisteme ait 25'ten fazla arayüzün (View) UI Motoruyla temassızlık sorunu kökten çözüldü.
 - **ARCHITECTURE (Alias Mapping)**: XAML yüzeylerindeki `ThemeForeground`, `ThemePrimaryDark`, `StatusWarningFgDark` gibi eski kalıtımsal kodlar (Legacy Tokens), 3 ana tema (`Theme.PremiumLight`, `Theme.MidnightDark`, `Theme.Glassmorphism`) içerisine "Legacy Mappings" adı altında yeni hex kodlarıyla tescillendi. Tüm pencereler artık %100 çalışma zamanı tema değişimine tepki verebiliyor.
 - **BUILD**: Legacy Mapping enjeksiyonu sayesinde `0 Error` ve `sıfır kayıp` ile eksiksiz senkronizasyon doğrulandı. 
+
+## v14.20 — Professional Theme Engine & RBAC Integration (2026-03-24)
+- **THEME**: 27 eksik Key (Glass efektleri, Gölgelendirmeler, Status renkleri) `MidnightDark` ve `Glassmorphism` temalarına eklendi. Tema değişimi sırasında olası tüm "görünmez metin/buton" hataları giderildi.
+- **THEME**: Yeni profesyonel tokenlar (`ControlStrokeColorDefaultBrush`, `SystemAccentColorPrimaryBrush`, `ControlFillColorDefaultBrush`, `StatusNeutralBg`) tüm tema sözlüklerine entegre edildi.
+- **THEME**: `ThemeService.cs` içindeki Glassmorphism temasının `WPF-UI` tarafında yanlışlıkla `Light` mod olarak işlenmesi hatası giderildi (artık otomatik Dark kabul ediliyor).
+- **THEME**: `ThemeService.cs`'ye tema validasyonu eklendi, hatalı bir tema istenirse sistemin otomatik olarak `PremiumLight` fallback yapması sağlandı.
+- **USER MANAGEMENT**: `AddUserView`, `EditUserView` ve `UsersView` ekranları 3-Tab yapısı ve RBAC (Modül bazlı yetkilendirme) sistemi ile tam uyumlu hale getirildi. 
+- **USER MANAGEMENT**: `AddUserViewModel` ve `EditUserViewModel` tamamen API tabanlı (`ApiClient`) çalışacak şekilde güncellendi, UI-to-API veri transferi stabilize edildi.
+- **SERVICE JOBS**: `ServiceJobsView` ve `NewServiceJobWindow` içindeki tüm hardcoded Hex renk kodları temizlendi, `%100` oranında `DynamicResource` kullanımına geçildi.
+- **API**: `ServiceJobsController` ve `UsersController` üzerinde RBAC filtreleri, durum tarihçesi takibi ve granüler kullanıcı yönetimi güncellemeleri tamamlandı.
+
+## [Unreleased]
+
 
 ## v14.15 — Perfect Runtime Contrast & Login Refinements (2026-03-11)
 - **THEME**: `Styles.xaml` içerisine özel `ModernPasswordBox` stili eklendi, giriş ekranında (LoginView) şifre yazarken karşılaşılan "görünmez metin" hatası kalıcı olarak giderildi.

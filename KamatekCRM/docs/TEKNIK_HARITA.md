@@ -70,7 +70,8 @@ KamatekCrm/
 │   ├── MainViewModel.cs          # Ana navigation kontrolü + Logout
 │   ├── LoginViewModel.cs         # Giriş ekranı mantığı
 │   ├── UsersViewModel.cs         # Kullanıcı listesi + yönetimi
-│   ├── AddUserViewModel.cs       # Hızlı kullanıcı ekleme
+│   ├── AddUserViewModel.cs       # Hızlı kullanıcı ekleme (3-Tab, RBAC, API)
+│   ├── EditUserViewModel.cs      # Kullanıcı düzenleme (3-Tab, RBAC, API)
 │   ├── DashboardViewModel.cs     # Dashboard KPI ve özet verileri (ApiClient üzerinden /api/dashboard/summary)
 │   ├── ServiceJobViewModel.cs    # İş emri wizard + liste mantığı (ApiClient /api/servicejobs)
 │   ├── FaultTicketViewModel.cs   # Cihaz Kabul ve Arıza Kaydı (Hibrit)
@@ -93,7 +94,8 @@ KamatekCrm/
 ├── Views/                # XAML arayüzleri
 │   ├── LoginView.xaml            # Giriş ekranı (Modern Glassmorphism & Fluent UI)
 │   ├── UsersView.xaml            # Kullanıcı listesi
-│   ├── AddUserView.xaml          # Hızlı kullanıcı ekleme (popup)
+│   ├── AddUserView.xaml          # Hızlı kullanıcı ekleme (3-Tab, RBAC)
+│   ├── EditUserView.xaml         # Kullanıcı düzenleme (3-Tab, RBAC)
 │   ├── DashboardView.xaml        # Ana sayfa dashboard (Standardized Glassmorphism)
 │   ├── ServiceJobsView.xaml      # Master list (DataGrid)
 │   ├── NewServiceJobWindow.xaml  # Wizard (ayrı pencere)

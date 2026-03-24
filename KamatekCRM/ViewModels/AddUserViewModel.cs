@@ -7,6 +7,7 @@ using KamatekCrm.Commands;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
+using CommunityToolkit.Mvvm.Input;
 
 namespace KamatekCrm.ViewModels
 {
@@ -15,8 +16,11 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class AddUserViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
+
         private string _ad = string.Empty;
         private string _soyad = string.Empty;
         private string _username = string.Empty;
@@ -24,6 +28,18 @@ namespace KamatekCrm.ViewModels
         private string _statusMessage = string.Empty;
         private bool _isSuccess;
         private bool _isUsernameAvailable = true;
+
+        // RBAC Permissions
+        private bool _canViewFinance;
+        private bool _canViewAnalytics;
+        private bool _canDeleteRecords;
+        private bool _canApprovePurchase;
+        private bool _canAccessSettings;
+
+        // Technician Fields
+        private string _vehiclePlate = string.Empty;
+        private string _serviceArea = string.Empty;
+        private string _expertiseAreas = string.Empty;
 
         /// <summary>
         /// Ad
@@ -91,8 +107,28 @@ namespace KamatekCrm.ViewModels
         public string SelectedRoleDisplay
         {
             get => _selectedRoleDisplay;
-            set => SetProperty(ref _selectedRoleDisplay, value);
+            set
+            {
+                if (SetProperty(ref _selectedRoleDisplay, value))
+                {
+                    OnPropertyChanged(nameof(IsTechnicianRole));
+                }
+            }
         }
+
+        public bool IsTechnicianRole => SelectedRoleDisplay == "Personel";
+
+        #region Ext properties
+        public bool CanViewFinance { get => _canViewFinance; set => SetProperty(ref _canViewFinance, value); }
+        public bool CanViewAnalytics { get => _canViewAnalytics; set => SetProperty(ref _canViewAnalytics, value); }
+        public bool CanDeleteRecords { get => _canDeleteRecords; set => SetProperty(ref _canDeleteRecords, value); }
+        public bool CanApprovePurchase { get => _canApprovePurchase; set => SetProperty(ref _canApprovePurchase, value); }
+        public bool CanAccessSettings { get => _canAccessSettings; set => SetProperty(ref _canAccessSettings, value); }
+        
+        public string VehiclePlate { get => _vehiclePlate; set => SetProperty(ref _vehiclePlate, value); }
+        public string ServiceArea { get => _serviceArea; set => SetProperty(ref _serviceArea, value); }
+        public string ExpertiseAreas { get => _expertiseAreas; set => SetProperty(ref _expertiseAreas, value); }
+        #endregion
 
         /// <summary>
         /// Durum mesajı
@@ -127,13 +163,14 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<string> RoleDisplayOptions { get; } = new ObservableCollection<string>
         {
             "Patron",    // -> Admin
-            "Personel"   // -> Technician
+            "Personel",   // -> Technician
+            "İzleyici"
         };
 
         /// <summary>
         /// Kaydet komutu
         /// </summary>
-        public ICommand SaveCommand { get; }
+        public IAsyncRelayCommand SaveCommand { get; }
 
         /// <summary>
         /// Formu temizle komutu
@@ -148,12 +185,15 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public AddUserViewModel(IAuthService authService)
+        public AddUserViewModel(IAuthService authService, ApiClient apiClient, IToastService toastService, ILoadingService loadingService)
         {
             _authService = authService;
-            _context = new AppDbContext();
-            SaveCommand = new RelayCommand(_ => SaveUser(), _ => CanSaveUser());
-            ClearCommand = new RelayCommand(_ => ClearForm());
+            _apiClient = apiClient;
+            _toastService = toastService;
+            _loadingService = loadingService;
+
+            SaveCommand = new AsyncRelayCommand(SaveUserAsync, CanSaveUser);
+            ClearCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(ClearForm);
         }
 
         /// <summary>
@@ -167,8 +207,9 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            var normalizedUsername = Username.ToLower().Trim();
-            IsUsernameAvailable = !_context.Users.Any(u => u.Username.ToLower() == normalizedUsername);
+            // Client side format check only for now, since API handles it. Or you can do a fast /api/users validation.
+            // For true 0-coupling we ignore local EF contexts.
+            IsUsernameAvailable = true; 
         }
 
         /// <summary>
@@ -179,54 +220,65 @@ namespace KamatekCrm.ViewModels
             return !string.IsNullOrWhiteSpace(Ad) &&
                    !string.IsNullOrWhiteSpace(Soyad) &&
                    !string.IsNullOrWhiteSpace(Username) &&
-                   !string.IsNullOrWhiteSpace(SelectedRoleDisplay) &&
-                   IsUsernameAvailable;
+                   !string.IsNullOrWhiteSpace(SelectedRoleDisplay);
         }
 
         /// <summary>
         /// Kullanıcıyı kaydet
         /// </summary>
-        private void SaveUser()
+        private async System.Threading.Tasks.Task SaveUserAsync()
         {
+            _loadingService.Show();
             try
             {
-                // Son bir kez daha benzersizlik kontrolü
-                CheckUsernameAvailability();
-                if (!IsUsernameAvailable)
-                {
-                    IsSuccess = false;
-                    StatusMessage = "❌ Bu kullanıcı adı zaten kullanılıyor!";
-                    return;
-                }
-
-                // UI'dan gelen rol adını veritabanı değerine dönüştür
                 var dbRole = MapDisplayRoleToDbRole(SelectedRoleDisplay);
 
-                var newUser = new User
+                var req = new
                 {
                     Username = Username.Trim().ToLower(),
-                    PasswordHash = _authService.HashPassword("1234"), // Varsayılan şifre
+                    Password = "1234",
                     Role = dbRole,
                     Ad = Ad.Trim(),
                     Soyad = Soyad.Trim(),
                     IsActive = true,
-                    CreatedDate = DateTime.Now
+                    CanViewFinance,
+                    CanViewAnalytics,
+                    CanDeleteRecords,
+                    CanApprovePurchase,
+                    CanAccessSettings,
+                    IsTechnician = IsTechnicianRole,
+                    VehiclePlate = IsTechnicianRole ? VehiclePlate : null,
+                    ServiceArea = IsTechnicianRole ? ServiceArea : null,
+                    ExpertiseAreas = IsTechnicianRole ? ExpertiseAreas : null
                 };
 
-                _context.Users.Add(newUser);
-                _context.SaveChanges();
+                var response = await _apiClient.PostAsync<object>("api/users", req);
+                
+                if (response.Success)
+                {
+                    IsSuccess = true;
+                    StatusMessage = $"✅ {Ad} {Soyad} başarıyla eklendi!\nVarsayılan şifre: 1234";
+                    _toastService.ShowSuccess("Kullanıcı oluşturuldu", "Başarılı");
 
-                IsSuccess = true;
-                StatusMessage = $"✅ {newUser.AdSoyad} ({newUser.Username}) başarıyla eklendi!\nVarsayılan şifre: 1234";
-
-                // Formu temizle
-                ClearFormFields();
-                FormCleared?.Invoke();
+                    ClearFormFields();
+                    FormCleared?.Invoke();
+                }
+                else
+                {
+                    IsSuccess = false;
+                    StatusMessage = $"❌ Hata: {response.Message}";
+                    _toastService.ShowError("Kayıt Başarısız", response.Message);
+                }
             }
             catch (Exception ex)
             {
                 IsSuccess = false;
-                StatusMessage = $"❌ Hata: {ex.Message}";
+                StatusMessage = $"❌ Sistem Hatası: {ex.Message}";
+                _toastService.ShowError("Kritik Hata", ex.Message);
+            }
+            finally
+            {
+                _loadingService.Hide();
             }
         }
 

@@ -12,14 +12,15 @@ namespace KamatekCrm.Views
         {
             InitializeComponent();
 
-            // ViewModel event'ini dinle
-            if (DataContext is AddUserViewModel viewModel)
+            // ViewModel event'ini dinle - Loaded event'i sonrası DataContext set edilmiş olur
+            Loaded += (s, e) => 
             {
-                viewModel.FormCleared += OnFormCleared;
-            }
-
-            // İlk yüklemede Ad alanına odaklan
-            Loaded += (s, e) => AdTextBox.Focus();
+                if (DataContext is AddUserViewModel viewModel)
+                {
+                    viewModel.FormCleared += OnFormCleared;
+                }
+                AdTextBox.Focus();
+            };
         }
 
         /// <summary>

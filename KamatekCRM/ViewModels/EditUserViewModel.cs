@@ -6,6 +6,7 @@ using KamatekCrm.Commands;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
+using CommunityToolkit.Mvvm.Input;
 
 namespace KamatekCrm.ViewModels
 {
@@ -14,7 +15,9 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class EditUserViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly ApiClient _apiClient;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
         private readonly User _user;
 
         private string _ad;
@@ -23,6 +26,19 @@ namespace KamatekCrm.ViewModels
         private bool _isActive;
         private string _statusMessage = string.Empty;
         private bool _isSuccess;
+
+        // RBAC Permissions
+        private bool _canViewFinance;
+        private bool _canViewAnalytics;
+        private bool _canDeleteRecords;
+        private bool _canApprovePurchase;
+        private bool _canAccessSettings;
+
+        // Technician Fields
+        private string _phone = string.Empty;
+        private string _vehiclePlate = string.Empty;
+        private string _serviceArea = string.Empty;
+        private string _expertiseAreas = string.Empty;
 
         /// <summary>
         /// Ad
@@ -53,8 +69,29 @@ namespace KamatekCrm.ViewModels
         public string SelectedRoleDisplay
         {
             get => _selectedRoleDisplay;
-            set => SetProperty(ref _selectedRoleDisplay, value);
+            set 
+            {
+                if (SetProperty(ref _selectedRoleDisplay, value))
+                {
+                    OnPropertyChanged(nameof(IsTechnicianRole));
+                }
+            }
         }
+
+        public bool IsTechnicianRole => SelectedRoleDisplay == "Personel";
+
+        #region Ext properties
+        public bool CanViewFinance { get => _canViewFinance; set => SetProperty(ref _canViewFinance, value); }
+        public bool CanViewAnalytics { get => _canViewAnalytics; set => SetProperty(ref _canViewAnalytics, value); }
+        public bool CanDeleteRecords { get => _canDeleteRecords; set => SetProperty(ref _canDeleteRecords, value); }
+        public bool CanApprovePurchase { get => _canApprovePurchase; set => SetProperty(ref _canApprovePurchase, value); }
+        public bool CanAccessSettings { get => _canAccessSettings; set => SetProperty(ref _canAccessSettings, value); }
+
+        public string Phone { get => _phone; set => SetProperty(ref _phone, value); }
+        public string VehiclePlate { get => _vehiclePlate; set => SetProperty(ref _vehiclePlate, value); }
+        public string ServiceArea { get =>  _serviceArea; set => SetProperty(ref _serviceArea, value); }
+        public string ExpertiseAreas { get => _expertiseAreas; set => SetProperty(ref _expertiseAreas, value); }
+        #endregion
 
         /// <summary>
         /// Aktif mi?
@@ -98,13 +135,14 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<string> RoleDisplayOptions { get; } = new ObservableCollection<string>
         {
             "Patron",
-            "Personel"
+            "Personel",
+            "İzleyici"
         };
 
         /// <summary>
         /// Kaydet komutu
         /// </summary>
-        public ICommand SaveCommand { get; }
+        public IAsyncRelayCommand SaveCommand { get; }
 
         /// <summary>
         /// İptal komutu
@@ -124,9 +162,11 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public EditUserViewModel(User user)
+        public EditUserViewModel(User user, ApiClient apiClient, IToastService toastService, ILoadingService loadingService)
         {
-            _context = new AppDbContext();
+            _apiClient = apiClient;
+            _toastService = toastService;
+            _loadingService = loadingService;
             _user = user;
 
             // Mevcut değerleri yükle
@@ -134,9 +174,20 @@ namespace KamatekCrm.ViewModels
             _soyad = user.Soyad;
             _isActive = user.IsActive;
             _selectedRoleDisplay = GetDisplayRole(user.Role);
+            
+            _canViewFinance = user.CanViewFinance;
+            _canViewAnalytics = user.CanViewAnalytics;
+            _canDeleteRecords = user.CanDeleteRecords;
+            _canApprovePurchase = user.CanApprovePurchase;
+            _canAccessSettings = user.CanAccessSettings;
 
-            SaveCommand = new RelayCommand(_ => SaveUser(), _ => CanSaveUser());
-            CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
+            _phone = user.Phone ?? "";
+            _vehiclePlate = user.VehiclePlate ?? "";
+            _serviceArea = user.ServiceArea ?? "";
+            _expertiseAreas = user.ExpertiseAreas ?? "";
+
+            SaveCommand = new AsyncRelayCommand(SaveUserAsync, CanSaveUser);
+            CancelCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() => CancelRequested?.Invoke());
         }
 
         /// <summary>
@@ -152,36 +203,54 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Değişiklikleri kaydet
         /// </summary>
-        private void SaveUser()
+        private async System.Threading.Tasks.Task SaveUserAsync()
         {
+            _loadingService.Show();
             try
             {
-                // Veritabanından kullanıcıyı al
-                var dbUser = _context.Users.Find(_user.Id);
-                if (dbUser == null)
+                var req = new
+                {
+                    Ad = Ad.Trim(),
+                    Soyad = Soyad.Trim(),
+                    Role = MapDisplayRoleToDbRole(SelectedRoleDisplay),
+                    IsActive = IsActive,
+                    CanViewFinance,
+                    CanViewAnalytics,
+                    CanDeleteRecords,
+                    CanApprovePurchase,
+                    CanAccessSettings,
+                    IsTechnician = IsTechnicianRole,
+                    Phone,
+                    VehiclePlate = IsTechnicianRole ? VehiclePlate : null,
+                    ServiceArea = IsTechnicianRole ? ServiceArea : null,
+                    ExpertiseAreas = IsTechnicianRole ? ExpertiseAreas : null
+                };
+
+                var response = await _apiClient.PutAsync<object>($"api/users/{_user.Id}", req);
+
+                if (response.Success)
+                {
+                    IsSuccess = true;
+                    StatusMessage = "✅ Kullanıcı güncellendi!";
+                    _toastService.ShowSuccess("Kullanıcı güncellendi", "Başarılı");
+                    SaveSuccessful?.Invoke();
+                }
+                else
                 {
                     IsSuccess = false;
-                    StatusMessage = "❌ Kullanıcı bulunamadı!";
-                    return;
+                    StatusMessage = $"❌ Hata: {response.Message}";
+                    _toastService.ShowError("Hata", response.Message);
                 }
-
-                // Değerleri güncelle
-                dbUser.Ad = Ad.Trim();
-                dbUser.Soyad = Soyad.Trim();
-                dbUser.Role = MapDisplayRoleToDbRole(SelectedRoleDisplay);
-                dbUser.IsActive = IsActive;
-
-                _context.SaveChanges();
-
-                IsSuccess = true;
-                StatusMessage = "✅ Kullanıcı güncellendi!";
-
-                SaveSuccessful?.Invoke();
             }
             catch (Exception ex)
             {
                 IsSuccess = false;
-                StatusMessage = $"❌ Hata: {ex.Message}";
+                StatusMessage = $"❌ Sistem Hatası: {ex.Message}";
+                _toastService.ShowError("Hata", ex.Message);
+            }
+            finally
+            {
+                _loadingService.Hide();
             }
         }
 

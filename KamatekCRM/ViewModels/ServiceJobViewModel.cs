@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -30,6 +31,29 @@ namespace KamatekCrm.ViewModels
         private readonly ILoadingService _loadingService;
         private ServiceJob? _selectedServiceJob;
 
+        // ===== DASHBOARD KPI ALANLARI =====
+        private int _totalJobCount;
+        private int _pendingCount;
+        private int _inProgressCount;
+        private int _completedCount;
+        private int _slaBreachedCount;
+        private int _todayCreatedCount;
+        private double _avgCompletionHours;
+
+        // ===== WIZARD ADIM YÖNETİMİ =====
+        private int _currentWizardStep = 1;
+        private const int TotalWizardSteps = 4;
+
+        // ===== KDV HESAPLAMA =====
+        private decimal _kdvRate = 20m; // %20 varsayılan
+
+        // ===== TEKNİSYEN SEÇİMİ =====
+        private int? _selectedTechnicianId;
+
+        // ===== DETAY PANELİ =====
+        private bool _isDetailPanelOpen;
+        private ObservableCollection<ServiceJobHistory> _selectedJobHistory = new();
+
         public ServiceJobViewModel(NavigationService navigationService, IToastService toastService, ILoadingService loadingService, ApiClient apiClient)
         {
             _navigationService = navigationService;
@@ -40,6 +64,7 @@ namespace KamatekCrm.ViewModels
             ServiceJobs = new ObservableCollection<ServiceJob>();
             Customers = new ObservableCollection<Customer>();
             Products = new ObservableCollection<Product>();
+            Technicians = new ObservableCollection<User>();
             CurrentJobItems = new ObservableCollection<ServiceJobItem>();
             CurrentJobItems.CollectionChanged += (s, e) =>
             {
@@ -82,6 +107,14 @@ namespace KamatekCrm.ViewModels
             PrintServiceFormCommand = new RelayCommand(param => PrintServiceForm(param as ServiceJob), param => param is ServiceJob);
             AddAssetCommand = new RelayCommand(_ => OpenQuickAssetAdd(), _ => SelectedCustomer != null);
             CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
+
+            // Wizard komutları
+            GoNextStepCommand = new RelayCommand(_ => GoNextStep(), _ => CanGoNextStep());
+            GoPreviousStepCommand = new RelayCommand(_ => GoPreviousStep(), _ => CurrentWizardStep > 1);
+
+            // Dashboard & durum değiştirme komutları
+            ChangeJobStatusCommand = new RelayCommand(param => ChangeJobStatus(param), param => SelectedServiceJob != null);
+            DeleteJobCommand = new RelayCommand(_ => DeleteJob(), _ => SelectedServiceJob != null);
 
             _ = LoadData();
             UpdateDeviceTypeOptions();
@@ -238,6 +271,138 @@ namespace KamatekCrm.ViewModels
         {
             get => _technicianNotes;
             set => SetProperty(ref _technicianNotes, value);
+        }
+
+        #endregion
+
+        #region Dashboard KPI Properties
+
+        public int TotalJobCount
+        {
+            get => _totalJobCount;
+            set => SetProperty(ref _totalJobCount, value);
+        }
+
+        public int PendingCount
+        {
+            get => _pendingCount;
+            set => SetProperty(ref _pendingCount, value);
+        }
+
+        public int InProgressCount
+        {
+            get => _inProgressCount;
+            set => SetProperty(ref _inProgressCount, value);
+        }
+
+        public int CompletedCount
+        {
+            get => _completedCount;
+            set => SetProperty(ref _completedCount, value);
+        }
+
+        public int SlaBreachedCount
+        {
+            get => _slaBreachedCount;
+            set => SetProperty(ref _slaBreachedCount, value);
+        }
+
+        public int TodayCreatedCount
+        {
+            get => _todayCreatedCount;
+            set => SetProperty(ref _todayCreatedCount, value);
+        }
+
+        public double AvgCompletionHours
+        {
+            get => _avgCompletionHours;
+            set => SetProperty(ref _avgCompletionHours, value);
+        }
+
+        #endregion
+
+        #region Wizard Step Properties
+
+        public int CurrentWizardStep
+        {
+            get => _currentWizardStep;
+            set
+            {
+                if (SetProperty(ref _currentWizardStep, value))
+                {
+                    OnPropertyChanged(nameof(IsStep1));
+                    OnPropertyChanged(nameof(IsStep2));
+                    OnPropertyChanged(nameof(IsStep3));
+                    OnPropertyChanged(nameof(IsStep4));
+                    OnPropertyChanged(nameof(WizardProgress));
+                    OnPropertyChanged(nameof(WizardStepTitle));
+                    OnPropertyChanged(nameof(CanGoBack));
+                    OnPropertyChanged(nameof(IsLastStep));
+                }
+            }
+        }
+
+        public bool IsStep1 => CurrentWizardStep == 1;
+        public bool IsStep2 => CurrentWizardStep == 2;
+        public bool IsStep3 => CurrentWizardStep == 3;
+        public bool IsStep4 => CurrentWizardStep == 4;
+        public bool CanGoBack => CurrentWizardStep > 1;
+        public bool IsLastStep => CurrentWizardStep == TotalWizardSteps;
+
+        public double WizardProgress => (double)CurrentWizardStep / TotalWizardSteps * 100;
+
+        public string WizardStepTitle => CurrentWizardStep switch
+        {
+            1 => "👤 Müşteri & Konum",
+            2 => "📋 İş Detayları",
+            3 => "📦 Malzeme & Maliyet",
+            4 => "✅ Özet & Onay",
+            _ => ""
+        };
+
+        #endregion
+
+        #region KDV Properties
+
+        public decimal KdvRate
+        {
+            get => _kdvRate;
+            set
+            {
+                if (SetProperty(ref _kdvRate, value))
+                {
+                    OnPropertyChanged(nameof(KdvAmount));
+                    OnPropertyChanged(nameof(GrandTotalWithKdv));
+                }
+            }
+        }
+
+        public decimal SubTotal => MaterialTotal + LaborCost - DiscountAmount;
+        public decimal KdvAmount => SubTotal * KdvRate / 100m;
+        public decimal GrandTotalWithKdv => SubTotal + KdvAmount;
+
+        #endregion
+
+        #region Technician & Detail Panel Properties
+
+        public ObservableCollection<User> Technicians { get; set; }
+
+        public int? SelectedTechnicianId
+        {
+            get => _selectedTechnicianId;
+            set => SetProperty(ref _selectedTechnicianId, value);
+        }
+
+        public bool IsDetailPanelOpen
+        {
+            get => _isDetailPanelOpen;
+            set => SetProperty(ref _isDetailPanelOpen, value);
+        }
+
+        public ObservableCollection<ServiceJobHistory> SelectedJobHistory
+        {
+            get => _selectedJobHistory;
+            set => SetProperty(ref _selectedJobHistory, value);
         }
 
         #endregion
@@ -634,7 +799,11 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Mevcut cihaz mı seçiliyor?
         /// </summary>
-        public bool IsExistingAsset => !IsNewAsset;
+        public bool IsExistingAsset
+        {
+            get => !IsNewAsset;
+            set => IsNewAsset = !value;
+        }
 
         /// <summary>
         /// Yeni cihaz formu görünür mü?
@@ -960,6 +1129,26 @@ namespace KamatekCrm.ViewModels
         public ICommand CancelCommand { get; }
 
         /// <summary>
+        /// Wizard ileri adım
+        /// </summary>
+        public ICommand GoNextStepCommand { get; }
+
+        /// <summary>
+        /// Wizard geri adım
+        /// </summary>
+        public ICommand GoPreviousStepCommand { get; }
+
+        /// <summary>
+        /// İş durumu değiştirme komutu
+        /// </summary>
+        public ICommand ChangeJobStatusCommand { get; }
+
+        /// <summary>
+        /// İş silme komutu
+        /// </summary>
+        public ICommand DeleteJobCommand { get; }
+
+        /// <summary>
         /// İptal talebi event
         /// </summary>
         public event Action? CancelRequested;
@@ -980,6 +1169,9 @@ namespace KamatekCrm.ViewModels
         {
             OnPropertyChanged(nameof(MaterialTotal));
             OnPropertyChanged(nameof(GrandTotal));
+            OnPropertyChanged(nameof(SubTotal));
+            OnPropertyChanged(nameof(KdvAmount));
+            OnPropertyChanged(nameof(GrandTotalWithKdv));
         }
 
         #endregion
@@ -1069,13 +1261,15 @@ namespace KamatekCrm.ViewModels
             if (_loadingService != null) 
                 _loadingService.Show("İşler yükleniyor...");
             
-            await Task.Delay(500); // UI thread'in nefes alması için
+            await Task.Delay(300);
 
             try
             {
                 await LoadCustomers();
                 await LoadProducts();
                 await LoadServiceJobs();
+                await LoadDashboardAsync();
+                await LoadTechnicians();
             }
             finally
             {
@@ -1512,6 +1706,188 @@ namespace KamatekCrm.ViewModels
             catch (Exception ex)
             {
                 _toastService.ShowError($"PDF oluşturulurken hata: {ex.Message}");
+            }
+        }
+
+        #endregion
+
+        #region Dashboard & Wizard Methods
+
+        /// <summary>
+        /// Dashboard istatistiklerini API'den yükle
+        /// </summary>
+        public async Task LoadDashboardAsync()
+        {
+            try
+            {
+                var response = await _apiClient.GetAsync<dynamic>("api/servicejobs/stats");
+                if (response != null && response.Success && response.Data != null)
+                {
+                    var data = response.Data;
+                    // JsonElement'ten değerleri parse et
+                    if (data is System.Text.Json.JsonElement json)
+                    {
+                        TotalJobCount = json.TryGetProperty("totalJobs", out var tj) ? tj.GetInt32() : 0;
+                        PendingCount = json.TryGetProperty("pendingJobs", out var pj) ? pj.GetInt32() : 0;
+                        InProgressCount = json.TryGetProperty("inProgressJobs", out var ipj) ? ipj.GetInt32() : 0;
+                        CompletedCount = json.TryGetProperty("completedJobs", out var cj) ? cj.GetInt32() : 0;
+                        SlaBreachedCount = json.TryGetProperty("slaBreachedJobs", out var sbj) ? sbj.GetInt32() : 0;
+                        TodayCreatedCount = json.TryGetProperty("todayCreated", out var tc) ? tc.GetInt32() : 0;
+                        AvgCompletionHours = json.TryGetProperty("avgCompletionHours", out var ach) ? ach.GetDouble() : 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Dashboard stats yüklenemedi: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Teknisyen listesini API'den yükle
+        /// </summary>
+        private async Task LoadTechnicians()
+        {
+            try
+            {
+                var response = await _apiClient.GetAsync<List<User>>("api/users?pageSize=100");
+                if (response != null && response.Success && response.Data != null)
+                {
+                    Technicians.Clear();
+                    foreach (var user in response.Data.Where(u => u.Role == "Personel" || u.Role == "Admin"))
+                    {
+                        Technicians.Add(user);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Teknisyenler yüklenemedi: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Seçili işin tarihçesini yükle
+        /// </summary>
+        private async Task LoadSelectedJobHistory()
+        {
+            SelectedJobHistory.Clear();
+            if (SelectedServiceJob == null) return;
+
+            try
+            {
+                var response = await _apiClient.GetAsync<List<ServiceJobHistory>>($"api/servicejobs/{SelectedServiceJob.Id}/history");
+                if (response != null && response.Success && response.Data != null)
+                {
+                    foreach (var h in response.Data) SelectedJobHistory.Add(h);
+                }
+            }
+            catch { /* Tarihçe opsiyonel */ }
+        }
+
+        /// <summary>
+        /// Wizard ileri adım
+        /// </summary>
+        private void GoNextStep()
+        {
+            if (CurrentWizardStep < TotalWizardSteps)
+                CurrentWizardStep++;
+        }
+
+        /// <summary>
+        /// Wizard geri adım
+        /// </summary>
+        private void GoPreviousStep()
+        {
+            if (CurrentWizardStep > 1)
+                CurrentWizardStep--;
+        }
+
+        /// <summary>
+        /// Wizard ileri adım izin kontrolü (per-step validation)
+        /// </summary>
+        private bool CanGoNextStep()
+        {
+            return CurrentWizardStep switch
+            {
+                1 => SelectedCustomer != null, // Müşteri seçilmiş olmalı
+                2 => !string.IsNullOrWhiteSpace(Description), // Açıklama girilmiş olmalı
+                3 => true, // Malzeme opsiyonel
+                _ => false
+            };
+        }
+
+        /// <summary>
+        /// İş durumunu değiştir (Dashboard context menu)
+        /// </summary>
+        private async void ChangeJobStatus(object? param)
+        {
+            if (SelectedServiceJob == null || param == null) return;
+
+            try
+            {
+                JobStatus newStatus;
+                if (param is JobStatus js)
+                    newStatus = js;
+                else if (Enum.TryParse<JobStatus>(param.ToString(), out var parsed))
+                    newStatus = parsed;
+                else
+                    return;
+
+                var response = await _apiClient.PatchAsync<object>($"api/servicejobs/{SelectedServiceJob.Id}/status", 
+                    new { Status = newStatus });
+
+                if (response != null && response.Success)
+                {
+                    SelectedServiceJob.Status = newStatus;
+                    if (newStatus == JobStatus.Completed)
+                        SelectedServiceJob.CompletedDate = DateTime.Now;
+
+                    await LoadServiceJobs();
+                    await LoadDashboardAsync();
+                    _toastService?.ShowSuccess($"İş #{SelectedServiceJob.Id} durumu güncellendi: {newStatus}");
+                }
+                else
+                {
+                    _toastService?.ShowError(response?.Message ?? "Durum güncellenemedi.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Hata: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// İş sil (Dashboard context menu)
+        /// </summary>
+        private async void DeleteJob()
+        {
+            if (SelectedServiceJob == null) return;
+
+            var result = MessageBox.Show(
+                $"İş #{SelectedServiceJob.Id} silinecek. Emin misiniz?",
+                "Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var response = await _apiClient.DeleteAsync<object>($"api/servicejobs/{SelectedServiceJob.Id}");
+                if (response != null && response.Success)
+                {
+                    await LoadServiceJobs();
+                    await LoadDashboardAsync();
+                    _toastService?.ShowSuccess("İş kaydı silindi.");
+                }
+                else
+                {
+                    _toastService?.ShowError(response?.Message ?? "Silinemedi.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Hata: {ex.Message}");
             }
         }
 

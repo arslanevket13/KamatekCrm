@@ -125,8 +125,61 @@
     <!-- ─────────── GLASSMORPHISM (Subtle Hover / Overlay states) ─────────── -->
     <SolidColorBrush x:Key="GlassBrushLow" Color="#FFFFFF" Opacity="0.05"/>
     <SolidColorBrush x:Key="GlassBrushMedium" Color="#FFFFFF" Opacity="0.10"/>
+    <SolidColorBrush x:Key="GlassBrushHigh" Color="#FFFFFF" Opacity="0.15"/>
+    <SolidColorBrush x:Key="GlassBrush" Color="#FFFFFF" Opacity="0.20"/>
     <SolidColorBrush x:Key="HoverOverlayBrush" Color="#FFFFFF" Opacity="0.08"/>
     <SolidColorBrush x:Key="PressedOverlayBrush" Color="#FFFFFF" Opacity="0.15"/>
     <SolidColorBrush x:Key="SelectedRowBrush" Color="#818CF8" Opacity="0.2"/>
+
+    <!-- Glass Card Gradient -->
+    <LinearGradientBrush x:Key="GlassCardGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#FFFFFF" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- Glass Borders -->
+    <SolidColorBrush x:Key="GlassBorderBrush" Color="#FFFFFF" Opacity="0.30"/>
+    <SolidColorBrush x:Key="GlassBorderHighlight" Color="#FFFFFF" Opacity="0.50"/>
+    <SolidColorBrush x:Key="CardStrokeBrush" Color="#FFFFFF" Opacity="0.20"/>
+
+    <!-- ─────────── SHADOW SYSTEM (Soft Glows) ─────────── -->
+    <Color x:Key="ShadowColor">#0F172A</Color>
+    <DropShadowEffect x:Key="ShadowSubtle" BlurRadius="6" ShadowDepth="1" Direction="270" Color="#000000" Opacity="0.10"/>
+    <DropShadowEffect x:Key="ShadowDefault" BlurRadius="12" ShadowDepth="2" Direction="270" Color="#000000" Opacity="0.15"/>
+    <DropShadowEffect x:Key="ShadowMedium" BlurRadius="24" ShadowDepth="4" Direction="270" Color="#000000" Opacity="0.20"/>
+    <DropShadowEffect x:Key="ShadowHigh" BlurRadius="36" ShadowDepth="8" Direction="270" Color="#000000" Opacity="0.30"/>
+
+    <!-- ─────────── INTERACTION STATES ─────────── -->
+    <SolidColorBrush x:Key="FocusRingBrush" Color="#818CF8" Opacity="0.6"/>
+    <SolidColorBrush x:Key="DisabledOverlayBrush" Color="#091428" Opacity="0.5"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#64748B"/>
+    <SolidColorBrush x:Key="RippleBrush" Color="#818CF8" Opacity="0.20"/>
+
+    <!-- ─────────── STATUS LIGHT VARIANTS (Translucent) ─────────── -->
+    <SolidColorBrush x:Key="StatusSuccessBgLight" Color="#34D399" Opacity="0.10"/>
+    <SolidColorBrush x:Key="StatusSuccessFgLight" Color="#6EE7B7"/>
+    <SolidColorBrush x:Key="StatusWarningBgLight" Color="#FBBF24" Opacity="0.10"/>
+    <SolidColorBrush x:Key="StatusWarningFgLight" Color="#FCD34D"/>
+    <SolidColorBrush x:Key="StatusErrorBgLight" Color="#F87171" Opacity="0.10"/>
+    <SolidColorBrush x:Key="StatusErrorFgLight" Color="#FCA5A5"/>
+    <SolidColorBrush x:Key="StatusInfoBgLight" Color="#60A5FA" Opacity="0.10"/>
+    <SolidColorBrush x:Key="StatusInfoFgLight" Color="#93C5FD"/>
+
+    <!-- ─────────── KPI GRADIENT - ERROR ─────────── -->
+    <LinearGradientBrush x:Key="KpiGradientError" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F43F5E" Offset="0"/>
+        <GradientStop Color="#EF4444" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- ─────────── MISC MISSING TOKENS ─────────── -->
+    <SolidColorBrush x:Key="ThemeHoverLight" Color="#FFFFFF" Opacity="0.08"/>
+    <SolidColorBrush x:Key="ThemePrimaryMuted" Color="#818CF8" Opacity="0.20"/>
+    <Color x:Key="ThemeTextTertiaryColor">#64748B</Color>
+
+    <!-- ─────────── NEW PROFESSIONAL TOKENS ─────────── -->
+    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="#FFFFFF" Opacity="0.3"/>
+    <SolidColorBrush x:Key="SystemAccentColorPrimaryBrush" Color="#818CF8"/>
+    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="#FFFFFF" Opacity="0.05"/>
+    <SolidColorBrush x:Key="StatusNeutralBg" Color="#FFFFFF" Opacity="0.10"/>
 
 </ResourceDictionary>

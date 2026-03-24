@@ -309,6 +309,53 @@ namespace KamatekCrm.API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Dashboard istatistikleri
+        /// </summary>
+        [HttpGet("stats")]
+        public async Task<ActionResult<ServiceJobStatsResponse>> GetStats()
+        {
+            try
+            {
+                var now = DateTime.UtcNow;
+                var todayStart = now.Date;
+
+                var allJobs = await _context.ServiceJobs
+                    .AsNoTracking()
+                    .Select(j => new { j.Status, j.SlaDeadline, j.CreatedDate, j.CompletedDate })
+                    .ToListAsync();
+
+                var completedJobs = allJobs.Where(j => j.Status == JobStatus.Completed && j.CompletedDate.HasValue).ToList();
+                double avgHours = 0;
+                if (completedJobs.Any())
+                {
+                    avgHours = completedJobs
+                        .Select(j => (j.CompletedDate!.Value - j.CreatedDate).TotalHours)
+                        .Average();
+                }
+
+                var stats = new ServiceJobStatsResponse
+                {
+                    TotalJobs = allJobs.Count,
+                    PendingJobs = allJobs.Count(j => j.Status == JobStatus.Pending),
+                    InProgressJobs = allJobs.Count(j => j.Status == JobStatus.InProgress),
+                    CompletedJobs = allJobs.Count(j => j.Status == JobStatus.Completed),
+                    CancelledJobs = allJobs.Count(j => j.Status == JobStatus.Cancelled),
+                    WaitingForPartsJobs = allJobs.Count(j => j.Status == JobStatus.WaitingForParts),
+                    SlaBreachedJobs = allJobs.Count(j => j.SlaDeadline.HasValue && j.SlaDeadline.Value < now && j.Status != JobStatus.Completed && j.Status != JobStatus.Cancelled),
+                    TodayCreated = allJobs.Count(j => j.CreatedDate >= todayStart),
+                    AvgCompletionHours = Math.Round(avgHours, 1)
+                };
+
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ServiceJob istatistik alma hatası");
+                return StatusCode(500, new { Message = "İstatistikler alınırken hata oluştu." });
+            }
+        }
+
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
@@ -320,5 +367,18 @@ namespace KamatekCrm.API.Controllers
     {
         public JobStatus Status { get; set; }
         public string? Notes { get; set; }
+    }
+
+    public class ServiceJobStatsResponse
+    {
+        public int TotalJobs { get; set; }
+        public int PendingJobs { get; set; }
+        public int InProgressJobs { get; set; }
+        public int CompletedJobs { get; set; }
+        public int CancelledJobs { get; set; }
+        public int WaitingForPartsJobs { get; set; }
+        public int SlaBreachedJobs { get; set; }
+        public int TodayCreated { get; set; }
+        public double AvgCompletionHours { get; set; }
     }
 }

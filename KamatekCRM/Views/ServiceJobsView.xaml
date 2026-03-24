@@ -6,89 +6,418 @@
              xmlns:local="clr-namespace:KamatekCrm.Views"
              xmlns:helpers="clr-namespace:KamatekCrm.Helpers"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:enums="clr-namespace:KamatekCrm.Shared.Enums;assembly=KamatekCrm.Shared"
              mc:Ignorable="d" 
-             d:DesignHeight="500" d:DesignWidth="800"
+             d:DesignHeight="800" d:DesignWidth="1400"
              helpers:AnimationHelper.EntranceAnimation="SlideInFromBottom"
              Background="{DynamicResource SurfacePageBrush}">
 
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ========== MERKEZ İÇERİK ========== -->
-        <Border Background="{DynamicResource ThemeSurface}" 
-                BorderBrush="{DynamicResource ThemeBorder}"
-                BorderThickness="1"
-                CornerRadius="16"
-                Margin="40" 
-                MaxWidth="500" 
-                MaxHeight="400"
-                VerticalAlignment="Center"
-                HorizontalAlignment="Center">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="40" ShadowDepth="10" Opacity="0.08" Color="Black"/>
-            </Border.Effect>
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40">
-                
-                <!-- Icon -->
-                <Border Background="{DynamicResource PrimaryBrush}" 
-                        CornerRadius="50" 
-                        Width="80" Height="80"
-                        Margin="0,0,0,24">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.3" Color="{DynamicResource ThemePrimaryColor}"/>
-                    </Border.Effect>
-                    <ui:SymbolIcon Symbol="Wrench24" FontSize="36" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                </Border>
-                
-                <!-- Başlık -->
-                <TextBlock Text="Yeni İş Emri Oluştur" 
-                           FontSize="24" 
-                           FontWeight="Bold"
-                           Foreground="{DynamicResource ThemeTextPrimary}"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,12"/>
-                
-                <!-- Açıklama -->
-                <TextBlock Text="Müşteri için yeni servis, kurulum veya bakım işi kaydı oluşturun." 
-                           FontSize="14" 
-                           Foreground="{DynamicResource ThemeTextSecondary}"
-                           HorizontalAlignment="Center"
-                           TextWrapping="Wrap"
-                           TextAlignment="Center"
-                           Margin="0,0,0,30"
-                           MaxWidth="350"/>
-                
-                <!-- Yeni İş Emri Butonu -->
-                <ui:Button Content="Yeni İş Emri Aç"
-                           Icon="{ui:SymbolIcon Add24}"
-                           Command="{Binding OpenNewJobFormCommand}"
-                           Appearance="Primary"
-                           Height="48"
-                           Width="220"
-                           FontSize="15"
-                           HorizontalAlignment="Center"/>
-                
-                <!-- Yönlendirme Bilgisi -->
-                <StackPanel Margin="0,30,0,0" HorizontalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
-                        <ui:SymbolIcon Symbol="Lightbulb24" FontSize="16" Foreground="{DynamicResource ThemeWarning}" Margin="0,0,8,0"/>
-                        <TextBlock Text="İpucu:" FontWeight="SemiBold" Foreground="{DynamicResource ThemeWarning}"/>
-                    </StackPanel>
-                    <TextBlock Text="Mevcut işleri görüntülemek için sidebar'dan" 
-                               Foreground="{DynamicResource ThemeTextSecondary}"
-                               HorizontalAlignment="Center"
-                               FontSize="12"/>
-                    <TextBlock Text="'Tamir Listesi' veya 'Saha İşleri' kullanın." 
-                               Foreground="{DynamicResource ThemeTextSecondary}"
-                               HorizontalAlignment="Center"
-                               FontSize="12"/>
+        <!-- ========== ROW 0: HEADER ========== -->
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                Padding="24,16" Margin="0,0,0,1"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Text="🔧 İş Emri Yönetim Merkezi" 
+                               FontSize="22" FontWeight="Bold" 
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock FontSize="12" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                        <Run Text="Toplam"/>
+                        <Run Text="{Binding TotalJobCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <Run Text="iş kaydı  •  Bugün"/>
+                        <Run Text="{Binding TodayCreatedCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <Run Text="yeni"/>
+                    </TextBlock>
                 </StackPanel>
-                
-            </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:Button Content="➕ Yeni İş Emri"
+                               Command="{Binding OpenNewJobFormCommand}"
+                               Appearance="Primary"
+                               Height="38" Padding="16,0" Margin="0,0,8,0" FontSize="13"/>
+                    <ui:Button Content="🔄"
+                               Command="{Binding RefreshListCommand}"
+                               Width="38" Height="38" Padding="0"
+                               ToolTip="Yenile"/>
+                </StackPanel>
+            </Grid>
         </Border>
+
+        <!-- ========== ROW 1: KPI CARDS ========== -->
+        <UniformGrid Grid.Row="1" Columns="5" Margin="16,12,16,4">
+            <!-- Toplam -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
+                    Padding="16,14" Margin="4"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06" Color="Black"/>
+                </Border.Effect>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="6" Width="28" Height="28" Margin="0,0,8,0">
+                            <TextBlock Text="📊" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="TOPLAM" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding TotalJobCount}" FontSize="28" FontWeight="Bold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Bekleyen -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
+                    Padding="16,14" Margin="4"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06" Color="Black"/>
+                </Border.Effect>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Background="{DynamicResource StatusWarningBgLight}" CornerRadius="6" Width="28" Height="28" Margin="0,0,8,0">
+                            <TextBlock Text="⏳" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="BEKLEYEN" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource StatusWarningFg}"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding PendingCount}" FontSize="28" FontWeight="Bold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Devam Eden -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
+                    Padding="16,14" Margin="4"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06" Color="Black"/>
+                </Border.Effect>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="6" Width="28" Height="28" Margin="0,0,8,0">
+                            <TextBlock Text="🔵" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="DEVAM EDEN" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource StatusInfoFg}"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding InProgressCount}" FontSize="28" FontWeight="Bold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Tamamlanan -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
+                    Padding="16,14" Margin="4"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06" Color="Black"/>
+                </Border.Effect>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Background="{DynamicResource StatusSuccessBgLight}" CornerRadius="6" Width="28" Height="28" Margin="0,0,8,0">
+                            <TextBlock Text="✅" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="TAMAMLANAN" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource StatusSuccessFg}"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding CompletedCount}" FontSize="28" FontWeight="Bold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- SLA Aşan -->
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
+                    Padding="16,14" Margin="4"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06" Color="Black"/>
+                </Border.Effect>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Background="{DynamicResource StatusErrorBgLight}" CornerRadius="6" Width="28" Height="28" Margin="0,0,8,0">
+                            <TextBlock Text="⚠️" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Text="SLA AŞAN" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource StatusErrorFg}"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding SlaBreachedCount}" FontSize="28" FontWeight="Bold"
+                               Foreground="{DynamicResource StatusErrorFg}"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- ========== ROW 2: TOOLBAR + DATAGRID ========== -->
+        <Grid Grid.Row="2" Margin="16,8,16,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Toolbar -->
+            <Border Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                    CornerRadius="10" Padding="12" Margin="0,0,0,8"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Arama -->
+                    <ui:TextBox Grid.Column="0" 
+                                PlaceholderText="🔍 Müşteri, başlık veya açıklama ara..."
+                                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                Height="36" Margin="0,0,12,0"/>
+
+                    <!-- Durum Filtre -->
+                    <ComboBox Grid.Column="1" 
+                              ItemsSource="{Binding StatusFilters}"
+                              SelectedItem="{Binding SelectedStatusFilter}"
+                              Width="150" Height="36" Margin="0,0,8,0"
+                              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                              Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding}" Value="All">
+                                                    <Setter Property="Text" Value="🔘 Tümü"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding}" Value="Pending">
+                                                    <Setter Property="Text" Value="⏳ Bekleyen"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding}" Value="InProgress">
+                                                    <Setter Property="Text" Value="🔵 Devam Eden"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding}" Value="Completed">
+                                                    <Setter Property="Text" Value="✅ Tamamlanan"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- Tarih Filtre -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,8,0">
+                        <DatePicker SelectedDate="{Binding FilterStartDate}" 
+                                    Width="130" Height="36" Margin="0,0,4,0"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+                        <TextBlock Text="—" VerticalAlignment="Center" Margin="4,0" 
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <DatePicker SelectedDate="{Binding FilterEndDate}" 
+                                    Width="130" Height="36"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+                    </StackPanel>
+
+                    <!-- Yazdır -->
+                    <ui:Button Grid.Column="3" Content="🖨️ PDF"
+                               Command="{Binding PrintServiceFormCommand}"
+                               CommandParameter="{Binding SelectedServiceJob}"
+                               Height="36" Padding="12,0"/>
+                </Grid>
+            </Border>
+
+            <!-- DataGrid -->
+            <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                    CornerRadius="10" Padding="0"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.06" Color="Black"/>
+                </Border.Effect>
+                <DataGrid ItemsSource="{Binding ServiceJobsView}"
+                          SelectedItem="{Binding SelectedServiceJob}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                          RowBackground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                          AlternatingRowBackground="{DynamicResource SurfacePageBrush}"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                          HeadersVisibility="Column"
+                          ColumnHeaderHeight="42"
+                          RowHeight="44"
+                          FontSize="13">
+                    <DataGrid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="📋 Detay Göster" Command="{Binding ViewJobDetailCommand}" 
+                                      CommandParameter="{Binding SelectedServiceJob}"/>
+                            <Separator/>
+                            <MenuItem Header="⏳ Bekliyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Pending"/>
+                            <MenuItem Header="🔵 Devam Ediyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="InProgress"/>
+                            <MenuItem Header="✅ Tamamla" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Completed"/>
+                            <MenuItem Header="❌ İptal Et" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Cancelled"/>
+                            <Separator/>
+                            <MenuItem Header="🖨️ PDF Yazdır" Command="{Binding PrintServiceFormCommand}" 
+                                      CommandParameter="{Binding SelectedServiceJob}"/>
+                            <Separator/>
+                            <MenuItem Header="🗑️ Sil" Command="{Binding DeleteJobCommand}" Foreground="Red"/>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
+
+                    <DataGrid.Columns>
+                        <!-- ID -->
+                        <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="50">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="8,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Müşteri -->
+                        <DataGridTextColumn Header="Müşteri" Binding="{Binding Customer.FullName}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="8,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Açıklama -->
+                        <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="1.5*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="8,0"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- İş Türü -->
+                        <DataGridTextColumn Header="Tür" Binding="{Binding WorkOrderTypeDisplay}" Width="110">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="8,0"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Durum -->
+                        <DataGridTextColumn Header="Durum" Binding="{Binding StatusDisplay}" Width="130">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="8,0"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Öncelik -->
+                        <DataGridTemplateColumn Header="Öncelik" Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock VerticalAlignment="Center" Padding="8,0" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="{x:Static enums:JobPriority.Low}">
+                                                        <Setter Property="Text" Value="🟢 Düşük"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="{x:Static enums:JobPriority.Normal}">
+                                                        <Setter Property="Text" Value="🔵 Normal"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="{x:Static enums:JobPriority.Urgent}">
+                                                        <Setter Property="Text" Value="🟠 Acil"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="{x:Static enums:JobPriority.Critical}">
+                                                        <Setter Property="Text" Value="🔴 Kritik"/>
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Teknisyen -->
+                        <DataGridTextColumn Header="Teknisyen" Binding="{Binding AssignedTechnician}" Width="100">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="8,0"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Tarih -->
+                        <DataGridTextColumn Header="Tarih" Binding="{Binding CreatedDate, StringFormat=dd.MM.yyyy}" Width="90">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="8,0"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- SLA -->
+                        <DataGridTextColumn Header="SLA" Binding="{Binding SlaStatus}" Width="110">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="8,0"/>
+                                    <Setter Property="FontSize" Value="11"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Tutar -->
+                        <DataGridTextColumn Header="Tutar" Binding="{Binding TotalAmount, StringFormat=₺{0:N0}}" Width="90">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="8,0"/>
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>
-
-

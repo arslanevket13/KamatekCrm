@@ -1,6 +1,7 @@
 using System.Windows;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;
+using KamatekCrm.Services;
 
 namespace KamatekCrm.Views
 {
@@ -9,24 +10,16 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class EditUserView : Window
     {
-        public EditUserView(User user)
+        public EditUserView()
         {
             InitializeComponent();
+        }
 
-            var viewModel = new EditUserViewModel(user);
-            viewModel.SaveSuccessful += () =>
-            {
-                DialogResult = true;
-                Close();
-            };
-            
-            viewModel.CancelRequested += () =>
-            {
-                DialogResult = false;
-                Close();
-            };
-            
-            DataContext = viewModel;
+        // Keep this for legacy if needed, but parameterless is preferred for our new flow
+        public EditUserView(User user, ApiClient apiClient, IToastService toastService, ILoadingService loadingService)
+        {
+            InitializeComponent();
+            DataContext = new EditUserViewModel(user, apiClient, toastService, loadingService);
         }
     }
 }

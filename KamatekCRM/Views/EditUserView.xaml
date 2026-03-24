@@ -32,79 +32,122 @@
         </StackPanel>
 
         <!-- Form -->
-        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
-                Padding="20" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
-            <StackPanel>
-                <!-- Ad -->
-                <TextBlock Text="Ad *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
-                <TextBox Text="{Binding Ad, UpdateSourceTrigger=PropertyChanged}"
-                         Height="40" FontSize="14" Padding="12,8"
-                         BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
-                    <TextBox.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="6"/>
-                        </Style>
-                    </TextBox.Resources>
-                </TextBox>
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
+            <TabControl.Resources>
+                <Style TargetType="TabItem">
+                    <Setter Property="HeaderTemplate">
+                        <Setter.Value>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontSize="14" FontWeight="SemiBold" Margin="8,4"/>
+                            </DataTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="Padding" Value="12,8"/>
+                </Style>
+            </TabControl.Resources>
 
-                <!-- Soyad -->
-                <TextBlock Text="Soyad *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,16,0,6"/>
-                <TextBox Text="{Binding Soyad, UpdateSourceTrigger=PropertyChanged}"
-                         Height="40" FontSize="14" Padding="12,8"
-                         BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
-                    <TextBox.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="6"/>
-                        </Style>
-                    </TextBox.Resources>
-                </TextBox>
+            <!-- TAB 1: Temel Bilgiler -->
+            <TabItem Header="👤 Temel Bilgiler">
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
+                        Padding="20" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,12,0,0">
+                    <StackPanel>
+                        <!-- Ad -->
+                        <TextBlock Text="Ad *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
+                        <TextBox Text="{Binding Ad, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource PremiumTextBox}"
+                                 Height="40" Margin="0,0,0,12"/>
 
-                <!-- Rol -->
-                <TextBlock Text="Rol *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,16,0,6"/>
-                <ComboBox ItemsSource="{Binding RoleDisplayOptions}"
-                          SelectedItem="{Binding SelectedRoleDisplay}"
-                          Height="40" FontSize="14" Padding="12,8"
-                          BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
-                    <ComboBox.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="6"/>
-                        </Style>
-                    </ComboBox.Resources>
-                </ComboBox>
+                        <!-- Soyad -->
+                        <TextBlock Text="Soyad *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,4,0,6"/>
+                        <TextBox Text="{Binding Soyad, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource PremiumTextBox}"
+                                 Height="40" Margin="0,0,0,12"/>
 
-                <!-- Aktif -->
-                <CheckBox IsChecked="{Binding IsActive}" 
-                          Content="Kullanıcı Aktif" 
-                          FontSize="14"
-                          Margin="0,16,0,0"/>
+                        <!-- Rol -->
+                        <TextBlock Text="Rol *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,4,0,6"/>
+                        <ComboBox ItemsSource="{Binding RoleDisplayOptions}"
+                                  SelectedItem="{Binding SelectedRoleDisplay}"
+                                  Style="{StaticResource ModernComboBox}"
+                                  Height="40" Margin="0,0,0,12"/>
 
-                <!-- Status Message -->
-                <Border Margin="0,16,0,0" CornerRadius="6" Padding="12,10"
-                        Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVis}}">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsSuccess}" Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" FontSize="12">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsSuccess}" Value="True">
-                                        <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                        <!-- Aktif -->
+                        <CheckBox IsChecked="{Binding IsActive}" 
+                                  Content="Kullanıcı Aktif" 
+                                  FontSize="13"
+                                  Margin="0,8,0,0"/>
+                    </StackPanel>
                 </Border>
-            </StackPanel>
+            </TabItem>
+
+            <!-- TAB 2: Yetkiler (RBAC) -->
+            <TabItem Header="🛡️ Yetkiler">
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
+                        Padding="20" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Modül Erişim Yetkileri" FontSize="15" FontWeight="Bold" Margin="0,0,0,16" Foreground="{DynamicResource ThemePrimary}"/>
+                        
+                        <CheckBox Content="Finansal Kayıtları Gör" IsChecked="{Binding CanViewFinance}" Margin="0,0,0,12"/>
+                        <CheckBox Content="Analiz ve Raporları Gör" IsChecked="{Binding CanViewAnalytics}" Margin="0,0,0,12"/>
+                        <CheckBox Content="Kayıt Silme Yetkisi" IsChecked="{Binding CanDeleteRecords}" Margin="0,0,0,12"/>
+                        <CheckBox Content="Satın Alma Onay Yetkisi" IsChecked="{Binding CanApprovePurchase}" Margin="0,0,0,12"/>
+                        <CheckBox Content="Sistem Ayarlarına Erişim" IsChecked="{Binding CanAccessSettings}" Margin="0,0,0,12"/>
+                    </StackPanel>
+                </Border>
+            </TabItem>
+
+            <!-- TAB 3: Saha Bilgileri -->
+            <TabItem Header="🔧 Saha Bilgileri" Visibility="{Binding IsTechnicianRole, Converter={StaticResource BoolToVis}}">
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
+                        Padding="20" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Teknisyen Detayları" FontSize="15" FontWeight="Bold" Margin="0,0,0,16" Foreground="{DynamicResource ThemeSuccess}"/>
+
+                        <!-- Telefon -->
+                        <TextBlock Text="İletişim Telefonu" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
+                        <TextBox Text="{Binding Phone}" Style="{StaticResource PremiumTextBox}" Height="40" Margin="0,0,0,12"/>
+
+                        <!-- Araç Plakası -->
+                        <TextBlock Text="Araç Plakası" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
+                        <TextBox Text="{Binding VehiclePlate}" Style="{StaticResource PremiumTextBox}" Height="40" Margin="0,0,0,12"/>
+
+                        <!-- Hizmet Bölgesi -->
+                        <TextBlock Text="Hizmet Bölgesi" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,4,0,6"/>
+                        <TextBox Text="{Binding ServiceArea}" Style="{StaticResource PremiumTextBox}" Height="40" Margin="0,0,0,12"/>
+
+                        <!-- Uzmanlık Alanları -->
+                        <TextBlock Text="Uzmanlık Alanları" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,4,0,6"/>
+                        <TextBox Text="{Binding ExpertiseAreas}" Style="{StaticResource PremiumTextBox}" Height="60" TextWrapping="Wrap" AcceptsReturn="True"/>
+                    </StackPanel>
+                </Border>
+            </TabItem>
+        </TabControl>
+
+        <!-- Status Message Overlay -->
+        <Border Grid.Row="1" VerticalAlignment="Bottom" Margin="10" CornerRadius="6" Padding="12,10" Panel.ZIndex="10"
+                Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVis}}"
+                Effect="{DynamicResource Elevation2}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSuccess}" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" FontSize="12">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSuccess}" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
         </Border>
 
         <!-- Buttons -->

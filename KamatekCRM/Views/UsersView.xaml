@@ -1,10 +1,12 @@
 <UserControl x:Class="KamatekCrm.Views.UsersView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:components="clr-namespace:KamatekCrm.Components"
              Background="{DynamicResource SurfacePageBrush}">
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -38,8 +40,27 @@
             </Border>
         </Grid>
 
+        <!-- KPI Cards -->
+        <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,16">
+            <components:KmKpiCard Title="Toplam Kullanıcı"
+                                  Value="{Binding TotalUsersCount}"
+                                  Icon="👥"
+                                  AccentBrush="{DynamicResource ThemePrimary}"
+                                  Margin="0,0,8,0"/>
+            <components:KmKpiCard Title="Aktif Personel"
+                                  Value="{Binding ActiveTechniciansCount}"
+                                  Icon="🔧"
+                                  AccentBrush="{DynamicResource ThemeSuccess}"
+                                  Margin="8,0"/>
+            <components:KmKpiCard Title="Yöneticiler"
+                                  Value="{Binding AdminCount}"
+                                  Icon="👑"
+                                  AccentBrush="{DynamicResource ThemeWarning}"
+                                  Margin="8,0,0,0"/>
+        </UniformGrid>
+
         <!-- Toolbar -->
-        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
+        <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MaxWidth="300"/>
@@ -55,6 +76,13 @@
                     <TextBlock Text="🔍" FontSize="16" VerticalAlignment="Center" 
                                Margin="12,0,0,0" IsHitTestVisible="False"/>
                 </Grid>
+
+                <!-- Filters -->
+                <components:KmFilterPanel Grid.Column="1" Margin="16,0,0,0"
+                                          CategoryItems="{Binding CategoryItems}"
+                                          SelectedCategory="{Binding SelectedCategory}"
+                                          StatusItems="{Binding StatusItems}"
+                                          SelectedStatus="{Binding SelectedStatus}"/>
 
                 <!-- Actions -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
@@ -73,7 +101,7 @@
         </Border>
 
         <!-- Users Grid -->
-        <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="0">
+        <Border Grid.Row="3" Style="{StaticResource CardPanel}" Padding="0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -101,25 +129,22 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
-                        <DataGridTextColumn Header="Ad Soyad" Binding="{Binding AdSoyad}" Width="*" MinWidth="150">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Margin" Value="12,0"/>
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-
-                        <DataGridTextColumn Header="Kullanıcı Adı" Binding="{Binding Username}" Width="150">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Margin" Value="12,0"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
+                        <DataGridTemplateColumn Header="Kullanıcı" Width="*" MinWidth="200">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="12,0">
+                                        <components:KmAvatar FullName="{Binding AdSoyad}" 
+                                                             Size="Medium" 
+                                                             VerticalAlignment="Center" 
+                                                             Margin="0,0,12,0"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding AdSoyad}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding Username}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
                         <DataGridTemplateColumn Header="Rol" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
@@ -166,22 +191,22 @@
                         <DataGridTemplateColumn Header="Durum" Width="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock VerticalAlignment="Center" Margin="12,0">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
+                                    <components:KmStatusBadge VerticalAlignment="Center" Margin="12,0">
+                                        <components:KmStatusBadge.Style>
+                                            <Style TargetType="components:KmStatusBadge">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                        <Setter Property="Text" Value="✅ Aktif"/>
-                                                        <Setter Property="Foreground" Value="{DynamicResource ThemeSuccess}"/>
+                                                        <Setter Property="Status" Value="Success"/>
+                                                        <Setter Property="Text" Value="Aktif"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding IsActive}" Value="False">
-                                                        <Setter Property="Text" Value="❌ Pasif"/>
-                                                        <Setter Property="Foreground" Value="{DynamicResource ThemeError}"/>
+                                                        <Setter Property="Status" Value="Error"/>
+                                                        <Setter Property="Text" Value="Pasif"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                        </components:KmStatusBadge.Style>
+                                    </components:KmStatusBadge>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

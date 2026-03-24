@@ -3,12 +3,15 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
 using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.DTOs;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using CommunityToolkit.Mvvm.Input;
 
 namespace KamatekCrm.ViewModels
 {
@@ -17,10 +20,14 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class UsersViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
+        private readonly IToastService _toastService;
+        private readonly ILoadingService _loadingService;
+        
         private User? _selectedUser;
         private string _searchText = string.Empty;
+        private List<User> _allUsers = new List<User>();
 
         /// <summary>
         /// Kullanıcılar listesi
@@ -51,6 +58,22 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        private string _selectedCategory = "Tümü";
+        public string SelectedCategory
+        {
+            get => _selectedCategory;
+            set { if (SetProperty(ref _selectedCategory, value)) FilterUsers(); }
+        }
+
+        private string _selectedStatus = "Tümü";
+        public string SelectedStatus
+        {
+            get => _selectedStatus;
+            set { if (SetProperty(ref _selectedStatus, value)) FilterUsers(); }
+        }
+
+        public ObservableCollection<string> CategoryItems { get; } = new ObservableCollection<string> { "Tümü", "Patron", "Personel", "İzleyici" };
+        public ObservableCollection<string> StatusItems { get; } = new ObservableCollection<string> { "Tümü", "Aktif", "Pasif" };
         /// <summary>
         /// Mevcut kullanıcı (giriş yapmış)
         /// </summary>
@@ -79,35 +102,12 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        /// <summary>
-        /// Yeni kullanıcı ekle komutu
-        /// </summary>
         public ICommand AddUserCommand { get; }
-
-        /// <summary>
-        /// Kullanıcı düzenle komutu
-        /// </summary>
         public ICommand EditUserCommand { get; }
-
-        /// <summary>
-        /// Kullanıcı sil komutu
-        /// </summary>
-        public ICommand DeleteUserCommand { get; }
-
-        /// <summary>
-        /// Şifre sıfırla komutu (1234)
-        /// </summary>
-        public ICommand ResetPasswordCommand { get; }
-
-        /// <summary>
-        /// Şifre değiştir komutu (özel şifre)
-        /// </summary>
+        public IAsyncRelayCommand DeleteUserCommand { get; }
+        public IAsyncRelayCommand ResetPasswordCommand { get; }
         public ICommand SetPasswordCommand { get; }
-
-        /// <summary>
-        /// Listeyi yenile komutu
-        /// </summary>
-        public ICommand RefreshCommand { get; }
+        public IAsyncRelayCommand RefreshCommand { get; }
 
         #endregion
 
@@ -117,37 +117,71 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public UsersViewModel(IAuthService authService)
+        public UsersViewModel(
+            IAuthService authService,
+            ApiClient apiClient,
+            IToastService toastService,
+            ILoadingService loadingService)
         {
             _authService = authService;
-            _context = new AppDbContext();
+            _apiClient = apiClient;
+            _toastService = toastService;
+            _loadingService = loadingService;
 
-            AddUserCommand = new RelayCommand(_ => OpenAddUserWindow(), _ => IsAdmin);
-            EditUserCommand = new RelayCommand(_ => OpenEditUserWindow(), _ => SelectedUser != null && IsAdmin);
-            DeleteUserCommand = new RelayCommand(_ => DeleteUser(), _ => CanDeleteUser());
-            ResetPasswordCommand = new RelayCommand(_ => ResetPasswordTo1234(), _ => SelectedUser != null && IsAdmin);
-            SetPasswordCommand = new RelayCommand(_ => OpenSetPasswordWindow(), _ => SelectedUser != null && IsAdmin);
-            RefreshCommand = new RelayCommand(_ => LoadUsers());
+            AddUserCommand = new RelayCommand(() => OpenAddUserWindow(), () => IsAdmin);
+            EditUserCommand = new RelayCommand(() => OpenEditUserWindow(SelectedUser!), () => SelectedUser != null && IsAdmin);
+            DeleteUserCommand = new AsyncRelayCommand(DeleteUserAsync, () => CanDeleteUser());
+            ResetPasswordCommand = new AsyncRelayCommand(ResetPasswordTo1234Async, () => SelectedUser != null && IsAdmin);
+            SetPasswordCommand = new RelayCommand(() => OpenSetPasswordWindow(), () => SelectedUser != null && IsAdmin);
+            RefreshCommand = new AsyncRelayCommand(LoadUsersAsync);
 
-            LoadUsers();
+            // Execute initial load
+            _ = LoadUsersAsync();
         }
 
         /// <summary>
         /// Kullanıcıları yükle
         /// </summary>
-        private void LoadUsers()
+        private async Task LoadUsersAsync()
         {
-            Users.Clear();
-
-            // Yeni context ile fresh data al
-            using var freshContext = new AppDbContext();
-            var users = freshContext.Users.OrderBy(u => u.Ad).ThenBy(u => u.Soyad).ToList();
-
-            foreach (var user in users)
+            _loadingService.Show();
+            try
             {
-                Users.Add(user);
+                var response = await _apiClient.GetAsync<List<User>>("api/users");
+                if (response.Success && response.Data != null)
+                {
+                    _allUsers = response.Data;
+                    FilterUsers();
+                }
+                else
+                {
+                    _toastService.ShowError("Kullanıcılar Alınamadı", response.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError("Hata", ex.Message);
+            }
+            finally
+            {
+                _loadingService.Hide();
             }
         }
+
+        /// <summary>
+        /// Toplam Kullanıcı Sayısı
+        /// </summary>
+        public int TotalUsersCount => Users.Count;
+
+        /// <summary>
+        /// Aktif Teknisyen Sayısı
+        /// </summary>
+        public int ActiveTechniciansCount => Users.Count(u => u.Role == "Technician" && u.IsActive);
+
+        /// <summary>
+        /// Yönetici Sayısı
+        /// </summary>
+        public int AdminCount => Users.Count(u => u.Role == "Admin");
 
         /// <summary>
         /// Kullanıcıları filtrele
@@ -155,23 +189,44 @@ namespace KamatekCrm.ViewModels
         private void FilterUsers()
         {
             Users.Clear();
-
-            using var freshContext = new AppDbContext();
-            var query = freshContext.Users.AsQueryable();
+            var query = _allUsers.AsEnumerable();
 
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
                 var search = SearchText.ToLower();
                 query = query.Where(u =>
-                    u.Ad.ToLower().Contains(search) ||
-                    u.Soyad.ToLower().Contains(search) ||
-                    u.Username.ToLower().Contains(search));
+                    (u.Ad?.ToLower() ?? "").Contains(search) ||
+                    (u.Soyad?.ToLower() ?? "").Contains(search) ||
+                    (u.Username?.ToLower() ?? "").Contains(search));
+            }
+
+            if (SelectedCategory != "Tümü" && !string.IsNullOrEmpty(SelectedCategory))
+            {
+                string roleFilter = SelectedCategory switch
+                {
+                    "Patron" => "Admin",
+                    "Personel" => "Technician",
+                    "İzleyici" => "Viewer",
+                    _ => ""
+                };
+                if (!string.IsNullOrEmpty(roleFilter))
+                    query = query.Where(u => u.Role == roleFilter);
+            }
+
+            if (SelectedStatus != "Tümü" && !string.IsNullOrEmpty(SelectedStatus))
+            {
+                bool isActiveFilter = SelectedStatus == "Aktif";
+                query = query.Where(u => u.IsActive == isActiveFilter);
             }
 
             foreach (var user in query.OrderBy(u => u.Ad).ThenBy(u => u.Soyad))
             {
                 Users.Add(user);
             }
+
+            OnPropertyChanged(nameof(TotalUsersCount));
+            OnPropertyChanged(nameof(ActiveTechniciansCount));
+            OnPropertyChanged(nameof(AdminCount));
         }
 
         /// <summary>
@@ -182,32 +237,35 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void OpenAddUserWindow()
         {
-            var addUserViewModel = new AddUserViewModel(_authService);
+            var addUserViewModel = new AddUserViewModel(_authService, _apiClient, _toastService, _loadingService);
             var addUserView = new AddUserView
             {
                 DataContext = addUserViewModel
             };
             addUserView.ShowDialog();
-            LoadUsers();
+            _ = LoadUsersAsync();
         }
 
         /// <summary>
         /// Kullanıcı düzenleme penceresi aç
         /// </summary>
-        private void OpenEditUserWindow()
+        private void OpenEditUserWindow(User user)
         {
-            if (SelectedUser == null) return;
+            var viewModel = new EditUserViewModel(user, _apiClient, _toastService, _loadingService);
+            var view = new EditUserView { DataContext = viewModel };
 
-            var editUserView = new EditUserView(SelectedUser);
-            if (editUserView.ShowDialog() == true)
+            viewModel.SaveSuccessful += () =>
             {
-                LoadUsers();
-            }
+                view.Close();
+                _ = LoadUsersAsync();
+            };
+
+            viewModel.CancelRequested += () => view.Close();
+
+            view.Owner = Application.Current.MainWindow;
+            view.ShowDialog();
         }
 
-        /// <summary>
-        /// Şifre değiştirme penceresi aç
-        /// </summary>
         /// <summary>
         /// Şifre değiştirme penceresi aç
         /// </summary>
@@ -242,41 +300,40 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Kullanıcı sil
         /// </summary>
-        private void DeleteUser()
+        private async Task DeleteUserAsync()
         {
             if (SelectedUser == null) return;
 
             var result = MessageBox.Show(
-                $"{SelectedUser.AdSoyad} kullanıcısını silmek istediğinizden emin misiniz?",
+                $"{SelectedUser.AdSoyad} kullanıcısını sistemden kaldırmak istediğinize emin misiniz?",
                 "Kullanıcı Sil",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
             if (result == MessageBoxResult.Yes)
             {
+                _loadingService.Show();
                 try
                 {
-                    var deletedUsername = SelectedUser.Username;
-                    var deletedFullName = SelectedUser.AdSoyad;
-
-                    using var deleteContext = new AppDbContext();
-                    var userToDelete = deleteContext.Users.Find(SelectedUser.Id);
-                    if (userToDelete != null)
+                    var response = await _apiClient.DeleteAsync<object>($"api/users/{SelectedUser.Id}");
+                    if (response.Success)
                     {
-                        deleteContext.Users.Remove(userToDelete);
-                        deleteContext.SaveChanges();
+                        await LoadUsersAsync();
+                        _toastService.ShowSuccess("Kullanıcı başarıyla sistemden kaldırıldı.", "Silme Başarılı");
+                        SelectedUser = null;
                     }
-
-                    // Audit log kaydet
-                    _ = AuditService.LogUserDeletedAsync(deletedUsername, deletedFullName);
-
-                    LoadUsers();
-                    SelectedUser = null;
-                    MessageBox.Show("Kullanıcı silindi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                    else
+                    {
+                        _toastService.ShowError("Kullanıcı bulunamadı veya silinemedi.", response.Message);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService.ShowError("Hata oluştu", ex.Message);
+                }
+                finally
+                {
+                    _loadingService.Hide();
                 }
             }
         }
@@ -284,7 +341,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Şifre sıfırla (1234 yap)
         /// </summary>
-        private void ResetPasswordTo1234()
+        private async Task ResetPasswordTo1234Async()
         {
             if (SelectedUser == null) return;
 
@@ -296,24 +353,28 @@ namespace KamatekCrm.ViewModels
 
             if (result == MessageBoxResult.Yes)
             {
+                _loadingService.Show();
                 try
                 {
-                    using var resetContext = new AppDbContext();
-                    var user = resetContext.Users.Find(SelectedUser.Id);
-                    if (user != null)
+                    var req = new { NewPassword = "1234" };
+                    var response = await _apiClient.PostAsync<object>($"api/users/{SelectedUser.Id}/change-password", req);
+                    
+                    if (response.Success)
                     {
-                        user.PasswordHash = _authService.HashPassword("1234");
-                        resetContext.SaveChanges();
-
-                        // Audit log kaydet
-                        _ = AuditService.LogPasswordResetAsync(user);
+                        _toastService.ShowSuccess("Şifre başarıyla '1234' olarak sıfırlandı.", "Güvenlik İşlemi");
                     }
-
-                    MessageBox.Show("Şifre '1234' olarak sıfırlandı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                    else
+                    {
+                        _toastService.ShowError("Sıfırlama Başarısız", response.Message);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService.ShowError("Hata", ex.Message);
+                }
+                finally
+                {
+                    _loadingService.Hide();
                 }
             }
         }

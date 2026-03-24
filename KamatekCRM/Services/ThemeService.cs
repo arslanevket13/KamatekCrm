@@ -13,18 +13,22 @@ namespace KamatekCrm.Services
     {
         public static event EventHandler<string>? ThemeChanged;
 
-        public static string CurrentTheme => AppSettings.CurrentTheme;
+        // Current loaded theme token
+        public static string CurrentThemeName { get; private set; } = "PremiumLight";
+
+        // List of all valid themes
+        public static readonly string[] AvailableThemes = { "PremiumLight", "MidnightDark", "Glassmorphism" };
 
         /// <summary>
         /// Uygulamayı başlatırken ayarlanmış son temayı yükle
         /// </summary>
         public static void Initialize()
         {
-            ChangeTheme(CurrentTheme);
+            ChangeTheme(AppSettings.CurrentTheme);
             
-            // WPF-UI için dark mode uyumluluğu
-            var isDark = CurrentTheme == "MidnightDark";
-            ApplicationThemeManager.Apply(isDark ? ApplicationTheme.Dark : ApplicationTheme.Light);
+            // WPF-UI için dark mode uyumluluğu - This is now handled by ChangeTheme
+            // var isDark = CurrentTheme == "MidnightDark";
+            // ApplicationThemeManager.Apply(isDark ? ApplicationTheme.Dark : ApplicationTheme.Light);
         }
 
         /// <summary>
@@ -36,11 +40,27 @@ namespace KamatekCrm.Services
         {
             try
             {
+                // Fallback to PremiumLight if theme is invalid
+                if (!AvailableThemes.Contains(themeName))
+                {
+                    // Assuming Log is a static class available in the project
+                    // If not, this line will cause a compilation error and needs to be adapted
+                    // For example, System.Diagnostics.Debug.WriteLine($"ThemeService: Invalid theme '{themeName}' requested. Falling back to PremiumLight.");
+                    // Log.Warning("ThemeService: Invalid theme '{ThemeName}' requested. Falling back to PremiumLight.", themeName);
+                    themeName = "PremiumLight";
+                }
+
+                if (CurrentThemeName == themeName) return;
+
+                // Assuming Log is a static class available in the project
+                // Log.Information("ThemeService: Switching theme to {ThemeName}", themeName);
+
                 var app = Application.Current;
                 if (app == null) return;
 
                 // Geçerli temayı kaydet
                 AppSettings.CurrentTheme = themeName;
+                CurrentThemeName = themeName; // Update the internal current theme name
                 
                 // 1. Yeni tema sözlüğünün kaynağını hazırla
                 var newThemeUri = new Uri($"Resources/Themes/Theme.{themeName}.xaml", UriKind.Relative);
@@ -72,9 +92,32 @@ namespace KamatekCrm.Services
                     dictionaries.Remove(currentThemeDict);
                 }
 
+                // Ensure WPF UI Theme follows our logic
+                // Both MidnightDark and Glassmorphism are visually Dark themes
+                var wpfUiTheme = themeName switch
+                {
+                    "MidnightDark" => ApplicationTheme.Dark,
+                    "Glassmorphism" => ApplicationTheme.Dark,
+                    _ => ApplicationTheme.Light
+                };
+                
+                try
+                {
+                    ApplicationThemeManager.Apply(wpfUiTheme);
+                    // Remove auto-injected Wpf.Ui dictionaries to prevent our dynamic styles from being overridden.
+                    // PurgeWpfUiDictionaries(App.Current.Resources); // This method is not defined in the provided context.
+                }
+                catch (Exception ex)
+                {
+                    // Assuming Log is a static class available in the project
+                    // Log.Warning(ex, "ThemeService: WPF UI Theme Manager failed to apply theme.");
+                    System.Diagnostics.Debug.WriteLine($"[Sıfır-Hata Koruma] WPF UI Theme Manager failed to apply theme: {ex.Message}");
+                }
+
                 // 5. WPF-UI tema senkronizasyonu (Gölge, Scrollbar ve Popup kontrollerinin karanlık durumu için)
-                var isDark = themeName == "MidnightDark";
-                ApplicationThemeManager.Apply(isDark ? ApplicationTheme.Dark : ApplicationTheme.Light);
+                // This block is replaced by the new WPF UI Theme logic above
+                // var isDark = themeName == "MidnightDark";
+                // ApplicationThemeManager.Apply(isDark ? ApplicationTheme.Dark : ApplicationTheme.Light);
 
                 // Olayı tetikle
                 ThemeChanged?.Invoke(null, themeName);

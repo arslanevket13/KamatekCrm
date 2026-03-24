@@ -20,7 +20,7 @@ namespace KamatekCrm.ViewModels
             RestoreBackupCommand = new RelayCommand(_ => RestoreBackup(), _ => !IsBusy);
             
             // Mevcut temayı yükle
-            _selectedTheme = AvailableThemes.FirstOrDefault(t => t.Id == ThemeService.CurrentTheme) ?? AvailableThemes.First();
+            _selectedTheme = AvailableThemes.FirstOrDefault(t => t.Id == ThemeService.CurrentThemeName) ?? AvailableThemes.First();
             
             LoadLastBackupInfo();
         }

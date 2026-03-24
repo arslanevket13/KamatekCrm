@@ -2,19 +2,24 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ═══════════════════════════════════════════════════════════════════
-         KAMATEK CRM — THE MASTERPIECE PALETTE (PREMIUM LIGHT THEME)
-         Elite SaaS Design (Stripe/Linear/Apple macOS inspired).
-         STRICT RULE: Only Colors and Brushes.
+         KAMATEK CRM — MODERN GLASSMORPHISM PREMIUM LIGHT THEME v5.0
+         Elite Glass Effects (Apple/Linear/Stripe Inspired)
     ═══════════════════════════════════════════════════════════════════ -->
 
-    <!-- ─────────── PAGE & BACKGROUNDS (The Canvas) ─────────── -->
-    <Color x:Key="SurfacePageColor">#F8FAFC</Color>
-    <SolidColorBrush x:Key="SurfacePageBrush" Color="#F8FAFC"/>
-    <Color x:Key="ThemeBackgroundColor">#F8FAFC</Color>
-    <SolidColorBrush x:Key="ThemeBackground" Color="#F8FAFC"/>
-    <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="#F8FAFC"/>
+    <!-- ═══════════════════════════════════════════════════════════════════
+         PAGE & BACKGROUNDS - Soft, Eye-Friendly
+    ═══════════════════════════════════════════════════════════════════ -->
+    
+    <Color x:Key="SurfacePageColor">#F5F7FA</Color>
+    <SolidColorBrush x:Key="SurfacePageBrush" Color="#F5F7FA"/>
+    <Color x:Key="ThemeBackgroundColor">#F5F7FA</Color>
+    <SolidColorBrush x:Key="ThemeBackground" Color="#F5F7FA"/>
+    <SolidColorBrush x:Key="ApplicationBackgroundBrush" Color="#F5F7FA"/>
 
-    <!-- ─────────── SURFACES & CARDS (Pure White for Content Pop) ─────────── -->
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SURFACES & CARDS - Pure White with Glass Effect
+    ═══════════════════════════════════════════════════════════════════ -->
+    
     <Color x:Key="SurfaceCardColor">#FFFFFF</Color>
     <Color x:Key="ThemeSurfaceColor">#FFFFFF</Color>
     <SolidColorBrush x:Key="ThemeSurface" Color="#FFFFFF"/>
@@ -23,57 +28,83 @@
     <SolidColorBrush x:Key="ThemeCard" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#FFFFFF"/>
 
-    <Color x:Key="SurfaceSidebarColor">#FFFFFF</Color>
-    <SolidColorBrush x:Key="SurfaceSidebarBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ThemeSidebar" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="ThemeSidebarHover" Color="#F1F5F9"/>
-    <SolidColorBrush x:Key="ThemeSidebarActive" Color="#E2E8F0"/>
+    <!-- Glass Card Gradient -->
+    <LinearGradientBrush x:Key="GlassCardGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#FAFBFC" Offset="1"/>
+    </LinearGradientBrush>
 
-    <!-- ─────────── CORE TYPOGRAPHY (Absolute readability) ─────────── -->
-    <Color x:Key="ThemeTextPrimaryColor">#020617</Color>
-    <SolidColorBrush x:Key="ThemeTextPrimary" Color="#020617"/>
-    <SolidColorBrush x:Key="TextHeadingBrush" Color="#020617"/>
+    <!-- Sidebar - Light with subtle blue tint -->
+    <Color x:Key="SurfaceSidebarColor">#F0F4F8</Color>
+    <SolidColorBrush x:Key="SurfaceSidebarBrush" Color="#F0F4F8"/>
+    <SolidColorBrush x:Key="ThemeSidebar" Color="#F0F4F8"/>
+    <SolidColorBrush x:Key="ThemeSidebarHover" Color="#E8EEF4"/>
+    <SolidColorBrush x:Key="ThemeSidebarActive" Color="#DFE5EF"/>
 
+    <!-- ═══════════════════════════════════════════════════════════════════
+         CORE TYPOGRAPHY - Refined Readability
+    ═══════════════════════════════════════════════════════════════════ -->
+    
+    <!-- Primary Text - Rich, Deep Slate -->
+    <Color x:Key="ThemeTextPrimaryColor">#0F172A</Color>
+    <SolidColorBrush x:Key="ThemeTextPrimary" Color="#0F172A"/>
+    <SolidColorBrush x:Key="TextHeadingBrush" Color="#0F172A"/>
+
+    <!-- Secondary Text -->
     <Color x:Key="ThemeTextSecondaryColor">#475569</Color>
     <SolidColorBrush x:Key="ThemeTextSecondary" Color="#475569"/>
     <SolidColorBrush x:Key="TextBodyBrush" Color="#334155"/>
+
+    <!-- Muted/Tertiary Text -->
+    <Color x:Key="ThemeTextTertiaryColor">#64748B</Color>
     <SolidColorBrush x:Key="TextMutedBrush" Color="#64748B"/>
     <SolidColorBrush x:Key="ThemeTextTertiary" Color="#64748B"/>
     
     <!-- Legacy Mappings -->
-    <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#020617"/>
+    <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#0F172A"/>
     <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#475569"/>
     
-    <SolidColorBrush x:Key="ThemeForeground" Color="#020617"/>
+    <SolidColorBrush x:Key="ThemeForeground" Color="#0F172A"/>
     <SolidColorBrush x:Key="ThemeForegroundMuted" Color="#475569"/>
     <SolidColorBrush x:Key="ThemeHover" Color="#0F172A" Opacity="0.04"/>
+    <SolidColorBrush x:Key="ThemeHoverLight" Color="#0F172A" Opacity="0.06"/>
 
     <SolidColorBrush x:Key="TextInverseBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="PrimaryForeground" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="TextLinkBrush" Color="#4F46E5"/>
+    <SolidColorBrush x:Key="TextLinkBrush" Color="#6366F1"/>
 
-    <!-- ─────────── BORDERS & DIVIDERS (Premium Subtlety) ─────────── -->
+    <!-- ═══════════════════════════════════════════════════════════════════
+         BORDERS & DIVIDERS - Subtle Premium Feel
+    ═══════════════════════════════════════════════════════════════════ -->
+    
     <Color x:Key="ThemeBorderColor">#E2E8F0</Color>
-    <SolidColorBrush x:Key="ThemeBorder" Color="#E2E8F0" Opacity="0.8"/>
+    <SolidColorBrush x:Key="ThemeBorder" Color="#E2E8F0" Opacity="0.7"/>
     <SolidColorBrush x:Key="ThemeDivider" Color="#F1F5F9"/>
     <SolidColorBrush x:Key="BorderDefaultBrush" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="CardStrokeBrush" Color="#E2E8F0" Opacity="0.5"/>
 
-    <!-- ─────────── BRAND COLORS & ACCENTS ─────────── -->
-    <Color x:Key="ThemePrimaryColor">#4F46E5</Color>
-    <Color x:Key="ThemeAccentColor">#06B6D4</Color>
+    <!-- ═══════════════════════════════════════════════════════════════════
+         BRAND COLORS & ACCENTS - Vibrant, Modern Indigo
+    ═══════════════════════════════════════════════════════════════════ -->
     
-    <SolidColorBrush x:Key="ThemePrimary" Color="#4F46E5"/>
-    <SolidColorBrush x:Key="ThemeAccent" Color="#06B6D4"/>
+    <Color x:Key="ThemePrimaryColor">#6366F1</Color>
+    <Color x:Key="ThemeAccentColor">#0EA5E9</Color>
     
-    <SolidColorBrush x:Key="PrimaryColor" Color="#4F46E5"/>
-    <SolidColorBrush x:Key="AccentColor" Color="#06B6D4"/>
+    <SolidColorBrush x:Key="ThemePrimary" Color="#6366F1"/>
+    <SolidColorBrush x:Key="ThemeAccent" Color="#0EA5E9"/>
     
-    <!-- Legacy Brand Mappings -->
-    <SolidColorBrush x:Key="ThemePrimaryLight" Color="#4F46E5" Opacity="0.10"/>
-    <SolidColorBrush x:Key="ThemePrimaryDark" Color="#3730A3"/>
+    <SolidColorBrush x:Key="PrimaryColor" Color="#6366F1"/>
+    <SolidColorBrush x:Key="AccentColor" Color="#0EA5E9"/>
+    
+    <SolidColorBrush x:Key="ThemePrimaryLight" Color="#6366F1" Opacity="0.10"/>
+    <SolidColorBrush x:Key="ThemePrimaryDark" Color="#4338CA"/>
+    <SolidColorBrush x:Key="ThemePrimaryMuted" Color="#6366F1" Opacity="0.15"/>
 
-    <!-- ─────────── STATUS COLORS (Success, Warning, Error) ─────────── -->
+    <!-- ═══════════════════════════════════════════════════════════════════
+         STATUS COLORS - Refined, Professional
+    ═══════════════════════════════════════════════════════════════════ -->
+    
     <Color x:Key="ThemeSuccessColor">#10B981</Color>
     <Color x:Key="ThemeWarningColor">#F59E0B</Color>
     <Color x:Key="ThemeErrorColor">#EF4444</Color>
@@ -86,18 +117,31 @@
 
     <SolidColorBrush x:Key="StatusSuccessBg" Color="#10B981" Opacity="0.12"/>
     <SolidColorBrush x:Key="StatusSuccessFg" Color="#059669"/>
-    <SolidColorBrush x:Key="StatusWarningBg" Color="#F59E0B" Opacity="0.15"/>
-    <SolidColorBrush x:Key="StatusWarningFg" Color="#D97706"/>
-    <SolidColorBrush x:Key="StatusWarningFgDark" Color="#D97706"/>
-    <SolidColorBrush x:Key="StatusErrorBg"   Color="#EF4444" Opacity="0.12"/>
-    <SolidColorBrush x:Key="StatusErrorFg"   Color="#DC2626"/>
-    <SolidColorBrush x:Key="StatusInfoBg"    Color="#3B82F6" Opacity="0.12"/>
-    <SolidColorBrush x:Key="StatusInfoFg"    Color="#2563EB"/>
+    <SolidColorBrush x:Key="StatusSuccessBgLight" Color="#D1FAE5"/>
+    <SolidColorBrush x:Key="StatusSuccessFgLight" Color="#065F46"/>
 
-    <!-- ─────────── WORLD-CLASS LINEAR GRADIENTS (KPIs) ─────────── -->
+    <SolidColorBrush x:Key="StatusWarningBg" Color="#F59E0B" Opacity="0.12"/>
+    <SolidColorBrush x:Key="StatusWarningFg" Color="#D97706"/>
+    <SolidColorBrush x:Key="StatusWarningBgLight" Color="#FEF3C7"/>
+    <SolidColorBrush x:Key="StatusWarningFgLight" Color="#92400E"/>
+
+    <SolidColorBrush x:Key="StatusErrorBg" Color="#EF4444" Opacity="0.10"/>
+    <SolidColorBrush x:Key="StatusErrorFg" Color="#DC2626"/>
+    <SolidColorBrush x:Key="StatusErrorBgLight" Color="#FEE2E2"/>
+    <SolidColorBrush x:Key="StatusErrorFgLight" Color="#991B1B"/>
+
+    <SolidColorBrush x:Key="StatusInfoBg" Color="#3B82F6" Opacity="0.10"/>
+    <SolidColorBrush x:Key="StatusInfoFg" Color="#2563EB"/>
+    <SolidColorBrush x:Key="StatusInfoBgLight" Color="#DBEAFE"/>
+    <SolidColorBrush x:Key="StatusInfoFgLight" Color="#1E40AF"/>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         WORLD-CLASS LINEAR GRADIENTS - Premium KPI Cards
+    ═══════════════════════════════════════════════════════════════════ -->
+    
     <LinearGradientBrush x:Key="KpiGradientPrimary" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#4F46E5" Offset="0"/>
-        <GradientStop Color="#06B6D4" Offset="1"/>
+        <GradientStop Color="#6366F1" Offset="0"/>
+        <GradientStop Color="#0EA5E9" Offset="1"/>
     </LinearGradientBrush>
     
     <LinearGradientBrush x:Key="KpiGradientSuccess" StartPoint="0,0" EndPoint="1,1">
@@ -107,20 +151,59 @@
 
     <LinearGradientBrush x:Key="KpiGradientWarning" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#F43F5E" Offset="0"/>
-        <GradientStop Color="#F97316" Offset="1"/>
+        <GradientStop Color="#F59E0B" Offset="1"/>
     </LinearGradientBrush>
 
-    <!-- Legacy Gradient Mappings -->
+    <LinearGradientBrush x:Key="KpiGradientError" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F43F5E" Offset="0"/>
+        <GradientStop Color="#EF4444" Offset="1"/>
+    </LinearGradientBrush>
+
     <LinearGradientBrush x:Key="ThemePrimaryGradient" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#4F46E5" Offset="0"/>
+        <GradientStop Color="#6366F1" Offset="0"/>
         <GradientStop Color="#3B82F6" Offset="1"/>
     </LinearGradientBrush>
 
-    <!-- ─────────── GLASSMORPHISM (Subtle Hover / Overlay states) ─────────── -->
+    <!-- ═══════════════════════════════════════════════════════════════════
+         GLASSMORPHISM EFFECTS - Modern Depth
+    ═══════════════════════════════════════════════════════════════════ -->
+    
+    <SolidColorBrush x:Key="GlassBrush" Color="#FFFFFF" Opacity="0.95"/>
     <SolidColorBrush x:Key="GlassBrushLow" Color="#0F172A" Opacity="0.03"/>
-    <SolidColorBrush x:Key="GlassBrushMedium" Color="#0F172A" Opacity="0.06"/>
+    <SolidColorBrush x:Key="GlassBrushMedium" Color="#0F172A" Opacity="0.05"/>
+    <SolidColorBrush x:Key="GlassBrushHigh" Color="#0F172A" Opacity="0.08"/>
+    
     <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0F172A" Opacity="0.04"/>
-    <SolidColorBrush x:Key="PressedOverlayBrush" Color="#0F172A" Opacity="0.08"/>
-    <SolidColorBrush x:Key="SelectedRowBrush" Color="#4F46E5" Opacity="0.06"/>
+    <SolidColorBrush x:Key="PressedOverlayBrush" Color="#0F172A" Opacity="0.06"/>
+    <SolidColorBrush x:Key="SelectedRowBrush" Color="#6366F1" Opacity="0.08"/>
+
+    <SolidColorBrush x:Key="GlassBorderBrush" Color="#FFFFFF" Opacity="0.8"/>
+    <SolidColorBrush x:Key="GlassBorderHighlight" Color="#FFFFFF" Opacity="0.5"/>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         SHADOW SYSTEM - Multi-Level Depth
+    ═══════════════════════════════════════════════════════════════════ -->
+    
+    <Color x:Key="ShadowColor">#0F172A</Color>
+    
+    <DropShadowEffect x:Key="ShadowSubtle" BlurRadius="4" ShadowDepth="1" Direction="270" Color="#0F172A" Opacity="0.04"/>
+    <DropShadowEffect x:Key="ShadowDefault" BlurRadius="8" ShadowDepth="2" Direction="270" Color="#0F172A" Opacity="0.06"/>
+    <DropShadowEffect x:Key="ShadowMedium" BlurRadius="16" ShadowDepth="4" Direction="270" Color="#0F172A" Opacity="0.08"/>
+    <DropShadowEffect x:Key="ShadowHigh" BlurRadius="24" ShadowDepth="8" Direction="270" Color="#0F172A" Opacity="0.12"/>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         INTERACTION STATES - Smooth Transitions
+    ═══════════════════════════════════════════════════════════════════ -->
+    
+    <SolidColorBrush x:Key="FocusRingBrush" Color="#6366F1" Opacity="0.5"/>
+    <SolidColorBrush x:Key="DisabledOverlayBrush" Color="#F5F7FA" Opacity="0.6"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#94A3B8"/>
+    <SolidColorBrush x:Key="RippleBrush" Color="#6366F1" Opacity="0.15"/>
+
+    <!-- ─────────── NEW PROFESSIONAL TOKENS ─────────── -->
+    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="#CBD5E1"/>
+    <SolidColorBrush x:Key="SystemAccentColorPrimaryBrush" Color="#6366F1"/>
+    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="StatusNeutralBg" Color="#F1F5F9"/>
 
 </ResourceDictionary>
