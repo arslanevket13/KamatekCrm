@@ -1,3 +1,11 @@
+## v14.31 — Service Jobs Stock Reversion & SLA Logic Refinement (2026-03-28)
+- **FEATURE (BACKEND)**: `ServiceJobsController` içerisinde stok iade mekanizması (Stock Reversion) tamamlandı. Bir iş emri `Completed` durumundan herhangi bir başka duruma (`Pending`, `InProgress` vb.) çekildiğinde, kullanılan malzemeler otomatik olarak stoğa (`TotalStockQuantity`) geri iade edilir.
+- **FEATURE (BACKEND)**: `HttpPatch /api/servicejobs/{id}/status` endpoint'i üzerinden yapılan durum değişiklikleri de artık stok iade mantığını destekliyor.
+- **ARCHITECTURE**: `ServiceJob` modeli üzerindeki `SlaStatus` ve `IsSlaBreached` hesaplama mantığı, veritabanı standartlarıyla uyumlu olması için `DateTime.UtcNow` kullanacak şekilde güncellendi.
+- **ARCHITECTURE**: `ServiceJobViewModel` ve `ServiceJob` modeli genelinde `DateTime.Now` kullanımları `DateTime.UtcNow` olarak standardize edildi (Architectural Purity).
+- **BUGFIX**: `ServiceJobViewModel` wizard üzerinde "Keşif" (Discovery) tipi seçiliyse, açıklama (Description) girilmeden de iş emrinin kaydedilebilmesi sağlandı (Hızlı Keşif Kaydı).
+- **BUGFIX**: `ServiceJob.TotalAmount` hesaplamasındaki tutarsızlıklar giderildi ve model üzerinde `[NotMapped]` olarak standardize edildi.
+
 ## v14.30 — EF Core Integrity, Soft Delete & DB Recovery (2026-03-28)
 - **ARCHITECTURE**: Shadow State çakışması (`CustomerId1`) Fluent API üzerinden `WithMany()` tanımlanarak kalıcı olarak giderildi.
 - **ARCHITECTURE**: Soft Delete (Global Query Filter) mekanizmasının Cascade Delete hatalarına yol açmaması için `Inventory`, `StockTransaction`, `ServiceJobItem`, `CustomerAsset`, `PurchaseInvoiceLine` gibi child modellerdeki Foreign Key alanları `int?` (nullable) yapıldı.

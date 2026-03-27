@@ -62,6 +62,8 @@ namespace KamatekCrm.Shared.Models
         public decimal Price { get; set; } = 0;
         public decimal LaborCost { get; set; } = 0;
         public decimal DiscountAmount { get; set; } = 0;
+        public decimal TaxAmount { get; set; } = 0;
+        public decimal TotalAmount { get; set; } = 0;
 
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer Customer { get; set; } = null!;
@@ -179,8 +181,7 @@ namespace KamatekCrm.Shared.Models
         [NotMapped]
         public bool HasPhotos => !string.IsNullOrEmpty(PhotoPathsJson);
 
-        [NotMapped]
-        public decimal TotalAmount => (ServiceJobItems?.Sum(x => x.UnitPrice * x.QuantityUsed) ?? 0) + LaborCost - DiscountAmount;
+
 
         [NotMapped]
         public string SlaStatus
@@ -190,7 +191,7 @@ namespace KamatekCrm.Shared.Models
                 if (!SlaDeadline.HasValue) return "SLA Yok";
                 if (Status == JobStatus.Completed || Status == JobStatus.Cancelled) return "Tamamlandı";
                 
-                var remaining = SlaDeadline.Value - DateTime.Now;
+                var remaining = SlaDeadline.Value - DateTime.UtcNow;
                 if (remaining.TotalMinutes < 0) return "⚠️ SLA Aşıldı!";
                 if (remaining.TotalHours < 2) return "🔴 Acil (2 saat)";
                 if (remaining.TotalHours < 8) return "🟡 Yaklaşıyor (8 saat)";
@@ -199,7 +200,7 @@ namespace KamatekCrm.Shared.Models
         }
 
         [NotMapped]
-        public bool IsSlaBreached => SlaDeadline.HasValue && SlaDeadline.Value < DateTime.Now && Status != JobStatus.Completed && Status != JobStatus.Cancelled;
+        public bool IsSlaBreached => SlaDeadline.HasValue && SlaDeadline.Value < DateTime.UtcNow && Status != JobStatus.Completed && Status != JobStatus.Cancelled;
 
         #endregion
     }

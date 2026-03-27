@@ -28,7 +28,7 @@ namespace KamatekCrm.API.Controllers
         public async Task<ActionResult<IEnumerable<ServiceJob>>> GetServiceJobs(
             [FromQuery] string? search,
             [FromQuery] JobStatus? status,
-            [FromQuery] ServiceJobType? type, // YENİ: ServiceJobType filtresi eklendi (Arıza/Montaj vd. ayırmak için)
+            [FromQuery] WorkOrderType? type,
             [FromQuery] int? customerId,
             [FromQuery] int? assignedUserId,
             [FromQuery] DateTime? startDate,
@@ -43,9 +43,8 @@ namespace KamatekCrm.API.Controllers
                 .Include(s => s.AssignedUser)
                 .AsQueryable();
 
-            // Type filtresi
             if (type.HasValue)
-                query = query.Where(s => s.ServiceJobType == type.Value);
+                query = query.Where(s => s.WorkOrderType == type.Value);
 
             // Arama filtresi
             if (!string.IsNullOrEmpty(search))
@@ -195,7 +194,9 @@ namespace KamatekCrm.API.Controllers
         {
             if (id != serviceJob.Id) return BadRequest(new { Message = "ID uyuşmazlığı" });
 
-            var existing = await _context.ServiceJobs.FindAsync(id);
+            var existing = await _context.ServiceJobs
+                .Include(s => s.ServiceJobItems)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (existing == null) return NotFound();
 
             var oldStatus = existing.Status;
@@ -203,11 +204,38 @@ namespace KamatekCrm.API.Controllers
             _context.Entry(existing).CurrentValues.SetValues(serviceJob);
             existing.ModifiedDate = DateTime.UtcNow;
 
-            // Stok Düşme İşlemi
+            var existingItems = existing.ServiceJobItems.ToList();
+            var incomingItems = serviceJob.ServiceJobItems?.ToList() ?? new List<ServiceJobItem>();
+
+            var itemsToAdd = incomingItems.Where(i => i.Id == 0).ToList();
+            var itemsToUpdate = incomingItems.Where(i => i.Id > 0).ToList();
+            var itemsToRemove = existingItems.Where(e => !incomingItems.Any(i => i.Id == e.Id)).ToList();
+
+            foreach (var item in itemsToRemove)
+            {
+                _context.ServiceJobItems.Remove(item);
+            }
+
+            foreach (var incoming in itemsToUpdate)
+            {
+                var existingItem = existingItems.FirstOrDefault(e => e.Id == incoming.Id);
+                if (existingItem != null)
+                {
+                    _context.Entry(existingItem).CurrentValues.SetValues(incoming);
+                }
+            }
+
+            foreach (var newItem in itemsToAdd)
+            {
+                newItem.ServiceJobId = id;
+                _context.ServiceJobItems.Add(newItem);
+            }
+
+            var finalItems = await _context.ServiceJobItems.Where(i => i.ServiceJobId == id).ToListAsync();
+
             if (serviceJob.Status == JobStatus.Completed && oldStatus != JobStatus.Completed)
             {
-                var jobItems = await _context.ServiceJobItems.Where(i => i.ServiceJobId == id).ToListAsync();
-                foreach (var item in jobItems)
+                foreach (var item in finalItems)
                 {
                     var product = await _context.Products.FindAsync(item.ProductId);
                     if (product != null)
@@ -217,22 +245,19 @@ namespace KamatekCrm.API.Controllers
                     }
                 }
             }
-            // Stok İade İşlemi (Completed'dan iptal/beklemeye vb. geçişte)
             else if (oldStatus == JobStatus.Completed && serviceJob.Status != JobStatus.Completed)
             {
-                var jobItems = await _context.ServiceJobItems.Where(i => i.ServiceJobId == id).ToListAsync();
-                foreach (var item in jobItems)
+                foreach (var item in finalItems)
                 {
                     var product = await _context.Products.FindAsync(item.ProductId);
                     if (product != null)
                     {
-                        product.TotalStockQuantity += item.QuantityUsed; // Stok iadesi eklendi
+                        product.TotalStockQuantity += item.QuantityUsed;
                         product.ModifiedDate = DateTime.UtcNow;
                     }
                 }
             }
 
-            // Durum değişikliği tarihçeye kaydedilir
             if (oldStatus != serviceJob.Status)
             {
                 _context.ServiceJobHistories.Add(new ServiceJobHistory

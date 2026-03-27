@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
@@ -30,6 +31,7 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
         private ServiceJob? _selectedServiceJob;
+        private CancellationTokenSource? _searchCts;
 
         // ===== DASHBOARD KPI ALANLARI =====
         private int _totalJobCount;
@@ -75,13 +77,6 @@ namespace KamatekCrm.ViewModels
             {
                 UpdateTotals();
                 OnPropertyChanged(nameof(ItemCount));
-            };
-
-            JobTypes = new ObservableCollection<JobType>
-            {
-                JobType.SecurityCamera,
-                JobType.VideoIntercom,
-                JobType.SatelliteSystem
             };
 
             CategoryItems = new ObservableCollection<CategorySelectItem>
@@ -136,7 +131,6 @@ namespace KamatekCrm.ViewModels
 
 
         private Customer? _selectedCustomer;
-        private JobType _selectedJobType;
         private JobCategory _selectedJobCategory; // Geriye uyumluluk için
         private string _description = string.Empty;
         private Product? _selectedProductToAdd;
@@ -506,38 +500,6 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public int ItemCount => CurrentJobItems.Count;
 
-        /// <summary>
-        /// Harita HTML'i (WebViewHelper için)
-        /// </summary>
-        public string MapHtml
-        {
-            get
-            {
-                if (SelectedCustomer == null || string.IsNullOrWhiteSpace(SelectedCustomer.FullAddress))
-                {
-                    return @"<!DOCTYPE html>
-<html>
-<head><meta charset='utf-8'></head>
-<body style='display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#f5f5f5;font-family:Arial,sans-serif;'>
-<div style='text-align:center;color:#757575;'>
-<div style='font-size:48px;margin-bottom:16px;'>📍</div>
-<div style='font-size:16px;'>Harita için müşteri seçin</div>
-</div>
-</body>
-</html>";
-                }
-                var encoded = Uri.EscapeDataString(SelectedCustomer.FullAddress);
-                return $@"<!DOCTYPE html>
-<html>
-<head><meta charset='utf-8'><style>body{{margin:0;padding:0;overflow:hidden;}}</style></head>
-<body>
-<iframe width='100%' height='100%' frameborder='0' scrolling='no' marginheight='0' marginwidth='0' 
-  src='https://maps.google.com/maps?q={encoded}&t=&z=15&ie=UTF8&iwloc=&output=embed'></iframe>
-</body>
-</html>";
-            }
-        }
-
         #endregion
 
         #region Arıza Kayıt Form Properties
@@ -778,11 +740,6 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<Product> Products { get; set; }
 
         /// <summary>
-        /// İş türleri listesi (DEPRECATED)
-        /// </summary>
-        public ObservableCollection<JobType> JobTypes { get; set; }
-
-        /// <summary>
         /// Kategori çoklu seçimi için (CheckBox binding)
         /// </summary>
         public ObservableCollection<CategorySelectItem> CategoryItems { get; set; }
@@ -923,7 +880,10 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    _ = LoadServiceJobs(); // API tabanlı arama
+                    _searchCts?.Cancel();
+                    _searchCts = new CancellationTokenSource();
+                    _ = Task.Delay(500, _searchCts.Token).ContinueWith(
+                        _ => LoadServiceJobs(), TaskScheduler.FromCurrentSynchronizationContext());
                 }
             }
         }
@@ -1014,7 +974,6 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedCustomer, value))
                 {
-                    OnPropertyChanged(nameof(MapHtml));
                     OnPropertyChanged(nameof(SummaryCustomerName));
                     OnPropertyChanged(nameof(SummaryCustomerAddress));
 
@@ -1041,15 +1000,6 @@ namespace KamatekCrm.ViewModels
         public string SummaryCategory => string.Join(", ", 
             CategoryItems?.Where(c => c.IsSelected).Select(c => c.DisplayName) ?? Array.Empty<string>())
             ?? "Seçilmedi";
-
-        /// <summary>
-        /// Seçili iş türü (DEPRECATED)
-        /// </summary>
-        public JobType SelectedJobType
-        {
-            get => _selectedJobType;
-            set => SetProperty(ref _selectedJobType, value);
-        }
 
         /// <summary>
         /// Seçili iş kategorisi (geriye uyumluluk - ilk seçili kategori)
@@ -1316,12 +1266,6 @@ namespace KamatekCrm.ViewModels
                 }
             }
 
-            if (job.ServiceJobItems != null)
-            {
-                foreach (var item in job.ServiceJobItems)
-                    CurrentJobItems.Add(item);
-            }
-
             var photos = job.PhotoPathsList;
             if (photos != null)
             {
@@ -1350,8 +1294,7 @@ namespace KamatekCrm.ViewModels
             _isEditing = true;
 
             Description = job.Description ?? string.Empty;
-            IsDiscoveryOnly = false; // Artık keşif değil, normal arıza işi gibi devam edecek
-            job.WorkOrderType = WorkOrderType.Repair; // Tip kalıcı olarak değişiyor
+            IsDiscoveryOnly = false;
             
             ScheduledDate = job.ScheduledDate;
             SelectedPriority = job.Priority;
@@ -1379,19 +1322,13 @@ namespace KamatekCrm.ViewModels
                 }
             }
 
-            if (job.ServiceJobItems != null)
-            {
-                foreach (var item in job.ServiceJobItems)
-                    CurrentJobItems.Add(item);
-            }
-
             var photos = job.PhotoPathsList;
             if (photos != null)
             {
                 foreach (var p in photos) UploadedPhotos.Add(p);
             }
 
-            CurrentWizardStep = 3; // Doğrudan malzeme seçimine atla
+            CurrentWizardStep = 3;
             
             // Yeni pencereyi kendi contextimiz ile açıyoruz
             var window = new NewServiceJobWindow(this);
@@ -1645,7 +1582,7 @@ namespace KamatekCrm.ViewModels
                         FullName = QuickCustomerName.Trim(),
                         PhoneNumber = QuickCustomerPhone.Trim(),
                         Type = CustomerType.Individual,
-                        CreatedDate = DateTime.Now
+                        CreatedDate = DateTime.UtcNow
                     };
                     
                     if (_loadingService != null) _loadingService.Show("Müşteri kaydediliyor...");
@@ -1692,7 +1629,7 @@ namespace KamatekCrm.ViewModels
                         SerialNumber = string.IsNullOrWhiteSpace(NewAssetSerialNumber) ? null : NewAssetSerialNumber.Trim(),
                         Location = string.IsNullOrWhiteSpace(NewAssetLocation) ? null : NewAssetLocation.Trim(),
                         Status = AssetStatus.NeedsRepair, // Arıza ile geliyor
-                        CreatedDate = DateTime.Now
+                        CreatedDate = DateTime.UtcNow
                     };
 
                     // API'ye asset ekleme isteği (API'de bu endpoint'i açmamız gerekirse CustomersController'a bir POST eklenmeli - şimdilik eklediğimiz varsayımıyla devam ediyoruz)
@@ -1741,7 +1678,7 @@ namespace KamatekCrm.ViewModels
                 if (!_isEditing) 
                 {
                     jobToSave.Status = JobStatus.Pending;
-                    jobToSave.CreatedDate = DateTime.Now;
+                    jobToSave.CreatedDate = DateTime.UtcNow;
                 }
                 
                 jobToSave.ScheduledDate = ScheduledDate;
@@ -1758,6 +1695,9 @@ namespace KamatekCrm.ViewModels
 
                 // Seçilen ürünler (ServiceJobItem)
                 jobToSave.ServiceJobItems = CurrentJobItems.ToList();
+
+                jobToSave.TotalAmount = GrandTotal;
+                jobToSave.TaxAmount = KdvAmount;
 
                 if (_loadingService != null) _loadingService.Show("İş emri kaydediliyor...");
                 if (_isEditing)
@@ -1865,7 +1805,7 @@ namespace KamatekCrm.ViewModels
                 if (response != null && response.Success)
                 {
                     SelectedServiceJob.Status = JobStatus.Completed;
-                    SelectedServiceJob.CompletedDate = DateTime.Now;
+                    SelectedServiceJob.CompletedDate = DateTime.UtcNow;
                     
                     await LoadServiceJobs();
                     await LoadProducts();
@@ -1902,7 +1842,6 @@ namespace KamatekCrm.ViewModels
             // Single-page form reset
             SelectedStructureType = StructureType.SingleUnit;
             SelectedCustomer = null;
-            SelectedJobType = JobType.SecurityCamera;
             SelectedJobCategory = JobCategory.CCTV;
             // Kategorileri temizle
             if (CategoryItems != null)
@@ -1922,25 +1861,6 @@ namespace KamatekCrm.ViewModels
             LaborCost = 0;
             DiscountAmount = 0;
             CurrentJobItems.Clear();
-        }
-
-        /// <summary>
-        /// Seçilen kategoriye göre JobDetail instance oluştur
-        /// </summary>
-        private JobDetailBase CreateJobDetailInstance(JobCategory category)
-        {
-            return category switch
-            {
-                JobCategory.CCTV => new CctvJobDetail(),
-                JobCategory.VideoIntercom => new VideoIntercomJobDetail(),
-                JobCategory.FireAlarm => new FireAlarmJobDetail(),
-                JobCategory.BurglarAlarm => new BurglarAlarmJobDetail(),
-                JobCategory.SmartHome => new SmartHomeJobDetail(),
-                JobCategory.AccessControl => new AccessControlJobDetail(),
-                JobCategory.SatelliteSystem => new SatelliteJobDetail(),
-                JobCategory.FiberOptic => new FiberOpticJobDetail(),
-                _ => new CctvJobDetail()
-            };
         }
 
         /// <summary>
@@ -2129,7 +2049,7 @@ namespace KamatekCrm.ViewModels
                 {
                     SelectedServiceJob.Status = newStatus;
                     if (newStatus == JobStatus.Completed)
-                        SelectedServiceJob.CompletedDate = DateTime.Now;
+                        SelectedServiceJob.CompletedDate = DateTime.UtcNow;
 
                     await LoadServiceJobs();
                     await LoadDashboardAsync();
