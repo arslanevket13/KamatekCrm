@@ -19,6 +19,12 @@ namespace KamatekCrm.Views
                 Close();
             };
 
+            vm.SaveCompleted += () =>
+            {
+                DialogResult = true;
+                Close();
+            };
+
             DataContext = vm;
         }
     }

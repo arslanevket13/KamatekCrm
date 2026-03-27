@@ -139,7 +139,7 @@ namespace KamatekCrm.Data
             modelBuilder.Entity<Category>()
                 .HasOne(c => c.ParentCategory)
                 .WithMany(c => c.SubCategories)
-                .HasForeignKey(c => c.ParentId)
+                .HasForeignKey(c => c.ParentCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
 
@@ -220,7 +220,7 @@ namespace KamatekCrm.Data
 
                 entity.HasOne(e => e.UploadedByUser)
                     .WithMany()
-                    .HasForeignKey(e => e.UploadedBy)
+                    .HasForeignKey(e => e.UploadedByUserId)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(e => e.TaskId);
@@ -399,3 +399,5 @@ namespace KamatekCrm.Data
         }
     }
 }
+
+

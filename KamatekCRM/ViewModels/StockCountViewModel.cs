@@ -278,7 +278,7 @@ namespace KamatekCrm.ViewModels
                 {
                     var item = new StockCountItem
                     {
-                        ProductId = inv.ProductId,
+                        ProductId = inv.ProductId ?? 0,
                         ProductCode = inv.Product.SKU ?? $"P-{inv.ProductId:D4}",
                         ProductName = inv.Product.ProductName,
                         ModelName = inv.Product.ModelName ?? string.Empty,
@@ -1043,3 +1043,6 @@ namespace KamatekCrm.ViewModels
         public string ReferenceId { get; set; } = string.Empty;
     }
 }
+
+
+

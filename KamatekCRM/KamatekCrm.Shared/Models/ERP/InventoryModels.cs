@@ -47,7 +47,8 @@ namespace KamatekCrm.Shared.Models
     {
         public int Id { get; set; }
         public string Name { get; set; } = "";
-        public int? ParentId { get; set; }
+        public int? ParentCategoryId { get; set; }
+        [ForeignKey(nameof(ParentCategoryId))]
         public virtual Category? ParentCategory { get; set; }
         public virtual System.Collections.Generic.ICollection<Category> SubCategories { get; set; } = new System.Collections.Generic.List<Category>();
     }
@@ -55,12 +56,12 @@ namespace KamatekCrm.Shared.Models
     public class Inventory
     {
         public int Id { get; set; }
-        public int ProductId { get; set; }
-        public int WarehouseId { get; set; }
+        public int? ProductId { get; set; }
+        public int? WarehouseId { get; set; }
         public int Quantity { get; set; }
         public decimal AverageCost { get; set; }
         [ForeignKey(nameof(ProductId))]
-        public virtual Product Product { get; set; } = null!;
+        public virtual Product? Product { get; set; }
         [ForeignKey(nameof(WarehouseId))]
         public virtual Warehouse Warehouse { get; set; } = null!;
     }
@@ -77,7 +78,7 @@ namespace KamatekCrm.Shared.Models
     {
         public int Id { get; set; }
         public DateTime Date { get; set; } = DateTime.Now;
-        public int ProductId { get; set; }
+        public int? ProductId { get; set; }
         public int? SourceWarehouseId { get; set; }
         public int? TargetWarehouseId { get; set; }
         public int Quantity { get; set; }
@@ -94,19 +95,19 @@ namespace KamatekCrm.Shared.Models
         [ForeignKey(nameof(TargetWarehouseId))]
         public virtual Warehouse? TargetWarehouse { get; set; }
         [ForeignKey(nameof(ProductId))]
-        public virtual Product Product { get; set; } = null!;
+        public virtual Product? Product { get; set; }
     }
 
     public class ServiceJobItem
     {
         public int Id { get; set; }
-        public int ServiceJobId { get; set; }
-        public int ProductId { get; set; }
+        public int? ServiceJobId { get; set; }
+        public int? ProductId { get; set; }
         public int QuantityUsed { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal UnitCost { get; set; }
         [ForeignKey(nameof(ProductId))]
-        public virtual Product Product { get; set; } = null!;
+        public virtual Product? Product { get; set; }
         [ForeignKey(nameof(ServiceJobId))]
         public virtual ServiceJob ServiceJob { get; set; } = null!;
     }
@@ -133,7 +134,7 @@ namespace KamatekCrm.Shared.Models
         public DateTime UploadedAt { get; set; } = DateTime.Now;
         public string UploadedBy { get; set; } = string.Empty;
         [ForeignKey(nameof(ProductId))]
-        public virtual Product Product { get; set; } = null!;
+        public virtual Product? Product { get; set; }
         [ForeignKey(nameof(WarehouseId))]
         public virtual Warehouse Warehouse { get; set; } = null!;
     }
@@ -152,3 +153,4 @@ namespace KamatekCrm.Shared.Models
         public string ReservedBy { get; set; } = string.Empty;
     }
 }
+

@@ -7,7 +7,7 @@ namespace KamatekCrm.Shared.Models
     public class CustomerAsset
     {
         public int Id { get; set; }
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
         public JobCategory Category { get; set; } = JobCategory.Other;
         public string Brand { get; set; } = string.Empty;
         public string Model { get; set; } = string.Empty;
@@ -17,7 +17,7 @@ namespace KamatekCrm.Shared.Models
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public string FullName => $"{Brand} {Model}";
         [ForeignKey(nameof(CustomerId))]
-        public virtual Customer Customer { get; set; } = null!;
+        public virtual Customer? Customer { get; set; }
     }
 
     public class MaintenanceContract
@@ -26,9 +26,9 @@ namespace KamatekCrm.Shared.Models
         public string Title { get; set; } = "";
         public bool IsActive { get; set; }
         public DateTime NextDueDate { get; set; }
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
-        public virtual Customer Customer { get; set; } = null!;
+        public virtual Customer? Customer { get; set; }
         public string JobDescriptionTemplate { get; set; } = "";
         public decimal PricePerVisit { get; set; }
         public int FrequencyInMonths { get; set; }
@@ -83,3 +83,4 @@ namespace KamatekCrm.Shared.Models
     public class District { public int Id { get; set; } public string Name { get; set; } = ""; public int CityId { get; set; } public virtual System.Collections.Generic.ICollection<Neighborhood> Neighborhoods { get; set; } = new System.Collections.Generic.List<Neighborhood>(); }
     public class Neighborhood { public int Id { get; set; } public string Name { get; set; } = ""; public int DistrictId { get; set; } }
 }
+

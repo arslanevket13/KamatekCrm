@@ -39,4 +39,17 @@ namespace KamatekCrm.Shared.DTOs
         public double? CurrentLatitude { get; set; }
         public double? CurrentLongitude { get; set; }
     }
+
+    public class ServiceJobStatsResponseDto
+    {
+        public int TotalJobs { get; set; }
+        public int PendingJobs { get; set; }
+        public int InProgressJobs { get; set; }
+        public int CompletedJobs { get; set; }
+        public int CancelledJobs { get; set; }
+        public int WaitingForPartsJobs { get; set; }
+        public int SlaBreachedJobs { get; set; }
+        public int TodayCreated { get; set; }
+        public double AvgCompletionHours { get; set; }
+    }
 }

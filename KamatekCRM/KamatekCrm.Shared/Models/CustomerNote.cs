@@ -9,7 +9,7 @@ namespace KamatekCrm.Shared.Models
     public class CustomerNote
     {
         public int Id { get; set; }
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
         public string Content { get; set; } = "";
         public CustomerActivityType ActivityType { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -17,7 +17,7 @@ namespace KamatekCrm.Shared.Models
         public bool IsPinned { get; set; }
 
         [ForeignKey(nameof(CustomerId))]
-        public virtual Customer Customer { get; set; } = null!;
+        public virtual Customer? Customer { get; set; }
     }
 
     public enum CustomerActivityType
@@ -33,3 +33,4 @@ namespace KamatekCrm.Shared.Models
         Follow_Up
     }
 }
+

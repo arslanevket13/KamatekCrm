@@ -558,7 +558,7 @@ namespace KamatekCrm.Services.Domain
                         {
                             ProductId = p.Id,
                             ProductName = p.ProductName,
-                            WarehouseId = i.WarehouseId,
+                            WarehouseId = i.WarehouseId ?? 0,
                             WarehouseName = w.Name,
                             CurrentStock = i.Quantity,
                             MinStockLevel = p.MinStockLevel

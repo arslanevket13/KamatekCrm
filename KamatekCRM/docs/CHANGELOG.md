@@ -1,3 +1,23 @@
+## v14.30 — EF Core Integrity, Soft Delete & DB Recovery (2026-03-28)
+- **ARCHITECTURE**: Shadow State çakışması (`CustomerId1`) Fluent API üzerinden `WithMany()` tanımlanarak kalıcı olarak giderildi.
+- **ARCHITECTURE**: Soft Delete (Global Query Filter) mekanizmasının Cascade Delete hatalarına yol açmaması için `Inventory`, `StockTransaction`, `ServiceJobItem`, `CustomerAsset`, `PurchaseInvoiceLine` gibi child modellerdeki Foreign Key alanları `int?` (nullable) yapıldı.
+- **DATABASE**: Bozuk migration geçmişi temizlendi ve tüm ilişkileri kapsayan yeni bir "Baseline Migration" (`FixShadowStatesAndRelations`) ile veritabanı şeması %100 uyumlu hale getirildi.
+- **FEATURE (BACKEND)**: `DbInitializer` katmanı eklendi. Veritabanı sıfırlansa bile uygulama ilk açılışta `admin` / `123` kullanıcısını ve "Ana Depo" verisini otomatik olarak oluşturur (Auto-Seed).
+- **BUGFIX**: `TaskPhoto.UploadedBy` mülkü hiyerarşik tutarlılık için `UploadedByUserId` olarak yeniden adlandırıldı ve `PhotoController` üzerindeki tüm referanslar güncellendi.
+- **BUGFIX**: Nullable FK dönüşümü sonrası `SlaService`, `PurchasingDomainService`, `StockCountViewModel` ve `InventoryDomainService` üzerinde oluşan tip dönüşüm (Implicit cast) hataları null-coalescing operatörleriyle giderildi.
+
+## v14.25 — Service Jobs Discovery Workflow Entegrasyonu (2026-03-27)
+- **FEATURE (FRONTEND)**: `ServiceJobViewModel` içerisine "Hızlı Keşif" desteği eklendi. Kullanıcı sadece müşteri seçimi yaparak (Description zorunlu olmadan) 1. adımdan direk iş emrini Kaydedebilir hale geldi. Açıklama boş bırakıldırsa otomatik "Keşif Talebi" ile dolduruluyor.
+- **FEATURE (WORKFLOW)**: Keşif Onaylama senaryosu aktif edildi. DataGrid sağ-tık üzerinden `ApproveDiscoveryCommand` komutuna bağlanarak, keşifte olan işler onayla beraber `Repair` (Arıza) statüsüne çekiliyor ve direk Malzeme Seçimi (3. Adım) sekmesinden ekran açtırılıyor.
+- **UI/UX**: Veri türü sadece Keşif (` WorkOrderType.Discovery`) olan nesnelerde "Keşfi Onayla" ve "Keşfi Reddet" DataGrid menü opsiyonları görünecek (Visibility) şekilde `DiscoveryMenuItemStyle` Trigger'a bağlandı. "Keşfi Reddet" butonunun hatalı `Rejected` parametresi `Cancelled` (İptal) olarak düzeltildi.
+
+## v14.24 — Service Jobs Architectural Fixes & Optimizations (2026-03-27)
+- **FEATURE (BACKEND)**: `KamatekCrm.API` -> `ServiceJobsController` içerisinde Stok İade yeteneği (Stock Reversion Logic) eklendi. İş emri `Completed` durumundan çıkarıldığında ürün stoğu geri iade ediliyor.
+- **FEATURE (FRONTEND)**: `ServiceJobViewModel` için sayfalama ve filtreleme performansı artırıldı. Veriler bellek üzerinden `ICollectionView` ile limitli sayıda filtrelenmek yerine Asenkron (Server-Side) API endpoint parametrelerine `?search=&startDate=&endDate=` devredildi.
+- **UI/UX**: `NewServiceJobWindow` pencerelerinin başarılı kayıt/güncelleme işlemleri sonrasında otomatik kapanması için `SaveCompleted` eventi eklendi ve Code-behind içerisinden `Close()` tetiklendi.
+- **ARCHITECTURE**: Dashboard KPI metriklerinin dynamic JsonElement dönüşümlerinden kaynaklanabilecek Tip güvenliği açıkları `ServiceJobStatsResponseDto` eklenerek profesyonelce kapatıldı.
+- **ARCHITECTURE**: `KamatekCrm.Shared/Models/ServiceJob.cs` `WorkOrderTypeDisplay` enumerator haritalamasında unutulan `WorkOrderType.Discovery => "🔍 Keşif"` eklendi ve UI bug çözüldü.
+
 ## v14.23 — Login UI Professionalization & Fluent Design (2026-03-27)
 - **UI/UX**: `LoginView.xaml` Windows 11 Fluent Design standartlarına taşındı. `Wpf.Ui` bileşenleri ile derinlik (Depth), gölge hiyerarşisi ve yüksek kontrastlı tipografi (TextFillColorDisabled vb.) optimizasyonları yapıldı.
 - **UI/UX**: Giriş ekranındaki görsel çakışmalar giderildi, footer ve logo yerleşimi Grid bazlı esnek yapıya (Responsive) kavuşturuldu.

@@ -59,6 +59,20 @@ KamatekCrm.Web/
 ├── Program.cs             # Minimal API Host (Port 7000, Cookie Auth, Serilog)
 ├── appsettings.json
 └── KamatekCrm.Web.csproj  # Serilog.AspNetCore + KamatekCrm.Shared
+
+## Backend API Proje Detayları (KamatekCrm.API)
+
+```
+KamatekCrm.API/
+│
+├── Controllers/           # REST API Endpoints
+├── Data/
+│   ├── AppDbContext.cs    # PostgreSQL Fluent API Config
+│   └── DbInitializer.cs   # Auto-Seed & Admin Recovery (YENİ)
+├── Migrations/            # EF Core Migration History (Baseline resetlendi)
+├── Services/              # Domain & Infrastructure Services
+└── Program.cs             # API Host & Middleware Pipeline
+```
 ```
 
 ## WPF Proje Detayları

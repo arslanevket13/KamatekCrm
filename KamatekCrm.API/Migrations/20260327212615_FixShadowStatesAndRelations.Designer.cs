@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KamatekCrm.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260305210821_AddQuoteManagementFields")]
-    partial class AddQuoteManagementFields
+    [Migration("20260327212615_FixShadowStatesAndRelations")]
+    partial class FixShadowStatesAndRelations
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -112,9 +112,6 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<int?>("ParentCategoryId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ParentId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -275,7 +272,7 @@ namespace KamatekCrm.API.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Location")
@@ -320,7 +317,7 @@ namespace KamatekCrm.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("integer");
 
                     b.Property<bool>("IsPinned")
@@ -344,7 +341,7 @@ namespace KamatekCrm.API.Migrations
                     b.Property<decimal>("AverageCost")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("ProductId")
+                    b.Property<int?>("ProductId")
                         .HasColumnType("integer");
 
                     b.Property<int>("Quantity")
@@ -558,7 +555,7 @@ namespace KamatekCrm.API.Migrations
                     b.Property<decimal>("OldAverageCost")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("ProductId")
+                    b.Property<int?>("ProductId")
                         .HasColumnType("integer");
 
                     b.Property<string>("ProductName")
@@ -668,14 +665,14 @@ namespace KamatekCrm.API.Migrations
                     b.Property<decimal>("LineTotal")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("ProductId")
+                    b.Property<int?>("ProductId")
                         .HasColumnType("integer");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("PurchaseOrderId")
+                    b.Property<int?>("PurchaseOrderId")
                         .HasColumnType("integer");
 
                     b.Property<int>("Quantity")
@@ -739,7 +736,7 @@ namespace KamatekCrm.API.Migrations
                     b.Property<int?>("ServiceJobId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -759,7 +756,7 @@ namespace KamatekCrm.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("integer");
 
                     b.Property<string>("CustomerName")
@@ -927,9 +924,6 @@ namespace KamatekCrm.API.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("CustomerId1")
-                        .HasColumnType("integer");
-
                     b.Property<string>("CustomerSignature")
                         .HasColumnType("text");
 
@@ -1056,8 +1050,6 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("CustomerId1");
-
                     b.HasIndex("ServiceProjectId");
 
                     b.ToTable("ServiceJobs", (string)null);
@@ -1148,7 +1140,7 @@ namespace KamatekCrm.API.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ProductId")
+                    b.Property<int?>("ProductId")
                         .HasColumnType("integer");
 
                     b.Property<int>("QuantityUsed")
@@ -1292,7 +1284,7 @@ namespace KamatekCrm.API.Migrations
                     b.Property<int?>("InventoryId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("ProductId")
+                    b.Property<int?>("ProductId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("PurchaseOrderId")
@@ -1456,9 +1448,6 @@ namespace KamatekCrm.API.Migrations
                     b.Property<DateTime>("UploadedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("UploadedBy")
-                        .HasColumnType("integer");
-
                     b.Property<int?>("UploadedByUserId")
                         .HasColumnType("integer");
 
@@ -1506,7 +1495,7 @@ namespace KamatekCrm.API.Migrations
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -1527,7 +1516,7 @@ namespace KamatekCrm.API.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("Date")
@@ -1733,9 +1722,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Customer", "Customer")
                         .WithMany("Assets")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CustomerId");
 
                     b.Navigation("Customer");
                 });
@@ -1744,9 +1731,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Customer", "Customer")
                         .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CustomerId");
 
                     b.Navigation("Customer");
                 });
@@ -1755,9 +1740,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Product", "Product")
                         .WithMany("Inventories")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProductId");
 
                     b.HasOne("KamatekCrm.Shared.Models.Warehouse", "Warehouse")
                         .WithMany("Inventories")
@@ -1800,9 +1783,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProductId");
 
                     b.HasOne("KamatekCrm.Shared.Models.PurchaseInvoice", "PurchaseInvoice")
                         .WithMany("Lines")
@@ -1817,7 +1798,7 @@ namespace KamatekCrm.API.Migrations
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseOrder", b =>
                 {
-                    b.HasOne("KamatekCrm.Shared.Models.ServiceJob", null)
+                    b.HasOne("KamatekCrm.Shared.Models.ServiceJob", "ServiceJob")
                         .WithMany("PurchaseOrders")
                         .HasForeignKey("ServiceJobId");
 
@@ -1827,6 +1808,8 @@ namespace KamatekCrm.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("ServiceJob");
+
                     b.Navigation("Supplier");
                 });
 
@@ -1834,9 +1817,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.PurchaseOrder", "PurchaseOrder")
                         .WithMany("Items")
-                        .HasForeignKey("PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PurchaseOrderId");
 
                     b.Navigation("PurchaseOrder");
                 });
@@ -1849,9 +1830,7 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasOne("KamatekCrm.Shared.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("ServiceJob");
 
@@ -1862,9 +1841,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Customer", "Customer")
                         .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CustomerId");
 
                     b.Navigation("Customer");
                 });
@@ -1903,14 +1880,10 @@ namespace KamatekCrm.API.Migrations
                         .HasForeignKey("CustomerAssetId");
 
                     b.HasOne("KamatekCrm.Shared.Models.Customer", "Customer")
-                        .WithMany()
+                        .WithMany("ServiceJobs")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("KamatekCrm.Shared.Models.Customer", null)
-                        .WithMany("ServiceJobs")
-                        .HasForeignKey("CustomerId1");
 
                     b.HasOne("KamatekCrm.Shared.Models.ServiceProject", "ServiceProject")
                         .WithMany()
@@ -1940,9 +1913,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProductId");
 
                     b.HasOne("KamatekCrm.Shared.Models.ServiceJob", "ServiceJob")
                         .WithMany("ServiceJobItems")
@@ -1968,9 +1939,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Product", "Product")
                         .WithMany("Transactions")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProductId");
 
                     b.HasOne("KamatekCrm.Shared.Models.Warehouse", "SourceWarehouse")
                         .WithMany()
@@ -2008,9 +1977,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
@@ -2019,9 +1986,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Customer", "Customer")
                         .WithMany("Transactions")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CustomerId");
 
                     b.Navigation("Customer");
                 });

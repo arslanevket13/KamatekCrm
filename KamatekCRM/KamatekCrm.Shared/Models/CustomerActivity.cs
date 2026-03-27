@@ -9,7 +9,7 @@ namespace KamatekCrm.Shared.Models
     /// </summary>
     public class CustomerActivity : BaseEntity
     {
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
 
         /// <summary>
         /// Aktivite tipi
@@ -113,3 +113,4 @@ namespace KamatekCrm.Shared.Models
         BirthdayCelebrated = 50
     }
 }
+

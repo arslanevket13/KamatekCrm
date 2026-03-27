@@ -200,7 +200,8 @@ try
         try
         {
             db.Database.Migrate();
-            Log.Information("Database migrations applied successfully");
+            DbInitializer.Initialize(db);
+            Log.Information("Database migrations and seeding applied successfully");
         }
         catch (Exception ex)
         {

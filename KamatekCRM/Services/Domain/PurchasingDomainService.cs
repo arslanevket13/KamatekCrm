@@ -144,7 +144,7 @@ namespace KamatekCrm.Services.Domain
 
                         // Event
                         EventAggregator.Instance.Publish(new StockUpdatedEvent(
-                            item.ProductId,
+                            (item.ProductId ?? 0),
                             request.WarehouseId,
                             oldQty,
                             inventory.Quantity,
@@ -219,3 +219,5 @@ namespace KamatekCrm.Services.Domain
             => new() { Success = false, ErrorMessage = error };
     }
 }
+
+

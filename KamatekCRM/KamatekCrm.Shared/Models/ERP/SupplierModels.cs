@@ -27,14 +27,16 @@ namespace KamatekCrm.Shared.Models
         public string Notes { get; set; } = string.Empty;
         [ForeignKey(nameof(SupplierId))]
         public virtual Supplier Supplier { get; set; } = null!;
+        public int? ServiceJobId { get; set; }
+        public virtual ServiceJob? ServiceJob { get; set; }
         public virtual System.Collections.Generic.ICollection<PurchaseOrderItem> Items { get; set; } = new System.Collections.Generic.List<PurchaseOrderItem>();
     }
 
     public class PurchaseOrderItem
     {
         public int Id { get; set; }
-        public int PurchaseOrderId { get; set; }
-        public int ProductId { get; set; }
+        public int? PurchaseOrderId { get; set; }
+        public int? ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
@@ -44,7 +46,7 @@ namespace KamatekCrm.Shared.Models
         public decimal TaxRate { get; set; }
         public decimal SubTotal { get; set; }
         [ForeignKey(nameof(PurchaseOrderId))]
-        public virtual PurchaseOrder PurchaseOrder { get; set; } = null!;
+        public virtual PurchaseOrder? PurchaseOrder { get; set; }
     }
 
     public class PurchaseInvoice : KamatekCrm.Shared.Models.Common.BaseEntity
@@ -69,8 +71,8 @@ namespace KamatekCrm.Shared.Models
     public class PurchaseInvoiceLine
     {
         public int Id { get; set; }
-        public int PurchaseInvoiceId { get; set; }
-        public int ProductId { get; set; }
+        public int? PurchaseInvoiceId { get; set; }
+        public int? ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
@@ -82,6 +84,7 @@ namespace KamatekCrm.Shared.Models
         [ForeignKey(nameof(PurchaseInvoiceId))]
         public virtual PurchaseInvoice PurchaseInvoice { get; set; } = null!;
         [ForeignKey(nameof(ProductId))]
-        public virtual Product Product { get; set; } = null!;
+        public virtual Product? Product { get; set; }
     }
 }
+

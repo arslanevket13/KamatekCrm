@@ -97,7 +97,7 @@ namespace KamatekCrm.API.Controllers
                     FileSize = file.Length,
                     MimeType = file.ContentType,
                     Description = description,
-                    UploadedBy = userId,
+                    UploadedByUserId = userId,
                     UploadedAt = DateTime.Now
                 };
 
@@ -121,7 +121,7 @@ namespace KamatekCrm.API.Controllers
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
             
             // Authorization check: only uploader or admin/manager can delete
-            if (photo.UploadedBy != userId && !User.IsInRole("Admin"))
+            if (photo.UploadedByUserId != userId && !User.IsInRole("Admin"))
             {
                 return Forbid();
             }
@@ -140,3 +140,4 @@ namespace KamatekCrm.API.Controllers
         }
     }
 }
+

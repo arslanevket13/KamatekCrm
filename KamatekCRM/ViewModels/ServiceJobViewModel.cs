@@ -113,6 +113,7 @@ namespace KamatekCrm.ViewModels
             AddAssetCommand = new RelayCommand(_ => OpenQuickAssetAdd(), _ => SelectedCustomer != null);
             CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
             EditJobCommand = new RelayCommand(param => EditJob(param as ServiceJob), param => param is ServiceJob);
+            ApproveDiscoveryCommand = new RelayCommand(param => ApproveDiscovery(param as ServiceJob), param => param is ServiceJob);
             BrowsePhotosCommand = new RelayCommand(_ => BrowsePhotos());
             RemovePhotoCommand = new RelayCommand(param => RemovePhoto(param as string));
 
@@ -922,7 +923,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    _serviceJobsView?.Refresh();
+                    _ = LoadServiceJobs(); // API tabanlı arama
                 }
             }
         }
@@ -937,7 +938,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedStatusFilter, value))
                 {
-                    _serviceJobsView?.Refresh();
+                    _ = LoadServiceJobs(); // API tabanlı filtreleme
                 }
             }
         }
@@ -963,7 +964,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _filterStartDate, value))
                 {
-                    _serviceJobsView?.Refresh();
+                    _ = LoadServiceJobs(); // API tabanlı arama
                 }
             }
         }
@@ -978,7 +979,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _filterEndDate, value))
                 {
-                    _serviceJobsView?.Refresh();
+                    _ = LoadServiceJobs(); // API tabanlı arama
                 }
             }
         }
@@ -1145,6 +1146,11 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public ICommand ViewJobDetailCommand { get; }
 
+        /// <summary>
+        /// Keşfi onayla ve malzeme adımından başlat
+        /// </summary>
+        public ICommand ApproveDiscoveryCommand { get; }
+
 
         /// <summary>
         /// PDF Yazdır komutu
@@ -1193,6 +1199,11 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public event Action? CancelRequested;
 
+        /// <summary>
+        /// Kayıt/Güncelleme başarılı event (UX düzeltmesi)
+        /// </summary>
+        public event Action? SaveCompleted;
+
         #endregion
 
         /// <summary>
@@ -1223,31 +1234,8 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private bool FilterServiceJobs(object obj)
         {
-            if (obj is not ServiceJob job) return false;
-
-            // Status filter
-            bool statusMatch = SelectedStatusFilter switch
-            {
-                StatusFilter.Pending => job.Status == JobStatus.Pending,
-                StatusFilter.InProgress => job.Status == JobStatus.InProgress,
-                StatusFilter.Completed => job.Status == JobStatus.Completed,
-                _ => true // All
-            };
-
-            if (!statusMatch) return false;
-
-            // Date filter
-            if (FilterStartDate.HasValue && job.CreatedDate < FilterStartDate.Value)
-                return false;
-            if (FilterEndDate.HasValue && job.CreatedDate > FilterEndDate.Value.AddDays(1))
-                return false;
-
-            // Search text filter
-            if (string.IsNullOrWhiteSpace(SearchText)) return true;
-
-            var searchLower = SearchText.ToLower();
-            return job.Customer?.FullName.ToLower().Contains(searchLower) == true ||
-                   job.Description.ToLower().Contains(searchLower);
+            // İstemci tarafında (Client-Side) yapılan filtreleme, LoadServiceJobs API çağrısı ile yer değiştirilmiştir.
+            return true;
         }
 
         /// <summary>
@@ -1343,6 +1331,69 @@ namespace KamatekCrm.ViewModels
             CurrentWizardStep = 1;
             
             // Edit işlemi için yeni pencereyi kendi contextimiz ile açıyoruz
+            var window = new NewServiceJobWindow(this);
+            window.Owner = System.Windows.Application.Current.MainWindow;
+            var result = window.ShowDialog();
+
+            if (result == true) RefreshList();
+        }
+
+        /// <summary>
+        /// Keşfi onayla ve malzeme seçimiyle işe dönüştür
+        /// </summary>
+        private void ApproveDiscovery(ServiceJob? job)
+        {
+            if (job == null) return;
+
+            ClearForm();
+            SelectedServiceJob = job;
+            _isEditing = true;
+
+            Description = job.Description ?? string.Empty;
+            IsDiscoveryOnly = false; // Artık keşif değil, normal arıza işi gibi devam edecek
+            job.WorkOrderType = WorkOrderType.Repair; // Tip kalıcı olarak değişiyor
+            
+            ScheduledDate = job.ScheduledDate;
+            SelectedPriority = job.Priority;
+            LaborCost = job.LaborCost;
+            DiscountAmount = job.DiscountAmount;
+            TechnicianNotes = job.TechnicianNotes;
+            EstimatedDuration = job.EstimatedDuration;
+            SlaDeadline = job.SlaDeadline;
+            SelectedTechnicianId = job.AssignedTechnicianId;
+
+            SelectedCustomer = Customers.FirstOrDefault(c => c.Id == job.CustomerId);
+            if (SelectedCustomer != null && job.CustomerAssetId.HasValue)
+            {
+                IsExistingAsset = true;
+                SelectedAsset = CustomerAssets.FirstOrDefault(a => a.Id == job.CustomerAssetId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(job.CategoriesJson))
+            {
+                var jobCats = JsonSerializer.Deserialize<System.Collections.Generic.List<int>>(job.CategoriesJson);
+                if (jobCats != null)
+                {
+                    foreach (var cat in CategoryItems)
+                        cat.IsSelected = jobCats.Contains((int)cat.Category);
+                }
+            }
+
+            if (job.ServiceJobItems != null)
+            {
+                foreach (var item in job.ServiceJobItems)
+                    CurrentJobItems.Add(item);
+            }
+
+            var photos = job.PhotoPathsList;
+            if (photos != null)
+            {
+                foreach (var p in photos) UploadedPhotos.Add(p);
+            }
+
+            CurrentWizardStep = 3; // Doğrudan malzeme seçimine atla
+            
+            // Yeni pencereyi kendi contextimiz ile açıyoruz
             var window = new NewServiceJobWindow(this);
             window.Owner = System.Windows.Application.Current.MainWindow;
             var result = window.ShowDialog();
@@ -1505,6 +1556,17 @@ namespace KamatekCrm.ViewModels
         private async Task LoadServiceJobs()
         {
             var url = "api/servicejobs?pageSize=50";
+
+            // Arama ve Filtreleme API Parametreleri (Client-Side yerine API'ye devredildi)
+            if (!string.IsNullOrWhiteSpace(SearchText))
+                url += $"&search={Uri.EscapeDataString(SearchText)}";
+
+            if (FilterStartDate.HasValue)
+                url += $"&startDate={FilterStartDate.Value:yyyy-MM-dd}";
+
+            if (FilterEndDate.HasValue)
+                url += $"&endDate={FilterEndDate.Value:yyyy-MM-dd}";
+
             if (SelectedStatusFilter != StatusFilter.All)
             {
                 // Enum map mapping
@@ -1555,6 +1617,8 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private bool CanSaveServiceJob()
         {
+            // Keşif sırasında müşteri seçiliyse description istenmeden kayıt yapılabilir (Hızlı Kayıt)
+            if (IsDiscoveryOnly && SelectedCustomer != null) return true;
             return SelectedCustomer != null && !string.IsNullOrWhiteSpace(Description);
         }
 
@@ -1666,6 +1730,12 @@ namespace KamatekCrm.ViewModels
                 jobToSave.WorkOrderType = WorkOrderType.Repair;
                 jobToSave.JobCategory = selectedCategories.Any() ? (JobCategory)selectedCategories.First() : JobCategory.CCTV;
                 jobToSave.CategoriesJson = categoriesJson;
+
+                // Keşif talebi için Description boşsa otomatik doldur
+                if (IsDiscoveryOnly && string.IsNullOrWhiteSpace(Description))
+                {
+                    Description = "Keşif Talebi";
+                }
                 jobToSave.Description = Description;
                 
                 if (!_isEditing) 
@@ -1700,6 +1770,7 @@ namespace KamatekCrm.ViewModels
                         await LoadServiceJobs();
                         ClearForm();
                         _toastService?.ShowSuccess("İş kaydı başarıyla güncellendi!");
+                        SaveCompleted?.Invoke();
                     }
                     else
                     {
@@ -1716,6 +1787,7 @@ namespace KamatekCrm.ViewModels
                         await LoadServiceJobs();
                         ClearForm();
                         _toastService?.ShowSuccess("İş kaydı başarıyla oluşturuldu!");
+                        SaveCompleted?.Invoke();
                     }
                     else
                     {
@@ -1933,21 +2005,18 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                var response = await _apiClient.GetAsync<dynamic>("api/servicejobs/stats");
+                // Tip güvenliği (DTO) sağlandı
+                var response = await _apiClient.GetAsync<KamatekCrm.Shared.DTOs.ServiceJobStatsResponseDto>("api/servicejobs/stats");
                 if (response != null && response.Success && response.Data != null)
                 {
                     var data = response.Data;
-                    // JsonElement'ten değerleri parse et
-                    if (data is System.Text.Json.JsonElement json)
-                    {
-                        TotalJobCount = json.TryGetProperty("totalJobs", out var tj) ? tj.GetInt32() : 0;
-                        PendingCount = json.TryGetProperty("pendingJobs", out var pj) ? pj.GetInt32() : 0;
-                        InProgressCount = json.TryGetProperty("inProgressJobs", out var ipj) ? ipj.GetInt32() : 0;
-                        CompletedCount = json.TryGetProperty("completedJobs", out var cj) ? cj.GetInt32() : 0;
-                        SlaBreachedCount = json.TryGetProperty("slaBreachedJobs", out var sbj) ? sbj.GetInt32() : 0;
-                        TodayCreatedCount = json.TryGetProperty("todayCreated", out var tc) ? tc.GetInt32() : 0;
-                        AvgCompletionHours = json.TryGetProperty("avgCompletionHours", out var ach) ? ach.GetDouble() : 0;
-                    }
+                    TotalJobCount = data.TotalJobs;
+                    PendingCount = data.PendingJobs;
+                    InProgressCount = data.InProgressJobs;
+                    CompletedCount = data.CompletedJobs;
+                    SlaBreachedCount = data.SlaBreachedJobs;
+                    TodayCreatedCount = data.TodayCreated;
+                    AvgCompletionHours = data.AvgCompletionHours;
                 }
             }
             catch (Exception ex)

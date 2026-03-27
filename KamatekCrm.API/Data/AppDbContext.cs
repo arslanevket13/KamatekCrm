@@ -74,7 +74,7 @@ namespace KamatekCrm.Data
                 entity.Property(e => e.CompletedDate).IsRequired(false);
                 
                 entity.HasOne(e => e.Customer)
-                    .WithMany()
+                    .WithMany(c => c.ServiceJobs)
                     .HasForeignKey(e => e.CustomerId)
                     .OnDelete(DeleteBehavior.Restrict);
                 
@@ -135,3 +135,4 @@ namespace KamatekCrm.Data
         }
     }
 }
+

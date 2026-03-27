@@ -14,6 +14,16 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Sadece Keşif tipindeki kayıtlarda görünmesi gereken menü öğeleri için -->
+        <Style x:Key="DiscoveryMenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding WorkOrderTypeDisplay}" Value="🔍 Keşif">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
@@ -276,9 +286,14 @@
                             <MenuItem Header="✏️ İşi Düzenle" Command="{Binding EditJobCommand}" 
                                       CommandParameter="{Binding SelectedServiceJob}"/>
                             <Separator/>
-                            <MenuItem Header="🔍 Keşfi Onayla &amp; Malzeme Seç" Command="{Binding EditJobCommand}" 
-                                      CommandParameter="{Binding SelectedServiceJob}"/>
-                            <MenuItem Header="❌ Keşfi Reddet" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Rejected"/>
+                            <MenuItem Header="🔍 Keşfi Onayla &amp; Malzeme Seç" 
+                                      Command="{Binding ApproveDiscoveryCommand}" 
+                                      CommandParameter="{Binding SelectedServiceJob}"
+                                      Style="{StaticResource DiscoveryMenuItemStyle}"/>
+                            <MenuItem Header="❌ Keşfi Reddet" 
+                                      Command="{Binding ChangeJobStatusCommand}" 
+                                      CommandParameter="Cancelled"
+                                      Style="{StaticResource DiscoveryMenuItemStyle}"/>
                             <Separator/>
                             <MenuItem Header="⏳ Bekliyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Pending"/>
                             <MenuItem Header="🔵 Devam Ediyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="InProgress"/>

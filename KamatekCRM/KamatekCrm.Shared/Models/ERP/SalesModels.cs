@@ -7,7 +7,7 @@ namespace KamatekCrm.Shared.Models
     public class SalesOrder
     {
         public int Id { get; set; }
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
         public DateTime Date { get; set; } = DateTime.Now;
         public string PaymentMethod { get; set; } = string.Empty;
@@ -29,7 +29,7 @@ namespace KamatekCrm.Shared.Models
         /// </summary>
         public int PrintCount { get; set; }
         
-        public virtual Customer Customer { get; set; } = null!;
+        public virtual Customer? Customer { get; set; }
         public virtual System.Collections.Generic.ICollection<SalesOrderItem> Items { get; set; } = new System.Collections.Generic.List<SalesOrderItem>();
         public virtual System.Collections.Generic.ICollection<SalesOrderPayment> Payments { get; set; } = new System.Collections.Generic.List<SalesOrderPayment>();
     }
@@ -66,13 +66,13 @@ namespace KamatekCrm.Shared.Models
     public class Transaction
     {
         public int Id { get; set; }
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
         public decimal Amount { get; set; }
         public DateTime Date { get; set; }
         public TransactionType Type { get; set; }
         public string Description { get; set; } = string.Empty;
         [ForeignKey(nameof(CustomerId))]
-        public virtual Customer Customer { get; set; } = null!;
+        public virtual Customer? Customer { get; set; }
     }
 
     public class CashTransaction
@@ -93,3 +93,4 @@ namespace KamatekCrm.Shared.Models
         public virtual Customer? Customer { get; set; }
     }
 }
+

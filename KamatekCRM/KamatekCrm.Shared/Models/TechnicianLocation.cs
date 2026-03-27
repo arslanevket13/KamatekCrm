@@ -9,7 +9,7 @@ namespace KamatekCrm.Shared.Models
     public class TechnicianLocation
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public double? Accuracy { get; set; }
@@ -27,7 +27,7 @@ namespace KamatekCrm.Shared.Models
         public bool IsBackground { get; set; }
 
         [ForeignKey(nameof(UserId))]
-        public virtual User User { get; set; } = null!;
+        public virtual User? User { get; set; }
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ namespace KamatekCrm.Shared.Models
     public class RoutePoint
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
         public int? ServiceJobId { get; set; }
         public int? CustomerId { get; set; }
         public double Latitude { get; set; }
@@ -49,8 +49,9 @@ namespace KamatekCrm.Shared.Models
         public DateTime Date { get; set; } = DateTime.UtcNow.Date;
 
         [ForeignKey(nameof(UserId))]
-        public virtual User User { get; set; } = null!;
+        public virtual User? User { get; set; }
         [ForeignKey(nameof(ServiceJobId))]
         public virtual ServiceJob? ServiceJob { get; set; }
     }
 }
+

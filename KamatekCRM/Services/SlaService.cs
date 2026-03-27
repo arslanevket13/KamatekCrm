@@ -47,7 +47,7 @@ namespace KamatekCrm.Services
                             // 1. İş Emri Oluştur
                             var job = new ServiceJob
                             {
-                                CustomerId = contract.CustomerId,
+                                CustomerId = contract.CustomerId ?? 0,
                                 JobCategory = JobCategory.Other, // Bakım kategorisi varsa o seçilmeli
                                 WorkOrderType = WorkOrderType.Maintenance,
                                 Description = $"{contract.JobDescriptionTemplate} - {today:MMMM yyyy} Dönemi",
@@ -84,3 +84,5 @@ namespace KamatekCrm.Services
         }
     }
 }
+
+

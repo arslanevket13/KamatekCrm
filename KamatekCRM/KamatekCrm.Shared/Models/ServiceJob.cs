@@ -161,8 +161,9 @@ namespace KamatekCrm.Shared.Models
             WorkOrderType.Repair => "🔧 Arıza",
             WorkOrderType.Installation => "🏗️ Kurulum",
             WorkOrderType.Maintenance => "🛠️ Bakım",
-            WorkOrderType.Inspection => "🔍 Keşif",
+            WorkOrderType.Inspection => "🔎 İnceleme",
             WorkOrderType.Replacement => "🔄 Değiştirme",
+            WorkOrderType.Discovery => "🔍 Keşif",
             _ => WorkOrderType.ToString()
         };
 

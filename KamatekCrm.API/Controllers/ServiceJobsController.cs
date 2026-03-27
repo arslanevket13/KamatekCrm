@@ -217,6 +217,20 @@ namespace KamatekCrm.API.Controllers
                     }
                 }
             }
+            // Stok İade İşlemi (Completed'dan iptal/beklemeye vb. geçişte)
+            else if (oldStatus == JobStatus.Completed && serviceJob.Status != JobStatus.Completed)
+            {
+                var jobItems = await _context.ServiceJobItems.Where(i => i.ServiceJobId == id).ToListAsync();
+                foreach (var item in jobItems)
+                {
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.TotalStockQuantity += item.QuantityUsed; // Stok iadesi eklendi
+                        product.ModifiedDate = DateTime.UtcNow;
+                    }
+                }
+            }
 
             // Durum değişikliği tarihçeye kaydedilir
             if (oldStatus != serviceJob.Status)
@@ -263,6 +277,20 @@ namespace KamatekCrm.API.Controllers
                     if (product != null)
                     {
                         product.TotalStockQuantity -= item.QuantityUsed;
+                        product.ModifiedDate = DateTime.UtcNow;
+                    }
+                }
+            }
+            // Stok İade İşlemi (Durum Completed'dan çıkarıldığında)
+            else if (oldStatus == JobStatus.Completed && request.Status != JobStatus.Completed)
+            {
+                var jobItems = await _context.ServiceJobItems.Where(i => i.ServiceJobId == id).ToListAsync();
+                foreach (var item in jobItems)
+                {
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.TotalStockQuantity += item.QuantityUsed; // Stok iadesi eklendi
                         product.ModifiedDate = DateTime.UtcNow;
                     }
                 }
