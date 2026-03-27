@@ -221,6 +221,7 @@ KamatekCrm/
 ├── ViewModels/ (Devam)
 │   ├── RepairViewModel.cs        # Tamir iş akışı ve tarihçe yönetimi
 │   ├── DirectSalesViewModel.cs   # POS sepet ve satış mantığı
+│   ├── ServiceJobViewModel.cs    # (Geliştirildi) İş emri düzenleme, hızlı müşteri ekleme, fotoğraf yönetimi ve dinamik KDV hesaplama
 │   └── ...
 │
 ├── Models/ (Devam)

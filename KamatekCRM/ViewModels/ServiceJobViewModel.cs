@@ -40,12 +40,17 @@ namespace KamatekCrm.ViewModels
         private int _todayCreatedCount;
         private double _avgCompletionHours;
 
+        // ===== EDIT & FOTOĞRAF =====
+        private bool _isEditing = false;
+        private ObservableCollection<string> _uploadedPhotos = new();
+
         // ===== WIZARD ADIM YÖNETİMİ =====
         private int _currentWizardStep = 1;
         private const int TotalWizardSteps = 4;
 
         // ===== KDV HESAPLAMA =====
         private decimal _kdvRate = 20m; // %20 varsayılan
+        public ObservableCollection<decimal> KdvRates { get; } = new ObservableCollection<decimal> { 0m, 1m, 10m, 20m };
 
         // ===== TEKNİSYEN SEÇİMİ =====
         private int? _selectedTechnicianId;
@@ -107,6 +112,9 @@ namespace KamatekCrm.ViewModels
             PrintServiceFormCommand = new RelayCommand(param => PrintServiceForm(param as ServiceJob), param => param is ServiceJob);
             AddAssetCommand = new RelayCommand(_ => OpenQuickAssetAdd(), _ => SelectedCustomer != null);
             CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
+            EditJobCommand = new RelayCommand(param => EditJob(param as ServiceJob), param => param is ServiceJob);
+            BrowsePhotosCommand = new RelayCommand(_ => BrowsePhotos());
+            RemovePhotoCommand = new RelayCommand(param => RemovePhoto(param as string));
 
             // Wizard komutları
             GoNextStepCommand = new RelayCommand(_ => GoNextStep(), _ => CanGoNextStep());
@@ -650,7 +658,21 @@ namespace KamatekCrm.ViewModels
         public bool IsQuickAddCustomer
         {
             get => _isQuickAddCustomer;
-            set => SetProperty(ref _isQuickAddCustomer, value);
+            set
+            {
+                if (SetProperty(ref _isQuickAddCustomer, value))
+                    (GoNextStepCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
+            }
+        }
+
+        private bool _isDiscoveryOnly;
+        /// <summary>
+        /// Yalnızca keşif yapılacak seçeneği
+        /// </summary>
+        public bool IsDiscoveryOnly
+        {
+            get => _isDiscoveryOnly;
+            set => SetProperty(ref _isDiscoveryOnly, value);
         }
 
         /// <summary>
@@ -659,7 +681,11 @@ namespace KamatekCrm.ViewModels
         public string QuickCustomerName
         {
             get => _quickCustomerName;
-            set => SetProperty(ref _quickCustomerName, value);
+            set
+            {
+                if (SetProperty(ref _quickCustomerName, value))
+                    (GoNextStepCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
+            }
         }
 
         /// <summary>
@@ -668,7 +694,11 @@ namespace KamatekCrm.ViewModels
         public string QuickCustomerPhone
         {
             get => _quickCustomerPhone;
-            set => SetProperty(ref _quickCustomerPhone, value);
+            set
+            {
+                if (SetProperty(ref _quickCustomerPhone, value))
+                    (GoNextStepCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
+            }
         }
 
         /// <summary>
@@ -687,6 +717,12 @@ namespace KamatekCrm.ViewModels
         {
             get => _hasValidationError;
             set => SetProperty(ref _hasValidationError, value);
+        }
+
+        public ObservableCollection<string> UploadedPhotos
+        {
+            get => _uploadedPhotos;
+            set => SetProperty(ref _uploadedPhotos, value);
         }
 
         /// <summary>
@@ -1128,6 +1164,10 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public ICommand CancelCommand { get; }
 
+        public ICommand EditJobCommand { get; }
+        public ICommand BrowsePhotosCommand { get; }
+        public ICommand RemovePhotoCommand { get; }
+
         /// <summary>
         /// Wizard ileri adım
         /// </summary>
@@ -1218,6 +1258,12 @@ namespace KamatekCrm.ViewModels
             // Create a new ViewModel with dependencies
             var newVm = new ServiceJobViewModel(_navigationService, _toastService, _loadingService, _apiClient);
             
+            // Veri aktarımı (YENI: API cagrisini beklememek icin ana VM'den listeleri gonderiyoruz)
+            foreach (var cust in Customers) newVm.Customers.Add(cust);
+            foreach (var prod in Products) newVm.Products.Add(prod);
+            foreach (var tech in Technicians) newVm.Technicians.Add(tech);
+            foreach (var asset in CustomerAssets) newVm.CustomerAssets.Add(asset);
+
             var window = new NewServiceJobWindow(newVm);
             window.Owner = System.Windows.Application.Current.MainWindow;
             var result = window.ShowDialog();
@@ -1244,6 +1290,88 @@ namespace KamatekCrm.ViewModels
         {
             if (job == null) return;
             MessageBox.Show($"İş Detayı: #{job.Id}\n{job.Description}", "Detay", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void EditJob(ServiceJob? job)
+        {
+            if (job == null) return;
+
+            ClearForm();
+            SelectedServiceJob = job;
+            _isEditing = true;
+
+            Description = job.Description ?? string.Empty;
+            IsDiscoveryOnly = job.WorkOrderType == WorkOrderType.Discovery;
+            ScheduledDate = job.ScheduledDate;
+            SelectedPriority = job.Priority;
+            LaborCost = job.LaborCost;
+            DiscountAmount = job.DiscountAmount;
+            TechnicianNotes = job.TechnicianNotes;
+            EstimatedDuration = job.EstimatedDuration;
+            SlaDeadline = job.SlaDeadline;
+            SelectedTechnicianId = job.AssignedTechnicianId;
+
+            SelectedCustomer = Customers.FirstOrDefault(c => c.Id == job.CustomerId);
+            if (SelectedCustomer != null && job.CustomerAssetId.HasValue)
+            {
+                IsExistingAsset = true;
+                SelectedAsset = CustomerAssets.FirstOrDefault(a => a.Id == job.CustomerAssetId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(job.CategoriesJson))
+            {
+                var jobCats = JsonSerializer.Deserialize<System.Collections.Generic.List<int>>(job.CategoriesJson);
+                if (jobCats != null)
+                {
+                    foreach (var cat in CategoryItems)
+                        cat.IsSelected = jobCats.Contains((int)cat.Category);
+                }
+            }
+
+            if (job.ServiceJobItems != null)
+            {
+                foreach (var item in job.ServiceJobItems)
+                    CurrentJobItems.Add(item);
+            }
+
+            var photos = job.PhotoPathsList;
+            if (photos != null)
+            {
+                foreach (var p in photos) UploadedPhotos.Add(p);
+            }
+
+            CurrentWizardStep = 1;
+            
+            // Edit işlemi için yeni pencereyi kendi contextimiz ile açıyoruz
+            var window = new NewServiceJobWindow(this);
+            window.Owner = System.Windows.Application.Current.MainWindow;
+            var result = window.ShowDialog();
+
+            if (result == true) RefreshList();
+        }
+
+        private void BrowsePhotos()
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Multiselect = true,
+                Filter = "Resim Dosyaları|*.jpg;*.jpeg;*.png;*.webp"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                foreach (var file in dialog.FileNames)
+                {
+                    if (!UploadedPhotos.Contains(file))
+                        UploadedPhotos.Add(file);
+                }
+            }
+        }
+
+        private void RemovePhoto(string? path)
+        {
+            if (path != null && UploadedPhotos.Contains(path))
+                UploadedPhotos.Remove(path);
         }
 
         #endregion
@@ -1439,6 +1567,47 @@ namespace KamatekCrm.ViewModels
             {
                 int? assetId = null;
 
+                // === ADIM 0: Hızlı Yeni Müşteri Mı? ===
+                if (IsQuickAddCustomer)
+                {
+                    if (string.IsNullOrWhiteSpace(QuickCustomerName) || string.IsNullOrWhiteSpace(QuickCustomerPhone))
+                    {
+                        MessageBox.Show("Yeni müşteri için Ad Soyad ve Telefon zorunludur.", "Uyarı",
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                    var newCustomer = new Customer
+                    {
+                        FullName = QuickCustomerName.Trim(),
+                        PhoneNumber = QuickCustomerPhone.Trim(),
+                        Type = CustomerType.Individual,
+                        CreatedDate = DateTime.Now
+                    };
+                    
+                    if (_loadingService != null) _loadingService.Show("Müşteri kaydediliyor...");
+                    var custResponse = await _apiClient.PostAsync<Customer>("api/customers", newCustomer);
+                    if (_loadingService != null) _loadingService.Hide();
+
+                    if (custResponse != null && custResponse.Success && custResponse.Data != null)
+                    {
+                        Customers.Add(custResponse.Data);
+                        SelectedCustomer = custResponse.Data;
+                        IsQuickAddCustomer = false; // Reset
+                        _toastService?.ShowSuccess($"Yeni müşteri eklendi: {custResponse.Data.FullName}");
+                    }
+                    else
+                    {
+                        _toastService?.ShowError("Yeni müşteri kaydedilemedi.");
+                        return;
+                    }
+                }
+
+                if (SelectedCustomer == null)
+                {
+                    MessageBox.Show("Lütfen müşteri seçin veya oluşturun.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 // === ADIM 1: Yeni cihaz mı? Önce onu oluştur ===
                 if (IsNewAsset)
                 {
@@ -1489,36 +1658,69 @@ namespace KamatekCrm.ViewModels
                     .ToList() ?? new List<int>();
                 string categoriesJson = JsonSerializer.Serialize(selectedCategories);
 
-                // === ADIM 3: İş emrini oluştur ===
-                var newJob = new ServiceJob
-                {
-                    CustomerId = SelectedCustomer!.Id,
-                    CustomerAssetId = assetId, // Cihaz bağlantısı
-                    WorkOrderType = WorkOrderType.Repair, // Arıza
-                    JobCategory = selectedCategories.Any() ? (JobCategory)selectedCategories.First() : JobCategory.CCTV,
-                    CategoriesJson = categoriesJson,
-                    Description = Description,
-                    Status = JobStatus.Pending,
-                    CreatedDate = DateTime.Now,
-                    ScheduledDate = ScheduledDate,
-                    AssignedTechnician = AssignedTechnician,
-                    Priority = SelectedPriority,
-                    LaborCost = LaborCost,
-                    DiscountAmount = DiscountAmount,
-                    ServiceJobItems = CurrentJobItems.ToList() // Ürünleri tek seferde gönder
-                };
+                // === ADIM 3: İş emrini oluştur/güncelle ===
+                var jobToSave = _isEditing && SelectedServiceJob != null ? SelectedServiceJob : new ServiceJob();
 
-                var response = await _apiClient.PostAsync<ServiceJob>("api/servicejobs", newJob);
-
-                if (response != null && response.Success)
+                jobToSave.CustomerId = SelectedCustomer!.Id;
+                jobToSave.CustomerAssetId = assetId;
+                jobToSave.WorkOrderType = WorkOrderType.Repair;
+                jobToSave.JobCategory = selectedCategories.Any() ? (JobCategory)selectedCategories.First() : JobCategory.CCTV;
+                jobToSave.CategoriesJson = categoriesJson;
+                jobToSave.Description = Description;
+                
+                if (!_isEditing) 
                 {
-                    await LoadServiceJobs();
-                    ClearForm();
-                    _toastService.ShowSuccess("İş kaydı başarıyla oluşturuldu!");
+                    jobToSave.Status = JobStatus.Pending;
+                    jobToSave.CreatedDate = DateTime.Now;
+                }
+                
+                jobToSave.ScheduledDate = ScheduledDate;
+                jobToSave.AssignedTechnician = AssignedTechnician;
+                jobToSave.AssignedTechnicianId = SelectedTechnicianId;
+                jobToSave.Priority = SelectedPriority;
+                jobToSave.LaborCost = LaborCost;
+                jobToSave.DiscountAmount = DiscountAmount;
+                jobToSave.EstimatedDuration = EstimatedDuration;
+                jobToSave.SlaDeadline = SlaDeadline;
+                jobToSave.TechnicianNotes = TechnicianNotes;
+                jobToSave.PhotoPathsJson = JsonSerializer.Serialize(UploadedPhotos.ToList());
+                jobToSave.WorkOrderType = IsDiscoveryOnly ? WorkOrderType.Discovery : WorkOrderType.Repair;
+
+                // Seçilen ürünler (ServiceJobItem)
+                jobToSave.ServiceJobItems = CurrentJobItems.ToList();
+
+                if (_loadingService != null) _loadingService.Show("İş emri kaydediliyor...");
+                if (_isEditing)
+                {
+                    var response = await _apiClient.PutAsync<ServiceJob>($"api/servicejobs/{jobToSave.Id}", jobToSave);
+                    if (_loadingService != null) _loadingService.Hide();
+
+                    if (response != null && response.Success)
+                    {
+                        await LoadServiceJobs();
+                        ClearForm();
+                        _toastService?.ShowSuccess("İş kaydı başarıyla güncellendi!");
+                    }
+                    else
+                    {
+                        _toastService?.ShowError(response?.Message ?? "İş güncellenemedi");
+                    }
                 }
                 else
                 {
-                    _toastService.ShowError(response?.Message ?? "İş kaydedilemedi");
+                    var response = await _apiClient.PostAsync<ServiceJob>("api/servicejobs", jobToSave);
+                    if (_loadingService != null) _loadingService.Hide();
+
+                    if (response != null && response.Success)
+                    {
+                        await LoadServiceJobs();
+                        ClearForm();
+                        _toastService?.ShowSuccess("İş kaydı başarıyla oluşturuldu!");
+                    }
+                    else
+                    {
+                        _toastService?.ShowError(response?.Message ?? "İş kaydedilemedi");
+                    }
                 }
             }
             catch (Exception ex)
@@ -1614,6 +1816,17 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void ClearForm()
         {
+            _isEditing = false;
+            IsQuickAddCustomer = false;
+            UploadedPhotos.Clear();
+            SelectedTechnicianId = null;
+            EstimatedDuration = null;
+            SlaDeadline = null;
+            TechnicianNotes = null;
+            KdvRate = 20m;
+            QuickCustomerName = string.Empty;
+            QuickCustomerPhone = string.Empty;
+
             // Single-page form reset
             SelectedStructureType = StructureType.SingleUnit;
             SelectedCustomer = null;
@@ -1790,7 +2003,9 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void GoNextStep()
         {
-            if (CurrentWizardStep < TotalWizardSteps)
+            if (CurrentWizardStep == 2 && IsDiscoveryOnly)
+                CurrentWizardStep = 4; // Skip Malzeme (Step 3)
+            else if (CurrentWizardStep < TotalWizardSteps)
                 CurrentWizardStep++;
         }
 
@@ -1799,7 +2014,9 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void GoPreviousStep()
         {
-            if (CurrentWizardStep > 1)
+            if (CurrentWizardStep == 4 && IsDiscoveryOnly)
+                CurrentWizardStep = 2; // Skip Malzeme (Step 3) back
+            else if (CurrentWizardStep > 1)
                 CurrentWizardStep--;
         }
 
@@ -1810,7 +2027,9 @@ namespace KamatekCrm.ViewModels
         {
             return CurrentWizardStep switch
             {
-                1 => SelectedCustomer != null, // Müşteri seçilmiş olmalı
+                1 => IsQuickAddCustomer 
+                        ? (!string.IsNullOrWhiteSpace(QuickCustomerName) && !string.IsNullOrWhiteSpace(QuickCustomerPhone)) 
+                        : SelectedCustomer != null,
                 2 => !string.IsNullOrWhiteSpace(Description), // Açıklama girilmiş olmalı
                 3 => true, // Malzeme opsiyonel
                 _ => false

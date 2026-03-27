@@ -174,32 +174,71 @@
                             <TextBlock Text="👤 MÜŞTERİ SEÇİMİ" Style="{StaticResource SectionHeader}"/>
 
                             <TextBlock Text="Müşteri" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox ItemsSource="{Binding Customers}"
-                                     SelectedItem="{Binding SelectedCustomer}"
-                                     DisplayMemberPath="FullName"
-                                     IsEditable="True" IsTextSearchEnabled="True"
-                                     Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" 
-                                     Height="38" Margin="0,0,0,16"/>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <RadioButton x:Name="RbExisting" Content="Müşteri Seç" IsChecked="True" Margin="0,0,16,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" GroupName="CstT"/>
+                                <RadioButton x:Name="RbNew" Content="Hızlı Müşteri Ekle" IsChecked="{Binding IsQuickAddCustomer, Mode=TwoWay}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" GroupName="CstT"/>
+                            </StackPanel>
 
-                            <!-- Müşteri Bilgi Kartı -->
-                            <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
-                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
-                                <StackPanel>
-                                    <TextBlock Text="📋 Müşteri Bilgileri" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,10"
-                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <TextBlock Text="Ad:" Width="60" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"/>
-                                        <TextBlock Text="{Binding SummaryCustomerName}" FontWeight="SemiBold" FontSize="12"
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsChecked, ElementName=RbNew}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <ComboBox ItemsSource="{Binding Customers}"
+                                         SelectedItem="{Binding SelectedCustomer}"
+                                         DisplayMemberPath="FullName"
+                                         IsEditable="True" IsTextSearchEnabled="True"
+                                         Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                         BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" 
+                                         Height="38" Margin="0,0,0,16"/>
+
+                                <!-- Müşteri Bilgi Kartı -->
+                                <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
+                                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock Text="📋 Müşteri Bilgileri" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,10"
                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                            <TextBlock Text="Ad:" Width="60" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"/>
+                                            <TextBlock Text="{Binding SummaryCustomerName}" FontWeight="SemiBold" FontSize="12"
+                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Adres:" Width="60" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"/>
+                                            <TextBlock Text="{Binding SummaryCustomerAddress}" TextWrapping="Wrap" FontSize="12"
+                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" MaxWidth="300"/>
+                                        </StackPanel>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Adres:" Width="60" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"/>
-                                        <TextBlock Text="{Binding SummaryCustomerAddress}" TextWrapping="Wrap" FontSize="12"
-                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" MaxWidth="300"/>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Yeni Müşteri -->
+                            <StackPanel Visibility="{Binding IsChecked, ElementName=RbNew, Converter={StaticResource BoolToVis}}" Margin="0,0,0,16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Ad Soyad *" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding QuickCustomerName, UpdateSourceTrigger=PropertyChanged}" Height="36"
+                                                 Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                     </StackPanel>
-                                </StackPanel>
-                            </Border>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Telefon *" Style="{StaticResource FieldLabel}"/>
+                                        <TextBox Text="{Binding QuickCustomerPhone, UpdateSourceTrigger=PropertyChanged}" Height="36"
+                                                 Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
 
                             <!-- Cihaz Seçimi -->
                             <TextBlock Text="🔌 Mevcut Cihaz" Style="{StaticResource FieldLabel}"/>
@@ -341,6 +380,13 @@
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="⚙️ İŞ AYARLARI" Style="{StaticResource SectionHeader}"/>
 
+                            <!-- Sadece Keşif -->
+                            <CheckBox Content="Sadece Keşif Yapılacak (Malzeme Girilmez)" 
+                                      IsChecked="{Binding IsDiscoveryOnly}" 
+                                      Foreground="{DynamicResource SystemAccentColorPrimaryBrush}"
+                                      FontWeight="SemiBold"
+                                      Margin="0,0,0,16"/>
+
                             <!-- Öncelik -->
                             <TextBlock Text="🚨 Öncelik" Style="{StaticResource FieldLabel}"/>
                             <ComboBox ItemsSource="{Binding Priorities}"
@@ -412,6 +458,29 @@
                                      Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                      Height="80" TextWrapping="Wrap" AcceptsReturn="True"
                                      VerticalScrollBarVisibility="Auto" Padding="12"/>
+                                     
+                            <TextBlock Text="📸 Fotoğraflar &amp; Belgeler" Style="{StaticResource FieldLabel}" Margin="0,16,0,8"/>
+                            <ui:Button Content="Fotoğraf Seç..." Command="{Binding BrowsePhotosCommand}" Appearance="Secondary" Height="36" Margin="0,0,0,12"/>
+                            
+                            <ItemsControl ItemsSource="{Binding UploadedPhotos}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="100" Height="100" CornerRadius="8" Margin="0,0,8,8" Background="{DynamicResource SurfacePageBrush}">
+                                            <Grid>
+                                                <Image Source="{Binding}" Stretch="UniformToFill" Margin="2" />
+                                                <Button Content="x" Command="{Binding DataContext.RemovePhotoCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"
+                                                        Background="#AA000000" Foreground="White" BorderThickness="0" 
+                                                        Width="20" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="4"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </StackPanel>
                     </Grid>
                 </ScrollViewer>
@@ -534,11 +603,10 @@
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,8">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="KDV (" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                        <TextBlock Text="{Binding KdvRate, StringFormat=%{0:N0}}" FontSize="13" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                                        <TextBlock Text="):" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="KDV %: " FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                        <ComboBox ItemsSource="{Binding KdvRates}" SelectedItem="{Binding KdvRate}" Width="65" Height="28" Padding="4,2"
+                                                  Background="Transparent" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding KdvAmount, StringFormat=₺{0:N2}}" FontSize="13"
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Right"/>

@@ -18,163 +18,9 @@
         <Geometry x:Key="EyeOffIcon">M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z</Geometry>
         <Geometry x:Key="GlobeIcon">M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M6.5,8.5C7.5,8.5 8.5,9 9,10C8.5,10.5 7.5,11 6.5,11C5.5,11 4.5,10.5 4,9.5C4.5,8.5 5.5,8 6.5,8M17.5,11C16.5,11 15.5,10.5 15,9.5C15.5,8.5 16.5,8 17.5,8C18.5,8 19.5,8.5 20,9.5C19.5,10.5 18.5,11 17.5,11M12,6C13.5,6 15,6.5 16.25,7.5C15.5,8.5 14.25,9 12,9C9.75,9 8.5,8.5 7.75,7.5C9,6.5 10.5,6 12,6Z</Geometry>
 
-        <!-- Input Style -->
-        <Style x:Key="FluentInput" TargetType="Control">
-            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Control">
-                        <Border x:Name="Border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="40"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <Path x:Name="IconPath"
-                                      Grid.Column="0"
-                                      Data="{TemplateBinding Tag}"
-                                      Fill="{DynamicResource ThemeTextTertiary}"
-                                      Width="18" Height="18"
-                                      Stretch="Uniform"
-                                      VerticalAlignment="Center"
-                                      HorizontalAlignment="Center"/>
-
-                                <ScrollViewer x:Name="PART_ContentHost" 
-                                              Grid.Column="1"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,10,0"/>
-
-                                <!-- Bottom Border Accent -->
-                                <Border x:Name="AccentBorder"
-                                        Grid.ColumnSpan="2"
-                                        VerticalAlignment="Bottom"
-                                        Height="2"
-                                        Background="{DynamicResource ThemePrimary}"
-                                        CornerRadius="0,0,8,8"
-                                        Opacity="0"
-                                        Margin="1,0,1,1"/>
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
-                                <Setter TargetName="IconPath" Property="Fill" Value="{DynamicResource ThemePrimary}"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource ThemeSidebarHover}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsLoading}" Value="True">
-                    <Setter Property="IsEnabled" Value="False"/>
-                    <Setter Property="Opacity" Value="0.6"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- Loading Animation -->
-        <Style x:Key="LoginButtonFluent" TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Padding="10">
-                            <Grid>
-                                <ContentPresenter x:Name="contentPresenter" 
-                                                  HorizontalAlignment="Center" 
-                                                  VerticalAlignment="Center"
-                                                  Visibility="Visible"/>
-                                
-                                <StackPanel x:Name="LoadingIndicator" 
-                                            Orientation="Horizontal" 
-                                            HorizontalAlignment="Center" 
-                                            Visibility="Collapsed">
-                                    <Ellipse Width="18" Height="18" Stroke="{DynamicResource TextInverseBrush}" StrokeThickness="2" StrokeDashArray="3 1">
-                                        <Ellipse.RenderTransform>
-                                            <RotateTransform x:Name="Rotate" CenterX="9" CenterY="9"/>
-                                        </Ellipse.RenderTransform>
-                                        <Ellipse.Triggers>
-                                            <EventTrigger RoutedEvent="Loaded">
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetName="Rotate"
-                                                                         Storyboard.TargetProperty="Angle"
-                                                                         From="0" To="360" Duration="0:0:1"
-                                                                         RepeatBehavior="Forever"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </EventTrigger>
-                                        </Ellipse.Triggers>
-                                    </Ellipse>
-                                    <TextBlock Text="Giriş Yapılıyor..." Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextInverseBrush}"/>
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ThemePrimaryDark}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="border" Property="Opacity" Value="0.7"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsLoading}" Value="True">
-                    <Setter Property="IsEnabled" Value="False"/>
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="Button">
-                                <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="10" Opacity="0.7">
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Canvas Width="18" Height="18" VerticalAlignment="Center">
-                                            <Ellipse Width="18" Height="18" Stroke="{DynamicResource TextInverseBrush}" StrokeThickness="2" StrokeDashArray="3 1">
-                                                <Ellipse.RenderTransform>
-                                                    <RotateTransform x:Name="Rotate" CenterX="9" CenterY="9"/>
-                                                </Ellipse.RenderTransform>
-                                            </Ellipse>
-                                        </Canvas>
-                                        <TextBlock Text="Giriş Yapılıyor..." Margin="10,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextInverseBrush}" FontWeight="SemiBold"/>
-                                    </StackPanel>
-                                    <Border.Triggers>
-                                        <EventTrigger RoutedEvent="Loaded">
-                                            <BeginStoryboard>
-                                                <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetName="Rotate"
-                                                                     Storyboard.TargetProperty="Angle"
-                                                                     From="0" To="360" Duration="0:0:1"
-                                                                     RepeatBehavior="Forever"/>
-                                                </Storyboard>
-                                            </BeginStoryboard>
-                                        </EventTrigger>
-                                    </Border.Triggers>
-                                </Border>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
     </UserControl.Resources>
 
-    <Grid x:Name="MainGrid" Background="{DynamicResource SurfacePageBrush}">
+    <Grid x:Name="MainGrid" Background="{DynamicResource ApplicationBackgroundBrush}">
         <!-- Language Selector -->
         <StackPanel Orientation="Horizontal" 
                     HorizontalAlignment="Right" 
@@ -183,9 +29,6 @@
             <ComboBox x:Name="LanguageCombo"
                       Width="100"
                       SelectedIndex="0"
-                      Background="{DynamicResource ThemeSurface}"
-                      Foreground="{DynamicResource ThemeTextPrimary}"
-                      BorderBrush="{DynamicResource ThemeBorder}"
                       FontSize="12"
                       Cursor="Hand">
                 <ComboBoxItem Content="🇹🇷 Türkçe" Tag="tr-TR"/>
@@ -194,160 +37,131 @@
             </ComboBox>
         </StackPanel>
 
-        <!-- PURE WHITE THEME BACKGROUND (MESH GRADIENT VE KARMAŞIK EFEKTLER TEMİZLENDİ) -->
-
         <!-- Login Card -->
         <Border x:Name="LoginCard"
-                Width="420" Height="520" 
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                CornerRadius="16"
-                Background="{DynamicResource SurfaceCardBrush}"
-                BorderBrush="{DynamicResource ThemeBorder}"
+                Width="420"
+                VerticalAlignment="Center" HorizontalAlignment="Center"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                ClipToBounds="False"
-                Opacity="1"
-                RenderTransformOrigin="0.5,0.5">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="40" Opacity="0.08" ShadowDepth="10" Direction="270" Color="Black"/>
-            </Border.Effect>
-
-                <!-- Classic Flat Surface -->
-                <Border Background="{DynamicResource ThemeSurface}" 
-                        CornerRadius="16">
-                    
-                    <Grid Margin="40">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <!-- Header -->
-                        <StackPanel Grid.Row="0" Margin="0,0,0,30">
-                            <Image Source="/Assets/Images/KamatekLogo.png" 
-                                   Width="200" Height="Auto"
-                                   Stretch="Uniform"
-                                   HorizontalAlignment="Center"
-                                   Effect="{x:Null}"/>
-                            <TextBlock Text="Teknik Servis Yönetimi" 
-                                       FontSize="14" 
-                                       FontWeight="Medium"
-                                       Foreground="{DynamicResource TextBodyBrush}" 
-                                       HorizontalAlignment="Center"
-                                       Margin="0,12,0,0"/>
-                        </StackPanel>
-
-                        <!-- Inputs -->
-                        <StackPanel Grid.Row="1">
-                            <!-- Username -->
-                            <TextBlock Text="Kullanıcı Adı" 
-                                       FontSize="12"
-                                       FontWeight="SemiBold" 
-                                       Foreground="{DynamicResource ThemeTextSecondary}"
-                                       Margin="4,0,0,8"/>
-                            <ui:TextBox x:Name="UsernameTextBox"
-                                     Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
-                                     Icon="Person24"
-                                     PlaceholderText="Kullanıcı adınızı girin"
-                                     Height="44"
-                                     FontSize="14"
-                                     Foreground="{DynamicResource ThemeTextPrimary}"
-                                     Background="{DynamicResource ThemeSurface}"
-                                     BorderBrush="{DynamicResource ThemeBorder}"
-                                     BorderThickness="1"
-                                     VerticalContentAlignment="Center"/>
-
-                            <!-- Password -->
-                            <TextBlock Text="Şifre" 
-                                       FontSize="12"
-                                       FontWeight="SemiBold" 
-                                       Foreground="{DynamicResource ThemeTextSecondary}"
-                                       Margin="4,20,0,8"/>
-                            <Grid>
-                                <ui:PasswordBox x:Name="PasswordBox"
-                                             Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             Icon="Key24"
-                                             PlaceholderText="Şifrenizi girin"
-                                             Height="44"
-                                             FontSize="14"
-                                             Foreground="{DynamicResource ThemeTextPrimary}"
-                                             Background="{DynamicResource ThemeSurface}"
-                                             BorderBrush="{DynamicResource ThemeBorder}"
-                                             BorderThickness="1"
-                                             VerticalContentAlignment="Center"/>
-                            </Grid>
-
-                            <!-- Options Row -->
-                            <Grid Margin="4,16,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <CheckBox Grid.Column="0"
-                                          Content="Beni Hatırla" 
-                                          IsChecked="{Binding RememberMe}"
-                                          Foreground="{DynamicResource ThemeTextSecondary}"
-                                          FontSize="13"
-                                          Cursor="Hand"/>
-                                
-                                <TextBlock Grid.Column="1"
-                                           Text="Şifremi Unuttum"
-                                           Foreground="{DynamicResource TextLinkBrush}"
-                                           FontSize="13"
-                                           Cursor="Hand"
-                                           TextDecorations="Underline"
-                                           MouseLeftButtonUp="ForgotPassword_Click"/>
-                            </Grid>
-                        </StackPanel>
-
-                        <!-- Actions -->
-                        <StackPanel Grid.Row="2" VerticalAlignment="Bottom">
-                            <!-- Error Message -->
-                            <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="8" 
-                                    Padding="15,10" Margin="0,0,0,16"
-                                    Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-                                <StackPanel Orientation="Horizontal">
-                                    <Path Data="M13,14H11V10H13M13,18H11V16H13M1,21H23L12,2L1,21Z" Fill="{DynamicResource StatusErrorFg}" Width="14" Height="14" Stretch="Uniform" Margin="0,0,10,0"/>
-                                    <TextBlock Text="{Binding ErrorMessage}" 
-                                               Foreground="{DynamicResource StatusErrorFg}" 
-                                               FontSize="12"
-                                               FontWeight="Medium"
-                                               VerticalAlignment="Center"
-                                               TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Modern Login Button -->
-                            <ui:Button x:Name="LoginBtn"
-                                    Content="Sisteme Giriş Yap"
-                                    Icon="ArrowRight24"
-                                    Command="{Binding LoginCommand}"
-                                    Appearance="Primary"
-                                    Foreground="{DynamicResource TextInverseBrush}"
-                                    Background="{DynamicResource ThemePrimary}"
-                                    BorderBrush="Transparent"
-                                    BorderThickness="0"
-                                    CornerRadius="{DynamicResource RadiusMedium}"
-                                    Width="338"
-                                    Height="48"
-                                    FontSize="16"
-                                    FontWeight="SemiBold"
-                                    HorizontalAlignment="Stretch"
-                                    Cursor="Hand"/>
-                        </StackPanel>
-
-                        <!-- Footer -->
-                        <TextBlock Grid.Row="3" 
-                                   Text="v1.0.1 © 2026 Kamatek"
-                                   HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource ThemeTextTertiary}"
-                                   FontSize="11"
-                                   Margin="0,30,0,0"/>
-                    </Grid>
-                </Border>
+                CornerRadius="12">
             
+            <Grid Margin="40">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,30">
+                    <Image Source="/Assets/Images/KamatekLogo.png" 
+                           Width="200" Height="Auto"
+                           Stretch="Uniform"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,16"/>
+                    <TextBlock Text="Hoş Geldiniz" 
+                               FontSize="22" 
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,4"/>
+                    <TextBlock Text="Teknik Servis Yönetimi" 
+                               FontSize="14" 
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Inputs -->
+                <StackPanel Grid.Row="1">
+                    <!-- Username -->
+                    <TextBlock Text="Kullanıcı Adı" 
+                               FontSize="12"
+                               FontWeight="SemiBold" 
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Margin="4,0,0,8"/>
+                    <ui:TextBox x:Name="UsernameTextBox"
+                                Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                                Icon="Person24"
+                                PlaceholderText="Kullanıcı Adı"
+                                ClearButtonEnabled="True"
+                                Height="40"
+                                Margin="0,0,0,16"/>
+
+                    <!-- Password -->
+                    <TextBlock Text="Şifre" 
+                               FontSize="12"
+                               FontWeight="SemiBold" 
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                               Margin="4,0,0,8"/>
+                    <ui:PasswordBox x:Name="PasswordBox"
+                                    Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    Icon="Lock24"
+                                    PlaceholderText="Şifre"
+                                    Height="40"/>
+
+                    <!-- Options Row -->
+                    <Grid Margin="4,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <ui:ToggleSwitch Grid.Column="0"
+                                         Content="Beni Hatırla" 
+                                         IsChecked="{Binding RememberMe}"
+                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        
+                        <TextBlock Grid.Column="1"
+                                   Text="Şifremi Unuttum"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                   FontSize="13"
+                                   Cursor="Hand"
+                                   TextDecorations="Underline"
+                                   MouseLeftButtonUp="ForgotPassword_Click"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Actions -->
+                <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Margin="0,30,0,0">
+                    <!-- Error Message -->
+                    <Border Background="{DynamicResource SystemFillColorCriticalBackgroundBrush}" CornerRadius="8" 
+                            Padding="12,10" Margin="0,0,0,16"
+                            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Warning24" Foreground="{DynamicResource SystemFillColorCriticalBrush}" Margin="0,0,10,0"/>
+                            <TextBlock Text="{Binding ErrorMessage}" 
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                                       FontSize="12"
+                                       FontWeight="Medium"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       MaxWidth="300"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Modern Login Button -->
+                    <ui:Button x:Name="LoginBtn"
+                               Content="Giriş Yap"
+                               Command="{Binding LoginCommand}"
+                               Appearance="Primary"
+                               HorizontalAlignment="Stretch"
+                               Height="44"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Cursor="Hand"/>
+                </StackPanel>
+
+                <!-- Footer -->
+                <TextBlock Grid.Row="3" 
+                           Text="v1.0.1 © 2026 Kamatek"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorDisabledBrush}"
+                           FontSize="11"
+                           Margin="0,20,0,0"/>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

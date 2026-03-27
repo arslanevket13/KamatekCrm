@@ -7,6 +7,7 @@ namespace KamatekCrm.Shared.Enums
         WaitingForParts,
         WaitingForApproval,
         Completed,
-        Cancelled
+        Cancelled,
+        Rejected // Müşterinin keşif sonrası teklifi reddetmesi
     }
 }

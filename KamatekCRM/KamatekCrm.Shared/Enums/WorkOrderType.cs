@@ -6,6 +6,7 @@ namespace KamatekCrm.Shared.Enums
         Installation,
         Maintenance,
         Inspection,
-        Replacement
+        Replacement,
+        Discovery // Sadece keşif yapılacak
     }
 }

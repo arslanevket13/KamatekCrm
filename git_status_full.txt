@@ -1,0 +1,10 @@
+ M KamatekCRM/KamatekCrm.Shared/Enums/JobStatus.cs
+ M KamatekCRM/KamatekCrm.Shared/Enums/WorkOrderType.cs
+ M KamatekCRM/ViewModels/ServiceJobViewModel.cs
+ M KamatekCRM/Views/LoginView.xaml
+ M KamatekCRM/Views/NewServiceJobWindow.xaml
+ M KamatekCRM/Views/ServiceJobsView.xaml
+ M KamatekCRM/docs/CHANGELOG.md
+ M KamatekCRM/docs/TEKNIK_HARITA.md
+ M KamatekCrm.API/Controllers/ServiceJobsController.cs
+?? git_status_full.txt

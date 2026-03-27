@@ -203,6 +203,21 @@ namespace KamatekCrm.API.Controllers
             _context.Entry(existing).CurrentValues.SetValues(serviceJob);
             existing.ModifiedDate = DateTime.UtcNow;
 
+            // Stok Düşme İşlemi
+            if (serviceJob.Status == JobStatus.Completed && oldStatus != JobStatus.Completed)
+            {
+                var jobItems = await _context.ServiceJobItems.Where(i => i.ServiceJobId == id).ToListAsync();
+                foreach (var item in jobItems)
+                {
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.TotalStockQuantity -= item.QuantityUsed;
+                        product.ModifiedDate = DateTime.UtcNow;
+                    }
+                }
+            }
+
             // Durum değişikliği tarihçeye kaydedilir
             if (oldStatus != serviceJob.Status)
             {
@@ -237,8 +252,21 @@ namespace KamatekCrm.API.Controllers
             job.Status = request.Status;
             job.ModifiedDate = DateTime.UtcNow;
 
-            if (request.Status == JobStatus.Completed)
+            if (request.Status == JobStatus.Completed && oldStatus != JobStatus.Completed)
+            {
                 job.CompletedDate = DateTime.UtcNow;
+
+                var jobItems = await _context.ServiceJobItems.Where(i => i.ServiceJobId == id).ToListAsync();
+                foreach (var item in jobItems)
+                {
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.TotalStockQuantity -= item.QuantityUsed;
+                        product.ModifiedDate = DateTime.UtcNow;
+                    }
+                }
+            }
 
             _context.ServiceJobHistories.Add(new ServiceJobHistory
             {

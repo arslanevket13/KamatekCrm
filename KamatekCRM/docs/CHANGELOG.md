@@ -1,3 +1,21 @@
+## v14.23 — Login UI Professionalization & Fluent Design (2026-03-27)
+- **UI/UX**: `LoginView.xaml` Windows 11 Fluent Design standartlarına taşındı. `Wpf.Ui` bileşenleri ile derinlik (Depth), gölge hiyerarşisi ve yüksek kontrastlı tipografi (TextFillColorDisabled vb.) optimizasyonları yapıldı.
+- **UI/UX**: Giriş ekranındaki görsel çakışmalar giderildi, footer ve logo yerleşimi Grid bazlı esnek yapıya (Responsive) kavuşturuldu.
+- **BUGFIX**: `ServiceJobViewModel` sihirbazındaki veri bağlama (Binding) gecikmeleri ve `SelectedCustomer` sıfırlanma sorunları giderildi.
+- **SDLC**: Tüm dokümantasyon ve teknik harita güncellenerek GitHub senkronizasyonuna hazır hale getirildi.
+
+## v14.22 — Service Jobs Real-Time Stock Engine & Discovery Workflow (2026-03-26)
+- **FEATURE (BACKEND)**: `KamatekCrm.API` -> `ServiceJobsController` içerisine gerçek zamanlı Stok Düşme yeteneği (Stock Deduction Logic) eklendi. Bir İş Emri'nin durumu `Completed` yapıldığı takdirde (ör. `[PATCH] /api/servicejobs/{id}/status`), kullanılan tüm parçalar otomatik taranarak veritabanındaki ana `Product.TotalStockQuantity` miktarından eksiltilmesi sağlandı.
+- **FEATURE (WORKFLOW)**: "Sadece Keşif Yapılacak" (Discovery Only) algoritması bağlandı. `WorkOrderType` isimli Enum listesine `Discovery` tipi ve `JobStatus` içerisine `Rejected` (Reddedildi) eklendi.
+- **FEATURE (UI)**: `NewServiceJobWindow` sihirbazının 2. adımına "Sadece Keşif" özel Onay Kutusu (CheckBox) yerleştirildi. Seçilmesi durumunda Malzeme Ekleme sayfası bypass edilerek süreç hızlandırıldı. Datagrid bağlam menüsüne ise "Keşfi Onayla & Malzeme Ekle" ile "Keşfi Reddet" kısa yolları kodlandı.
+- **BUGFIX**: Ekrandaki Müşteri ve Malzeme combobox listelerinin sihirbaz içerisinde "Boş Çıkması" (`LoadData`'nın tetiklenmemesi) sorunu çözüldü. Ana VM instance'ı üzerinden kopyalama yapılarak liste gecikmesiz (sıfır api isteği ile) enjekte edildi.
+
+## v14.21 — Service Jobs Professional Feature Set (2026-03-25)
+- **FEATURE**: `ServiceJobsView` ve DataGrid içerisine `Edit Job` (İş Emri Düzenle) butonu ve komutu eklendi. Seçili iş emirleri sihirbaz ekranına mevcut verisiyle geri yüklenebiliyor.
+- **FEATURE**: `NewServiceJobWindow` Müşteri & Konum (1. Adım) ekranına "Hızlı Müşteri Ekle" UI eklentisi yapıldı. Ad Soyad ve GSM girilerek form kapanmadan müşteri oluşturulabiliyor.
+- **FEATURE**: İş Detayları (2. Adım) ekranına fotoğraf/belge ekleme galerisi (`BrowsePhotosCommand` ve `ObservableCollection`) eklendi.
+- **FEATURE**: Maliyet Özeti (3. Adım) ekranında salt-okunur kalan KDV (%20) parametresi esnetildi ve %0, %1, %10, %20 olarak değiştirilebilir ComboBox haline getirildi.
+
 ## v14.19 — Professional Service Job Module Overhaul (2026-03-23)
 - **DASHBOARD**: `ServiceJobsView.xaml` tamamen yeniden yazıldı. 5 KPI kartı (Toplam, Bekleyen, Devam Eden, Tamamlanan, SLA Aşan), akıllı toolbar (arama, durum filtresi, tarih aralığı), tam DataGrid ile profesyonel iş emri merkezi.
 - **WIZARD**: `NewServiceJobWindow.xaml` 4 adımlı wizard yapısına dönüştürüldü: Müşteri & Konum → İş Detayları → Malzeme & Maliyet (KDV dahil) → Özet & Onay. Stepper progress bar ve adım validasyonu eklendi.

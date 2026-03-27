@@ -51,6 +51,11 @@
                                Command="{Binding OpenNewJobFormCommand}"
                                Appearance="Primary"
                                Height="38" Padding="16,0" Margin="0,0,8,0" FontSize="13"/>
+                    <ui:Button Content="✏️ Düzenle"
+                               Command="{Binding EditJobCommand}"
+                               CommandParameter="{Binding SelectedServiceJob}"
+                               Appearance="Secondary"
+                               Height="38" Padding="16,0" Margin="0,0,8,0" FontSize="13"/>
                     <ui:Button Content="🔄"
                                Command="{Binding RefreshListCommand}"
                                Width="38" Height="38" Padding="0"
@@ -268,6 +273,12 @@
                         <ContextMenu>
                             <MenuItem Header="📋 Detay Göster" Command="{Binding ViewJobDetailCommand}" 
                                       CommandParameter="{Binding SelectedServiceJob}"/>
+                            <MenuItem Header="✏️ İşi Düzenle" Command="{Binding EditJobCommand}" 
+                                      CommandParameter="{Binding SelectedServiceJob}"/>
+                            <Separator/>
+                            <MenuItem Header="🔍 Keşfi Onayla &amp; Malzeme Seç" Command="{Binding EditJobCommand}" 
+                                      CommandParameter="{Binding SelectedServiceJob}"/>
+                            <MenuItem Header="❌ Keşfi Reddet" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Rejected"/>
                             <Separator/>
                             <MenuItem Header="⏳ Bekliyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Pending"/>
                             <MenuItem Header="🔵 Devam Ediyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="InProgress"/>
