@@ -197,6 +197,7 @@ namespace KamatekCrm.API.Controllers
             var existing = await _context.ServiceJobs
                 .Include(s => s.ServiceJobItems)
                 .FirstOrDefaultAsync(s => s.Id == id);
+
             if (existing == null) return NotFound();
 
             var oldStatus = existing.Status;
@@ -204,38 +205,35 @@ namespace KamatekCrm.API.Controllers
             _context.Entry(existing).CurrentValues.SetValues(serviceJob);
             existing.ModifiedDate = DateTime.UtcNow;
 
-            var existingItems = existing.ServiceJobItems.ToList();
-            var incomingItems = serviceJob.ServiceJobItems?.ToList() ?? new List<ServiceJobItem>();
-
-            var itemsToAdd = incomingItems.Where(i => i.Id == 0).ToList();
-            var itemsToUpdate = incomingItems.Where(i => i.Id > 0).ToList();
-            var itemsToRemove = existingItems.Where(e => !incomingItems.Any(i => i.Id == e.Id)).ToList();
-
-            foreach (var item in itemsToRemove)
+            var newItemsIds = serviceJob.ServiceJobItems?.Select(i => i.Id).ToList() ?? new List<int>();
+            
+            foreach (var existingItem in existing.ServiceJobItems.ToList())
             {
-                _context.ServiceJobItems.Remove(item);
+                if (!newItemsIds.Contains(existingItem.Id))
+                    _context.ServiceJobItems.Remove(existingItem);
             }
 
-            foreach (var incoming in itemsToUpdate)
+            if (serviceJob.ServiceJobItems != null)
             {
-                var existingItem = existingItems.FirstOrDefault(e => e.Id == incoming.Id);
-                if (existingItem != null)
+                foreach (var newItem in serviceJob.ServiceJobItems)
                 {
-                    _context.Entry(existingItem).CurrentValues.SetValues(incoming);
+                    if (newItem.Id == 0)
+                    {
+                        newItem.ServiceJobId = id;
+                        existing.ServiceJobItems.Add(newItem);
+                    }
+                    else
+                    {
+                        var existingItem = existing.ServiceJobItems.FirstOrDefault(i => i.Id == newItem.Id);
+                        if (existingItem != null)
+                            _context.Entry(existingItem).CurrentValues.SetValues(newItem);
+                    }
                 }
             }
 
-            foreach (var newItem in itemsToAdd)
-            {
-                newItem.ServiceJobId = id;
-                _context.ServiceJobItems.Add(newItem);
-            }
-
-            var finalItems = await _context.ServiceJobItems.Where(i => i.ServiceJobId == id).ToListAsync();
-
             if (serviceJob.Status == JobStatus.Completed && oldStatus != JobStatus.Completed)
             {
-                foreach (var item in finalItems)
+                foreach (var item in existing.ServiceJobItems)
                 {
                     var product = await _context.Products.FindAsync(item.ProductId);
                     if (product != null)
@@ -247,7 +245,7 @@ namespace KamatekCrm.API.Controllers
             }
             else if (oldStatus == JobStatus.Completed && serviceJob.Status != JobStatus.Completed)
             {
-                foreach (var item in finalItems)
+                foreach (var item in existing.ServiceJobItems)
                 {
                     var product = await _context.Products.FindAsync(item.ProductId);
                     if (product != null)
@@ -274,7 +272,7 @@ namespace KamatekCrm.API.Controllers
             }
 
             await _context.SaveChangesAsync();
-            _logger.LogInformation("ServiceJob #{Id} güncellendi", id);
+            _logger.LogInformation("ServiceJob #{Id} güncellendi (Malzemeler dahil)", id);
             return NoContent();
         }
 

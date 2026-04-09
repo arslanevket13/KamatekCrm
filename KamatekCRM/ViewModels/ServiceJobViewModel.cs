@@ -1290,9 +1290,8 @@ namespace KamatekCrm.ViewModels
             if (job == null) return;
 
             ClearForm();
-            SelectedServiceJob = job;
+            
             _isEditing = true;
-
             Description = job.Description ?? string.Empty;
             IsDiscoveryOnly = false;
             
@@ -1314,13 +1313,16 @@ namespace KamatekCrm.ViewModels
 
             if (!string.IsNullOrEmpty(job.CategoriesJson))
             {
-                var jobCats = JsonSerializer.Deserialize<System.Collections.Generic.List<int>>(job.CategoriesJson);
+                var jobCats = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<int>>(job.CategoriesJson);
                 if (jobCats != null)
                 {
                     foreach (var cat in CategoryItems)
                         cat.IsSelected = jobCats.Contains((int)cat.Category);
                 }
             }
+
+            _selectedServiceJob = job;
+            _ = LoadJobItems();
 
             var photos = job.PhotoPathsList;
             if (photos != null)
@@ -1330,12 +1332,13 @@ namespace KamatekCrm.ViewModels
 
             CurrentWizardStep = 3;
             
-            // Yeni pencereyi kendi contextimiz ile açıyoruz
-            var window = new NewServiceJobWindow(this);
-            window.Owner = System.Windows.Application.Current.MainWindow;
+            var window = new NewServiceJobWindow(this)
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
             var result = window.ShowDialog();
 
-            if (result == true) RefreshList();
+            if (result == true) _ = LoadServiceJobs();
         }
 
         private void BrowsePhotos()
