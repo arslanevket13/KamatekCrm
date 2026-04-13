@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using KamatekCrm.Services;
 using KamatekCrm.Settings;
@@ -35,7 +35,7 @@ namespace KamatekCrm.Extensions
             
             // Registering AuthService. Since it was static, we need to handle it. 
             // We will register IAuthService implementation.
-            services.AddScoped<IAuthService, AuthService>();
+            services.AddSingleton<IAuthService, AuthService>();
             services.AddTransient<AttachmentService>();
             services.AddScoped<ProjectScopeService>();
             
@@ -127,3 +127,4 @@ namespace KamatekCrm.Extensions
         }
     }
 }
+

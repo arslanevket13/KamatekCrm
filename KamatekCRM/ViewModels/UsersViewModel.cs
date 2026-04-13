@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -273,8 +273,8 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedUser == null) return;
 
-            var passwordResetViewModel = new PasswordResetViewModel(SelectedUser, _authService);
-            var passwordView = new PasswordResetView(SelectedUser, _authService)
+            var passwordResetViewModel = new PasswordResetViewModel(SelectedUser, _authService, _apiClient);
+            var passwordView = new PasswordResetView(SelectedUser, _authService, _apiClient)
             {
                 DataContext = passwordResetViewModel
             };

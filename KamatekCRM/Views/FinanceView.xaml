@@ -236,6 +236,9 @@
                           SelectionMode="Single"
                           HeadersVisibility="Column"
                           RowHeight="45"
+                          VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.CanContentScroll="False"
+                          VirtualizingPanel.ScrollUnit="Pixel"
                           CanUserAddRows="False">
 
                     <DataGrid.ColumnHeaderStyle>

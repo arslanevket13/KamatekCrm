@@ -43,6 +43,12 @@ namespace KamatekCrm.Data
         // CRM
         public DbSet<CustomerNote> CustomerNotes { get; set; }
 
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+            configurationBuilder.Properties<decimal>().HavePrecision(18, 2);
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -82,6 +88,12 @@ namespace KamatekCrm.Data
                     .WithMany()
                     .HasForeignKey(e => e.AssignedUserId)
                     .OnDelete(DeleteBehavior.SetNull);
+                
+                // Fix ServiceJob <=> ServiceJobItem Mapping
+                entity.HasMany(e => e.ServiceJobItems)
+                    .WithOne(e => e.ServiceJob)
+                    .HasForeignKey(e => e.ServiceJobId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // ServiceJobHistory konfigürasyonu

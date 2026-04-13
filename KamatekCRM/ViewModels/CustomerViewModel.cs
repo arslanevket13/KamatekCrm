@@ -283,12 +283,19 @@ namespace KamatekCrm.ViewModels
         public ICommand ClearFormCommand { get; }
         public ICommand ViewProfileCommand { get; }
         public ICommand ClearTypeFilterCommand { get; }
+        public ICommand SetTypeFilterCommand { get; }
         public ICommand OpenAddCustomerWindowCommand { get; }
         public ICommand OpenCustomerProfileCommand { get; }
 
         private void ClearTypeFilter()
         {
             SelectedTypeFilter = null;
+        }
+
+        private void SetTypeFilter(object? param)
+        {
+            if (param is CustomerType type)
+                SelectedTypeFilter = type;
         }
 
 
@@ -317,6 +324,7 @@ namespace KamatekCrm.ViewModels
             ClearFormCommand = new RelayCommand(_ => ClearForm());
             ViewProfileCommand = new RelayCommand(_ => ViewProfile(), _ => SelectedCustomer != null);
             ClearTypeFilterCommand = new RelayCommand(_ => ClearTypeFilter());
+            SetTypeFilterCommand = new RelayCommand(p => SetTypeFilter(p));
             OpenAddCustomerWindowCommand = new RelayCommand(_ => OpenAddCustomerWindow());
             OpenCustomerProfileCommand = new RelayCommand(_ => OpenCustomerProfile(), _ => SelectedCustomer != null);
 

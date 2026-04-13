@@ -1,3 +1,5 @@
+﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -7,7 +9,7 @@ using KamatekCrm.Services;
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
-    /// Login ekranı ViewModel (UserControl için)
+    /// Login ekrani ViewModel (UserControl icin)
     /// </summary>
     public partial class LoginViewModel : ViewModelBase
     {
@@ -32,7 +34,7 @@ namespace KamatekCrm.ViewModels
         private bool _isServerFound;
 
         /// <summary>
-        /// Kullanıcı adı
+        /// Kullanici adi
         /// </summary>
         public string Username
         {
@@ -45,7 +47,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Şifre (code-behind'dan set edilir)
+        /// Sifre (code-behind'dan set edilir)
         /// </summary>
         public string Password
         {
@@ -58,7 +60,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Beni Hatırla seçeneği
+        /// Beni Hatirla secenegi
         /// </summary>
         public bool RememberMe
         {
@@ -67,7 +69,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Hata mesajı
+        /// Hata mesaji
         /// </summary>
         public string ErrorMessage
         {
@@ -80,7 +82,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Yükleniyor durumu
+        /// Yukleniyor durumu
         /// </summary>
         public bool IsLoading
         {
@@ -89,12 +91,12 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Hata mesajı görünürlüğü
+        /// Hata mesaji gorunurlugu
         /// </summary>
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
         /// <summary>
-        /// Giriş komutu
+        /// Giris komutu
         /// </summary>
         public ICommand LoginCommand { get; }
 
@@ -116,8 +118,18 @@ namespace KamatekCrm.ViewModels
             _toastService = toastService;
             LoginCommand = new RelayCommand(async param => await ExecuteLoginAsync(param), _ => CanLogin());
             
-            // Load saved settings
+            // Load saved settings, then apply dev defaults if empty
             LoadSavedCredentials();
+            
+            // Development: Inject default credentials so user doesn't have to type every time
+            if (string.IsNullOrWhiteSpace(Username))
+            {
+                Username = "admin";
+            }
+            if (string.IsNullOrWhiteSpace(Password))
+            {
+                Password = "123";
+            }
             
             _ = InitializeDiscoveryAsync();
         }
@@ -125,10 +137,10 @@ namespace KamatekCrm.ViewModels
         public async Task InitializeDiscoveryAsync()
         {
             IsSearchingForServer = true;
-            ServerStatusMessage = "Ağda Sunucu Aranıyor...";
+            ServerStatusMessage = "Agda Sunucu Araniyor...";
             IsServerFound = false;
 
-            var server = await _discoveryService.DiscoverServerAsync(5000);
+            var server = await _discoveryService.DiscoverServerAsync(3000);
 
             if (server != null && !string.IsNullOrWhiteSpace(server.ApiUrl))
             {
@@ -138,18 +150,17 @@ namespace KamatekCrm.ViewModels
             }
             else
             {
-                IsServerFound = false;
-                ServerStatusMessage = "Sunucu bulunamadı. Lütfen manuel IP girin veya localhost kullanın.";
+                // Fallback: Use localhost directly — API is likely on the same machine
+                _apiClient.SetBaseUrl("http://localhost:5050");
+                IsServerFound = true;
+                ServerStatusMessage = "Localhost sunucuya baglanildi (http://localhost:5050)";
             }
 
             IsSearchingForServer = false;
         }
 
-        // Default constructor REMOVED as we heavily rely on DI now and manual instantiation is error prone.
-        // If design-time support is needed, a separate design-time ViewModel can be created.
-
         /// <summary>
-        /// Giriş yapılabilir mi kontrolü
+        /// Giris yapilabilir mi kontrolu
         /// </summary>
         private bool CanLogin()
         {
@@ -157,7 +168,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Kayıtlı giriş bilgilerini yükle
+        /// Kayitli giris bilgilerini yukle
         /// </summary>
         private void LoadSavedCredentials()
         {
@@ -168,18 +179,16 @@ namespace KamatekCrm.ViewModels
                 {
                     Username = props.SavedUsername;
                     RememberMe = true;
-                    // Şifreyi güvenlik nedeniyle kaydetmiyoruz veya şifreli saklıyoruz.
-                    // Burada basitlik için sadece kullanıcı adı hatırlanıyor.
                 }
             }
             catch (Exception ex)
             {
-                _toastService.ShowError($"Kayıtlı bilgiler yüklenemedi: {ex.Message}");
+                _toastService.ShowError($"Kayitli bilgiler yuklenemedi: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Giriş başarılı olunca bilgileri kaydet
+        /// Giris basarili olunca bilgileri kaydet
         /// </summary>
         private void SaveCredentials(string? token)
         {
@@ -188,17 +197,16 @@ namespace KamatekCrm.ViewModels
                 var props = Properties.Settings.Default;
                 props.RememberMe = RememberMe;
                 props.SavedUsername = RememberMe ? Username : string.Empty;
-                // Token saklama mekanizması eklenebilir
                 props.Save();
             }
             catch (Exception ex)
             {
-                _toastService.ShowError($"Kayıt bilgileri saklanamadı: {ex.Message}");
+                _toastService.ShowError($"Kayit bilgileri saklanamadi: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Giriş işlemini gerçekleştir
+        /// Giris islemini gerceklestir — API uzerinden
         /// </summary>
         public async Task ExecuteLoginAsync(object? parameter = null)
         {
@@ -207,8 +215,8 @@ namespace KamatekCrm.ViewModels
 
             if (string.IsNullOrEmpty(autoToken) && (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password)))
             {
-                 if(string.IsNullOrWhiteSpace(Username)) ErrorMessage = "Kullanıcı adı gerekli!";
-                 else if(string.IsNullOrWhiteSpace(Password)) ErrorMessage = "Şifre gerekli!";
+                 if(string.IsNullOrWhiteSpace(Username)) ErrorMessage = "Kullanici adi gerekli!";
+                 else if(string.IsNullOrWhiteSpace(Password)) ErrorMessage = "Sifre gerekli!";
                  return;
             }
 
@@ -217,14 +225,11 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                await Task.Delay(500); // Simulate network/db latency for better UX
-
                 bool isAuthenticated = false;
 
                 if (!string.IsNullOrEmpty(autoToken))
                 {
-                    // Token Login (Simply validating existing session in local context)
-                    // For local app, token might just be username or a simple hash
+                    // Token Login (pre-existing session)
                     if (!string.IsNullOrEmpty(Username))
                     {
                          isAuthenticated = true;
@@ -232,40 +237,36 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
-                    // Local DB Login
-                    // IAuthService uses bool for Login return, not User object directly in current implementation?
-                    // Let's check IAuthService.Login signature.
-                    // IAuthService.Login(user, pass) returns bool. And sets CurrentUser.
-                    if (_authService.Login(Username, Password))
+                    // API-based Login via AuthService
+                    if (await _authService.LoginAsync(Username, Password))
                     {
                         isAuthenticated = true;
-                        autoToken = Username; 
                         // Set global current user
                         App.CurrentUser = _authService.CurrentUser;
                     }
                     else
                     {
-                        ErrorMessage = "Hatalı kullanıcı adı veya şifre!";
+                        ErrorMessage = "Hatali kullanici adi veya sifre!";
                     }
                 }
 
                 if (isAuthenticated)
                 {
-                    // Başarılı giriş - Ayarları kaydet
-                    SaveCredentials(autoToken);
+                    // Basarili giris - Ayarlari kaydet
+                    SaveCredentials(null);
                     
-                    // Ana içeriğe geç
+                    // Ana icerigi gec
                     _navigationService.NavigateToMainContent();
                 }
                 else
                 {
-                     if(string.IsNullOrEmpty(ErrorMessage)) ErrorMessage = "Giriş başarısız.";
+                     if(string.IsNullOrEmpty(ErrorMessage)) ErrorMessage = "Giris basarisiz.";
                      Password = string.Empty;
                 }
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Giriş hatası: {ex.Message}";
+                ErrorMessage = $"Giris hatasi: {ex.Message}";
             }
             finally
             {
@@ -274,4 +275,3 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
-

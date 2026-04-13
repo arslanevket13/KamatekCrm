@@ -8,6 +8,7 @@
              xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
              xmlns:helpers="clr-namespace:KamatekCrm.Helpers"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:enums="clr-namespace:KamatekCrm.Shared.Enums;assembly=KamatekCrm.Shared"
              d:DataContext="{d:DesignInstance Type=viewmodels:CustomersViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="1200"
@@ -66,7 +67,7 @@
                     <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="{DynamicResource ThemeSuccessColor}"/>
                 </Border.Effect>
                 <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding ClearTypeFilterCommand}"/>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding SetTypeFilterCommand}" CommandParameter="{x:Static enums:CustomerType.Individual}"/>
                 </Border.InputBindings>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
@@ -84,7 +85,7 @@
                     <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="{DynamicResource ThemeWarningColor}"/>
                 </Border.Effect>
                 <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding ClearTypeFilterCommand}"/>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding SetTypeFilterCommand}" CommandParameter="{x:Static enums:CustomerType.Corporate}"/>
                 </Border.InputBindings>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
@@ -102,7 +103,7 @@
                     <DropShadowEffect BlurRadius="15" ShadowDepth="3" Opacity="0.2" Color="{DynamicResource ThemeInfoColor}"/>
                 </Border.Effect>
                 <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding ClearTypeFilterCommand}"/>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding SetTypeFilterCommand}" CommandParameter="{x:Static enums:CustomerType.WalkIn}"/>
                 </Border.InputBindings>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
@@ -162,11 +163,16 @@
                         <Button Content="Tümü" Command="{Binding ClearTypeFilterCommand}" 
                                 Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5"/>
                         <Button Content="Bireysel" 
-                                Command="{Binding ClearTypeFilterCommand}"
+                                Command="{Binding SetTypeFilterCommand}"
+                                CommandParameter="{x:Static enums:CustomerType.Individual}"
                                 Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5" Background="{DynamicResource ThemeSuccess}"/>
                         <Button Content="Kurumsal" 
+                                Command="{Binding SetTypeFilterCommand}"
+                                CommandParameter="{x:Static enums:CustomerType.Corporate}"
                                 Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5" Background="{DynamicResource ThemeWarning}"/>
                         <Button Content="Perakende" 
+                                Command="{Binding SetTypeFilterCommand}"
+                                CommandParameter="{x:Static enums:CustomerType.WalkIn}"
                                 Style="{StaticResource ModernButton}" Margin="0,0,5,0" Padding="10,5" Background="{DynamicResource ThemeInfoDark}"/>
                     </StackPanel>
 
@@ -191,6 +197,8 @@
                               ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Auto"
+                              ScrollViewer.CanContentScroll="False"
+                              VirtualizingPanel.ScrollUnit="Pixel"
                               CanUserAddRows="False"
                               IsReadOnly="True">
                         <DataGrid.InputBindings>

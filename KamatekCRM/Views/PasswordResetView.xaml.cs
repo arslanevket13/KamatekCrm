@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;
 using KamatekCrm.Services;
@@ -10,11 +10,11 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class PasswordResetView : Window
     {
-        public PasswordResetView(User user, IAuthService authService)
+        public PasswordResetView(User user, IAuthService authService, ApiClient apiClient)
         {
             InitializeComponent();
 
-            var viewModel = new PasswordResetViewModel(user, authService);
+            var viewModel = new PasswordResetViewModel(user, authService, apiClient);
             viewModel.SaveSuccessful += () =>
             {
                 DialogResult = true;

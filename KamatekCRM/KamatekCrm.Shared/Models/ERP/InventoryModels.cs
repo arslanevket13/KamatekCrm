@@ -101,7 +101,7 @@ namespace KamatekCrm.Shared.Models
     public class ServiceJobItem
     {
         public int Id { get; set; }
-        public int? ServiceJobId { get; set; }
+        public int ServiceJobId { get; set; }
         public int? ProductId { get; set; }
         public int QuantityUsed { get; set; }
         public decimal UnitPrice { get; set; }

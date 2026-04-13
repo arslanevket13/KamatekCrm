@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -74,7 +74,7 @@ namespace KamatekCrm
                         // AuthHeaderHandler ile JWT token otomatik eklenir
                         services.AddHttpClient("KamatekAPI", client =>
                         {
-                            var apiUrl = context.Configuration["Api:BaseUrl"] ?? "http://localhost:5050";
+                            var apiUrl = context.Configuration["AppSettings:ApiBaseUrl"] ?? "http://localhost:5050";
                             client.BaseAddress = new Uri(apiUrl);
                             client.Timeout = TimeSpan.FromSeconds(30);
                             client.DefaultRequestHeaders.Add("Accept", "application/json");
@@ -306,3 +306,4 @@ namespace KamatekCrm
         }
     }
 }
+

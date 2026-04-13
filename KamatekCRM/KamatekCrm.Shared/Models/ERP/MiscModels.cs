@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using KamatekCrm.Shared.Enums;
@@ -9,10 +10,10 @@ namespace KamatekCrm.Shared.Models
         public int Id { get; set; }
         public int? CustomerId { get; set; }
         public JobCategory Category { get; set; } = JobCategory.Other;
-        public string Brand { get; set; } = string.Empty;
-        public string Model { get; set; } = string.Empty;
-        public string? SerialNumber { get; set; }
-        public string? Location { get; set; }
+        [Required] [MaxLength(100)] public string Brand { get; set; } = string.Empty;
+        [Required] [MaxLength(100)] public string Model { get; set; } = string.Empty;
+        [MaxLength(100)] public string? SerialNumber { get; set; }
+        [MaxLength(200)] public string? Location { get; set; }
         public AssetStatus Status { get; set; } = AssetStatus.Active;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public string FullName => $"{Brand} {Model}";

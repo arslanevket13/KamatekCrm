@@ -37,7 +37,7 @@ namespace KamatekCrm.API.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20)
         {
-            var query = _context.Customers.AsQueryable();
+            var query = _context.Customers.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
             {

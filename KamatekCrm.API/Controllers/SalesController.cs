@@ -45,7 +45,7 @@ namespace KamatekCrm.API.Controllers
             var query = _context.SalesOrders
                 .Include(s => s.Customer)
                 .Include(s => s.Items)
-                .AsQueryable();
+                .AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(s => s.OrderNumber.Contains(search) || s.CustomerName.Contains(search));
@@ -126,7 +126,7 @@ namespace KamatekCrm.API.Controllers
             [FromQuery] DateTime? startDate,
             [FromQuery] DateTime? endDate)
         {
-            var query = _context.SalesOrders.Include(s => s.Items).AsQueryable();
+            var query = _context.SalesOrders.Include(s => s.Items).AsNoTracking().AsQueryable();
             if (startDate.HasValue) query = query.Where(s => s.Date >= startDate.Value);
             if (endDate.HasValue) query = query.Where(s => s.Date <= endDate.Value);
 

@@ -29,4 +29,5 @@ build_error.log
 keys_*.txt
 *.sql
 nul
-**/nul
+# Database Data
+PostgresData/

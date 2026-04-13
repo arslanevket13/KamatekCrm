@@ -82,14 +82,14 @@ namespace KamatekCrm.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    ParentId = table.Column<int>(type: "integer", nullable: true)
+                    ParentCategoryId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Categories", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Categories_Categories_ParentId",
-                        column: x => x.ParentId,
+                        name: "FK_Categories_Categories_ParentCategoryId",
+                        column: x => x.ParentCategoryId,
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -119,6 +119,14 @@ namespace KamatekCrm.Migrations
                     CompanyName = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: true),
                     TaxNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     TaxOffice = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    LastPurchaseDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    TotalPurchaseCount = table.Column<int>(type: "integer", nullable: false),
+                    TotalSpent = table.Column<decimal>(type: "numeric", nullable: false),
+                    LoyaltyPoints = table.Column<int>(type: "integer", nullable: false),
+                    BirthDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Tags = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Segment = table.Column<int>(type: "integer", nullable: false),
+                    LastInteractionDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedBy = table.Column<string>(type: "text", nullable: true),
@@ -139,11 +147,35 @@ namespace KamatekCrm.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     SerialNumber = table.Column<string>(type: "text", nullable: false),
-                    ProductId = table.Column<int>(type: "integer", nullable: false)
+                    ProductId = table.Column<int>(type: "integer", nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ManufactureDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    Location = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProductSerials", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StockReservations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ProductId = table.Column<int>(type: "integer", nullable: false),
+                    WarehouseId = table.Column<int>(type: "integer", nullable: false),
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    ReferenceType = table.Column<string>(type: "text", nullable: false),
+                    ReferenceId = table.Column<string>(type: "text", nullable: false),
+                    ReservedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    ReservedBy = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StockReservations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -190,6 +222,16 @@ namespace KamatekCrm.Migrations
                     CanDeleteRecords = table.Column<bool>(type: "boolean", nullable: false),
                     CanApprovePurchase = table.Column<bool>(type: "boolean", nullable: false),
                     CanAccessSettings = table.Column<bool>(type: "boolean", nullable: false),
+                    IsTechnician = table.Column<bool>(type: "boolean", nullable: false),
+                    Phone = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    VehiclePlate = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    ServiceArea = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    ExpertiseAreas = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    CurrentGpsLocation = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    LastLocationUpdate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsOnDuty = table.Column<bool>(type: "boolean", nullable: false),
+                    TotalJobsCompleted = table.Column<int>(type: "integer", nullable: false),
+                    AverageRating = table.Column<double>(type: "double precision", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedBy = table.Column<string>(type: "text", nullable: true),
@@ -248,6 +290,8 @@ namespace KamatekCrm.Migrations
                     TotalStockQuantity = table.Column<int>(type: "integer", nullable: false),
                     MinStockLevel = table.Column<int>(type: "integer", nullable: false),
                     TechSpecsJson = table.Column<string>(type: "jsonb", nullable: false),
+                    ImagePath = table.Column<string>(type: "text", nullable: true),
+                    AverageCost = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedBy = table.Column<string>(type: "text", nullable: true),
@@ -280,6 +324,7 @@ namespace KamatekCrm.Migrations
                     Amount = table.Column<decimal>(type: "numeric", nullable: false),
                     Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     TransactionType = table.Column<int>(type: "integer", nullable: false),
+                    PaymentMethod = table.Column<int>(type: "integer", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     Category = table.Column<string>(type: "text", nullable: false),
                     ReferenceNumber = table.Column<string>(type: "text", nullable: false),
@@ -299,12 +344,41 @@ namespace KamatekCrm.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CustomerActivities",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    CustomerId = table.Column<int>(type: "integer", nullable: true),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    RelatedId = table.Column<int>(type: "integer", nullable: true),
+                    RelatedType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    CreatedBy = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DeletedBy = table.Column<string>(type: "text", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ModifiedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ModifiedBy = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerActivities", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CustomerActivities_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CustomerAssets",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CustomerId = table.Column<int>(type: "integer", nullable: false),
+                    CustomerId = table.Column<int>(type: "integer", nullable: true),
                     Category = table.Column<int>(type: "integer", nullable: false),
                     Brand = table.Column<string>(type: "text", nullable: false),
                     Model = table.Column<string>(type: "text", nullable: false),
@@ -320,8 +394,7 @@ namespace KamatekCrm.Migrations
                         name: "FK_CustomerAssets_Customers_CustomerId",
                         column: x => x.CustomerId,
                         principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -333,7 +406,7 @@ namespace KamatekCrm.Migrations
                     Title = table.Column<string>(type: "text", nullable: false),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     NextDueDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CustomerId = table.Column<int>(type: "integer", nullable: false),
+                    CustomerId = table.Column<int>(type: "integer", nullable: true),
                     JobDescriptionTemplate = table.Column<string>(type: "text", nullable: false),
                     PricePerVisit = table.Column<decimal>(type: "numeric", nullable: false),
                     FrequencyInMonths = table.Column<int>(type: "integer", nullable: false)
@@ -345,8 +418,7 @@ namespace KamatekCrm.Migrations
                         name: "FK_MaintenanceContracts_Customers_CustomerId",
                         column: x => x.CustomerId,
                         principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -355,12 +427,19 @@ namespace KamatekCrm.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CustomerId = table.Column<int>(type: "integer", nullable: false),
+                    CustomerId = table.Column<int>(type: "integer", nullable: true),
                     OrderNumber = table.Column<string>(type: "text", nullable: false),
                     Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     PaymentMethod = table.Column<string>(type: "text", nullable: false),
                     CustomerName = table.Column<string>(type: "text", nullable: false),
-                    TotalAmount = table.Column<decimal>(type: "numeric", nullable: false)
+                    SubTotal = table.Column<decimal>(type: "numeric", nullable: false),
+                    DiscountTotal = table.Column<decimal>(type: "numeric", nullable: false),
+                    TaxTotal = table.Column<decimal>(type: "numeric", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "numeric", nullable: false),
+                    Notes = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    IsReprinted = table.Column<bool>(type: "boolean", nullable: false),
+                    PrintCount = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -369,8 +448,7 @@ namespace KamatekCrm.Migrations
                         name: "FK_SalesOrders_Customers_CustomerId",
                         column: x => x.CustomerId,
                         principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -393,7 +471,19 @@ namespace KamatekCrm.Migrations
                     Status = table.Column<int>(type: "integer", nullable: false),
                     TotalUnitCount = table.Column<int>(type: "integer", nullable: false),
                     SurveyNotes = table.Column<string>(type: "text", nullable: false),
-                    QuoteItemsJson = table.Column<string>(type: "text", nullable: false)
+                    QuoteItemsJson = table.Column<string>(type: "text", nullable: false),
+                    QuoteNumber = table.Column<string>(type: "text", nullable: true),
+                    QuoteStatus = table.Column<int>(type: "integer", nullable: false),
+                    RevisionNumber = table.Column<int>(type: "integer", nullable: false),
+                    SentDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ValidUntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ApprovedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    RejectedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    RejectionReason = table.Column<string>(type: "text", nullable: true),
+                    KdvRate = table.Column<decimal>(type: "numeric", nullable: false),
+                    Notes = table.Column<string>(type: "text", nullable: true),
+                    PaymentTerms = table.Column<string>(type: "text", nullable: true),
+                    RevisionsJson = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -411,7 +501,7 @@ namespace KamatekCrm.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CustomerId = table.Column<int>(type: "integer", nullable: false),
+                    CustomerId = table.Column<int>(type: "integer", nullable: true),
                     Amount = table.Column<decimal>(type: "numeric", nullable: false),
                     Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Type = table.Column<int>(type: "integer", nullable: false),
@@ -424,8 +514,118 @@ namespace KamatekCrm.Migrations
                         name: "FK_Transactions_Customers_CustomerId",
                         column: x => x.CustomerId,
                         principalTable: "Customers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PurchaseInvoices",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    InvoiceNumber = table.Column<string>(type: "text", nullable: false),
+                    SupplierId = table.Column<int>(type: "integer", nullable: false),
+                    SubTotal = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    VatTotal = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    GrandTotal = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    PaymentStatus = table.Column<int>(type: "integer", nullable: false),
+                    PaidAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    RemainingAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    OcrRawText = table.Column<string>(type: "text", nullable: true),
+                    Notes = table.Column<string>(type: "text", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DeletedBy = table.Column<string>(type: "text", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedBy = table.Column<string>(type: "text", nullable: false),
+                    ModifiedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ModifiedBy = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PurchaseInvoices", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PurchaseInvoices_Suppliers_SupplierId",
+                        column: x => x.SupplierId,
+                        principalTable: "Suppliers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PosTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    TransactionNumber = table.Column<string>(type: "text", nullable: false),
+                    ReceiptNumber = table.Column<string>(type: "text", nullable: false),
+                    IsReprinted = table.Column<bool>(type: "boolean", nullable: false),
+                    PrintCount = table.Column<int>(type: "integer", nullable: false),
+                    SubTotal = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    DiscountTotal = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    VatTotal = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    GrandTotal = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    PaymentMethod = table.Column<int>(type: "integer", nullable: false),
+                    CashAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    CardAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    Notes = table.Column<string>(type: "text", nullable: true),
+                    CashierUserId = table.Column<int>(type: "integer", nullable: true),
+                    CustomerId = table.Column<int>(type: "integer", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DeletedBy = table.Column<string>(type: "text", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedBy = table.Column<string>(type: "text", nullable: false),
+                    ModifiedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ModifiedBy = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PosTransactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PosTransactions_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_PosTransactions_Users_CashierUserId",
+                        column: x => x.CashierUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TechnicianLocations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: true),
+                    Latitude = table.Column<double>(type: "double precision", nullable: false),
+                    Longitude = table.Column<double>(type: "double precision", nullable: false),
+                    Accuracy = table.Column<double>(type: "double precision", nullable: true),
+                    Speed = table.Column<double>(type: "double precision", nullable: true),
+                    Heading = table.Column<double>(type: "double precision", nullable: true),
+                    Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Source = table.Column<string>(type: "text", nullable: true),
+                    BatteryLevel = table.Column<int>(type: "integer", nullable: true),
+                    IsBackground = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TechnicianLocations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TechnicianLocations_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -456,13 +656,45 @@ namespace KamatekCrm.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "InventoryImages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    InventoryId = table.Column<int>(type: "integer", nullable: false),
+                    ProductId = table.Column<int>(type: "integer", nullable: false),
+                    WarehouseId = table.Column<int>(type: "integer", nullable: false),
+                    ImagePath = table.Column<string>(type: "text", nullable: false),
+                    ThumbnailPath = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    UploadedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UploadedBy = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InventoryImages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_InventoryImages_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_InventoryImages_Warehouses_WarehouseId",
+                        column: x => x.WarehouseId,
+                        principalTable: "Warehouses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "StockTransactions",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ProductId = table.Column<int>(type: "integer", nullable: false),
+                    ProductId = table.Column<int>(type: "integer", nullable: true),
                     SourceWarehouseId = table.Column<int>(type: "integer", nullable: true),
                     TargetWarehouseId = table.Column<int>(type: "integer", nullable: true),
                     Quantity = table.Column<int>(type: "integer", nullable: false),
@@ -482,8 +714,7 @@ namespace KamatekCrm.Migrations
                         name: "FK_StockTransactions_Products_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Products",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_StockTransactions_Warehouses_SourceWarehouseId",
                         column: x => x.SourceWarehouseId,
@@ -508,13 +739,39 @@ namespace KamatekCrm.Migrations
                     ProductId = table.Column<int>(type: "integer", nullable: false),
                     ProductName = table.Column<string>(type: "text", nullable: false),
                     Quantity = table.Column<int>(type: "integer", nullable: false),
-                    UnitPrice = table.Column<decimal>(type: "numeric", nullable: false)
+                    UnitPrice = table.Column<decimal>(type: "numeric", nullable: false),
+                    DiscountPercent = table.Column<decimal>(type: "numeric", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "numeric", nullable: false),
+                    TaxRate = table.Column<int>(type: "integer", nullable: false),
+                    LineTotal = table.Column<decimal>(type: "numeric", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SalesOrderItems", x => x.Id);
                     table.ForeignKey(
                         name: "FK_SalesOrderItems_SalesOrders_SalesOrderId",
+                        column: x => x.SalesOrderId,
+                        principalTable: "SalesOrders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SalesOrderPayments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    SalesOrderId = table.Column<int>(type: "integer", nullable: false),
+                    PaymentMethod = table.Column<int>(type: "integer", nullable: false),
+                    Amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    Reference = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SalesOrderPayments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SalesOrderPayments_SalesOrders_SalesOrderId",
                         column: x => x.SalesOrderId,
                         principalTable: "SalesOrders",
                         principalColumn: "Id",
@@ -559,6 +816,18 @@ namespace KamatekCrm.Migrations
                     Price = table.Column<decimal>(type: "numeric", nullable: false),
                     LaborCost = table.Column<decimal>(type: "numeric", nullable: false),
                     DiscountAmount = table.Column<decimal>(type: "numeric", nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "numeric", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "numeric", nullable: false),
+                    SlaDeadline = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    EstimatedDuration = table.Column<int>(type: "integer", nullable: true),
+                    ActualDuration = table.Column<int>(type: "integer", nullable: true),
+                    TechnicianNotes = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    CustomerSignature = table.Column<string>(type: "text", nullable: true),
+                    IsCustomerApproved = table.Column<bool>(type: "boolean", nullable: false),
+                    GpsLocation = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    IsOffSite = table.Column<bool>(type: "boolean", nullable: false),
+                    Source = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedBy = table.Column<string>(type: "text", nullable: true),
@@ -594,6 +863,75 @@ namespace KamatekCrm.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PurchaseInvoiceLine",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    PurchaseInvoiceId = table.Column<int>(type: "integer", nullable: true),
+                    ProductId = table.Column<int>(type: "integer", nullable: true),
+                    ProductName = table.Column<string>(type: "text", nullable: false),
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    VatRate = table.Column<int>(type: "integer", nullable: false),
+                    VatAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    LineTotal = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    OldAverageCost = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    NewAverageCost = table.Column<decimal>(type: "numeric(18,4)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PurchaseInvoiceLine", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PurchaseInvoiceLine_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_PurchaseInvoiceLine_PurchaseInvoices_PurchaseInvoiceId",
+                        column: x => x.PurchaseInvoiceId,
+                        principalTable: "PurchaseInvoices",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PosTransactionLine",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    PosTransactionId = table.Column<int>(type: "integer", nullable: false),
+                    ProductId = table.Column<int>(type: "integer", nullable: false),
+                    ProductName = table.Column<string>(type: "text", nullable: false),
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    DiscountType = table.Column<int>(type: "integer", nullable: false),
+                    DiscountValue = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    VatRate = table.Column<int>(type: "integer", nullable: false),
+                    VatAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    NetTotal = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    LineTotal = table.Column<decimal>(type: "numeric(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PosTransactionLine", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PosTransactionLine_PosTransactions_PosTransactionId",
+                        column: x => x.PosTransactionId,
+                        principalTable: "PosTransactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PosTransactionLine_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PurchaseOrders",
                 columns: table => new
                 {
@@ -603,6 +941,9 @@ namespace KamatekCrm.Migrations
                     Status = table.Column<int>(type: "integer", nullable: false),
                     Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     OrderDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    InvoiceNumber = table.Column<string>(type: "text", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "numeric", nullable: false),
+                    Notes = table.Column<string>(type: "text", nullable: false),
                     ServiceJobId = table.Column<int>(type: "integer", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -626,6 +967,39 @@ namespace KamatekCrm.Migrations
                         principalTable: "Suppliers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RoutePoints",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: true),
+                    ServiceJobId = table.Column<int>(type: "integer", nullable: true),
+                    CustomerId = table.Column<int>(type: "integer", nullable: true),
+                    Latitude = table.Column<double>(type: "double precision", nullable: false),
+                    Longitude = table.Column<double>(type: "double precision", nullable: false),
+                    Address = table.Column<string>(type: "text", nullable: false),
+                    OrderIndex = table.Column<int>(type: "integer", nullable: false),
+                    EstimatedArrival = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ActualArrival = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsVisited = table.Column<bool>(type: "boolean", nullable: false),
+                    Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RoutePoints", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RoutePoints_ServiceJobs_ServiceJobId",
+                        column: x => x.ServiceJobId,
+                        principalTable: "ServiceJobs",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_RoutePoints_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -671,8 +1045,8 @@ namespace KamatekCrm.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    ServiceJobId = table.Column<int>(type: "integer", nullable: false),
-                    ProductId = table.Column<int>(type: "integer", nullable: false),
+                    ServiceJobId = table.Column<int>(type: "integer", nullable: true),
+                    ProductId = table.Column<int>(type: "integer", nullable: true),
                     QuantityUsed = table.Column<int>(type: "integer", nullable: false),
                     UnitPrice = table.Column<decimal>(type: "numeric", nullable: false),
                     UnitCost = table.Column<decimal>(type: "numeric", nullable: false)
@@ -684,14 +1058,12 @@ namespace KamatekCrm.Migrations
                         name: "FK_ServiceJobItems_Products_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Products",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ServiceJobItems_ServiceJobs_ServiceJobId",
                         column: x => x.ServiceJobId,
                         principalTable: "ServiceJobs",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -707,7 +1079,7 @@ namespace KamatekCrm.Migrations
                     FileSize = table.Column<long>(type: "bigint", nullable: false),
                     MimeType = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: true),
-                    UploadedBy = table.Column<int>(type: "integer", nullable: false),
+                    UploadedByUserId = table.Column<int>(type: "integer", nullable: true),
                     UploadedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -727,8 +1099,8 @@ namespace KamatekCrm.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TaskPhotos_Users_UploadedBy",
-                        column: x => x.UploadedBy,
+                        name: "FK_TaskPhotos_Users_UploadedByUserId",
+                        column: x => x.UploadedByUserId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -740,8 +1112,8 @@ namespace KamatekCrm.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    PurchaseOrderId = table.Column<int>(type: "integer", nullable: false),
-                    ProductId = table.Column<int>(type: "integer", nullable: false),
+                    PurchaseOrderId = table.Column<int>(type: "integer", nullable: true),
+                    ProductId = table.Column<int>(type: "integer", nullable: true),
                     ProductName = table.Column<string>(type: "text", nullable: false),
                     Quantity = table.Column<int>(type: "integer", nullable: false),
                     UnitPrice = table.Column<decimal>(type: "numeric", nullable: false),
@@ -758,8 +1130,7 @@ namespace KamatekCrm.Migrations
                         name: "FK_PurchaseOrderItems_PurchaseOrders_PurchaseOrderId",
                         column: x => x.PurchaseOrderId,
                         principalTable: "PurchaseOrders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.InsertData(
@@ -774,7 +1145,7 @@ namespace KamatekCrm.Migrations
 
             migrationBuilder.InsertData(
                 table: "Categories",
-                columns: new[] { "Id", "Name", "ParentId" },
+                columns: new[] { "Id", "Name", "ParentCategoryId" },
                 values: new object[] { 3, "Diafon", null });
 
             migrationBuilder.InsertData(
@@ -782,8 +1153,8 @@ namespace KamatekCrm.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedDate", "DeletedAt", "DeletedBy", "IsActive", "IsDeleted", "ModifiedBy", "ModifiedDate", "Name", "Type" },
                 values: new object[,]
                 {
-                    { 1, "", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, true, false, null, null, "Merkez Depo", 0 },
-                    { 2, "", new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), null, null, true, false, null, null, "Servis Aracı 1", 3 }
+                    { 1, "", new DateTime(2026, 4, 9, 19, 39, 23, 53, DateTimeKind.Utc).AddTicks(4393), null, null, true, false, null, null, "Merkez Depo", 0 },
+                    { 2, "", new DateTime(2026, 4, 9, 19, 39, 23, 53, DateTimeKind.Utc).AddTicks(5022), null, null, true, false, null, null, "Servis Aracı 1", 3 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -792,9 +1163,14 @@ namespace KamatekCrm.Migrations
                 column: "CustomerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Categories_ParentId",
+                name: "IX_Categories_ParentCategoryId",
                 table: "Categories",
-                column: "ParentId");
+                column: "ParentCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerActivities_CustomerId",
+                table: "CustomerActivities",
+                column: "CustomerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CustomerAssets_CustomerId",
@@ -807,9 +1183,50 @@ namespace KamatekCrm.Migrations
                 column: "WarehouseId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_InventoryImages_ProductId",
+                table: "InventoryImages",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InventoryImages_WarehouseId",
+                table: "InventoryImages",
+                column: "WarehouseId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_MaintenanceContracts_CustomerId",
                 table: "MaintenanceContracts",
                 column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PosTransactionLine_PosTransactionId",
+                table: "PosTransactionLine",
+                column: "PosTransactionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PosTransactionLine_ProductId",
+                table: "PosTransactionLine",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PosTransactions_CashierUserId",
+                table: "PosTransactions",
+                column: "CashierUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PosTransactions_CustomerId",
+                table: "PosTransactions",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PosTransactions_TransactionNumber",
+                table: "PosTransactions",
+                column: "TransactionNumber",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_Barcode",
+                table: "Products",
+                column: "Barcode");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_BrandId",
@@ -834,6 +1251,27 @@ namespace KamatekCrm.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_PurchaseInvoiceLine_ProductId",
+                table: "PurchaseInvoiceLine",
+                column: "ProductId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PurchaseInvoiceLine_PurchaseInvoiceId",
+                table: "PurchaseInvoiceLine",
+                column: "PurchaseInvoiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PurchaseInvoices_InvoiceNumber",
+                table: "PurchaseInvoices",
+                column: "InvoiceNumber",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PurchaseInvoices_SupplierId",
+                table: "PurchaseInvoices",
+                column: "SupplierId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PurchaseOrderItems_PurchaseOrderId",
                 table: "PurchaseOrderItems",
                 column: "PurchaseOrderId");
@@ -849,8 +1287,23 @@ namespace KamatekCrm.Migrations
                 column: "SupplierId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RoutePoints_ServiceJobId",
+                table: "RoutePoints",
+                column: "ServiceJobId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RoutePoints_UserId",
+                table: "RoutePoints",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SalesOrderItems_SalesOrderId",
                 table: "SalesOrderItems",
+                column: "SalesOrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SalesOrderPayments_SalesOrderId",
+                table: "SalesOrderPayments",
                 column: "SalesOrderId");
 
             migrationBuilder.CreateIndex(
@@ -929,9 +1382,14 @@ namespace KamatekCrm.Migrations
                 columns: new[] { "TaskId", "IsDeleted" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskPhotos_UploadedBy",
+                name: "IX_TaskPhotos_UploadedByUserId",
                 table: "TaskPhotos",
-                column: "UploadedBy");
+                column: "UploadedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TechnicianLocations_UserId",
+                table: "TechnicianLocations",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_CustomerId",
@@ -952,19 +1410,37 @@ namespace KamatekCrm.Migrations
                 name: "CashTransactions");
 
             migrationBuilder.DropTable(
+                name: "CustomerActivities");
+
+            migrationBuilder.DropTable(
                 name: "Inventories");
+
+            migrationBuilder.DropTable(
+                name: "InventoryImages");
 
             migrationBuilder.DropTable(
                 name: "MaintenanceContracts");
 
             migrationBuilder.DropTable(
+                name: "PosTransactionLine");
+
+            migrationBuilder.DropTable(
                 name: "ProductSerials");
+
+            migrationBuilder.DropTable(
+                name: "PurchaseInvoiceLine");
 
             migrationBuilder.DropTable(
                 name: "PurchaseOrderItems");
 
             migrationBuilder.DropTable(
+                name: "RoutePoints");
+
+            migrationBuilder.DropTable(
                 name: "SalesOrderItems");
+
+            migrationBuilder.DropTable(
+                name: "SalesOrderPayments");
 
             migrationBuilder.DropTable(
                 name: "ServiceJobHistories");
@@ -973,13 +1449,25 @@ namespace KamatekCrm.Migrations
                 name: "ServiceJobItems");
 
             migrationBuilder.DropTable(
+                name: "StockReservations");
+
+            migrationBuilder.DropTable(
                 name: "StockTransactions");
 
             migrationBuilder.DropTable(
                 name: "TaskPhotos");
 
             migrationBuilder.DropTable(
+                name: "TechnicianLocations");
+
+            migrationBuilder.DropTable(
                 name: "Transactions");
+
+            migrationBuilder.DropTable(
+                name: "PosTransactions");
+
+            migrationBuilder.DropTable(
+                name: "PurchaseInvoices");
 
             migrationBuilder.DropTable(
                 name: "PurchaseOrders");

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
@@ -27,15 +27,16 @@ namespace KamatekCrm.Data
             }
 
             // Seed a default admin user (password: 123)
-            if (!context.Users.Any(u => u.Username == "admin"))
+            var adminUser = context.Users.FirstOrDefault(u => u.Username == "admin");
+            if (adminUser == null)
             {
-                var adminUser = new User
+                adminUser = new User
                 {
                     Username = "admin",
                     PasswordHash = HashPassword("123"),
                     Role = "Admin",
-                    Ad = "Admin",
-                    Soyad = "System",
+                    Ad = "System",
+                    Soyad = "Admin",
                     IsActive = true,
                     CanViewFinance = true,
                     CanViewAnalytics = true,
@@ -45,9 +46,20 @@ namespace KamatekCrm.Data
                     CreatedDate = DateTime.UtcNow,
                     CreatedBy = "System"
                 };
-
                 context.Users.Add(adminUser);
                 context.SaveChanges();
+            }
+            else
+            {
+                // Ensure the hash is correct in case an older version seeded a plain text or invalid hash
+                var correctHash = HashPassword("123");
+                
+                // If it's a plain text or clearly not a 48 byte Base64 string, force update
+                if (string.IsNullOrEmpty(adminUser.PasswordHash) || adminUser.PasswordHash.Length < 60) // 48 bytes base64 is 64 chars
+                {
+                    adminUser.PasswordHash = correctHash;
+                    context.SaveChanges();
+                }
             }
         }
 
@@ -67,3 +79,4 @@ namespace KamatekCrm.Data
         }
     }
 }
+

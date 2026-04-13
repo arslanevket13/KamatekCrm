@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -324,10 +324,8 @@ namespace KamatekCrm.ViewModels
             public bool CanDeleteRecords => true;
             public bool CanApprovePurchase => true;
             public bool CanAccessSettings => true;
-            public bool Login(string username, string password) => true;
+            public Task<bool> LoginAsync(string username, string password) => Task.FromResult(true);
             public void Logout() { }
-            public void CreateDefaultUser() { }
-            public string HashPassword(string password) => password;
         }
 
         /// <summary>
@@ -556,3 +554,4 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
+

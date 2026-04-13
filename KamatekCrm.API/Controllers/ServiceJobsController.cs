@@ -41,7 +41,7 @@ namespace KamatekCrm.API.Controllers
             var query = _context.ServiceJobs
                 .Include(s => s.Customer)
                 .Include(s => s.AssignedUser)
-                .AsQueryable();
+                .AsNoTracking().AsQueryable();
 
             if (type.HasValue)
                 query = query.Where(s => s.WorkOrderType == type.Value);

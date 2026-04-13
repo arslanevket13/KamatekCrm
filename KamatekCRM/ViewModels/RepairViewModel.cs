@@ -335,11 +335,18 @@ namespace KamatekCrm.ViewModels
 
         private async void LoadProducts()
         {
-            var productsResponse = await _apiClient.GetAsync<IEnumerable<Product>>("api/products?pageSize=1000");
-            if (productsResponse?.Data != null)
+            try
             {
-                Products.Clear();
-                foreach (var p in productsResponse.Data.OrderBy(x => x.ProductName)) Products.Add(p);
+                var productsResponse = await _apiClient.GetAsync<IEnumerable<Product>>("api/products?pageSize=1000");
+                if (productsResponse?.Data != null)
+                {
+                    Products.Clear();
+                    foreach (var p in productsResponse.Data.OrderBy(x => x.ProductName)) Products.Add(p);
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Ürünler yüklenemedi: {ex.Message}");
             }
         }
 
@@ -376,31 +383,40 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            var historyResponse = await _apiClient.GetAsync<IEnumerable<ServiceJobHistory>>($"api/servicejobs/{jobId}/history");
-            if (historyResponse?.Data != null)
+            try
             {
-                JobHistory = new ObservableCollection<ServiceJobHistory>(historyResponse.Data);
-            }
+                var historyResponse = await _apiClient.GetAsync<IEnumerable<ServiceJobHistory>>($"api/servicejobs/{jobId}/history");
+                if (historyResponse?.Data != null)
+                {
+                    JobHistory = new ObservableCollection<ServiceJobHistory>(historyResponse.Data);
+                }
 
-            // Parçaları yükle
-            LoadJobItems(jobId);
+                // Parçaları yükle
+                LoadJobItems(jobId);
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Geçmiş yüklenemedi: {ex.Message}");
+            }
         }
 
         private async void LoadJobItems(int jobId)
         {
-            CurrentJobItems.Clear();
-            var jobResponse = await _apiClient.GetAsync<ServiceJob>($"api/servicejobs/{jobId}");
-            if (jobResponse?.Data?.ServiceJobItems != null)
+            try
             {
-                foreach(var item in jobResponse.Data.ServiceJobItems) CurrentJobItems.Add(item);
+                CurrentJobItems.Clear();
+                var jobResponse = await _apiClient.GetAsync<ServiceJob>($"api/servicejobs/{jobId}");
+                if (jobResponse?.Data?.ServiceJobItems != null)
+                {
+                    foreach(var item in jobResponse.Data.ServiceJobItems) CurrentJobItems.Add(item);
+                }
+                
+                UpdateTotals();
             }
-            
-            // Fiyatları güncelle
-            if (SelectedJob != null)
+            catch (Exception ex)
             {
-                 // Zaten seçili, UI üzerinden veriler görünüyor.
+                _toastService?.ShowError($"İş kalemleri yüklenemedi: {ex.Message}");
             }
-            UpdateTotals();
         }
 
         private void OpenRegistration(object? parameter)
@@ -573,28 +589,35 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedJob == null || SelectedProductToAdd == null) return;
 
-            var newItem = new ServiceJobItem
+            try
             {
-                ServiceJobId = SelectedJob.Id,
-                ProductId = SelectedProductToAdd.Id,
-                QuantityUsed = QuantityToAdd,
-                UnitPrice = UnitPriceToAdd,
-                UnitCost = SelectedProductToAdd.PurchasePrice
-            };
+                var newItem = new ServiceJobItem
+                {
+                    ServiceJobId = SelectedJob.Id,
+                    ProductId = SelectedProductToAdd.Id,
+                    QuantityUsed = QuantityToAdd,
+                    UnitPrice = UnitPriceToAdd,
+                    UnitCost = SelectedProductToAdd.PurchasePrice
+                };
 
-            var result = await _apiClient.PostAsync<ServiceJobItem>($"api/servicejobs/{SelectedJob.Id}/items", newItem);
-            
-            if (result != null && result.Success && result.Data != null)
-            {
-                CurrentJobItems.Add(result.Data);
-                SelectedProductToAdd = null;
-                QuantityToAdd = 1;
-                UnitPriceToAdd = 0;
-                UpdateTotals();
+                var result = await _apiClient.PostAsync<ServiceJobItem>($"api/servicejobs/{SelectedJob.Id}/items", newItem);
+                
+                if (result != null && result.Success && result.Data != null)
+                {
+                    CurrentJobItems.Add(result.Data);
+                    SelectedProductToAdd = null;
+                    QuantityToAdd = 1;
+                    UnitPriceToAdd = 0;
+                    UpdateTotals();
+                }
+                else
+                {
+                    _toastService?.ShowError("Parça eklenirken hata: " + result?.Message);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                _toastService?.ShowError("Parça eklenirken hata: " + result?.Message);
+                _toastService?.ShowError($"Parça eklenirken hata: {ex.Message}");
             }
         }
 
@@ -602,11 +625,18 @@ namespace KamatekCrm.ViewModels
         {
             if (parameter is ServiceJobItem item && SelectedJob != null)
             {
-                var result = await _apiClient.DeleteAsync<object>($"api/servicejobs/{SelectedJob.Id}/items/{item.Id}");
-                if (result != null && result.Success)
+                try
                 {
-                    CurrentJobItems.Remove(item);
-                    UpdateTotals();
+                    var result = await _apiClient.DeleteAsync<object>($"api/servicejobs/{SelectedJob.Id}/items/{item.Id}");
+                    if (result != null && result.Success)
+                    {
+                        CurrentJobItems.Remove(item);
+                        UpdateTotals();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _toastService?.ShowError($"Parça çıkarılırken hata: {ex.Message}");
                 }
             }
         }
@@ -618,24 +648,38 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(MaterialTotal));
             OnPropertyChanged(nameof(GrandTotal));
             
-            SelectedJob.LaborCost = LaborCost;
-            SelectedJob.DiscountAmount = DiscountAmount;
-            
-            await _apiClient.PutAsync<object>($"api/servicejobs/{SelectedJob.Id}", SelectedJob);
+            try
+            {
+                SelectedJob.LaborCost = LaborCost;
+                SelectedJob.DiscountAmount = DiscountAmount;
+                
+                await _apiClient.PutAsync<object>($"api/servicejobs/{SelectedJob.Id}", SelectedJob);
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Toplamlar güncellenemedi: {ex.Message}");
+            }
         }
 
         private async void CompleteJob(object? parameter)
         {
-            UpdateStatus(RepairStatus.Delivered);
-
-            foreach(var item in CurrentJobItems)
+            try
             {
-                var productResp = await _apiClient.GetAsync<Product>($"api/products/{item.ProductId}");
-                if (productResp?.Data != null)
+                UpdateStatus(RepairStatus.Delivered);
+
+                foreach(var item in CurrentJobItems)
                 {
-                    productResp.Data.TotalStockQuantity -= item.QuantityUsed;
-                    await _apiClient.PutAsync<object>($"api/products/{item.ProductId}", productResp.Data);
+                    var productResp = await _apiClient.GetAsync<Product>($"api/products/{item.ProductId}");
+                    if (productResp?.Data != null)
+                    {
+                        productResp.Data.TotalStockQuantity -= item.QuantityUsed;
+                        await _apiClient.PutAsync<object>($"api/products/{item.ProductId}", productResp.Data);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"İş tamamlanırken hata: {ex.Message}");
             }
         }
 

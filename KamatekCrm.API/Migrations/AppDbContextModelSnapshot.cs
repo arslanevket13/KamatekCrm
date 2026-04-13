@@ -1024,6 +1024,9 @@ namespace KamatekCrm.API.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("TechnicianNotes")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
@@ -1032,6 +1035,9 @@ namespace KamatekCrm.API.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric");
 
                     b.Property<int>("WorkOrderType")
                         .HasColumnType("integer");

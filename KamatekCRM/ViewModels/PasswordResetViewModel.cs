@@ -1,19 +1,20 @@
-using System;
+﻿using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Commands;
-using KamatekCrm.Data;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
-    /// Şifre sıfırlama/değiştirme ViewModel
+    /// Sifre sifirlama/degistirme ViewModel
+    /// API uzerinden sifre degistirme islemi yapar.
     /// </summary>
     public class PasswordResetViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
         private readonly User _user;
 
@@ -22,19 +23,9 @@ namespace KamatekCrm.ViewModels
         private string _statusMessage = string.Empty;
         private bool _isSuccess;
 
-        /// <summary>
-        /// Kullanıcı adı (gösterim için)
-        /// </summary>
         public string Username => _user.Username;
-
-        /// <summary>
-        /// Ad Soyad (gösterim için)
-        /// </summary>
         public string AdSoyad => _user.AdSoyad;
 
-        /// <summary>
-        /// Yeni şifre
-        /// </summary>
         public string NewPassword
         {
             get => _newPassword;
@@ -46,9 +37,6 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// Şifre onayı
-        /// </summary>
         public string ConfirmPassword
         {
             get => _confirmPassword;
@@ -60,9 +48,6 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// Şifreler eşleşiyor mu?
-        /// </summary>
         public bool PasswordsMatch
         {
             get
@@ -73,22 +58,16 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// Şifre eşleşme mesajı
-        /// </summary>
         public string PasswordMatchMessage
         {
             get
             {
                 if (string.IsNullOrEmpty(ConfirmPassword))
                     return string.Empty;
-                return PasswordsMatch ? "✅ Şifreler eşleşiyor" : "❌ Şifreler eşleşmiyor";
+                return PasswordsMatch ? "Sifreler eslesiyor" : "Sifreler eslesmiyor";
             }
         }
 
-        /// <summary>
-        /// Durum mesajı
-        /// </summary>
         public string StatusMessage
         {
             get => _statusMessage;
@@ -99,56 +78,30 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// Başarılı mı?
-        /// </summary>
         public bool IsSuccess
         {
             get => _isSuccess;
             set => SetProperty(ref _isSuccess, value);
         }
 
-        /// <summary>
-        /// Durum mesajı var mı?
-        /// </summary>
         public bool HasStatusMessage => !string.IsNullOrEmpty(StatusMessage);
 
-        /// <summary>
-        /// Kaydet komutu
-        /// </summary>
         public ICommand SaveCommand { get; }
-
-        /// <summary>
-        /// İptal komutu
-        /// </summary>
         public ICommand CancelCommand { get; }
 
-        /// <summary>
-        /// Kaydetme başarılı event
-        /// </summary>
         public event Action? SaveSuccessful;
-
-        /// <summary>
-        /// İptal talebi event
-        /// </summary>
         public event Action? CancelRequested;
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public PasswordResetViewModel(User user, IAuthService authService)
+        public PasswordResetViewModel(User user, IAuthService authService, ApiClient apiClient)
         {
-            _context = new AppDbContext();
             _user = user;
             _authService = authService;
+            _apiClient = apiClient;
 
-            SaveCommand = new RelayCommand(_ => SavePassword(), _ => CanSavePassword());
+            SaveCommand = new RelayCommand(async _ => await SavePasswordAsync(), _ => CanSavePassword());
             CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
         }
 
-        /// <summary>
-        /// Kayıt yapılabilir mi?
-        /// </summary>
         private bool CanSavePassword()
         {
             return !string.IsNullOrWhiteSpace(NewPassword) &&
@@ -157,51 +110,44 @@ namespace KamatekCrm.ViewModels
                    PasswordsMatch;
         }
 
-        /// <summary>
-        /// Şifreyi kaydet
-        /// </summary>
-        private void SavePassword()
+        private async Task SavePasswordAsync()
         {
             try
             {
                 if (!PasswordsMatch)
                 {
                     IsSuccess = false;
-                    StatusMessage = "❌ Şifreler eşleşmiyor!";
+                    StatusMessage = "Sifreler eslesmiyor!";
                     return;
                 }
 
                 if (NewPassword.Length < 4)
                 {
                     IsSuccess = false;
-                    StatusMessage = "❌ Şifre en az 4 karakter olmalı!";
+                    StatusMessage = "Sifre en az 4 karakter olmali!";
                     return;
                 }
 
-                // Veritabanından kullanıcıyı al
-                var dbUser = _context.Users.Find(_user.Id);
-                if (dbUser == null)
+                // API uzerinden sifre degistir
+                var payload = new { UserId = _user.Id, NewPassword = NewPassword };
+                var response = await _apiClient.PutAsync<object>($"api/users/{_user.Id}/password", payload);
+
+                if (response.Success)
+                {
+                    IsSuccess = true;
+                    StatusMessage = "Sifre basariyla guncellendi!";
+                    SaveSuccessful?.Invoke();
+                }
+                else
                 {
                     IsSuccess = false;
-                    StatusMessage = "❌ Kullanıcı bulunamadı!";
-                    return;
+                    StatusMessage = $"Hata: {response.Message}";
                 }
-
-                // Şifreyi hash'le ve kaydet
-                // Şifreyi hash'le ve kaydet
-                dbUser.PasswordHash = _authService.HashPassword(NewPassword);
-                _context.SaveChanges();
-                _context.SaveChanges();
-
-                IsSuccess = true;
-                StatusMessage = "✅ Şifre başarıyla güncellendi!";
-
-                SaveSuccessful?.Invoke();
             }
             catch (Exception ex)
             {
                 IsSuccess = false;
-                StatusMessage = $"❌ Hata: {ex.Message}";
+                StatusMessage = $"Hata: {ex.Message}";
             }
         }
     }

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -26,7 +26,7 @@ try
 
     // DbContext - PostgreSQL
     var connectionString = builder.Configuration.GetConnectionString("PostgreSQL") 
-        ?? "Host=localhost;Port=5432;Database=kamatekcrm;Username=postgres;Password=postgres";
+        ?? "Host=localhost;Port=5432;Database=kamatekcrm;Username=postgres;Password=123456";
     
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(connectionString, npgsqlOptions =>
@@ -164,6 +164,29 @@ try
 
     var app = builder.Build();
 
+    // --- EF Core Auto-Migration Injection ---
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var context = services.GetRequiredService<AppDbContext>();
+            
+            // This command checks if DB exists, creates it if not, and applies all pending migrations.
+            context.Database.Migrate();
+
+            // Seed data
+            DbInitializer.Initialize(context);
+            Log.Information("Database migrations and seeding applied successfully at startup.");
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "An error occurred while migrating or seeding the database during application startup.");
+            Log.Error(ex, "An error occurred while migrating the database.");
+        }
+    }
+
     // Middleware pipeline
     if (app.Environment.IsDevelopment())
     {
@@ -193,22 +216,6 @@ try
         Version = "1.0.0"
     }));
 
-    // Veritabanı migration'ını otomatik uygula (opsiyonel)
-    using (var scope = app.Services.CreateScope())
-    {
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        try
-        {
-            db.Database.Migrate();
-            DbInitializer.Initialize(db);
-            Log.Information("Database migrations and seeding applied successfully");
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "An error occurred while migrating the database");
-        }
-    }
-
     Log.Information("API running on: {Urls}", string.Join(", ", app.Urls));
     app.Run();
 }
@@ -220,3 +227,4 @@ finally
 {
     Log.CloseAndFlush();
 }
+
