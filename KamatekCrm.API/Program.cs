@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -172,6 +172,12 @@ try
         {
             var context = services.GetRequiredService<AppDbContext>();
             
+            var databaseCreator = Microsoft.EntityFrameworkCore.Infrastructure.AccessorExtensions.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalDatabaseCreator>(context.Database);
+            if (databaseCreator != null && !databaseCreator.Exists())
+            {
+                databaseCreator.Create();
+            }
+
             // This command checks if DB exists, creates it if not, and applies all pending migrations.
             context.Database.Migrate();
 

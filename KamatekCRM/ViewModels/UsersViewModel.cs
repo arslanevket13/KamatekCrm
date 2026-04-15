@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -155,12 +155,12 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
-                    _toastService.ShowError("Kullanıcılar Alınamadı", response.Message);
+                    _toastService.ShowError("Kullanıcılar Alınamadı", response.Message ?? "Bilinmeyen Hata");
                 }
             }
             catch (Exception ex)
             {
-                _toastService.ShowError("Hata", ex.Message);
+                _toastService.ShowError("Hata", ex.Message ?? "Hata");
             }
             finally
             {
@@ -324,12 +324,12 @@ namespace KamatekCrm.ViewModels
                     }
                     else
                     {
-                        _toastService.ShowError("Kullanıcı bulunamadı veya silinemedi.", response.Message);
+                        _toastService.ShowError("Kullanıcı bulunamadı veya silinemedi.", response.Message ?? "Bilinmeyen Hata");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _toastService.ShowError("Hata oluştu", ex.Message);
+                    _toastService.ShowError("Hata oluştu", ex.Message ?? "Hata");
                 }
                 finally
                 {
@@ -365,12 +365,12 @@ namespace KamatekCrm.ViewModels
                     }
                     else
                     {
-                        _toastService.ShowError("Sıfırlama Başarısız", response.Message);
+                        _toastService.ShowError("Sıfırlama Başarısız", response.Message ?? "Bilinmeyen Hata");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _toastService.ShowError("Hata", ex.Message);
+                    _toastService.ShowError("Hata", ex.Message ?? "Hata");
                 }
                 finally
                 {

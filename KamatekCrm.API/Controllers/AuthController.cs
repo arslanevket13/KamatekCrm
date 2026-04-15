@@ -33,17 +33,13 @@ namespace KamatekCrm.API.Controllers
         /// Kullanıcı girişi - JWT token üretir
         /// </summary>
         [HttpPost("login")]
-        public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto request)
+        public async Task<ActionResult<ApiResp<LoginResponseDto>>> Login([FromBody] LoginRequestDto request)
         {
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(new LoginResponseDto
-                    {
-                        Success = false,
-                        Message = "Geçersiz istek. Kullanıcı adı ve şifre gereklidir."
-                    });
+                    return BadRequest(ApiResp<LoginResponseDto>.Fail("Geçersiz istek. Kullanıcı adı ve şifre gereklidir."));
                 }
 
                 // Kullanıcıyı veritabanından bul
@@ -53,22 +49,14 @@ namespace KamatekCrm.API.Controllers
                 if (user == null)
                 {
                     _logger.LogWarning("Login başarısız: Kullanıcı bulunamadı - {Username}", request.Username);
-                    return Unauthorized(new LoginResponseDto
-                    {
-                        Success = false,
-                        Message = "Kullanıcı adı veya şifre hatalı."
-                    });
+                    return Unauthorized(ApiResp<LoginResponseDto>.Fail("Kullanıcı adı veya şifre hatalı."));
                 }
 
                 // Şifre doğrulama (PBKDF2 - WPF AuthService ile aynı algoritma)
                 if (!VerifyPassword(request.Password, user.PasswordHash))
                 {
                     _logger.LogWarning("Login başarısız: Hatalı şifre - {Username}", request.Username);
-                    return Unauthorized(new LoginResponseDto
-                    {
-                        Success = false,
-                        Message = "Kullanıcı adı veya şifre hatalı."
-                    });
+                    return Unauthorized(ApiResp<LoginResponseDto>.Fail("Kullanıcı adı veya şifre hatalı."));
                 }
 
                 // JWT token oluştur
@@ -81,7 +69,7 @@ namespace KamatekCrm.API.Controllers
 
                 _logger.LogInformation("Login başarılı: {Username} (UserId: {UserId})", user.Username, user.Id);
 
-                return Ok(new LoginResponseDto
+                var responseDto = new LoginResponseDto
                 {
                     Success = true,
                     Token = token,
@@ -90,16 +78,14 @@ namespace KamatekCrm.API.Controllers
                     Role = user.Role,
                     UserId = user.Id,
                     Message = "Giriş başarılı."
-                });
+                };
+
+                return Ok(ApiResp<LoginResponseDto>.Ok(responseDto, "Giriş başarılı."));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Login sırasında beklenmeyen hata - {Username}", request.Username);
-                return StatusCode(500, new LoginResponseDto
-                {
-                    Success = false,
-                    Message = "Sunucu hatası. Lütfen daha sonra tekrar deneyin."
-                });
+                return StatusCode(500, ApiResp<LoginResponseDto>.Fail("Sunucu hatası. Lütfen daha sonra tekrar deneyin."));
             }
         }
 

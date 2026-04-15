@@ -267,14 +267,14 @@ namespace KamatekCrm.ViewModels
                 {
                     IsSuccess = false;
                     StatusMessage = $"❌ Hata: {response.Message}";
-                    _toastService.ShowError("Kayıt Başarısız", response.Message);
+                    _toastService.ShowError("Kayıt Başarısız", response.Message ?? "Bilinmeyen Hata");
                 }
             }
             catch (Exception ex)
             {
                 IsSuccess = false;
                 StatusMessage = $"❌ Sistem Hatası: {ex.Message}";
-                _toastService.ShowError("Kritik Hata", ex.Message);
+                _toastService.ShowError("Kritik Hata", ex.Message ?? "Hata");
             }
             finally
             {
