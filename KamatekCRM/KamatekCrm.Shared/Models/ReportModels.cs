@@ -61,7 +61,7 @@ namespace KamatekCrm.Shared.Models
     public class ReportResult
     {
         public string Title { get; set; } = string.Empty;
-        public DateTime GeneratedAt { get; set; } = DateTime.Now;
+        public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public List<Dictionary<string, object>> Rows { get; set; } = new();

@@ -313,7 +313,7 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private string GenerateSKU()
         {
-            return $"PRD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
+            return $"PRD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
         }
 
         /// <summary>
@@ -449,7 +449,7 @@ namespace KamatekCrm.ViewModels
                     Quantity = InitialStock,
                     TransactionType = StockTransactionType.OpeningStock,
                     UnitCost = NewProduct.PurchasePrice,
-                    Date = DateTime.Now,
+                    Date = DateTime.UtcNow,
                     Description = "Açılış Stoğu"
                 };
                 _context.StockTransactions.Add(transaction);
@@ -518,7 +518,7 @@ namespace KamatekCrm.ViewModels
                     Quantity = Math.Abs(StockAdjustment),
                     TransactionType = transactionType,
                     UnitCost = NewProduct.PurchasePrice,
-                    Date = DateTime.Now,
+                    Date = DateTime.UtcNow,
                     Description = StockAdjustment > 0 ? "Manuel Stok Artışı" : "Manuel Stok Azaltması"
                 };
                 _context.StockTransactions.Add(transaction);

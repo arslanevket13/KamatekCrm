@@ -163,7 +163,7 @@ namespace KamatekCrm.ViewModels
             {
                 // Auto-generate SKU if empty
                 var sku = string.IsNullOrWhiteSpace(SKU)
-                    ? $"POI-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}"
+                    ? $"POI-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}"
                     : SKU.Trim();
 
                 var product = new Product

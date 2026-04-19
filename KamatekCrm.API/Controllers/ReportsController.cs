@@ -161,7 +161,7 @@ namespace KamatekCrm.API.Controllers
             var onTime = jobs.Count(j => j.Status == JobStatus.Completed && j.CompletedDate <= j.SlaDeadline);
             var breached = jobs.Count(j => j.IsSlaBreached);
             var atRisk = jobs.Count(j => !j.IsSlaBreached && j.SlaDeadline.HasValue
-                && j.SlaDeadline.Value < DateTime.Now.AddHours(8)
+                && j.SlaDeadline.Value < DateTime.UtcNow.AddHours(8)
                 && j.Status != JobStatus.Completed && j.Status != JobStatus.Cancelled);
 
             return Ok(ApiResponse<object>.Ok(new

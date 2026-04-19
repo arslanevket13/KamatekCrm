@@ -3,24 +3,130 @@ using System;
 using KamatekCrm.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace KamatekCrm.API.Migrations
+namespace KamatekCrm.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260419195646_AddActivityLogsTable")]
+    partial class AddActivityLogsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.1")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.ActivityLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AdditionalData")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<long>("DurationMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EntityName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RecordId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReferenceId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ActivityLogs");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.Attachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("EntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EntityType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UploadDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UploadedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Attachments");
+                });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Brand", b =>
                 {
@@ -41,6 +147,26 @@ namespace KamatekCrm.API.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Brands");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            BrandName = "",
+                            Name = "Hikvision"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            BrandName = "",
+                            Name = "Dahua"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            BrandName = "",
+                            Name = "Next"
+                        });
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.CashTransaction", b =>
@@ -52,8 +178,7 @@ namespace KamatekCrm.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -106,8 +231,7 @@ namespace KamatekCrm.API.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("ParentCategoryId")
                         .HasColumnType("integer");
@@ -116,7 +240,14 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasIndex("ParentCategoryId");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 3,
+                            Name = "Diafon"
+                        });
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Customer", b =>
@@ -242,15 +373,69 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("TotalSpent")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Customers", (string)null);
+                    b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.CustomerActivity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("RelatedId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RelatedType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("CustomerActivities");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.CustomerAsset", b =>
@@ -298,60 +483,64 @@ namespace KamatekCrm.API.Migrations
                     b.ToTable("CustomerAssets");
                 });
 
-            modelBuilder.Entity("KamatekCrm.Shared.Models.CustomerNote", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ActivityType")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("CustomerId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsPinned")
-                        .HasColumnType("boolean");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.ToTable("CustomerNotes");
-                });
-
             modelBuilder.Entity("KamatekCrm.Shared.Models.Inventory", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("ProductId")
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("AverageCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
-                    b.Property<int?>("ProductId")
+                    b.Property<int>("Id")
                         .HasColumnType("integer");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("WarehouseId")
+                    b.HasKey("ProductId", "WarehouseId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("Inventories");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.InventoryImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("InventoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ThumbnailPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UploadedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("WarehouseId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -360,7 +549,191 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasIndex("WarehouseId");
 
-                    b.ToTable("Inventories");
+                    b.ToTable("InventoryImages");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.MaintenanceContract", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FrequencyInMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JobDescriptionTemplate")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("NextDueDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("PricePerVisit")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("MaintenanceContracts");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PosTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("CardAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CashAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("CashierUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("DiscountTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsReprinted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PrintCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReceiptNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("SubTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TransactionNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("VatTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CashierUserId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("TransactionNumber")
+                        .IsUnique();
+
+                    b.ToTable("PosTransactions");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PosTransactionLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("DiscountType")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("DiscountValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("NetTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PosTransactionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("VatRate")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PosTransactionId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("PosTransactionLine");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Product", b =>
@@ -372,8 +745,7 @@ namespace KamatekCrm.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AverageCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Barcode")
                         .IsRequired()
@@ -430,19 +802,18 @@ namespace KamatekCrm.API.Migrations
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<decimal>("PurchasePrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("SKU")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<decimal>("SalePrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("SupplierName")
                         .IsRequired()
@@ -450,7 +821,7 @@ namespace KamatekCrm.API.Migrations
 
                     b.Property<string>("TechSpecsJson")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("jsonb");
 
                     b.Property<int>("TotalStockQuantity")
                         .HasColumnType("integer");
@@ -464,11 +835,48 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Barcode");
+
                     b.HasIndex("BrandId");
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("SKU")
+                        .IsUnique();
+
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.ProductSerial", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ManufactureDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SerialNumber")
+                        .IsUnique();
+
+                    b.ToTable("ProductSerials");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseInvoice", b =>
@@ -496,8 +904,7 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("GrandTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
@@ -519,31 +926,30 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("PaidAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("PaymentStatus")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("RemainingAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("SubTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("SupplierId")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("VatTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("InvoiceNumber")
+                        .IsUnique();
 
                     b.HasIndex("SupplierId");
 
@@ -559,16 +965,13 @@ namespace KamatekCrm.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("LineTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("NewAverageCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("OldAverageCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<int?>("ProductId")
                         .HasColumnType("integer");
@@ -584,12 +987,10 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("VatAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("VatRate")
                         .HasColumnType("integer");
@@ -657,8 +1058,7 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -678,12 +1078,10 @@ namespace KamatekCrm.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("DiscountAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("LineTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<int?>("ProductId")
                         .HasColumnType("integer");
@@ -699,20 +1097,16 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("SubTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("TaxAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("TaxRate")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -791,8 +1185,7 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("DiscountTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<bool>("IsReprinted")
                         .HasColumnType("boolean");
@@ -816,16 +1209,13 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("SubTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("TaxTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -843,16 +1233,13 @@ namespace KamatekCrm.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("DiscountAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("DiscountPercent")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("LineTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("integer");
@@ -871,8 +1258,7 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -890,8 +1276,7 @@ namespace KamatekCrm.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<int>("PaymentMethod")
                         .HasColumnType("integer");
@@ -907,7 +1292,7 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasIndex("SalesOrderId");
 
-                    b.ToTable("SalesOrderPayment");
+                    b.ToTable("SalesOrderPayments");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.ServiceJob", b =>
@@ -941,7 +1326,7 @@ namespace KamatekCrm.API.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("CompletedDate")
+                    b.Property<DateTime>("CompletedDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("CreatedBy")
@@ -978,8 +1363,7 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("DiscountAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<int?>("EstimatedDuration")
                         .HasColumnType("integer");
@@ -1007,8 +1391,7 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("LaborCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("ModifiedBy")
                         .HasColumnType("text");
@@ -1023,8 +1406,7 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
@@ -1064,8 +1446,7 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("TaxAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("TechnicianNotes")
                         .HasMaxLength(2000)
@@ -1077,8 +1458,7 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<int>("WorkOrderType")
                         .HasColumnType("integer");
@@ -1096,7 +1476,7 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasIndex("ServiceProjectId");
 
-                    b.ToTable("ServiceJobs", (string)null);
+                    b.ToTable("ServiceJobs");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.ServiceJobHistory", b =>
@@ -1154,7 +1534,7 @@ namespace KamatekCrm.API.Migrations
                     b.Property<int>("PerformedBy")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ServiceJobId")
+                    b.Property<int>("ServiceJobId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("StatusChange")
@@ -1171,9 +1551,11 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PerformedAt");
+
                     b.HasIndex("ServiceJobId");
 
-                    b.ToTable("ServiceJobHistories", (string)null);
+                    b.ToTable("ServiceJobHistories");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.ServiceJobItem", b =>
@@ -1190,16 +1572,14 @@ namespace KamatekCrm.API.Migrations
                     b.Property<int>("QuantityUsed")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ServiceJobId")
+                    b.Property<int>("ServiceJobId")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("UnitCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -1228,12 +1608,10 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("DiscountPercent")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("KdvRate")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1293,16 +1671,13 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("TotalBudget")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("TotalCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("TotalProfit")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<int>("TotalUnitCount")
                         .HasColumnType("integer");
@@ -1315,6 +1690,49 @@ namespace KamatekCrm.API.Migrations
                     b.HasIndex("CustomerId");
 
                     b.ToTable("ServiceProjects");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.StockReservation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReferenceId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReferenceType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ReservedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReservedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StockReservations");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.StockTransaction", b =>
@@ -1361,8 +1779,7 @@ namespace KamatekCrm.API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("UnitCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -1388,8 +1805,7 @@ namespace KamatekCrm.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Balance")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<string>("CompanyName")
                         .IsRequired()
@@ -1467,13 +1883,11 @@ namespace KamatekCrm.API.Migrations
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                        .HasColumnType("text");
 
                     b.Property<string>("FilePath")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("text");
 
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
@@ -1483,8 +1897,7 @@ namespace KamatekCrm.API.Migrations
 
                     b.Property<string>("MimeType")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ModifiedBy")
                         .HasColumnType("text");
@@ -1492,7 +1905,7 @@ namespace KamatekCrm.API.Migrations
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("TaskId")
+                    b.Property<int>("TaskId")
                         .HasColumnType("integer");
 
                     b.Property<string>("ThumbnailPath")
@@ -1510,7 +1923,9 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasIndex("UploadedByUserId");
 
-                    b.ToTable("TaskPhotos", (string)null);
+                    b.HasIndex("TaskId", "IsDeleted");
+
+                    b.ToTable("TaskPhotos");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.TechnicianLocation", b =>
@@ -1567,8 +1982,7 @@ namespace KamatekCrm.API.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<int?>("CustomerId")
                         .HasColumnType("integer");
@@ -1587,7 +2001,7 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.ToTable("Transaction");
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.User", b =>
@@ -1703,10 +2117,7 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Username")
-                        .IsUnique();
-
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Warehouse", b =>
@@ -1752,6 +2163,28 @@ namespace KamatekCrm.API.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Warehouses");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedBy = "",
+                            CreatedDate = new DateTime(2026, 4, 19, 19, 56, 45, 598, DateTimeKind.Utc).AddTicks(4183),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Merkez Depo",
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedBy = "",
+                            CreatedDate = new DateTime(2026, 4, 19, 19, 56, 45, 598, DateTimeKind.Utc).AddTicks(4937),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Servis Aracı 1",
+                            Type = 3
+                        });
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.CashTransaction", b =>
@@ -1767,9 +2200,19 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Category", "ParentCategory")
                         .WithMany("SubCategories")
-                        .HasForeignKey("ParentCategoryId");
+                        .HasForeignKey("ParentCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ParentCategory");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.CustomerActivity", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId");
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.CustomerAsset", b =>
@@ -1781,7 +2224,45 @@ namespace KamatekCrm.API.Migrations
                     b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("KamatekCrm.Shared.Models.CustomerNote", b =>
+            modelBuilder.Entity("KamatekCrm.Shared.Models.Inventory", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.Product", "Product")
+                        .WithMany("Inventories")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamatekCrm.Shared.Models.Warehouse", "Warehouse")
+                        .WithMany("Inventories")
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.InventoryImage", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamatekCrm.Shared.Models.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.MaintenanceContract", b =>
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Customer", "Customer")
                         .WithMany()
@@ -1790,19 +2271,40 @@ namespace KamatekCrm.API.Migrations
                     b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("KamatekCrm.Shared.Models.Inventory", b =>
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PosTransaction", b =>
                 {
-                    b.HasOne("KamatekCrm.Shared.Models.Product", "Product")
-                        .WithMany("Inventories")
-                        .HasForeignKey("ProductId");
+                    b.HasOne("KamatekCrm.Shared.Models.User", "CashierUser")
+                        .WithMany()
+                        .HasForeignKey("CashierUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("KamatekCrm.Shared.Models.Warehouse", "Warehouse")
-                        .WithMany("Inventories")
-                        .HasForeignKey("WarehouseId");
+                    b.HasOne("KamatekCrm.Shared.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CashierUser");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PosTransactionLine", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.PosTransaction", "PosTransaction")
+                        .WithMany("Lines")
+                        .HasForeignKey("PosTransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamatekCrm.Shared.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PosTransaction");
 
                     b.Navigation("Product");
-
-                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Product", b =>
@@ -1825,7 +2327,7 @@ namespace KamatekCrm.API.Migrations
                     b.HasOne("KamatekCrm.Shared.Models.Supplier", "Supplier")
                         .WithMany()
                         .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Supplier");
@@ -1835,7 +2337,8 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductId");
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("KamatekCrm.Shared.Models.PurchaseInvoice", "PurchaseInvoice")
                         .WithMany("Lines")
@@ -1922,8 +2425,7 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.User", "AssignedUser")
                         .WithMany()
-                        .HasForeignKey("AssignedUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("AssignedUserId");
 
                     b.HasOne("KamatekCrm.Shared.Models.CustomerAsset", "CustomerAsset")
                         .WithMany()
@@ -1932,7 +2434,7 @@ namespace KamatekCrm.API.Migrations
                     b.HasOne("KamatekCrm.Shared.Models.Customer", "Customer")
                         .WithMany("ServiceJobs")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("KamatekCrm.Shared.Models.ServiceProject", "ServiceProject")
@@ -1952,7 +2454,9 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.ServiceJob", "ServiceJob")
                         .WithMany()
-                        .HasForeignKey("ServiceJobId");
+                        .HasForeignKey("ServiceJobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ServiceJob");
                 });
@@ -1965,7 +2469,9 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasOne("KamatekCrm.Shared.Models.ServiceJob", "ServiceJob")
                         .WithMany("ServiceJobItems")
-                        .HasForeignKey("ServiceJobId");
+                        .HasForeignKey("ServiceJobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Product");
 
@@ -1989,11 +2495,13 @@ namespace KamatekCrm.API.Migrations
 
                     b.HasOne("KamatekCrm.Shared.Models.Warehouse", "SourceWarehouse")
                         .WithMany()
-                        .HasForeignKey("SourceWarehouseId");
+                        .HasForeignKey("SourceWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("KamatekCrm.Shared.Models.Warehouse", "TargetWarehouse")
                         .WithMany()
-                        .HasForeignKey("TargetWarehouseId");
+                        .HasForeignKey("TargetWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Product");
 
@@ -2006,11 +2514,14 @@ namespace KamatekCrm.API.Migrations
                 {
                     b.HasOne("KamatekCrm.Shared.Models.ServiceJob", "Task")
                         .WithMany()
-                        .HasForeignKey("TaskId");
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("KamatekCrm.Shared.Models.User", "UploadedByUser")
                         .WithMany()
-                        .HasForeignKey("UploadedByUserId");
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Task");
 
@@ -2047,6 +2558,11 @@ namespace KamatekCrm.API.Migrations
                     b.Navigation("ServiceJobs");
 
                     b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PosTransaction", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Product", b =>

@@ -74,7 +74,7 @@ namespace KamatekCrm.API.Controllers
             {
                 var today = DateTime.UtcNow.Date;
                 var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
-                var startOfMonth = new DateTime(today.Year, today.Month, 1);
+                var startOfMonth = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);
                 var endOfMonth = startOfMonth.AddMonths(1);
 
                 var dto = new KamatekCrm.Shared.Models.DashboardSummaryDto();
@@ -176,7 +176,7 @@ namespace KamatekCrm.API.Controllers
                     {
                         if (!c.BirthDate.HasValue) return false;
                         var bday = c.BirthDate.Value;
-                        var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day);
+                        var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day, 0, 0, 0, DateTimeKind.Utc);
                         var daysUntil = (thisYearBirthday - today).Days;
                         if (daysUntil < 0) daysUntil += 365; // Next year's birthday if passed
                         return daysUntil >= 0 && daysUntil <= 30;
@@ -184,7 +184,7 @@ namespace KamatekCrm.API.Controllers
                     .OrderBy(c => {
                         if (!c.BirthDate.HasValue) return 999;
                         var bday = c.BirthDate.Value;
-                        var thisYear = new DateTime(today.Year, bday.Month, bday.Day);
+                        var thisYear = new DateTime(today.Year, bday.Month, bday.Day, 0, 0, 0, DateTimeKind.Utc);
                         var days = (thisYear - today).Days;
                         return days < 0 ? days + 365 : days;
                     })

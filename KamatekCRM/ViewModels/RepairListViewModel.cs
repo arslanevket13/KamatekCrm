@@ -734,7 +734,7 @@ namespace KamatekCrm.ViewModels
 
         // Computed
         public string DeviceDisplay => $"{DeviceBrand} {DeviceModel}".Trim();
-        public int DaysInShop => (DateTime.Now - CreatedDate).Days;
+        public int DaysInShop => (DateTime.UtcNow - CreatedDate).Days;
 
         public string StatusDisplay => RepairStatus switch
         {

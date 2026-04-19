@@ -28,7 +28,7 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<CashTransaction> Transactions { get; } = new();
         public ICollectionView FilteredTransactions { get; private set; }
 
-        private DateTime _selectedDate = DateTime.Today;
+        private DateTime _selectedDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
         public DateTime SelectedDate
         {
             get => _selectedDate;
@@ -165,7 +165,7 @@ namespace KamatekCrm.ViewModels
             DeleteTransactionCommand = new RelayCommand(DeleteTransaction, CanDeleteTransaction);
             PreviousDayCommand = new RelayCommand(_ => SelectedDate = SelectedDate.AddDays(-1));
             NextDayCommand = new RelayCommand(_ => SelectedDate = SelectedDate.AddDays(1));
-            GoToTodayCommand = new RelayCommand(_ => SelectedDate = DateTime.Today);
+            GoToTodayCommand = new RelayCommand(_ => SelectedDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc));
 
             LoadData();
         }
@@ -185,7 +185,7 @@ namespace KamatekCrm.ViewModels
 
                 if (ShowMonthly)
                 {
-                    startDate = new DateTime(SelectedDate.Year, SelectedDate.Month, 1);
+                    startDate = new DateTime(SelectedDate.Year, SelectedDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
                     endDate = startDate.AddMonths(1).AddTicks(-1); // Ayın son günü 23:59:59.9999999
                 }
                 else
@@ -259,13 +259,13 @@ namespace KamatekCrm.ViewModels
             {
                 var expense = new CashTransaction
                 {
-                    Date = DateTime.Now,
+                    Date = DateTime.UtcNow,
                     Amount = NewExpenseAmount,
                     TransactionType = CashTransactionType.Expense,
                     Description = NewExpenseDescription,
                     Category = NewExpenseCategory,
                     CreatedBy = _authService.CurrentUser?.AdSoyad ?? "Sistem",
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 _context.CashTransactions.Add(expense);

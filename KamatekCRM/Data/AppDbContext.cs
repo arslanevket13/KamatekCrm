@@ -215,8 +215,7 @@ namespace KamatekCrm.Data
                 
                 entity.HasOne(e => e.Task)
                     .WithMany()
-                    .HasForeignKey(e => e.TaskId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .HasForeignKey(e => e.TaskId).IsRequired(false).OnDelete(DeleteBehavior.ClientSetNull);
 
                 entity.HasOne(e => e.UploadedByUser)
                     .WithMany()
@@ -234,8 +233,7 @@ namespace KamatekCrm.Data
                 
                 entity.HasOne(e => e.ServiceJob)
                     .WithMany()
-                    .HasForeignKey(e => e.ServiceJobId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .HasForeignKey(e => e.ServiceJobId).IsRequired(false).OnDelete(DeleteBehavior.ClientSetNull);
 
                 entity.HasIndex(e => e.ServiceJobId);
                 entity.HasIndex(e => e.PerformedAt);
@@ -387,12 +385,40 @@ namespace KamatekCrm.Data
                         }
                         break;
 
-                    case EntityState.Deleted:
+                                        case EntityState.Deleted:
                         // Convert physical delete to soft delete
                         entry.State = EntityState.Modified;
                         entry.Entity.IsDeleted = true;
                         entry.Entity.DeletedAt = timestamp;
                         entry.Entity.DeletedBy = currentUser;
+
+                        // Soft Cascade Delete
+                        foreach (var navigation in entry.Metadata.GetNavigations())
+                        {
+                            if (navigation.IsCollection)
+                            {
+                                var collection = entry.Collection(navigation.Name);
+                                if (!collection.IsLoaded)
+                                {
+                                    collection.Load();
+                                }
+                                
+                                if (collection.CurrentValue != null)
+                                {
+                                    foreach (var dependent in collection.CurrentValue)
+                                    {
+                                        if (dependent is KamatekCrm.Shared.Models.Common.ISoftDeletable sd)
+                                        {
+                                            var dependentEntry = Entry(dependent);
+                                            dependentEntry.State = EntityState.Modified;
+                                            sd.IsDeleted = true;
+                                            sd.DeletedAt = timestamp;
+                                            sd.DeletedBy = currentUser;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         break;
                 }
             }

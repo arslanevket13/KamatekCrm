@@ -332,7 +332,7 @@ namespace KamatekCrm.ViewModels
 
         private string GenerateCustomerCode()
         {
-            int year = DateTime.Now.Year;
+            int year = DateTime.UtcNow.Year;
             int customerCount = _context.Customers
                 .Count(c => c.CustomerCode.StartsWith($"MŞ-{year}-"));
             int nextNumber = customerCount + 1;

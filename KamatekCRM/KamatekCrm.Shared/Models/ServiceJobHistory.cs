@@ -9,11 +9,10 @@ namespace KamatekCrm.Shared.Models
     {
         // Id is in BaseEntity
 
-        [Required]
-        public int ServiceJobId { get; set; }
+        public int? ServiceJobId { get; set; }
 
         [Required]
-        public DateTime Date { get; set; } = DateTime.Now;
+        public DateTime Date { get; set; } = DateTime.UtcNow;
 
         public RepairStatus? StatusChange { get; set; }
         public JobStatus? JobStatusChange { get; set; }
@@ -29,12 +28,12 @@ namespace KamatekCrm.Shared.Models
         public string? UserId { get; set; }
 
         [ForeignKey(nameof(ServiceJobId))]
-        public virtual ServiceJob ServiceJob { get; set; } = null!;
+        public virtual ServiceJob? ServiceJob { get; set; }
 
         // --- New Fields for Technician Web App ---
         public string Action { get; set; } = string.Empty;
         public string? Notes { get; set; }
         public int PerformedBy { get; set; }
-        public DateTime PerformedAt { get; set; } = DateTime.Now;
+        public DateTime PerformedAt { get; set; } = DateTime.UtcNow;
     }
 }

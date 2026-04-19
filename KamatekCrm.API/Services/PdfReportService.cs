@@ -347,7 +347,7 @@ namespace KamatekCrm.API.Services
                 row.RelativeItem().AlignRight().Column(col =>
                 {
                     col.Item().Text(title).FontSize(14).Bold().FontColor(PrimaryColor);
-                    col.Item().Text($"Tarih: {DateTime.Now:dd.MM.yyyy HH:mm}").FontSize(8).FontColor(SecondaryColor);
+                    col.Item().Text($"Tarih: {DateTime.UtcNow:dd.MM.yyyy HH:mm}").FontSize(8).FontColor(SecondaryColor);
                 });
             });
         }

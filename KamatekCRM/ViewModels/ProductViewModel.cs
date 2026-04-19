@@ -344,7 +344,7 @@ namespace KamatekCrm.ViewModels
                             // YENİ ÜRÜN EKLE
                             var newProduct = new Product
                             {
-                                SKU = sku ?? $"IMP-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}",
+                                SKU = sku ?? $"IMP-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}",
                                 ProductName = productName ?? "İsimsiz Ürün",
                                 PurchasePrice = purchasePrice,
                                 SalePrice = salePrice,
@@ -391,7 +391,7 @@ namespace KamatekCrm.ViewModels
                                     Quantity = stockQty,
                                     TransactionType = StockTransactionType.OpeningStock,
                                     UnitCost = purchasePrice,
-                                    Date = DateTime.Now,
+                                    Date = DateTime.UtcNow,
                                     Description = "Excel Açılış Stoğu"
                                 };
                                 _context.StockTransactions.Add(transaction);

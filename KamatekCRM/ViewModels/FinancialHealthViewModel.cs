@@ -73,7 +73,7 @@ namespace KamatekCrm.ViewModels
 
                 // --- 1. Aylık Gelir/Gider (Line Chart) ---
                 var last6Months = Enumerable.Range(0, 6)
-                    .Select(i => DateTime.Now.AddMonths(-i))
+                    .Select(i => DateTime.UtcNow.AddMonths(-i))
                     .OrderBy(d => d)
                     .ToList();
 

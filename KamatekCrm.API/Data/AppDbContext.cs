@@ -92,8 +92,7 @@ namespace KamatekCrm.Data
                 // Fix ServiceJob <=> ServiceJobItem Mapping
                 entity.HasMany(e => e.ServiceJobItems)
                     .WithOne(e => e.ServiceJob)
-                    .HasForeignKey(e => e.ServiceJobId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .HasForeignKey(e => e.ServiceJobId).IsRequired(false).OnDelete(DeleteBehavior.ClientSetNull);
             });
 
             // ServiceJobHistory konfigürasyonu
@@ -104,8 +103,7 @@ namespace KamatekCrm.Data
                 
                 entity.HasOne(e => e.ServiceJob)
                     .WithMany()
-                    .HasForeignKey(e => e.ServiceJobId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .HasForeignKey(e => e.ServiceJobId).IsRequired(false).OnDelete(DeleteBehavior.ClientSetNull);
             });
 
             // Customer konfigürasyonu

@@ -347,7 +347,7 @@ namespace KamatekCrm.ViewModels
 
                 var dialog = new Microsoft.Win32.SaveFileDialog
                 {
-                    FileName = $"Teklif_{SelectedQuote.Title}_{DateTime.Now:yyyyMMdd}",
+                    FileName = $"Teklif_{SelectedQuote.Title}_{DateTime.UtcNow:yyyyMMdd}",
                     DefaultExt = ".pdf",
                     Filter = "PDF Belgeleri (.pdf)|*.pdf"
                 };

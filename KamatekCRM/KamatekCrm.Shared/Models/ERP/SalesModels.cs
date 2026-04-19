@@ -9,7 +9,7 @@ namespace KamatekCrm.Shared.Models
         public int Id { get; set; }
         public int? CustomerId { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
-        public DateTime Date { get; set; } = DateTime.Now;
+        public DateTime Date { get; set; } = DateTime.UtcNow;
         public string PaymentMethod { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
         public decimal SubTotal { get; set; }
@@ -79,7 +79,7 @@ namespace KamatekCrm.Shared.Models
     {
         public int Id { get; set; }
         public decimal Amount { get; set; }
-        public DateTime Date { get; set; } = DateTime.Now;
+        public DateTime Date { get; set; } = DateTime.UtcNow;
         public CashTransactionType TransactionType { get; set; }
         public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
         public string Description { get; set; } = string.Empty;
@@ -87,7 +87,7 @@ namespace KamatekCrm.Shared.Models
         public string ReferenceNumber { get; set; } = string.Empty;
         public int? SalesOrderId { get; set; }
         public string CreatedBy { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public int? CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer? Customer { get; set; }

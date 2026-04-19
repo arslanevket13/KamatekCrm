@@ -251,7 +251,7 @@ namespace KamatekCrm.ViewModels
                         if (dbJob != null)
                         {
                             dbJob.Status = JobStatus.Completed;
-                            dbJob.CompletedDate = DateTime.Now;
+                            dbJob.CompletedDate = DateTime.UtcNow;
                             _context.SaveChanges();
                             
                             job.Status = JobStatus.Completed;

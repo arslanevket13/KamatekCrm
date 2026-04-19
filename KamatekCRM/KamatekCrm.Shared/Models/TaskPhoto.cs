@@ -6,7 +6,7 @@ namespace KamatekCrm.Shared.Models
 {
     public class TaskPhoto : BaseEntity
     {
-        public int TaskId { get; set; }
+        public int? TaskId { get; set; }
         public string FileName { get; set; } = string.Empty;
         public string FilePath { get; set; } = string.Empty;
         public string? ThumbnailPath { get; set; }

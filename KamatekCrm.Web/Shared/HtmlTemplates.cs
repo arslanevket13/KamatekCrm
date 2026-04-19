@@ -179,7 +179,7 @@ public static class HtmlTemplates
             _ => $"""<span class="badge bg-secondary">{role}</span>"""
         };
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         var greeting = now.Hour switch
         {
             < 12 => "Günaydın",
@@ -585,7 +585,7 @@ public static class HtmlTemplates
 
     public static string TechnicianDashboard(string userName, string role, List<JobListItem> todayJobs, List<JobListItem> pendingJobs, DashboardStats stats, string? token)
     {
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         var greeting = now.Hour switch { < 12 => "Günaydın", < 18 => "İyi günler", _ => "İyi akşamlar" };
 
         var todayJobsHtml = todayJobs.Count > 0
@@ -690,7 +690,7 @@ public static class HtmlTemplates
     {
         var prevDate = date.AddDays(-1).ToString("yyyy-MM-dd");
         var nextDate = date.AddDays(1).ToString("yyyy-MM-dd");
-        var isToday = date.Date == DateTime.Today;
+        var isToday = date.Date == DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
 
         var timeSlots = new[] { "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00" };
         var timelineHtml = string.Join("", timeSlots.Select(slot => {
@@ -811,7 +811,7 @@ public static class HtmlTemplates
     {
         var prevDate = date.AddDays(-1).ToString("yyyy-MM-dd");
         var nextDate = date.AddDays(1).ToString("yyyy-MM-dd");
-        var isToday = date.Date == DateTime.Today;
+        var isToday = date.Date == DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
 
         var totalPoints = points.Count;
         var completedPoints = points.Count(p => p.IsVisited);

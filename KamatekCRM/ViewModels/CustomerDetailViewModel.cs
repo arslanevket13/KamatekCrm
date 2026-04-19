@@ -255,9 +255,9 @@ namespace KamatekCrm.ViewModels
             get
             {
                 if (!BirthDate.HasValue) return false;
-                var today = DateTime.Today;
+                var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
                 var bday = BirthDate.Value;
-                var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day);
+                var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day, 0, 0, 0, DateTimeKind.Utc);
                 var daysUntil = (thisYearBirthday - today).Days;
                 return daysUntil >= 0 && daysUntil <= 30;
             }
@@ -439,7 +439,7 @@ namespace KamatekCrm.ViewModels
                     CustomerId = _customerId,
                     Type = type,
                     Amount = amount,
-                    Date = DateTime.Now,
+                    Date = DateTime.UtcNow,
                     Description = description
                 };
 
@@ -551,7 +551,7 @@ namespace KamatekCrm.ViewModels
                 {
                     _customer.Notes = string.IsNullOrEmpty(_customer.Notes) 
                         ? note 
-                        : _customer.Notes + "\n" + DateTime.Now.ToString("dd.MM.yyyy") + ": " + note;
+                        : _customer.Notes + "\n" + DateTime.UtcNow.ToString("dd.MM.yyyy") + ": " + note;
                     _customer.LastInteractionDate = DateTime.UtcNow;
                     _context.SaveChanges();
                 }

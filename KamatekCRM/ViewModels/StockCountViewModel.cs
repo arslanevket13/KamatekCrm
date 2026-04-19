@@ -25,7 +25,7 @@ namespace KamatekCrm.ViewModels
     {
         private readonly AppDbContext _context;
         private Warehouse? _selectedWarehouse;
-        private DateTime _countDate = DateTime.Today;
+        private DateTime _countDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
         private string _statusMessage = string.Empty;
         private bool _isActionSuccessful;
         private bool _isLoading;
@@ -422,7 +422,7 @@ namespace KamatekCrm.ViewModels
             var saveDialog = new SaveFileDialog
             {
                 Filter = "Excel Dosyası (*.xlsx)|*.xlsx",
-                FileName = $"StokSayim_{SelectedWarehouse?.Name ?? "Tum"}_{DateTime.Now:yyyyMMdd_HHmm}.xlsx",
+                FileName = $"StokSayim_{SelectedWarehouse?.Name ?? "Tum"}_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx",
                 Title = "Stok Sayım Raporu Kaydet"
             };
 
@@ -441,7 +441,7 @@ namespace KamatekCrm.ViewModels
 
                 worksheet.Cell(2, 1).Value = $"Depo: {SelectedWarehouse?.Name ?? "Belirtilmemiş"}";
                 worksheet.Cell(3, 1).Value = $"Tarih: {CountDate:dd.MM.yyyy}";
-                worksheet.Cell(4, 1).Value = $"Rapor Oluşturma: {DateTime.Now:dd.MM.yyyy HH:mm}";
+                worksheet.Cell(4, 1).Value = $"Rapor Oluşturma: {DateTime.UtcNow:dd.MM.yyyy HH:mm}";
 
                 // Header satırı
                 int headerRow = 6;
@@ -893,7 +893,7 @@ namespace KamatekCrm.ViewModels
             using var transaction = _context.Database.BeginTransaction();
             try
             {
-                var referenceId = $"MANUAL-{DateTime.Now:yyyyMMdd-HHmmss}-{ManualSelectedWarehouse.Id}";
+                var referenceId = $"MANUAL-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{ManualSelectedWarehouse.Id}";
 
                 foreach (var item in itemsWithDifference)
                 {
@@ -920,7 +920,7 @@ namespace KamatekCrm.ViewModels
 
                     var stockTransaction = new StockTransaction
                     {
-                        Date = DateTime.Now,
+                        Date = DateTime.UtcNow,
                         ProductId = item.ProductId,
                         SourceWarehouseId = item.Difference < 0 ? ManualSelectedWarehouse.Id : null,
                         TargetWarehouseId = item.Difference > 0 ? ManualSelectedWarehouse.Id : null,

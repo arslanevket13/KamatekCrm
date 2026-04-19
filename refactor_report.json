@@ -1,0 +1,434 @@
+﻿[
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ReportModels.cs",
+        "Line":  64,
+        "Old":  "public DateTime GeneratedAt { get; set; } = DateTime.Now;",
+        "New":  "public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ServiceJobHistory.cs",
+        "Line":  16,
+        "Old":  "public DateTime Date { get; set; } = DateTime.Now;",
+        "New":  "public DateTime Date { get; set; } = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ServiceJobHistory.cs",
+        "Line":  38,
+        "Old":  "public DateTime PerformedAt { get; set; } = DateTime.Now;",
+        "New":  "public DateTime PerformedAt { get; set; } = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ERP\\InventoryModels.cs",
+        "Line":  80,
+        "Old":  "public DateTime Date { get; set; } = DateTime.Now;",
+        "New":  "public DateTime Date { get; set; } = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ERP\\InventoryModels.cs",
+        "Line":  115,
+        "Old":  "public class ProductSerial\n    {\n        public int Id { get; set; }\n        public string SerialNumber { get; set; } = \"\";\n        public int ProductId { get; set; }\n        public DateTime? ExpiryDate { get; set; }\n        public DateTime? ManufactureDate { get; set; }\n        public string? Location { get; set; }\n    }\n\n    public class InventoryImage\n    {\n        public int Id { get; set; }\n        public int InventoryId { get; set; }\n        public int ProductId { get; set; }\n        public int WarehouseId { get; set; }\n        public string ImagePath { get; set; } = string.Empty;\n        public string ThumbnailPath { get; set; } = string.Empty;\n        public string Description { get; set; } = string.Empty;\n        public DateTime UploadedAt { get; set; } = DateTime.Now;\n        public string UploadedBy { get; set; } = string.Empty;\n        [ForeignKey(nameof(ProductId))]\n        public virtual Product? Product { get; set; }\n        [ForeignKey(nameof(WarehouseId))]\n        public virtual Warehouse Warehouse { get; set; } = null!;\n    }\n\n    public class StockReservation\n    {\n        public int Id { get; set; }\n        public int ProductId { get; set; }\n        public int WarehouseId { get; set; }\n        public int Quantity { get; set; }\n        public string ReferenceType { get; set; } = string.Empty;\n        public string ReferenceId { get; set; } = string.Empty;\n        public DateTime ReservedAt { get; set; } = DateTime.Now;\n        public DateTime? ExpiresAt { get; set; }\n        public bool IsActive { get; set; } = true;\n        public string ReservedBy { get; set; } = string.Empty;\n    }\n}",
+        "New":  "public class ProductSerial\n    {\n        public int Id { get; set; }\n        public string SerialNumber { get; set; } = \"\";\n        public int ProductId { get; set; }\n        public DateTime? ExpiryDate { get; set; }\n        public DateTime? ManufactureDate { get; set; }\n        public string? Location { get; set; }\n    }\n\n    public class InventoryImage\n    {\n        public int Id { get; set; }\n        public int InventoryId { get; set; }\n        public int ProductId { get; set; }\n        public int WarehouseId { get; set; }\n        public string ImagePath { get; set; } = string.Empty;\n        public string ThumbnailPath { get; set; } = string.Empty;\n        public string Description { get; set; } = string.Empty;\n        public DateTime UploadedAt { get; set; } = DateTime.UtcNow;\n        public string UploadedBy { get; set; } = string.Empty;\n        [ForeignKey(nameof(ProductId))]\n        public virtual Product? Product { get; set; }\n        [ForeignKey(nameof(WarehouseId))]\n        public virtual Warehouse Warehouse { get; set; } = null!;\n    }\n\n    public class StockReservation\n    {\n        public int Id { get; set; }\n        public int ProductId { get; set; }\n        public int WarehouseId { get; set; }\n        public int Quantity { get; set; }\n        public string ReferenceType { get; set; } = string.Empty;\n        public string ReferenceId { get; set; } = string.Empty;\n        public DateTime ReservedAt { get; set; } = DateTime.UtcNow;\n        public DateTime? ExpiresAt { get; set; }\n        public bool IsActive { get; set; } = true;\n        public string ReservedBy { get; set; } = string.Empty;\n    }\n}"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ERP\\MiscModels.cs",
+        "Line":  18,
+        "Old":  "public DateTime CreatedDate { get; set; } = DateTime.Now;",
+        "New":  "public DateTime CreatedDate { get; set; } = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ERP\\MiscModels.cs",
+        "Line":  46,
+        "Old":  "public DateTime UploadDate { get; set; } = DateTime.Now;",
+        "New":  "public DateTime UploadDate { get; set; } = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ERP\\SalesModels.cs",
+        "Line":  7,
+        "Old":  "public class SalesOrder\n    {\n        public int Id { get; set; }\n        public int? CustomerId { get; set; }\n        public string OrderNumber { get; set; } = string.Empty;\n        public DateTime Date { get; set; } = DateTime.Now;\n        public string PaymentMethod { get; set; } = string.Empty;\n        public string CustomerName { get; set; } = string.Empty;\n        public decimal SubTotal { get; set; }\n        public decimal DiscountTotal { get; set; }\n        public decimal TaxTotal { get; set; }\n        public decimal TotalAmount { get; set; }\n        public string Notes { get; set; } = string.Empty;\n        public SalesOrderStatus Status { get; set; } = SalesOrderStatus.Completed;\n        \n        /// \u003csummary\u003e\n        /// Fiş tekrar yazdırıldı mı?\n        /// \u003c/summary\u003e\n        public bool IsReprinted { get; set; }\n        \n        /// \u003csummary\u003e\n        /// Kaç kez yazdırıldı\n        /// \u003c/summary\u003e\n        public int PrintCount { get; set; }\n        \n        public virtual Customer? Customer { get; set; }\n        public virtual System.Collections.Generic.ICollection\u003cSalesOrderItem\u003e Items { get; set; } = new System.Collections.Generic.List\u003cSalesOrderItem\u003e();\n        public virtual System.Collections.Generic.ICollection\u003cSalesOrderPayment\u003e Payments { get; set; } = new System.Collections.Generic.List\u003cSalesOrderPayment\u003e();\n    }",
+        "New":  "public class SalesOrder\n    {\n        public int Id { get; set; }\n        public int? CustomerId { get; set; }\n        public string OrderNumber { get; set; } = string.Empty;\n        public DateTime Date { get; set; } = DateTime.UtcNow;\n        public string PaymentMethod { get; set; } = string.Empty;\n        public string CustomerName { get; set; } = string.Empty;\n        public decimal SubTotal { get; set; }\n        public decimal DiscountTotal { get; set; }\n        public decimal TaxTotal { get; set; }\n        public decimal TotalAmount { get; set; }\n        public string Notes { get; set; } = string.Empty;\n        public SalesOrderStatus Status { get; set; } = SalesOrderStatus.Completed;\n        \n        /// \u003csummary\u003e\n        /// Fiş tekrar yazdırıldı mı?\n        /// \u003c/summary\u003e\n        public bool IsReprinted { get; set; }\n        \n        /// \u003csummary\u003e\n        /// Kaç kez yazdırıldı\n        /// \u003c/summary\u003e\n        public int PrintCount { get; set; }\n        \n        public virtual Customer? Customer { get; set; }\n        public virtual System.Collections.Generic.ICollection\u003cSalesOrderItem\u003e Items { get; set; } = new System.Collections.Generic.List\u003cSalesOrderItem\u003e();\n        public virtual System.Collections.Generic.ICollection\u003cSalesOrderPayment\u003e Payments { get; set; } = new System.Collections.Generic.List\u003cSalesOrderPayment\u003e();\n    }"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ERP\\SalesModels.cs",
+        "Line":  53,
+        "Old":  "public DateTime Date { get; set; } = DateTime.Now;",
+        "New":  "public DateTime Date { get; set; } = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ERP\\SalesModels.cs",
+        "Line":  61,
+        "Old":  "public DateTime CreatedAt { get; set; } = DateTime.Now;",
+        "New":  "public DateTime CreatedAt { get; set; } = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ERP\\SupplierModels.cs",
+        "Line":  23,
+        "Old":  "public DateTime Date { get; set; } = DateTime.Now;",
+        "New":  "public DateTime Date { get; set; } = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\KamatekCrm.Shared\\Models\\ERP\\SupplierModels.cs",
+        "Line":  24,
+        "Old":  "public DateTime OrderDate { get; set; } = DateTime.Now;",
+        "New":  "public DateTime OrderDate { get; set; } = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\AddProductViewModel.cs",
+        "Line":  316,
+        "Old":  "return $\"PRD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}\";",
+        "New":  "return $\"PRD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}\";"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\AddProductViewModel.cs",
+        "Line":  452,
+        "Old":  "Date = DateTime.Now,",
+        "New":  "Date = DateTime.UtcNow,"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\AddProductViewModel.cs",
+        "Line":  521,
+        "Old":  "Date = DateTime.Now,",
+        "New":  "Date = DateTime.UtcNow,"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\AnalyticsViewModel.cs",
+        "Line":  159,
+        "Old":  ".Select(i =\u003e DateTime.Now.AddMonths(-i))",
+        "New":  ".Select(i =\u003e DateTime.UtcNow.AddMonths(-i))"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\CustomerAddViewModel.cs",
+        "Line":  335,
+        "Old":  "int year = DateTime.Now.Year;",
+        "New":  "int year = DateTime.UtcNow.Year;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\CustomerDetailViewModel.cs",
+        "Line":  192,
+        "Old":  "/// \u003csummary\u003e\n        /// Aktif iş sayısı\n        /// \u003c/summary\u003e\n        public int ActiveJobCount =\u003e ActiveJobs?.Count ?? 0;\n\n        // Yeni Alanlar için Property\u0027ler\n        public string? Tags\n        {\n            get =\u003e _tags;\n            set =\u003e SetProperty(ref _tags, value);\n        }\n\n        public CustomerSegment Segment\n        {\n            get =\u003e _segment;\n            set =\u003e SetProperty(ref _segment, value);\n        }\n\n        public DateTime? BirthDate\n        {\n            get =\u003e _birthDate;\n            set =\u003e SetProperty(ref _birthDate, value);\n        }\n\n        public string? LoyaltyLevel\n        {\n            get =\u003e _loyaltyLevel;\n            private set =\u003e SetProperty(ref _loyaltyLevel, value);\n        }\n\n        /// \u003csummary\u003e\n        /// Doğum günü yaklaşıyor mu?\n        /// \u003c/summary\u003e\n        public bool HasUpcomingBirthday\n        {\n            get\n            {\n                if (!BirthDate.HasValue) return false;\n                var today = DateTime.Today;\n                var bday = BirthDate.Value;\n                var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day);\n                var daysUntil = (thisYearBirthday - today).Days;\n                return daysUntil \u003e= 0 \u0026\u0026 daysUntil \u003c= 30;\n            }\n        }\n\n        #endregion",
+        "New":  "/// \u003csummary\u003e\n        /// Aktif iş sayısı\n        /// \u003c/summary\u003e\n        public int ActiveJobCount =\u003e ActiveJobs?.Count ?? 0;\n\n        // Yeni Alanlar için Property\u0027ler\n        public string? Tags\n        {\n            get =\u003e _tags;\n            set =\u003e SetProperty(ref _tags, value);\n        }\n\n        public CustomerSegment Segment\n        {\n            get =\u003e _segment;\n            set =\u003e SetProperty(ref _segment, value);\n        }\n\n        public DateTime? BirthDate\n        {\n            get =\u003e _birthDate;\n            set =\u003e SetProperty(ref _birthDate, value);\n        }\n\n        public string? LoyaltyLevel\n        {\n            get =\u003e _loyaltyLevel;\n            private set =\u003e SetProperty(ref _loyaltyLevel, value);\n        }\n\n        /// \u003csummary\u003e\n        /// Doğum günü yaklaşıyor mu?\n        /// \u003c/summary\u003e\n        public bool HasUpcomingBirthday\n        {\n            get\n            {\n                if (!BirthDate.HasValue) return false;\n                var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);\n                var bday = BirthDate.Value;\n                var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day, 0, 0, 0, DateTimeKind.Utc);\n                var daysUntil = (thisYearBirthday - today).Days;\n                return daysUntil \u003e= 0 \u0026\u0026 daysUntil \u003c= 30;\n            }\n        }\n\n        #endregion"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\CustomerDetailViewModel.cs",
+        "Line":  330,
+        "Old":  "Date = DateTime.Now,",
+        "New":  "Date = DateTime.UtcNow,"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\CustomerDetailViewModel.cs",
+        "Line":  404,
+        "Old":  "// Müşteriyi önceden seç\n            if (_customer != null)\n            {\n                serviceJobViewModel.SelectedCustomer = _customer;\n            }\n        }\n\n        private void AddNote()\n        {\n            var note = Notes;\n            if (string.IsNullOrWhiteSpace(note))\n            {\n                MessageBox.Show(\"Lütfen bir not girin!\", \"Uyarı\", MessageBoxButton.OK, MessageBoxImage.Warning);\n                return;\n            }\n\n            try\n            {\n                var activity = new CustomerActivity\n                {\n                    CustomerId = _customerId,\n                    Type = ActivityType.NoteAdded,\n                    Description = note,\n                    CreatedDate = DateTime.UtcNow,\n                    CreatedBy = \"Kullanıcı\"\n                };\n\n                _context.CustomerActivities.Add(activity);\n                _context.SaveChanges();\n\n                // Activity\u0027yi listeye ekle\n                Activities.Insert(0, activity);\n\n                // Müşterinin notlarını da güncelle\n                if (_customer != null)\n                {\n                    _customer.Notes = string.IsNullOrEmpty(_customer.Notes) \n                        ? note \n                        : _customer.Notes + \"\\n\" + DateTime.Now.ToString(\"dd.MM.yyyy\") + \": \" + note;\n                    _customer.LastInteractionDate = DateTime.UtcNow;\n                    _context.SaveChanges();\n                }\n\n                Notes = string.Empty;\n                _toastService.ShowSuccess(\"Not başarıyla eklendi!\");\n            }\n            catch (Exception ex)\n            {\n                MessageBox.Show($\"Not ekleme hatası: {ex.Message}\", \"Hata\", MessageBoxButton.OK, MessageBoxImage.Error);\n            }\n        }\n\n        private void SaveTags()\n        {\n            if (_customer == null) return;\n\n            try\n            {\n                _customer.Tags = Tags;\n                _customer.LastInteractionDate = DateTime.UtcNow;\n                _context.SaveChanges();\n\n                // Etiket ekleme aktivitesi kaydet\n                var activity = new CustomerActivity\n                {\n                    CustomerId = _customerId,\n                    Type = ActivityType.TagAdded,\n                    Description = $\"Etiketler güncellendi: {Tags}\",\n                    CreatedDate = DateTime.UtcNow,\n                    CreatedBy = \"Kullanıcı\"\n                };\n                _context.CustomerActivities.Add(activity);\n                _context.SaveChanges();\n\n                Activities.Insert(0, activity);\n                _toastService.ShowSuccess(\"Etiketler kaydedildi!\");\n            }\n            catch (Exception ex)\n            {\n                MessageBox.Show($\"Etiket kaydetme hatası: {ex.Message}\", \"Hata\", MessageBoxButton.OK, MessageBoxImage.Error);\n            }\n        }\n\n        private void SaveSegment()\n        {\n            if (_customer == null) return;\n\n            try\n            {\n                _customer.Segment = Segment;\n                _customer.LastInteractionDate = DateTime.UtcNow;\n                _context.SaveChanges();\n\n                _toastService.ShowSuccess($\"Müşteri segmenti \u0027{Segment}\u0027 olarak güncellendi!\");\n            }\n            catch (Exception ex)\n            {\n                MessageBox.Show($\"Segment güncelleme hatası: {ex.Message}\", \"Hata\", MessageBoxButton.OK, MessageBoxImage.Error);\n            }\n        }\n\n        #endregion\n    }\n}",
+        "New":  "// Müşteriyi önceden seç\n            if (_customer != null)\n            {\n                serviceJobViewModel.SelectedCustomer = _customer;\n            }\n        }\n\n        private void AddNote()\n        {\n            var note = Notes;\n            if (string.IsNullOrWhiteSpace(note))\n            {\n                MessageBox.Show(\"Lütfen bir not girin!\", \"Uyarı\", MessageBoxButton.OK, MessageBoxImage.Warning);\n                return;\n            }\n\n            try\n            {\n                var activity = new CustomerActivity\n                {\n                    CustomerId = _customerId,\n                    Type = ActivityType.NoteAdded,\n                    Description = note,\n                    CreatedDate = DateTime.UtcNow,\n                    CreatedBy = \"Kullanıcı\"\n                };\n\n                _context.CustomerActivities.Add(activity);\n                _context.SaveChanges();\n\n                // Activity\u0027yi listeye ekle\n                Activities.Insert(0, activity);\n\n                // Müşterinin notlarını da güncelle\n                if (_customer != null)\n                {\n                    _customer.Notes = string.IsNullOrEmpty(_customer.Notes) \n                        ? note \n                        : _customer.Notes + \"\\n\" + DateTime.UtcNow.ToString(\"dd.MM.yyyy\") + \": \" + note;\n                    _customer.LastInteractionDate = DateTime.UtcNow;\n                    _context.SaveChanges();\n                }\n\n                Notes = string.Empty;\n                _toastService.ShowSuccess(\"Not başarıyla eklendi!\");\n            }\n            catch (Exception ex)\n            {\n                MessageBox.Show($\"Not ekleme hatası: {ex.Message}\", \"Hata\", MessageBoxButton.OK, MessageBoxImage.Error);\n            }\n        }\n\n        private void SaveTags()\n        {\n            if (_customer == null) return;\n\n            try\n            {\n                _customer.Tags = Tags;\n                _customer.LastInteractionDate = DateTime.UtcNow;\n                _context.SaveChanges();\n\n                // Etiket ekleme aktivitesi kaydet\n                var activity = new CustomerActivity\n                {\n                    CustomerId = _customerId,\n                    Type = ActivityType.TagAdded,\n                    Description = $\"Etiketler güncellendi: {Tags}\",\n                    CreatedDate = DateTime.UtcNow,\n                    CreatedBy = \"Kullanıcı\"\n                };\n                _context.CustomerActivities.Add(activity);\n                _context.SaveChanges();\n\n                Activities.Insert(0, activity);\n                _toastService.ShowSuccess(\"Etiketler kaydedildi!\");\n            }\n            catch (Exception ex)\n            {\n                MessageBox.Show($\"Etiket kaydetme hatası: {ex.Message}\", \"Hata\", MessageBoxButton.OK, MessageBoxImage.Error);\n            }\n        }\n\n        private void SaveSegment()\n        {\n            if (_customer == null) return;\n\n            try\n            {\n                _customer.Segment = Segment;\n                _customer.LastInteractionDate = DateTime.UtcNow;\n                _context.SaveChanges();\n\n                _toastService.ShowSuccess($\"Müşteri segmenti \u0027{Segment}\u0027 olarak güncellendi!\");\n            }\n            catch (Exception ex)\n            {\n                MessageBox.Show($\"Segment güncelleme hatası: {ex.Message}\", \"Hata\", MessageBoxButton.OK, MessageBoxImage.Error);\n            }\n        }\n\n        #endregion\n    }\n}"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\DashboardViewModel.cs",
+        "Line":  38,
+        "Old":  "public string TodayDate =\u003e DateTime.Now.ToString(\"dd MMMM yyyy, dddd\", new System.Globalization.CultureInfo(\"tr-TR\"));",
+        "New":  "public string TodayDate =\u003e DateTime.UtcNow.ToString(\"dd MMMM yyyy, dddd\", new System.Globalization.CultureInfo(\"tr-TR\"));"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\DashboardViewModel.cs",
+        "Line":  43,
+        "Old":  "public string CurrentMonthName =\u003e DateTime.Now.ToString(\"MMMM yyyy\", new System.Globalization.CultureInfo(\"tr-TR\"));",
+        "New":  "public string CurrentMonthName =\u003e DateTime.UtcNow.ToString(\"MMMM yyyy\", new System.Globalization.CultureInfo(\"tr-TR\"));"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\FieldJobListViewModel.cs",
+        "Line":  254,
+        "Old":  "dbJob.CompletedDate = DateTime.Now;",
+        "New":  "dbJob.CompletedDate = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\FinanceViewModel.cs",
+        "Line":  31,
+        "Old":  "private DateTime _selectedDate = DateTime.Today;",
+        "New":  "private DateTime _selectedDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\FinanceViewModel.cs",
+        "Line":  168,
+        "Old":  "GoToTodayCommand = new RelayCommand(_ =\u003e SelectedDate = DateTime.Today);",
+        "New":  "GoToTodayCommand = new RelayCommand(_ =\u003e SelectedDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc));"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\FinanceViewModel.cs",
+        "Line":  188,
+        "Old":  "startDate = new DateTime(SelectedDate.Year, SelectedDate.Month, 1);",
+        "New":  "startDate = new DateTime(SelectedDate.Year, SelectedDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\FinanceViewModel.cs",
+        "Line":  262,
+        "Old":  "Date = DateTime.Now,",
+        "New":  "Date = DateTime.UtcNow,"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\FinanceViewModel.cs",
+        "Line":  268,
+        "Old":  "CreatedAt = DateTime.Now",
+        "New":  "CreatedAt = DateTime.UtcNow"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\FinancialHealthViewModel.cs",
+        "Line":  76,
+        "Old":  ".Select(i =\u003e DateTime.Now.AddMonths(-i))",
+        "New":  ".Select(i =\u003e DateTime.UtcNow.AddMonths(-i))"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\ProductViewModel.cs",
+        "Line":  347,
+        "Old":  "SKU = sku ?? $\"IMP-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}\",",
+        "New":  "SKU = sku ?? $\"IMP-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}\","
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\ProductViewModel.cs",
+        "Line":  394,
+        "Old":  "Date = DateTime.Now,",
+        "New":  "Date = DateTime.UtcNow,"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\ProjectQuoteEditorViewModel.cs",
+        "Line":  739,
+        "Old":  "FileName = $\"Teklif_{ProjectName}_{DateTime.Now:yyyyMMdd}\",",
+        "New":  "FileName = $\"Teklif_{ProjectName}_{DateTime.UtcNow:yyyyMMdd}\","
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\ProjectQuoteEditorViewModel.cs",
+        "Line":  814,
+        "Old":  "string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $\"Teklif_{ProjectName}_{DateTime.Now:yyyyMMddHHmmss}.pdf\");",
+        "New":  "string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $\"Teklif_{ProjectName}_{DateTime.UtcNow:yyyyMMddHHmmss}.pdf\");"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\ProjectQuoteViewModel.cs",
+        "Line":  206,
+        "Old":  "var year = DateTime.Now.Year;",
+        "New":  "var year = DateTime.UtcNow.Year;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\ProjectQuoteViewModel.cs",
+        "Line":  215,
+        "Old":  "CreatedDate = DateTime.Now,",
+        "New":  "CreatedDate = DateTime.UtcNow,"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\PurchaseOrderViewModel.cs",
+        "Line":  327,
+        "Old":  "OrderDate = DateTime.Now,",
+        "New":  "OrderDate = DateTime.UtcNow,"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\PurchaseOrderViewModel.cs",
+        "Line":  328,
+        "Old":  "Date = DateTime.Now,",
+        "New":  "Date = DateTime.UtcNow,"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\PurchaseOrderViewModel.cs",
+        "Line":  330,
+        "Old":  "InvoiceNumber = $\"INV-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}\",",
+        "New":  "InvoiceNumber = $\"INV-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}\","
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\QuickAssetAddViewModel.cs",
+        "Line":  123,
+        "Old":  "CreatedDate = DateTime.Now",
+        "New":  "CreatedDate = DateTime.UtcNow"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\QuickNewProductForPurchaseViewModel.cs",
+        "Line":  166,
+        "Old":  "? $\"POI-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}\"",
+        "New":  "? $\"POI-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}\""
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\QuoteListViewModel.cs",
+        "Line":  350,
+        "Old":  "FileName = $\"Teklif_{SelectedQuote.Title}_{DateTime.Now:yyyyMMdd}\",",
+        "New":  "FileName = $\"Teklif_{SelectedQuote.Title}_{DateTime.UtcNow:yyyyMMdd}\","
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\RepairListViewModel.cs",
+        "Line":  737,
+        "Old":  "public int DaysInShop =\u003e (DateTime.Now - CreatedDate).Days;",
+        "New":  "public int DaysInShop =\u003e (DateTime.UtcNow - CreatedDate).Days;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\RepairViewModel.cs",
+        "Line":  432,
+        "Old":  "CreatedDate = DateTime.Now,",
+        "New":  "CreatedDate = DateTime.UtcNow,"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\RoutePlanningViewModel.cs",
+        "Line":  63,
+        "Old":  "private DateTime _selectedDate = DateTime.Today;",
+        "New":  "private DateTime _selectedDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\StockCountViewModel.cs",
+        "Line":  28,
+        "Old":  "private DateTime _countDate = DateTime.Today;",
+        "New":  "private DateTime _countDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\StockCountViewModel.cs",
+        "Line":  425,
+        "Old":  "FileName = $\"StokSayim_{SelectedWarehouse?.Name ?? \"Tum\"}_{DateTime.Now:yyyyMMdd_HHmm}.xlsx\",",
+        "New":  "FileName = $\"StokSayim_{SelectedWarehouse?.Name ?? \"Tum\"}_{DateTime.UtcNow:yyyyMMdd_HHmm}.xlsx\","
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\StockCountViewModel.cs",
+        "Line":  444,
+        "Old":  "worksheet.Cell(4, 1).Value = $\"Rapor Oluşturma: {DateTime.Now:dd.MM.yyyy HH:mm}\";",
+        "New":  "worksheet.Cell(4, 1).Value = $\"Rapor Oluşturma: {DateTime.UtcNow:dd.MM.yyyy HH:mm}\";"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\StockCountViewModel.cs",
+        "Line":  896,
+        "Old":  "var referenceId = $\"MANUAL-{DateTime.Now:yyyyMMdd-HHmmss}-{ManualSelectedWarehouse.Id}\";",
+        "New":  "var referenceId = $\"MANUAL-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{ManualSelectedWarehouse.Id}\";"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\StockCountViewModel.cs",
+        "Line":  923,
+        "Old":  "Date = DateTime.Now,",
+        "New":  "Date = DateTime.UtcNow,"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\StockReportsViewModel.cs",
+        "Line":  136,
+        "Old":  "StartDate = DateTime.Today.AddDays(-30);",
+        "New":  "StartDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-30);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\StockReportsViewModel.cs",
+        "Line":  137,
+        "Old":  "EndDate = DateTime.Today;",
+        "New":  "EndDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\StockReportsViewModel.cs",
+        "Line":  284,
+        "Old":  "StartDate = DateTime.Today.AddDays(-30);",
+        "New":  "StartDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-30);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\StockReportsViewModel.cs",
+        "Line":  285,
+        "Old":  "EndDate = DateTime.Today;",
+        "New":  "EndDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\SystemLogsViewModel.cs",
+        "Line":  162,
+        "Old":  "_startDate = DateTime.Today.AddDays(-7);",
+        "New":  "_startDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-7);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\SystemLogsViewModel.cs",
+        "Line":  163,
+        "Old":  "_endDate = DateTime.Today.AddDays(1);",
+        "New":  "_endDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(1);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\SystemLogsViewModel.cs",
+        "Line":  233,
+        "Old":  "_startDate = DateTime.Today.AddDays(-7);",
+        "New":  "_startDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-7);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCRM\\ViewModels\\SystemLogsViewModel.cs",
+        "Line":  234,
+        "Old":  "_endDate = DateTime.Today.AddDays(1);",
+        "New":  "_endDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(1);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.API\\Controllers\\DashboardController.cs",
+        "Line":  77,
+        "Old":  "var startOfMonth = new DateTime(today.Year, today.Month, 1);",
+        "New":  "var startOfMonth = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.API\\Controllers\\DashboardController.cs",
+        "Line":  179,
+        "Old":  "var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day);",
+        "New":  "var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day, 0, 0, 0, DateTimeKind.Utc);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.API\\Controllers\\DashboardController.cs",
+        "Line":  187,
+        "Old":  "var thisYear = new DateTime(today.Year, bday.Month, bday.Day);",
+        "New":  "var thisYear = new DateTime(today.Year, bday.Month, bday.Day, 0, 0, 0, DateTimeKind.Utc);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.API\\Controllers\\PhotoController.cs",
+        "Line":  101,
+        "Old":  "UploadedAt = DateTime.Now",
+        "New":  "UploadedAt = DateTime.UtcNow"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.API\\Controllers\\PhotoController.cs",
+        "Line":  131,
+        "Old":  "photo.DeletedAt = DateTime.Now;",
+        "New":  "photo.DeletedAt = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.API\\Controllers\\ReportsController.cs",
+        "Line":  164,
+        "Old":  "\u0026\u0026 j.SlaDeadline.Value \u003c DateTime.Now.AddHours(8)",
+        "New":  "\u0026\u0026 j.SlaDeadline.Value \u003c DateTime.UtcNow.AddHours(8)"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.API\\Services\\PdfReportService.cs",
+        "Line":  350,
+        "Old":  "col.Item().Text($\"Tarih: {DateTime.Now:dd.MM.yyyy HH:mm}\").FontSize(8).FontColor(SecondaryColor);",
+        "New":  "col.Item().Text($\"Tarih: {DateTime.UtcNow:dd.MM.yyyy HH:mm}\").FontSize(8).FontColor(SecondaryColor);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.Web\\Features\\Route\\RouteEndpoints.cs",
+        "Line":  24,
+        "Old":  "var targetDate = string.IsNullOrEmpty(date) ? DateTime.Today : DateTime.Parse(date);",
+        "New":  "var targetDate = string.IsNullOrEmpty(date) ? DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc) : DateTime.Parse(date);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.Web\\Features\\Technician\\JobWorkflowEndpoints.cs",
+        "Line":  111,
+        "Old":  "var now = DateTime.Now;",
+        "New":  "var now = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.Web\\Features\\Technician\\TechnicianDashboardEndpoints.cs",
+        "Line":  34,
+        "Old":  "var today = DateTime.Today.ToString(\"yyyy-MM-dd\");",
+        "New":  "var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).ToString(\"yyyy-MM-dd\");"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.Web\\Features\\Technician\\TechnicianDashboardEndpoints.cs",
+        "Line":  72,
+        "Old":  "var targetDate = string.IsNullOrEmpty(date) ? DateTime.Today : DateTime.Parse(date);",
+        "New":  "var targetDate = string.IsNullOrEmpty(date) ? DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc) : DateTime.Parse(date);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.Web\\Shared\\HtmlTemplates.cs",
+        "Line":  182,
+        "Old":  "var now = DateTime.Now;",
+        "New":  "var now = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.Web\\Shared\\HtmlTemplates.cs",
+        "Line":  588,
+        "Old":  "var now = DateTime.Now;",
+        "New":  "var now = DateTime.UtcNow;"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.Web\\Shared\\HtmlTemplates.cs",
+        "Line":  693,
+        "Old":  "var isToday = date.Date == DateTime.Today;",
+        "New":  "var isToday = date.Date == DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);"
+    },
+    {
+        "File":  "C:\\Antigravity\\KamatekCrm.Web\\Shared\\HtmlTemplates.cs",
+        "Line":  814,
+        "Old":  "var isToday = date.Date == DateTime.Today;",
+        "New":  "var isToday = date.Date == DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);"
+    }
+]

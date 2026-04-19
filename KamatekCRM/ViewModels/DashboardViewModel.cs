@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -35,12 +35,12 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Bugünün tarihi (Türkçe format)
         /// </summary>
-        public string TodayDate => DateTime.Now.ToString("dd MMMM yyyy, dddd", new System.Globalization.CultureInfo("tr-TR"));
+        public string TodayDate => DateTime.UtcNow.ToString("dd MMMM yyyy, dddd", new System.Globalization.CultureInfo("tr-TR"));
 
         /// <summary>
         /// Mevcut ay adı
         /// </summary>
-        public string CurrentMonthName => DateTime.Now.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"));
+        public string CurrentMonthName => DateTime.UtcNow.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"));
 
         #endregion
 

@@ -20,8 +20,8 @@ namespace KamatekCrm.Shared.Models
     {
         public int SupplierId { get; set; }
         public PurchaseStatus Status { get; set; }
-        public DateTime Date { get; set; } = DateTime.Now;
-        public DateTime OrderDate { get; set; } = DateTime.Now;
+        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public DateTime OrderDate { get; set; } = DateTime.UtcNow;
         public string InvoiceNumber { get; set; } = string.Empty;
         public decimal TotalAmount { get; set; }
         public string Notes { get; set; } = string.Empty;

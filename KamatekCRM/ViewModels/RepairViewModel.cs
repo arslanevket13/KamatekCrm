@@ -429,7 +429,7 @@ namespace KamatekCrm.ViewModels
             NewJob = new ServiceJob 
             { 
                 ServiceJobType = ServiceJobType.Fault,
-                CreatedDate = DateTime.Now,
+                CreatedDate = DateTime.UtcNow,
                 RepairStatus = RepairStatus.Registered,
                 Status = JobStatus.Pending,
                 WorkOrderType = WorkOrderType.Repair,

@@ -98,7 +98,7 @@ namespace KamatekCrm.API.Controllers
                     MimeType = file.ContentType,
                     Description = description,
                     UploadedByUserId = userId,
-                    UploadedAt = DateTime.Now
+                    UploadedAt = DateTime.UtcNow
                 };
 
                 _context.TaskPhotos.Add(photo);
@@ -128,7 +128,7 @@ namespace KamatekCrm.API.Controllers
 
             // Soft delete record
             photo.IsDeleted = true;
-            photo.DeletedAt = DateTime.Now;
+            photo.DeletedAt = DateTime.UtcNow;
             photo.DeletedBy = userId.ToString(); // Assuming DeletedBy is string in BaseEntity
 
             // Optionally delete physical file immediately or keep it

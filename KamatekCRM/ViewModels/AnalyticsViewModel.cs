@@ -156,7 +156,7 @@ namespace KamatekCrm.ViewModels
 
             // --- 3. Son 6 Ay Arıza Trendi (Line Chart) ---
             var last6Months = Enumerable.Range(0, 6)
-                .Select(i => DateTime.Now.AddMonths(-i))
+                .Select(i => DateTime.UtcNow.AddMonths(-i))
                 .OrderBy(d => d)
                 .ToList();
 

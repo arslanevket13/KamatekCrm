@@ -15,7 +15,7 @@ namespace KamatekCrm.Shared.Models
         [MaxLength(100)] public string? SerialNumber { get; set; }
         [MaxLength(200)] public string? Location { get; set; }
         public AssetStatus Status { get; set; } = AssetStatus.Active;
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public string FullName => $"{Brand} {Model}";
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer? Customer { get; set; }
@@ -43,7 +43,7 @@ namespace KamatekCrm.Shared.Models
         public string Path { get; set; } = "";
         public long FileSize { get; set; }
         public string ContentType { get; set; } = "";
-        public DateTime UploadDate { get; set; } = DateTime.Now;
+        public DateTime UploadDate { get; set; } = DateTime.UtcNow;
         public string UploadedBy { get; set; } = "";
         public string Description { get; set; } = "";
         public AttachmentEntityType EntityType { get; set; }

@@ -324,10 +324,10 @@ namespace KamatekCrm.ViewModels
                 var order = new PurchaseOrder
                 {
                     SupplierId = SelectedSupplier.Id,
-                    OrderDate = DateTime.Now,
-                    Date = DateTime.Now,
+                    OrderDate = DateTime.UtcNow,
+                    Date = DateTime.UtcNow,
                     Status = autoReceive ? PurchaseStatus.Pending : PurchaseStatus.Pending,
-                    InvoiceNumber = $"INV-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}",
+                    InvoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}",
                     Notes = string.Empty,
                     Items = new ObservableCollection<PurchaseOrderItem>(CurrentOrderItems)
                 };

@@ -114,7 +114,7 @@ public static class JobWorkflowEndpoints
             var form = await ctx.Request.ReadFormAsync();
             var note = form["Note"].ToString();
             var userName = ctx.User.FindFirst(ClaimTypes.Name)?.Value ?? "Teknisyen";
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
 
             // Return the new note card via HTMX
             var noteHtml = $"""

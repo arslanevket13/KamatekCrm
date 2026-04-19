@@ -445,7 +445,8 @@ namespace KamatekCrm.Migrations
 
                     b.Property<string>("Brand")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("Category")
                         .HasColumnType("integer");
@@ -457,14 +458,17 @@ namespace KamatekCrm.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Location")
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("Model")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("SerialNumber")
-                        .HasColumnType("text");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -1565,7 +1569,7 @@ namespace KamatekCrm.Migrations
                     b.Property<int>("QuantityUsed")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ServiceJobId")
+                    b.Property<int>("ServiceJobId")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("UnitCost")
@@ -2162,7 +2166,7 @@ namespace KamatekCrm.Migrations
                         {
                             Id = 1,
                             CreatedBy = "",
-                            CreatedDate = new DateTime(2026, 4, 9, 19, 39, 23, 53, DateTimeKind.Utc).AddTicks(4393),
+                            CreatedDate = new DateTime(2026, 4, 19, 19, 56, 45, 598, DateTimeKind.Utc).AddTicks(4183),
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Merkez Depo",
@@ -2172,7 +2176,7 @@ namespace KamatekCrm.Migrations
                         {
                             Id = 2,
                             CreatedBy = "",
-                            CreatedDate = new DateTime(2026, 4, 9, 19, 39, 23, 53, DateTimeKind.Utc).AddTicks(5022),
+                            CreatedDate = new DateTime(2026, 4, 19, 19, 56, 45, 598, DateTimeKind.Utc).AddTicks(4937),
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Servis Aracı 1",
@@ -2462,7 +2466,9 @@ namespace KamatekCrm.Migrations
 
                     b.HasOne("KamatekCrm.Shared.Models.ServiceJob", "ServiceJob")
                         .WithMany("ServiceJobItems")
-                        .HasForeignKey("ServiceJobId");
+                        .HasForeignKey("ServiceJobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Product");
 

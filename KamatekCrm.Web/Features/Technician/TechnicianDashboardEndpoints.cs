@@ -31,7 +31,7 @@ public static class TechnicianDashboardEndpoints
                 var client = httpClientFactory.CreateClient("ApiClient");
                 
                 // Bugünkü işler (bugün oluşturulan veya bugüne atanan)
-                var today = DateTime.Today.ToString("yyyy-MM-dd");
+                var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).ToString("yyyy-MM-dd");
                 var todayResponse = await client.GetAsync($"api/servicejobs?startDate={today}&pageSize=10");
                 var todayJobs = todayResponse.IsSuccessStatusCode 
                     ? await todayResponse.Content.ReadFromJsonAsync<List<JobListItem>>() 
@@ -69,7 +69,7 @@ public static class TechnicianDashboardEndpoints
         {
             var userName = ctx.User.FindFirst(ClaimTypes.Name)?.Value ?? "Teknisyen";
             var tokens = antiforgery.GetAndStoreTokens(ctx);
-            var targetDate = string.IsNullOrEmpty(date) ? DateTime.Today : DateTime.Parse(date);
+            var targetDate = string.IsNullOrEmpty(date) ? DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc) : DateTime.Parse(date);
             var nextDay = targetDate.AddDays(1);
 
             try

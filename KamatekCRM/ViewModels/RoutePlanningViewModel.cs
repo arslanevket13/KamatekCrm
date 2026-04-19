@@ -60,7 +60,7 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _mapHtmlContent, value);
         }
 
-        private DateTime _selectedDate = DateTime.Today;
+        private DateTime _selectedDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
         public DateTime SelectedDate
         {
             get => _selectedDate;

@@ -159,8 +159,8 @@ namespace KamatekCrm.ViewModels
             ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
 
             // Varsayılan: Son 7 gün
-            _startDate = DateTime.Today.AddDays(-7);
-            _endDate = DateTime.Today.AddDays(1);
+            _startDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-7);
+            _endDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(1);
 
             LoadLogs();
         }
@@ -230,8 +230,8 @@ namespace KamatekCrm.ViewModels
             _searchText = string.Empty;
             _selectedActionFilter = "Tümü";
             _selectedEntityFilter = "Tümü";
-            _startDate = DateTime.Today.AddDays(-7);
-            _endDate = DateTime.Today.AddDays(1);
+            _startDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-7);
+            _endDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(1);
 
             OnPropertyChanged(nameof(SearchText));
             OnPropertyChanged(nameof(SelectedActionFilter));

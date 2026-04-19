@@ -120,7 +120,7 @@ namespace KamatekCrm.ViewModels
                     SerialNumber = SerialNumber?.Trim(),
                     Location = Location?.Trim(),
                     Status = AssetStatus.Active,
-                    CreatedDate = DateTime.Now
+                    CreatedDate = DateTime.UtcNow
                 };
 
                 context.CustomerAssets.Add(asset);

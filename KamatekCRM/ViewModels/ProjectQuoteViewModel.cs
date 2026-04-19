@@ -203,7 +203,7 @@ namespace KamatekCrm.ViewModels
             try
             {
                 // Proje kodu oluştur
-                var year = DateTime.Now.Year;
+                var year = DateTime.UtcNow.Year;
                 var count = _context.ServiceProjects.Count(p => p.CreatedDate.Year == year) + 1;
                 var projectCode = $"PRJ-{year}-{count:D3}";
 
@@ -212,7 +212,7 @@ namespace KamatekCrm.ViewModels
                     ProjectCode = projectCode,
                     Title = ProjectName,
                     CustomerId = SelectedCustomer!.Id,
-                    CreatedDate = DateTime.Now,
+                    CreatedDate = DateTime.UtcNow,
                     TotalUnitCount = TotalUnitCount,
                     TotalBudget = TotalAmount,
                     SurveyNotes = $"Blok: {BlockCount}, Kat: {FloorCount}, Daire/Kat: {FlatsPerFloor}",

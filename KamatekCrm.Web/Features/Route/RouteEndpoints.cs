@@ -21,7 +21,7 @@ public static class RouteEndpoints
             var userIdStr = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var userId = int.TryParse(userIdStr, out var uid) ? uid : 0;
             var tokens = antiforgery.GetAndStoreTokens(ctx);
-            var targetDate = string.IsNullOrEmpty(date) ? DateTime.Today : DateTime.Parse(date);
+            var targetDate = string.IsNullOrEmpty(date) ? DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc) : DateTime.Parse(date);
 
             var routePoints = new List<RoutePointDto>();
             try

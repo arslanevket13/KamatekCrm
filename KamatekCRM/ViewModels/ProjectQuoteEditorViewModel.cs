@@ -736,7 +736,7 @@ namespace KamatekCrm.ViewModels
 
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
-                FileName = $"Teklif_{ProjectName}_{DateTime.Now:yyyyMMdd}",
+                FileName = $"Teklif_{ProjectName}_{DateTime.UtcNow:yyyyMMdd}",
                 DefaultExt = ".pdf",
                 Filter = "PDF Belgeleri (.pdf)|*.pdf"
             };
@@ -811,7 +811,7 @@ namespace KamatekCrm.ViewModels
              if (result != MessageBoxResult.Yes) return;
 
              // Geçici dosya yolu
-             string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Teklif_{ProjectName}_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+             string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Teklif_{ProjectName}_{DateTime.UtcNow:yyyyMMddHHmmss}.pdf");
 
              try
              {

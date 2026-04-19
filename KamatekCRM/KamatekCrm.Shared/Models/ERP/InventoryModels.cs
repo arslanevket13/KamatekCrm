@@ -77,7 +77,7 @@ namespace KamatekCrm.Shared.Models
     public class StockTransaction
     {
         public int Id { get; set; }
-        public DateTime Date { get; set; } = DateTime.Now;
+        public DateTime Date { get; set; } = DateTime.UtcNow;
         public int? ProductId { get; set; }
         public int? SourceWarehouseId { get; set; }
         public int? TargetWarehouseId { get; set; }
@@ -101,7 +101,7 @@ namespace KamatekCrm.Shared.Models
     public class ServiceJobItem
     {
         public int Id { get; set; }
-        public int ServiceJobId { get; set; }
+        public int? ServiceJobId { get; set; }
         public int? ProductId { get; set; }
         public int QuantityUsed { get; set; }
         public decimal UnitPrice { get; set; }
@@ -109,7 +109,7 @@ namespace KamatekCrm.Shared.Models
         [ForeignKey(nameof(ProductId))]
         public virtual Product? Product { get; set; }
         [ForeignKey(nameof(ServiceJobId))]
-        public virtual ServiceJob ServiceJob { get; set; } = null!;
+        public virtual ServiceJob? ServiceJob { get; set; }
     }
 
     public class ProductSerial
@@ -131,7 +131,7 @@ namespace KamatekCrm.Shared.Models
         public string ImagePath { get; set; } = string.Empty;
         public string ThumbnailPath { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public DateTime UploadedAt { get; set; } = DateTime.Now;
+        public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
         public string UploadedBy { get; set; } = string.Empty;
         [ForeignKey(nameof(ProductId))]
         public virtual Product? Product { get; set; }
@@ -147,7 +147,7 @@ namespace KamatekCrm.Shared.Models
         public int Quantity { get; set; }
         public string ReferenceType { get; set; } = string.Empty;
         public string ReferenceId { get; set; } = string.Empty;
-        public DateTime ReservedAt { get; set; } = DateTime.Now;
+        public DateTime ReservedAt { get; set; } = DateTime.UtcNow;
         public DateTime? ExpiresAt { get; set; }
         public bool IsActive { get; set; } = true;
         public string ReservedBy { get; set; } = string.Empty;

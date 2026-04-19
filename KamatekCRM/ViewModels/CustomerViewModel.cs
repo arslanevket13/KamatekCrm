@@ -343,7 +343,7 @@ namespace KamatekCrm.ViewModels
 
                 // İstatistikleri yükle
                 var statsResponse = await _apiClient.GetAsync<dynamic>("api/customers/stats");
-                if (statsResponse != null && statsResponse.Success && statsResponse.Data != null)
+                if (statsResponse != null && statsResponse.Success && (object)statsResponse.Data != null)
                 {
                     try
                     {

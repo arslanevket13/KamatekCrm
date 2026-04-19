@@ -133,8 +133,8 @@ namespace KamatekCrm.ViewModels
             };
 
             // Varsayılan tarih aralığı: Son 30 gün
-            StartDate = DateTime.Today.AddDays(-30);
-            EndDate = DateTime.Today;
+            StartDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-30);
+            EndDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
 
             SearchCommand = new RelayCommand(_ => ExecuteSearch());
             ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
@@ -281,8 +281,8 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void ClearFilters()
         {
-            StartDate = DateTime.Today.AddDays(-30);
-            EndDate = DateTime.Today;
+            StartDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-30);
+            EndDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
             SelectedTransactionType = null;
             SelectedProduct = null;
             SelectedWarehouse = null;
