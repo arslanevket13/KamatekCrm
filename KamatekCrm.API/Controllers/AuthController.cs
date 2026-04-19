@@ -33,13 +33,13 @@ namespace KamatekCrm.API.Controllers
         /// Kullanıcı girişi - JWT token üretir
         /// </summary>
         [HttpPost("login")]
-        public async Task<ActionResult<ApiResp<LoginResponseDto>>> Login([FromBody] LoginRequestDto request)
+        public async Task<ActionResult<KamatekCrm.API.Models.ApiResponse<LoginResponseDto>>> Login([FromBody] LoginRequestDto request)
         {
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ApiResp<LoginResponseDto>.Fail("Geçersiz istek. Kullanıcı adı ve şifre gereklidir."));
+                    return BadRequest(KamatekCrm.API.Models.ApiResponse<LoginResponseDto>.Fail("Geçersiz istek. Kullanıcı adı ve şifre gereklidir."));
                 }
 
                 // Kullanıcıyı veritabanından bul
@@ -49,14 +49,14 @@ namespace KamatekCrm.API.Controllers
                 if (user == null)
                 {
                     _logger.LogWarning("Login başarısız: Kullanıcı bulunamadı - {Username}", request.Username);
-                    return Unauthorized(ApiResp<LoginResponseDto>.Fail("Kullanıcı adı veya şifre hatalı."));
+                    return Unauthorized(KamatekCrm.API.Models.ApiResponse<LoginResponseDto>.Fail("Kullanıcı adı veya şifre hatalı."));
                 }
 
                 // Şifre doğrulama (PBKDF2 - WPF AuthService ile aynı algoritma)
                 if (!VerifyPassword(request.Password, user.PasswordHash))
                 {
                     _logger.LogWarning("Login başarısız: Hatalı şifre - {Username}", request.Username);
-                    return Unauthorized(ApiResp<LoginResponseDto>.Fail("Kullanıcı adı veya şifre hatalı."));
+                    return Unauthorized(KamatekCrm.API.Models.ApiResponse<LoginResponseDto>.Fail("Kullanıcı adı veya şifre hatalı."));
                 }
 
                 // JWT token oluştur
@@ -80,12 +80,12 @@ namespace KamatekCrm.API.Controllers
                     Message = "Giriş başarılı."
                 };
 
-                return Ok(ApiResp<LoginResponseDto>.Ok(responseDto, "Giriş başarılı."));
+                return Ok(KamatekCrm.API.Models.ApiResponse<LoginResponseDto>.Ok(responseDto, "Giriş başarılı."));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Login sırasında beklenmeyen hata - {Username}", request.Username);
-                return StatusCode(500, ApiResp<LoginResponseDto>.Fail("Sunucu hatası. Lütfen daha sonra tekrar deneyin."));
+                return StatusCode(500, KamatekCrm.API.Models.ApiResponse<LoginResponseDto>.Fail("Sunucu hatası. Lütfen daha sonra tekrar deneyin."));
             }
         }
 

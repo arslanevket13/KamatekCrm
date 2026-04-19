@@ -1,0 +1,25 @@
+2026-04-13 16:19:44.758 GMT [27868] LOG:  starting PostgreSQL 18.3 on x86_64-windows, compiled by msvc-19.44.35223, 64-bit
+2026-04-13 16:19:44.763 GMT [27868] LOG:  listening on IPv6 address "::1", port 5432
+2026-04-13 16:19:44.766 GMT [27868] LOG:  could not bind IPv4 address "127.0.0.1": Only one usage of each socket address (protocol/network address/port) is normally permitted.
+	
+2026-04-13 16:19:44.766 GMT [27868] HINT:  Is another postmaster already running on port 5432? If not, wait a few seconds and retry.
+2026-04-13 16:19:44.813 GMT [27580] LOG:  database system was interrupted; last known up at 2026-04-11 22:55:19 GMT
+2026-04-13 16:19:45.736 GMT [27580] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-04-13 16:19:45.742 GMT [27580] LOG:  redo starts at 0/1EB1EC8
+2026-04-13 16:19:45.742 GMT [27580] LOG:  invalid record length at 0/1EB1FD0: expected at least 24, got 0
+2026-04-13 16:19:45.742 GMT [27580] LOG:  redo done at 0/1EB1F98 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2026-04-13 16:19:45.748 GMT [24652] LOG:  checkpoint starting: end-of-recovery immediate wait
+2026-04-13 16:19:45.769 GMT [24652] LOG:  checkpoint complete: wrote 0 buffers (0.0%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.003 s, sync=0.004 s, total=0.024 s; sync files=2, longest=0.002 s, average=0.002 s; distance=0 kB, estimate=0 kB; lsn=0/1EB1FD0, redo lsn=0/1EB1FD0
+2026-04-13 16:19:45.776 GMT [27868] LOG:  database system is ready to accept connections
+2026-04-13 16:52:28.716 GMT [13904] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2026-04-13 16:54:45.882 GMT [24652] LOG:  checkpoint starting: time
+2026-04-13 16:55:09.842 GMT [24652] LOG:  checkpoint complete: wrote 215 buffers (1.3%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 1 recycled; write=23.600 s, sync=0.218 s, total=23.966 s; sync files=323, longest=0.013 s, average=0.001 s; distance=2209 kB, estimate=2209 kB; lsn=0/20DA5C8, redo lsn=0/20DA538
+2026-04-13 17:33:19.668 GMT [29176] FATAL:  database "postegres" does not exist
+2026-04-13 17:33:39.199 GMT [29564] FATAL:  database "postegres" does not exist
+2026-04-13 17:34:46.020 GMT [24652] LOG:  checkpoint starting: time
+2026-04-13 17:34:48.724 GMT [24652] LOG:  checkpoint complete: wrote 21 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.317 s, sync=0.361 s, total=2.735 s; sync files=8, longest=0.088 s, average=0.046 s; distance=131 kB, estimate=2001 kB; lsn=0/20FB410, redo lsn=0/20FB3B8
+2026-04-13 18:18:47.750 GMT [28864] FATAL:  invalid value for parameter "timezone_abbreviations": "Default"
+2026-04-13 18:19:47.751 GMT [1940] WARNING:  autovacuum worker took too long to start; canceled
+2026-04-13 18:19:47.820 GMT [15896] FATAL:  could not open directory "C:/postegresql/share/timezonesets": No such file or directory
+2026-04-13 18:19:47.820 GMT [15896] HINT:  This may indicate an incomplete PostgreSQL installation, or that the file "C:/postegresql/bin/postgres.exe" has been moved away from its proper location.
