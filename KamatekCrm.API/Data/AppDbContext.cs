@@ -142,7 +142,70 @@ namespace KamatekCrm.Data
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             });
+                }
+
+        // --- Soft Delete & Audit Interceptor ---
+        public override int SaveChanges()
+        {
+            ApplyAuditInformation();
+            return base.SaveChanges();
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyAuditInformation();
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void ApplyAuditInformation()
+        {
+            var entries = ChangeTracker.Entries<KamatekCrm.Shared.Models.Common.BaseEntity>();
+            var timestamp = DateTime.UtcNow;
+
+            foreach (var entry in entries)
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entry.Entity.CreatedDate = timestamp;
+                        entry.Entity.IsDeleted = false;
+                        break;
+
+                    case EntityState.Deleted:
+                        // Fiziksel silme yerine Soft Delete uygula
+                        entry.State = EntityState.Modified;
+                        entry.Entity.IsDeleted = true;
+                        entry.Entity.DeletedAt = timestamp;
+
+                        // Soft Cascade Delete — alt navigation'lari da sil
+                        foreach (var navigation in entry.Metadata.GetNavigations())
+                        {
+                            if (navigation.IsCollection)
+                            {
+                                var collection = entry.Collection(navigation.Name);
+                                if (!collection.IsLoaded)
+                                {
+                                    collection.Load();
+                                }
+
+                                if (collection.CurrentValue != null)
+                                {
+                                    foreach (var dependent in collection.CurrentValue)
+                                    {
+                                        if (dependent is KamatekCrm.Shared.Models.Common.ISoftDeletable sd)
+                                        {
+                                            var dependentEntry = Entry(dependent);
+                                            dependentEntry.State = EntityState.Modified;
+                                            sd.IsDeleted = true;
+                                            sd.DeletedAt = timestamp;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
         }
     }
 }
-
