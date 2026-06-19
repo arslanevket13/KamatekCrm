@@ -32,7 +32,7 @@
 
                 <StackPanel Grid.Column="0" Margin="0,0,10,10">
                     <Label Content="Çözünürlük" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding Resolution}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding Resolution}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="2MP"/>
                         <ComboBoxItem Content="4MP"/>
                         <ComboBoxItem Content="5MP"/>
@@ -42,7 +42,7 @@
 
                 <StackPanel Grid.Column="1" Margin="0,0,10,10">
                     <Label Content="Lens Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding LensType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding LensType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Fixed"/>
                         <ComboBoxItem Content="Varifocal"/>
                         <ComboBoxItem Content="Motorized"/>
@@ -51,7 +51,7 @@
 
                 <StackPanel Grid.Column="2" Margin="0,0,0,10">
                     <Label Content="Kamera Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding CameraType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding CameraType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Dome"/>
                         <ComboBoxItem Content="Bullet"/>
                         <ComboBoxItem Content="PTZ"/>
@@ -66,7 +66,7 @@
 
                 <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,10,10">
                     <Label Content="IP Koruma" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding IpRating}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding IpRating}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="IP65"/>
                         <ComboBoxItem Content="IP66"/>
                         <ComboBoxItem Content="IP67"/>
@@ -75,7 +75,7 @@
 
                 <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,10">
                     <Label Content="Sıkıştırma" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding Compression}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding Compression}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="H.264"/>
                         <ComboBoxItem Content="H.265"/>
                         <ComboBoxItem Content="H.265+"/>
@@ -102,7 +102,7 @@
 
                 <StackPanel Grid.Column="0" Margin="0,0,10,10">
                     <Label Content="Ekran Boyutu" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding ScreenSize}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ScreenSize}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="4.3 inç"/>
                         <ComboBoxItem Content="7 inç"/>
                         <ComboBoxItem Content="10 inç"/>
@@ -111,7 +111,7 @@
 
                 <StackPanel Grid.Column="1" Margin="0,0,10,10">
                     <Label Content="Bağlantı Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding ConnectionType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ConnectionType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="IP"/>
                         <ComboBoxItem Content="2-Wire"/>
                         <ComboBoxItem Content="4-Wire"/>
@@ -121,7 +121,7 @@
 
                 <StackPanel Grid.Column="2" Margin="0,0,0,10">
                     <Label Content="Montaj Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding MountingType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding MountingType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Sıva Üstü"/>
                         <ComboBoxItem Content="Sıva Altı"/>
                         <ComboBoxItem Content="Masa Üstü"/>
@@ -148,7 +148,7 @@
 
                 <StackPanel Grid.Column="0" Margin="0,0,10,10">
                     <Label Content="Dedektör Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding DetectorType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding DetectorType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Duman"/>
                         <ComboBoxItem Content="Isı"/>
                         <ComboBoxItem Content="Multi-Sensor"/>
@@ -158,7 +158,7 @@
 
                 <StackPanel Grid.Column="1" Margin="0,0,10,10">
                     <Label Content="Sistem Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding SystemType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding SystemType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Adresli"/>
                         <ComboBoxItem Content="Konvansiyonel"/>
                     </ComboBox>
@@ -166,7 +166,7 @@
 
                 <StackPanel Grid.Column="2" Margin="0,0,0,10">
                     <Label Content="Bileşen Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Panel"/>
                         <ComboBoxItem Content="Dedektör"/>
                         <ComboBoxItem Content="Siren"/>
@@ -193,7 +193,7 @@
 
                 <StackPanel Grid.Column="0" Margin="0,0,10,10">
                     <Label Content="Bağlantı Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding ConnectionType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ConnectionType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Kablolu"/>
                         <ComboBoxItem Content="Kablosuz"/>
                         <ComboBoxItem Content="Hibrit"/>
@@ -202,7 +202,7 @@
 
                 <StackPanel Grid.Column="1" Margin="0,0,10,10">
                     <Label Content="Bileşen Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Panel"/>
                         <ComboBoxItem Content="PIR"/>
                         <ComboBoxItem Content="Manyetik Kontak"/>
@@ -213,7 +213,7 @@
 
                 <StackPanel Grid.Column="2" Margin="0,0,0,10">
                     <Label Content="Algılama Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding DetectionType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding DetectionType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Hareket"/>
                         <ComboBoxItem Content="Kapı/Pencere"/>
                         <ComboBoxItem Content="Titreşim"/>
@@ -241,7 +241,7 @@
 
                 <StackPanel Grid.Column="0" Margin="0,0,10,10">
                     <Label Content="Protokol" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding Protocol}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding Protocol}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="KNX"/>
                         <ComboBoxItem Content="Zigbee"/>
                         <ComboBoxItem Content="Z-Wave"/>
@@ -252,7 +252,7 @@
 
                 <StackPanel Grid.Column="1" Margin="0,0,10,10">
                     <Label Content="Modül Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding ModuleType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ModuleType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Anahtar"/>
                         <ComboBoxItem Content="Dimmer"/>
                         <ComboBoxItem Content="Röle"/>
@@ -263,7 +263,7 @@
 
                 <StackPanel Grid.Column="2" Margin="0,0,0,10">
                     <Label Content="Yük Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding LoadType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding LoadType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="LED"/>
                         <ComboBoxItem Content="Akkor"/>
                         <ComboBoxItem Content="Motor"/>
@@ -289,7 +289,7 @@
 
                 <StackPanel Grid.Column="0" Margin="0,0,10,10">
                     <Label Content="Okuyucu Frekansı" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding ReaderFrequency}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ReaderFrequency}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="125kHz"/>
                         <ComboBoxItem Content="13.56MHz"/>
                         <ComboBoxItem Content="Dual Frekans"/>
@@ -298,7 +298,7 @@
 
                 <StackPanel Grid.Column="1" Margin="0,0,10,10">
                     <Label Content="Bileşen Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Kontrol Ünitesi"/>
                         <ComboBoxItem Content="Okuyucu"/>
                         <ComboBoxItem Content="Elektrikli Kilit"/>
@@ -308,7 +308,7 @@
 
                 <StackPanel Grid.Column="2" Margin="0,0,0,10">
                     <Label Content="Haberleşme" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding CommunicationType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding CommunicationType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Wiegand"/>
                         <ComboBoxItem Content="RS485"/>
                         <ComboBoxItem Content="TCP/IP"/>
@@ -335,7 +335,7 @@
 
                 <StackPanel Grid.Column="0" Margin="0,0,10,10">
                     <Label Content="Bileşen Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Çanak"/>
                         <ComboBoxItem Content="LNB"/>
                         <ComboBoxItem Content="Receiver"/>
@@ -351,7 +351,7 @@
 
                 <StackPanel Grid.Column="2" Margin="0,0,0,10">
                     <Label Content="LNB Çıkış Sayısı" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding LnbOutputs}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding LnbOutputs}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="1"/>
                         <ComboBoxItem Content="2"/>
                         <ComboBoxItem Content="4"/>
@@ -361,7 +361,7 @@
 
                 <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,10">
                     <Label Content="Malzeme" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding Material}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding Material}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Çelik"/>
                         <ComboBoxItem Content="Alüminyum"/>
                         <ComboBoxItem Content="Fiberglas"/>
@@ -387,7 +387,7 @@
 
                 <StackPanel Grid.Column="0" Margin="0,0,10,10">
                     <Label Content="Fiber Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding FiberMode}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding FiberMode}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="SingleMode"/>
                         <ComboBoxItem Content="MultiMode"/>
                     </ComboBox>
@@ -395,7 +395,7 @@
 
                 <StackPanel Grid.Column="1" Margin="0,0,10,10">
                     <Label Content="Kor Sayısı" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding CoreCount}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding CoreCount}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="2"/>
                         <ComboBoxItem Content="4"/>
                         <ComboBoxItem Content="8"/>
@@ -408,7 +408,7 @@
 
                 <StackPanel Grid.Column="2" Margin="0,0,0,10">
                     <Label Content="Kablo Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding CableType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding CableType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Indoor"/>
                         <ComboBoxItem Content="Outdoor"/>
                         <ComboBoxItem Content="ADSS"/>
@@ -418,7 +418,7 @@
 
                 <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,10,10">
                     <Label Content="Konnektör Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedItem="{Binding ConnectorType}" Style="{StaticResource ModernComboBox}">
+                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ConnectorType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="SC"/>
                         <ComboBoxItem Content="LC"/>
                         <ComboBoxItem Content="FC"/>

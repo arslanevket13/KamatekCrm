@@ -53,7 +53,7 @@ namespace KamatekCrm.API.Services
                     {
                         OrderNumber = orderNumber,
                         Date = DateTime.UtcNow,
-                        CustomerId = request.CustomerId ?? 0,
+                        CustomerId = request.CustomerId > 0 ? request.CustomerId : null,
                         PaymentMethod = request.PaymentMethod.ToString(),
                         SubTotal = subTotal,
                         DiscountTotal = discountTotal,
@@ -245,7 +245,7 @@ namespace KamatekCrm.API.Services
                 TotalDiscount = orders.Sum(o => o.DiscountTotal),
                 TotalCash = orders.Where(o => o.PaymentMethod == "Cash").Sum(o => o.TotalAmount),
                 TotalCard = orders.Where(o => o.PaymentMethod == "CreditCard").Sum(o => o.TotalAmount),
-                WalkInCustomerCount = orders.Count(o => o.CustomerId == 0),
+                WalkInCustomerCount = orders.Count(o => o.CustomerId == null || o.CustomerId == 0),
                 RegisteredCustomerCount = orders.Count(o => o.CustomerId > 0)
             };
 

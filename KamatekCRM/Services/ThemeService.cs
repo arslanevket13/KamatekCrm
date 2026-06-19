@@ -21,14 +21,21 @@ namespace KamatekCrm.Services
 
         /// <summary>
         /// Uygulamayı başlatırken ayarlanmış son temayı yükle
+        /// ve WPF-UI'ın enjekte ettiği stilleri ezecek şekilde
+        /// kendi ScrollBar/ScrollViewer stillerimizi en sona ekle.
         /// </summary>
         public static void Initialize()
         {
             ChangeTheme(AppSettings.CurrentTheme);
             
-            // WPF-UI için dark mode uyumluluğu - This is now handled by ChangeTheme
-            // var isDark = CurrentTheme == "MidnightDark";
-            // ApplicationThemeManager.Apply(isDark ? ApplicationTheme.Dark : ApplicationTheme.Light);
+            // ChangeTheme, aynı tema ise early-return yapabilir.
+            // Bu durumda ReapplyCustomStyles çağrılmamış olur.
+            // Her durumda kendi stillerimizi WPF-UI'ın üzerine yüklemeyi garanti et.
+            var app = Application.Current;
+            if (app != null)
+            {
+                ReapplyCustomStyles(app);
+            }
         }
 
         /// <summary>
@@ -104,20 +111,15 @@ namespace KamatekCrm.Services
                 try
                 {
                     ApplicationThemeManager.Apply(wpfUiTheme);
-                    // Remove auto-injected Wpf.Ui dictionaries to prevent our dynamic styles from being overridden.
-                    // PurgeWpfUiDictionaries(App.Current.Resources); // This method is not defined in the provided context.
+                    
+                    // WPF-UI'ın enjekte ettiği ScrollBar/ScrollViewer stillerini temizle
+                    // ve kendi FixedScrollBar stillerimizi yeniden yükle
+                    ReapplyCustomStyles(app);
                 }
                 catch (Exception ex)
                 {
-                    // Assuming Log is a static class available in the project
-                    // Log.Warning(ex, "ThemeService: WPF UI Theme Manager failed to apply theme.");
                     System.Diagnostics.Debug.WriteLine($"[Sıfır-Hata Koruma] WPF UI Theme Manager failed to apply theme: {ex.Message}");
                 }
-
-                // 5. WPF-UI tema senkronizasyonu (Gölge, Scrollbar ve Popup kontrollerinin karanlık durumu için)
-                // This block is replaced by the new WPF UI Theme logic above
-                // var isDark = themeName == "MidnightDark";
-                // ApplicationThemeManager.Apply(isDark ? ApplicationTheme.Dark : ApplicationTheme.Light);
 
                 // Olayı tetikle
                 ThemeChanged?.Invoke(null, themeName);
@@ -125,6 +127,39 @@ namespace KamatekCrm.Services
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[Sıfır-Hata Koruma] Tema değiştirme hatası: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// WPF-UI'ın ApplicationThemeManager.Apply() çağrısından sonra enjekte ettiği
+        /// ScrollBar ve ScrollViewer stillerini temizler ve kendi FixedScrollBar.xaml
+        /// stillerimizi MergedDictionaries'in sonuna yeniden ekler.
+        /// Bu sayede "son eklenen kazanır" kuralıyla kendi stillerimiz öncelik alır.
+        /// </summary>
+        private static void ReapplyCustomStyles(Application app)
+        {
+            try
+            {
+                var dictionaries = app.Resources.MergedDictionaries;
+                
+                // Kendi FixedScrollBar sözlüğümüzü bul
+                var fixedScrollBarUri = new Uri("Resources/FixedScrollBar.xaml", UriKind.Relative);
+                var existingScrollBar = dictionaries.FirstOrDefault(d =>
+                    d.Source != null && d.Source.OriginalString.Contains("FixedScrollBar.xaml"));
+                
+                if (existingScrollBar != null)
+                {
+                    // Mevcut sözlüğü kaldır
+                    dictionaries.Remove(existingScrollBar);
+                }
+                
+                // Yeniden oluştur ve EN SONA ekle (WPF-UI'ın enjekte ettiklerinden sonra)
+                var freshScrollBarDict = new ResourceDictionary { Source = fixedScrollBarUri };
+                dictionaries.Add(freshScrollBarDict);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Sıfır-Hata Koruma] ReapplyCustomStyles hatası: {ex.Message}");
             }
         }
     }

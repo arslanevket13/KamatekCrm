@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -47,6 +47,10 @@ namespace KamatekCrm
 
                 // WPF-UI Theme - OnStartup'tan SONRA uygula
                 ApplicationThemeManager.Apply(ApplicationTheme.Light);
+
+                // Kendi tema ve stil yapılandırmamızı uygula
+                // WPF-UI'ın enjekte ettiği ScrollBar/ScrollViewer stillerini ezer
+                ThemeService.Initialize();
 
                 // Host Builder'ı yapılandır — SADECE WPF DI, web server YOK
                 _host = Host.CreateDefaultBuilder()

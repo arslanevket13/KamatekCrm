@@ -341,8 +341,17 @@
     <Style x:Key="ModernTextBox" TargetType="TextBox" BasedOn="{StaticResource PremiumTextBox}"/>
     <Style x:Key="ModernPasswordBox" TargetType="PasswordBox" BasedOn="{StaticResource PremiumPasswordBox}"/>
     
-    <!-- Modern ComboBox -->
-    <Style x:Key="ModernComboBox" TargetType="ComboBox">
+    <!-- Modern ComboBoxItem (Inherits default behavior, applies colors) -->
+    <Style x:Key="ModernComboBoxItem" TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
+    </Style>
+
+    <!-- Modern ComboBox (Inherits default behavior, applies colors) -->
+    <Style x:Key="ModernComboBox" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Height" Value="42"/>
         <Setter Property="Padding" Value="12,0"/>
@@ -352,62 +361,7 @@
         <Setter Property="Background" Value="{DynamicResource SurfaceCardBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-         <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ComboBox">
-                     <Grid>
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="{DynamicResource RadiusSmall}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="30"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ContentPresenter Margin="{TemplateBinding Padding}" 
-                                                      VerticalAlignment="Center" 
-                                                      Content="{TemplateBinding SelectionBoxItem}"
-                                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                                      ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
-                                    <Path Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          Data="M0,0 L4,4 L8,0" Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.5"/>
-                                     <ToggleButton Name="ToggleButton" 
-                                                    Grid.ColumnSpan="2" 
-                                                    Focusable="false" 
-                                                    IsChecked="{Binding Path=IsDropDownOpen,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}" 
-                                                    ClickMode="Press">
-                                        <ToggleButton.Template>
-                                            <ControlTemplate TargetType="ToggleButton">
-                                                <Border Background="Transparent"/>
-                                            </ControlTemplate>
-                                        </ToggleButton.Template>
-                                    </ToggleButton>
-                                    <!-- Popup details -->
-                                    <Popup Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
-                                        <Grid Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
-                                            <Border x:Name="DropDownBorder" Background="{DynamicResource SurfaceCardBrush}" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorder}" CornerRadius="{DynamicResource RadiusSmall}" Padding="2">
-                                                <Border.Effect>
-                                                    <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="4" Opacity="0.1"/>
-                                                </Border.Effect>
-                                                <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
-                                                    <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
-                                                </ScrollViewer>
-                                            </Border>
-                                        </Grid>
-                                    </Popup>
-                                </Grid>
-                        </Border>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource TextMutedBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource ModernComboBoxItem}"/>
     </Style>
 
     <Style x:Key="ModernDataGrid" TargetType="DataGrid" BasedOn="{StaticResource PremiumDataGrid}"/>

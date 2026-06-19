@@ -184,7 +184,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Kategori listesi
         /// </summary>
-        public Array Categories => Enum.GetValues(typeof(ProductCategory));
+        public Array Categories => Enum.GetValues(typeof(ProductCategoryType));
 
         /// <summary>
         /// KDV Oranları
