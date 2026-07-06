@@ -34,7 +34,7 @@
         <!-- Dashboard Skeleton -->
         <StackPanel Margin="24">
             <!-- Header Skeleton -->
-            <Grid Margin="0,0,0,20">
+            <Grid Margin="0,0,0,24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -50,7 +50,7 @@
             </Grid>
             
             <!-- Stats Cards Skeleton -->
-            <UniformGrid Columns="4" Margin="0,0,0,20">
+            <UniformGrid Columns="4" Margin="0,0,0,24">
                 <Border Background="{DynamicResource ShimmerBrush}" Height="100" Margin="0,0,8,0" CornerRadius="12"/>
                 <Border Background="{DynamicResource ShimmerBrush}" Height="100" Margin="4,0" CornerRadius="12"/>
                 <Border Background="{DynamicResource ShimmerBrush}" Height="100" Margin="4,0" CornerRadius="12"/>

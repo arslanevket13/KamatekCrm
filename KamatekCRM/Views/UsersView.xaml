@@ -4,7 +4,7 @@
              xmlns:components="clr-namespace:KamatekCrm.Components"
              Background="{DynamicResource SurfacePageBrush}">
 
-    <Grid Margin="20">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -13,7 +13,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Grid Grid.Row="0" Margin="0,0,0,20">
+        <Grid Grid.Row="0" Margin="0,0,0,24">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -33,7 +33,7 @@
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="👤" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <StackPanel>
-                        <TextBlock Text="{Binding CurrentUserName}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding CurrentUserName}" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
                         <TextBlock Text="{Binding CurrentUserRole}" FontSize="11" Foreground="{DynamicResource ThemePrimary}"/>
                     </StackPanel>
                 </StackPanel>
@@ -72,9 +72,9 @@
                 <Grid Grid.Column="0">
                     <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource ModernTextBox}"
-                             Height="40" Padding="36,8,12,8"/>
+                             Height="40" Padding="40,8,16,8"/>
                     <TextBlock Text="🔍" FontSize="16" VerticalAlignment="Center" 
-                               Margin="12,0,0,0" IsHitTestVisible="False"/>
+                               Margin="16,0,0,0" IsHitTestVisible="False"/>
                 </Grid>
 
                 <!-- Filters -->
@@ -132,13 +132,13 @@
                         <DataGridTemplateColumn Header="Kullanıcı" Width="*" MinWidth="200">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="12,0">
+                                    <StackPanel Orientation="Horizontal" Margin="16,0">
                                         <components:KmAvatar FullName="{Binding AdSoyad}" 
                                                              Size="Medium" 
                                                              VerticalAlignment="Center" 
-                                                             Margin="0,0,12,0"/>
+                                                             Margin="0,0,16,0"/>
                                         <StackPanel VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding AdSoyad}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding AdSoyad}" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                             <TextBlock Text="{Binding Username}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"/>
                                         </StackPanel>
                                     </StackPanel>
@@ -149,7 +149,7 @@
                         <DataGridTemplateColumn Header="Rol" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="12" Padding="10,4" HorizontalAlignment="Left" Margin="12,0">
+                                    <Border CornerRadius="12" Padding="8,4" HorizontalAlignment="Left" Margin="16,0">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="{DynamicResource BorderDefaultBrush}"/>
@@ -191,7 +191,7 @@
                         <DataGridTemplateColumn Header="Durum" Width="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <components:KmStatusBadge VerticalAlignment="Center" Margin="12,0">
+                                    <components:KmStatusBadge VerticalAlignment="Center" Margin="16,0">
                                         <components:KmStatusBadge.Style>
                                             <Style TargetType="components:KmStatusBadge">
                                                 <Style.Triggers>
@@ -244,7 +244,7 @@
                                     <Border Background="{TemplateBinding Background}" 
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="6">
+                                            CornerRadius="8">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                 </ControlTemplate>
@@ -269,7 +269,7 @@
                                     <Border Background="{TemplateBinding Background}" 
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="6">
+                                            CornerRadius="8">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                 </ControlTemplate>

@@ -33,7 +33,7 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
+                                CornerRadius="8">
                             <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
                         </Border>
                     </ControlTemplate>
@@ -55,12 +55,12 @@
         </Style>
     </Window.Resources>
 
-    <Border Margin="20" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
+    <Border Margin="24" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
         <Border.Effect>
             <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.08"/>
         </Border.Effect>
 
-        <Grid Margin="22">
+        <Grid Margin="24">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -71,8 +71,8 @@
             <StackPanel Grid.Row="0">
                 <TextBlock Text="Yeni Ürün Oluştur" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                 <TextBlock Text="Siparişe eklenecek ürün bilgilerini girin." 
-                           FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,3,0,0"/>
-                <Separator Margin="0,12,0,0" Background="{DynamicResource BorderDefaultBrush}"/>
+                           FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+                <Separator Margin="0,16,0,0" Background="{DynamicResource BorderDefaultBrush}"/>
             </StackPanel>
 
             <!-- Two-column form -->
@@ -131,7 +131,7 @@
                                  Style="{StaticResource Field}"/>
 
                         <!-- Info note -->
-                        <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="6" Padding="10,8" Margin="0,14,0,0">
+                        <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="8,8" Margin="0,16,0,0">
                             <TextBlock Text="💡 SKU boş bırakılırsa otomatik tanımlanır. Satış fiyatı boş bırakılırsa alış × 1.20 uygulanır."
                                        FontSize="11" Foreground="{DynamicResource ThemePrimary}" TextWrapping="Wrap"/>
                         </Border>
@@ -140,9 +140,9 @@
             </ScrollViewer>
 
             <!-- Footer -->
-            <StackPanel Grid.Row="2" Margin="0,14,0,0">
+            <StackPanel Grid.Row="2" Margin="0,16,0,0">
                 <!-- Error -->
-                <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="6" Padding="10,8" Margin="0,0,0,10"
+                <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="8,8" Margin="0,0,0,16"
                         Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
                     <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"/>
                 </Border>
@@ -156,7 +156,7 @@
 
                     <Button Grid.Column="0" Content="İptal"
                             Command="{Binding CancelCommand}"
-                            Height="38" FontSize="13"
+                            Height="38" FontSize="14"
                             Background="{DynamicResource ApplicationBackgroundBrush}" Foreground="{DynamicResource TextBodyBrush}"
                             BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Cursor="Hand">
                         <Button.Template>
@@ -175,7 +175,7 @@
                             Content="📦 Oluştur &amp; Ekle"
                             Command="{Binding SaveProductCommand}"
                             IsDefault="True"
-                            Height="38" FontSize="13" FontWeight="SemiBold"
+                            Height="38" FontSize="14" FontWeight="SemiBold"
                             Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0" Cursor="Hand">
                         <Button.Style>
                             <Style TargetType="Button">

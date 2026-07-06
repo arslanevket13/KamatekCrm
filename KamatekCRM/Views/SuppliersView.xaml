@@ -44,7 +44,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="50" Width="40" Height="40" Margin="0,0,12,0">
+                                <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="50" Width="40" Height="40" Margin="0,0,16,0">
                                     <ui:SymbolIcon Symbol="Person24" Foreground="{DynamicResource PrimaryBrush}"/>
                                 </Border>
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -91,6 +91,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,16">
@@ -113,7 +114,12 @@
                         <TextBox Text="{Binding SelectedSupplier.Email, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
                     </StackPanel>
 
-                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2">
+                    <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,16">
+                        <TextBlock Text="Vergi Numarası" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding SelectedSupplier.TaxNumber, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,0,0,16">
                         <TextBlock Text="Adres" Margin="0,0,0,4"/>
                         <TextBox Text="{Binding SelectedSupplier.Address, UpdateSourceTrigger=PropertyChanged}" Padding="8" TextWrapping="Wrap" AcceptsReturn="True" Height="80"/>
                     </StackPanel>

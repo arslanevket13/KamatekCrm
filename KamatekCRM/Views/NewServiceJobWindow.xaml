@@ -67,7 +67,7 @@
                     <!-- Step 1 -->
                     <StackPanel Grid.Column="0" HorizontalAlignment="Center">
                         <Border Width="36" Height="36" CornerRadius="18" HorizontalAlignment="Center"
-                                Margin="0,0,0,6">
+                                Margin="0,0,0,8">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Background" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
@@ -79,7 +79,7 @@
                                 </Style>
                             </Border.Style>
                             <TextBlock Text="1" FontSize="14" FontWeight="Bold" 
-                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="Müşteri" FontSize="11" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -88,7 +88,7 @@
                     <!-- Step 2 -->
                     <StackPanel Grid.Column="1" HorizontalAlignment="Center">
                         <Border Width="36" Height="36" CornerRadius="18" HorizontalAlignment="Center"
-                                Margin="0,0,0,6">
+                                Margin="0,0,0,8">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Background" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
@@ -100,7 +100,7 @@
                                 </Style>
                             </Border.Style>
                             <TextBlock Text="2" FontSize="14" FontWeight="Bold"
-                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="İş Detayları" FontSize="11" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -109,7 +109,7 @@
                     <!-- Step 3 -->
                     <StackPanel Grid.Column="2" HorizontalAlignment="Center">
                         <Border Width="36" Height="36" CornerRadius="18" HorizontalAlignment="Center"
-                                Margin="0,0,0,6">
+                                Margin="0,0,0,8">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Background" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
@@ -121,7 +121,7 @@
                                 </Style>
                             </Border.Style>
                             <TextBlock Text="3" FontSize="14" FontWeight="Bold"
-                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="Malzeme" FontSize="11" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -130,7 +130,7 @@
                     <!-- Step 4 -->
                     <StackPanel Grid.Column="3" HorizontalAlignment="Center">
                         <Border Width="36" Height="36" CornerRadius="18" HorizontalAlignment="Center"
-                                Margin="0,0,0,6">
+                                Margin="0,0,0,8">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Background" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
@@ -142,7 +142,7 @@
                                 </Style>
                             </Border.Style>
                             <TextBlock Text="4" FontSize="14" FontWeight="Bold"
-                                       Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="Özet" FontSize="11" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -151,12 +151,12 @@
 
                 <!-- Progress Bar -->
                 <ProgressBar Value="{Binding WizardProgress, Mode=OneWay}" Maximum="100" Height="4"
-                             Margin="0,12,0,0" Foreground="{DynamicResource SystemAccentColorPrimaryBrush}"/>
+                             Margin="0,16,0,0" Foreground="{DynamicResource SystemAccentColorPrimaryBrush}"/>
             </StackPanel>
         </Border>
 
         <!-- ========== MAIN CONTENT: STEP PANELS ========== -->
-        <Grid Grid.Row="1" Margin="20,12,20,0">
+        <Grid Grid.Row="1" Margin="24,16,24,0">
 
             <!-- === STEP 1: MÜŞTERİ & KONUM === -->
             <Border Style="{StaticResource ModernCard}" 
@@ -203,9 +203,9 @@
                                 <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
                                         BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                                     <StackPanel>
-                                        <TextBlock Text="📋 Müşteri Bilgileri" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,10"
+                                        <TextBlock Text="📋 Müşteri Bilgileri" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,16"
                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                             <TextBlock Text="Ad:" Width="60" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"/>
                                             <TextBlock Text="{Binding SummaryCustomerName}" FontWeight="SemiBold" FontSize="12"
                                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
@@ -293,7 +293,7 @@
                             </ComboBox>
 
                             <!-- Dynamic Blok/Daire -->
-                            <Grid Visibility="{Binding ShowBlockCount, Converter={StaticResource BoolToVis}}" Margin="0,0,0,12">
+                            <Grid Visibility="{Binding ShowBlockCount, Converter={StaticResource BoolToVis}}" Margin="0,0,0,16">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -312,10 +312,10 @@
                             </Grid>
 
                             <!-- Birim Badge -->
-                            <Border Background="{DynamicResource SystemAccentColorPrimaryBrush}" CornerRadius="6" Padding="10,6"
+                            <Border Background="{DynamicResource SystemAccentColorPrimaryBrush}" CornerRadius="8" Padding="8,4"
                                     HorizontalAlignment="Left" Margin="0,0,0,16"
                                     Visibility="{Binding ShowFlatCount, Converter={StaticResource BoolToVis}}">
-                                <TextBlock Foreground="White" FontSize="12">
+                                <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="12">
                                     <Run Text="Toplam:"/>
                                     <Run Text="{Binding TotalUnitCount, Mode=OneWay}" FontWeight="Bold"/>
                                     <Run Text="birim"/>
@@ -366,14 +366,14 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <TextBlock Text="📝 İŞ AÇIKLAMASI" Style="{StaticResource SectionHeader}" Margin="0,20,0,12"/>
+                            <TextBlock Text="📝 İŞ AÇIKLAMASI" Style="{StaticResource SectionHeader}" Margin="0,24,0,16"/>
                             <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
                                      Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                      BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                                      Height="150" TextWrapping="Wrap" AcceptsReturn="True"
-                                     VerticalScrollBarVisibility="Auto" Padding="12"/>
+                                     VerticalScrollBarVisibility="Auto" Padding="16"/>
                             <TextBlock Text="💡 Kamera sayısı, dedektör adedi, kablo metrajı gibi teknik detayları yazın." 
-                                      FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,6,0,0"/>
+                                      FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,8,0,0"/>
                         </StackPanel>
 
                         <!-- Sağ: Öncelik, Tarih, Teknisyen, SLA -->
@@ -457,10 +457,10 @@
                             <TextBox Text="{Binding TechnicianNotes, UpdateSourceTrigger=PropertyChanged}"
                                      Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                      Height="80" TextWrapping="Wrap" AcceptsReturn="True"
-                                     VerticalScrollBarVisibility="Auto" Padding="12"/>
+                                     VerticalScrollBarVisibility="Auto" Padding="16"/>
                                      
                             <TextBlock Text="📸 Fotoğraflar &amp; Belgeler" Style="{StaticResource FieldLabel}" Margin="0,16,0,8"/>
-                            <ui:Button Content="Fotoğraf Seç..." Command="{Binding BrowsePhotosCommand}" Appearance="Secondary" Height="36" Margin="0,0,0,12"/>
+                            <ui:Button Content="Fotoğraf Seç..." Command="{Binding BrowsePhotosCommand}" Appearance="Secondary" Height="36" Margin="0,0,0,16"/>
                             
                             <ItemsControl ItemsSource="{Binding UploadedPhotos}">
                                 <ItemsControl.ItemsPanel>
@@ -472,9 +472,9 @@
                                     <DataTemplate>
                                         <Border Width="100" Height="100" CornerRadius="8" Margin="0,0,8,8" Background="{DynamicResource SurfacePageBrush}">
                                             <Grid>
-                                                <Image Source="{Binding}" Stretch="UniformToFill" Margin="2" />
+                                                <Image Source="{Binding}" Stretch="UniformToFill" Margin="0" />
                                                 <Button Content="x" Command="{Binding DataContext.RemovePhotoCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}"
-                                                        Background="#AA000000" Foreground="White" BorderThickness="0" 
+                                                        Background="{DynamicResource ThemeSurface}" Opacity="0.8" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0" 
                                                         Width="20" Height="20" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="4"/>
                                             </Grid>
                                         </Border>
@@ -500,7 +500,7 @@
                     <TextBlock Grid.Row="0" Text="📦 MALZEME VE MALİYET" Style="{StaticResource SectionHeader}"/>
 
                     <!-- Ürün Ekleme -->
-                    <Border Grid.Row="1" Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,12"
+                    <Border Grid.Row="1" Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
                             BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                         <StackPanel>
                             <ComboBox ItemsSource="{Binding Products}"
@@ -561,7 +561,7 @@
                     </DataGrid>
 
                     <!-- Maliyet Özeti v2 (KDV dahil) -->
-                    <Border Grid.Row="3" Background="{DynamicResource SurfacePageBrush}" CornerRadius="10" Padding="16" Margin="0,12,0,0"
+                    <Border Grid.Row="3" Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="16" Margin="0,16,0,0"
                             BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -571,26 +571,26 @@
 
                             <!-- Sol: Maliyet Girdileri -->
                             <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                                <Grid Margin="0,0,0,10">
-                                    <TextBlock Text="Malzeme:" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                    <TextBlock Text="{Binding MaterialTotal, StringFormat=₺{0:N2}}" FontSize="13" FontWeight="SemiBold"
+                                <Grid Margin="0,0,0,16">
+                                    <TextBlock Text="Malzeme:" FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding MaterialTotal, StringFormat=₺{0:N2}}" FontSize="14" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,8">
                                     <TextBlock Text="İşçilik (₺):" VerticalAlignment="Center"
-                                               FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                               FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                     <TextBox Text="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
                                              Background="Transparent" BorderThickness="0" 
                                              Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                             FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Right"
+                                             FontWeight="SemiBold" FontSize="14" HorizontalAlignment="Right"
                                              Width="100" TextAlignment="Right"/>
                                 </Grid>
                                 <Grid>
                                     <TextBlock Text="İndirim (₺):" VerticalAlignment="Center"
-                                               FontSize="13" Foreground="{DynamicResource StatusErrorFg}"/>
+                                               FontSize="14" Foreground="{DynamicResource StatusErrorFg}"/>
                                     <TextBox Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}"
                                              Background="Transparent" BorderThickness="0" Foreground="{DynamicResource StatusErrorFg}"
-                                             FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Right"
+                                             FontWeight="SemiBold" FontSize="14" HorizontalAlignment="Right"
                                              Width="100" TextAlignment="Right"/>
                                 </Grid>
                             </StackPanel>
@@ -598,20 +598,20 @@
                             <!-- Sağ: Toplamlar -->
                             <StackPanel Grid.Column="1" Margin="16,0,0,0">
                                 <Grid Margin="0,0,0,8">
-                                    <TextBlock Text="Ara Toplam:" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                    <TextBlock Text="{Binding SubTotal, StringFormat=₺{0:N2}}" FontSize="13" FontWeight="SemiBold"
+                                    <TextBlock Text="Ara Toplam:" FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding SubTotal, StringFormat=₺{0:N2}}" FontSize="14" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Right"/>
                                 </Grid>
                                 <Grid Margin="0,0,0,8">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="KDV %: " FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
-                                        <ComboBox ItemsSource="{Binding KdvRates}" SelectedItem="{Binding KdvRate}" Width="65" Height="28" Padding="4,2"
+                                        <TextBlock Text="KDV %: " FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                        <ComboBox ItemsSource="{Binding KdvRates}" SelectedItem="{Binding KdvRate}" Width="65" Height="28" Padding="4,0"
                                                   Background="Transparent" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    <TextBlock Text="{Binding KdvAmount, StringFormat=₺{0:N2}}" FontSize="13"
+                                    <TextBlock Text="{Binding KdvAmount, StringFormat=₺{0:N2}}" FontSize="14"
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Right"/>
                                 </Grid>
-                                <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" Padding="0,10,0,0">
+                                <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" Padding="0,8,0,0">
                                     <Grid>
                                         <TextBlock Text="GENEL TOPLAM:" FontSize="16" FontWeight="Bold"
                                                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
@@ -632,11 +632,11 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="✅ İŞ EMRİ ÖZETİ" Style="{StaticResource SectionHeader}"/>
-                        <TextBlock Text="Lütfen bilgileri kontrol edin ve kaydedin." FontSize="12" Margin="0,0,0,20"
+                        <TextBlock Text="Lütfen bilgileri kontrol edin ve kaydedin." FontSize="12" Margin="0,0,0,24"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
 
                         <!-- Özet Kartı -->
-                        <UniformGrid Columns="2" Margin="0,0,0,20">
+                        <UniformGrid Columns="2" Margin="0,0,0,24">
                             <!-- Müşteri -->
                             <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="16" Margin="0,0,8,8"
                                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
@@ -700,7 +700,7 @@
 
         <!-- ========== FOOTER: NAVIGATION BUTTONS ========== -->
         <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                Padding="24,14" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+                Padding="24,16" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -712,7 +712,7 @@
                 <!-- İptal -->
                 <ui:Button Grid.Column="0" Content="❌ İptal" 
                            Command="{Binding CancelCommand}"
-                           Appearance="Danger" Height="40" Padding="16,0" FontSize="13"/>
+                           Appearance="Danger" Height="40" Padding="16,0" FontSize="14"/>
 
                 <!-- Adım Bilgisi -->
                 <TextBlock Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"
@@ -723,11 +723,11 @@
                 <!-- Geri -->
                 <ui:Button Grid.Column="2" Content="◀ Geri" 
                            Command="{Binding GoPreviousStepCommand}"
-                           Height="40" Padding="16,0" Margin="0,0,8,0" FontSize="13"
+                           Height="40" Padding="16,0" Margin="0,0,8,0" FontSize="14"
                            Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVis}}"/>
 
                 <!-- İleri / Kaydet -->
-                <ui:Button Grid.Column="3" Height="40" Padding="20,0" FontSize="14" FontWeight="Bold"
+                <ui:Button Grid.Column="3" Height="40" Padding="24,0" FontSize="14" FontWeight="Bold"
                            Appearance="Primary">
                     <ui:Button.Style>
                         <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">

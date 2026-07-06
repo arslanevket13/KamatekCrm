@@ -21,9 +21,10 @@ namespace KamatekCrm.ViewModels
             
             // Commands
             LoadDataCommand = new RelayCommand(async _ => await LoadData());
-            SaveCommand = new RelayCommand(async _ => await Save(), _ => SelectedSupplier != null);
-            DeleteCommand = new RelayCommand(async _ => await Delete(), _ => SelectedSupplier != null && SelectedSupplier.Id > 0);
-            AddNewCommand = new RelayCommand(_ => AddNew());
+            SaveSupplierCommand = new RelayCommand(async _ => await Save(), _ => SelectedSupplier != null);
+            DeleteSupplierCommand = new RelayCommand(async _ => await Delete(), _ => SelectedSupplier != null && SelectedSupplier.Id > 0);
+            AddSupplierCommand = new RelayCommand(_ => AddNew());
+            ClearSearchCommand = new RelayCommand(_ => SearchText = string.Empty);
 
             // Immediate Load
             _ = LoadData();
@@ -70,9 +71,10 @@ namespace KamatekCrm.ViewModels
         #region Commands
 
         public ICommand LoadDataCommand { get; }
-        public ICommand SaveCommand { get; }
-        public ICommand DeleteCommand { get; }
-        public ICommand AddNewCommand { get; }
+        public ICommand SaveSupplierCommand { get; }
+        public ICommand DeleteSupplierCommand { get; }
+        public ICommand AddSupplierCommand { get; }
+        public ICommand ClearSearchCommand { get; }
 
         #endregion
 

@@ -34,7 +34,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="6" 
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8" 
                                 Padding="{TemplateBinding Padding}" x:Name="Bd">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -52,14 +52,14 @@
         </Style>
     </UserControl.Resources>
     
-    <Grid Margin="10">
+    <Grid Margin="16">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="380"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         
         <!-- ============ SOL PANEL ============ -->
-        <Grid Grid.Column="0" Margin="0,0,10,0">
+        <Grid Grid.Column="0" Margin="0,0,16,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>  <!-- Header -->
                 <RowDefinition Height="Auto"/>  <!-- Stats -->
@@ -70,17 +70,17 @@
             <!-- === HEADER === -->
             <Border Grid.Row="0" Style="{StaticResource CardBorder}" Margin="0,0,0,8">
                 <StackPanel>
-                    <TextBlock Text="📍 ROTA PLANLAMA" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,10"/>
+                    <TextBlock Text="📍 ROTA PLANLAMA" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,16"/>
                     
                     <!-- Teknisyen Seçimi -->
                     <TextBlock Text="Teknisyen" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
                     <ComboBox ItemsSource="{Binding Technicians}" SelectedItem="{Binding SelectedTechnician}"
-                              Padding="8,6" FontSize="13">
+                              Padding="8,4" FontSize="14">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="👤 " FontSize="13"/>
-                                    <TextBlock FontSize="13">
+                                    <TextBlock Text="👤 " FontSize="14"/>
+                                    <TextBlock FontSize="14">
                                         <Run Text="{Binding Ad}"/> <Run Text="{Binding Soyad}"/>
                                     </TextBlock>
                                 </StackPanel>
@@ -89,8 +89,8 @@
                     </ComboBox>
                     
                     <!-- Tarih Seçimi -->
-                    <TextBlock Text="Tarih" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,10,0,4"/>
-                    <DatePicker SelectedDate="{Binding SelectedDate}" Padding="6,4" FontSize="13"/>
+                    <TextBlock Text="Tarih" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,8,0,4"/>
+                    <DatePicker SelectedDate="{Binding SelectedDate}" Padding="4,4" FontSize="14"/>
                 </StackPanel>
             </Border>
             
@@ -160,7 +160,7 @@
                             <ItemsControl ItemsSource="{Binding RoutePoints}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Margin="2" CornerRadius="8" Padding="10,8" 
+                                        <Border Margin="0" CornerRadius="8" Padding="8,8" 
                                                 Background="{Binding StatusBgColor}" 
                                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                             <Grid>
@@ -184,21 +184,21 @@
                                                                Foreground="{DynamicResource TextHeadingBrush}" TextTrimming="CharacterEllipsis"/>
                                                     <TextBlock Text="{Binding CustomerName}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                     <TextBlock Text="{Binding StatusDisplay}" FontSize="10" 
-                                                               Foreground="{Binding StatusColor}" FontWeight="SemiBold" Margin="0,3,0,0"/>
+                                                               Foreground="{Binding StatusColor}" FontWeight="SemiBold" Margin="0,4,0,0"/>
                                                 </StackPanel>
                                                 
                                                 <!-- Butonlar -->
                                                 <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center">
-                                                    <Button Content="▲" FontSize="10" Padding="4,2" Margin="0,0,0,2"
+                                                    <Button Content="▲" FontSize="10" Padding="4,0" Margin="0,0,0,0"
                                                             Command="{Binding DataContext.MoveUpCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}" Cursor="Hand" Background="Transparent" BorderThickness="0"/>
-                                                    <Button Content="✓" FontSize="12" Padding="4,2" Margin="0,0,0,2"
+                                                    <Button Content="✓" FontSize="12" Padding="4,0" Margin="0,0,0,0"
                                                             Command="{Binding DataContext.MarkVisitedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}" Cursor="Hand" Foreground="{DynamicResource ThemeSuccess}" Background="Transparent" BorderThickness="0"/>
-                                                    <Button Content="▼" FontSize="10" Padding="4,2" Margin="0,0,0,2"
+                                                    <Button Content="▼" FontSize="10" Padding="4,0" Margin="0,0,0,0"
                                                             Command="{Binding DataContext.MoveDownCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}" Cursor="Hand" Background="Transparent" BorderThickness="0"/>
-                                                    <Button Content="✕" FontSize="10" Padding="4,2" Foreground="{DynamicResource ThemeError}"
+                                                    <Button Content="✕" FontSize="10" Padding="4,0" Foreground="{DynamicResource ThemeError}"
                                                             Command="{Binding DataContext.RemoveFromRouteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                             CommandParameter="{Binding}" Cursor="Hand" Background="Transparent" BorderThickness="0"/>
                                                 </StackPanel>
@@ -218,7 +218,7 @@
                             <ItemsControl ItemsSource="{Binding AvailableJobs}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Margin="2" CornerRadius="8" Padding="10,8" Background="{DynamicResource ThemeSurface}" 
+                                        <Border Margin="0" CornerRadius="8" Padding="8,8" Background="{DynamicResource ThemeSurface}" 
                                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
@@ -228,11 +228,11 @@
                                                 
                                                 <StackPanel Grid.Column="0">
                                                     <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding PriorityDisplay}" FontSize="11" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="{Binding PriorityDisplay}" FontSize="11" Margin="0,0,4,0"/>
                                                         <TextBlock Text="{Binding CategoryDisplay}" FontSize="11"/>
                                                     </StackPanel>
                                                     <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12" 
-                                                               Foreground="{DynamicResource TextHeadingBrush}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                               Foreground="{DynamicResource TextHeadingBrush}" TextTrimming="CharacterEllipsis" Margin="0,0,0,0"/>
                                                     <TextBlock Text="{Binding CustomerName}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                     <TextBlock Text="{Binding Address}" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
                                                                TextTrimming="CharacterEllipsis"/>
@@ -256,7 +256,7 @@
         </Grid>
         
         <!-- ============ SAĞ PANEL: HARİTA ============ -->
-        <Border Grid.Column="1" CornerRadius="10" ClipToBounds="True" 
+        <Border Grid.Column="1" CornerRadius="8" ClipToBounds="True" 
                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
             <Border.Effect>
                 <DropShadowEffect ShadowDepth="4" BlurRadius="20" Opacity="0.08" Color="Black"/>
@@ -265,13 +265,13 @@
                 <wv2:WebView2 x:Name="MapWebView"/>
                 
                 <!-- Yükleniyor -->
-                <Border x:Name="LoadingOverlay" Background="{DynamicResource ThemeSurface}" CornerRadius="10" 
+                <Border x:Name="LoadingOverlay" Background="{DynamicResource ThemeSurface}" CornerRadius="8" 
                         Visibility="Visible">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                         <TextBlock Text="🗺️" FontSize="48" HorizontalAlignment="Center"/>
                         <TextBlock Text="Harita yükleniyor..." FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
-                                   HorizontalAlignment="Center" Margin="0,10,0,0"/>
-                        <ProgressBar IsIndeterminate="True" Width="200" Height="3" Margin="0,15,0,0"
+                                   HorizontalAlignment="Center" Margin="0,16,0,0"/>
+                        <ProgressBar IsIndeterminate="True" Width="200" Height="3" Margin="0,16,0,0"
                                      Foreground="{DynamicResource ThemePrimary}" Background="{DynamicResource ThemePrimaryLight}"/>
                     </StackPanel>
                 </Border>

@@ -52,23 +52,23 @@
             <!-- TAB 1: Temel Bilgiler -->
             <TabItem Header="👤 Temel Bilgiler">
                 <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
-                        Padding="20" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,12,0,0">
+                        Padding="24" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,16,0,0">
                     <StackPanel>
                         <!-- Ad -->
-                        <TextBlock Text="Ad *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
+                        <TextBlock Text="Ad *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
                         <TextBox x:Name="AdTextBox"
                                  Text="{Binding Ad, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource PremiumTextBox}"
-                                 Height="40" Margin="0,0,0,12"/>
+                                 Height="40" Margin="0,0,0,16"/>
 
                         <!-- Soyad -->
-                        <TextBlock Text="Soyad *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,4,0,6"/>
+                        <TextBlock Text="Soyad *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,8,0,8"/>
                         <TextBox Text="{Binding Soyad, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource PremiumTextBox}"
-                                 Height="40" Margin="0,0,0,12"/>
+                                 Height="40" Margin="0,0,0,16"/>
 
                         <!-- Kullanıcı Adı -->
-                        <TextBlock Text="Kullanıcı Adı *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,4,0,6"/>
+                        <TextBlock Text="Kullanıcı Adı *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,8,0,8"/>
                         <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource PremiumTextBox}"
                                  Height="40"/>
@@ -89,14 +89,14 @@
                         </TextBlock>
 
                         <!-- Rol -->
-                        <TextBlock Text="Rol *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,12,0,6"/>
+                        <TextBlock Text="Rol *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,16,0,8"/>
                         <ComboBox ItemsSource="{Binding RoleDisplayOptions}"
                                   SelectedItem="{Binding SelectedRoleDisplay}"
                                   Style="{StaticResource ModernComboBox}"
                                   Height="40"/>
 
                         <!-- Bilgi notu -->
-                        <Border Background="{DynamicResource StatusInfoBg}" CornerRadius="6" Padding="12,10" Margin="0,16,0,0">
+                        <Border Background="{DynamicResource StatusInfoBg}" CornerRadius="8" Padding="16,8" Margin="0,16,0,0">
                             <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource StatusInfoFg}">
                                 <Run FontWeight="SemiBold">ℹ️ Varsayılan şifre: 1234</Run>
                                 <LineBreak/>
@@ -110,17 +110,17 @@
             <!-- TAB 2: Yetkiler (RBAC) -->
             <TabItem Header="🛡️ Yetkiler">
                 <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
-                        Padding="20" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,12,0,0">
+                        Padding="24" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,16,0,0">
                     <StackPanel>
                         <TextBlock Text="Modül Erişim Yetkileri" FontSize="15" FontWeight="Bold" Margin="0,0,0,16" Foreground="{DynamicResource ThemePrimary}"/>
                         
-                        <CheckBox Content="Finansal Kayıtları Gör" IsChecked="{Binding CanViewFinance}" Margin="0,0,0,12" Style="{StaticResource {x:Type CheckBox}}"/>
-                        <CheckBox Content="Analiz ve Raporları Gör" IsChecked="{Binding CanViewAnalytics}" Margin="0,0,0,12"/>
-                        <CheckBox Content="Kayıt Silme Yetkisi" IsChecked="{Binding CanDeleteRecords}" Margin="0,0,0,12"/>
-                        <CheckBox Content="Satın Alma Onay Yetkisi" IsChecked="{Binding CanApprovePurchase}" Margin="0,0,0,12"/>
-                        <CheckBox Content="Sistem Ayarlarına Erişim" IsChecked="{Binding CanAccessSettings}" Margin="0,0,0,12"/>
+                        <CheckBox Content="Finansal Kayıtları Gör" IsChecked="{Binding CanViewFinance}" Margin="0,0,0,16" Style="{StaticResource {x:Type CheckBox}}"/>
+                        <CheckBox Content="Analiz ve Raporları Gör" IsChecked="{Binding CanViewAnalytics}" Margin="0,0,0,16"/>
+                        <CheckBox Content="Kayıt Silme Yetkisi" IsChecked="{Binding CanDeleteRecords}" Margin="0,0,0,16"/>
+                        <CheckBox Content="Satın Alma Onay Yetkisi" IsChecked="{Binding CanApprovePurchase}" Margin="0,0,0,16"/>
+                        <CheckBox Content="Sistem Ayarlarına Erişim" IsChecked="{Binding CanAccessSettings}" Margin="0,0,0,16"/>
                         
-                        <Border Background="{DynamicResource StatusWarningBg}" CornerRadius="6" Padding="12,10" Margin="0,8,0,0">
+                        <Border Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="16,8" Margin="0,8,0,0">
                             <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource StatusWarningFg}">
                                 <Run FontWeight="SemiBold">⚠️ Uyarı:</Run>
                                 <Run>Yetkiler kullanıcının rolünden bağımsız olarak verilebilir.</Run>
@@ -133,20 +133,20 @@
             <!-- TAB 3: Saha Bilgileri (Sadece Teknisyenler için) -->
             <TabItem Header="🔧 Saha Bilgileri" Visibility="{Binding IsTechnicianRole, Converter={StaticResource BoolToVis}}">
                 <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
-                        Padding="20" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,12,0,0">
+                        Padding="24" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,16,0,0">
                     <StackPanel>
                         <TextBlock Text="Teknisyen Detayları" FontSize="15" FontWeight="Bold" Margin="0,0,0,16" Foreground="{DynamicResource ThemeSuccess}"/>
 
                         <!-- Araç Plakası -->
-                        <TextBlock Text="Araç Plakası" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
-                        <TextBox Text="{Binding VehiclePlate}" Style="{StaticResource PremiumTextBox}" Height="40" Margin="0,0,0,12" Tag="34 KV 1234"/>
+                        <TextBlock Text="Araç Plakası" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
+                        <TextBox Text="{Binding VehiclePlate}" Style="{StaticResource PremiumTextBox}" Height="40" Margin="0,0,0,16" Tag="34 KV 1234"/>
 
                         <!-- Hizmet Bölgesi -->
-                        <TextBlock Text="Hizmet Bölgesi" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,4,0,6"/>
-                        <TextBox Text="{Binding ServiceArea}" Style="{StaticResource PremiumTextBox}" Height="40" Margin="0,0,0,12" Tag="Eskişehir Merkez"/>
+                        <TextBlock Text="Hizmet Bölgesi" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,8,0,8"/>
+                        <TextBox Text="{Binding ServiceArea}" Style="{StaticResource PremiumTextBox}" Height="40" Margin="0,0,0,16" Tag="Eskişehir Merkez"/>
 
                         <!-- Uzmanlık Alanları -->
-                        <TextBlock Text="Uzmanlık Alanları" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,4,0,6"/>
+                        <TextBlock Text="Uzmanlık Alanları" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,8,0,8"/>
                         <TextBox Text="{Binding ExpertiseAreas}" Style="{StaticResource PremiumTextBox}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Tag="Kombi, Klima, Beyaz Eşya"/>
                     </StackPanel>
                 </Border>
@@ -154,7 +154,7 @@
         </TabControl>
 
         <!-- Status Message Overlay -->
-        <Border Grid.Row="1" VerticalAlignment="Bottom" Margin="10" CornerRadius="6" Padding="12,10" Panel.ZIndex="10"
+        <Border Grid.Row="1" VerticalAlignment="Bottom" Margin="16" CornerRadius="8" Padding="16,8" Panel.ZIndex="10"
                 Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVis}}"
                 Effect="{DynamicResource Elevation2}">
             <Border.Style>
@@ -182,7 +182,7 @@
         </Border>
 
         <!-- Buttons -->
-        <Grid Grid.Row="2" Margin="0,20,0,0">
+        <Grid Grid.Row="2" Margin="0,24,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="12"/>
@@ -200,7 +200,7 @@
                         <Border Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
+                                CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
@@ -219,7 +219,7 @@
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="8">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                 </ControlTemplate>

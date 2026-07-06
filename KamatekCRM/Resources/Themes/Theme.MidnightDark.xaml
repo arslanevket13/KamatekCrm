@@ -2,8 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ═══════════════════════════════════════════════════════════════════
-         KAMATEK CRM — THE MASTERPIECE PALETTE (MIDNIGHT DARK THEME)
-         Ultra-Deep Navy (#0B0E14) & Glowing Accents.
+         KAMATEK CRM — PREMIUM DARK THEME (MIDNIGHT)
+         Ultra-Deep Navy (#0B0E14) & Unified Blue Accent (#3B82F6).
     ═══════════════════════════════════════════════════════════════════ -->
 
     <!-- ─────────── PAGE & BACKGROUNDS (The Canvas) ─────────── -->
@@ -29,12 +29,10 @@
     <SolidColorBrush x:Key="ThemeSidebarActive" Color="#334155"/>
 
     <!-- ─────────── CORE TYPOGRAPHY (Absolute readability) ─────────── -->
-    <!-- TextHeadingBrush: Soft slate white -->
     <Color x:Key="ThemeTextPrimaryColor">#F1F5F9</Color>
     <SolidColorBrush x:Key="ThemeTextPrimary" Color="#F1F5F9"/>
     <SolidColorBrush x:Key="TextHeadingBrush" Color="#F1F5F9"/>
 
-    <!-- TextBodyBrush: Dimmer slate (#94A3B8) -->
     <Color x:Key="ThemeTextSecondaryColor">#94A3B8</Color>
     <SolidColorBrush x:Key="ThemeTextSecondary" Color="#94A3B8"/>
     <SolidColorBrush x:Key="TextBodyBrush" Color="#CBD5E1"/>
@@ -51,28 +49,29 @@
 
     <SolidColorBrush x:Key="TextInverseBrush" Color="#020617"/>
     <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="PrimaryForeground" Color="#020617"/>
+    <SolidColorBrush x:Key="PrimaryForeground" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TextLinkBrush" Color="#60A5FA"/>
 
     <!-- ─────────── BORDERS & DIVIDERS (Premium Subtlety) ─────────── -->
     <Color x:Key="ThemeBorderColor">#1E293B</Color>
-    <SolidColorBrush x:Key="ThemeBorder" Color="#1E293B" Opacity="0.8"/>
+    <SolidColorBrush x:Key="ThemeBorder" Color="#1E293B"/>
     <SolidColorBrush x:Key="ThemeDivider" Color="#1E293B"/>
     <SolidColorBrush x:Key="BorderDefaultBrush" Color="#1E293B"/>
 
-    <!-- ─────────── BRAND COLORS & ACCENTS ─────────── -->
+    <!-- ─────────── BRAND COLORS & ACCENTS (Unified Blue) ─────────── -->
     <Color x:Key="ThemePrimaryColor">#3B82F6</Color>
-    <Color x:Key="ThemeAccentColor">#0ea5e9</Color>
+    <Color x:Key="ThemeAccentColor">#3B82F6</Color>
     
     <SolidColorBrush x:Key="ThemePrimary" Color="#3B82F6"/>
-    <SolidColorBrush x:Key="ThemeAccent" Color="#0ea5e9"/>
+    <SolidColorBrush x:Key="ThemeAccent" Color="#3B82F6"/>
     
     <SolidColorBrush x:Key="PrimaryColor" Color="#3B82F6"/>
-    <SolidColorBrush x:Key="AccentColor" Color="#0ea5e9"/>
+    <SolidColorBrush x:Key="AccentColor" Color="#3B82F6"/>
 
     <!-- Legacy Brand Mappings -->
     <SolidColorBrush x:Key="ThemePrimaryLight" Color="#3B82F6" Opacity="0.20"/>
     <SolidColorBrush x:Key="ThemePrimaryDark" Color="#1D4ED8"/>
+    <SolidColorBrush x:Key="ThemePrimaryMuted" Color="#3B82F6" Opacity="0.20"/>
 
     <!-- ─────────── STATUS COLORS (Success, Warning, Error) ─────────── -->
     <Color x:Key="ThemeSuccessColor">#10B981</Color>
@@ -95,10 +94,10 @@
     <SolidColorBrush x:Key="StatusInfoBg"    Color="#3B82F6" Opacity="0.15"/>
     <SolidColorBrush x:Key="StatusInfoFg"    Color="#60A5FA"/>
 
-    <!-- ─────────── WORLD-CLASS LINEAR GRADIENTS (KPIs) ─────────── -->
+    <!-- ─────────── PREMIUM LINEAR GRADIENTS (KPIs) ─────────── -->
     <LinearGradientBrush x:Key="KpiGradientPrimary" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#3B82F6" Offset="0"/>
-        <GradientStop Color="#0ea5e9" Offset="1"/>
+        <GradientStop Color="#60A5FA" Offset="1"/>
     </LinearGradientBrush>
     
     <LinearGradientBrush x:Key="KpiGradientSuccess" StartPoint="0,0" EndPoint="1,1">
@@ -109,6 +108,11 @@
     <LinearGradientBrush x:Key="KpiGradientWarning" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#E11D48" Offset="0"/>
         <GradientStop Color="#F59E0B" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientError" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#DC2626" Offset="0"/>
+        <GradientStop Color="#EF4444" Offset="1"/>
     </LinearGradientBrush>
 
     <!-- Legacy Gradient Mappings -->
@@ -137,12 +141,12 @@
     <SolidColorBrush x:Key="GlassBorderHighlight" Color="#FFFFFF" Opacity="0.04"/>
     <SolidColorBrush x:Key="CardStrokeBrush" Color="#1E293B" Opacity="0.6"/>
 
-    <!-- ─────────── SHADOW SYSTEM (Dark - Deeper Shadows) ─────────── -->
+    <!-- ─────────── SHADOW SYSTEM (Dark - Premium Subtle) ─────────── -->
     <Color x:Key="ShadowColor">#000000</Color>
-    <DropShadowEffect x:Key="ShadowSubtle" BlurRadius="4" ShadowDepth="1" Direction="270" Color="#000000" Opacity="0.20"/>
-    <DropShadowEffect x:Key="ShadowDefault" BlurRadius="8" ShadowDepth="2" Direction="270" Color="#000000" Opacity="0.25"/>
-    <DropShadowEffect x:Key="ShadowMedium" BlurRadius="16" ShadowDepth="4" Direction="270" Color="#000000" Opacity="0.30"/>
-    <DropShadowEffect x:Key="ShadowHigh" BlurRadius="24" ShadowDepth="8" Direction="270" Color="#000000" Opacity="0.40"/>
+    <DropShadowEffect x:Key="ShadowSubtle" BlurRadius="8" ShadowDepth="1" Direction="270" Color="#000000" Opacity="0.15"/>
+    <DropShadowEffect x:Key="ShadowDefault" BlurRadius="15" ShadowDepth="2" Direction="270" Color="#000000" Opacity="0.20"/>
+    <DropShadowEffect x:Key="ShadowMedium" BlurRadius="24" ShadowDepth="4" Direction="270" Color="#000000" Opacity="0.25"/>
+    <DropShadowEffect x:Key="ShadowHigh" BlurRadius="32" ShadowDepth="8" Direction="270" Color="#000000" Opacity="0.35"/>
 
     <!-- ─────────── INTERACTION STATES ─────────── -->
     <SolidColorBrush x:Key="FocusRingBrush" Color="#3B82F6" Opacity="0.6"/>
@@ -160,18 +164,11 @@
     <SolidColorBrush x:Key="StatusInfoBgLight" Color="#3B82F6" Opacity="0.10"/>
     <SolidColorBrush x:Key="StatusInfoFgLight" Color="#60A5FA"/>
 
-    <!-- ─────────── KPI GRADIENT - ERROR ─────────── -->
-    <LinearGradientBrush x:Key="KpiGradientError" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#DC2626" Offset="0"/>
-        <GradientStop Color="#EF4444" Offset="1"/>
-    </LinearGradientBrush>
-
-    <!-- ─────────── MISC MISSING TOKENS ─────────── -->
+    <!-- ─────────── MISC TOKENS ─────────── -->
     <SolidColorBrush x:Key="ThemeHoverLight" Color="#E2E8F0" Opacity="0.08"/>
-    <SolidColorBrush x:Key="ThemePrimaryMuted" Color="#3B82F6" Opacity="0.20"/>
     <Color x:Key="ThemeTextTertiaryColor">#475569</Color>
 
-    <!-- ─────────── NEW PROFESSIONAL TOKENS ─────────── -->
+    <!-- ─────────── PROFESSIONAL TOKENS ─────────── -->
     <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="#334155"/>
     <SolidColorBrush x:Key="SystemAccentColorPrimaryBrush" Color="#3B82F6"/>
     <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="#0F172A"/>

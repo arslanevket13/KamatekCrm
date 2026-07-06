@@ -31,7 +31,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10" Padding="16,8">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Padding="16,8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -55,7 +55,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="6,4">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="4,4">
                             <ContentPresenter/>
                         </Border>
                     </ControlTemplate>
@@ -64,7 +64,7 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="14">
+    <Grid Margin="16">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="6*"/>
             <ColumnDefinition Width="12"/>
@@ -72,7 +72,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- ========================= LEFT: CATALOG ========================= -->
-        <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="14" Padding="16">
+        <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16">
             <Border.Effect><DropShadowEffect BlurRadius="12" Opacity="0.07" ShadowDepth="2"/></Border.Effect>
             <Grid>
                 <Grid.RowDefinitions>
@@ -87,13 +87,13 @@
                 </Grid.RowDefinitions>
 
                 <!-- Title -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
                     <TextBlock Text="📦" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBlock Text="Ürün Kataloğu" FontSize="19" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Barkod input — distinct, highlighted -->
-                <Border Grid.Row="1" Background="{DynamicResource StatusInfoBgLight}" CornerRadius="8" Padding="10,8" Margin="0,0,0,10"
+                <Border Grid.Row="1" Background="{DynamicResource StatusInfoBgLight}" CornerRadius="8" Padding="8,8" Margin="0,0,0,16"
                         BorderBrush="{DynamicResource StatusInfoFgLight}" BorderThickness="1" x:Name="BarcodeBorder">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -102,7 +102,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="📷 Barkod:" VerticalAlignment="Center" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource ThemePrimary}" Margin="0,0,10,0" FontSize="13"/>
+                                   Foreground="{DynamicResource ThemePrimary}" Margin="0,0,16,0" FontSize="14"/>
                         <TextBox Grid.Column="1" x:Name="BarcodeTextBox"
                                  Text="{Binding BarcodeText, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="14" BorderThickness="0" Background="Transparent"
@@ -115,10 +115,10 @@
                                 Command="{Binding BarcodeScanCommand}"
                                 Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                 FontSize="12" FontWeight="SemiBold"
-                                Padding="10,4" BorderThickness="0" Cursor="Hand">
+                                Padding="8,4" BorderThickness="0" Cursor="Hand">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="8">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="8,4"/>
                                     </Border>
                                 </ControlTemplate>
@@ -128,14 +128,14 @@
                 </Border>
 
                 <!-- Search + Depo row -->
-                <Grid Grid.Row="2" Margin="0,0,0,12">
+                <Grid Grid.Row="2" Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="14"/>
                         <ColumnDefinition Width="180"/>
                     </Grid.ColumnDefinitions>
                     <!-- Search -->
-                    <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="10,7"
+                    <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="8,8"
                             BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -170,7 +170,7 @@
                     </Border>
                     <!-- Depo -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Depo:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBlock Text="Depo:" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" FontWeight="SemiBold"/>
                         <ComboBox ItemsSource="{Binding Warehouses}"
                                   SelectedItem="{Binding SelectedWarehouse}"
                                   DisplayMemberPath="Name"
@@ -222,7 +222,7 @@
                         <DataGridTemplateColumn Header="" Width="52" CanUserSort="False">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border Width="38" Height="38" CornerRadius="6" Background="{DynamicResource ApplicationBackgroundBrush}"
+                                    <Border Width="38" Height="38" CornerRadius="8" Background="{DynamicResource ApplicationBackgroundBrush}"
                                             HorizontalAlignment="Center" ClipToBounds="True">
                                         <Grid>
                                             <!-- Emoji placeholder — visible when no image -->
@@ -287,7 +287,7 @@
                         <DataGridTemplateColumn Header="Stok" Width="68">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Center">
+                                    <Border CornerRadius="4" Padding="4,0" HorizontalAlignment="Center">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
@@ -340,7 +340,7 @@
                                             BorderThickness="0" Cursor="Hand" ToolTip="Sepete Ekle">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="8">
                                                     <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                             </ControlTemplate>
@@ -365,7 +365,7 @@
         </Border>
 
         <!-- ========================= RIGHT: CART ========================= -->
-        <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="14" Padding="16">
+        <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16">
             <Border.Effect><DropShadowEffect BlurRadius="12" Opacity="0.07" ShadowDepth="2"/></Border.Effect>
             <Grid>
                 <Grid.RowDefinitions>
@@ -379,29 +379,29 @@
                 </Grid.RowDefinitions>
 
                 <!-- Header -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
                     <TextBlock Text="🛒" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBlock Text="Sepetim" FontSize="19" FontWeight="Bold"
                                Foreground="{DynamicResource ThemeWarning}" VerticalAlignment="Center"/>
-                    <Border Background="{DynamicResource StatusWarningBg}" CornerRadius="10" Padding="8,3" Margin="12,0,0,0"
+                    <Border Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="8,4" Margin="16,0,0,0"
                             Visibility="{Binding CartItemCount, Converter={StaticResource BoolVis}}">
                         <TextBlock Text="{Binding CartItemCount, StringFormat='{}{0} ürün'}"
                                    Foreground="{DynamicResource StatusWarningFg}" FontWeight="SemiBold" FontSize="12"/>
                     </Border>
                     <!-- F Shortcut hints -->
-                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="4,2" Margin="2,0">
+                    <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
+                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="4,0" Margin="0,0">
                             <TextBlock Text="F8=Nakit" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         </Border>
-                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="4,2" Margin="2,0">
+                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="4,0" Margin="0,0">
                             <TextBlock Text="F9=Kart" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         </Border>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- Customer Panel -->
-                <Border Grid.Row="1" Background="{DynamicResource StatusWarningBgLight}" CornerRadius="8" Padding="10"
-                        Margin="0,0,0,10" BorderBrush="{DynamicResource StatusWarningFgLight}" BorderThickness="1">
+                <Border Grid.Row="1" Background="{DynamicResource StatusWarningBgLight}" CornerRadius="8" Padding="16"
+                        Margin="0,0,0,16" BorderBrush="{DynamicResource StatusWarningFgLight}" BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -415,7 +415,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="👤" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="👤" FontSize="16" VerticalAlignment="Center" Margin="0,0,4,0"/>
                             <TextBlock Grid.Column="1"
                                        Text="{Binding CustomerDisplayName}"
                                        FontSize="12" FontWeight="SemiBold"
@@ -426,7 +426,7 @@
                                     Command="{Binding ClearCustomerCommand}"
                                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"
                                     Background="Transparent" BorderThickness="0"
-                                    Cursor="Hand" Margin="6,0,2,0"
+                                    Cursor="Hand" Margin="4,0,0,0"
                                     ToolTip="Müşteriyi temizle">
                                 <Button.Style>
                                     <Style TargetType="Button">
@@ -448,24 +448,24 @@
                                     Background="{DynamicResource ThemeWarning}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                     FontSize="11" FontWeight="SemiBold"
                                     BorderThickness="0" Cursor="Hand"
-                                    Padding="8,3" ToolTip="Yeni müşteri ekle (F7)">
+                                    Padding="8,4" ToolTip="Yeni müşteri ekle (F7)">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="6,3"/>
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,4"/>
                                         </Border>
                                     </ControlTemplate>
                                 </Button.Template>
                             </Button>
                         </Grid>
                         <!-- Row 2: customer search -->
-                        <Grid Grid.Row="1" Margin="0,7,0,0">
+                        <Grid Grid.Row="1" Margin="0,8,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}"
-                                     FontSize="12" Padding="7,4"
+                                     FontSize="12" Padding="8,4"
                                      BorderBrush="{DynamicResource ThemeWarning}" BorderThickness="1"
                                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" TabIndex="3">
                                 <TextBox.Template>
@@ -473,7 +473,7 @@
                                         <Border Background="{TemplateBinding Background}"
                                                 BorderBrush="{TemplateBinding BorderBrush}"
                                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                                CornerRadius="6">
+                                                CornerRadius="8">
                                             <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
                                         </Border>
                                     </ControlTemplate>
@@ -551,7 +551,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            <Button Content="−" Width="22" Height="22" FontSize="13" FontWeight="Bold"
+                                            <Button Content="−" Width="22" Height="22" FontSize="14" FontWeight="Bold"
                                                     Background="{DynamicResource StatusErrorBg}" Foreground="{DynamicResource StatusErrorFg}" BorderThickness="0"
                                                     Command="{Binding DataContext.DecreaseQuantityCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}" Cursor="Hand">
@@ -564,8 +564,8 @@
                                                 </Button.Template>
                                             </Button>
                                             <TextBlock Text="{Binding Quantity}" Width="26" TextAlignment="Center"
-                                                       FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
-                                            <Button Content="+" Width="22" Height="22" FontSize="13" FontWeight="Bold"
+                                                       FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
+                                            <Button Content="+" Width="22" Height="22" FontSize="14" FontWeight="Bold"
                                                     Background="{DynamicResource StatusSuccessBg}" Foreground="{DynamicResource StatusSuccessFg}" BorderThickness="0"
                                                     Command="{Binding DataContext.IncreaseQuantityCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}" Cursor="Hand">
@@ -604,7 +604,7 @@
                                                  FontSize="11" Foreground="{DynamicResource ThemeWarning}"
                                                  BorderThickness="0" Background="{DynamicResource StatusWarningBgLight}"
                                                  TextAlignment="Center" VerticalAlignment="Center"
-                                                 Padding="3,0"/>
+                                                 Padding="4,0"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -640,7 +640,7 @@
                 </Border>
 
                 <!-- Global Discount Row -->
-                <Border Grid.Row="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="6" Padding="10,7" Margin="0,10,0,6"
+                <Border Grid.Row="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="8,8" Margin="0,8,0,4"
                         BorderBrush="{DynamicResource StatusWarningFg}" BorderThickness="1">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -663,19 +663,19 @@
                                     <Border Background="{TemplateBinding Background}"
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="6">
+                                            CornerRadius="8">
                                         <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
                                     </Border>
                                 </ControlTemplate>
                             </TextBox.Template>
                         </TextBox>
                         <TextBlock Grid.Column="3" Text=" %" VerticalAlignment="Center"
-                                   FontSize="13" FontWeight="Bold" Foreground="{DynamicResource ThemeWarningDark}"/>
+                                   FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ThemeWarningDark}"/>
                     </Grid>
                 </Border>
 
                 <!-- Totals -->
-                <Border Grid.Row="4" Background="{DynamicResource StatusWarningBg}" CornerRadius="10" Padding="14,10" Margin="0,0,0,8">
+                <Border Grid.Row="4" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="16,8" Margin="0,0,0,8">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -690,17 +690,17 @@
                             <TextBlock Text="{Binding SubTotal, StringFormat='{}{0:N2} ₺'}"
                                        HorizontalAlignment="Right" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"/>
                         </Grid>
-                        <Grid Grid.Row="1" Margin="0,3,0,0">
+                        <Grid Grid.Row="1" Margin="0,4,0,0">
                             <TextBlock Text="İndirim" Foreground="{DynamicResource ThemeWarning}" FontSize="12" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding DiscountTotal, StringFormat='- {0:N2} ₺'}"
                                        HorizontalAlignment="Right" Foreground="{DynamicResource ThemeWarning}" FontSize="12"/>
                         </Grid>
-                        <Grid Grid.Row="2" Margin="0,3,0,0">
+                        <Grid Grid.Row="2" Margin="0,4,0,0">
                             <TextBlock Text="KDV" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding TaxTotal, StringFormat='{}{0:N2} ₺'}"
                                        HorizontalAlignment="Right" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"/>
                         </Grid>
-                        <Separator Grid.Row="3" Background="{DynamicResource ThemeWarningLight}" Margin="0,6"/>
+                        <Separator Grid.Row="3" Background="{DynamicResource ThemeWarningLight}" Margin="0,8"/>
                         <!-- Grand Total -->
                         <Grid Grid.Row="4">
                             <TextBlock Text="TOPLAM" FontSize="17" FontWeight="Bold"
@@ -719,7 +719,7 @@
                             Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                             ToolTip="F8 kısayolu">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💵" FontSize="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="💵" FontSize="20" Margin="0,0,16,0"/>
                             <TextBlock Text="NAKİT ÖDEME (F8)" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -728,7 +728,7 @@
                             Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                             ToolTip="F9 kısayolu">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="💳" FontSize="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="💳" FontSize="20" Margin="0,0,16,0"/>
                             <TextBlock Text="KREDİ KARTI (F9)" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -748,7 +748,7 @@
                 </StackPanel>
 
                 <!-- Status -->
-                <Border Grid.Row="5" Background="{DynamicResource StatusWarningBgLight}" CornerRadius="6" Padding="10,8" Margin="0,0,0,5"
+                <Border Grid.Row="5" Background="{DynamicResource StatusWarningBgLight}" CornerRadius="8" Padding="8,8" Margin="0,0,0,8"
                         Visibility="{Binding HasStockWarning, Converter={StaticResource BoolVis}}">
                     <TextBlock Text="{Binding StockWarningMessage}" FontSize="12" Foreground="{DynamicResource StatusWarningFgDark}" FontWeight="SemiBold"/>
                 </Border>

@@ -14,8 +14,8 @@
           d:Visibility="Visible">
         
         <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                CornerRadius="10" 
-                Padding="20" 
+                CornerRadius="8" 
+                Padding="24" 
                 HorizontalAlignment="Center" 
                 VerticalAlignment="Center"
                 Effect="{DynamicResource DropShadow}">
@@ -46,7 +46,7 @@
                 </Viewbox>
                 
                 <TextBlock Text="{Binding BusyMessage}" 
-                           Margin="0,15,0,0" 
+                           Margin="0,16,0,0" 
                            FontSize="16" 
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"

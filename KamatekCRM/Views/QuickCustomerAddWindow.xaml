@@ -51,11 +51,11 @@
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel Grid.Row="0" Margin="0,0,0,16">
                 <TextBlock Text="Yeni Müşteri" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                 <TextBlock Text="Satış için hızlı müşteri kaydı oluşturun." 
                            FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
-                <Separator Margin="0,14,0,0" Background="{DynamicResource BorderDefaultBrush}"/>
+                <Separator Margin="0,16,0,0" Background="{DynamicResource BorderDefaultBrush}"/>
             </StackPanel>
 
             <!-- Form -->
@@ -71,7 +71,7 @@
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="6">
+                                    CornerRadius="8">
                                 <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
                             </Border>
                         </ControlTemplate>
@@ -87,7 +87,7 @@
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="6">
+                                    CornerRadius="8">
                                 <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
                             </Border>
                         </ControlTemplate>
@@ -103,7 +103,7 @@
                             <Border Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="6">
+                                    CornerRadius="8">
                                 <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
                             </Border>
                         </ControlTemplate>
@@ -111,7 +111,7 @@
                 </TextBox>
 
                 <!-- Hata mesajı -->
-                <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="6" Padding="10,8" Margin="0,10,0,0"
+                <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="8,8" Margin="0,16,0,0"
                         Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
                     <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"/>
                 </Border>

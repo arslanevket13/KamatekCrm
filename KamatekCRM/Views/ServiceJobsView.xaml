@@ -35,7 +35,7 @@
 
         <!-- ========== ROW 0: HEADER ========== -->
         <Border Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                Padding="24,16" Margin="0,0,0,1"
+                Padding="24,16" Margin="0,0,0,0"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -60,12 +60,12 @@
                     <ui:Button Content="➕ Yeni İş Emri"
                                Command="{Binding OpenNewJobFormCommand}"
                                Appearance="Primary"
-                               Height="38" Padding="16,0" Margin="0,0,8,0" FontSize="13"/>
+                               Height="38" Padding="16,0" Margin="0,0,8,0" FontSize="14"/>
                     <ui:Button Content="✏️ Düzenle"
                                Command="{Binding EditJobCommand}"
                                CommandParameter="{Binding SelectedServiceJob}"
                                Appearance="Secondary"
-                               Height="38" Padding="16,0" Margin="0,0,8,0" FontSize="13"/>
+                               Height="38" Padding="16,0" Margin="0,0,8,0" FontSize="14"/>
                     <ui:Button Content="🔄"
                                Command="{Binding RefreshListCommand}"
                                Width="38" Height="38" Padding="0"
@@ -75,17 +75,17 @@
         </Border>
 
         <!-- ========== ROW 1: KPI CARDS ========== -->
-        <UniformGrid Grid.Row="1" Columns="5" Margin="16,12,16,4">
+        <UniformGrid Grid.Row="1" Columns="5" Margin="16,16,16,4">
             <!-- Toplam -->
             <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
-                    Padding="16,14" Margin="4"
+                    Padding="16,16" Margin="4"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06" Color="Black"/>
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="6" Width="28" Height="28" Margin="0,0,8,0">
+                        <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="8" Width="28" Height="28" Margin="0,0,8,0">
                             <TextBlock Text="📊" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="TOPLAM" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"
@@ -98,14 +98,14 @@
 
             <!-- Bekleyen -->
             <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
-                    Padding="16,14" Margin="4"
+                    Padding="16,16" Margin="4"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06" Color="Black"/>
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="{DynamicResource StatusWarningBgLight}" CornerRadius="6" Width="28" Height="28" Margin="0,0,8,0">
+                        <Border Background="{DynamicResource StatusWarningBgLight}" CornerRadius="8" Width="28" Height="28" Margin="0,0,8,0">
                             <TextBlock Text="⏳" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="BEKLEYEN" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"
@@ -118,14 +118,14 @@
 
             <!-- Devam Eden -->
             <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
-                    Padding="16,14" Margin="4"
+                    Padding="16,16" Margin="4"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06" Color="Black"/>
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="6" Width="28" Height="28" Margin="0,0,8,0">
+                        <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="8" Width="28" Height="28" Margin="0,0,8,0">
                             <TextBlock Text="🔵" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="DEVAM EDEN" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"
@@ -138,14 +138,14 @@
 
             <!-- Tamamlanan -->
             <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
-                    Padding="16,14" Margin="4"
+                    Padding="16,16" Margin="4"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06" Color="Black"/>
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="{DynamicResource StatusSuccessBgLight}" CornerRadius="6" Width="28" Height="28" Margin="0,0,8,0">
+                        <Border Background="{DynamicResource StatusSuccessBgLight}" CornerRadius="8" Width="28" Height="28" Margin="0,0,8,0">
                             <TextBlock Text="✅" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="TAMAMLANAN" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"
@@ -158,14 +158,14 @@
 
             <!-- SLA Aşan -->
             <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
-                    Padding="16,14" Margin="4"
+                    Padding="16,16" Margin="4"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06" Color="Black"/>
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="{DynamicResource StatusErrorBgLight}" CornerRadius="6" Width="28" Height="28" Margin="0,0,8,0">
+                        <Border Background="{DynamicResource StatusErrorBgLight}" CornerRadius="8" Width="28" Height="28" Margin="0,0,8,0">
                             <TextBlock Text="⚠️" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="SLA AŞAN" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"
@@ -177,92 +177,40 @@
             </Border>
         </UniformGrid>
 
-        <!-- ========== ROW 2: TOOLBAR + DATAGRID ========== -->
+        <!-- ========== ROW 2: F-PATTERN CONTENT (70/30) ========== -->
         <Grid Grid.Row="2" Margin="16,8,16,16">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="7*"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
 
-            <!-- Toolbar -->
-            <Border Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                    CornerRadius="10" Padding="12" Margin="0,0,0,8"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-
-                    <!-- Arama -->
-                    <ui:TextBox Grid.Column="0" 
-                                PlaceholderText="🔍 Müşteri, başlık veya açıklama ara..."
-                                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                Height="36" Margin="0,0,12,0"/>
-
-                    <!-- Durum Filtre -->
-                    <ComboBox Grid.Column="1" 
-                              ItemsSource="{Binding StatusFilters}"
-                              SelectedItem="{Binding SelectedStatusFilter}"
-                              Width="150" Height="36" Margin="0,0,8,0"
-                              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                              Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock>
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding}" Value="All">
-                                                    <Setter Property="Text" Value="🔘 Tümü"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding}" Value="Pending">
-                                                    <Setter Property="Text" Value="⏳ Bekleyen"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding}" Value="InProgress">
-                                                    <Setter Property="Text" Value="🔵 Devam Eden"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding}" Value="Completed">
-                                                    <Setter Property="Text" Value="✅ Tamamlanan"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-                    <!-- Tarih Filtre -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,8,0">
-                        <DatePicker SelectedDate="{Binding FilterStartDate}" 
-                                    Width="130" Height="36" Margin="0,0,4,0"
-                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
-                        <TextBlock Text="—" VerticalAlignment="Center" Margin="4,0" 
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <DatePicker SelectedDate="{Binding FilterEndDate}" 
-                                    Width="130" Height="36"
-                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
-                    </StackPanel>
-
-                    <!-- Yazdır -->
-                    <ui:Button Grid.Column="3" Content="🖨️ PDF"
-                               Command="{Binding PrintServiceFormCommand}"
-                               CommandParameter="{Binding SelectedServiceJob}"
-                               Height="36" Padding="12,0"/>
-                </Grid>
-            </Border>
-
-            <!-- DataGrid -->
-            <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                    CornerRadius="10" Padding="0"
+            <!-- SOL BÖLGE (%70) - DataGrid -->
+            <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                    CornerRadius="8" Padding="0"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.06" Color="Black"/>
                 </Border.Effect>
-                <DataGrid ItemsSource="{Binding ServiceJobsView}"
+                
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <Border Grid.Row="0" Padding="16,16" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                        <DockPanel>
+                            <TextBlock Text="İş Emirleri Listesi" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                            <ui:Button Content="🖨️ PDF Yazdır"
+                                       Command="{Binding PrintServiceFormCommand}"
+                                       CommandParameter="{Binding SelectedServiceJob}"
+                                       HorizontalAlignment="Right"
+                                       Height="32" Padding="16,0"/>
+                        </DockPanel>
+                    </Border>
+                <DataGrid Grid.Row="1"
+                          ItemsSource="{Binding ServiceJobsView}"
                           SelectedItem="{Binding SelectedServiceJob}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
@@ -276,9 +224,9 @@
                           GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                           HeadersVisibility="Column"
-                          ColumnHeaderHeight="42"
+                          ColumnHeaderHeight="40"
                           RowHeight="44"
-                          FontSize="13">
+                          FontSize="14">
                     <DataGrid.ContextMenu>
                         <ContextMenu>
                             <MenuItem Header="📋 Detay Göster" Command="{Binding ViewJobDetailCommand}" 
@@ -303,7 +251,7 @@
                             <MenuItem Header="🖨️ PDF Yazdır" Command="{Binding PrintServiceFormCommand}" 
                                       CommandParameter="{Binding SelectedServiceJob}"/>
                             <Separator/>
-                            <MenuItem Header="🗑️ Sil" Command="{Binding DeleteJobCommand}" Foreground="Red"/>
+                            <MenuItem Header="🗑️ Sil" Command="{Binding DeleteJobCommand}" Foreground="{DynamicResource ThemeError}"/>
                         </ContextMenu>
                     </DataGrid.ContextMenu>
 
@@ -443,7 +391,73 @@
                         </DataGridTextColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+                </Grid>
             </Border>
+
+            <!-- SAĞ BÖLGE (%30) - Filtreler ve Arama -->
+            <StackPanel Grid.Column="2">
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                        CornerRadius="8" Padding="24"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.06" Color="Black"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="Arama ve Filtreleme" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,0,16"/>
+                        
+                        <!-- Arama -->
+                        <TextBlock Text="Hızlı Arama" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" Margin="0,0,0,4"/>
+                        <ui:TextBox PlaceholderText="Müşteri, başlık veya açıklama..."
+                                    Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                    Icon="{ui:SymbolIcon Search24}"
+                                    Height="40" Margin="0,0,0,16"/>
+
+                        <!-- Durum Filtre -->
+                        <TextBlock Text="Durum Filtresi" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding StatusFilters}"
+                                  SelectedItem="{Binding SelectedStatusFilter}"
+                                  Height="40" Margin="0,0,0,16"
+                                  Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                  Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding}" Value="All">
+                                                        <Setter Property="Text" Value="🔘 Tümü"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding}" Value="Pending">
+                                                        <Setter Property="Text" Value="⏳ Bekleyen"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding}" Value="InProgress">
+                                                        <Setter Property="Text" Value="🔵 Devam Eden"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding}" Value="Completed">
+                                                        <Setter Property="Text" Value="✅ Tamamlanan"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <!-- Tarih Filtre -->
+                        <TextBlock Text="Tarih Aralığı" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" Margin="0,0,0,4"/>
+                        <StackPanel Margin="0,0,0,16">
+                            <DatePicker SelectedDate="{Binding FilterStartDate}" 
+                                        Height="40" Margin="0,0,0,8"
+                                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+                            <DatePicker SelectedDate="{Binding FilterEndDate}" 
+                                        Height="40"
+                                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
         </Grid>
     </Grid>
 </UserControl>

@@ -47,7 +47,7 @@
             </Grid.RowDefinitions>
 
             <!-- Arama Çubuğu -->
-            <Border Grid.Row="0" Padding="20,16" 
+            <Border Grid.Row="0" Padding="24,16" 
                     BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -57,7 +57,7 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0" Text="🔍" FontSize="22" 
-                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                               VerticalAlignment="Center" Margin="0,0,16,0"/>
 
                     <TextBox x:Name="SearchBox" Grid.Column="1"
                              Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
@@ -72,7 +72,7 @@
                     </TextBox>
 
                     <Border Grid.Column="2" Background="{DynamicResource ApplicationBackgroundBrush}" 
-                            CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                            CornerRadius="8" Padding="8,4" VerticalAlignment="Center">
                         <TextBlock Text="ESC" FontSize="10" FontWeight="SemiBold"
                                    Foreground="{DynamicResource ThemeTextTertiary}"/>
                     </Border>
@@ -80,12 +80,12 @@
             </Border>
 
             <!-- Aksiyon Listesi -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="12,8">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,8">
                 <StackPanel>
                     <!-- Hızlı Aksiyonlar Başlığı -->
                     <TextBlock Text="HIZLI AKSİYONLAR" FontSize="10" FontWeight="Bold"
                                Foreground="{DynamicResource ThemeTextTertiary}" 
-                               Margin="8,8,0,10"/>
+                               Margin="8,8,0,8"/>
 
                     <!-- Arıza Kabuı -->
                     <Border Style="{StaticResource ActionItemStyle}" 
@@ -101,14 +101,14 @@
                                 <TextBlock Text="⚡" FontSize="18" 
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="Arıza Kabul" FontWeight="SemiBold" FontSize="14"
                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                 <TextBlock Text="Yeni cihaz arıza kaydı oluştur" FontSize="11"
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                             </StackPanel>
                             <Border Grid.Column="2" Background="{DynamicResource ApplicationBackgroundBrush}" 
-                                    CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                                    CornerRadius="8" Padding="8,4" VerticalAlignment="Center">
                                 <TextBlock Text="Ctrl+N" FontSize="10" FontWeight="Medium"
                                            Foreground="{DynamicResource ThemeTextTertiary}"/>
                             </Border>
@@ -129,14 +129,14 @@
                                 <TextBlock Text="🛒" FontSize="18" 
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="Hızlı Satış" FontWeight="SemiBold" FontSize="14"
                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                 <TextBlock Text="Perakende ürün satışı yap" FontSize="11"
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                             </StackPanel>
                             <Border Grid.Column="2" Background="{DynamicResource ApplicationBackgroundBrush}" 
-                                    CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                                    CornerRadius="8" Padding="8,4" VerticalAlignment="Center">
                                 <TextBlock Text="Ctrl+S" FontSize="10" FontWeight="Medium"
                                            Foreground="{DynamicResource ThemeTextTertiary}"/>
                             </Border>
@@ -156,7 +156,7 @@
                                 <TextBlock Text="👤" FontSize="18" 
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="Yeni Müşteri" FontWeight="SemiBold" FontSize="14"
                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                 <TextBlock Text="Müşteri veritabanına ekle" FontSize="11"
@@ -178,7 +178,7 @@
                                 <TextBlock Text="🏗️" FontSize="18" 
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
-                            <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="Proje &amp; Teklif" FontWeight="SemiBold" FontSize="14"
                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                 <TextBlock Text="Proje veya teklif oluştur" FontSize="11"
@@ -188,13 +188,13 @@
                     </Border>
 
                     <!-- Ayırıcı -->
-                    <Border Margin="0,12,0,8" BorderThickness="0,1,0,0" 
+                    <Border Margin="0,16,0,8" BorderThickness="0,1,0,0" 
                             BorderBrush="{DynamicResource ThemeDivider}"/>
 
                     <!-- Sayfalar Başlığı -->
                     <TextBlock Text="SAYFALAR" FontSize="10" FontWeight="Bold"
                                Foreground="{DynamicResource ThemeTextTertiary}" 
-                               Margin="8,4,0,10"/>
+                               Margin="8,4,0,8"/>
 
                     <!-- Dashboard -->
                     <Border Style="{StaticResource ActionItemStyle}" 
@@ -205,9 +205,9 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="🏠" FontSize="20" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Ana Sayfa (Dashboard)" FontSize="13"
+                            <TextBlock Grid.Column="1" Text="Ana Sayfa (Dashboard)" FontSize="14"
                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
-                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                       VerticalAlignment="Center" Margin="16,0,0,0"/>
                         </Grid>
                     </Border>
 
@@ -220,9 +220,9 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="👥" FontSize="20" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Müşteriler" FontSize="13"
+                            <TextBlock Grid.Column="1" Text="Müşteriler" FontSize="14"
                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
-                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                       VerticalAlignment="Center" Margin="16,0,0,0"/>
                         </Grid>
                     </Border>
 
@@ -235,9 +235,9 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="📦" FontSize="20" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Stoklar" FontSize="13"
+                            <TextBlock Grid.Column="1" Text="Stoklar" FontSize="14"
                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
-                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                       VerticalAlignment="Center" Margin="16,0,0,0"/>
                         </Grid>
                     </Border>
 
@@ -250,9 +250,9 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="🔧" FontSize="20" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Tamir Listesi" FontSize="13"
+                            <TextBlock Grid.Column="1" Text="Tamir Listesi" FontSize="14"
                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
-                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                       VerticalAlignment="Center" Margin="16,0,0,0"/>
                         </Grid>
                     </Border>
 
@@ -265,16 +265,16 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="💰" FontSize="20" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="Finans" FontSize="13"
+                            <TextBlock Grid.Column="1" Text="Finans" FontSize="14"
                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
-                                       VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                       VerticalAlignment="Center" Margin="16,0,0,0"/>
                         </Grid>
                     </Border>
                 </StackPanel>
             </ScrollViewer>
 
             <!-- Footer -->
-            <Border Grid.Row="2" Padding="16,10"
+            <Border Grid.Row="2" Padding="16,8"
                     BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,1,0,0"
                     Background="{DynamicResource ApplicationBackgroundBrush}">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

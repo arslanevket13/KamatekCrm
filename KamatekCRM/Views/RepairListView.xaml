@@ -63,8 +63,8 @@
                 <!-- KPI Cards Row -->
                 <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,0">
                     <!-- Toplam -->
-                    <Border Background="{DynamicResource ThemeSurface}" CornerRadius="10" 
-                            Padding="16,12" Margin="0,0,8,0"
+                    <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" 
+                            Padding="16,16" Margin="0,0,8,0"
                             BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                         <StackPanel>
                             <TextBlock Text="📊 TOPLAM" FontSize="10" FontWeight="SemiBold" 
@@ -74,8 +74,8 @@
                         </StackPanel>
                     </Border>
                     <!-- Bekleyen -->
-                    <Border Background="{DynamicResource ThemeSurface}" CornerRadius="10" 
-                            Padding="16,12" Margin="4,0"
+                    <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" 
+                            Padding="16,16" Margin="4,0"
                             BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                         <StackPanel>
                             <TextBlock Text="⏳ BEKLEYEN" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFgDark}" Margin="0,0,0,4"/>
@@ -83,8 +83,8 @@
                         </StackPanel>
                     </Border>
                     <!-- Tamir Sürüyor -->
-                    <Border Background="{DynamicResource ThemeSurface}" CornerRadius="10" 
-                            Padding="16,12" Margin="4,0"
+                    <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" 
+                            Padding="16,16" Margin="4,0"
                             BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                         <StackPanel>
                             <TextBlock Text="🔧 TAMİRDE" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFg}" Margin="0,0,0,4"/>
@@ -92,8 +92,8 @@
                         </StackPanel>
                     </Border>
                     <!-- Teslim Edildi -->
-                    <Border Background="{DynamicResource ThemeSurface}" CornerRadius="10" 
-                            Padding="16,12" Margin="8,0,0,0"
+                    <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" 
+                            Padding="16,16" Margin="8,0,0,0"
                             BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                         <StackPanel>
                             <TextBlock Text="✅ TESLİM" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFg}" Margin="0,0,0,4"/>
@@ -127,14 +127,14 @@
                     </Grid.RowDefinitions>
 
                     <!-- Search -->
-                    <Border Grid.Row="0" Padding="12" Background="{DynamicResource ThemeSurface}">
+                    <Border Grid.Row="0" Padding="16" Background="{DynamicResource ThemeSurface}">
                         <Grid>
                             <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
                                      Style="{StaticResource ModernTextBox}" 
-                                     Height="36" FontSize="13"
+                                     Height="36" FontSize="14"
                                      Padding="32,8,8,8"/>
                             <TextBlock Text="🔍" FontSize="14" 
-                                       VerticalAlignment="Center" Margin="10,0,0,0"
+                                       VerticalAlignment="Center" Margin="16,0,0,0"
                                        IsHitTestVisible="False"
                                        Foreground="{DynamicResource ThemeForegroundMuted}"/>
                         </Grid>
@@ -142,7 +142,7 @@
 
                     <!-- Status Filter Chips -->
                     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
-                                  Padding="12,0,12,8">
+                                  Padding="16,0,16,8">
                         <ItemsControl ItemsSource="{Binding StatusOptions}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -160,7 +160,7 @@
                                             <ControlTemplate TargetType="RadioButton">
                                                 <Border x:Name="ChipBorder" 
                                                         Background="{DynamicResource ApplicationBackgroundBrush}" 
-                                                        CornerRadius="14" Padding="10,5"
+                                                        CornerRadius="8" Padding="8,4"
                                                         BorderBrush="{DynamicResource ThemeBorder}" 
                                                         BorderThickness="1">
                                                     <TextBlock Text="{TemplateBinding Content}" 
@@ -202,7 +202,7 @@
                                         <ControlTemplate TargetType="ListBoxItem">
                                             <Border x:Name="ItemBorder" 
                                                     Background="Transparent" 
-                                                    Padding="12,10"
+                                                    Padding="16,8"
                                                     BorderBrush="{DynamicResource ThemeBorder}"
                                                     BorderThickness="0,0,0,1">
                                                 <ContentPresenter/>
@@ -232,17 +232,17 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Status Color Bar -->
-                                    <Border Grid.Column="0" CornerRadius="2" Width="4" Margin="0,2"
+                                    <Border Grid.Column="0" CornerRadius="2" Width="4" Margin="0,0"
                                             VerticalAlignment="Stretch" Background="{Binding StatusColor}">
                                     </Border>
 
                                     <!-- Info -->
-                                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                        <TextBlock FontWeight="SemiBold" FontSize="13"
+                                    <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                                        <TextBlock FontWeight="SemiBold" FontSize="14"
                                                    Foreground="{DynamicResource ThemeForeground}">
                                             <Run Text="{Binding CustomerName}"/>
                                         </TextBlock>
-                                        <TextBlock FontSize="11" Margin="0,2,0,0"
+                                        <TextBlock FontSize="11" Margin="0,0,0,0"
                                                    Foreground="{DynamicResource ThemeForegroundMuted}">
                                             <Run Text="{Binding DeviceDisplay}"/>
                                             <Run Text=" · "/>
@@ -252,11 +252,11 @@
 
                                     <!-- Status Badge + Days -->
                                     <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                        <Border CornerRadius="10" Padding="8,3" HorizontalAlignment="Right" Background="{Binding StatusBgColor}">
+                                        <Border CornerRadius="8" Padding="8,4" HorizontalAlignment="Right" Background="{Binding StatusBgColor}">
                                             <TextBlock Text="{Binding StatusDisplay}" FontSize="10" FontWeight="SemiBold" Foreground="{Binding StatusColor}"/>
                                         </Border>
                                         <TextBlock Text="{Binding DaysInShop, StringFormat='{}{0} gün'}" 
-                                                   FontSize="10" HorizontalAlignment="Right" Margin="0,3,0,0"
+                                                   FontSize="10" HorizontalAlignment="Right" Margin="0,4,0,0"
                                                    Foreground="{DynamicResource ThemeForegroundMuted}"/>
                                     </StackPanel>
                                 </Grid>
@@ -274,16 +274,16 @@
                     <TextBlock Text="🔧" FontSize="48" HorizontalAlignment="Center" Opacity="0.3"/>
                     <TextBlock Text="Detay görüntülemek için listeden bir iş seçin" 
                                FontSize="14" Foreground="{DynamicResource ThemeForegroundMuted}"
-                               HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                               HorizontalAlignment="Center" Margin="0,16,0,0"/>
                 </StackPanel>
 
                 <!-- Detail View -->
                 <ScrollViewer Visibility="{Binding IsJobSelected, Converter={StaticResource BoolToVis}}"
-                              VerticalScrollBarVisibility="Auto" Padding="20">
+                              VerticalScrollBarVisibility="Auto" Padding="24">
                     <StackPanel>
 
                         <!-- Customer + Device Header Card -->
-                        <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="20" Margin="0,0,0,12"
+                        <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="24" Margin="0,0,0,16"
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -319,17 +319,17 @@
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
                                     <Button Content="🖨️ PDF" Command="{Binding PrintTicketCommand}"
                                             Style="{StaticResource ModernButton}"
-                                            Height="30" Padding="12,0" FontSize="11"/>
+                                            Height="30" Padding="16,0" FontSize="11"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
 
                         <!-- ========== WORKFLOW TIMELINE ========== -->
-                        <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="20" Margin="0,0,0,12"
+                        <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="24" Margin="0,0,0,16"
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                             <StackPanel>
                                 <TextBlock Text="📜 İş Akışı Geçmişi" FontSize="14" FontWeight="SemiBold" 
-                                           Foreground="{DynamicResource ThemeForeground}" Margin="0,0,0,12"/>
+                                           Foreground="{DynamicResource ThemeForeground}" Margin="0,0,0,16"/>
 
                                 <ItemsControl ItemsSource="{Binding JobHistory}">
                                     <ItemsControl.ItemTemplate>
@@ -349,7 +349,7 @@
                                                 </StackPanel>
 
                                                 <!-- Note -->
-                                                <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                                <StackPanel Grid.Column="1" Margin="16,0,0,0">
                                                     <TextBlock Text="{Binding TechnicianNote}" FontSize="12"
                                                                TextWrapping="Wrap"
                                                                Foreground="{DynamicResource ThemeForeground}"/>
@@ -368,48 +368,48 @@
                         </Border>
 
                         <!-- ========== STATUS CHANGE BUTTONS ========== -->
-                        <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="20" Margin="0,0,0,12"
+                        <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="24" Margin="0,0,0,16"
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                             <StackPanel>
                                 <TextBlock Text="⚡ Durum Değiştir" FontSize="14" FontWeight="SemiBold" 
-                                           Foreground="{DynamicResource ThemeForeground}" Margin="0,0,0,12"/>
+                                           Foreground="{DynamicResource ThemeForeground}" Margin="0,0,0,16"/>
 
                                 <WrapPanel>
-                                    <Button Content="🔍 Arıza Tespiti" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
+                                    <Button Content="🔍 Arıza Tespiti" Margin="0,0,4,4" Height="32" Padding="16,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
                                             Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.Diagnosing}"/>
-                                    <Button Content="📦 Parça Bekliyor" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
+                                    <Button Content="📦 Parça Bekliyor" Margin="0,0,4,4" Height="32" Padding="16,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
                                             Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.WaitingForParts}"/>
-                                    <Button Content="🏭 Fabrikaya Gönder" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
+                                    <Button Content="🏭 Fabrikaya Gönder" Margin="0,0,4,4" Height="32" Padding="16,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
                                             Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.SentToFactory}"/>
-                                    <Button Content="🔧 Tamire Başla" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
+                                    <Button Content="🔧 Tamire Başla" Margin="0,0,4,4" Height="32" Padding="16,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
                                             Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.InRepair}"/>
-                                    <Button Content="✔️ Test" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
+                                    <Button Content="✔️ Test" Margin="0,0,4,4" Height="32" Padding="16,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
                                             Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.Testing}"/>
-                                    <Button Content="✅ Teslimata Hazır" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
+                                    <Button Content="✅ Teslimata Hazır" Margin="0,0,4,4" Height="32" Padding="16,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
                                             Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
                                             CommandParameter="{x:Static vm:RepairStatusHelper.ReadyForPickup}"/>
-                                    <Button Content="🚗 Teslim Edildi" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
+                                    <Button Content="🚗 Teslim Edildi" Margin="0,0,4,4" Height="32" Padding="16,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
                                             Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding CompleteJobCommand}"/>
-                                    <Button Content="❌ İade/Hurda" Margin="0,0,6,6" Height="32" Padding="12,0" Cursor="Hand"
+                                    <Button Content="❌ İade/Hurda" Margin="0,0,4,4" Height="32" Padding="16,0" Cursor="Hand"
                                             Style="{StaticResource ModernButton}" 
                                             Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                             Command="{Binding UpdateStatusCommand}" 
@@ -417,7 +417,7 @@
                                 </WrapPanel>
 
                                 <!-- Add Note -->
-                                <Grid Margin="0,12,0,0">
+                                <Grid Margin="0,16,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
@@ -430,20 +430,20 @@
                                     <Button Grid.Column="1" Content="📝 Not Ekle" 
                                             Command="{Binding AddNoteCommand}"
                                             Style="{StaticResource ModernButton}"
-                                            Height="36" Padding="12,0"/>
+                                            Height="36" Padding="16,0"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- ========== PARÇA YÖNETİMİ ========== -->
-                        <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="20" Margin="0,0,0,12"
+                        <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="24" Margin="0,0,0,16"
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                             <StackPanel>
                                 <TextBlock Text="🧩 Kullanılan Parçalar" FontSize="14" FontWeight="SemiBold" 
-                                           Foreground="{DynamicResource ThemeForeground}" Margin="0,0,0,12"/>
+                                           Foreground="{DynamicResource ThemeForeground}" Margin="0,0,0,16"/>
 
                                 <!-- Add Part -->
-                                <Grid Margin="0,0,0,12">
+                                <Grid Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="70"/>
@@ -455,16 +455,16 @@
                                               ItemsSource="{Binding Products}" 
                                               SelectedItem="{Binding SelectedProductToAdd}"
                                               DisplayMemberPath="ProductName"
-                                              Height="34" Margin="0,0,6,0" FontSize="12"/>
+                                              Height="34" Margin="0,0,4,0" FontSize="12"/>
                                     <TextBox Grid.Column="1" 
                                              Text="{Binding QuantityToAdd, UpdateSourceTrigger=PropertyChanged}" 
                                              Style="{StaticResource ModernTextBox}"
-                                             Height="34" Margin="0,0,6,0" FontSize="12"
+                                             Height="34" Margin="0,0,4,0" FontSize="12"
                                              VerticalContentAlignment="Center"/>
                                     <TextBox Grid.Column="2" 
                                              Text="{Binding UnitPriceToAdd, StringFormat='{}{0:N2}'}" 
                                              Style="{StaticResource ModernTextBox}"
-                                             Height="34" Margin="0,0,6,0" FontSize="12"
+                                             Height="34" Margin="0,0,4,0" FontSize="12"
                                              VerticalContentAlignment="Center"/>
                                     <Button Grid.Column="3" Content="➕" 
                                             Command="{Binding AddItemToJobCommand}"
@@ -476,8 +476,8 @@
                                 <ItemsControl ItemsSource="{Binding CurrentJobItems}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" 
-                                                    Padding="10,8" Margin="0,0,0,4">
+                                            <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" 
+                                                    Padding="8,8" Margin="0,0,0,4">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
@@ -517,7 +517,7 @@
                                 </ItemsControl>
 
                                 <!-- Cost Summary -->
-                                <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="12" Margin="0,8,0,0">
+                                <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="16" Margin="0,8,0,0">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition/>
@@ -562,16 +562,16 @@
                         </Border>
 
                         <!-- ========== FOTOĞRAFLAR ========== -->
-                        <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="20" Margin="0,0,0,12"
+                        <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="24" Margin="0,0,0,16"
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                             <StackPanel>
-                                <Grid Margin="0,0,0,12">
+                                <Grid Margin="0,0,0,16">
                                     <TextBlock Text="📷 Fotoğraflar" FontSize="14" FontWeight="SemiBold" 
                                                Foreground="{DynamicResource ThemeForeground}"/>
                                     <Button Content="+ Fotoğraf Ekle" HorizontalAlignment="Right"
                                             Command="{Binding DataContext.AddPhotoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             Style="{StaticResource ModernButton}"
-                                            Height="28" Padding="10,0" FontSize="11"/>
+                                            Height="28" Padding="16,0" FontSize="11"/>
                                 </Grid>
 
                                 <ItemsControl ItemsSource="{Binding PhotoPaths}">
@@ -582,7 +582,7 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Width="100" Height="100" CornerRadius="8" Margin="0,0,6,6"
+                                            <Border Width="100" Height="100" CornerRadius="8" Margin="0,0,4,4"
                                                     Cursor="Hand" ClipToBounds="True"
                                                     BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                                 <Border.InputBindings>

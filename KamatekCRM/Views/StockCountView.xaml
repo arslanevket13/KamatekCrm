@@ -17,21 +17,21 @@
         <viewmodels:StockCountViewModel/>
     </UserControl.DataContext>
 
-    <Grid Margin="20">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Header -->
             <RowDefinition Height="*"/>    <!-- TabControl -->
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Grid Grid.Row="0" Margin="0,0,0,15">
+        <Grid Grid.Row="0" Margin="0,0,0,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             
             <StackPanel Grid.Column="0" Orientation="Horizontal">
-                <TextBlock Text="📦" FontSize="28" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock Text="📦" FontSize="28" VerticalAlignment="Center" Margin="0,0,16,0"/>
                 <TextBlock Text="Fiziksel Stok Sayımı" 
                            FontSize="24" FontWeight="Bold"
                            Foreground="{DynamicResource TextHeadingBrush}"
@@ -62,7 +62,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- Filters -->
-                    <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="15" Margin="0,10,0,15">
+                    <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="16" Margin="0,8,0,16">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -123,7 +123,7 @@
                                   BorderThickness="0"
                                   Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                                   RowHeight="40"
-                                  ColumnHeaderHeight="45">
+                                  ColumnHeaderHeight="40">
 
                             <DataGrid.ColumnHeaderStyle>
                                 <Style TargetType="DataGridColumnHeader">
@@ -275,7 +275,7 @@
                     </Border>
 
                     <!-- Summary Cards -->
-                    <Grid Grid.Row="2" Margin="0,15,0,0">
+                    <Grid Grid.Row="2" Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
@@ -284,7 +284,7 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Total Items -->
-                        <Border Grid.Column="0" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="15" Margin="0,0,7,0">
+                        <Border Grid.Column="0" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="16" Margin="0,0,8,0">
                             <StackPanel>
                                 <TextBlock Text="Toplam Ürün" Foreground="{DynamicResource StatusWarningFg}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding TotalItemCount, StringFormat='{}{0} kalem'}" 
@@ -293,7 +293,7 @@
                         </Border>
 
                         <!-- Positive Difference -->
-                        <Border Grid.Column="1" Background="{DynamicResource StatusSuccessBg}" CornerRadius="8" Padding="15" Margin="7,0,7,0">
+                        <Border Grid.Column="1" Background="{DynamicResource StatusSuccessBg}" CornerRadius="8" Padding="16" Margin="8,0,8,0">
                             <StackPanel>
                                 <TextBlock Text="Sayım Fazlası" Foreground="{DynamicResource StatusSuccessFgDark}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding TotalPositiveDifference, StringFormat='+{0} adet'}" 
@@ -302,7 +302,7 @@
                         </Border>
 
                         <!-- Negative Difference -->
-                        <Border Grid.Column="2" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="15" Margin="7,0,7,0">
+                        <Border Grid.Column="2" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="16" Margin="8,0,8,0">
                             <StackPanel>
                                 <TextBlock Text="Sayım Eksiği" Foreground="{DynamicResource StatusErrorFgDark}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding TotalNegativeDifference, StringFormat='{}{0} adet'}" 
@@ -311,7 +311,7 @@
                         </Border>
 
                         <!-- Items with Difference -->
-                        <Border Grid.Column="3" Background="{DynamicResource StatusInfoBgLight}" CornerRadius="8" Padding="15" Margin="7,0,0,0">
+                        <Border Grid.Column="3" Background="{DynamicResource StatusInfoBgLight}" CornerRadius="8" Padding="16" Margin="8,0,0,0">
                             <StackPanel>
                                 <TextBlock Text="Farklı Ürün" Foreground="{DynamicResource StatusInfoFg}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding TotalDifferenceCount, StringFormat='{}{0} kalem'}" 
@@ -321,7 +321,7 @@
                     </Grid>
 
                     <!-- Footer -->
-                    <Grid Grid.Row="3" Margin="0,15,0,0">
+                    <Grid Grid.Row="3" Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
@@ -346,12 +346,12 @@
                         </TextBlock>
 
                         <!-- Buttons -->
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,10,0">
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,16,0">
                             <Button Content="📤 Excel'den Aktar" 
                                     Command="{Binding ImportFromExcelCommand}"
                                     Style="{StaticResource SecondaryButton}" 
                                     ToolTip="Excel dosyasından sayım verilerini yükle (Sütun1: Stok Kodu/Model, Sütun2: Miktar)"
-                                    Width="140" Height="40" Margin="0,0,10,0"/>
+                                    Width="140" Height="40" Margin="0,0,16,0"/>
                             <Button Content="📥 Excel'e Aktar" 
                                     Command="{Binding ExportToExcelCommand}"
                                     Style="{StaticResource SecondaryButton}" 
@@ -381,7 +381,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- Üst Panel: Depo Seçimi ve Ürün Arama -->
-                    <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="15" Margin="0,10,0,15">
+                    <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="16" Margin="0,8,0,16">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="250"/>
@@ -448,8 +448,8 @@
                                   GridLinesVisibility="Horizontal"
                                   BorderThickness="0"
                                   Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                  RowHeight="45"
-                                  ColumnHeaderHeight="45">
+                                  RowHeight="40"
+                                  ColumnHeaderHeight="40">
 
                             <DataGrid.ColumnHeaderStyle>
                                 <Style TargetType="DataGridColumnHeader">
@@ -578,7 +578,7 @@
                                                 </Border.Style>
                                                 <TextBlock Text="{Binding Difference, StringFormat='{}{0:+#;-#;0}'}" 
                                                            FontWeight="Bold"
-                                                           FontSize="13"
+                                                           FontSize="14"
                                                            HorizontalAlignment="Center">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
@@ -619,7 +619,7 @@
                     </Border>
 
                     <!-- Manuel Özet Kartları -->
-                    <Grid Grid.Row="2" Margin="0,15,0,0">
+                    <Grid Grid.Row="2" Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
@@ -628,7 +628,7 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Toplam Ürün -->
-                        <Border Grid.Column="0" Background="{DynamicResource StatusInfoBg}" CornerRadius="8" Padding="15" Margin="0,0,7,0">
+                        <Border Grid.Column="0" Background="{DynamicResource StatusInfoBg}" CornerRadius="8" Padding="16" Margin="0,0,8,0">
                             <StackPanel>
                                 <TextBlock Text="Toplam Ürün" Foreground="{DynamicResource StatusInfoFg}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding ManualTotalItemCount, StringFormat='{}{0} kalem'}" 
@@ -637,7 +637,7 @@
                         </Border>
 
                         <!-- Sayım Fazlası -->
-                        <Border Grid.Column="1" Background="{DynamicResource StatusSuccessBg}" CornerRadius="8" Padding="15" Margin="7,0,7,0">
+                        <Border Grid.Column="1" Background="{DynamicResource StatusSuccessBg}" CornerRadius="8" Padding="16" Margin="8,0,8,0">
                             <StackPanel>
                                 <TextBlock Text="Sayım Fazlası" Foreground="{DynamicResource StatusSuccessFgDark}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding ManualTotalPositiveDifference, StringFormat='+{0} adet'}" 
@@ -646,7 +646,7 @@
                         </Border>
 
                         <!-- Sayım Eksiği -->
-                        <Border Grid.Column="2" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="15" Margin="7,0,7,0">
+                        <Border Grid.Column="2" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="16" Margin="8,0,8,0">
                             <StackPanel>
                                 <TextBlock Text="Sayım Eksiği" Foreground="{DynamicResource StatusErrorFgDark}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding ManualTotalNegativeDifference, StringFormat='{}{0} adet'}" 
@@ -655,7 +655,7 @@
                         </Border>
 
                         <!-- Farklı Ürün -->
-                        <Border Grid.Column="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="15" Margin="7,0,0,0">
+                        <Border Grid.Column="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="16" Margin="8,0,0,0">
                             <StackPanel>
                                 <TextBlock Text="Farklı Ürün" Foreground="{DynamicResource StatusWarningFgDark}" FontWeight="Medium"/>
                                 <TextBlock Text="{Binding ManualTotalDifferenceCount, StringFormat='{}{0} kalem'}" 
@@ -665,7 +665,7 @@
                     </Grid>
 
                     <!-- Manuel Sayım Footer -->
-                    <Grid Grid.Row="3" Margin="0,15,0,0">
+                    <Grid Grid.Row="3" Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
@@ -694,7 +694,7 @@
                                 Content="🗑️ Listeyi Temizle" 
                                 Command="{Binding ClearManualListCommand}"
                                 Style="{StaticResource SecondaryButton}" 
-                                Width="140" Height="40" Margin="0,0,10,0"/>
+                                Width="140" Height="40" Margin="0,0,16,0"/>
                         
                         <!-- Sayımı Onayla -->
                         <Button Grid.Column="2" 
@@ -716,8 +716,8 @@
                     CornerRadius="12" 
                     MaxWidth="700" 
                     MaxHeight="500"
-                    Margin="50"
-                    Padding="20"
+                    Margin="48"
+                    Padding="24"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center">
                 <Border.Effect>
@@ -732,8 +732,8 @@
                     </Grid.RowDefinitions>
                     
                     <!-- Popup Header -->
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                        <TextBlock Text="📋" FontSize="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+                        <TextBlock Text="📋" FontSize="22" VerticalAlignment="Center" Margin="0,0,16,0"/>
                         <TextBlock Text="Sayım Geçmişi" FontSize="20" FontWeight="Bold" 
                                    Foreground="{DynamicResource TextHeadingBrush}"/>
                     </StackPanel>
@@ -810,7 +810,7 @@
                             Style="{StaticResource SecondaryButton}"
                             Width="100" Height="35"
                             HorizontalAlignment="Right"
-                            Margin="0,15,0,0"/>
+                            Margin="0,16,0,0"/>
                 </Grid>
             </Border>
         </Border>

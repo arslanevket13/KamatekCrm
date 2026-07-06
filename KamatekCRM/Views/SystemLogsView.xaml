@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource ApplicationBackgroundBrush}">
 
-    <Grid Margin="20">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -11,7 +11,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
             <TextBlock Text="📋 Sistem Logları" 
                        FontSize="28" FontWeight="Bold"
                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
@@ -32,38 +32,38 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Search -->
-                <Grid Grid.Column="0" Margin="0,0,12,0">
+                <Grid Grid.Column="0" Margin="0,0,16,0">
                     <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource ModernTextBox}"
-                             Height="36" Padding="36,8,12,8"/>
+                             Height="36" Padding="40,8,16,8"/>
                     <TextBlock Text="🔍" FontSize="14" VerticalAlignment="Center" 
-                               Margin="12,0,0,0" IsHitTestVisible="False"/>
+                               Margin="16,0,0,0" IsHitTestVisible="False"/>
                 </Grid>
 
                 <!-- Action Filter -->
-                <StackPanel Grid.Column="1" Margin="0,0,12,0">
-                    <TextBlock Text="İşlem Tipi" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                    <TextBlock Text="İşlem Tipi" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,0"/>
                     <ComboBox ItemsSource="{Binding ActionTypes}"
                               SelectedItem="{Binding SelectedActionFilter}"
                               Width="120" Height="36"/>
                 </StackPanel>
 
                 <!-- Entity Filter -->
-                <StackPanel Grid.Column="2" Margin="0,0,12,0">
-                    <TextBlock Text="Entity" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                <StackPanel Grid.Column="2" Margin="0,0,16,0">
+                    <TextBlock Text="Entity" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,0"/>
                     <ComboBox ItemsSource="{Binding EntityTypes}"
                               SelectedItem="{Binding SelectedEntityFilter}"
                               Width="120" Height="36"/>
                 </StackPanel>
 
                 <!-- Date Range -->
-                <StackPanel Grid.Column="3" Margin="0,0,12,0">
-                    <TextBlock Text="Başlangıç" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                <StackPanel Grid.Column="3" Margin="0,0,16,0">
+                    <TextBlock Text="Başlangıç" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,0"/>
                     <DatePicker SelectedDate="{Binding StartDate}" Width="120" Height="36"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="4" Margin="0,0,12,0">
-                    <TextBlock Text="Bitiş" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                <StackPanel Grid.Column="4" Margin="0,0,16,0">
+                    <TextBlock Text="Bitiş" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,0"/>
                     <DatePicker SelectedDate="{Binding EndDate}" Width="120" Height="36"/>
                 </StackPanel>
 
@@ -72,11 +72,11 @@
                     <Button Content="🗑️ Temizle"
                             Style="{StaticResource SecondaryButton}"
                             Command="{Binding ClearFiltersCommand}"
-                            Height="36" Padding="12,0" Margin="0,0,8,0"/>
+                            Height="36" Padding="16,0" Margin="0,0,8,0"/>
                     <Button Content="🔄 Yenile"
                             Style="{StaticResource ModernButton}"
                             Command="{Binding RefreshCommand}"
-                            Height="36" Padding="12,0"/>
+                            Height="36" Padding="16,0"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -89,7 +89,7 @@
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       SelectionMode="Single"
-                      RowHeight="45">
+                      RowHeight="40">
                 
                 <DataGrid.Columns>
                     <!-- Timestamp -->
@@ -123,7 +123,7 @@
                     <DataGridTemplateColumn Header="İşlem" Width="130">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border CornerRadius="12" Padding="8,4" HorizontalAlignment="Left" Margin="12,0">
+                                <Border CornerRadius="12" Padding="8,4" HorizontalAlignment="Left" Margin="16,0">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="{DynamicResource BorderDefaultBrush}"/>

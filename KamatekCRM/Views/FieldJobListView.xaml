@@ -7,7 +7,7 @@
              Background="{DynamicResource ApplicationBackgroundBrush}"
              d:DesignHeight="600" d:DesignWidth="900">
 
-    <Grid Margin="20">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>  <!-- Başlık -->
             <RowDefinition Height="Auto"/>  <!-- Kategori Toggles -->
@@ -18,7 +18,7 @@
 
         <!-- ===== BAŞLIK ===== -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
-            <TextBlock Text="🚜" FontSize="28" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <TextBlock Text="🚜" FontSize="28" VerticalAlignment="Center" Margin="0,0,16,0"/>
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="SAHA OPERASYON &amp; MONTAJ LİSTESİ" 
                            FontSize="22" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}"/>
@@ -29,12 +29,12 @@
             <Button Content="🔄 Yenile" 
                     Style="{StaticResource SecondaryButton}"
                     Command="{Binding RefreshCommand}"
-                    Margin="30,0,0,0"
+                    Margin="32,0,0,0"
                     VerticalAlignment="Center"/>
         </StackPanel>
 
         <!-- ===== KATEGORİ TOGGLE BUTONLARI ===== -->
-        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,12" Margin="0,0,0,12">
+        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,16" Margin="0,0,0,16">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="6" Opacity="0.04" ShadowDepth="1"/>
             </Border.Effect>
@@ -70,7 +70,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Başlangıç Tarihi -->
-                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                <StackPanel Grid.Column="0" Margin="0,0,16,0">
                     <TextBlock Text="Başlangıç" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
                     <DatePicker SelectedDate="{Binding StartDate}"
                                 Width="130"
@@ -78,7 +78,7 @@
                 </StackPanel>
 
                 <!-- Bitiş Tarihi -->
-                <StackPanel Grid.Column="1" Margin="0,0,20,0">
+                <StackPanel Grid.Column="1" Margin="0,0,24,0">
                     <TextBlock Text="Bitiş" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
                     <DatePicker SelectedDate="{Binding EndDate}"
                                 Width="130"
@@ -86,8 +86,8 @@
                 </StackPanel>
 
                 <!-- Arama (Adres) -->
-                <Border Grid.Column="2" Background="{DynamicResource SurfacePageBrush}" CornerRadius="6" Padding="10,0" 
-                        VerticalAlignment="Bottom" Height="34" Margin="0,0,12,0">
+                <Border Grid.Column="2" Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="16,0" 
+                        VerticalAlignment="Bottom" Height="34" Margin="0,0,16,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -100,7 +100,7 @@
                                  BorderThickness="0"
                                  Background="Transparent"
                                  VerticalAlignment="Center"
-                                 FontSize="13"/>
+                                 FontSize="14"/>
                     </Grid>
                 </Border>
 
@@ -170,7 +170,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
-                                    <TextBlock Text="{Binding CategoryIcon}" FontSize="16" Margin="0,0,6,0"/>
+                                    <TextBlock Text="{Binding CategoryIcon}" FontSize="16" Margin="0,0,4,0"/>
                                     <TextBlock Text="{Binding CategoryDisplay}" 
                                                Foreground="{Binding CategoryColor}"
                                                FontWeight="SemiBold"/>
@@ -221,7 +221,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
-                                    <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="12" Width="24" Height="24" Margin="0,0,6,0">
+                                    <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="12" Width="24" Height="24" Margin="0,0,4,0">
                                         <TextBlock Text="👤" FontSize="12" 
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
@@ -272,7 +272,7 @@
         </Border>
 
         <!-- ===== FOOTER ===== -->
-        <Border Grid.Row="4" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="6" Padding="16,10" Margin="0,12,0,0">
+        <Border Grid.Row="4" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,8" Margin="0,16,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

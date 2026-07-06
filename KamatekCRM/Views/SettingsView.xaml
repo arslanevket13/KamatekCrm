@@ -8,14 +8,14 @@
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="1000">
 
-    <Grid Margin="20">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Margin="0,0,0,20">
+        <Border Grid.Row="0" Margin="0,0,0,24">
             <StackPanel>
                 <TextBlock Text="⚙️ AYARLAR" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
                 <TextBlock Text="Uygulama yapılandırması ve veritabanı yönetimi" FontSize="14" Foreground="{DynamicResource ThemeTextSecondary}"/>
@@ -26,19 +26,19 @@
         <ScrollViewer Grid.Row="1">
             <WrapPanel>
                 <!-- Backup Card -->
-                <Border Width="300" Margin="0,0,20,20" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="15">
+                <Border Width="300" Margin="0,0,24,24" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
+                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="16">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="20" Direction="270" ShadowDepth="4" Opacity="0.08" Color="Black"/>
                     </Border.Effect>
                     <StackPanel>
                         <!-- Card Header -->
-                        <Grid Margin="0,0,0,15">
+                        <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Background="{DynamicResource StatusSuccessBg}" CornerRadius="20" Width="40" Height="40" Margin="0,0,10,0">
+                            <Border Background="{DynamicResource StatusSuccessBg}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
                                 <TextBlock Text="💾" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -47,20 +47,20 @@
                             </StackPanel>
                         </Grid>
 
-                        <Separator Margin="0,0,0,15" Background="{DynamicResource ThemeDivider}"/>
+                        <Separator Margin="0,0,0,16" Background="{DynamicResource ThemeDivider}"/>
 
                         <!-- Info -->
-                        <StackPanel Margin="0,0,0,15">
+                        <StackPanel Margin="0,0,0,16">
                             <TextBlock Text="SON YEDEKLEME" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemeTextTertiary}"/>
-                            <TextBlock Text="{Binding LastBackupText}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,2,0,0"/>
+                            <TextBlock Text="{Binding LastBackupText}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,0"/>
                         </StackPanel>
 
                         <!-- Backup Action -->
                         <Button Content="💾 ŞİMDİ YEDEK AL" 
                                 Command="{Binding TakeBackupCommand}"
                                 Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                FontWeight="Bold" Padding="15,10"
-                                BorderThickness="0" Cursor="Hand" Margin="0,0,0,10">
+                                FontWeight="Bold" Padding="16,8"
+                                BorderThickness="0" Cursor="Hand" Margin="0,0,0,16">
                             <Button.Style>
                                 <Style TargetType="Button">
                                     <Setter Property="Opacity" Value="1"/>
@@ -77,7 +77,7 @@
                         <Button Content="📂 YEDEKTEN YÜKLE" 
                                 Command="{Binding RestoreBackupCommand}"
                                 Background="{DynamicResource ThemeWarning}" Foreground="{DynamicResource TextInverseBrush}"
-                                FontWeight="Bold" Padding="15,10"
+                                FontWeight="Bold" Padding="16,8"
                                 BorderThickness="0" Cursor="Hand">
                             <Button.Style>
                                 <Style TargetType="Button">
@@ -92,25 +92,25 @@
                         </Button>
 
                         <TextBlock Text="* Uygulama kapanırken otomatik yedek alınır." 
-                                   FontSize="10" Foreground="{DynamicResource ThemeTextTertiary}" Margin="0,10,0,0" 
+                                   FontSize="10" Foreground="{DynamicResource ThemeTextTertiary}" Margin="0,16,0,0" 
                                    TextWrapping="Wrap" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
                 
                 <!-- THEME SELECTOR CARD -->
-                <Border Width="620" Margin="0,0,20,20" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="20">
+                <Border Width="620" Margin="0,0,24,24" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
+                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="24">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="20" Direction="270" ShadowDepth="4" Opacity="0.08" Color="Black"/>
                     </Border.Effect>
                     <StackPanel>
                         <!-- Header -->
-                        <Grid Margin="0,0,0,15">
+                        <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Background="{DynamicResource ThemePrimary}" CornerRadius="20" Width="40" Height="40" Margin="0,0,10,0">
+                            <Border Background="{DynamicResource ThemePrimary}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
                                 <TextBlock Text="🎨" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -119,7 +119,7 @@
                             </StackPanel>
                         </Grid>
 
-                        <Separator Margin="0,0,0,15" Background="{DynamicResource ThemeDivider}"/>
+                        <Separator Margin="0,0,0,16" Background="{DynamicResource ThemeDivider}"/>
 
                         <!-- Radio Cards ListBox -->
                         <ListBox ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}" 
@@ -152,7 +152,7 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <!-- Radio Card -->
-                                    <Border x:Name="ThemeCardBorder" Width="180" Height="100" Margin="0,0,10,10" 
+                                    <Border x:Name="ThemeCardBorder" Width="180" Height="100" Margin="0,0,16,16" 
                                             CornerRadius="8" BorderThickness="2" BorderBrush="{DynamicResource ThemeBorder}"
                                             Background="{DynamicResource ThemeSurface}" Cursor="Hand">
                                         
@@ -174,7 +174,7 @@
                                             </Style>
                                         </Border.Style>
                                         
-                                        <Grid Margin="12">
+                                        <Grid Margin="16">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="*"/>
@@ -182,7 +182,7 @@
                                             
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                                 <TextBlock Text="{Binding Icon}" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="13" 
+                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="14" 
                                                            Foreground="{DynamicResource ThemeTextPrimary}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                             
@@ -220,10 +220,10 @@
                 </Border>
                 
                 <!-- Placeholder for future settings -->
-                <Border Width="300" Margin="0,0,20,20" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="15" Opacity="0.5">
+                <Border Width="300" Margin="0,0,24,24" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
+                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="16" Opacity="0.5">
                     <StackPanel>
-                        <TextBlock Text="👤 Kullanıcı Ayarları" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,10"/>
+                        <TextBlock Text="👤 Kullanıcı Ayarları" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
                         <TextBlock Text="Yakında eklenecek..." Foreground="{DynamicResource ThemeTextSecondary}"/>
                     </StackPanel>
                 </Border>

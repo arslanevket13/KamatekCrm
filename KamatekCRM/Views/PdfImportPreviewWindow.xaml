@@ -7,14 +7,14 @@
         Title="PDF Fatura Önizleme ve Düzenleme" Height="500" Width="800"
         WindowStartupLocation="CenterScreen">
     
-    <Grid Margin="10">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="PDF'ten Okunan Kalemler" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" Foreground="{DynamicResource ThemePrimaryDark}"/>
+        <TextBlock Text="PDF'ten Okunan Kalemler" FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="{DynamicResource ThemePrimaryDark}"/>
 
         <DataGrid Grid.Row="1" ItemsSource="{Binding ParsedItems}" AutoGenerateColumns="False" 
                   CanUserAddRows="False" BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}"
@@ -29,16 +29,16 @@
                         <DataTemplate>
                             <Button Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
                                     CommandParameter="{Binding}"
-                                    Content="SİL" Background="{DynamicResource StatusErrorFg}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="5,2" BorderThickness="0"/>
+                                    Content="SİL" Background="{DynamicResource StatusErrorFg}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="4,0" BorderThickness="0"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
             <Button Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                    Content="İPTAL" Width="100" Margin="0,0,10,0"
+                    Content="İPTAL" Width="100" Margin="0,0,16,0"
                     Background="{DynamicResource TextFillColorSecondaryBrush}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}" FontWeight="Bold" Height="35"/>
             
             <Button Command="{Binding ConfirmCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"

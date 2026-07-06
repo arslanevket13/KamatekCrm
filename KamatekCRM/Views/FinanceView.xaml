@@ -42,7 +42,7 @@
         </Grid.RowDefinitions>
 
         <!-- HEADER -->
-        <Grid Grid.Row="0" Margin="0,0,0,20">
+        <Grid Grid.Row="0" Margin="0,0,0,24">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -50,12 +50,12 @@
 
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Symbol="Money24" FontSize="28" Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,12,0"/>
+                    <ui:SymbolIcon Symbol="Money24" FontSize="28" Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,16,0"/>
                     <TextBlock Text="KASA / FİNANS" 
                                FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                 </StackPanel>
                 <TextBlock Text="Günlük gelir-gider takibi ve kasa raporu" 
-                           FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+                           FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
             </StackPanel>
 
             <!-- Tarih Kontrolleri -->
@@ -72,11 +72,11 @@
                 <Button Content="▶" Command="{Binding NextDayCommand}"
                         Width="32" Height="32" FontSize="14"
                         Background="{DynamicResource ThemePrimaryDark}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
-                        Margin="4,0,12,0" Cursor="Hand"/>
+                        Margin="4,0,16,0" Cursor="Hand"/>
 
                 <Button Content="📅 Bugün" Command="{Binding GoToTodayCommand}"
-                        Padding="12,6" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                        BorderThickness="0" Cursor="Hand" Margin="0,0,12,0"/>
+                        Padding="16,4" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                        BorderThickness="0" Cursor="Hand" Margin="0,0,16,0"/>
 
                 <CheckBox Content="Aylık Görünüm" 
                           IsChecked="{Binding ShowMonthly}" 
@@ -129,7 +129,7 @@
         </UniformGrid>
 
         <!-- GİDER EKLEME BÖLÜMÜ -->
-        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="24" Margin="0,0,0,16">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -143,29 +143,29 @@
                            FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                            VerticalAlignment="Center" Margin="0,0,16,0"/>
 
-                <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                <StackPanel Grid.Column="1" Margin="0,0,16,0">
                     <TextBlock Text="Tutar (₺)" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding NewExpenseAmount, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="10,8" FontSize="14"/>
+                             Padding="8,8" FontSize="14"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="2" Margin="0,0,12,0">
+                <StackPanel Grid.Column="2" Margin="0,0,16,0">
                     <TextBlock Text="Kategori" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
                     <ComboBox ItemsSource="{Binding ExpenseCategories}"
                               SelectedItem="{Binding NewExpenseCategory}"
-                              Padding="10,8" FontSize="12"/>
+                              Padding="8,8" FontSize="12"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="3" Margin="0,0,12,0">
+                <StackPanel Grid.Column="3" Margin="0,0,16,0">
                     <TextBlock Text="Açıklama" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding NewExpenseDescription, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="10,8" FontSize="14" 
+                             Padding="8,8" FontSize="14" 
                              ToolTip="Örn: Elektrik faturası, Malzeme alımı..."/>
                 </StackPanel>
 
                 <Button Grid.Column="4" Content="💾 KAYDET" 
                         Command="{Binding AddExpenseCommand}"
-                        Padding="20,12" FontSize="14" FontWeight="Bold"
+                        Padding="24,16" FontSize="14" FontWeight="Bold"
                         Background="{DynamicResource ThemeWarning}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
                         VerticalAlignment="Bottom" Cursor="Hand">
                     <Button.Style>
@@ -190,7 +190,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Liste Header -->
-                <Grid Grid.Row="0" Margin="0,0,0,12">
+                <Grid Grid.Row="0" Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
@@ -202,7 +202,7 @@
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
-                                 Width="200" Padding="10,8" Margin="0,0,8,0"
+                                 Width="200" Padding="8,8" Margin="0,0,8,0"
                                  Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}">
                             <TextBox.Style>
                                 <Style TargetType="TextBox">
@@ -235,7 +235,7 @@
                           HorizontalGridLinesBrush="{DynamicResource BorderDefaultBrush}"
                           SelectionMode="Single"
                           HeadersVisibility="Column"
-                          RowHeight="45"
+                          RowHeight="40"
                           VerticalScrollBarVisibility="Auto"
                           ScrollViewer.CanContentScroll="False"
                           VirtualizingPanel.ScrollUnit="Pixel"
@@ -326,7 +326,7 @@
                         <DataGridTemplateColumn Header="TUTAR" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock FontWeight="Bold" FontSize="13" VerticalAlignment="Center">
+                                    <TextBlock FontWeight="Bold" FontSize="14" VerticalAlignment="Center">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Text" Value="{Binding Amount, StringFormat='₺{0:N2}'}"/>

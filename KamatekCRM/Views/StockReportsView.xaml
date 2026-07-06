@@ -13,7 +13,7 @@
         <viewmodels:StockReportsViewModel/>
     </UserControl.DataContext>
 
-    <Grid Margin="20">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Header -->
             <RowDefinition Height="Auto"/> <!-- Filters -->
@@ -23,8 +23,8 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-            <TextBlock Text="📊" FontSize="28" VerticalAlignment="Center" Margin="0,0,10,0"/>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <TextBlock Text="📊" FontSize="28" VerticalAlignment="Center" Margin="0,0,16,0"/>
             <TextBlock Text="Stok Hareketleri Raporu" 
                        FontSize="24" FontWeight="Bold"
                        Foreground="{DynamicResource TextHeadingBrush}"
@@ -32,7 +32,7 @@
         </StackPanel>
 
         <!-- Filters -->
-        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="15" Margin="0,0,0,15">
+        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -107,11 +107,11 @@
                     <Button Content="🗑️ Filtreleri Temizle" 
                             Command="{Binding ClearFiltersCommand}"
                             Style="{StaticResource SecondaryButton}" 
-                            Height="35" Margin="0,0,10,0" Padding="15,0"/>
+                            Height="35" Margin="0,0,16,0" Padding="16,0"/>
                     <Button Content="📋 Kopyala" 
                             Command="{Binding ExportCommand}"
                             Style="{StaticResource SecondaryButton}" 
-                            Height="35" Margin="0,0,10,0" Padding="15,0"/>
+                            Height="35" Margin="0,0,16,0" Padding="16,0"/>
                     <Button Content="🔍 Ara" 
                             Command="{Binding SearchCommand}"
                             Style="{StaticResource ModernButton}" 
@@ -133,7 +133,7 @@
                       BorderThickness="0"
                       Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                       RowHeight="38"
-                      ColumnHeaderHeight="42">
+                      ColumnHeaderHeight="40">
 
                 <DataGrid.ColumnHeaderStyle>
                     <Style TargetType="DataGridColumnHeader">
@@ -190,7 +190,7 @@
                     <DataGridTemplateColumn Header="İşlem Tipi" Width="130">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Border Padding="6,3" CornerRadius="4" HorizontalAlignment="Left" Margin="10,0">
+                                <Border Padding="4,4" CornerRadius="4" HorizontalAlignment="Left" Margin="8,0">
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="{DynamicResource ThemeBorder}"/>
@@ -309,7 +309,7 @@
         </Border>
 
         <!-- Summary Cards -->
-        <Grid Grid.Row="3" Margin="0,15,0,0">
+        <Grid Grid.Row="3" Margin="0,16,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -318,7 +318,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Total In -->
-            <Border Grid.Column="0" Background="{DynamicResource StatusSuccessBg}" CornerRadius="8" Padding="15" Margin="0,0,7,0">
+            <Border Grid.Column="0" Background="{DynamicResource StatusSuccessBg}" CornerRadius="8" Padding="16" Margin="0,0,8,0">
                 <StackPanel>
                     <TextBlock Text="📈 Toplam Giren" Foreground="{DynamicResource StatusSuccessFgDark}" FontWeight="Medium"/>
                     <TextBlock Text="{Binding TotalIn, StringFormat='{}{0:N0} adet'}" 
@@ -327,7 +327,7 @@
             </Border>
 
             <!-- Total Out -->
-            <Border Grid.Column="1" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="15" Margin="7,0,7,0">
+            <Border Grid.Column="1" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="16" Margin="8,0,8,0">
                 <StackPanel>
                     <TextBlock Text="📉 Toplam Çıkan" Foreground="{DynamicResource StatusErrorFgDark}" FontWeight="Medium"/>
                     <TextBlock Text="{Binding TotalOut, StringFormat='{}{0:N0} adet'}" 
@@ -336,7 +336,7 @@
             </Border>
 
             <!-- Net Change -->
-            <Border Grid.Column="2" CornerRadius="8" Padding="15" Margin="7,0,7,0">
+            <Border Grid.Column="2" CornerRadius="8" Padding="16" Margin="8,0,8,0">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
@@ -371,7 +371,7 @@
             </Border>
 
             <!-- Transaction Count -->
-            <Border Grid.Column="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="15" Margin="7,0,0,0">
+            <Border Grid.Column="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="16" Margin="8,0,0,0">
                 <StackPanel>
                     <TextBlock Text="📝 Toplam Hareket" Foreground="{DynamicResource StatusWarningFgDark}" FontWeight="Medium"/>
                     <TextBlock Text="{Binding TransactionCount, StringFormat='{}{0:N0} kayıt'}" 
@@ -381,7 +381,7 @@
         </Grid>
 
         <!-- Footer -->
-        <Grid Grid.Row="4" Margin="0,15,0,0">
+        <Grid Grid.Row="4" Margin="0,16,0,0">
             <!-- Status Message -->
             <TextBlock Text="{Binding StatusMessage}" 
                        VerticalAlignment="Center"

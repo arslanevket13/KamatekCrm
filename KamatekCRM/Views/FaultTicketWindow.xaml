@@ -46,7 +46,7 @@
                     <ControlTemplate TargetType="RadioButton">
                         <Border x:Name="border" Background="{DynamicResource ApplicationBackgroundBrush}" 
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" 
-                                CornerRadius="8" Padding="16,12" Cursor="Hand">
+                                CornerRadius="8" Padding="16,16" Cursor="Hand">
                             <ContentPresenter HorizontalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -70,7 +70,7 @@
                     <ControlTemplate TargetType="ToggleButton">
                         <Border x:Name="chipBorder" 
                                 Background="{DynamicResource ApplicationBackgroundBrush}" 
-                                CornerRadius="16" Padding="14,6" Margin="0,0,8,8"
+                                CornerRadius="16" Padding="16,4" Margin="0,0,8,8"
                                 BorderBrush="{DynamicResource ThemeBorder}" 
                                 BorderThickness="1" Cursor="Hand">
                             <TextBlock Text="{TemplateBinding Content}" 
@@ -118,7 +118,7 @@
                 
                 <!-- Öncelik Badge -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock Text="Öncelik Seviyesi:" Foreground="{DynamicResource ThemeForegroundMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <TextBlock Text="Öncelik Seviyesi:" Foreground="{DynamicResource ThemeForegroundMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,16,0"/>
                     <ComboBox ItemsSource="{Binding Priorities}"
                               SelectedItem="{Binding SelectedPriority}"
                               Style="{StaticResource ModernComboBox}"
@@ -127,28 +127,26 @@
             </Grid>
         </Border>
 
-        <!-- ========== 3-COLUMN MAIN CONTENT ========== -->
+        <!-- ========== 2-COLUMN MAIN CONTENT ========== -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <Grid Margin="24">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="340"/>
-                    <ColumnDefinition Width="20"/>
-                    <ColumnDefinition Width="380"/>
-                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="24"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- ===== SOL PANEL: MÜŞTERİ BİLGİLERİ ===== -->
+                <!-- ===== SOL PANEL: MÜŞTERİ & CİHAZ BİLGİLERİ ===== -->
                 <StackPanel Grid.Column="0">
                     <Border Style="{StaticResource SectionCard}">
                         <StackPanel>
                             <TextBlock Style="{StaticResource SectionHeader}" Text="1. Müşteri Bilgisi"/>
                             
-                            <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" Padding="12" Margin="0,0,0,16"
+                            <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
                                     BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                 <CheckBox Content="⚡ Hızlı Yeni Müşteri Kısayolu" 
                                           IsChecked="{Binding IsQuickAddCustomer}"
-                                          FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}"/>
+                                          FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}"/>
                             </Border>
                             
                             <!-- Mevcut Müşteri Seçimi -->
@@ -159,10 +157,10 @@
                                           DisplayMemberPath="FullName"
                                           IsEditable="True" IsTextSearchEnabled="True"
                                           Style="{StaticResource ModernComboBox}"
-                                          Height="44" Margin="0,0,0,12"/>
+                                          Height="44" Margin="0,0,0,16"/>
                                 
                                 <!-- Müşteri Adres Box -->
-                                <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="12" MinHeight="60"
+                                <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="16" MinHeight="60"
                                         BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                     <TextBlock Text="{Binding CustomerAddress}" 
                                                TextWrapping="Wrap" FontSize="12" 
@@ -183,36 +181,16 @@
                         </StackPanel>
                     </Border>
                     
-                    <Border Style="{StaticResource SectionCard}" Margin="0">
-                        <StackPanel>
-                            <TextBlock Style="{StaticResource SectionHeader}" Text="4. Ön Maliyet (Opsiyonel)"/>
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="Tahmini İşçilik Ücreti (₺)"/>
-                            <TextBox Text="{Binding LaborCost, StringFormat='{}{0:N2}', UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource ModernTextBox}" Height="40" Margin="0,0,0,12"/>
-                            
-                            <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" Padding="16" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
-                                <Grid>
-                                    <TextBlock Text="Tahmini Toplam:" FontSize="13" Foreground="{DynamicResource ThemeForegroundMuted}" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding TotalEstimate, StringFormat='{}{0:N2} ₺'}" 
-                                               FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" 
-                                               HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <!-- ===== ORTA PANEL: CİHAZ ===== -->
-                <StackPanel Grid.Column="2">
+                    <!-- ===== CİHAZ BİLGİLERİ ===== -->
                     <Border Style="{StaticResource SectionCard}">
                         <StackPanel>
                             <TextBlock Style="{StaticResource SectionHeader}" Text="2. Cihaz Bilgileri"/>
                             
-                            <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" Padding="12" Margin="0,0,0,16"
+                            <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
                                     BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                 <CheckBox Content="✨ Yeni Cihaz (Envanterde Yok)" 
                                           IsChecked="{Binding IsNewAsset}"
-                                          FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}"/>
+                                          FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}"/>
                             </Border>
 
                             <!-- Kayıtlı Cihaz Seçimi -->
@@ -319,9 +297,9 @@
                     </Border>
                 </StackPanel>
 
-                <!-- ===== SAĞ PANEL: ARIZA DETAYLARI ===== -->
-                <StackPanel Grid.Column="4">
-                    <Border Style="{StaticResource SectionCard}" Margin="0">
+                <!-- ===== SAĞ PANEL: ARIZA DETAYLARI & MALİYET ===== -->
+                <StackPanel Grid.Column="2">
+                    <Border Style="{StaticResource SectionCard}">
                         <StackPanel>
                             <TextBlock Style="{StaticResource SectionHeader}" Text="3. Arıza Beyanı &amp; Durum"/>
                             
@@ -357,7 +335,7 @@
                             </Border>
 
                             <!-- Eklenen Fotoğraflar -->
-                            <ItemsControl ItemsSource="{Binding TempPhotoPaths}" Margin="0,12,0,0">
+                            <ItemsControl ItemsSource="{Binding TempPhotoPaths}" Margin="0,16,0,0">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <WrapPanel/>
@@ -365,7 +343,7 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Width="80" Height="80" CornerRadius="6" Margin="0,0,8,8"
+                                        <Border Width="80" Height="80" CornerRadius="8" Margin="0,0,8,8"
                                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                                                 ClipToBounds="True">
                                             <Grid>
@@ -386,6 +364,25 @@
                             </ItemsControl>
                         </StackPanel>
                     </Border>
+
+                    <!-- ===== ÖN MALİYET ===== -->
+                    <Border Style="{StaticResource SectionCard}" Margin="0">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionHeader}" Text="4. Ön Maliyet (Opsiyonel)"/>
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="Tahmini İşçilik Ücreti (₺)"/>
+                            <TextBox Text="{Binding LaborCost, StringFormat='{}{0:N2}', UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource ModernTextBox}" Height="40" Margin="0,0,0,16"/>
+                            
+                            <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" Padding="16" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
+                                <Grid>
+                                    <TextBlock Text="Tahmini Toplam:" FontSize="14" Foreground="{DynamicResource ThemeForegroundMuted}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding TotalEstimate, StringFormat='{}{0:N2} ₺'}" 
+                                               FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" 
+                                               HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Grid>
         </ScrollViewer>
@@ -394,18 +391,17 @@
         <Border Grid.Row="2" Background="{DynamicResource ThemeSurface}" 
                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,1,0,0" 
                 Padding="24,16">
-            <Grid>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="İptal Et" 
                         Command="{Binding CancelCommand}"
-                        Style="{StaticResource ModernButton}" Background="{DynamicResource ApplicationBackgroundBrush}" 
+                        Style="{StaticResource ModernButton}" Background="Transparent" 
                         Foreground="{DynamicResource ThemeForeground}" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorder}"
-                        HorizontalAlignment="Left"
-                        Width="120" Height="44" FontSize="14"/>
+                        Height="44" Padding="24,0" FontSize="14" Margin="0,0,16,0"/>
                 
                 <Button Command="{Binding SaveFaultTicketCommand}"
-                        Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                        HorizontalAlignment="Right"
-                        Width="240" Height="48" FontSize="15" FontWeight="SemiBold">
+                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                        Height="44" Padding="32,0" FontSize="15" FontWeight="SemiBold"
+                        BorderThickness="0">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <TextBlock Text="💾" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -423,7 +419,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-            </Grid>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>
