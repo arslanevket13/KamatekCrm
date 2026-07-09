@@ -97,8 +97,9 @@
                 <views:FinancialHealthView/>
             </DataTemplate>
             
-            <DataTemplate DataType="{x:Type vm:PurchaseOrderViewModel}">
-                <views:PurchaseOrderView/>
+            <!-- Satın Alma ve Stok Giriş -->
+            <DataTemplate DataType="{x:Type vm:PurchasingViewModel}">
+                <views:PurchasingView />
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type vm:SuppliersViewModel}">

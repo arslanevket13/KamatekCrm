@@ -207,7 +207,7 @@ namespace KamatekCrm.ViewModels
             NavigateToSettingsCommand = new RelayCommand(_ => NavigateTo<SettingsViewModel>(), _ => _authService.CanAccessSettings);
             NavigateToFinanceCommand = new RelayCommand(_ => NavigateTo<FinanceViewModel>(), _ => _authService.CanViewFinance);
             NavigateToAnalyticsCommand = new RelayCommand(_ => NavigateTo<AnalyticsViewModel>(), _ => _authService.CanViewAnalytics);
-            NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateTo<PurchaseOrderViewModel>());
+            NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateTo<PurchasingViewModel>());
             ToggleNotificationsCommand = new RelayCommand(_ => IsNotificationsOpen = !IsNotificationsOpen);
             RefreshNotificationsCommand = new RelayCommand(_ => LoadNotifications());
             

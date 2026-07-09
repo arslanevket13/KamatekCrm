@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using KamatekCrm.Services;
 using KamatekCrm.Settings;
@@ -96,7 +96,7 @@ namespace KamatekCrm.Extensions
             services.AddTransient<AnalyticsViewModel>();
             services.AddTransient<RoutePlanningViewModel>();
             services.AddTransient<FinancialHealthViewModel>();
-            services.AddTransient<PurchaseOrderViewModel>();
+            services.AddTransient<PurchasingViewModel>();
             services.AddTransient<StockTransferViewModel>();
             services.AddTransient<AddUserViewModel>();
 

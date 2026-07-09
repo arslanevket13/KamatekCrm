@@ -12,7 +12,6 @@
     <UserControl.InputBindings>
         <KeyBinding Modifiers="Ctrl" Key="K" Command="{Binding OpenQuickAddCommand}"/>
         <KeyBinding Modifiers="Ctrl" Key="B" Command="{Binding ToggleSidebarCommand}"/>
-        <KeyBinding Modifiers="Ctrl" Key="N" Command="{Binding OpenFaultTicketCommand}"/>
         <KeyBinding Modifiers="Ctrl" Key="D" Command="{Binding ToggleDarkModeCommand}"/>
     </UserControl.InputBindings>
     
@@ -190,11 +189,10 @@
                         </Button>
                         
                         <!-- Logo -->
-                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center"
-                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="KAMATEK" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <TextBlock Text="Teknik Servis" FontSize="10" Foreground="{DynamicResource TextBodyBrush}"/>
-                        </StackPanel>
+                        <Image Grid.Column="1" Source="/Assets/Images/KamatekLogo.png" 
+                               Height="32" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Center"
+                               Margin="16,0,0,0"
+                               Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                     </Grid>
                 </Border>
 
@@ -241,13 +239,6 @@
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="24,4,24,8"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
-                        <Button Command="{Binding OpenFaultTicketCommand}" Style="{StaticResource GlassAccentNavButton}">
-                            <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource LightningIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
-                                <TextBlock Text=" Hızlı Kabul" VerticalAlignment="Center" Margin="8,0,0,0"
-                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
-                            </StackPanel>
-                        </Button>
 
                         <Button Command="{Binding NavigateToRepairListCommand}" Style="{StaticResource GlassNavButton}">
                             <StackPanel Orientation="Horizontal">
