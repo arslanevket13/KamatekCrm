@@ -16,5 +16,15 @@ namespace KamatekCrm.Views
                 vm.Initialize(customerId);
             }
         }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            
+            if (GetTemplateChild("PART_CloseButton") is System.Windows.Controls.Button closeButton)
+            {
+                closeButton.Click += (s, e) => this.Close();
+            }
+        }
     }
 }

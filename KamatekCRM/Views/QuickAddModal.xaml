@@ -6,7 +6,7 @@
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
         AllowsTransparency="True"
-        Background="Transparent"
+        Style="{StaticResource PremiumWindowStyle}"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
         Topmost="True">

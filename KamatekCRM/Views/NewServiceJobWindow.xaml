@@ -10,7 +10,7 @@
         Title="🔧 Profesyonel İş Emri Formu" 
         Width="1150" Height="760"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource SurfacePageBrush}">
+        Style="{StaticResource PremiumWindowStyle}">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>

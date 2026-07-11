@@ -10,7 +10,7 @@
         MaxHeight="700"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="{DynamicResource SurfacePageBrush}">
+        Style="{StaticResource PremiumWindowStyle}">
     
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>

@@ -6,7 +6,7 @@
         SizeToContent="WidthAndHeight"
         MinWidth="400"
         ResizeMode="NoResize"
-        Background="{DynamicResource SurfacePageBrush}">
+        Style="{StaticResource PremiumWindowStyle}">
 
     <Border Margin="24" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="24">
         <Border.Effect>

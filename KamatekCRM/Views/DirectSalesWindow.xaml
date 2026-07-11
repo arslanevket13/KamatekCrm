@@ -7,7 +7,7 @@
         Title="💰 Perakende Satış (POS)" 
         Height="740" Width="1280"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource ApplicationBackgroundBrush}">
+        Style="{StaticResource PremiumWindowStyle}">
 
     <Window.InputBindings>
         <KeyBinding Key="F5" Command="{Binding ClearCartCommand}"/>

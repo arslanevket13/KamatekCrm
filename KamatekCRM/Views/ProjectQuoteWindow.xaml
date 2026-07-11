@@ -4,7 +4,7 @@
         Title="🏗️ PROJE &amp; TEKLİF OLUŞTUR" 
         Height="650" Width="900"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource ApplicationBackgroundBrush}">
+        Style="{StaticResource PremiumWindowStyle}">
     
     <Grid Margin="24">
         <Grid.RowDefinitions>

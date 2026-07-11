@@ -14,7 +14,7 @@
         MaxWidth="1000"
         MaxHeight="800"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource SurfacePageBrush}">
+        Style="{StaticResource PremiumWindowStyle}">
 
     <Window.Resources>
         <!-- Boolean to Visibility Converter -->
@@ -457,25 +457,34 @@
         </DataTemplate>
     </Window.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Margin="24">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Row 0: Header -->
+            <RowDefinition Height="*"/>    <!-- Row 1: Body -->
+            <RowDefinition Height="Auto"/> <!-- Row 2: Footer -->
+        </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <TextBlock Grid.Row="0" Text="Yeni Stok Kartı Oluştur" 
-                       FontSize="28" FontWeight="Bold"
-                       Foreground="{DynamicResource TextHeadingBrush}"
-                       Margin="0,0,0,24"/>
+        <!-- ROW 0: HEADER -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <TextBlock Text="📦" FontSize="20" Margin="0,0,8,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                <TextBlock Text="{Binding WindowTitle}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}"/>
+            </StackPanel>
+            <Rectangle Height="1" Fill="{DynamicResource ThemeDivider}" />
+        </StackPanel>
+
+        <!-- ROW 1: BODY -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="0,0,16,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
             <!-- Section 1: Identity -->
-            <Border Grid.Row="1" Style="{StaticResource CardPanel}" Margin="0,0,0,16" Padding="24">
+            <Border Grid.Row="0" Style="{StaticResource CardPanel}" Margin="0,0,0,16" Padding="24">
                 <StackPanel>
                     <TextBlock Text="Ürün Kimliği" FontSize="16" FontWeight="SemiBold" 
                                Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
@@ -539,7 +548,7 @@
             </Border>
 
             <!-- Section 2: Financial -->
-            <Border Grid.Row="2" Style="{StaticResource CardPanel}" Margin="0,0,0,16" Padding="24">
+            <Border Grid.Row="1" Style="{StaticResource CardPanel}" Margin="0,0,0,16" Padding="24">
                 <StackPanel>
                     <TextBlock Text="Finansal Bilgiler" FontSize="16" FontWeight="SemiBold" 
                                Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
@@ -629,7 +638,7 @@
             </Border>
 
             <!-- Section 3: Dynamic Specs -->
-            <Border Grid.Row="3" Style="{StaticResource CardPanel}" Margin="0,0,0,16" Padding="24">
+            <Border Grid.Row="2" Style="{StaticResource CardPanel}" Margin="0,0,0,16" Padding="24">
                 <StackPanel>
                     <TextBlock Text="Teknik Özellikler" FontSize="16" FontWeight="SemiBold" 
                                Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
@@ -648,7 +657,7 @@
             </Border>
 
             <!-- Section 4: Description -->
-            <Border Grid.Row="4" Style="{StaticResource CardPanel}" Margin="0,0,0,24" Padding="24">
+            <Border Grid.Row="3" Style="{StaticResource CardPanel}" Margin="0,0,0,24" Padding="24">
                 <StackPanel>
                     <Label Content="Ürün Açıklaması" Style="{StaticResource ModernLabel}" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}"/>
                     <TextBox Text="{Binding NewProduct.Description, UpdateSourceTrigger=PropertyChanged}" 
@@ -657,28 +666,13 @@
                 </StackPanel>
             </Border>
 
-            <!-- Footer Buttons (Gutenberg Diagram) -->
-            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,16">
-                <Button Content="İptal"
-                        Command="{Binding CancelCommand}"
-                        Height="40" FontSize="14"
-                        Style="{StaticResource ModernButton}"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource BorderDefaultBrush}"
-                        Margin="0,0,16,0"
-                        Padding="16,0"/>
+            </Grid>
+        </ScrollViewer>
 
-                <Button Content="Kaydet"
-                        Command="{Binding SaveCommand}"
-                        IsDefault="True"
-                        Height="40" FontSize="14" FontWeight="SemiBold"
-                        Style="{StaticResource ModernButton}"
-                        Background="{DynamicResource ThemePrimary}" 
-                        Foreground="{DynamicResource TextOnPrimaryBrush}"
-                        BorderThickness="0"
-                        Padding="32,0"/>
-            </StackPanel>
-        </Grid>
-    </ScrollViewer>
+        <!-- ROW 2: FOOTER (Eylem Butonları) -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="İptal" Command="{Binding CancelCommand}" Height="40" Padding="24,0" Margin="0,0,8,0" Style="{DynamicResource DefaultButtonStyle}" Click="CloseWindow_Click"/>
+            <Button Content="Kaydet" Command="{Binding SaveCommand}" IsDefault="True" Height="40" Padding="32,0" Style="{DynamicResource AccentButtonStyle}"/>
+        </StackPanel>
+    </Grid>
 </Window>

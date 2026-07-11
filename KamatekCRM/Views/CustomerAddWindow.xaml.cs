@@ -26,5 +26,22 @@ namespace KamatekCrm.Views
             };
             DataContext = viewModel;
         }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            
+            // PremiumWindowStyle içindeki kapatma butonunu bul ve Click eventini bağla
+            if (GetTemplateChild("PART_CloseButton") is System.Windows.Controls.Button closeButton)
+            {
+                closeButton.Click += (s, e) => this.Close();
+            }
+        }
+
+        private void CloseWindow_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = false;
+            this.Close();
+        }
     }
 }

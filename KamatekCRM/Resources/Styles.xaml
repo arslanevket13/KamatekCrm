@@ -9,6 +9,67 @@
 
     <FontFamily x:Key="MainFont">Segoe UI Variable, Segoe UI</FontFamily>
 
+    <!-- ─────────── PREMIUM WINDOW STYLE ─────────── -->
+    <Style x:Key="PremiumWindowStyle" TargetType="Window">
+        <Setter Property="WindowStyle" Value="None" />
+        <Setter Property="AllowsTransparency" Value="True" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource MainFont}" />
+        <Setter Property="WindowChrome.WindowChrome">
+            <Setter.Value>
+                <WindowChrome CaptionHeight="0" CornerRadius="8" GlassFrameThickness="0" ResizeBorderThickness="4" UseAeroCaptionButtons="False" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Window">
+                    <!-- Gölge ve Kenar Yumuşatma için Dış Container -->
+                    <Grid Background="Transparent">
+                        <Border Margin="10" 
+                                Background="{DynamicResource ApplicationBackgroundBrush}" 
+                                CornerRadius="8" 
+                                BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}" 
+                                BorderThickness="1"
+                                ClipToBounds="True">
+                            <Border.Effect>
+                                <!-- Yumuşak bir DropShadow -->
+                                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.15" Color="Black" />
+                            </Border.Effect>
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <!-- Özel Başlık Çubuğu Alanı -->
+                                    <RowDefinition Height="Auto" />
+                                    <!-- Ana İçerik -->
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Üst Bar: Sadece Kapatma Butonu (Title Bar gizli) -->
+                                <Grid Grid.Row="0" Height="40" Background="Transparent" WindowChrome.IsHitTestVisibleInChrome="True">
+                                    <Button x:Name="PART_CloseButton"
+                                            Content="✕" 
+                                            HorizontalAlignment="Right" 
+                                            VerticalAlignment="Top" 
+                                            Width="48" Height="32" 
+                                            BorderThickness="0" 
+                                            Background="Transparent" 
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                            FontSize="14">
+                                        <!-- Hover state works automatically if BasedOn empty or if standard Button template supports it -->
+                                    </Button>
+                                </Grid>
+
+                                <!-- Holy Grail Layout İçeriğinin Geleceği Alan -->
+                                <ContentPresenter Grid.Row="1" ClipToBounds="True" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ─────────── TEXT STYLES ─────────── -->
     <Style TargetType="TextBlock" x:Key="ReadableTextBlock">
         <Setter Property="FontFamily" Value="{StaticResource MainFont}"/>

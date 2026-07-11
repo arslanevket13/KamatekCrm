@@ -29,7 +29,7 @@
                         <DataTemplate>
                             <Button Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
                                     CommandParameter="{Binding}"
-                                    Content="SİL" Background="{DynamicResource StatusErrorFg}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="4,0" BorderThickness="0"/>
+                                    Content="SİL" Style="{StaticResource PremiumWindowStyle}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="4,0" BorderThickness="0"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

@@ -8,7 +8,7 @@
         Height="420" Width="450"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="{DynamicResource SurfacePageBrush}">
+        Style="{StaticResource PremiumWindowStyle}">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolVis"/>

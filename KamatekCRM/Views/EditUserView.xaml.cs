@@ -21,5 +21,15 @@ namespace KamatekCrm.Views
             InitializeComponent();
             DataContext = new EditUserViewModel(user, apiClient, toastService, loadingService);
         }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            
+            if (GetTemplateChild("PART_CloseButton") is System.Windows.Controls.Button closeButton)
+            {
+                closeButton.Click += (s, e) => this.Close();
+            }
+        }
     }
 }
