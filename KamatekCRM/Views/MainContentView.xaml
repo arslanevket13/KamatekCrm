@@ -281,6 +281,14 @@
                             </StackPanel>
                         </Button>
 
+                        <Button Command="{Binding OpenQuotationCommand}" Style="{StaticResource GlassNavButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource ClipboardIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Fiyat Teklifi" VerticalAlignment="Center" Margin="8,0,0,0"
+                                           Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
                         <Button Command="{Binding OpenProjectQuoteCommand}" Style="{StaticResource GlassNavButton}"
                                 Background="{DynamicResource ThemePrimary}">
                             <StackPanel Orientation="Horizontal">

@@ -129,6 +129,7 @@ namespace KamatekCrm.ViewModels
         public ICommand LogoutCommand { get; }
         public ICommand OpenFaultTicketCommand { get; }
         public ICommand OpenProjectQuoteCommand { get; }
+        public ICommand OpenQuotationCommand { get; }
         public ICommand OpenRepairTrackingCommand { get; }
         public ICommand OpenDirectSalesCommand { get; }
         public ICommand NavigateToRepairListCommand { get; }
@@ -200,6 +201,7 @@ namespace KamatekCrm.ViewModels
             LogoutCommand = new RelayCommand(_ => Logout());
             OpenFaultTicketCommand = new RelayCommand(_ => OpenFaultTicket());
             OpenProjectQuoteCommand = new RelayCommand(_ => OpenProjectQuote());
+            OpenQuotationCommand = new RelayCommand(_ => OpenQuotation());
             OpenRepairTrackingCommand = new RelayCommand(_ => OpenRepairTracking());
             OpenDirectSalesCommand = new RelayCommand(_ => OpenDirectSales());
             NavigateToRepairListCommand = new RelayCommand(_ => NavigateTo<RepairListViewModel>());
@@ -277,6 +279,12 @@ namespace KamatekCrm.ViewModels
         private void OpenProjectQuote()
         {
             NavigateTo<QuoteListViewModel>();
+        }
+
+        private void OpenQuotation()
+        {
+            var window = new Views.QuotationWindow();
+            window.Show();
         }
 
         private void OpenDirectSales()

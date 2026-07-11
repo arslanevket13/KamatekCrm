@@ -140,8 +140,16 @@ namespace KamatekCrm.ViewModels
         public bool IsBusy
         {
             get => _isBusy;
-            set => SetProperty(ref _isBusy, value);
+            set
+            {
+                if (SetProperty(ref _isBusy, value))
+                {
+                    OnPropertyChanged(nameof(IsNotBusy));
+                }
+            }
         }
+
+        public bool IsNotBusy => !IsBusy;
 
         // Header Properties
         private ObservableCollection<Supplier> _suppliers = new();
@@ -392,7 +400,7 @@ namespace KamatekCrm.ViewModels
             }
 
             IsBusy = true;
-            using var transaction = await _unitOfWork.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
                 var order = new PurchaseOrder
@@ -465,7 +473,7 @@ namespace KamatekCrm.ViewModels
 
                 if (result.Success)
                 {
-                    await transaction.CommitAsync();
+                    await _unitOfWork.CommitAsync();
                     _toastService.ShowSuccess("İşlem başarıyla tamamlandı, stoklar güncellendi.");
                     
                     // Reset Form
@@ -477,13 +485,13 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
-                    await transaction.RollbackAsync();
+                    await _unitOfWork.RollbackAsync();
                     _toastService.ShowError($"Stoklara işlenirken hata oluştu: {result.ErrorMessage}");
                 }
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 _toastService.ShowError($"Kritik hata: {ex.Message}");
             }
             finally

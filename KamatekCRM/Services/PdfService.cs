@@ -684,6 +684,185 @@ namespace KamatekCrm.Services
             public int Level { get; set; }
         }
 
+        #region Standard Quote PDF
+
+        public void GenerateStandardQuote(Quote quote, string filePath)
+        {
+            var logoBytes = GetLogoBytes();
+            var totalItems = quote.Lines.Sum(l => l.Quantity);
+
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(0);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
+
+                    page.Header().Element(c => ComposeStandardQuoteHeader(c, quote, logoBytes));
+                    page.Content().Element(c => ComposeStandardQuoteContent(c, quote, totalItems));
+                    page.Footer().Element(c => ComposeProfessionalFooter(c));
+                });
+            })
+            .GeneratePdf(filePath);
+        }
+
+        private void ComposeStandardQuoteHeader(IContainer container, Quote quote, byte[]? logoBytes)
+        {
+            container.Column(col =>
+            {
+                // Üst Banner - Beyaz / Modern Tasarım
+                col.Item().Padding(20).PaddingBottom(10).Row(row =>
+                {
+                    // Sol: Logo
+                    row.RelativeItem().Column(c =>
+                    {
+                        if (logoBytes != null)
+                        {
+                            c.Item().Width(240).Image(logoBytes).FitArea();
+                        }
+                        else
+                        {
+                            c.Item().Text("KAMATEK").FontSize(32).Bold().FontColor(BrandColors.Primary);
+                            c.Item().Text("ELEKTRİK VE GÜVENLİK SİSTEMLERİ").FontSize(10).FontColor(BrandColors.Secondary);
+                        }
+                    });
+
+                    // Sağ: Başlık ve Tarih
+                    row.ConstantItem(250).AlignRight().Column(c =>
+                    {
+                        c.Item().AlignRight().Text("Teklif No: " + (!string.IsNullOrWhiteSpace(quote.QuoteNumber) ? quote.QuoteNumber : "TASLAK")).FontSize(10).FontColor(BrandColors.TextSecondary);
+                        c.Item().AlignRight().Text("Tarih: " + quote.Date.ToString("dd MMMM yyyy")).FontSize(10).FontColor(BrandColors.TextSecondary);
+                        c.Item().AlignRight().Text("Geçerlilik: " + quote.ValidUntil.ToString("dd MMMM yyyy")).FontSize(9).FontColor(BrandColors.TextSecondary);
+                        c.Item().PaddingTop(10).AlignRight().Text("FİYAT TEKLİFİ").FontSize(18).Bold().FontColor(BrandColors.Primary);
+                    });
+                });
+
+                // Kırmızı Accent Çizgi
+                col.Item().LineHorizontal(3).LineColor(BrandColors.Secondary);
+
+                // İkinci Satır - Müşteri Özeti
+                col.Item().PaddingTop(15).PaddingHorizontal(20).Background("#F8F9FA").Border(1).BorderColor("#E9ECEF").Padding(15).Row(row =>
+                {
+                    row.RelativeItem().Column(c =>
+                    {
+                        c.Item().Text("SAYIN:").FontSize(8).FontColor(BrandColors.TextSecondary);
+                        c.Item().Text(quote.Customer?.FullName ?? "Değerli Müşterimiz").FontSize(12).Bold().FontColor(BrandColors.Primary);
+                        if (!string.IsNullOrWhiteSpace(quote.Customer?.FullAddress))
+                        {
+                            c.Item().Text(quote.Customer.FullAddress).FontSize(9).FontColor(BrandColors.TextSecondary);
+                        }
+                        if (!string.IsNullOrWhiteSpace(quote.Customer?.PhoneNumber))
+                        {
+                            c.Item().Text("Tel: " + quote.Customer.PhoneNumber).FontSize(9).FontColor(BrandColors.TextSecondary);
+                        }
+                    });
+                });
+            });
+        }
+
+        private void ComposeStandardQuoteContent(IContainer container, Quote quote, decimal totalItems)
+        {
+            container.Padding(20).Column(col =>
+            {
+                col.Spacing(15);
+
+                // 1. Şirket Profili
+                col.Item().Element(c => ComposeCompanyProfile(c));
+
+                // 2. Malzeme Listesi (Tablo)
+                col.Item().Element(c => ComposeStandardQuoteTable(c, quote));
+
+                // 3. Finansal Özet
+                col.Item().Element(c => ComposeStandardQuoteSummary(c, quote));
+
+                // 4. Ticari Şartlar
+                if (!string.IsNullOrWhiteSpace(quote.TermsAndConditions))
+                {
+                    col.Item().PaddingTop(10).Column(c =>
+                    {
+                        c.Item().Text("ŞARTLAR VE KOŞULLAR").FontSize(10).Bold().FontColor(BrandColors.Secondary);
+                        c.Item().PaddingTop(5).Background("#FDFDFD").Border(1).BorderColor("#E0E0E0").Padding(10)
+                         .Text(quote.TermsAndConditions).FontSize(9);
+                    });
+                }
+            });
+        }
+
+        private void ComposeStandardQuoteTable(IContainer container, Quote quote)
+        {
+            container.Table(table =>
+            {
+                table.ColumnsDefinition(cols =>
+                {
+                    cols.RelativeColumn(3); // Ürün Adı
+                    cols.RelativeColumn(1); // Miktar
+                    cols.RelativeColumn(1); // Birim Fiyat
+                    cols.RelativeColumn(1); // İskonto
+                    cols.RelativeColumn(1); // Tutar
+                });
+
+                table.Header(header =>
+                {
+                    header.Cell().Background(BrandColors.TableHeader).Padding(8).Text("Ürün / Hizmet").Bold().FontColor(BrandColors.Primary);
+                    header.Cell().Background(BrandColors.TableHeader).Padding(8).AlignRight().Text("Miktar").Bold().FontColor(BrandColors.Primary);
+                    header.Cell().Background(BrandColors.TableHeader).Padding(8).AlignRight().Text("Birim Fiyat").Bold().FontColor(BrandColors.Primary);
+                    header.Cell().Background(BrandColors.TableHeader).Padding(8).AlignRight().Text("İskonto").Bold().FontColor(BrandColors.Primary);
+                    header.Cell().Background(BrandColors.TableHeader).Padding(8).AlignRight().Text("Tutar").Bold().FontColor(BrandColors.Primary);
+                });
+
+                foreach (var line in quote.Lines)
+                {
+                    table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(8).Text(line.ProductName ?? line.ProductCode).FontSize(9);
+                    table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(8).AlignRight().Text($"{line.Quantity:N2}").FontSize(9);
+                    table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(8).AlignRight().Text($"{line.UnitPrice:C2}").FontSize(9);
+                    table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(8).AlignRight().Text($"{line.DiscountPercent:N2}%").FontSize(9);
+                    table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(8).AlignRight().Text($"{line.LineTotal:C2}").FontSize(9);
+                }
+            });
+        }
+
+        private void ComposeStandardQuoteSummary(IContainer container, Quote quote)
+        {
+            container.Row(row =>
+            {
+                row.RelativeItem(); // Boşluk
+                row.ConstantItem(250).Background("#F8F9FA").Border(1).BorderColor("#E0E0E0").Padding(15).Column(c =>
+                {
+                    c.Item().Row(r =>
+                    {
+                        r.RelativeItem().Text("Ara Toplam:").FontSize(10);
+                        r.RelativeItem().AlignRight().Text($"{quote.SubTotal:C2}").FontSize(10);
+                    });
+                    
+                    if (quote.TotalDiscount > 0)
+                    {
+                        c.Item().PaddingTop(5).Row(r =>
+                        {
+                            r.RelativeItem().Text("İskonto Toplamı:").FontSize(10).FontColor(BrandColors.Warning);
+                            r.RelativeItem().AlignRight().Text($"-{quote.TotalDiscount:C2}").FontSize(10).FontColor(BrandColors.Warning);
+                        });
+                    }
+
+                    c.Item().PaddingTop(5).Row(r =>
+                    {
+                        r.RelativeItem().Text("KDV Toplamı:").FontSize(10);
+                        r.RelativeItem().AlignRight().Text($"{quote.TotalTax:C2}").FontSize(10);
+                    });
+
+                    c.Item().PaddingTop(10).LineHorizontal(1).LineColor("#CCCCCC");
+
+                    c.Item().PaddingTop(10).Row(r =>
+                    {
+                        r.RelativeItem().Text("GENEL TOPLAM:").FontSize(12).Bold().FontColor(BrandColors.Primary);
+                        r.RelativeItem().AlignRight().Text($"{quote.GrandTotal:C2}").FontSize(12).Bold().FontColor(BrandColors.Secondary);
+                    });
+                });
+            });
+        }
+
+        #endregion
+
         #endregion
     }
 }

@@ -1,0 +1,376 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using KamatekCrm.Commands;
+using KamatekCrm.Data;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace KamatekCrm.ViewModels
+{
+    public class QuotationViewModel : INotifyPropertyChanged
+    {
+        private readonly AppDbContext _context;
+
+        // Properties
+        public ObservableCollection<Customer> Customers { get; set; } = new ObservableCollection<Customer>();
+        public ObservableCollection<QuoteLine> QuoteLines { get; set; } = new ObservableCollection<QuoteLine>();
+        public ObservableCollection<Product> SearchResults { get; set; } = new ObservableCollection<Product>();
+
+        private Customer _selectedCustomer;
+        public Customer SelectedCustomer
+        {
+            get => _selectedCustomer;
+            set
+            {
+                _selectedCustomer = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private DateTime _quoteDate = DateTime.Now;
+        public DateTime QuoteDate
+        {
+            get => _quoteDate;
+            set
+            {
+                _quoteDate = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private DateTime _validUntil = DateTime.Now.AddDays(15);
+        public DateTime ValidUntil
+        {
+            get => _validUntil;
+            set
+            {
+                _validUntil = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _termsAndConditions;
+        public string TermsAndConditions
+        {
+            get => _termsAndConditions;
+            set
+            {
+                _termsAndConditions = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private bool _isSidebarOpen;
+        public bool IsSidebarOpen
+        {
+            get => _isSidebarOpen;
+            set
+            {
+                _isSidebarOpen = value;
+                OnPropertyChanged();
+            }
+        }
+
+        // Sidebar Add Product Properties
+        private string _searchTerm;
+        public string SearchTerm
+        {
+            get => _searchTerm;
+            set
+            {
+                _searchTerm = value;
+                OnPropertyChanged();
+                DebounceSearch();
+            }
+        }
+
+        private Product _selectedProduct;
+        public Product SelectedProduct
+        {
+            get => _selectedProduct;
+            set
+            {
+                _selectedProduct = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _newQuantity = 1;
+        public int NewQuantity
+        {
+            get => _newQuantity;
+            set
+            {
+                _newQuantity = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private decimal _newDiscount;
+        public decimal NewDiscount
+        {
+            get => _newDiscount;
+            set
+            {
+                _newDiscount = value;
+                OnPropertyChanged();
+            }
+        }
+
+        // Totals
+        public decimal SubTotal => QuoteLines.Sum(l => l.Quantity * l.UnitPrice);
+        public decimal TotalDiscount => QuoteLines.Sum(l => (l.Quantity * l.UnitPrice) * (l.DiscountPercent / 100m));
+        public decimal TotalTax => QuoteLines.Sum(l => ((l.Quantity * l.UnitPrice) - ((l.Quantity * l.UnitPrice) * (l.DiscountPercent / 100m))) * (l.TaxPercent / 100m));
+        public decimal GrandTotal => SubTotal - TotalDiscount + TotalTax;
+
+
+        private bool _isBusy;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set
+            {
+                _isBusy = value;
+                OnPropertyChanged();
+            }
+        }
+
+        // Commands
+        public ICommand ToggleSidebarCommand { get; }
+        public ICommand AddProductCommand { get; }
+        public ICommand RemoveLineCommand { get; }
+        public ICommand SaveDraftCommand { get; }
+        public ICommand SaveAndSendCommand { get; }
+        public ICommand ExportToPdfCommand { get; }
+
+        public QuotationViewModel()
+        {
+            // Designer time initialization avoidance
+            if (DesignerProperties.GetIsInDesignMode(new System.Windows.DependencyObject()))
+                return;
+
+            _context = new AppDbContext(); // Replace with dependency injection ideally
+
+            ToggleSidebarCommand = new RelayCommand(_ => IsSidebarOpen = !IsSidebarOpen);
+            AddProductCommand = new RelayCommand(_ => AddProduct(), _ => SelectedProduct != null && NewQuantity > 0);
+            RemoveLineCommand = new RelayCommand(line => RemoveLine(line as QuoteLine));
+            SaveDraftCommand = new RelayCommand(async _ => await SaveQuoteAsync(QuoteStatus.Draft), _ => SelectedCustomer != null && QuoteLines.Count > 0);
+            SaveAndSendCommand = new RelayCommand(async _ => await SaveQuoteAsync(QuoteStatus.Sent), _ => SelectedCustomer != null && QuoteLines.Count > 0);
+            ExportToPdfCommand = new RelayCommand(async _ => await ExportToPdfAsync(), _ => SelectedCustomer != null && QuoteLines.Count > 0);
+
+            QuoteLines.CollectionChanged += (s, e) => UpdateTotals();
+            LoadData();
+        }
+
+        private async void LoadData()
+        {
+            try
+            {
+                var customers = await _context.Customers.ToListAsync();
+                foreach (var c in customers) Customers.Add(c);
+            }
+            catch { /* handle error */ }
+        }
+
+        // --- Debounce Logic for Search ---
+        private System.Timers.Timer _debounceTimer;
+        private void DebounceSearch()
+        {
+            if (_debounceTimer == null)
+            {
+                _debounceTimer = new System.Timers.Timer(300);
+                _debounceTimer.AutoReset = false;
+                _debounceTimer.Elapsed += async (s, e) => await PerformSearchAsync();
+            }
+            _debounceTimer.Stop();
+            _debounceTimer.Start();
+        }
+
+        private async Task PerformSearchAsync()
+        {
+            if (string.IsNullOrWhiteSpace(SearchTerm)) return;
+            var term = SearchTerm.ToLower();
+
+            try
+            {
+                var products = await _context.Products
+                    .Where(p => p.ProductName.ToLower().Contains(term) || p.SKU.ToLower().Contains(term))
+                    .Take(20)
+                    .ToListAsync();
+
+                // Marshal back to UI thread
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    SearchResults.Clear();
+                    foreach (var p in products) SearchResults.Add(p);
+                });
+            }
+            catch { /* Handle error */ }
+        }
+
+        private void AddProduct()
+        {
+            if (SelectedProduct == null) return;
+
+            var existingLine = QuoteLines.FirstOrDefault(l => l.ProductId == SelectedProduct.Id);
+            if (existingLine != null)
+            {
+                existingLine.Quantity += NewQuantity;
+                existingLine.LineTotal = CalculateLineTotal(existingLine);
+            }
+            else
+            {
+                var line = new QuoteLine
+                {
+                    ProductId = SelectedProduct.Id,
+                    Product = SelectedProduct,
+                    ProductName = SelectedProduct.ProductName,
+                    ProductCode = SelectedProduct.SKU,
+                    Quantity = NewQuantity,
+                    Unit = SelectedProduct.Unit ?? "Adet",
+                    UnitPrice = SelectedProduct.SalePrice,
+                    DiscountPercent = NewDiscount,
+                    TaxPercent = SelectedProduct.VatRate,
+                    CurrentStockQuantity = SelectedProduct.TotalStockQuantity
+                };
+                line.LineTotal = CalculateLineTotal(line);
+                QuoteLines.Add(line);
+            }
+
+            UpdateTotals();
+            IsSidebarOpen = false; // Close sidebar after adding
+        }
+
+        private void RemoveLine(QuoteLine line)
+        {
+            if (line != null)
+            {
+                QuoteLines.Remove(line);
+                UpdateTotals();
+            }
+        }
+
+        private decimal CalculateLineTotal(QuoteLine line)
+        {
+            var total = line.Quantity * line.UnitPrice;
+            var discount = total * (line.DiscountPercent / 100m);
+            var totalAfterDiscount = total - discount;
+            var tax = totalAfterDiscount * (line.TaxPercent / 100m);
+            return totalAfterDiscount + tax;
+        }
+
+        private void UpdateTotals()
+        {
+            OnPropertyChanged(nameof(SubTotal));
+            OnPropertyChanged(nameof(TotalDiscount));
+            OnPropertyChanged(nameof(TotalTax));
+            OnPropertyChanged(nameof(GrandTotal));
+        }
+
+        private async Task ExportToPdfAsync()
+        {
+            if (IsBusy) return;
+            IsBusy = true;
+
+            try
+            {
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "PDF Dosyası (*.pdf)|*.pdf",
+                    FileName = $"Teklif_{DateTime.Now:yyyyMMddHHmmss}.pdf",
+                    Title = "PDF Olarak Kaydet"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    var filePath = saveFileDialog.FileName;
+
+                    var quote = new Quote
+                    {
+                        QuoteNumber = $"TKLF-{DateTime.Now.Year}-{new Random().Next(1000, 9999)}",
+                        CustomerId = SelectedCustomer?.Id,
+                        Customer = SelectedCustomer,
+                        Date = QuoteDate,
+                        ValidUntil = ValidUntil,
+                        SubTotal = SubTotal,
+                        TotalDiscount = TotalDiscount,
+                        TotalTax = TotalTax,
+                        GrandTotal = GrandTotal,
+                        TermsAndConditions = TermsAndConditions,
+                        Lines = QuoteLines.ToList()
+                    };
+
+                    await Task.Run(() =>
+                    {
+                        var pdfService = new KamatekCrm.Services.PdfService();
+                        pdfService.GenerateStandardQuote(quote, filePath);
+                    });
+
+                    System.Windows.MessageBox.Show("PDF başarıyla oluşturuldu.", "Başarılı", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"PDF oluşturulurken hata oluştu:\n{ex.Message}", "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private async Task SaveQuoteAsync(QuoteStatus status)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var quote = new Quote
+                {
+                    QuoteNumber = $"TKLF-{DateTime.Now.Year}-{new Random().Next(1000, 9999)}", // Demo purpose
+                    CustomerId = SelectedCustomer.Id,
+                    Date = QuoteDate,
+                    ValidUntil = ValidUntil,
+                    Status = status,
+                    SubTotal = SubTotal,
+                    TotalDiscount = TotalDiscount,
+                    TotalTax = TotalTax,
+                    GrandTotal = GrandTotal,
+                    TermsAndConditions = TermsAndConditions,
+                    Lines = QuoteLines.ToList()
+                };
+
+                // Clear navigation properties to prevent EF from tracking them as new entities
+                foreach (var line in quote.Lines)
+                {
+                    line.Product = null;
+                }
+
+                _context.Quotes.Add(quote);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                
+                // Show success (Toast message usually)
+                // Clear form or close window
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                // Show error message
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}

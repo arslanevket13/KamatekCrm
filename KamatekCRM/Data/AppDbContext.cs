@@ -58,6 +58,11 @@ namespace KamatekCrm.Data
         public DbSet<SalesOrderItem> SalesOrderItems { get; set; }
         public DbSet<SalesOrderPayment> SalesOrderPayments { get; set; }
 
+        // --- Fiyat Teklifleri (Quotation) ---
+        public DbSet<Quote> Quotes { get; set; }
+        public DbSet<QuoteLine> QuoteLines { get; set; }
+
+
         // --- Kasa / Finans ---
         public DbSet<CashTransaction> CashTransactions { get; set; }
 
