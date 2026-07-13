@@ -21,8 +21,15 @@ namespace KamatekCrm.Extensions
 
             services.AddDbContext<AppDbContext>(options =>
             {
-                 options.UseNpgsql(AppSettings.PostgreSqlConnectionString)
-                        .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+                 options.UseNpgsql(AppSettings.PostgreSqlConnectionString, npgsqlOptionsAction: sqlOptions =>
+                 {
+                     // 1. EF Core Dirençliliği (Connection Resiliency)
+                     sqlOptions.EnableRetryOnFailure(
+                         maxRetryCount: 5,
+                         maxRetryDelay: TimeSpan.FromSeconds(10),
+                         errorCodesToAdd: null);
+                 })
+                 .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             }, ServiceLifetime.Scoped);
 
              // Services

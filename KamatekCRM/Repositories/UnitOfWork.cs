@@ -42,7 +42,23 @@ namespace KamatekCrm.Repositories
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            return await _context.SaveChangesAsync();
+            try
+            {
+                return await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    System.Windows.MessageBox.Show(
+                        "Bu kayıt başka bir kullanıcı tarafından değiştirildi. Lütfen sayfayı yenileyin.",
+                        "Eşzamanlılık Uyarısı",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
+                });
+                
+                throw new Exception("ConcurrencyConflict: Kayıt başka bir kullanıcı tarafından değiştirildi.");
+            }
         }
 
         /// <summary>

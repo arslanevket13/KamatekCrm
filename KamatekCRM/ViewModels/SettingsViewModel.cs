@@ -23,6 +23,7 @@ namespace KamatekCrm.ViewModels
             _selectedTheme = AvailableThemes.FirstOrDefault(t => t.Id == ThemeService.CurrentThemeName) ?? AvailableThemes.First();
             
             LoadLastBackupInfo();
+            LoadIsMainServerConfig();
         }
 
         #region Properties
@@ -39,6 +40,19 @@ namespace KamatekCrm.ViewModels
         {
             get => _lastBackupText;
             set => SetProperty(ref _lastBackupText, value);
+        }
+
+        private bool _isMainServer;
+        public bool IsMainServer
+        {
+            get => _isMainServer;
+            set
+            {
+                if (SetProperty(ref _isMainServer, value))
+                {
+                    SaveIsMainServerToConfig(value);
+                }
+            }
         }
 
         #endregion
@@ -207,6 +221,67 @@ namespace KamatekCrm.ViewModels
             catch
             {
                 MessageBox.Show("Uygulama yeniden başlatılamadı. Lütfen manuel olarak kapatıp açın.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void LoadIsMainServerConfig()
+        {
+            try
+            {
+                string appSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+                if (!File.Exists(appSettingsPath))
+                {
+                    // Fallback to project root for dev
+                    string? projectRoot = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.Parent?.Parent?.FullName;
+                    if (!string.IsNullOrEmpty(projectRoot)) appSettingsPath = Path.Combine(projectRoot, "appsettings.json");
+                }
+
+                if (File.Exists(appSettingsPath))
+                {
+                    string jsonString = File.ReadAllText(appSettingsPath);
+                    var jsonObject = System.Text.Json.Nodes.JsonNode.Parse(jsonString);
+                    var isMainServerNode = jsonObject?["NetworkDiscovery"]?["IsMainServer"];
+                    if (isMainServerNode != null)
+                    {
+                        _isMainServer = isMainServerNode.GetValue<bool>();
+                        OnPropertyChanged(nameof(IsMainServer));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Config read error: {ex.Message}");
+            }
+        }
+
+        private void SaveIsMainServerToConfig(bool value)
+        {
+            try
+            {
+                string appSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+                if (!File.Exists(appSettingsPath))
+                {
+                    // Fallback to project root for dev
+                    string? projectRoot = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.Parent?.Parent?.FullName;
+                    if (!string.IsNullOrEmpty(projectRoot)) appSettingsPath = Path.Combine(projectRoot, "appsettings.json");
+                }
+
+                if (File.Exists(appSettingsPath))
+                {
+                    string jsonString = File.ReadAllText(appSettingsPath);
+                    var jsonObject = System.Text.Json.Nodes.JsonNode.Parse(jsonString);
+                    if (jsonObject != null && jsonObject["NetworkDiscovery"] != null)
+                    {
+                        jsonObject["NetworkDiscovery"]!["IsMainServer"] = value;
+                        var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+                        File.WriteAllText(appSettingsPath, jsonObject.ToJsonString(options));
+                        MessageBox.Show("Ağ ayarı kaydedildi. Değişikliklerin etkili olması için uygulamayı yeniden başlatmanız önerilir.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ayar kaydedilemedi: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

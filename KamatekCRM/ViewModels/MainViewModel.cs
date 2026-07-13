@@ -18,6 +18,16 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
         private object? _currentView;
+        private bool _isConnectionLost;
+
+        /// <summary>
+        /// Ağ veya veritabanı bağlantısı koptuğunda true olur (Overlay göstermek için)
+        /// </summary>
+        public bool IsConnectionLost
+        {
+            get => _isConnectionLost;
+            set => SetProperty(ref _isConnectionLost, value);
+        }
 
         /// <summary>
         /// Aktif görünüm
@@ -119,6 +129,17 @@ namespace KamatekCrm.ViewModels
                 {
                     ForceLogout();
                 });
+            });
+
+            // 4. Bağlantı Kopma / Geri Gelme Eventlerini Dinleme (UI Overlay için)
+            EventAggregator.Instance.Subscribe<DatabaseConnectionLostEvent>(_ =>
+            {
+                Application.Current.Dispatcher.Invoke(() => IsConnectionLost = true);
+            });
+
+            EventAggregator.Instance.Subscribe<DatabaseConnectionRestoredEvent>(_ =>
+            {
+                Application.Current.Dispatcher.Invoke(() => IsConnectionLost = false);
             });
 
             // Komutları tanımla

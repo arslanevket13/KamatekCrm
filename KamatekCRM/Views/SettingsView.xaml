@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:KamatekCrm.Views"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="1000">
 
@@ -219,12 +220,31 @@
                     </StackPanel>
                 </Border>
                 
-                <!-- Placeholder for future settings -->
+                <!-- NETWORK DISCOVERY CARD -->
                 <Border Width="300" Margin="0,0,24,24" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="16" Opacity="0.5">
+                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="16">
                     <StackPanel>
-                        <TextBlock Text="👤 Kullanıcı Ayarları" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
-                        <TextBlock Text="Yakında eklenecek..." Foreground="{DynamicResource ThemeTextSecondary}"/>
+                        <!-- Header -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Background="{DynamicResource ThemePrimary}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
+                                <TextBlock Text="🌐" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="Ağ &amp; Sunucu" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                <TextBlock Text="Çoklu kullanıcı ayarları" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Separator Margin="0,0,0,16" Background="{DynamicResource ThemeDivider}"/>
+
+                        <!-- Toggle -->
+                        <ui:ToggleSwitch IsChecked="{Binding IsMainServer}" Content="Bu bilgisayar Ana Sunucu mu?" 
+                                  FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Ana sunucu veritabanını diğer cihazlara yayınlar. İstemciler bu sunucuya bağlanır." TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
                     </StackPanel>
                 </Border>
             </WrapPanel>

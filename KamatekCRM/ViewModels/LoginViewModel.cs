@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -137,24 +137,16 @@ namespace KamatekCrm.ViewModels
         public async Task InitializeDiscoveryAsync()
         {
             IsSearchingForServer = true;
-            ServerStatusMessage = "Agda Sunucu Araniyor...";
+            ServerStatusMessage = "Ağ ayarları kontrol ediliyor...";
             IsServerFound = false;
 
-            var server = await _discoveryService.DiscoverServerAsync(3000);
+            // Arka planda App.xaml.cs zaten discovery başlatıyor.
+            // Sadece UI için kısa bir bekleme yapıp devam edelim.
+            await Task.Delay(500);
 
-            if (server != null && !string.IsNullOrWhiteSpace(server.ApiUrl))
-            {
-                _apiClient.SetBaseUrl(server.ApiUrl);
-                IsServerFound = true;
-                ServerStatusMessage = $"Sunucu Bulundu: {server.ApiUrl}";
-            }
-            else
-            {
-                // Fallback: Use localhost directly — API is likely on the same machine
-                _apiClient.SetBaseUrl("http://localhost:5050");
-                IsServerFound = true;
-                ServerStatusMessage = "Localhost sunucuya baglanildi (http://localhost:5050)";
-            }
+            _apiClient.SetBaseUrl("http://localhost:5050");
+            IsServerFound = true;
+            ServerStatusMessage = "Bağlantı ayarları yüklendi.";
 
             IsSearchingForServer = false;
         }

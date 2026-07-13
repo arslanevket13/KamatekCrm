@@ -112,14 +112,9 @@ namespace KamatekCrm
                 var discoveryEnabled = config.GetValue<bool>("NetworkDiscovery:Enabled", true);
                 if (discoveryEnabled)
                 {
-                    var discoveryPort = config.GetValue<int>("NetworkDiscovery:Port", 5051);
-                    var discoveryService = new NetworkDiscoveryService(discoveryPort);
-                    discoveryService.ServerDiscovered += (s, server) =>
-                    {
-                        Log.Information("Ağ üzerinden sunucu bulundu: {ApiUrl}", server.ApiUrl);
-                    };
+                    var discoveryService = _host.Services.GetRequiredService<NetworkDiscoveryService>();
                     discoveryService.Start();
-                    Log.Information("Ağ keşif servisi başlatıldı. Port: {Port}", discoveryPort);
+                    Log.Information("Ağ keşif servisi başlatıldı.");
                 }
 
                 // MainWindow'u DI'dan al ve göster

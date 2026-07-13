@@ -74,7 +74,7 @@
                             <ScaleTransform ScaleX="1" ScaleY="1"/>
                         </Border.RenderTransform>
                         <Border.Effect>
-                            <DropShadowEffect BlurRadius="15" ShadowDepth="2" Direction="270" Color="Black" Opacity="0.05"/>
+                            <DropShadowEffect BlurRadius="24" ShadowDepth="4" Direction="270" Color="Black" Opacity="0.04"/>
                         </Border.Effect>
 
                         <Grid>
@@ -100,7 +100,7 @@
                                 </Border>
                                 <TextBlock Text="{TemplateBinding Title}"
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                           FontSize="13"
+                                           FontSize="14"
                                            FontWeight="Medium"
                                            VerticalAlignment="Top"
                                            TextTrimming="CharacterEllipsis"/>
@@ -116,8 +116,8 @@
                                            VerticalAlignment="Bottom"
                                            Margin="0,0,4,2"/>
                                 <TextBlock Text="{TemplateBinding DisplayValue}"
-                                           Foreground="{DynamicResource TextHeadingBrush}"
-                                           FontSize="28"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                           FontSize="32"
                                            FontWeight="Bold"
                                            VerticalAlignment="Bottom"/>
                                 <TextBlock Text="{TemplateBinding Suffix}"
@@ -150,7 +150,7 @@
                                 <!-- Subtitle -->
                                 <TextBlock Text="{TemplateBinding Subtitle}"
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                           FontSize="11"
+                                           FontSize="12"
                                            VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>
                             </DockPanel>

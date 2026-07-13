@@ -605,6 +605,22 @@
                 </ContentControl.Triggers>
             </ContentControl>
         </Grid>
+        <!-- ==================== CONNECTION LOST OVERLAY ==================== -->
+        <Border Grid.ColumnSpan="2" Panel.ZIndex="999"
+                Background="#D9000000"
+                Visibility="{Binding IsConnectionLost, Converter={StaticResource BoolToVis}}"
+                IsHitTestVisible="True">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ui:ProgressRing IsIndeterminate="True" Width="64" Height="64" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,24"/>
+                <TextBlock Text="Ana sunucu ile bağlantı kesildi. Yeniden bağlanılıyor..." 
+                           Foreground="White" FontSize="20" FontWeight="SemiBold" 
+                           HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="Lütfen bekleyin, bağlantı sağlandığında ekran otomatik açılacaktır." 
+                           Foreground="#A0A0A0" FontSize="14" 
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
     </Grid>
 </UserControl>
 

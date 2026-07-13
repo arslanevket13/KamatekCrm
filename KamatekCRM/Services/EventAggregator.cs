@@ -99,4 +99,14 @@ namespace KamatekCrm.Services
             }
         }
     }
+
+    /// <summary>
+    /// Ağ bağlantısı veya veritabanı bağlantısı koptuğunda fırlatılır
+    /// </summary>
+    public class DatabaseConnectionLostEvent { }
+
+    /// <summary>
+    /// Ağ bağlantısı veya veritabanı bağlantısı tekrar sağlandığında fırlatılır
+    /// </summary>
+    public class DatabaseConnectionRestoredEvent { }
 }
