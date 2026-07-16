@@ -106,10 +106,73 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Ağ veya veritabanı bağlantısı koptuğunda true olur (Overlay göstermek için)
         /// </summary>
+        private bool _isForceServerButtonVisible;
+        private System.Timers.Timer? _fallbackTimer;
+
+        public bool IsForceServerButtonVisible
+        {
+            get => _isForceServerButtonVisible;
+            set => SetProperty(ref _isForceServerButtonVisible, value);
+        }
+
         public bool IsConnectionLost
         {
             get => _isConnectionLost;
-            set => SetProperty(ref _isConnectionLost, value);
+            set 
+            {
+                if (SetProperty(ref _isConnectionLost, value))
+                {
+                    if (value)
+                    {
+                        // 1. Emergency Draft Save Logic (Data Loss Prevention)
+                        if (CurrentView != null)
+                        {
+                            try 
+                            {
+                                string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                                string kamatekFolder = System.IO.Path.Combine(appDataPath, "KamatekCRM");
+                                System.IO.Directory.CreateDirectory(kamatekFolder);
+                                string draftFile = System.IO.Path.Combine(kamatekFolder, "emergency_draft.json");
+
+                                var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+                                string json = System.Text.Json.JsonSerializer.Serialize(CurrentView, CurrentView.GetType(), options);
+                                System.IO.File.WriteAllText(draftFile, json);
+
+                                // Background thread warning via Dispatcher
+                                System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                                {
+                                    _toastService?.ShowWarning("Bağlantı koptu. Mevcut form verileriniz yerel taslak olarak kaydedildi.");
+                                });
+                            }
+                            catch (Exception ex) 
+                            { 
+                                System.Diagnostics.Debug.WriteLine($"Acil taslak kaydedilemedi: {ex.Message}");
+                            }
+                        }
+
+                        // 2. Start 15s fallback timer
+                        if (_fallbackTimer == null)
+                        {
+                            _fallbackTimer = new System.Timers.Timer(15000);
+                            _fallbackTimer.AutoReset = false;
+                            _fallbackTimer.Elapsed += (s, e) => 
+                            {
+                                System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                                {
+                                    IsForceServerButtonVisible = true;
+                                });
+                            };
+                        }
+                        IsForceServerButtonVisible = false;
+                        _fallbackTimer.Start();
+                    }
+                    else
+                    {
+                        _fallbackTimer?.Stop();
+                        IsForceServerButtonVisible = false;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -174,6 +237,8 @@ namespace KamatekCrm.ViewModels
         public ICommand NavigateToRoutePlanningCommand { get; }
 
         public ICommand GoToSettingsCommand { get; }
+        
+        public ICommand ForceMainServerCommand { get; }
 
         #endregion
 
@@ -248,6 +313,7 @@ namespace KamatekCrm.ViewModels
             NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateTo<PurchasingViewModel>());
             ToggleNotificationsCommand = new RelayCommand(_ => IsNotificationsOpen = !IsNotificationsOpen);
             RefreshNotificationsCommand = new RelayCommand(_ => LoadNotifications());
+            ForceMainServerCommand = new RelayCommand(_ => ForceMainServer());
             
             // Yeni komutlar
             ToggleSidebarCommand = new RelayCommand(_ => IsSidebarCollapsed = !IsSidebarCollapsed);
@@ -292,6 +358,45 @@ namespace KamatekCrm.ViewModels
         {
             IsConnectionLost = false; // Overlay'i gizle
             NavigateTo<SettingsViewModel>();
+        }
+
+        private void ForceMainServer()
+        {
+            // Zorla Ana Sunucu moduna geç ve yeniden başlat
+            Properties.Settings.Default.IsMainServerManualOverride = true;
+            Properties.Settings.Default.IsMainServer = true;
+            Properties.Settings.Default.Save();
+
+            try
+            {
+                // Appsettings.json fallback
+                string appSettingsPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+                if (!System.IO.File.Exists(appSettingsPath))
+                {
+                    string? projectRoot = System.IO.Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.Parent?.Parent?.FullName;
+                    if (!string.IsNullOrEmpty(projectRoot)) appSettingsPath = System.IO.Path.Combine(projectRoot, "appsettings.json");
+                }
+
+                if (System.IO.File.Exists(appSettingsPath))
+                {
+                    string jsonString = System.IO.File.ReadAllText(appSettingsPath);
+                    var jsonObject = System.Text.Json.Nodes.JsonNode.Parse(jsonString);
+                    if (jsonObject != null && jsonObject["NetworkDiscovery"] != null)
+                    {
+                        jsonObject["NetworkDiscovery"]!["IsMainServer"] = true;
+                        var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
+                        System.IO.File.WriteAllText(appSettingsPath, jsonObject.ToJsonString(options));
+                    }
+                }
+            }
+            catch { }
+
+            var moduleName = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
+            if (!string.IsNullOrEmpty(moduleName))
+            {
+                System.Diagnostics.Process.Start(moduleName);
+            }
+            System.Windows.Application.Current.Shutdown();
         }
         
         /// <summary>

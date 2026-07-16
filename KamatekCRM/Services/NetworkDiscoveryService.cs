@@ -14,6 +14,7 @@ namespace KamatekCrm.Services
     // Mock event classes if they don't exist in MediatR, or just use the old ones.
     // The old code used EventAggregator.Instance.Publish(new DatabaseConnectionRestoredEvent());
     // I'll keep the same but we must ensure it compiles.
+    public class DatabaseServiceFailedEvent { }
     
     public class NetworkDiscoveryService : BackgroundService
     {
@@ -49,8 +50,59 @@ namespace KamatekCrm.Services
                 }
                 else
                 {
-                    _logger.LogInformation("Yerel veritabanı bulunamadı. Sistem 'İstemci' olarak ayarlanıyor.");
-                    isMainServer = false;
+                    _logger.LogInformation("Yerel veritabanı TCP pinge yanıt vermedi. Windows Servisleri kontrol ediliyor...");
+                    bool isPostgresInstalled = false;
+                    
+                    try
+                    {
+                        var services = System.ServiceProcess.ServiceController.GetServices();
+                        var pgService = System.Linq.Enumerable.FirstOrDefault(services, s => s.ServiceName.ToLower().Contains("postgres") || s.DisplayName.ToLower().Contains("postgres"));
+                        
+                        if (pgService != null)
+                        {
+                            isPostgresInstalled = true;
+                            _logger.LogWarning($"PostgreSQL servisi ({pgService.ServiceName}) bulundu ancak durumu: {pgService.Status}");
+                            
+                            if (pgService.Status == System.ServiceProcess.ServiceControllerStatus.Stopped)
+                            {
+                                try
+                                {
+                                    _logger.LogInformation("PostgreSQL servisi başlatılmaya çalışılıyor...");
+                                    pgService.Start();
+                                    pgService.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
+                                    isLocalDbRunning = true;
+                                    _logger.LogInformation("PostgreSQL servisi başarıyla başlatıldı!");
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "PostgreSQL servisi başlatılamadı. Yönetici yetkisi gerekebilir.");
+                                    try {
+                                        KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseServiceFailedEvent());
+                                    } catch { }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "Windows Service kontrolü yapılamadı (İşletim sistemi kısıtlaması olabilir).");
+                    }
+                    
+                    if (isLocalDbRunning)
+                    {
+                        _logger.LogInformation("Hizmet başlatıldığı için Sistem 'Ana Sunucu' olarak ayarlanıyor.");
+                        isMainServer = true;
+                    }
+                    else if (isPostgresInstalled)
+                    {
+                        _logger.LogCritical("Bu cihaz Ana Sunucu ancak PostgreSQL başlatılamadı. İstemci moduna GEÇİLMİYOR.");
+                        isMainServer = true; // Asıl sunucu ama kapalı. İstemci olup sonsuz döngüye girmesin.
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Yerel veritabanı tamamen yok. Sistem 'İstemci' olarak ayarlanıyor.");
+                        isMainServer = false;
+                    }
                 }
 
                 // Sadece RAM üzerinde tutmuyoruz, bir sonraki manuel geçersiz kılmaya kadar ayarları da tutarlı yapıyoruz

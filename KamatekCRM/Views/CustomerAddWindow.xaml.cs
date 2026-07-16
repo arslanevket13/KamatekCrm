@@ -10,7 +10,7 @@ namespace KamatekCrm.Views
             var vm = new KamatekCrm.ViewModels.CustomerAddViewModel();
             vm.RequestClose += success =>
             {
-                DialogResult = success;
+                try { DialogResult = success; } catch { }
                 Close();
             };
             DataContext = vm;
@@ -21,7 +21,7 @@ namespace KamatekCrm.Views
             InitializeComponent();
             viewModel.RequestClose += success =>
             {
-                DialogResult = success;
+                try { DialogResult = success; } catch { }
                 Close();
             };
             DataContext = viewModel;
@@ -40,7 +40,7 @@ namespace KamatekCrm.Views
 
         private void CloseWindow_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            try { this.DialogResult = false; } catch { }
             this.Close();
         }
     }
