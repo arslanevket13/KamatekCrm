@@ -56,7 +56,10 @@ namespace KamatekCrm.Extensions
             services.AddTransient<ReportService>();
             services.AddTransient<SmsService>();
             services.AddTransient<StructureGeneratorService>();
-            
+
+            // More missing services
+            services.AddTransient<AddressService>();
+
             // Repositories
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -123,6 +126,10 @@ namespace KamatekCrm.Extensions
             services.AddTransient<QuickCustomerAddViewModel>();
             services.AddTransient<QuickNewProductForPurchaseViewModel>();
             services.AddTransient<LoadingViewModel>();
+            
+            // Missing ViewModels from DI
+            services.AddTransient<PurchaseOrderViewModel>();
+            services.AddTransient<QuotationViewModel>();
 
             // Window'ların da DI container'da kayıtlı olması gerekir
             services.AddTransient<Views.RepairTrackingWindow>();

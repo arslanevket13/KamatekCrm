@@ -118,6 +118,20 @@ namespace KamatekCrm.Data
                 }
             }
 
+            // PostgreSQL xmin Concurrency Global Configuration
+            if (AppSettings.UsePostgreSql)
+            {
+                foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+                {
+                    // Her Entity için xmin'i concurrency token olarak tanımla
+                    modelBuilder.Entity(entityType.ClrType)
+                                .Property<uint>("xmin")
+                                .HasColumnType("xid")
+                                .ValueGeneratedOnAddOrUpdate()
+                                .IsConcurrencyToken();
+                }
+            }
+
             // --- Inventory Modülü İlişkileri ---
 
             // Inventory - Composite Key (ProductId + WarehouseId)
@@ -198,15 +212,8 @@ namespace KamatekCrm.Data
                 if (AppSettings.UsePostgreSql)
                 {
                     entity.Property(e => e.TechSpecsJson).HasColumnType("jsonb");
-                    entity.Property("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
                 }
             });
-
-            // Quote (ProjectQuote) Concurrency
-            if (AppSettings.UsePostgreSql)
-            {
-                modelBuilder.Entity<Quote>().Property("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
-            }
 
             // Seed Data
             modelBuilder.Entity<Brand>().HasData(

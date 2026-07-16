@@ -19,11 +19,18 @@ namespace KamatekCrm.ViewModels
             TakeBackupCommand = new RelayCommand(_ => TakeBackup(), _ => !IsBusy);
             RestoreBackupCommand = new RelayCommand(_ => RestoreBackup(), _ => !IsBusy);
             
-            // Mevcut temayı yükle
-            _selectedTheme = AvailableThemes.FirstOrDefault(t => t.Id == ThemeService.CurrentThemeName) ?? AvailableThemes.First();
+            // Ayarları Properties.Settings.Default'tan yükle
+            string savedThemeId = Properties.Settings.Default.ThemePreference;
+            if (string.IsNullOrEmpty(savedThemeId)) savedThemeId = "PremiumLight";
+            
+            _selectedTheme = AvailableThemes.FirstOrDefault(t => t.Id == savedThemeId) 
+                             ?? AvailableThemes.FirstOrDefault(t => t.Id == ThemeService.CurrentThemeName) 
+                             ?? AvailableThemes.First();
+                             
+            _accentColor = Properties.Settings.Default.AccentColor;
+            _isMainServer = Properties.Settings.Default.IsMainServer;
             
             LoadLastBackupInfo();
-            LoadIsMainServerConfig();
         }
 
         #region Properties
@@ -50,7 +57,24 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _isMainServer, value))
                 {
+                    Properties.Settings.Default.IsMainServer = value;
+                    Properties.Settings.Default.IsMainServerManualOverride = true; // Mark as manually overridden
+                    Properties.Settings.Default.Save();
                     SaveIsMainServerToConfig(value);
+                }
+            }
+        }
+        
+        private string _accentColor = "#2563EB";
+        public string AccentColor
+        {
+            get => _accentColor;
+            set
+            {
+                if (SetProperty(ref _accentColor, value))
+                {
+                    Properties.Settings.Default.AccentColor = value;
+                    Properties.Settings.Default.Save();
                 }
             }
         }
@@ -84,6 +108,8 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedTheme, value) && value != null)
                 {
                     ThemeService.ChangeTheme(value.Id);
+                    Properties.Settings.Default.ThemePreference = value.Id;
+                    Properties.Settings.Default.Save();
                 }
             }
         }
@@ -275,7 +301,14 @@ namespace KamatekCrm.ViewModels
                         jsonObject["NetworkDiscovery"]!["IsMainServer"] = value;
                         var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
                         File.WriteAllText(appSettingsPath, jsonObject.ToJsonString(options));
-                        MessageBox.Show("Ağ ayarı kaydedildi. Değişikliklerin etkili olması için uygulamayı yeniden başlatmanız önerilir.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                        
+                        var result = MessageBox.Show("Ağ ayarı (Ana Sunucu) değiştirildi. Değişikliğin anında etkili olması için programın yeniden başlatılması gerekmektedir.\n\nŞimdi yeniden başlatılsın mı?", 
+                            "Yeniden Başlat Gerekli", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                            
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            RestartApplication();
+                        }
                     }
                 }
             }

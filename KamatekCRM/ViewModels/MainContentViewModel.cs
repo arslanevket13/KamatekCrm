@@ -5,6 +5,7 @@ using KamatekCrm.Commands;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
 using KamatekCrm.Repositories;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace KamatekCrm.ViewModels
 {
@@ -101,6 +102,16 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _currentView, value);
         }
 
+        private bool _isConnectionLost;
+        /// <summary>
+        /// Ağ veya veritabanı bağlantısı koptuğunda true olur (Overlay göstermek için)
+        /// </summary>
+        public bool IsConnectionLost
+        {
+            get => _isConnectionLost;
+            set => SetProperty(ref _isConnectionLost, value);
+        }
+
         /// <summary>
         /// Mevcut kullanıcı ad soyad
         /// </summary>
@@ -162,6 +173,8 @@ namespace KamatekCrm.ViewModels
 
         public ICommand NavigateToRoutePlanningCommand { get; }
 
+        public ICommand GoToSettingsCommand { get; }
+
         #endregion
 
         /// <summary>
@@ -189,6 +202,29 @@ namespace KamatekCrm.ViewModels
             // Kayıtlı tercihleri yükle
             _isSidebarCollapsed = Properties.Settings.Default.SidebarCollapsed;
             _isDarkMode = Properties.Settings.Default.IsDarkMode;
+
+            // 4. Bağlantı Kopma / Geri Gelme Eventlerini Dinleme (UI Overlay için)
+            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Register<UnauthorizedMessage>(this, (r, m) =>
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Logout();
+                });
+            });
+
+            EventAggregator.Instance.Subscribe<DatabaseConnectionLostEvent>(_ =>
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                {
+                    if (CurrentView is SettingsViewModel) return;
+                    IsConnectionLost = true;
+                });
+            });
+
+            EventAggregator.Instance.Subscribe<DatabaseConnectionRestoredEvent>(_ =>
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() => IsConnectionLost = false);
+            });
 
             NavigateToDashboardCommand = new RelayCommand(_ => NavigateTo<DashboardViewModel>());
             NavigateToCustomersCommand = new RelayCommand(_ => NavigateTo<CustomersViewModel>());
@@ -220,6 +256,8 @@ namespace KamatekCrm.ViewModels
             NavigateToFinancialHealthCommand = new RelayCommand(_ => NavigateTo<FinancialHealthViewModel>(), _ => _authService.CanViewFinance);
             NavigateToRoutePlanningCommand = new RelayCommand(_ => NavigateTo<RoutePlanningViewModel>());
             
+            GoToSettingsCommand = new RelayCommand(_ => GoToSettings());
+
             NavigateToSuppliersCommand = new RelayCommand(_ => NavigateTo<SuppliersViewModel>());
             NavigateToPipelineCommand = new RelayCommand(_ => _toastService.ShowInfo("Satış Pipeline modülü yapım aşamasındadır."));
             NavigateToSchedulerCommand = new RelayCommand(_ => _toastService.ShowInfo("Takvim modülü yapım aşamasındadır."));
@@ -248,6 +286,12 @@ namespace KamatekCrm.ViewModels
                 // System.Diagnostics.Debug.WriteLine($"Navigation Error to {typeof(TViewModel).Name}: {ex.Message}");
                 _toastService.ShowError($"Sayfa yüklenemedi: {ex.Message}");
             }
+        }
+
+        private void GoToSettings()
+        {
+            IsConnectionLost = false; // Overlay'i gizle
+            NavigateTo<SettingsViewModel>();
         }
         
         /// <summary>

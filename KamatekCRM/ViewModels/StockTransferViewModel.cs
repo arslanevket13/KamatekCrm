@@ -14,7 +14,7 @@ namespace KamatekCrm.ViewModels
 {
     public class StockTransferViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IInventoryDomainService _inventoryDomainService;
         private Warehouse? _sourceWarehouse;
         private Warehouse? _targetWarehouse;
@@ -90,7 +90,8 @@ namespace KamatekCrm.ViewModels
             {
                 if (SelectedProduct == null || SourceWarehouse == null) return 0;
                 
-                var inventory = _context.Inventories
+                using var context = _dbContextFactory.CreateDbContext();
+                var inventory = context.Inventories
                     .FirstOrDefault(i => i.ProductId == SelectedProduct.Id && i.WarehouseId == SourceWarehouse.Id);
                 
                 return inventory?.Quantity ?? 0;
@@ -100,12 +101,14 @@ namespace KamatekCrm.ViewModels
         public ICommand TransferCommand { get; }
         public ICommand CloseCommand { get; }
         
-        public StockTransferViewModel(IInventoryDomainService inventoryDomainService)
+        public StockTransferViewModel(IInventoryDomainService inventoryDomainService, IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _inventoryDomainService = inventoryDomainService;
-            _context = new AppDbContext();
-            Warehouses = new ObservableCollection<Warehouse>(_context.Warehouses.Where(w => w.IsActive).ToList());
-            Products = new ObservableCollection<Product>(_context.Products.ToList());
+            _dbContextFactory = dbContextFactory;
+            
+            using var context = _dbContextFactory.CreateDbContext();
+            Warehouses = new ObservableCollection<Warehouse>(context.Warehouses.Where(w => w.IsActive).ToList());
+            Products = new ObservableCollection<Product>(context.Products.ToList());
             
             TransferCommand = new RelayCommand(_ => ExecuteTransfer(), _ => CanExecuteTransfer());
             CloseCommand = new RelayCommand(param => (param as Window)?.Close());

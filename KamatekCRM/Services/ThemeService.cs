@@ -26,11 +26,11 @@ namespace KamatekCrm.Services
         /// </summary>
         public static void Initialize()
         {
-            ChangeTheme(AppSettings.CurrentTheme);
+            string savedTheme = Properties.Settings.Default.ThemePreference;
+            if (string.IsNullOrEmpty(savedTheme)) savedTheme = "PremiumLight";
             
-            // ChangeTheme, aynı tema ise early-return yapabilir.
-            // Bu durumda ReapplyCustomStyles çağrılmamış olur.
-            // Her durumda kendi stillerimizi WPF-UI'ın üzerine yüklemeyi garanti et.
+            ChangeTheme(savedTheme);
+            
             var app = Application.Current;
             if (app != null)
             {
@@ -66,7 +66,10 @@ namespace KamatekCrm.Services
                 if (app == null) return;
 
                 // Geçerli temayı kaydet
-                AppSettings.CurrentTheme = themeName;
+                AppSettings.CurrentTheme = themeName; // Keep backward compatibility
+                Properties.Settings.Default.ThemePreference = themeName;
+                Properties.Settings.Default.Save();
+                
                 CurrentThemeName = themeName; // Update the internal current theme name
                 
                 // 1. Yeni tema sözlüğünün kaynağını hazırla

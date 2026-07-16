@@ -14,9 +14,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
-    public class QuotationViewModel : INotifyPropertyChanged
+    public class QuotationViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private AppDbContext _context;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
 
         // Properties
         public ObservableCollection<Customer> Customers { get; set; } = new ObservableCollection<Customer>();
@@ -150,13 +151,14 @@ namespace KamatekCrm.ViewModels
         public ICommand SaveAndSendCommand { get; }
         public ICommand ExportToPdfCommand { get; }
 
-        public QuotationViewModel()
+        public QuotationViewModel(Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> dbContextFactory)
         {
+            _dbContextFactory = dbContextFactory;
             // Designer time initialization avoidance
             if (DesignerProperties.GetIsInDesignMode(new System.Windows.DependencyObject()))
                 return;
 
-            _context = new AppDbContext(); // Replace with dependency injection ideally
+            _context = _dbContextFactory.CreateDbContext();
 
             ToggleSidebarCommand = new RelayCommand(_ => IsSidebarOpen = !IsSidebarOpen);
             AddProductCommand = new RelayCommand(_ => AddProduct(), _ => SelectedProduct != null && NewQuantity > 0);

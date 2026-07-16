@@ -23,7 +23,8 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class StockCountViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private AppDbContext _context;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
         private Warehouse? _selectedWarehouse;
         private DateTime _countDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
         private string _statusMessage = string.Empty;
@@ -207,9 +208,10 @@ namespace KamatekCrm.ViewModels
         public ICommand ConfirmManualCountCommand { get; }
         public ICommand ClearManualListCommand { get; }
 
-        public StockCountViewModel()
+        public StockCountViewModel(Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> dbContextFactory)
         {
-            _context = new AppDbContext();
+            _dbContextFactory = dbContextFactory;
+            _context = _dbContextFactory.CreateDbContext();
             Warehouses = new ObservableCollection<Warehouse>(_context.Warehouses.Where(w => w.IsActive).ToList());
             CountItems = new ObservableCollection<StockCountItem>();
             CountHistory = new ObservableCollection<CountHistoryItem>();

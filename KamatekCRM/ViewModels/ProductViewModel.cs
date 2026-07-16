@@ -25,7 +25,8 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class ProductViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        private AppDbContext _context;
         private readonly IInventoryDomainService _inventoryDomainService;
         private readonly IProductImageService _imageService;
         private Product? _selectedProduct;
@@ -124,10 +125,11 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public ProductViewModel(IInventoryDomainService inventoryDomainService)
+        public ProductViewModel(IInventoryDomainService inventoryDomainService, IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _inventoryDomainService = inventoryDomainService;
-            _context = new AppDbContext();
+            _dbContextFactory = dbContextFactory;
+            _context = _dbContextFactory.CreateDbContext(); // TODO: Refactor to short-lived contexts
             _imageService = new ProductImageService();
             Products = new ObservableCollection<Product>();
 
@@ -446,7 +448,7 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedProduct == null) return;
 
-            var vm = new StockTransferViewModel(_inventoryDomainService);
+            var vm = new StockTransferViewModel(_inventoryDomainService, _dbContextFactory);
             var window = new Views.StockTransferView(vm);
 
             // ViewModel'deki SelectedProduct'ı set et

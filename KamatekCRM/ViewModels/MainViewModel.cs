@@ -131,17 +131,6 @@ namespace KamatekCrm.ViewModels
                 });
             });
 
-            // 4. Bağlantı Kopma / Geri Gelme Eventlerini Dinleme (UI Overlay için)
-            EventAggregator.Instance.Subscribe<DatabaseConnectionLostEvent>(_ =>
-            {
-                Application.Current.Dispatcher.Invoke(() => IsConnectionLost = true);
-            });
-
-            EventAggregator.Instance.Subscribe<DatabaseConnectionRestoredEvent>(_ =>
-            {
-                Application.Current.Dispatcher.Invoke(() => IsConnectionLost = false);
-            });
-
             // Komutları tanımla
             NavigateToDashboardCommand = new RelayCommand(_ => NavigateToDashboard());
             NavigateToCustomersCommand = new RelayCommand(_ => NavigateToCustomers());
@@ -155,6 +144,7 @@ namespace KamatekCrm.ViewModels
             LogoutCommand = new RelayCommand(_ => Logout());
             OpenFaultTicketCommand = new RelayCommand(_ => OpenFaultTicket());
             NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings());
+            GoToSettingsCommand = new RelayCommand(_ => GoToSettings());
 
             // Varsayılan olarak Dashboard sayfasını göster
             NavigateToDashboard();
@@ -194,10 +184,21 @@ namespace KamatekCrm.ViewModels
 
         private void NavigateToSettings() => _navigationService.NavigateTo<SettingsViewModel>();
 
+        private void GoToSettings()
+        {
+            IsConnectionLost = false; // Overlay'i gizle
+            _navigationService.NavigateTo<SettingsViewModel>();
+        }
+
         /// <summary>
         /// Ayarlar sayfasına git komutu
         /// </summary>
         public ICommand NavigateToSettingsCommand { get; }
+
+        /// <summary>
+        /// Kilitlenmeyi aşarak Ayarlar sayfasına git komutu
+        /// </summary>
+        public ICommand GoToSettingsCommand { get; }
 
         #endregion
 

@@ -618,6 +618,19 @@
                 <TextBlock Text="Lütfen bekleyin, bağlantı sağlandığında ekran otomatik açılacaktır." 
                            Foreground="#A0A0A0" FontSize="14" 
                            HorizontalAlignment="Center"/>
+                
+                <!-- Deadlock Bypass Butonu -->
+                <Button Content="Ayarları Aç / Ana Sunucu Yap"
+                        Command="{Binding GoToSettingsCommand}"
+                        Style="{DynamicResource OutlineButtonStyle}"
+                        Foreground="White"
+                        BorderBrush="#55FFFFFF"
+                        Background="#22FFFFFF"
+                        Padding="24,8"
+                        Margin="0,32,0,0"
+                        HorizontalAlignment="Center"
+                        IsHitTestVisible="True"
+                        Cursor="Hand"/>
             </StackPanel>
         </Border>
 

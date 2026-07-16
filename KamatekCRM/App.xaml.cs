@@ -13,6 +13,8 @@ using Microsoft.Extensions.Configuration;
 using KamatekCrm.Configuration;
 using Serilog;
 using Wpf.Ui.Appearance;
+using Microsoft.EntityFrameworkCore;
+using KamatekCrm.Data;
 
 namespace KamatekCrm
 {
@@ -88,8 +90,32 @@ namespace KamatekCrm
                         // ApiClient kaydı
                         services.AddHttpClient<ApiClient>("KamatekAPI");
 
-                        // NetworkDiscoveryService kaydı
+                        // 1. Thread-safe Provider'ı Singleton olarak ekliyoruz
+                        services.AddSingleton<IDatabaseConnectionProvider, DatabaseConnectionProvider>();
+
+                        // 2. DbContextFactory'yi dinamik Connection String alacak şekilde yapılandırıyoruz
+                        services.AddDbContextFactory<KamatekCrm.Data.AppDbContext>((sp, options) =>
+                        {
+                            var connectionProvider = sp.GetRequiredService<IDatabaseConnectionProvider>();
+                            try
+                            {
+                                var connString = connectionProvider.GetConnectionString();
+                                options.UseNpgsql(connString);
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                // Henüz ağ keşfi yapılmadıysa Design-Time veya başlangıç için dummy string
+                                options.UseNpgsql("Host=0.0.0.0;Database=dummy;Username=postgres;Password=123456"); 
+                            }
+                        });
+
+                        // 3. Arka plan servislerini ekliyoruz (Web server YOK, IHostedService olarak çalışacaklar)
+                        // Singleton olarak kaydet ki ViewModeller (LoginViewModel) inject edebilsin.
                         services.AddSingleton<NetworkDiscoveryService>();
+                        services.AddHostedService(provider => provider.GetRequiredService<NetworkDiscoveryService>());
+
+                        services.AddSingleton<ConnectionHeartbeatService>();
+                        services.AddHostedService(provider => provider.GetRequiredService<ConnectionHeartbeatService>());
                     })
                     .Build();
 
@@ -104,18 +130,9 @@ namespace KamatekCrm
                 AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
                 TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
-                // Host'u başlat (web server YOK, sadece DI lifecycle)
+                // Host'u başlat (web server YOK, sadece DI lifecycle). IHostedService'ler otomatik başlar.
                 await _host.StartAsync();
 
-                // Network Discovery Service - Sunucuyu otomatik bul
-                var config = _host.Services.GetRequiredService<IConfiguration>();
-                var discoveryEnabled = config.GetValue<bool>("NetworkDiscovery:Enabled", true);
-                if (discoveryEnabled)
-                {
-                    var discoveryService = _host.Services.GetRequiredService<NetworkDiscoveryService>();
-                    discoveryService.Start();
-                    Log.Information("Ağ keşif servisi başlatıldı.");
-                }
 
                 // MainWindow'u DI'dan al ve göster
                 var mainWindow = _host.Services.GetRequiredService<MainWindow>();

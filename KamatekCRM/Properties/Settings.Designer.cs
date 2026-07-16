@@ -94,5 +94,53 @@ namespace KamatekCrm.Properties {
                 this["AuthToken"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Light")]
+        public string ThemePreference {
+            get {
+                return ((string)(this["ThemePreference"]));
+            }
+            set {
+                this["ThemePreference"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("#2563EB")]
+        public string AccentColor {
+            get {
+                return ((string)(this["AccentColor"]));
+            }
+            set {
+                this["AccentColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IsMainServer {
+            get {
+                return ((bool)(this["IsMainServer"]));
+            }
+            set {
+                this["IsMainServer"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IsMainServerManualOverride {
+            get {
+                return ((bool)(this["IsMainServerManualOverride"]));
+            }
+            set {
+                this["IsMainServerManualOverride"] = value;
+            }
+        }
     }
 }

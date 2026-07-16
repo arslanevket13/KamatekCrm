@@ -15,7 +15,8 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public class StockReportsViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private AppDbContext _context;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
         
         // Filtreler
         private DateTime? _startDate;
@@ -110,9 +111,10 @@ namespace KamatekCrm.ViewModels
         public ICommand ClearFiltersCommand { get; }
         public ICommand ExportCommand { get; }
 
-        public StockReportsViewModel()
+        public StockReportsViewModel(Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> dbContextFactory)
         {
-            _context = new AppDbContext();
+            _dbContextFactory = dbContextFactory;
+            _context = _dbContextFactory.CreateDbContext();
             
             Transactions = new ObservableCollection<StockTransactionReportItem>();
             Warehouses = new ObservableCollection<Warehouse>(_context.Warehouses.ToList());

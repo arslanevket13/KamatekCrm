@@ -15,6 +15,7 @@ namespace KamatekCrm.ViewModels
     public class SystemLogsViewModel : ViewModelBase
     {
         private readonly IAuthService _authService;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
         private string _searchText = string.Empty;
         private string _selectedActionFilter = "Tümü";
         private string _selectedEntityFilter = "Tümü";
@@ -152,9 +153,10 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public SystemLogsViewModel(IAuthService authService)
+        public SystemLogsViewModel(IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _authService = authService;
+            _dbContextFactory = dbContextFactory;
             RefreshCommand = new RelayCommand(_ => LoadLogs());
             ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
 
@@ -172,7 +174,7 @@ namespace KamatekCrm.ViewModels
         {
             Logs.Clear();
 
-            using var context = new AppDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             var query = context.ActivityLogs.AsQueryable();
 
             // Tarih filtresi

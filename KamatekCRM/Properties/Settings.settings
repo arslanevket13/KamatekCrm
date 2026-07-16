@@ -20,5 +20,17 @@
     <Setting Name="AuthToken" Type="System.String" Scope="User">
       <Value Profile="(Default)"></Value>
     </Setting>
+    <Setting Name="ThemePreference" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Light</Value>
+    </Setting>
+    <Setting Name="AccentColor" Type="System.String" Scope="User">
+      <Value Profile="(Default)">#2563EB</Value>
+    </Setting>
+    <Setting Name="IsMainServer" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="IsMainServerManualOverride" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
