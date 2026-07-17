@@ -34,128 +34,98 @@ namespace KamatekCrm.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // Ana sunucu mu kontrolü (Settings.settings üzerinden)
-            bool isMainServer = KamatekCrm.Properties.Settings.Default.IsMainServer;
-            bool isManualOverride = KamatekCrm.Properties.Settings.Default.IsMainServerManualOverride;
-
-            if (!isManualOverride)
+            // 1. Test Cached Server
+            string savedAddress = KamatekCrm.Properties.Settings.Default.SavedServerAddress;
+            if (!string.IsNullOrWhiteSpace(savedAddress))
             {
-                _logger.LogInformation("Zero-Configuration Aktif: Yerel veritabanı aranıyor...");
-                bool isLocalDbRunning = await IsLocalDatabaseRunningAsync(stoppingToken);
-
-                if (isLocalDbRunning)
+                _logger.LogInformation($"Zero-Configuration: Ön belleğe alınmış adres test ediliyor -> {savedAddress}");
+                if (await _connectionProvider.TestConnectionAsync(savedAddress))
                 {
-                    _logger.LogInformation("Yerel veritabanı (PostgreSQL) bulundu. Sistem 'Ana Sunucu' olarak ayarlanıyor.");
-                    isMainServer = true;
+                    ConfirmConnection(savedAddress);
+                    return; // STOP
                 }
-                else
-                {
-                    _logger.LogInformation("Yerel veritabanı TCP pinge yanıt vermedi. Windows Servisleri kontrol ediliyor...");
-                    bool isPostgresInstalled = false;
-                    
-                    try
-                    {
-                        var services = System.ServiceProcess.ServiceController.GetServices();
-                        var pgService = System.Linq.Enumerable.FirstOrDefault(services, s => s.ServiceName.ToLower().Contains("postgres") || s.DisplayName.ToLower().Contains("postgres"));
-                        
-                        if (pgService != null)
-                        {
-                            isPostgresInstalled = true;
-                            _logger.LogWarning($"PostgreSQL servisi ({pgService.ServiceName}) bulundu ancak durumu: {pgService.Status}");
-                            
-                            if (pgService.Status == System.ServiceProcess.ServiceControllerStatus.Stopped)
-                            {
-                                try
-                                {
-                                    _logger.LogInformation("PostgreSQL servisi başlatılmaya çalışılıyor...");
-                                    pgService.Start();
-                                    pgService.WaitForStatus(System.ServiceProcess.ServiceControllerStatus.Running, TimeSpan.FromSeconds(10));
-                                    isLocalDbRunning = true;
-                                    _logger.LogInformation("PostgreSQL servisi başarıyla başlatıldı!");
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogError(ex, "PostgreSQL servisi başlatılamadı. Yönetici yetkisi gerekebilir.");
-                                    try {
-                                        KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseServiceFailedEvent());
-                                    } catch { }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogDebug(ex, "Windows Service kontrolü yapılamadı (İşletim sistemi kısıtlaması olabilir).");
-                    }
-                    
-                    if (isLocalDbRunning)
-                    {
-                        _logger.LogInformation("Hizmet başlatıldığı için Sistem 'Ana Sunucu' olarak ayarlanıyor.");
-                        isMainServer = true;
-                    }
-                    else if (isPostgresInstalled)
-                    {
-                        _logger.LogCritical("Bu cihaz Ana Sunucu ancak PostgreSQL başlatılamadı. İstemci moduna GEÇİLMİYOR.");
-                        isMainServer = true; // Asıl sunucu ama kapalı. İstemci olup sonsuz döngüye girmesin.
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Yerel veritabanı tamamen yok. Sistem 'İstemci' olarak ayarlanıyor.");
-                        isMainServer = false;
-                    }
-                }
-
-                // Sadece RAM üzerinde tutmuyoruz, bir sonraki manuel geçersiz kılmaya kadar ayarları da tutarlı yapıyoruz
-                KamatekCrm.Properties.Settings.Default.IsMainServer = isMainServer;
-                KamatekCrm.Properties.Settings.Default.Save();
-            }
-            else
-            {
-                _logger.LogInformation($"Manuel Override Aktif: Sistem yapılandırmaya göre { (isMainServer ? "Ana Sunucu" : "İstemci") } olarak çalışacak.");
             }
 
-            if (isMainServer)
+            // 2. Test Localhost (Is this machine the server?)
+            _logger.LogInformation("Zero-Configuration: Yerel PostgreSQL kontrol ediliyor (127.0.0.1)...");
+            if (await _connectionProvider.TestConnectionAsync("127.0.0.1"))
             {
+                ConfirmConnection("127.0.0.1");
                 _logger.LogInformation("Bu cihaz Ana Sunucu. UDP Broadcast başlatılıyor.");
-                await BroadcastLoopAsync(stoppingToken);
+                // Sunucu olduğumuz için ağdaki diğer istemcilere yayın yapmaya devam et
+                _ = BroadcastLoopAsync(stoppingToken); 
+                return; // STOP
             }
-            else
+
+            // 3. Listen for UDP Broadcasts (Strict 3 second timeout)
+            _logger.LogInformation("Zero-Configuration: UDP yayınları dinleniyor (Maks 3 saniye)...");
+            string udpIp = await ListenForUdpBroadcastAsync(TimeSpan.FromSeconds(3), stoppingToken);
+            if (!string.IsNullOrWhiteSpace(udpIp))
             {
-                _logger.LogInformation("Bu cihaz İstemci. Sunucu aranıyor (Listener başlatılıyor).");
-                
-                // İstemci isek sunucu aranıyor animasyonunu başlat (Event Aggregator)
-                try
+                _logger.LogInformation($"UDP Sunucu Bulundu: {udpIp}. Bağlantı test ediliyor...");
+                if (await _connectionProvider.TestConnectionAsync(udpIp))
                 {
-                    KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseConnectionLostEvent());
+                    KamatekCrm.Properties.Settings.Default.SavedServerAddress = udpIp;
+                    KamatekCrm.Properties.Settings.Default.Save();
+                    ConfirmConnection(udpIp);
+                    
+                    _logger.LogInformation("Bu cihaz İstemci.");
+                    // İstemci modundayken dinlemeye devam edebiliriz veya bırakabiliriz. 
+                    // Bağlantı koparsa yeniden bu döngü çalışmalı (NetworkDiscoveryService restart).
+                    return; // STOP
                 }
-                catch { }
-
-                await ListenLoopAsync(stoppingToken);
             }
-        }
 
-        private async Task<bool> IsLocalDatabaseRunningAsync(CancellationToken stoppingToken)
-        {
+            // 4. Fallback to Connection Wizard
+            _logger.LogCritical("Zero-Configuration: Sunucu bulunamadı. Manuel bağlantı sihirbazı çağrılıyor.");
             try
             {
-                using var tcpClient = new TcpClient();
-                // 500ms timeout for ultra-fast startup detection without blocking UI
-                var connectTask = tcpClient.ConnectAsync("127.0.0.1", 5432);
-                var delayTask = Task.Delay(500, stoppingToken);
+                KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseConnectionLostEvent());
+                // TODO: ShowManualConnectionWizardEvent fırlatılabilir. Şu an DatabaseConnectionLostEvent, arayüzü çıkarıyor.
+            }
+            catch { }
+        }
 
-                var completedTask = await Task.WhenAny(connectTask, delayTask);
+        private void ConfirmConnection(string ip)
+        {
+            _connectionProvider.SetServerIp(ip);
+            _connectionProvider.SetConnectionState(true);
+            try
+            {
+                KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseConnectionRestoredEvent());
+            }
+            catch { }
+        }
+
+        private async Task<string> ListenForUdpBroadcastAsync(TimeSpan timeout, CancellationToken stoppingToken)
+        {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+            cts.CancelAfter(timeout);
+
+            try
+            {
+                using var udpClient = new UdpClient();
+                udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, BROADCAST_PORT));
+
+                var receiveTask = udpClient.ReceiveAsync(cts.Token);
+                var result = await receiveTask;
                 
-                if (completedTask == connectTask && tcpClient.Connected)
+                string receivedMessage = Encoding.UTF8.GetString(result.Buffer);
+                if (receivedMessage == EXPECTED_PING_SIGNATURE)
                 {
-                    return true;
+                    return result.RemoteEndPoint.Address.ToString();
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                // Timeout oldu
             }
             catch (Exception ex)
             {
-                _logger.LogDebug(ex, "Yerel veritabanı ping atılamadı.");
+                _logger.LogError(ex, "UDP Keşif sırasında hata.");
             }
-            
-            return false;
+            return string.Empty;
         }
 
         private async Task BroadcastLoopAsync(CancellationToken stoppingToken)
@@ -184,54 +154,6 @@ namespace KamatekCrm.Services
             }
         }
 
-        private async Task ListenLoopAsync(CancellationToken stoppingToken)
-        {
-            using var udpClient = new UdpClient();
-            udpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, BROADCAST_PORT));
 
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                try
-                {
-                    if (_connectionProvider.IsConnected)
-                    {
-                        await Task.Delay(2000, stoppingToken);
-                        continue;
-                    }
-
-                    var receiveResult = await udpClient.ReceiveAsync(stoppingToken);
-                    string receivedMessage = Encoding.UTF8.GetString(receiveResult.Buffer);
-
-                    if (receivedMessage == EXPECTED_PING_SIGNATURE)
-                    {
-                        string physicalIp = receiveResult.RemoteEndPoint.Address.ToString();
-                        
-                        _logger.LogInformation($"Sunucu keşfedildi. Gerçek Fiziksel IP: {physicalIp}");
-                        
-                        _connectionProvider.SetServerIp(physicalIp);
-                        _connectionProvider.SetConnectionState(true);
-                        
-                        // Eski kodda olan: EventAggregator.Instance.Publish(new DatabaseConnectionRestoredEvent());
-                        // Eğer o static sinif duruyorsa cagiriyoruz
-                        try
-                        {
-                            // Try to publish if the class exists
-                            KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseConnectionRestoredEvent());
-                        }
-                        catch { }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "UDP Keşif sırasında hata.");
-                    await Task.Delay(1000, stoppingToken);
-                }
-            }
-        }
     }
 }

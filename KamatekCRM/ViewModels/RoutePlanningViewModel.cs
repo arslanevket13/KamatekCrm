@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -20,7 +20,7 @@ namespace KamatekCrm.ViewModels
     /// Profesyonel Rota Planlama ViewModel
     /// Teknisyen seçimi, iş atama, sıralama, optimizasyon, harita ve DB kaydı
     /// </summary>
-    public class RoutePlanningViewModel : ViewModelBase
+    public partial class RoutePlanningViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
 
@@ -36,15 +36,6 @@ namespace KamatekCrm.ViewModels
             RoutePoints = new ObservableCollection<RoutePointItem>();
 
             // Commands
-            AddToRouteCommand = new RelayCommand<RouteJobItem>(AddToRoute);
-            RemoveFromRouteCommand = new RelayCommand<RoutePointItem>(RemoveFromRoute);
-            MoveUpCommand = new RelayCommand<RoutePointItem>(MoveUp, CanMoveUp);
-            MoveDownCommand = new RelayCommand<RoutePointItem>(MoveDown, CanMoveDown);
-            SaveRouteCommand = new RelayCommand(_ => SaveRoute(), _ => RoutePoints.Count > 0);
-            OptimizeRouteCommand = new RelayCommand(_ => OptimizeRoute(), _ => RoutePoints.Count > 2);
-            ClearRouteCommand = new RelayCommand(_ => ClearRoute(), _ => RoutePoints.Count > 0);
-            MarkVisitedCommand = new RelayCommand<RoutePointItem>(MarkVisited);
-            RefreshCommand = new RelayCommand(_ => LoadData());
 
             LoadTechnicians();
         }
@@ -67,7 +58,7 @@ namespace KamatekCrm.ViewModels
             set
             {
                 if (SetProperty(ref _selectedDate, value))
-                    LoadData();
+                    Refresh();
             }
         }
 
@@ -80,7 +71,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedTechnician, value))
                 {
                     OnPropertyChanged(nameof(IsTechnicianSelected));
-                    LoadData();
+                    Refresh();
                 }
             }
         }
@@ -122,16 +113,6 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand AddToRouteCommand { get; }
-        public ICommand RemoveFromRouteCommand { get; }
-        public ICommand MoveUpCommand { get; }
-        public ICommand MoveDownCommand { get; }
-        public ICommand SaveRouteCommand { get; }
-        public ICommand OptimizeRouteCommand { get; }
-        public ICommand ClearRouteCommand { get; }
-        public ICommand MarkVisitedCommand { get; }
-        public ICommand RefreshCommand { get; }
-
         #endregion
 
         #region Data Loading
@@ -158,7 +139,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void LoadData()
+        [RelayCommand]
+        private void Refresh()
         {
             if (SelectedTechnician == null) return;
             LoadAvailableJobs();
@@ -276,6 +258,7 @@ namespace KamatekCrm.ViewModels
 
         #region Route Operations
 
+        [RelayCommand]
         private void AddToRoute(RouteJobItem? job)
         {
             if (job == null) return;
@@ -300,6 +283,7 @@ namespace KamatekCrm.ViewModels
             GenerateMapHtml();
         }
 
+        [RelayCommand]
         private void RemoveFromRoute(RoutePointItem? point)
         {
             if (point == null) return;
@@ -316,6 +300,7 @@ namespace KamatekCrm.ViewModels
         private bool CanMoveUp(RoutePointItem? point) => point != null && RoutePoints.IndexOf(point) > 0;
         private bool CanMoveDown(RoutePointItem? point) => point != null && RoutePoints.IndexOf(point) < RoutePoints.Count - 1;
 
+        [RelayCommand]
         private void MoveUp(RoutePointItem? point)
         {
             if (point == null) return;
@@ -327,6 +312,7 @@ namespace KamatekCrm.ViewModels
             GenerateMapHtml();
         }
 
+        [RelayCommand]
         private void MoveDown(RoutePointItem? point)
         {
             if (point == null) return;
@@ -338,6 +324,7 @@ namespace KamatekCrm.ViewModels
             GenerateMapHtml();
         }
 
+        [RelayCommand]
         private void OptimizeRoute()
         {
             if (RoutePoints.Count < 3) return;
@@ -375,6 +362,7 @@ namespace KamatekCrm.ViewModels
             GenerateMapHtml();
         }
 
+        [RelayCommand]
         private void ClearRoute()
         {
             RoutePoints.Clear();
@@ -383,6 +371,7 @@ namespace KamatekCrm.ViewModels
             LoadAvailableJobs();
         }
 
+        [RelayCommand]
         private void MarkVisited(RoutePointItem? point)
         {
             if (point == null) return;
@@ -392,6 +381,7 @@ namespace KamatekCrm.ViewModels
             GenerateMapHtml();
         }
 
+        [RelayCommand]
         private void SaveRoute()
         {
             if (SelectedTechnician == null) return;
@@ -679,7 +669,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     /// <summary>
     /// Rota üzerindeki nokta (sıralı, durum bilgili)
     /// </summary>
-    public class RoutePointItem : ViewModelBase
+    public partial class RoutePointItem : ViewModelBase
     {
         public int Id { get; set; }
         public int? ServiceJobId { get; set; }
@@ -722,3 +712,4 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
 
     #endregion
 }
+

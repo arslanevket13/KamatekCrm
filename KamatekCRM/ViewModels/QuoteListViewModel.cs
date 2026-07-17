@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Models;
@@ -18,7 +18,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Teklif Listesi ViewModel — Tüm tekliflerin listelenmesi, filtrelenmesi, yönetilmesi
     /// </summary>
-    public class QuoteListViewModel : ViewModelBase
+    public partial class QuoteListViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
         private readonly IServiceProvider _serviceProvider;
@@ -117,21 +117,6 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand NewQuoteCommand { get; }
-        public ICommand EditQuoteCommand { get; }
-        public ICommand DuplicateQuoteCommand { get; }
-        public ICommand DeleteQuoteCommand { get; }
-        public ICommand ExportPdfCommand { get; }
-        public ICommand MarkAsSentCommand { get; }
-        public ICommand MarkAsApprovedCommand { get; }
-        public ICommand MarkAsRejectedCommand { get; }
-        public ICommand FilterAllCommand { get; }
-        public ICommand FilterDraftCommand { get; }
-        public ICommand FilterSentCommand { get; }
-        public ICommand FilterApprovedCommand { get; }
-        public ICommand FilterRejectedCommand { get; }
-        public ICommand RefreshCommand { get; }
-
         #endregion
 
         #region Constructor
@@ -141,29 +126,15 @@ namespace KamatekCrm.ViewModels
             _context = context;
             _serviceProvider = serviceProvider;
 
-            NewQuoteCommand = new RelayCommand(_ => NewQuote());
-            EditQuoteCommand = new RelayCommand(_ => EditQuote(), _ => HasSelectedQuote);
-            DuplicateQuoteCommand = new RelayCommand(_ => DuplicateQuote(), _ => HasSelectedQuote);
-            DeleteQuoteCommand = new RelayCommand(_ => DeleteQuote(), _ => HasSelectedQuote);
-            ExportPdfCommand = new RelayCommand(_ => ExportPdf(), _ => HasSelectedQuote);
-            MarkAsSentCommand = new RelayCommand(_ => ChangeStatus(QuoteStatus.Sent), _ => SelectedQuote?.QuoteStatus == QuoteStatus.Draft);
-            MarkAsApprovedCommand = new RelayCommand(_ => ChangeStatus(QuoteStatus.Approved), _ => SelectedQuote?.QuoteStatus == QuoteStatus.Sent);
-            MarkAsRejectedCommand = new RelayCommand(_ => ChangeStatus(QuoteStatus.Rejected), _ => SelectedQuote?.QuoteStatus == QuoteStatus.Sent);
-            FilterAllCommand = new RelayCommand(_ => StatusFilter = null);
-            FilterDraftCommand = new RelayCommand(_ => StatusFilter = QuoteStatus.Draft);
-            FilterSentCommand = new RelayCommand(_ => StatusFilter = QuoteStatus.Sent);
-            FilterApprovedCommand = new RelayCommand(_ => StatusFilter = QuoteStatus.Approved);
-            FilterRejectedCommand = new RelayCommand(_ => StatusFilter = QuoteStatus.Rejected);
-            RefreshCommand = new RelayCommand(_ => LoadQuotes());
-
-            LoadQuotes();
+            Refresh();
         }
 
         #endregion
 
         #region Data Loading
 
-        private void LoadQuotes()
+        [RelayCommand]
+        private void Refresh()
         {
             try
             {
@@ -217,13 +188,14 @@ namespace KamatekCrm.ViewModels
 
         #region Quote Operations
 
+        [RelayCommand]
         private void NewQuote()
         {
             try
             {
                 var window = _serviceProvider.GetRequiredService<ProjectQuoteEditorWindow>();
                 window.ShowDialog();
-                LoadQuotes(); // Refresh after close
+                Refresh(); // Refresh after close
             }
             catch (Exception ex)
             {
@@ -232,6 +204,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void EditQuote()
         {
             if (SelectedQuote == null) return;
@@ -244,7 +217,7 @@ namespace KamatekCrm.ViewModels
                     vm.LoadExistingProject(SelectedQuote.Id);
                 }
                 window.ShowDialog();
-                LoadQuotes(); // Refresh after close
+                Refresh(); // Refresh after close
             }
             catch (Exception ex)
             {
@@ -253,6 +226,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void DuplicateQuote()
         {
             if (SelectedQuote == null) return;
@@ -298,7 +272,7 @@ namespace KamatekCrm.ViewModels
                 _context.ServiceProjects.Add(copy);
                 _context.SaveChanges();
 
-                LoadQuotes();
+                Refresh();
                 StatusMessage = $"Teklif kopyalandı: {copy.ProjectCode}";
                 IsActionSuccessful = true;
             }
@@ -309,6 +283,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void DeleteQuote()
         {
             if (SelectedQuote == null) return;
@@ -326,7 +301,7 @@ namespace KamatekCrm.ViewModels
                 _context.ServiceProjects.Remove(SelectedQuote);
                 _context.SaveChanges();
 
-                LoadQuotes();
+                Refresh();
                 StatusMessage = "Teklif silindi.";
                 IsActionSuccessful = true;
             }
@@ -337,6 +312,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void ExportPdf()
         {
             if (SelectedQuote == null) return;
@@ -387,7 +363,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void ChangeStatus(QuoteStatus newStatus)
+        [RelayCommand]
+        private void MarkAsSent(QuoteStatus newStatus)
         {
             if (SelectedQuote == null) return;
 
@@ -433,7 +410,7 @@ namespace KamatekCrm.ViewModels
                 }
 
                 _context.SaveChanges();
-                LoadQuotes();
+                Refresh();
 
                 StatusMessage = $"Teklif durumu güncellendi: {statusName}";
                 IsActionSuccessful = true;
@@ -493,3 +470,4 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
+

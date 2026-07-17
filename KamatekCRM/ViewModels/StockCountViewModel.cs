@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using ClosedXML.Excel;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -21,7 +21,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Fiziksel Stok Sayım işlemleri için ViewModel
     /// </summary>
-    public class StockCountViewModel : ViewModelBase
+    public partial class StockCountViewModel : ViewModelBase
     {
         private AppDbContext _context;
         private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
@@ -58,7 +58,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedWarehouse, value))
                 {
-                    LoadInventoryForWarehouse();
+                    Refresh();
                 }
             }
         }
@@ -195,18 +195,8 @@ namespace KamatekCrm.ViewModels
         public int ManualTotalItemCount => ManualCountItems?.Count ?? 0;
 
         // === EXCEL SAYIM KOMUTLARI ===
-        public ICommand SaveCountCommand { get; }
-        public ICommand RefreshCommand { get; }
-        public ICommand ExportToExcelCommand { get; }
-        public ICommand ImportFromExcelCommand { get; }
-        public ICommand ShowHistoryCommand { get; }
-        public ICommand CloseHistoryCommand { get; }
 
         // === MANUEL SAYIM KOMUTLARI ===
-        public ICommand AddToManualCountCommand { get; }
-        public ICommand RemoveFromManualCountCommand { get; }
-        public ICommand ConfirmManualCountCommand { get; }
-        public ICommand ClearManualListCommand { get; }
 
         public StockCountViewModel(Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> dbContextFactory)
         {
@@ -225,18 +215,8 @@ namespace KamatekCrm.ViewModels
             CountItemsView.Filter = FilterItems;
 
             // Excel Sayım Komutları
-            SaveCountCommand = new RelayCommand(_ => ExecuteSaveCount(), _ => CanExecuteSaveCount());
-            RefreshCommand = new RelayCommand(_ => LoadInventoryForWarehouse());
-            ExportToExcelCommand = new RelayCommand(_ => ExecuteExportToExcel(), _ => CountItems.Count > 0);
-            ImportFromExcelCommand = new RelayCommand(_ => ExecuteImportFromExcel(), _ => CountItems.Count > 0);
-            ShowHistoryCommand = new RelayCommand(_ => ExecuteShowHistory());
-            CloseHistoryCommand = new RelayCommand(_ => IsHistoryVisible = false);
 
             // Manuel Sayım Komutları
-            AddToManualCountCommand = new RelayCommand(_ => ExecuteAddToManualCount(), _ => CanAddToManualCount());
-            RemoveFromManualCountCommand = new RelayCommand(ExecuteRemoveFromManualCount);
-            ConfirmManualCountCommand = new RelayCommand(_ => ExecuteConfirmManualCount(), _ => CanConfirmManualCount());
-            ClearManualListCommand = new RelayCommand(_ => ExecuteClearManualList(), _ => ManualCountItems.Count > 0);
         }
 
         /// <summary>
@@ -258,7 +238,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Seçilen depo için envanter verilerini yükler
         /// </summary>
-        private void LoadInventoryForWarehouse()
+        [RelayCommand]
+        private void Refresh()
         {
             CountItems.Clear();
             StatusMessage = string.Empty;
@@ -333,7 +314,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Sayım sonuçlarını kaydeder ve stok düzeltmesi yapar
         /// </summary>
-        private void ExecuteSaveCount()
+        [RelayCommand]
+        private void SaveCount()
         {
             if (SelectedWarehouse == null) return;
 
@@ -399,7 +381,7 @@ namespace KamatekCrm.ViewModels
                 IsActionSuccessful = true;
 
                 // Listeyi yenile
-                LoadInventoryForWarehouse();
+                Refresh();
             }
             catch (Exception ex)
             {
@@ -412,7 +394,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Excel'e dışa aktarım
         /// </summary>
-        private void ExecuteExportToExcel()
+        [RelayCommand]
+        private void ExportToExcel()
         {
             if (CountItems.Count == 0)
             {
@@ -530,7 +513,8 @@ namespace KamatekCrm.ViewModels
         /// Excel'den sayım verilerini içe aktar
         /// SKU veya ModelName ile eşleştirme yapar
         /// </summary>
-        private void ExecuteImportFromExcel()
+        [RelayCommand]
+        private void ImportFromExcel()
         {
             if (CountItems.Count == 0)
             {
@@ -653,7 +637,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Sayım geçmişini yükle ve göster
         /// </summary>
-        private void ExecuteShowHistory()
+        [RelayCommand]
+        private void ShowHistory()
         {
             try
             {
@@ -773,7 +758,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Seçilen ürünü manuel sayım listesine ekle
         /// </summary>
-        private void ExecuteAddToManualCount()
+        [RelayCommand]
+        private void AddToManualCount()
         {
             if (ManualSelectedWarehouse == null)
             {
@@ -841,7 +827,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Ürünü manuel sayım listesinden çıkar
         /// </summary>
-        private void ExecuteRemoveFromManualCount(object? parameter)
+        [RelayCommand]
+        private void RemoveFromManualCount(object? parameter)
         {
             if (parameter is StockCountItem item)
             {
@@ -865,7 +852,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Manuel sayımı onayla ve stokları güncelle
         /// </summary>
-        private void ExecuteConfirmManualCount()
+        [RelayCommand]
+        private void ConfirmManualCount()
         {
             if (ManualSelectedWarehouse == null) return;
 
@@ -960,7 +948,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Manuel sayım listesini temizle
         /// </summary>
-        private void ExecuteClearManualList()
+        [RelayCommand]
+        private void ClearManualList()
         {
             if (ManualCountItems.Count == 0) return;
 
@@ -1045,6 +1034,7 @@ namespace KamatekCrm.ViewModels
         public string ReferenceId { get; set; } = string.Empty;
     }
 }
+
 
 
 

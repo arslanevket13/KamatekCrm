@@ -1,4 +1,4 @@
-using KamatekCrm.Shared.Enums;
+﻿using KamatekCrm.Shared.Enums;
 
 namespace KamatekCrm.ViewModels
 {

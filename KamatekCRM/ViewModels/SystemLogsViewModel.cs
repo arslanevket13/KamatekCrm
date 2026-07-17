@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
@@ -12,7 +12,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Sistem logları ViewModel
     /// </summary>
-    public class SystemLogsViewModel : ViewModelBase
+    public partial class SystemLogsViewModel : ViewModelBase
     {
         private readonly IAuthService _authService;
         private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
@@ -37,7 +37,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    LoadLogs();
+                    Refresh();
                 }
             }
         }
@@ -52,7 +52,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedActionFilter, value))
                 {
-                    LoadLogs();
+                    Refresh();
                 }
             }
         }
@@ -67,7 +67,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedEntityFilter, value))
                 {
-                    LoadLogs();
+                    Refresh();
                 }
             }
         }
@@ -82,7 +82,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _startDate, value))
                 {
-                    LoadLogs();
+                    Refresh();
                 }
             }
         }
@@ -97,7 +97,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _endDate, value))
                 {
-                    LoadLogs();
+                    Refresh();
                 }
             }
         }
@@ -130,19 +130,6 @@ namespace KamatekCrm.ViewModels
         };
 
         /// <summary>
-        /// Yenile komutu
-        /// </summary>
-        public ICommand RefreshCommand { get; }
-
-        /// <summary>
-        /// Filtreleri temizle komutu
-        /// </summary>
-        public ICommand ClearFiltersCommand { get; }
-
-        /// <summary>
-        /// Admin mi?
-        /// </summary>
-        /// <summary>
         /// Admin mi?
         /// </summary>
         public bool IsAdmin => _authService.IsAdmin;
@@ -150,27 +137,23 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <summary>
-        /// Constructor
-        /// </summary>
         public SystemLogsViewModel(IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
-            RefreshCommand = new RelayCommand(_ => LoadLogs());
-            ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
 
             // Varsayılan: Son 7 gün
             _startDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-7);
             _endDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(1);
 
-            LoadLogs();
+            Refresh();
         }
 
         /// <summary>
         /// Logları yükle
         /// </summary>
-        private void LoadLogs()
+        [RelayCommand]
+        private void Refresh()
         {
             Logs.Clear();
 
@@ -227,6 +210,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Filtreleri temizle
         /// </summary>
+        [RelayCommand]
         private void ClearFilters()
         {
             _searchText = string.Empty;
@@ -241,7 +225,7 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(StartDate));
             OnPropertyChanged(nameof(EndDate));
 
-            LoadLogs();
+            Refresh();
         }
     }
 }

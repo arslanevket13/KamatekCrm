@@ -508,7 +508,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBox Grid.Column="0" Text="{Binding NewProduct.SKU, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernTextBox}"/>
-                                <Button Grid.Column="1" Content="🔄" Command="{Binding GenerateSKUCommand}" 
+                                <Button Grid.Column="1" Content="🔄" Command="{Binding RegenerateSKUCommand}" 
                                         Width="40" Margin="8,0,0,0" ToolTip="Yeni SKU Üret"/>
                             </Grid>
                         </StackPanel>

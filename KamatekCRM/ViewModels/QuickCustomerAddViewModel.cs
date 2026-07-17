@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -12,7 +12,7 @@ namespace KamatekCrm.ViewModels
     /// POS ekranından hızlı yeni müşteri kaydı için ViewModel.
     /// Başarılı kayıt sonucu SavedCustomer set edilir ve pencere kapanır.
     /// </summary>
-    public class QuickCustomerAddViewModel : ViewModelBase
+    public partial class QuickCustomerAddViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
         private string _fullName = string.Empty;
@@ -77,20 +77,11 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand SaveCustomerCommand { get; }
-        public ICommand CancelCommand { get; }
-
         #endregion
 
         public QuickCustomerAddViewModel()
         {
             _context = new AppDbContext();
-
-            SaveCustomerCommand = new RelayCommand(
-                _ => ExecuteSaveCustomer(),
-                _ => !string.IsNullOrWhiteSpace(FullName) && !IsBusy);
-
-            CancelCommand = new RelayCommand(_ => RequestClose?.Invoke(false));
         }
 
         /// <summary>
@@ -98,7 +89,14 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public event Action<bool>? RequestClose;
 
-        private void ExecuteSaveCustomer()
+        private bool CanSaveCustomer() => !string.IsNullOrWhiteSpace(FullName) && !IsBusy;
+
+        [RelayCommand]
+        private void Cancel() => RequestClose?.Invoke(false);
+
+        [RelayCommand(CanExecute = nameof(CanSaveCustomer))]
+        private void SaveCustomer()
+
         {
             if (string.IsNullOrWhiteSpace(FullName))
             {
@@ -142,3 +140,6 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+
+
+

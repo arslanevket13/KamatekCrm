@@ -1,33 +1,24 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
-    public class SuppliersViewModel : ViewModelBase
+    public partial class SuppliersViewModel : ViewModelBase
     {
         private readonly IUnitOfWork _unitOfWork;
 
         public SuppliersViewModel(IUnitOfWork unitOfWork)
         {
-            _unitOfWork = unitOfWork;
-            
-            // Commands
-            LoadDataCommand = new RelayCommand(async _ => await LoadData());
-            SaveSupplierCommand = new RelayCommand(async _ => await Save(), _ => SelectedSupplier != null);
-            DeleteSupplierCommand = new RelayCommand(async _ => await Delete(), _ => SelectedSupplier != null && SelectedSupplier.Id > 0);
-            AddSupplierCommand = new RelayCommand(_ => AddNew());
-            ClearSearchCommand = new RelayCommand(_ => SearchText = string.Empty);
-
-            // Immediate Load
-            _ = LoadData();
+            _unitOfWork = unitOfWork;            // Immediate Load
+            _ = Refresh();
         }
 
         #region Properties
@@ -54,7 +45,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    _ = LoadData();
+                    _ = Refresh();
                 }
             }
         }
@@ -68,19 +59,19 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        #region Commands
+        private bool CanSaveSupplier() => SelectedSupplier != null;
+        private bool CanDeleteSupplier() => SelectedSupplier != null && SelectedSupplier.Id > 0;
 
-        public ICommand LoadDataCommand { get; }
-        public ICommand SaveSupplierCommand { get; }
-        public ICommand DeleteSupplierCommand { get; }
-        public ICommand AddSupplierCommand { get; }
-        public ICommand ClearSearchCommand { get; }
-
-        #endregion
+        [RelayCommand]
+        private void Clear()
+        {
+            SearchText = string.Empty;
+        }
 
         #region Methods
 
-        private async Task LoadData()
+        [RelayCommand]
+        private async Task Refresh()
         {
             if (IsBusy) return;
             IsBusy = true;
@@ -108,7 +99,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void AddNew()
+        [RelayCommand]
+        private void AddSupplier()
         {
             SelectedSupplier = new Supplier
             {
@@ -117,7 +109,8 @@ namespace KamatekCrm.ViewModels
             };
         }
 
-        private async Task Save()
+        [RelayCommand(CanExecute = nameof(CanSaveSupplier))]
+        private async Task SaveSupplier()
         {
             if (SelectedSupplier == null) return;
             
@@ -146,7 +139,7 @@ namespace KamatekCrm.ViewModels
                 }
 
                 await _unitOfWork.SaveChangesAsync();
-                await LoadData();
+                await Refresh();
                 MessageBox.Show("Kayıt Başarılı.", "Bilgi");
             }
             catch (Exception ex)
@@ -159,7 +152,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async Task Delete()
+        [RelayCommand(CanExecute = nameof(CanDeleteSupplier))]
+        private async Task DeleteSupplier()
         {
             if (SelectedSupplier == null) return;
 
@@ -172,7 +166,7 @@ namespace KamatekCrm.ViewModels
                     _unitOfWork.Context.Suppliers.Remove(SelectedSupplier);
                     await _unitOfWork.SaveChangesAsync();
                     SelectedSupplier = null;
-                    await LoadData();
+                    await Refresh();
                 }
                 catch (Exception ex)
                 {

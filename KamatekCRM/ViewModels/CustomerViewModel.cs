@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic; // List i�in gerekli
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -8,7 +8,7 @@ using System.Text; // UTF8 encoding için gerekli
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -22,7 +22,7 @@ namespace KamatekCrm.ViewModels
     /// Mteri ynetimi ViewModel
     /// </summary>
     // DZELTME 1: Snf ad 'CustomersViewModel' yapld (Sonunda 's' var)
-    public class CustomersViewModel : KamatekCrm.ViewModels.Common.PaginationViewModel
+    public partial class CustomersViewModel : KamatekCrm.ViewModels.Common.PaginationViewModel
     {
         private readonly ApiClient _apiClient;
         private Customer? _selectedCustomer;
@@ -278,27 +278,20 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _newTaxOffice, value);
         }
 
-        public ICommand SaveCustomerCommand { get; }
-        public ICommand DeleteCustomerCommand { get; }
-        public ICommand ClearFormCommand { get; }
-        public ICommand ViewProfileCommand { get; }
-        public ICommand ClearTypeFilterCommand { get; }
-        public ICommand SetTypeFilterCommand { get; }
-        public ICommand OpenAddCustomerWindowCommand { get; }
-        public ICommand OpenCustomerProfileCommand { get; }
+        private bool IsCustomerSelected() => SelectedCustomer != null;
 
+        [RelayCommand]
         private void ClearTypeFilter()
         {
             SelectedTypeFilter = null;
         }
 
+        [RelayCommand]
         private void SetTypeFilter(object? param)
         {
             if (param is CustomerType type)
                 SelectedTypeFilter = type;
         }
-
-
         private readonly NavigationService _navigationService;
         private readonly ILogger<CustomersViewModel> _logger;
         private readonly IToastService _toastService;
@@ -319,14 +312,6 @@ namespace KamatekCrm.ViewModels
             _customersView = CollectionViewSource.GetDefaultView(Customers);
             // _customersView.Filter = FilterCustomers; // DB Paging kullandığımız için kaldırıldı
 
-            SaveCustomerCommand = new RelayCommand(_ => SaveCustomer(), _ => CanSaveCustomer());
-            DeleteCustomerCommand = new RelayCommand(_ => DeleteCustomer(), _ => SelectedCustomer != null);
-            ClearFormCommand = new RelayCommand(_ => ClearForm());
-            ViewProfileCommand = new RelayCommand(_ => ViewProfile(), _ => SelectedCustomer != null);
-            ClearTypeFilterCommand = new RelayCommand(_ => ClearTypeFilter());
-            SetTypeFilterCommand = new RelayCommand(p => SetTypeFilter(p));
-            OpenAddCustomerWindowCommand = new RelayCommand(_ => OpenAddCustomerWindow());
-            OpenCustomerProfileCommand = new RelayCommand(_ => OpenCustomerProfile(), _ => SelectedCustomer != null);
 
             _logger.LogInformation("CustomersViewModel initialized");
 
@@ -403,7 +388,8 @@ namespace KamatekCrm.ViewModels
                    !string.IsNullOrWhiteSpace(City);
         }
 
-        private async void SaveCustomer()
+        [RelayCommand(CanExecute = nameof(CanSaveCustomer))]
+        private async Task SaveCustomer()
         {
             try
             {
@@ -466,7 +452,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async void DeleteCustomer()
+        [RelayCommand(CanExecute = nameof(IsCustomerSelected))]
+        private async Task DeleteCustomer()
         {
             if (SelectedCustomer == null) return;
 
@@ -496,6 +483,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void ClearForm()
         {
             SelectedCustomer = null;
@@ -589,12 +577,14 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand(CanExecute = nameof(IsCustomerSelected))]
         private void ViewProfile()
         {
             if (SelectedCustomer == null) return;
             OpenCustomerProfile();
         }
 
+        [RelayCommand]
         private void OpenAddCustomerWindow()
         {
             var window = new Views.CustomerAddWindow();
@@ -612,6 +602,7 @@ namespace KamatekCrm.ViewModels
             window.ShowDialog();
         }
 
+        [RelayCommand(CanExecute = nameof(IsCustomerSelected))]
         private void OpenCustomerProfile()
         {
             if (SelectedCustomer == null) return;

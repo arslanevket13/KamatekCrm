@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 
 namespace KamatekCrm.ViewModels
 {
-    public class QuickAssetAddViewModel : ViewModelBase
+    public partial class QuickAssetAddViewModel : ViewModelBase
     {
         private readonly int _customerId;
         private string _selectedCategoryTag;
@@ -51,9 +51,6 @@ namespace KamatekCrm.ViewModels
 
         public CustomerAsset? CreatedAsset { get; private set; }
 
-        public ICommand SaveCommand { get; }
-        public ICommand CancelCommand { get; }
-
         // Action to close the window (View Service / Interaction Request pattern)
         public Action<bool>? RequestClose { get; set; }
 
@@ -65,9 +62,6 @@ namespace KamatekCrm.ViewModels
             _model = string.Empty;
             _serialNumber = string.Empty;
             _location = string.Empty;
-
-            SaveCommand = new RelayCommand(_ => ExecuteSave(), _ => CanExecuteSave());
-            CancelCommand = new RelayCommand(_ => ExecuteCancel());
         }
 
         private bool CanExecuteSave()
@@ -75,12 +69,14 @@ namespace KamatekCrm.ViewModels
             return !string.IsNullOrWhiteSpace(Brand) && !string.IsNullOrWhiteSpace(Model);
         }
 
-        private void ExecuteCancel()
+        [RelayCommand]
+        private void Cancel()
         {
             RequestClose?.Invoke(false);
         }
 
-        private void ExecuteSave()
+        [RelayCommand]
+        private void Save()
         {
             if (string.IsNullOrWhiteSpace(Brand))
             {
@@ -136,3 +132,4 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Repositories;
 using KamatekCrm.Services;
 using KamatekCrm.Services.Domain;
@@ -96,7 +96,7 @@ namespace KamatekCrm.ViewModels
         }
     }
 
-    public class PurchasingViewModel : ViewModelBase
+    public partial class PurchasingViewModel : ViewModelBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPurchasingDomainService _purchasingService;
@@ -115,22 +115,9 @@ namespace KamatekCrm.ViewModels
             SidebarSearchResults = new ObservableCollection<Product>();
 
             // Commands
-            OpenSidebarCommand = new RelayCommand(_ => { ResetSidebar(); IsSidebarOpen = true; });
-            CloseSidebarCommand = new RelayCommand(_ => IsSidebarOpen = false);
-            AddLineItemCommand = new RelayCommand(_ => ExecuteAddLineItem());
-            RemoveLineItemCommand = new RelayCommand<PurchasingLineItem?>(ExecuteRemoveLineItem);
-            SelectSearchResultCommand = new RelayCommand<Product?>(ExecuteSelectSearchResult);
-            SaveAndReceiveCommand = new RelayCommand(async _ => await ExecuteSaveAndReceive());
-            OpenHistoryCommand = new RelayCommand(_ => IsHistoryOpen = true);
-            CloseHistoryCommand = new RelayCommand(_ => IsHistoryOpen = false);
-            CreateNewProductCommand = new RelayCommand(_ =>
-            {
-                SidebarItem.IsNewProduct = true;
-                IsShowingSearchResults = false;
-                SidebarItem.ProductName = SidebarSearchQuery; // Copy query to name
-            });
 
-            // Init
+            
+                // Init
             _ = InitializeAsync();
         }
 
@@ -251,19 +238,20 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
+
         #region Commands
 
-        public ICommand OpenSidebarCommand { get; }
-        public ICommand CloseSidebarCommand { get; }
-        public ICommand AddLineItemCommand { get; }
-        public ICommand RemoveLineItemCommand { get; }
-        public ICommand SelectSearchResultCommand { get; }
-        public ICommand SaveAndReceiveCommand { get; }
-        public ICommand OpenHistoryCommand { get; }
-        public ICommand CloseHistoryCommand { get; }
-        public ICommand CreateNewProductCommand { get; }
+        
+        
+        
+        
+        
+        
+        
+        
 
         #endregion
+
 
         #region Methods
 
@@ -334,7 +322,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void ExecuteSelectSearchResult(Product? product)
+        [RelayCommand]
+        private void SelectSearchResult(Product? product)
         {
             if (product == null) return;
             
@@ -352,7 +341,16 @@ namespace KamatekCrm.ViewModels
             IsShowingSearchResults = false;
         }
 
-        private void ExecuteAddLineItem()
+        [RelayCommand]
+        private void CreateNewProduct()
+        {
+            SidebarItem.IsNewProduct = true;
+            IsShowingSearchResults = false;
+            SidebarItem.ProductName = SidebarSearchQuery;
+        }
+
+        [RelayCommand]
+        private void AddLineItem()
         {
             if (SidebarItem == null) return;
 
@@ -373,7 +371,8 @@ namespace KamatekCrm.ViewModels
             IsSidebarOpen = false;
         }
 
-        private void ExecuteRemoveLineItem(PurchasingLineItem? item)
+        [RelayCommand]
+        private void RemoveLineItem(PurchasingLineItem? item)
         {
             if (item != null)
             {
@@ -382,7 +381,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async Task ExecuteSaveAndReceive()
+        [RelayCommand]
+        private async Task SaveAndReceive()
         {
             if (SelectedSupplier == null)
             {
@@ -518,5 +518,9 @@ namespace KamatekCrm.ViewModels
         }
 
         #endregion
+
     }
 }
+
+
+

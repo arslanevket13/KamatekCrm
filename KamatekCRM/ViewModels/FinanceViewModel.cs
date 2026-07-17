@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -18,7 +18,7 @@ namespace KamatekCrm.ViewModels
     /// Finans / Kasa Modülü ViewModel
     /// Günlük gelir/gider takibi ve gün sonu raporu
     /// </summary>
-    public class FinanceViewModel : ViewModelBase
+    public partial class FinanceViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
         private readonly IAuthService _authService;
@@ -36,7 +36,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedDate, value))
                 {
-                    LoadData();
+                    Refresh();
                 }
             }
         }
@@ -49,7 +49,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _showMonthly, value))
                 {
-                    LoadData();
+                    Refresh();
                 }
             }
         }
@@ -140,13 +140,6 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand AddExpenseCommand { get; }
-        public ICommand RefreshCommand { get; }
-        public ICommand DeleteTransactionCommand { get; }
-        public ICommand PreviousDayCommand { get; }
-        public ICommand NextDayCommand { get; }
-        public ICommand GoToTodayCommand { get; }
-
         #endregion
 
         #region Constructor
@@ -160,21 +153,16 @@ namespace KamatekCrm.ViewModels
             FilteredTransactions.Filter = FilterTransactions;
             FilteredTransactions.SortDescriptions.Add(new SortDescription(nameof(CashTransaction.Date), ListSortDirection.Descending));
 
-            AddExpenseCommand = new RelayCommand(_ => AddExpense(), _ => CanAddExpense());
-            RefreshCommand = new RelayCommand(_ => LoadData());
-            DeleteTransactionCommand = new RelayCommand(DeleteTransaction, CanDeleteTransaction);
-            PreviousDayCommand = new RelayCommand(_ => SelectedDate = SelectedDate.AddDays(-1));
-            NextDayCommand = new RelayCommand(_ => SelectedDate = SelectedDate.AddDays(1));
-            GoToTodayCommand = new RelayCommand(_ => SelectedDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc));
 
-            LoadData();
+            Refresh();
         }
 
         #endregion
 
         #region Methods
 
-        private void LoadData()
+        [RelayCommand]
+        private void Refresh()
         {
             IsBusy = true;
             try
@@ -253,6 +241,7 @@ namespace KamatekCrm.ViewModels
             return NewExpenseAmount > 0 && !string.IsNullOrWhiteSpace(NewExpenseDescription);
         }
 
+        [RelayCommand(CanExecute = nameof(CanAddExpense))]
         private void AddExpense()
         {
             try
@@ -278,7 +267,7 @@ namespace KamatekCrm.ViewModels
                 NewExpenseDescription = string.Empty;
                 NewExpenseCategory = "Genel";
 
-                LoadData();
+                Refresh();
             }
             catch (Exception ex)
             {
@@ -291,6 +280,7 @@ namespace KamatekCrm.ViewModels
             return parameter is CashTransaction && _authService.IsAdmin;
         }
 
+        [RelayCommand(CanExecute = nameof(CanDeleteTransaction))]
         private void DeleteTransaction(object? parameter)
         {
             if (parameter is not CashTransaction transaction) return;
@@ -307,7 +297,7 @@ namespace KamatekCrm.ViewModels
             {
                 _context.CashTransactions.Remove(transaction);
                 _context.SaveChanges();
-                LoadData();
+                Refresh();
             }
             catch (Exception ex)
             {
@@ -315,6 +305,16 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void PreviousDay() => SelectedDate = SelectedDate.AddDays(-1);
+
+        [RelayCommand]
+        private void NextDay() => SelectedDate = SelectedDate.AddDays(1);
+
+        [RelayCommand]
+        private void GoToToday() => SelectedDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+
         #endregion
     }
 }
+

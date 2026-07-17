@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 
@@ -12,7 +12,7 @@ namespace KamatekCrm.ViewModels
     /// Sifre sifirlama/degistirme ViewModel
     /// API uzerinden sifre degistirme islemi yapar.
     /// </summary>
-    public class PasswordResetViewModel : ViewModelBase
+    public partial class PasswordResetViewModel : ViewModelBase
     {
         private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
@@ -86,9 +86,6 @@ namespace KamatekCrm.ViewModels
 
         public bool HasStatusMessage => !string.IsNullOrEmpty(StatusMessage);
 
-        public ICommand SaveCommand { get; }
-        public ICommand CancelCommand { get; }
-
         public event Action? SaveSuccessful;
         public event Action? CancelRequested;
 
@@ -97,9 +94,6 @@ namespace KamatekCrm.ViewModels
             _user = user;
             _authService = authService;
             _apiClient = apiClient;
-
-            SaveCommand = new RelayCommand(async _ => await SavePasswordAsync(), _ => CanSavePassword());
-            CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
         }
 
         private bool CanSavePassword()
@@ -110,7 +104,8 @@ namespace KamatekCrm.ViewModels
                    PasswordsMatch;
         }
 
-        private async Task SavePasswordAsync()
+        [RelayCommand]
+        private async Task SaveAsync()
         {
             try
             {
@@ -152,3 +147,4 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+

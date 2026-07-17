@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 
 namespace KamatekCrm.ViewModels.Common
 {
@@ -74,13 +74,8 @@ namespace KamatekCrm.ViewModels.Common
         public bool HasPreviousPage => CurrentPage > 1;
         public bool HasNextPage => CurrentPage < TotalPages;
 
-        public ICommand NextPageCommand { get; }
-        public ICommand PreviousPageCommand { get; }
-
         protected PaginationViewModel()
         {
-            NextPageCommand = new RelayCommand(_ => NextPage(), _ => HasNextPage);
-            PreviousPageCommand = new RelayCommand(_ => PreviousPage(), _ => HasPreviousPage);
         }
 
         private void NextPage()
@@ -96,3 +91,5 @@ namespace KamatekCrm.ViewModels.Common
         protected abstract Task RefreshDataAsync();
     }
 }
+
+

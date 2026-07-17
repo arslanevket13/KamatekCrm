@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +18,7 @@ namespace KamatekCrm.ViewModels
     /// Arıza & Servis Kaydı ViewModel — DI + Async + Toast
     /// Hızlı arıza/servis kaydı için optimize edilmiş basit akış
     /// </summary>
-    public class FaultTicketViewModel : ViewModelBase
+    public partial class FaultTicketViewModel : ViewModelBase
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IToastService _toastService;
@@ -230,11 +230,6 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand SaveFaultTicketCommand { get; }
-        public ICommand CancelCommand { get; }
-        public ICommand AddPhotoCommand { get; }
-        public ICommand RemovePhotoCommand { get; }
-
         #endregion
 
         #region Constructor
@@ -243,12 +238,6 @@ namespace KamatekCrm.ViewModels
         {
             _serviceProvider = serviceProvider;
             _toastService = toastService;
-
-            SaveFaultTicketCommand = new RelayCommand(async _ => await SaveFaultTicketAsync(), _ => CanSave());
-            CancelCommand = new RelayCommand(_ => Cancel());
-            AddPhotoCommand = new RelayCommand(_ => ExecuteAddPhoto());
-            RemovePhotoCommand = new RelayCommand<string>(ExecuteRemovePhoto);
-
             _ = LoadCustomersAsync();
             UpdateDeviceTypeOptions();
         }
@@ -341,7 +330,8 @@ namespace KamatekCrm.ViewModels
                    !IsSaving;
         }
 
-        private async Task SaveFaultTicketAsync()
+        [RelayCommand(CanExecute = nameof(CanSave))]
+        private async Task SaveFaultTicket()
         {
             if (IsSaving) return;
             IsSaving = true;
@@ -480,6 +470,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void Cancel()
         {
             ClearForm();
@@ -511,7 +502,8 @@ namespace KamatekCrm.ViewModels
             TempPhotoPaths.Clear();
         }
 
-        private void ExecuteAddPhoto()
+        [RelayCommand]
+        private void AddPhoto()
         {
             var openFileDialog = new Microsoft.Win32.OpenFileDialog
             {
@@ -527,7 +519,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void ExecuteRemovePhoto(string? path)
+        [RelayCommand]
+        private void RemovePhoto(string? path)
         {
             if (path != null && TempPhotoPaths.Contains(path))
             {
@@ -538,3 +531,4 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
+

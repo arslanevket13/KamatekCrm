@@ -1,7 +1,7 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
 using CommunityToolkit.Mvvm.Messaging;
@@ -11,7 +11,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Ana ViewModel - Navigasyon kontrolü
     /// </summary>
-    public class MainViewModel : ViewModelBase
+    public partial class MainViewModel : ViewModelBase
     {
         private readonly NavigationService _navigationService;
         private readonly IAuthService _authService;
@@ -58,57 +58,46 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Dashboard sayfasına git komutu
         /// </summary>
-        public ICommand NavigateToDashboardCommand { get; }
 
         /// <summary>
         /// Müşteriler sayfasına git komutu
         /// </summary>
-        public ICommand NavigateToCustomersCommand { get; }
 
         /// <summary>
         /// Stoklar sayfasına git komutu
         /// </summary>
-        public ICommand NavigateToProductsCommand { get; }
 
         /// <summary>
         /// İş Emirleri sayfasına git komutu
         /// </summary>
-        public ICommand NavigateToServiceJobsCommand { get; }
 
         /// <summary>
         /// Tamir Listesi sayfasına git komutu
         /// </summary>
-        public ICommand NavigateToRepairListCommand { get; }
 
         /// <summary>
         /// Saha İşleri sayfasına git komutu
         /// </summary>
-        public ICommand NavigateToFieldJobListCommand { get; }
 
         /// <summary>
         /// Stok Sayım sayfasına git komutu
         /// </summary>
-        public ICommand NavigateToStockCountCommand { get; }
 
         /// <summary>
         /// Stok Raporları sayfasına git komutu
         /// </summary>
-        public ICommand NavigateToReportsCommand { get; }
 
         /// <summary>
         /// Kullanıcılar sayfasına git komutu
         /// </summary>
-        public ICommand NavigateToUsersCommand { get; }
 
         /// <summary>
         /// Çıkış yap komutu
         /// </summary>
-        public ICommand LogoutCommand { get; }
 
         /// <summary>
         /// Arıza Kaydı penceresi aç komutu
         /// </summary>
-        public ICommand OpenFaultTicketCommand { get; }
 
         #endregion
 
@@ -132,19 +121,6 @@ namespace KamatekCrm.ViewModels
             });
 
             // Komutları tanımla
-            NavigateToDashboardCommand = new RelayCommand(_ => NavigateToDashboard());
-            NavigateToCustomersCommand = new RelayCommand(_ => NavigateToCustomers());
-            NavigateToProductsCommand = new RelayCommand(_ => NavigateToProducts());
-            NavigateToServiceJobsCommand = new RelayCommand(_ => NavigateToServiceJobs());
-            NavigateToRepairListCommand = new RelayCommand(_ => NavigateToRepairList());
-            NavigateToFieldJobListCommand = new RelayCommand(_ => NavigateToFieldJobList());
-            NavigateToStockCountCommand = new RelayCommand(_ => NavigateToStockCount());
-            NavigateToReportsCommand = new RelayCommand(_ => NavigateToReports());
-            NavigateToUsersCommand = new RelayCommand(_ => NavigateToUsers(), _ => IsAdmin);
-            LogoutCommand = new RelayCommand(_ => Logout());
-            OpenFaultTicketCommand = new RelayCommand(_ => OpenFaultTicket());
-            NavigateToSettingsCommand = new RelayCommand(_ => NavigateToSettings());
-            GoToSettingsCommand = new RelayCommand(_ => GoToSettings());
 
             // Varsayılan olarak Dashboard sayfasını göster
             NavigateToDashboard();
@@ -152,14 +128,23 @@ namespace KamatekCrm.ViewModels
 
         #region Navigation Methods
 
+        [RelayCommand]
         private void NavigateToDashboard() => _navigationService.NavigateTo<DashboardViewModel>();
+        [RelayCommand]
         private void NavigateToCustomers() => _navigationService.NavigateTo<CustomersViewModel>();
+        [RelayCommand]
         private void NavigateToProducts() => _navigationService.NavigateTo<ProductViewModel>();
+        [RelayCommand]
         private void NavigateToServiceJobs() => _navigationService.NavigateTo<ServiceJobViewModel>();
+        [RelayCommand]
         public void NavigateToRepairList() => _navigationService.NavigateTo<RepairListViewModel>();
+        [RelayCommand]
         public void NavigateToFieldJobList() => _navigationService.NavigateTo<FieldJobListViewModel>();
+        [RelayCommand]
         private void NavigateToStockCount() => _navigationService.NavigateTo<StockCountViewModel>();
+        [RelayCommand]
         private void NavigateToReports() => _navigationService.NavigateTo<StockReportsViewModel>();
+        [RelayCommand]
         private void NavigateToUsers() => _navigationService.NavigateTo<UsersViewModel>();
 
         /// <summary>
@@ -174,6 +159,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Arıza Kaydı penceresini aç
         /// </summary>
+        [RelayCommand]
         private void OpenFaultTicket()
         {
             // Arıza Kaydı — DI ile ViewModel çözümlenir
@@ -182,8 +168,10 @@ namespace KamatekCrm.ViewModels
             window.ShowDialog();
         }
 
+        [RelayCommand]
         private void NavigateToSettings() => _navigationService.NavigateTo<SettingsViewModel>();
 
+        [RelayCommand]
         private void GoToSettings()
         {
             IsConnectionLost = false; // Overlay'i gizle
@@ -193,18 +181,17 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Ayarlar sayfasına git komutu
         /// </summary>
-        public ICommand NavigateToSettingsCommand { get; }
 
         /// <summary>
         /// Kilitlenmeyi aşarak Ayarlar sayfasına git komutu
         /// </summary>
-        public ICommand GoToSettingsCommand { get; }
 
         #endregion
 
         /// <summary>
         /// Çıkış yap
         /// </summary>
+        [RelayCommand]
         private void Logout()
         {
             var result = MessageBox.Show(
@@ -246,4 +233,5 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+
 

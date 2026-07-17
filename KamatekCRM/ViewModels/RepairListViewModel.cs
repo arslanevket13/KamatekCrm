@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
@@ -19,7 +19,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Cihaz Kabul & Tamir Listesi ViewModel — DI + Async + Toast
     /// </summary>
-    public class RepairListViewModel : ViewModelBase
+    public partial class RepairListViewModel : ViewModelBase
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IToastService _toastService;
@@ -86,10 +86,6 @@ namespace KamatekCrm.ViewModels
         }
 
         // Commands
-        public ICommand RefreshCommand { get; }
-        public ICommand ClearFiltersCommand { get; }
-        public ICommand PrintTicketCommand { get; }
-        public ICommand CreateNewRepairCommand { get; }
 
         // ===== DETAY & İŞLEM =====
         private RepairJobDisplayItem? _selectedDisplayItem;
@@ -150,13 +146,6 @@ namespace KamatekCrm.ViewModels
         public decimal GrandTotal => (SelectedJob == null) ? 0 : MaterialTotal + SelectedJob.LaborCost - SelectedJob.DiscountAmount;
 
         // ===== WORKFLOW COMMANDS =====
-        public ICommand UpdateStatusCommand { get; }
-        public ICommand AddNoteCommand { get; }
-        public ICommand AddItemToJobCommand { get; }
-        public ICommand RemoveItemFromJobCommand { get; }
-        public ICommand CompleteJobCommand { get; }
-        public ICommand AddPhotoCommand { get; }
-        public ICommand OpenPhotoCommand { get; }
 
         public RepairListViewModel(IServiceProvider serviceProvider, IToastService toastService)
         {
@@ -169,19 +158,8 @@ namespace KamatekCrm.ViewModels
             InitializeStatusOptions();
 
             // Commands
-            RefreshCommand = new RelayCommand(async _ => await LoadRepairJobsAsync());
-            ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
-            CreateNewRepairCommand = new RelayCommand(ExecuteCreateNewRepair);
 
             // Workflow Commands
-            UpdateStatusCommand = new RelayCommand<RepairStatus?>(async s => await UpdateStatusAsync(s));
-            AddNoteCommand = new RelayCommand(async _ => await AddNoteAsync());
-            AddItemToJobCommand = new RelayCommand(async _ => await AddItemToJobAsync());
-            RemoveItemFromJobCommand = new RelayCommand(async p => await RemoveItemFromJobAsync(p));
-            CompleteJobCommand = new RelayCommand(async _ => await CompleteJobAsync());
-            AddPhotoCommand = new RelayCommand(async _ => await AddPhotoAsync());
-            OpenPhotoCommand = new RelayCommand<string>(OpenPhoto);
-            PrintTicketCommand = new RelayCommand(ExecutePrintTicket);
 
             // CollectionView
             FilteredRepairJobs = CollectionViewSource.GetDefaultView(AllRepairJobs);
@@ -201,7 +179,7 @@ namespace KamatekCrm.ViewModels
         private async Task InitializeAsync()
         {
             await LoadProductsAsync();
-            await LoadRepairJobsAsync();
+            await RefreshAsync();
         }
 
         // ===== DATA LOADING (Async + Scoped DbContext) =====
@@ -320,6 +298,7 @@ namespace KamatekCrm.ViewModels
 
         // ===== WORKFLOW ACTIONS (Async) =====
 
+        [RelayCommand]
         private async Task UpdateStatusAsync(RepairStatus? newStatus)
         {
             if (SelectedJob == null || newStatus == null) return;
@@ -379,13 +358,15 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private async Task AddNoteAsync()
         {
             if (SelectedJob == null || string.IsNullOrWhiteSpace(NewNoteText)) return;
             await UpdateStatusAsync(SelectedJob.RepairStatus);
         }
 
-        private async Task AddItemToJobAsync()
+        [RelayCommand]
+        private async Task temToJobAsync()
         {
             if (SelectedJob == null || SelectedProductToAdd == null) return;
 
@@ -419,7 +400,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async Task RemoveItemFromJobAsync(object? param)
+        [RelayCommand]
+        private async Task temFromJobAsync(object? param)
         {
             if (param is not ServiceJobItem item) return;
 
@@ -445,6 +427,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private async Task CompleteJobAsync()
         {
             if (SelectedJob == null) return;
@@ -510,6 +493,7 @@ namespace KamatekCrm.ViewModels
 
         // ===== PHOTO MANAGEMENT =====
 
+        [RelayCommand]
         private async Task AddPhotoAsync()
         {
             if (SelectedJob == null) return;
@@ -561,6 +545,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void OpenPhoto(string? path)
         {
             if (!string.IsNullOrEmpty(path) && System.IO.File.Exists(path))
@@ -588,7 +573,8 @@ namespace KamatekCrm.ViewModels
             StatusOptions.Add(new RepairStatusOption { Status = RepairStatus.Unrepairable, DisplayName = "İade/Hurda", Icon = "❌" });
         }
 
-        private async Task LoadRepairJobsAsync()
+        [RelayCommand]
+        private async Task RefreshAsync()
         {
             if (IsBusy) return;
             IsBusy = true;
@@ -663,6 +649,7 @@ namespace KamatekCrm.ViewModels
             return true;
         }
 
+        [RelayCommand]
         private void ClearFilters()
         {
             SearchText = string.Empty;
@@ -671,7 +658,8 @@ namespace KamatekCrm.ViewModels
             EndDate = null;
         }
 
-        private void ExecutePrintTicket(object? parameter)
+        [RelayCommand]
+        private void PrintTicket(object? parameter)
         {
             if (SelectedJob == null) return;
 
@@ -703,13 +691,14 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async void ExecuteCreateNewRepair(object? parameter)
+        [RelayCommand]
+        private async void CreateNewRepair(object? parameter)
         {
             var faultVm = _serviceProvider.GetRequiredService<FaultTicketViewModel>();
             var regWindow = new Views.FaultTicketWindow(faultVm);
             if (regWindow.ShowDialog() == true)
             {
-                await LoadRepairJobsAsync();
+                await RefreshAsync();
             }
         }
     }
@@ -793,3 +782,6 @@ namespace KamatekCrm.ViewModels
         public string FullDisplay => $"{Icon} {DisplayName}";
     }
 }
+
+
+

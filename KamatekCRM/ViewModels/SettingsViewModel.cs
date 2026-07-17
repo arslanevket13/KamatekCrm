@@ -1,23 +1,21 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Services;
 
 namespace KamatekCrm.ViewModels
 {
-    public class SettingsViewModel : ViewModelBase
+    public partial class SettingsViewModel : ViewModelBase
     {
         private readonly BackupService _backupService;
 
         public SettingsViewModel()
         {
             _backupService = new BackupService();
-            TakeBackupCommand = new RelayCommand(_ => TakeBackup(), _ => !IsBusy);
-            RestoreBackupCommand = new RelayCommand(_ => RestoreBackup(), _ => !IsBusy);
             
             // Ayarları Properties.Settings.Default'tan yükle
             string savedThemeId = Properties.Settings.Default.ThemePreference;
@@ -118,8 +116,7 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand TakeBackupCommand { get; }
-        public ICommand RestoreBackupCommand { get; }
+        private bool IsNotBusy() => !IsBusy;
 
         #endregion
 
@@ -155,7 +152,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async void TakeBackup()
+        [RelayCommand(CanExecute = nameof(IsNotBusy))]
+        private async Task TakeBackup()
         {
             IsBusy = true;
             try
@@ -179,7 +177,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async void RestoreBackup()
+        [RelayCommand(CanExecute = nameof(IsNotBusy))]
+        private async Task RestoreBackup()
         {
             // 1. Dosya seçme dialogu
             var docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);

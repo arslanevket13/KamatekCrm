@@ -1,9 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Services.Domain;
 using KamatekCrm.Shared.Enums;
@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
-    public class StockTransferViewModel : ViewModelBase
+    public partial class StockTransferViewModel : ViewModelBase
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IInventoryDomainService _inventoryDomainService;
@@ -97,9 +97,6 @@ namespace KamatekCrm.ViewModels
                 return inventory?.Quantity ?? 0;
             }
         }
-
-        public ICommand TransferCommand { get; }
-        public ICommand CloseCommand { get; }
         
         public StockTransferViewModel(IInventoryDomainService inventoryDomainService, IDbContextFactory<AppDbContext> dbContextFactory)
         {
@@ -109,9 +106,6 @@ namespace KamatekCrm.ViewModels
             using var context = _dbContextFactory.CreateDbContext();
             Warehouses = new ObservableCollection<Warehouse>(context.Warehouses.Where(w => w.IsActive).ToList());
             Products = new ObservableCollection<Product>(context.Products.ToList());
-            
-            TransferCommand = new RelayCommand(_ => ExecuteTransfer(), _ => CanExecuteTransfer());
-            CloseCommand = new RelayCommand(param => (param as Window)?.Close());
         }
 
         private bool CanExecuteTransfer()
@@ -158,3 +152,5 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+
+

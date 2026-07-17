@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using LiveChartsCore;
@@ -18,7 +18,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Dashboard ViewModel - Komut Merkezi: Kritik uyarılar, günlük işler ve finansal özet
     /// </summary>
-    public class DashboardViewModel : ViewModelBase
+    public partial class DashboardViewModel : ViewModelBase
     {
         private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
@@ -277,22 +277,43 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand RefreshDashboardCommand { get; }
+        // Source Generator: RefreshDashboard() metodu [RelayCommand] ile işaretlenmiştir.
+        // Otomatik olarak 'RefreshDashboardCommand' özelliği üretilir.
 
         #endregion
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public DashboardViewModel(IAuthService authService, ApiClient apiClient, ILoadingService loadingService, IToastService toastService)
+        public DashboardViewModel(IAuthService authService, ApiClient apiClient, ILoadingService loadingService, IToastService toastService, IDatabaseConnectionProvider connectionProvider)
         {
             _authService = authService;
             _apiClient = apiClient;
             _loadingService = loadingService;
             _toastService = toastService;
             
-            RefreshDashboardCommand = new RelayCommand(async _ => await LoadDashboardDataAsync());
-            _ = LoadDashboardDataAsync();
+            
+            // Eğer bağlantı zaten varsa direkt yükle
+            if (connectionProvider.IsConnected)
+            {
+                _ = RefreshDashboard();
+            }
+            else
+            {
+                // Bağlantı henüz yoksa (uygulama yeni açılıyorsa Zero-Config sürecini bekle)
+                EventAggregator.Instance.Subscribe<DatabaseConnectionEstablishedEvent>(OnDatabaseConnected);
+                EventAggregator.Instance.Subscribe<DatabaseConnectionRestoredEvent>(OnDatabaseRestored);
+            }
+        }
+
+        private void OnDatabaseConnected(DatabaseConnectionEstablishedEvent _)
+        {
+            System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => await RefreshDashboard());
+        }
+
+        private void OnDatabaseRestored(DatabaseConnectionRestoredEvent _)
+        {
+            System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => await RefreshDashboard());
         }
 
         /// <summary>
@@ -308,7 +329,6 @@ namespace KamatekCrm.ViewModels
             LowStockProducts = new ObservableCollection<LowStockItemDto>();
             TodaysJobs = new ObservableCollection<TodayJobItemDto>();
             ReadyToDeliverRepairs = new ObservableCollection<ReadyRepairItemDto>();
-            RefreshDashboardCommand = new RelayCommand(_ => { });
         }
 
         /// <summary>
@@ -329,9 +349,10 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Tüm dashboard verilerini yükle (API'den)
+        /// Source Generator: Bu metottan otomatik olarak 'RefreshDashboardCommand' ICommand özelliği üretilir.
         /// </summary>
-        private async Task LoadDashboardDataAsync()
+        [RelayCommand]
+        private async Task RefreshDashboard()
         {
             _loadingService?.Show();
             try

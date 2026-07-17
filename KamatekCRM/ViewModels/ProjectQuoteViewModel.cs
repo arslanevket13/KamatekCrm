@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +13,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Proje & Teklif penceresi ViewModel - Basit TabControl yapısı
     /// </summary>
-    public class ProjectQuoteViewModel : ViewModelBase
+    public partial class ProjectQuoteViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
 
@@ -110,26 +110,16 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand AddToQuoteCommand { get; }
-        public ICommand RemoveFromQuoteCommand { get; }
-        public ICommand SaveCommand { get; }
-        public ICommand CancelCommand { get; }
-
         #endregion
 
         public ProjectQuoteViewModel(AppDbContext context)
         {
             _context = context;
 
-            AddToQuoteCommand = new RelayCommand(_ => AddToQuote(), _ => SelectedProduct != null);
-            RemoveFromQuoteCommand = new RelayCommand(_ => RemoveFromQuote(), _ => SelectedQuoteItem != null);
-            SaveCommand = new RelayCommand(_ => Save(), _ => CanSave());
-            CancelCommand = new RelayCommand(CloseWindow);
-
-            LoadData();
+            Refresh();
         }
 
-        private void LoadData()
+        private void Refresh()
         {
             // Müşterileri yükle
             var customers = _context.Customers.OrderBy(c => c.FullName).ToList();
@@ -147,6 +137,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Seçili ürünü teklife ekle (Çarpan mantığı ile)
         /// </summary>
+        [RelayCommand]
         private void AddToQuote()
         {
             if (SelectedProduct == null) return;
@@ -181,6 +172,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Seçili kalemi tekliften kaldır
         /// </summary>
+        [RelayCommand]
         private void RemoveFromQuote()
         {
             if (SelectedQuoteItem == null) return;
@@ -198,6 +190,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Projeyi veritabanına kaydet
         /// </summary>
+        [RelayCommand]
         private void Save()
         {
             try
@@ -229,7 +222,7 @@ namespace KamatekCrm.ViewModels
                     MessageBoxImage.Information);
 
                 // Pencereyi kapat
-                CloseWindow(null);
+                Cancel(null);
             }
             catch (Exception ex)
             {
@@ -241,7 +234,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void CloseWindow(object? parameter)
+        [RelayCommand]
+        private void Cancel(object? parameter)
         {
             if (parameter is Window window)
                 window.Close();
@@ -251,7 +245,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Teklif kalemi (In-memory model)
     /// </summary>
-    public class QuoteItem : ViewModelBase
+    public partial class QuoteItem : ViewModelBase
     {
         public int ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
@@ -279,3 +273,4 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+

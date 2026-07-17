@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -8,7 +8,7 @@ namespace KamatekCrm.ViewModels
     /// Tüm ViewModellerin base sınıfı - INotifyPropertyChanged ve INotifyDataErrorInfo implementasyonu
     /// (CommunityToolkit.Mvvm.ComponentModel.ObservableValidator üzerinden)
     /// </summary>
-    public class ViewModelBase : ObservableValidator
+    public partial class ViewModelBase : ObservableValidator
     {
         // ObservableValidator already handles INotifyPropertyChanged and SetProperty.
         // Keeping this for backwards compatibility if any derived classes strictly call SetProperty with ref.

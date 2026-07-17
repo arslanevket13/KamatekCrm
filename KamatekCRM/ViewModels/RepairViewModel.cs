@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -15,7 +15,7 @@ using KamatekCrm.Services;
 
 namespace KamatekCrm.ViewModels
 {
-    public class RepairViewModel : ViewModelBase
+    public partial class RepairViewModel : ViewModelBase
     {
         private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
@@ -34,17 +34,8 @@ namespace KamatekCrm.ViewModels
             _loadingService = loadingService;
             
             // Komutlar
-            SaveNewRepairCommand = new RelayCommand(SaveNewRepair, CanSaveNewRepair);
-            UpdateStatusCommand = new RelayCommand<RepairStatus?>(UpdateStatus);
-            AddNoteCommand = new RelayCommand(AddNote, _ => SelectedJob != null && !string.IsNullOrWhiteSpace(NewNoteText));
-            RefreshCommand = new RelayCommand(_ => LoadData());
-            OpenRegistrationCommand = new RelayCommand(OpenRegistration);
-            AddItemToJobCommand = new RelayCommand(AddItemToJob);
-            RemoveItemFromJobCommand = new RelayCommand(RemoveItemFromJob);
-            CompleteJobCommand = new RelayCommand(CompleteJob);
-            PrintServiceFormCommand = new RelayCommand(PrintServiceForm);
             
-            LoadData();
+            Refresh();
             UpdateDeviceTypeOptions();
         }
 
@@ -271,19 +262,6 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand SaveNewRepairCommand { get; }
-        public ICommand UpdateStatusCommand { get; }
-        public ICommand AddNoteCommand { get; }
-        public ICommand RefreshCommand { get; }
-        public ICommand OpenRegistrationCommand { get; }
-
-
-
-        public ICommand AddItemToJobCommand { get; }
-        public ICommand RemoveItemFromJobCommand { get; }
-        public ICommand CompleteJobCommand { get; }
-        public ICommand PrintServiceFormCommand { get; }
-
         public void SelectJobById(int id)
         {
             var job = AllRepairs.FirstOrDefault(x => x.Id == id);
@@ -297,7 +275,8 @@ namespace KamatekCrm.ViewModels
 
         #region Methods
 
-        private async void LoadData()
+        [RelayCommand]
+        private async void Refresh()
         {
             _loadingService?.Show();
             try
@@ -419,6 +398,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void OpenRegistration(object? parameter)
         {
             ResetNewJobForm();
@@ -446,6 +426,7 @@ namespace KamatekCrm.ViewModels
                 && !string.IsNullOrWhiteSpace(NewJob.DeviceModel);
         }
 
+        [RelayCommand]
         private async void SaveNewRepair(object? parameter)
         {
             try
@@ -458,7 +439,7 @@ namespace KamatekCrm.ViewModels
                 {
                     _toastService?.ShowSuccess($"Cihaz kabul edildi! Takip No: {result.Data.Id}");
                     ResetNewJobForm();
-                    LoadData();
+                    Refresh();
                     if (parameter is Window w) w.Close();
                 }
                 else
@@ -476,6 +457,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private async void UpdateStatus(RepairStatus? newStatus)
         {
             if (SelectedJob == null || newStatus == null) return;
@@ -540,7 +522,7 @@ namespace KamatekCrm.ViewModels
 
                 NewNoteText = string.Empty; // Notu temizle
                 LoadHistory(SelectedJob.Id);
-                LoadData(); // Listeleri güncelle
+                Refresh(); // Listeleri güncelle
             }
             catch (Exception ex)
             {
@@ -552,6 +534,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private async void AddNote(object? parameter)
         {
             if (SelectedJob == null) return;
@@ -585,7 +568,8 @@ namespace KamatekCrm.ViewModels
         // PARÇA VE MALİYET YÖNETİMİ
         // ==========================================
 
-        private async void AddItemToJob(object? parameter)
+        [RelayCommand]
+        private async void temToJob(object? parameter)
         {
             if (SelectedJob == null || SelectedProductToAdd == null) return;
 
@@ -621,7 +605,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async void RemoveItemFromJob(object? parameter)
+        [RelayCommand]
+        private async void temFromJob(object? parameter)
         {
             if (parameter is ServiceJobItem item && SelectedJob != null)
             {
@@ -661,6 +646,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private async void CompleteJob(object? parameter)
         {
             try
@@ -683,6 +669,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void PrintServiceForm(object? parameter)
         {
             if (SelectedJob == null) return;
@@ -720,3 +707,4 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
+

@@ -9,11 +9,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
-using KamatekCrm.Shared.Models.JobDetails;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +23,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// İş kaydı ViewModel - Wizard UI ile KRİTİK İŞ MANTIĞI İÇERİR
     /// </summary>
-    public class ServiceJobViewModel : ViewModelBase
+    public partial class ServiceJobViewModel : ViewModelBase
     {
         private readonly ApiClient _apiClient;
         private readonly NavigationService _navigationService;
@@ -96,31 +95,11 @@ namespace KamatekCrm.ViewModels
             _serviceJobsView = CollectionViewSource.GetDefaultView(ServiceJobs);
             _serviceJobsView.Filter = FilterServiceJobs;
 
-            SaveServiceJobCommand = new RelayCommand(_ => SaveServiceJob(), _ => CanSaveServiceJob());
-            AddItemToJobCommand = new RelayCommand(_ => AddItemToJob(), _ => CanAddItem());
-            RemoveItemFromJobCommand = new RelayCommand(param => RemoveItemFromJob(param as ServiceJobItem));
-            CompleteJobCommand = new RelayCommand(_ => CompleteJob(), _ => CanCompleteJob());
-            ClearFormCommand = new RelayCommand(_ => ClearForm());
-            OpenNewJobFormCommand = new RelayCommand(_ => OpenNewJobForm());
-            RefreshListCommand = new RelayCommand(_ => RefreshList());
-            ViewJobDetailCommand = new RelayCommand(param => ViewJobDetail(param as ServiceJob));
-            PrintServiceFormCommand = new RelayCommand(param => PrintServiceForm(param as ServiceJob), param => param is ServiceJob);
-            AddAssetCommand = new RelayCommand(_ => OpenQuickAssetAdd(), _ => SelectedCustomer != null);
-            CancelCommand = new RelayCommand(_ => CancelRequested?.Invoke());
-            EditJobCommand = new RelayCommand(param => EditJob(param as ServiceJob), param => param is ServiceJob);
-            ApproveDiscoveryCommand = new RelayCommand(param => ApproveDiscovery(param as ServiceJob), param => param is ServiceJob);
-            BrowsePhotosCommand = new RelayCommand(_ => BrowsePhotos());
-            RemovePhotoCommand = new RelayCommand(param => RemovePhoto(param as string));
-
             // Wizard komutları
-            GoNextStepCommand = new RelayCommand(_ => GoNextStep(), _ => CanGoNextStep());
-            GoPreviousStepCommand = new RelayCommand(_ => GoPreviousStep(), _ => CurrentWizardStep > 1);
 
             // Dashboard & durum değiştirme komutları
-            ChangeJobStatusCommand = new RelayCommand(param => ChangeJobStatus(param), param => SelectedServiceJob != null);
-            DeleteJobCommand = new RelayCommand(_ => DeleteJob(), _ => SelectedServiceJob != null);
 
-            _ = LoadData();
+            _ = Refresh();
             UpdateDeviceTypeOptions();
         }
 
@@ -1059,53 +1038,43 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İş kaydet komutu
         /// </summary>
-        public ICommand SaveServiceJobCommand { get; }
 
         /// <summary>
         /// İşe ürün ekle komutu
         /// </summary>
-        public ICommand AddItemToJobCommand { get; }
 
         /// <summary>
         /// İşten ürün çıkar komutu
         /// </summary>
-        public ICommand RemoveItemFromJobCommand { get; }
 
         /// <summary>
         /// İşi tamamla komutu (KRİTİK - STOK DÜŞME MANTIĞI)
         /// </summary>
-        public ICommand CompleteJobCommand { get; }
 
         /// <summary>
         /// Formu temizle komutu
         /// </summary>
-        public ICommand ClearFormCommand { get; }
 
         /// <summary>
         /// Yeni iş formunu aç
         /// </summary>
-        public ICommand OpenNewJobFormCommand { get; }
 
         /// <summary>
         /// Listeyi yenile
         /// </summary>
-        public ICommand RefreshListCommand { get; }
 
         /// <summary>
         /// İş detayı görüntüle
         /// </summary>
-        public ICommand ViewJobDetailCommand { get; }
 
         /// <summary>
         /// Keşfi onayla ve malzeme adımından başlat
         /// </summary>
-        public ICommand ApproveDiscoveryCommand { get; }
 
 
         /// <summary>
         /// PDF Yazdır komutu
         /// </summary>
-        public ICommand PrintServiceFormCommand { get; }
 
         /// <summary>
         /// Hızlı cihaz ekle komutu
@@ -1113,36 +1082,26 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Hızlı cihaz ekle komutu
         /// </summary>
-        public ICommand AddAssetCommand { get; }
 
         /// <summary>
         /// İptal komutu
         /// </summary>
-        public ICommand CancelCommand { get; }
-
-        public ICommand EditJobCommand { get; }
-        public ICommand BrowsePhotosCommand { get; }
-        public ICommand RemovePhotoCommand { get; }
 
         /// <summary>
         /// Wizard ileri adım
         /// </summary>
-        public ICommand GoNextStepCommand { get; }
 
         /// <summary>
         /// Wizard geri adım
         /// </summary>
-        public ICommand GoPreviousStepCommand { get; }
 
         /// <summary>
         /// İş durumu değiştirme komutu
         /// </summary>
-        public ICommand ChangeJobStatusCommand { get; }
 
         /// <summary>
         /// İş silme komutu
         /// </summary>
-        public ICommand DeleteJobCommand { get; }
 
         /// <summary>
         /// İptal talebi event
@@ -1191,6 +1150,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Yeni iş formunu aç
         /// </summary>
+        [RelayCommand]
         private void OpenNewJobForm()
         {
             // Create a new ViewModel with dependencies
@@ -1215,6 +1175,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Listeyi yenile
         /// </summary>
+        [RelayCommand]
         private async void RefreshList()
         {
             await LoadServiceJobs();
@@ -1224,12 +1185,14 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İş detayını görüntüle
         /// </summary>
+        [RelayCommand]
         private void ViewJobDetail(ServiceJob? job)
         {
             if (job == null) return;
             MessageBox.Show($"İş Detayı: #{job.Id}\n{job.Description}", "Detay", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        [RelayCommand]
         private void EditJob(ServiceJob? job)
         {
             if (job == null) return;
@@ -1285,6 +1248,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Keşfi onayla ve malzeme seçimiyle işe dönüştür
         /// </summary>
+        [RelayCommand]
         private void ApproveDiscovery(ServiceJob? job)
         {
             if (job == null) return;
@@ -1341,6 +1305,7 @@ namespace KamatekCrm.ViewModels
             if (result == true) _ = LoadServiceJobs();
         }
 
+        [RelayCommand]
         private void BrowsePhotos()
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
@@ -1359,6 +1324,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void RemovePhoto(string? path)
         {
             if (path != null && UploadedPhotos.Contains(path))
@@ -1375,7 +1341,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Tüm verileri yükle
         /// </summary>
-        private async Task LoadData()
+        private async Task Refresh()
         {
             if (_loadingService != null) 
                 _loadingService.Show("İşler yükleniyor...");
@@ -1472,7 +1438,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Hızlı cihaz ekleme popup'ını aç
         /// </summary>
-        private void OpenQuickAssetAdd()
+        [RelayCommand]
+        private void AddAsset()
         {
             if (SelectedCustomer == null)
             {
@@ -1565,6 +1532,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Yeni iş kaydet (Hibrit Cihaz Desteği ile)
         /// </summary>
+        [RelayCommand]
         private async void SaveServiceJob()
         {
             try
@@ -1755,7 +1723,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İşe ürün ekle
         /// </summary>
-        private void AddItemToJob()
+        [RelayCommand]
+        private void temToJob()
         {
             if (SelectedProductToAdd == null) return;
 
@@ -1777,7 +1746,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İşten ürün çıkar
         /// </summary>
-        private void RemoveItemFromJob(ServiceJobItem? item)
+        [RelayCommand]
+        private void temFromJob(ServiceJobItem? item)
         {
             if (item != null)
             {
@@ -1797,6 +1767,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İşi tamamla - KRİTİK İŞ MANTIĞI: STOK DÜŞME
         /// </summary>
+        [RelayCommand]
         private async void CompleteJob()
         {
             if (SelectedServiceJob == null) return;
@@ -1829,6 +1800,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Formu temizle
         /// </summary>
+        [RelayCommand]
         private void ClearForm()
         {
             _isEditing = false;
@@ -1869,6 +1841,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Servis formunu PDF olarak yazdır
         /// </summary>
+        [RelayCommand]
         private async void PrintServiceForm(ServiceJob? job)
         {
             if (job == null) return;
@@ -1993,6 +1966,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Wizard ileri adım
         /// </summary>
+        [RelayCommand]
         private void GoNextStep()
         {
             if (CurrentWizardStep == 2 && IsDiscoveryOnly)
@@ -2004,6 +1978,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Wizard geri adım
         /// </summary>
+        [RelayCommand]
         private void GoPreviousStep()
         {
             if (CurrentWizardStep == 4 && IsDiscoveryOnly)
@@ -2031,6 +2006,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İş durumunu değiştir (Dashboard context menu)
         /// </summary>
+        [RelayCommand]
         private async void ChangeJobStatus(object? param)
         {
             if (SelectedServiceJob == null || param == null) return;
@@ -2072,6 +2048,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İş sil (Dashboard context menu)
         /// </summary>
+        [RelayCommand]
         private async void DeleteJob()
         {
             if (SelectedServiceJob == null) return;
@@ -2105,3 +2082,4 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
+

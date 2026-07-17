@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -20,7 +20,7 @@ namespace KamatekCrm.ViewModels
     /// Barkod tarama, satır bazlı indirim, KDV hesaplama, split ödeme desteği
     /// F8=Nakit, F9=Kart kısayolları
     /// </summary>
-    public class DirectSalesViewModel : ViewModelBase
+    public partial class DirectSalesViewModel : ViewModelBase
     {
         private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
@@ -192,23 +192,6 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand AddToCartCommand { get; }
-        public ICommand IncreaseQuantityCommand { get; }
-        public ICommand DecreaseQuantityCommand { get; }
-        public ICommand RemoveFromCartCommand { get; }
-        public ICommand ProcessCashPaymentCommand { get; }
-        public ICommand ProcessCardPaymentCommand { get; }
-        public ICommand ClearCartCommand { get; }
-        public ICommand BarcodeScanCommand { get; }
-        public ICommand AddPaymentCommand { get; }
-        public ICommand RemovePaymentCommand { get; }
-        public ICommand CompleteSaleCommand { get; }
-        public ICommand PayFullCashCommand { get; }
-        public ICommand PayFullCardCommand { get; }
-        public ICommand QuickAddCustomerCommand { get; }
-        public ICommand SelectCustomerCommand { get; }
-        public ICommand ClearCustomerCommand { get; }
-
         #endregion
 
         public DirectSalesViewModel(
@@ -231,29 +214,12 @@ namespace KamatekCrm.ViewModels
             FilteredProducts.Filter = FilterProducts;
 
             // Commands
-            AddToCartCommand = new RelayCommand(ExecuteAddToCart, CanAddToCart);
-            IncreaseQuantityCommand = new RelayCommand(ExecuteIncreaseQuantity);
-            DecreaseQuantityCommand = new RelayCommand(ExecuteDecreaseQuantity);
-            RemoveFromCartCommand = new RelayCommand(ExecuteRemoveFromCart);
-            BarcodeScanCommand = new RelayCommand(_ => ExecuteBarcodeScan());
-            AddPaymentCommand = new RelayCommand(_ => ExecuteAddPayment(), _ => PaymentAmount > 0);
-            RemovePaymentCommand = new RelayCommand(ExecuteRemovePayment);
-            CompleteSaleCommand = new RelayCommand(_ => ExecuteCompleteSale(), _ => CanCompleteSale);
-            ClearCartCommand = new RelayCommand(_ => ExecuteClearCart(), _ => CartItems.Count > 0);
 
             // Quick full-payment shortcuts (F8/F9)
-            PayFullCashCommand = new RelayCommand(_ => ExecutePayFull(PaymentMethod.Cash), _ => CartItems.Count > 0 && GrandTotal > 0);
-            PayFullCardCommand = new RelayCommand(_ => ExecutePayFull(PaymentMethod.CreditCard), _ => CartItems.Count > 0 && GrandTotal > 0);
 
             // Legacy commands for backward compat
-            ProcessCashPaymentCommand = PayFullCashCommand;
-            ProcessCardPaymentCommand = PayFullCardCommand;
 
             CartItems.CollectionChanged += (s, e) => UpdateAllTotals();
-
-            QuickAddCustomerCommand = new RelayCommand(_ => ExecuteQuickAddCustomer());
-            SelectCustomerCommand = new RelayCommand(p => { if (p is Customer c) SelectedCustomer = c; });
-            ClearCustomerCommand = new RelayCommand(_ => { SelectedCustomer = null; CustomerSearch = string.Empty; });
 
             InitializeAsync();
         }
@@ -370,7 +336,8 @@ namespace KamatekCrm.ViewModels
             foreach (var c in src.Take(10)) FilteredCustomers.Add(c);
         }
 
-        private void ExecuteQuickAddCustomer()
+        [RelayCommand]
+        private void QuickAddCustomer()
         {
             var win = new Views.QuickCustomerAddWindow { Owner = System.Windows.Application.Current.MainWindow };
             if (win.ShowDialog() == true)
@@ -404,13 +371,15 @@ namespace KamatekCrm.ViewModels
 
         private bool CanAddToCart(object? parameter) => parameter is PosProductItem;
 
-        private void ExecuteAddToCart(object? parameter)
+        [RelayCommand]
+        private void AddToCart(object? parameter)
         {
             if (parameter is not PosProductItem product) return;
             AddProductToCart(product.ProductId, product.ProductName, product.SalePrice, product.VatRate, product.StockQuantity);
         }
 
-        private void ExecuteBarcodeScan()
+        [RelayCommand]
+        private void BarcodeScan()
         {
             if (string.IsNullOrWhiteSpace(BarcodeText)) return;
 
@@ -486,7 +455,8 @@ namespace KamatekCrm.ViewModels
             FocusBarcodeRequested = true;
         }
 
-        private void ExecuteIncreaseQuantity(object? parameter)
+        [RelayCommand]
+        private void IncreaseQuantity(object? parameter)
         {
             if (parameter is PosCartItem item)
             {
@@ -495,7 +465,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void ExecuteDecreaseQuantity(object? parameter)
+        [RelayCommand]
+        private void DecreaseQuantity(object? parameter)
         {
             if (parameter is PosCartItem item)
             {
@@ -512,7 +483,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void ExecuteRemoveFromCart(object? parameter)
+        [RelayCommand]
+        private void RemoveFromCart(object? parameter)
         {
             if (parameter is PosCartItem item)
             {
@@ -523,7 +495,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void ExecuteClearCart()
+        [RelayCommand]
+        private void ClearCart()
         {
             if (CartItems.Count == 0) return;
             var result = MessageBox.Show("Sepeti temizlemek istiyor musunuz?", "Sepeti Temizle",
@@ -545,7 +518,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Add a partial payment entry (for split payments)
         /// </summary>
-        private void ExecuteAddPayment()
+        [RelayCommand]
+        private void AddPayment()
         {
             if (PaymentAmount <= 0) return;
 
@@ -574,11 +548,12 @@ namespace KamatekCrm.ViewModels
             // Auto-complete sale if fully paid
             if (CanCompleteSale)
             {
-                ExecuteCompleteSale();
+                CompleteSale();
             }
         }
 
-        private void ExecuteRemovePayment(object? parameter)
+        [RelayCommand]
+        private void RemovePayment(object? parameter)
         {
             if (parameter is PosPaymentEntry entry)
             {
@@ -590,7 +565,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// F8/F9 shortcut: pay full amount with a single method
         /// </summary>
-        private void ExecutePayFull(PaymentMethod method)
+        [RelayCommand]
+        private void PayFull(PaymentMethod method)
         {
             if (CartItems.Count == 0 || GrandTotal <= 0) return;
 
@@ -604,10 +580,11 @@ namespace KamatekCrm.ViewModels
             });
 
             UpdateAllTotals();
-            ExecuteCompleteSale();
+            CompleteSale();
         }
 
-        private async void ExecuteCompleteSale()
+        [RelayCommand]
+        private async void CompleteSale()
         {
             if (!CanCompleteSale || SelectedWarehouse == null) return;
 
@@ -847,3 +824,5 @@ namespace KamatekCrm.ViewModels
     public class ProductDisplayItem : PosProductItem { }
     public class CartItem : PosCartItem { }
 }
+
+

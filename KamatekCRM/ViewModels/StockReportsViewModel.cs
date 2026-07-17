@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -13,19 +14,19 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Stok Hareketleri Raporlama ViewModel
     /// </summary>
-    public class StockReportsViewModel : ViewModelBase
+    public partial class StockReportsViewModel : ObservableObject
     {
         private AppDbContext _context;
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         
         // Filtreler
-        private DateTime? _startDate;
-        private DateTime? _endDate;
-        private StockTransactionType? _selectedTransactionType;
-        private Product? _selectedProduct;
-        private Warehouse? _selectedWarehouse;
-        private string _statusMessage = string.Empty;
-        private bool _isLoading;
+        [ObservableProperty] private DateTime? _startDate;
+        [ObservableProperty] private DateTime? _endDate;
+        [ObservableProperty] private StockTransactionType? _selectedTransactionType;
+        [ObservableProperty] private Product? _selectedProduct;
+        [ObservableProperty] private Warehouse? _selectedWarehouse;
+        [ObservableProperty] private string _statusMessage = string.Empty;
+        [ObservableProperty] private bool _isLoading;
 
         // Koleksiyonlar
         public ObservableCollection<StockTransactionReportItem> Transactions { get; set; }
@@ -33,85 +34,17 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<Product> Products { get; set; }
         public ObservableCollection<TransactionTypeItem> TransactionTypes { get; set; }
 
-        #region Properties
-
-        public DateTime? StartDate
-        {
-            get => _startDate;
-            set => SetProperty(ref _startDate, value);
-        }
-
-        public DateTime? EndDate
-        {
-            get => _endDate;
-            set => SetProperty(ref _endDate, value);
-        }
-
-        public StockTransactionType? SelectedTransactionType
-        {
-            get => _selectedTransactionType;
-            set => SetProperty(ref _selectedTransactionType, value);
-        }
-
-        public Product? SelectedProduct
-        {
-            get => _selectedProduct;
-            set => SetProperty(ref _selectedProduct, value);
-        }
-
-        public Warehouse? SelectedWarehouse
-        {
-            get => _selectedWarehouse;
-            set => SetProperty(ref _selectedWarehouse, value);
-        }
-
-        public string StatusMessage
-        {
-            get => _statusMessage;
-            set => SetProperty(ref _statusMessage, value);
-        }
-
-        public bool IsLoading
-        {
-            get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
-        }
-
-        #endregion
-
         #region Summary Properties
 
-        private int _totalIn;
-        private int _totalOut;
-        private int _transactionCount;
-
-        public int TotalIn
-        {
-            get => _totalIn;
-            set => SetProperty(ref _totalIn, value);
-        }
-
-        public int TotalOut
-        {
-            get => _totalOut;
-            set => SetProperty(ref _totalOut, value);
-        }
+        [ObservableProperty] private int _totalIn;
+        [ObservableProperty] private int _totalOut;
+        [ObservableProperty] private int _transactionCount;
 
         public int NetChange => TotalIn - TotalOut;
 
-        public int TransactionCount
-        {
-            get => _transactionCount;
-            set => SetProperty(ref _transactionCount, value);
-        }
-
         #endregion
 
-        public ICommand SearchCommand { get; }
-        public ICommand ClearFiltersCommand { get; }
-        public ICommand ExportCommand { get; }
-
-        public StockReportsViewModel(Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> dbContextFactory)
+        public StockReportsViewModel(IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
             _context = _dbContextFactory.CreateDbContext();
@@ -120,7 +53,6 @@ namespace KamatekCrm.ViewModels
             Warehouses = new ObservableCollection<Warehouse>(_context.Warehouses.ToList());
             Products = new ObservableCollection<Product>(_context.Products.OrderBy(p => p.ProductName).ToList());
             
-            // İşlem tipleri için Türkçe karşılıklar
             TransactionTypes = new ObservableCollection<TransactionTypeItem>
             {
                 new() { Type = null, DisplayName = "Tümü" },
@@ -133,23 +65,19 @@ namespace KamatekCrm.ViewModels
                 new() { Type = StockTransactionType.ReturnToSupplier, DisplayName = "Tedarikçiye İade" },
                 new() { Type = StockTransactionType.ReturnFromCustomer, DisplayName = "Müşteriden İade" }
             };
-
             // Varsayılan tarih aralığı: Son 30 gün
             StartDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-30);
             EndDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
 
-            SearchCommand = new RelayCommand(_ => ExecuteSearch());
-            ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
-            ExportCommand = new RelayCommand(_ => ExportToClipboard(), _ => Transactions.Any());
-
             // İlk yükleme
-            ExecuteSearch();
+            Search();
         }
 
         /// <summary>
         /// Filtrelere göre stok hareketlerini sorgular
         /// </summary>
-        private void ExecuteSearch()
+        [RelayCommand]
+        private void Search()
         {
             IsLoading = true;
             Transactions.Clear();
@@ -281,6 +209,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Filtreleri temizler
         /// </summary>
+        [RelayCommand]
         private void ClearFilters()
         {
             StartDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-30);
@@ -288,13 +217,16 @@ namespace KamatekCrm.ViewModels
             SelectedTransactionType = null;
             SelectedProduct = null;
             SelectedWarehouse = null;
-            ExecuteSearch();
+            Search();
         }
+
+        private bool CanExport() => Transactions != null && Transactions.Any();
 
         /// <summary>
         /// Sonuçları clipboard'a kopyalar (basit export)
         /// </summary>
-        private void ExportToClipboard()
+        [RelayCommand(CanExecute = nameof(CanExport))]
+        private void Export()
         {
             try
             {

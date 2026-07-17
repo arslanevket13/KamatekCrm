@@ -1,20 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
-using CommunityToolkit.Mvvm.Input;
 
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
     /// Kullanıcı ekleme ViewModel - Admin tarafından kullanılır
     /// </summary>
-    public class AddUserViewModel : ViewModelBase
+    public partial class AddUserViewModel : ViewModelBase
     {
         private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
@@ -168,16 +167,6 @@ namespace KamatekCrm.ViewModels
         };
 
         /// <summary>
-        /// Kaydet komutu
-        /// </summary>
-        public IAsyncRelayCommand SaveCommand { get; }
-
-        /// <summary>
-        /// Formu temizle komutu
-        /// </summary>
-        public ICommand ClearCommand { get; }
-
-        /// <summary>
         /// Form temizlendi event (focus için)
         /// </summary>
         public event Action? FormCleared;
@@ -192,8 +181,6 @@ namespace KamatekCrm.ViewModels
             _toastService = toastService;
             _loadingService = loadingService;
 
-            SaveCommand = new AsyncRelayCommand(SaveUserAsync, CanSaveUser);
-            ClearCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(ClearForm);
         }
 
         /// <summary>
@@ -226,7 +213,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Kullanıcıyı kaydet
         /// </summary>
-        private async System.Threading.Tasks.Task SaveUserAsync()
+        [RelayCommand(CanExecute = nameof(CanSaveUser))]
+        private async Task Save()
         {
             _loadingService.Show();
             try
@@ -285,7 +273,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Formu temizle
         /// </summary>
-        private void ClearForm()
+        [RelayCommand]
+        private void Clear()
         {
             ClearFormFields();
             StatusMessage = string.Empty;

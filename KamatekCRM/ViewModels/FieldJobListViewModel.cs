@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -16,7 +16,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Saha Operasyon & Montaj Listesi ViewModel
     /// </summary>
-    public class FieldJobListViewModel : ViewModelBase
+    public partial class FieldJobListViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
         private string _searchText = string.Empty;
@@ -60,13 +60,6 @@ namespace KamatekCrm.ViewModels
         public int TotalCount => FilteredFieldJobs?.Cast<object>().Count() ?? 0;
 
         // Commands
-        public ICommand RefreshCommand { get; }
-        public ICommand ClearFiltersCommand { get; }
-        public ICommand OpenMapCommand { get; }
-        public ICommand ShowFieldPhotosCommand { get; }
-        public ICommand CompleteFieldJobCommand { get; }
-        public ICommand OpenFieldJobDetailCommand { get; }
-        public ICommand ToggleCategoryCommand { get; }
 
         public FieldJobListViewModel()
         {
@@ -77,14 +70,6 @@ namespace KamatekCrm.ViewModels
             // Kategori filtrelerini başlat
             InitializeCategoryFilters();
 
-            // Commands
-            RefreshCommand = new RelayCommand(_ => LoadFieldJobs());
-            ClearFiltersCommand = new RelayCommand(_ => ClearFilters());
-            OpenMapCommand = new RelayCommand(ExecuteOpenMap);
-            ShowFieldPhotosCommand = new RelayCommand(ExecuteShowPhotos);
-            CompleteFieldJobCommand = new RelayCommand(ExecuteCompleteJob);
-            OpenFieldJobDetailCommand = new RelayCommand(ExecuteOpenDetail);
-            ToggleCategoryCommand = new RelayCommand(ExecuteToggleCategory);
 
             // CollectionView
             FilteredFieldJobs = CollectionViewSource.GetDefaultView(AllFieldJobs);
@@ -92,7 +77,7 @@ namespace KamatekCrm.ViewModels
             FilteredFieldJobs.CollectionChanged += (s, e) => OnPropertyChanged(nameof(TotalCount));
 
             // Veriyi yükle
-            LoadFieldJobs();
+            Refresh();
         }
 
         private void InitializeCategoryFilters()
@@ -107,7 +92,8 @@ namespace KamatekCrm.ViewModels
             CategoryFilters.Add(new CategoryFilterItem { Category = JobCategory.FiberOptic, DisplayName = "Fiber", Icon = "🌐", IsSelected = false });
         }
 
-        private void LoadFieldJobs()
+        [RelayCommand]
+        private void Refresh()
         {
             AllFieldJobs.Clear();
 
@@ -178,7 +164,8 @@ namespace KamatekCrm.ViewModels
             return true;
         }
 
-        private void ExecuteToggleCategory(object? parameter)
+        [RelayCommand]
+        private void ToggleCategory(object? parameter)
         {
             if (parameter is CategoryFilterItem filter)
             {
@@ -188,6 +175,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void ClearFilters()
         {
             SearchText = string.Empty;
@@ -197,7 +185,8 @@ namespace KamatekCrm.ViewModels
             FilteredFieldJobs?.Refresh();
         }
 
-        private void ExecuteOpenMap(object? parameter)
+        [RelayCommand]
+        private void OpenMap(object? parameter)
         {
             if (parameter is FieldJobDisplayItem job)
             {
@@ -225,7 +214,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void ExecuteShowPhotos(object? parameter)
+        [RelayCommand]
+        private void ShowFieldPhotos(object? parameter)
         {
             if (parameter is FieldJobDisplayItem job)
             {
@@ -233,7 +223,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void ExecuteCompleteJob(object? parameter)
+        [RelayCommand]
+        private void CompleteFieldJob(object? parameter)
         {
             if (parameter is FieldJobDisplayItem job)
             {
@@ -268,7 +259,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void ExecuteOpenDetail(object? parameter)
+        [RelayCommand]
+        private void OpenFieldJobDetail(object? parameter)
         {
             if (parameter is FieldJobDisplayItem job)
             {
@@ -379,3 +371,4 @@ namespace KamatekCrm.ViewModels
         public event PropertyChangedEventHandler? PropertyChanged;
     }
 }
+

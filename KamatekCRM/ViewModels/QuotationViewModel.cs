@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -14,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
-    public class QuotationViewModel : ViewModelBase
+    public partial class QuotationViewModel : ViewModelBase
     {
         private AppDbContext _context;
         private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
@@ -144,12 +144,6 @@ namespace KamatekCrm.ViewModels
         }
 
         // Commands
-        public ICommand ToggleSidebarCommand { get; }
-        public ICommand AddProductCommand { get; }
-        public ICommand RemoveLineCommand { get; }
-        public ICommand SaveDraftCommand { get; }
-        public ICommand SaveAndSendCommand { get; }
-        public ICommand ExportToPdfCommand { get; }
 
         public QuotationViewModel(Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> dbContextFactory)
         {
@@ -160,18 +154,11 @@ namespace KamatekCrm.ViewModels
 
             _context = _dbContextFactory.CreateDbContext();
 
-            ToggleSidebarCommand = new RelayCommand(_ => IsSidebarOpen = !IsSidebarOpen);
-            AddProductCommand = new RelayCommand(_ => AddProduct(), _ => SelectedProduct != null && NewQuantity > 0);
-            RemoveLineCommand = new RelayCommand(line => RemoveLine(line as QuoteLine));
-            SaveDraftCommand = new RelayCommand(async _ => await SaveQuoteAsync(QuoteStatus.Draft), _ => SelectedCustomer != null && QuoteLines.Count > 0);
-            SaveAndSendCommand = new RelayCommand(async _ => await SaveQuoteAsync(QuoteStatus.Sent), _ => SelectedCustomer != null && QuoteLines.Count > 0);
-            ExportToPdfCommand = new RelayCommand(async _ => await ExportToPdfAsync(), _ => SelectedCustomer != null && QuoteLines.Count > 0);
-
             QuoteLines.CollectionChanged += (s, e) => UpdateTotals();
-            LoadData();
+            Refresh();
         }
 
-        private async void LoadData()
+        private async void Refresh()
         {
             try
             {
@@ -217,6 +204,7 @@ namespace KamatekCrm.ViewModels
             catch { /* Handle error */ }
         }
 
+        [RelayCommand]
         private void AddProduct()
         {
             if (SelectedProduct == null) return;
@@ -250,6 +238,7 @@ namespace KamatekCrm.ViewModels
             IsSidebarOpen = false; // Close sidebar after adding
         }
 
+        [RelayCommand]
         private void RemoveLine(QuoteLine line)
         {
             if (line != null)
@@ -276,6 +265,7 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(GrandTotal));
         }
 
+        [RelayCommand]
         private async Task ExportToPdfAsync()
         {
             if (IsBusy) return;
@@ -329,7 +319,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async Task SaveQuoteAsync(QuoteStatus status)
+        [RelayCommand]
+        private async Task SaveDraftAsync(QuoteStatus status)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -369,10 +360,11 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
+
+

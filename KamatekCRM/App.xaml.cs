@@ -159,87 +159,141 @@ namespace KamatekCrm
         }
 
         /// <summary>
-        /// Handles unhandled UI thread exceptions gracefully
+        /// Handles unhandled UI thread exceptions gracefully.
+        /// Bu handler zaten Dispatcher (UI) thread üzerinde çalışır.
         /// </summary>
         private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs args)
         {
             var exception = args.Exception;
-            
-            // Check if it's a network-related exception
+
+            // ── Ağ hataları ──
             if (exception is HttpRequestException httpEx)
             {
                 Log.Error(httpEx, "HTTP Request Exception - Server unreachable");
-                
-                // Show user-friendly toast/notification
                 ShowErrorToast("Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.");
-                
-                args.Handled = true; // Prevent app crash
-                return;
-            }
-            
-            // Check for TaskCanceledException (often caused by timeout)
-            if (exception is TaskCanceledException taskEx)
-            {
-                Log.Warning(taskEx, "Task cancelled/timeout");
-                ShowErrorToast("İşlem zaman aşımına uğradı. Lütfen tekrar deneyin.");
-                
                 args.Handled = true;
                 return;
             }
-            
-            // Log other exceptions
-            Log.Error(exception, "Unhandled UI exception");
-            
-            // Show error but don't crash for non-critical errors
-            MessageBox.Show(
-                $"Bir hata oluştu:\n\n{exception.Message}",
-                "Hata",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-            
+
+            // ── Timeout / iptal hataları ──
+            if (exception is TaskCanceledException or OperationCanceledException)
+            {
+                Log.Warning(exception, "Task cancelled/timeout");
+                ShowErrorToast("İşlem zaman aşımına uğradı. Lütfen tekrar deneyin.");
+                args.Handled = true;
+                return;
+            }
+
+            // ── Diğer tüm hatalar ──
+            Log.Error(exception, "Unhandled UI exception: {Message}", exception.Message);
+            ShowErrorToast($"Beklenmeyen bir hata oluştu: {exception.Message}");
+
+            // Uygulamanın çökmesini engelle — hata loglandı ve kullanıcıya bildirildi
             args.Handled = true;
         }
 
         /// <summary>
-        /// Handles unhandled non-UI exceptions
+        /// Handles unhandled non-UI (AppDomain) exceptions.
+        /// DİKKAT: Bu handler HERHANGİ bir thread'den tetiklenebilir.
+        /// UI güncellemeleri Dispatcher üzerinden yapılmalıdır.
         /// </summary>
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs args)
         {
             var exception = args.ExceptionObject as Exception;
             Log.Fatal(exception, "Unhandled domain exception - IsTerminating: {IsTerminating}", args.IsTerminating);
-            
+
             if (args.IsTerminating)
             {
-                MessageBox.Show(
-                    $"Kritik bir hata oluştu ve uygulama kapanıyor:\n\n{exception?.Message}",
-                    "Kritik Hata",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                // Uygulama kapanıyor — Dispatcher üzerinden son bir bilgilendirme yap.
+                // BeginInvoke kullanıyoruz çünkü thread zaten ölüyor olabilir.
+                try
+                {
+                    Current?.Dispatcher?.Invoke(() =>
+                    {
+                        MessageBox.Show(
+                            $"Kritik bir hata oluştu ve uygulama kapanıyor:\n\n{exception?.Message}",
+                            "Kritik Hata",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                    });
+                }
+                catch
+                {
+                    // Dispatcher erişilemiyorsa sessizce geç — log zaten yazıldı
+                }
+            }
+            else
+            {
+                ShowErrorToast($"Arka plan hatası: {exception?.Message}");
             }
         }
 
         /// <summary>
-        /// Handles unobserved task exceptions
+        /// Handles unobserved task exceptions (await edilmemiş Task'lardaki hatalar).
+        /// DİKKAT: Bu handler Finalizer thread'inden tetiklenir — kesinlikle UI thread değildir.
         /// </summary>
         private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs args)
         {
-            Log.Error(args.Exception, "Unobserved task exception");
-            args.SetObserved(); // Prevent app crash
+            // Flatten ile iç içe AggregateException'ları düzleştir
+            var flattenedException = args.Exception?.Flatten();
+            var innerException = flattenedException?.InnerExceptions.Count > 0
+                ? flattenedException.InnerExceptions[0]
+                : args.Exception;
+
+            Log.Error(innerException, "Unobserved task exception: {Message}", innerException?.Message);
+
+            // GC'nin process'i sonlandırmasını engelle
+            args.SetObserved();
+
+            // Kullanıcıya thread-safe bildirim gönder
+            ShowErrorToast($"Arka plan işleminde hata: {innerException?.Message}");
         }
 
         /// <summary>
-        /// Shows error toast notification (calls ToastService if available)
+        /// Thread-safe hata bildirimi.
+        /// Hangi thread'den çağrılırsa çağrılsın, UI güncellemesi her zaman
+        /// Dispatcher (UI thread) üzerinden yapılır.
         /// </summary>
         private void ShowErrorToast(string message)
         {
             try
             {
-                var toastService = ServiceProvider?.GetService(typeof(ToastService)) as ToastService;
-                toastService?.ShowError(message);
+                // Dispatcher erişilebilir mi kontrol et
+                var dispatcher = Current?.Dispatcher;
+                if (dispatcher == null || dispatcher.HasShutdownStarted)
+                {
+                    // Uygulama kapanıyorsa sadece logla
+                    Log.Warning("ShowErrorToast called during shutdown: {Message}", message);
+                    return;
+                }
+
+                // Her zaman UI thread üzerinden çalıştır (fire-and-forget, bloklama yok)
+                dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        var toastService = ServiceProvider?.GetService(typeof(ToastService)) as ToastService;
+                        if (toastService != null)
+                        {
+                            toastService.ShowError(message);
+                        }
+                        else
+                        {
+                            // ToastService henüz hazır değilse fallback MessageBox
+                            MessageBox.Show(message, "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Toast gösterimi de başarısız olursa sadece logla — sonsuz döngü önleme
+                        Log.Warning(ex, "Failed to show error toast: {OriginalMessage}", message);
+                    }
+                }));
             }
-            catch
+            catch (Exception ex)
             {
-                // Fallback to MessageBox if ToastService unavailable
+                // Dispatcher erişimi bile başarısız olursa (uygulama çöküyorsa)
+                Log.Warning(ex, "ShowErrorToast completely failed: {Message}", message);
             }
         }
 

@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Services;
 
 namespace KamatekCrm.ViewModels
@@ -95,10 +95,7 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
-        /// <summary>
-        /// Giris komutu
-        /// </summary>
-        public ICommand LoginCommand { get; }
+
 
         private readonly IAuthService _authService;
         private readonly NavigationService _navigationService;
@@ -116,7 +113,6 @@ namespace KamatekCrm.ViewModels
             _discoveryService = discoveryService;
             _apiClient = apiClient;
             _toastService = toastService;
-            LoginCommand = new RelayCommand(async param => await ExecuteLoginAsync(param), _ => CanLogin());
             
             // Load saved settings, then apply dev defaults if empty
             LoadSavedCredentials();
@@ -149,6 +145,15 @@ namespace KamatekCrm.ViewModels
             ServerStatusMessage = "Bağlantı ayarları yüklendi.";
 
             IsSearchingForServer = false;
+        }
+
+        /// <summary>
+        /// Source Generator: Bu metottan otomatik olarak 'LoginCommand' ICommand özelliği üretilir.
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanLogin))]
+        private async Task Login(object? param)
+        {
+            await ExecuteLoginAsync(param);
         }
 
         /// <summary>

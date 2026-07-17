@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Repositories;
@@ -14,7 +14,7 @@ using KamatekCrm.Views;
 
 namespace KamatekCrm.ViewModels
 {
-    public class PurchaseOrderViewModel : ViewModelBase
+    public partial class PurchaseOrderViewModel : ViewModelBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPurchasingDomainService _purchasingService;
@@ -24,16 +24,8 @@ namespace KamatekCrm.ViewModels
             _unitOfWork = unitOfWork;
             _purchasingService = purchasingService;
 
-            LoadDataCommand = new RelayCommand(async _ => await LoadData());
-            CreateOrderCommand = new RelayCommand(_ => CreateOrder());
-            AddManualItemCommand = new RelayCommand(_ => AddManualItem());
-            UploadPdfCommand = new RelayCommand(_ => UploadPdf());
-            SaveOrderCommand = new RelayCommand(async _ => await SaveOrder(), _ => CurrentOrderItems.Any() && SelectedSupplier != null);
-            SaveAndReceiveCommand = new RelayCommand(async _ => await SaveAndReceive(), _ => CurrentOrderItems.Any() && SelectedSupplier != null);
-            CreateAndAddProductCommand = new RelayCommand(_ => ExecuteCreateAndAddProduct());
-
             // Init
-            _ = LoadData();
+            _ = Refresh();
         }
 
         #region Properties
@@ -117,19 +109,12 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand LoadDataCommand { get; }
-        public ICommand CreateOrderCommand { get; }
-        public ICommand AddManualItemCommand { get; }
-        public ICommand UploadPdfCommand { get; }
-        public ICommand SaveOrderCommand { get; }
-        public ICommand SaveAndReceiveCommand { get; }
-        public ICommand CreateAndAddProductCommand { get; }
-
         #endregion
 
         #region Methods
 
-        private async Task LoadData()
+        [RelayCommand]
+        private async Task Refresh()
         {
             if (IsBusy) return;
             IsBusy = true;
@@ -161,6 +146,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void CreateOrder()
         {
             // Reset form
@@ -172,7 +158,8 @@ namespace KamatekCrm.ViewModels
             MessageBox.Show("Yeni sipariş formu hazırlandı.", "Bilgi");
         }
 
-        private void AddManualItem()
+        [RelayCommand]
+        private void tem()
         {
             if (SelectedProduct == null)
             {
@@ -202,6 +189,7 @@ namespace KamatekCrm.ViewModels
             UnitPrice = 0;
         }
 
+        [RelayCommand]
         private void UploadPdf()
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
@@ -256,17 +244,20 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private async Task SaveOrder()
         {
            await SaveOrderInternal(false);
         }
 
+        [RelayCommand]
         private async Task SaveAndReceive()
         {
             await SaveOrderInternal(true);
         }
 
-        private void ExecuteCreateAndAddProduct()
+        [RelayCommand]
+        private void CreateAndAddProduct()
         {
             var win = new QuickNewProductForPurchaseWindow
             {
@@ -366,7 +357,7 @@ namespace KamatekCrm.ViewModels
 
                 // Refresh list and clear form
                 CreateOrder();
-                await LoadData();
+                await Refresh();
             }
             catch (Exception ex)
             {
@@ -381,3 +372,5 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
+
+

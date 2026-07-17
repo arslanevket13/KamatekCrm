@@ -1,7 +1,8 @@
-using System;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
 using KamatekCrm.Repositories;
@@ -12,7 +13,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Ana içerik alanı ViewModel (Sidebar + Content)
     /// </summary>
-    public class MainContentViewModel : ViewModelBase
+    public partial class MainContentViewModel : ViewModelBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuthService _authService;
@@ -192,39 +193,9 @@ namespace KamatekCrm.ViewModels
 
         #region Navigation Commands
 
-        public ICommand NavigateToDashboardCommand { get; }
-        public ICommand NavigateToCustomersCommand { get; }
-        public ICommand NavigateToProductsCommand { get; }
-        public ICommand NavigateToServiceJobsCommand { get; }
-        public ICommand NavigateToStockCountCommand { get; }
-        public ICommand NavigateToReportsCommand { get; }
-        public ICommand NavigateToUsersCommand { get; }
-        public ICommand NavigateToSystemLogsCommand { get; }
-        public ICommand LogoutCommand { get; }
-        public ICommand OpenFaultTicketCommand { get; }
-        public ICommand OpenProjectQuoteCommand { get; }
-        public ICommand OpenQuotationCommand { get; }
-        public ICommand OpenRepairTrackingCommand { get; }
-        public ICommand OpenDirectSalesCommand { get; }
-        public ICommand NavigateToRepairListCommand { get; }
-        public ICommand NavigateToFieldJobListCommand { get; }
-        public ICommand NavigateToSettingsCommand { get; }
-        public ICommand NavigateToFinanceCommand { get; }
-        public ICommand NavigateToAnalyticsCommand { get; }
-        public ICommand NavigateToPurchaseOrdersCommand { get; }
-        public ICommand NavigateToSuppliersCommand { get; }
-        public ICommand NavigateToPipelineCommand { get; }
-        public ICommand NavigateToSchedulerCommand { get; }
-
         // Methods
-
-        public ICommand ToggleNotificationsCommand { get; }
-        public ICommand RefreshNotificationsCommand { get; }
         
         // Yeni Komutlar
-        public ICommand ToggleSidebarCommand { get; }
-        public ICommand ToggleDarkModeCommand { get; }
-        public ICommand OpenQuickAddCommand { get; }
 
         // RBAC Visibility
         public bool CanViewFinance => _authService.CanViewFinance;
@@ -232,13 +203,6 @@ namespace KamatekCrm.ViewModels
         public bool CanAccessSettings => _authService.CanAccessSettings;
 
         // Finansal Sağlık Komutu
-        public ICommand NavigateToFinancialHealthCommand { get; }
-
-        public ICommand NavigateToRoutePlanningCommand { get; }
-
-        public ICommand GoToSettingsCommand { get; }
-        
-        public ICommand ForceMainServerCommand { get; }
 
         #endregion
 
@@ -290,45 +254,10 @@ namespace KamatekCrm.ViewModels
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsConnectionLost = false);
             });
-
-            NavigateToDashboardCommand = new RelayCommand(_ => NavigateTo<DashboardViewModel>());
-            NavigateToCustomersCommand = new RelayCommand(_ => NavigateTo<CustomersViewModel>());
-            NavigateToProductsCommand = new RelayCommand(_ => NavigateTo<ProductViewModel>());
-            NavigateToServiceJobsCommand = new RelayCommand(_ => NavigateTo<ServiceJobViewModel>());
-            NavigateToStockCountCommand = new RelayCommand(_ => NavigateTo<StockCountViewModel>());
-            NavigateToReportsCommand = new RelayCommand(_ => NavigateTo<StockReportsViewModel>());
-            NavigateToUsersCommand = new RelayCommand(_ => NavigateTo<UsersViewModel>(), _ => _authService.IsAdmin);
-            NavigateToSystemLogsCommand = new RelayCommand(_ => NavigateTo<SystemLogsViewModel>(), _ => _authService.IsAdmin);
-            LogoutCommand = new RelayCommand(_ => Logout());
-            OpenFaultTicketCommand = new RelayCommand(_ => OpenFaultTicket());
-            OpenProjectQuoteCommand = new RelayCommand(_ => OpenProjectQuote());
-            OpenQuotationCommand = new RelayCommand(_ => OpenQuotation());
-            OpenRepairTrackingCommand = new RelayCommand(_ => OpenRepairTracking());
-            OpenDirectSalesCommand = new RelayCommand(_ => OpenDirectSales());
-            NavigateToRepairListCommand = new RelayCommand(_ => NavigateTo<RepairListViewModel>());
-            NavigateToFieldJobListCommand = new RelayCommand(_ => NavigateTo<FieldJobListViewModel>());
-            NavigateToSettingsCommand = new RelayCommand(_ => NavigateTo<SettingsViewModel>(), _ => _authService.CanAccessSettings);
-            NavigateToFinanceCommand = new RelayCommand(_ => NavigateTo<FinanceViewModel>(), _ => _authService.CanViewFinance);
-            NavigateToAnalyticsCommand = new RelayCommand(_ => NavigateTo<AnalyticsViewModel>(), _ => _authService.CanViewAnalytics);
-            NavigateToPurchaseOrdersCommand = new RelayCommand(_ => NavigateTo<PurchasingViewModel>());
-            ToggleNotificationsCommand = new RelayCommand(_ => IsNotificationsOpen = !IsNotificationsOpen);
-            RefreshNotificationsCommand = new RelayCommand(_ => LoadNotifications());
-            ForceMainServerCommand = new RelayCommand(_ => ForceMainServer());
             
             // Yeni komutlar
-            ToggleSidebarCommand = new RelayCommand(_ => IsSidebarCollapsed = !IsSidebarCollapsed);
-            ToggleDarkModeCommand = new RelayCommand(_ => IsDarkMode = !IsDarkMode);
-            OpenQuickAddCommand = new RelayCommand(_ => OpenQuickAdd());
-            NavigateToFinancialHealthCommand = new RelayCommand(_ => NavigateTo<FinancialHealthViewModel>(), _ => _authService.CanViewFinance);
-            NavigateToRoutePlanningCommand = new RelayCommand(_ => NavigateTo<RoutePlanningViewModel>());
-            
-            GoToSettingsCommand = new RelayCommand(_ => GoToSettings());
 
-            NavigateToSuppliersCommand = new RelayCommand(_ => NavigateTo<SuppliersViewModel>());
-            NavigateToPipelineCommand = new RelayCommand(_ => _toastService.ShowInfo("Satış Pipeline modülü yapım aşamasındadır."));
-            NavigateToSchedulerCommand = new RelayCommand(_ => _toastService.ShowInfo("Takvim modülü yapım aşamasındadır."));
-
-            LoadNotifications();
+            _ = RefreshNotificationsAsync();
 
             // Varsayılan olarak Dashboard'u göster (Local Navigation)
             NavigateTo<DashboardViewModel>();
@@ -354,12 +283,14 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void GoToSettings()
         {
             IsConnectionLost = false; // Overlay'i gizle
             NavigateTo<SettingsViewModel>();
         }
 
+        [RelayCommand]
         private void ForceMainServer()
         {
             // Zorla Ana Sunucu moduna geç ve yeniden başlat
@@ -409,6 +340,7 @@ namespace KamatekCrm.ViewModels
             CurrentView = vm;
         }
 
+        [RelayCommand]
         private void OpenFaultTicket()
         {
             // Yeni Cihaz Kabul Ekranı (Repair Module) — DI ile ViewModel çözümlenir
@@ -417,6 +349,7 @@ namespace KamatekCrm.ViewModels
             window.ShowDialog();
         }
 
+        [RelayCommand]
         private void OpenRepairTracking()
         {
             // Yeni Arıza Takip Merkezi (Repair Module) — DI ile ViewModel çözümlenir
@@ -425,17 +358,20 @@ namespace KamatekCrm.ViewModels
             window.Show();
         }
 
+        [RelayCommand]
         private void OpenProjectQuote()
         {
             NavigateTo<QuoteListViewModel>();
         }
 
+        [RelayCommand]
         private void OpenQuotation()
         {
             var window = new Views.QuotationWindow();
             window.Show();
         }
 
+        [RelayCommand]
         private void OpenDirectSales()
         {
             // Perakende Satış — DI ile ViewModel çözümlenir
@@ -444,12 +380,17 @@ namespace KamatekCrm.ViewModels
             window.Show();
         }
 
-        private void LoadNotifications()
+        [RelayCommand]
+        private async Task RefreshNotificationsAsync()
         {
-            var items = _notificationService.GetNotifications();
-            Notifications.Clear();
-            foreach (var item in items) Notifications.Add(item);
-            NotificationCount = items.Count;
+            var items = await _notificationService.GetNotificationsAsync();
+            
+            System.Windows.Application.Current.Dispatcher.Invoke(() => 
+            {
+                Notifications.Clear();
+                foreach (var item in items) Notifications.Add(item);
+                NotificationCount = items.Count;
+            });
         }
 
         #endregion
@@ -457,6 +398,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Çıkış yap - Login ekranına dön
         /// </summary>
+        [RelayCommand]
         private void Logout()
         {
             _authService.Logout();
@@ -480,6 +422,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Quick Add Modal'ı aç (Ctrl+K)
         /// </summary>
+        [RelayCommand]
         private void OpenQuickAdd()
         {
             var modal = new Views.QuickAddModal
@@ -528,3 +471,7 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+
+
+
+

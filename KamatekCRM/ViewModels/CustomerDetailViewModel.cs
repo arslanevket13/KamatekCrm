@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
@@ -16,7 +16,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Müşteri detay sayfası ViewModel - 360 Derece Görünüm
     /// </summary>
-    public class CustomerDetailViewModel : ViewModelBase
+    public partial class CustomerDetailViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
         // _customerId removed from here, defined below or used from below
@@ -78,18 +78,7 @@ namespace KamatekCrm.ViewModels
             SalesOrders = new ObservableCollection<SalesOrder>();
             Activities = new ObservableCollection<CustomerActivity>();
 
-            SaveCommand = new RelayCommand(_ => SaveCustomer(), _ => CanSaveCustomer());
-            BackCommand = new RelayCommand(_ => NavigateBack());
-            NewServiceJobCommand = new RelayCommand(_ => CreateNewServiceJob());
-            
-            // Financial Commands
-            AddPaymentCommand = new RelayCommand(_ => AddTransaction(TransactionType.Payment));
-            AddDebtCommand = new RelayCommand(_ => AddTransaction(TransactionType.Debt));
-            
-            // Yeni komutlar
-            AddNoteCommand = new RelayCommand(_ => AddNote());
-            SaveTagsCommand = new RelayCommand(_ => SaveTags(), _ => _customer != null);
-            SaveSegmentCommand = new RelayCommand(_ => SaveSegment(), _ => _customer != null);
+
         }
 
         public void Initialize(int customerId)
@@ -265,18 +254,8 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        #region Commands
-
-        public ICommand SaveCommand { get; }
-        public ICommand BackCommand { get; }
-        public ICommand NewServiceJobCommand { get; }
-        public ICommand AddPaymentCommand { get; }
-        public ICommand AddDebtCommand { get; }
-        public ICommand AddNoteCommand { get; }
-        public ICommand SaveTagsCommand { get; }
-        public ICommand SaveSegmentCommand { get; }
-
-        #endregion
+        private bool CanSaveTags() => _customer != null;
+        private bool CanSaveSegment() => _customer != null;
 
         #region Methods
 
@@ -397,6 +376,12 @@ namespace KamatekCrm.ViewModels
             TotalBalance = totalDebts - totalPayments;
         }
 
+        [RelayCommand]
+        private void AddPayment() => AddTransaction(TransactionType.Payment);
+
+        [RelayCommand]
+        private void AddDebt() => AddTransaction(TransactionType.Debt);
+
         private void AddTransaction(TransactionType type)
         {
             var title = type == TransactionType.Payment ? "Ödeme/Tahsilat Al" : "Borç Ekle";
@@ -462,6 +447,7 @@ namespace KamatekCrm.ViewModels
                    !string.IsNullOrWhiteSpace(City);
         }
 
+        [RelayCommand(CanExecute = nameof(CanSaveCustomer))]
         private void SaveCustomer()
         {
             if (_customer == null) return;
@@ -496,12 +482,14 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void NavigateBack()
         {
             // CustomersViewModel'e geri dön (DI üzerinden yeniden oluşturulur ve veri yüklenir)
             _navigationService.NavigateTo<CustomersViewModel>();
         }
 
+        [RelayCommand]
         private void CreateNewServiceJob()
         {
             // ServiceJobViewModel'e git ve bu müşteriyi önceden seç
@@ -520,6 +508,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void AddNote()
         {
             var note = Notes;
@@ -565,6 +554,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand(CanExecute = nameof(CanSaveTags))]
         private void SaveTags()
         {
             if (_customer == null) return;
@@ -596,6 +586,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand(CanExecute = nameof(CanSaveSegment))]
         private void SaveSegment()
         {
             if (_customer == null) return;

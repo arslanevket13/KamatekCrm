@@ -1,6 +1,6 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Services;
 
 namespace KamatekCrm.ViewModels
@@ -8,7 +8,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Global arama ViewModel
     /// </summary>
-    public class GlobalSearchViewModel : ViewModelBase
+    public partial class GlobalSearchViewModel : ViewModelBase
     {
         private string _searchQuery = string.Empty;
         private bool _isSearching;
@@ -81,7 +81,6 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Temizle komutu
         /// </summary>
-        public ICommand ClearCommand { get; }
 
         /// <summary>
         /// Sonuç seçme event'i
@@ -93,7 +92,6 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public GlobalSearchViewModel()
         {
-            ClearCommand = new RelayCommand(_ => ClearSearch());
         }
 
         /// <summary>
@@ -133,7 +131,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Aramayı temizle
         /// </summary>
-        private void ClearSearch()
+        [RelayCommand]
+        private void Clear()
         {
             SearchQuery = string.Empty;
             Results.Clear();
@@ -148,7 +147,7 @@ namespace KamatekCrm.ViewModels
         private void NavigateToResult(SearchResult result)
         {
             ResultSelected?.Invoke(result.EntityType, result.Id);
-            ClearSearch();
+            Clear();
         }
 
         /// <summary>
@@ -160,3 +159,4 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+

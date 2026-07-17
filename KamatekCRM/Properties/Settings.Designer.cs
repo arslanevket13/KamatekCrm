@@ -142,5 +142,17 @@ namespace KamatekCrm.Properties {
                 this["IsMainServerManualOverride"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SavedServerAddress {
+            get {
+                return ((string)(this["SavedServerAddress"]));
+            }
+            set {
+                this["SavedServerAddress"] = value;
+            }
+        }
     }
 }

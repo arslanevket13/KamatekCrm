@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
@@ -11,7 +11,7 @@ using KamatekCrm.Shared.Models;
 
 namespace KamatekCrm.ViewModels
 {
-    public class CustomerAddViewModel : ViewModelBase
+    public partial class CustomerAddViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
         
@@ -217,9 +217,6 @@ namespace KamatekCrm.ViewModels
 
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
-        public ICommand SaveCustomerCommand { get; }
-        public ICommand ClearFormCommand { get; }
-        public ICommand CancelCommand { get; }
 
         public event Action<bool>? RequestClose;
 
@@ -230,12 +227,6 @@ namespace KamatekCrm.ViewModels
             Districts = new ObservableCollection<District>();
             Neighborhoods = new ObservableCollection<Neighborhood>();
 
-            SaveCustomerCommand = new RelayCommand(
-                _ => ExecuteSaveCustomer(),
-                _ => CanSaveCustomer() && !IsBusy);
-
-            ClearFormCommand = new RelayCommand(_ => ClearForm());
-            CancelCommand = new RelayCommand(_ => RequestClose?.Invoke(false));
 
             LoadCities();
         }
@@ -244,10 +235,12 @@ namespace KamatekCrm.ViewModels
         {
             return !string.IsNullOrWhiteSpace(FullName) &&
                    !string.IsNullOrWhiteSpace(PhoneNumber) &&
-                   !string.IsNullOrWhiteSpace(City);
+                   !string.IsNullOrWhiteSpace(City) &&
+                   !IsBusy;
         }
 
-        private void ExecuteSaveCustomer()
+        [RelayCommand(CanExecute = nameof(CanSaveCustomer))]
+        private void SaveCustomer()
         {
             if (!CanSaveCustomer())
             {
@@ -302,6 +295,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void ClearForm()
         {
             FullName = string.Empty;
@@ -337,6 +331,12 @@ namespace KamatekCrm.ViewModels
                 .Count(c => c.CustomerCode.StartsWith($"MŞ-{year}-"));
             int nextNumber = customerCount + 1;
             return $"MŞ-{year}-{nextNumber:D4}";
+        }
+
+        [RelayCommand]
+        private void Cancel()
+        {
+            RequestClose?.Invoke(false);
         }
     }
 }

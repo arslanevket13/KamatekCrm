@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
@@ -13,7 +13,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Kullanıcı düzenleme ViewModel
     /// </summary>
-    public class EditUserViewModel : ViewModelBase
+    public partial class EditUserViewModel : ViewModelBase
     {
         private readonly ApiClient _apiClient;
         private readonly IToastService _toastService;
@@ -142,12 +142,10 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Kaydet komutu
         /// </summary>
-        public IAsyncRelayCommand SaveCommand { get; }
 
         /// <summary>
         /// İptal komutu
         /// </summary>
-        public ICommand CancelCommand { get; }
 
         /// <summary>
         /// Kaydetme başarılı event
@@ -185,9 +183,6 @@ namespace KamatekCrm.ViewModels
             _vehiclePlate = user.VehiclePlate ?? "";
             _serviceArea = user.ServiceArea ?? "";
             _expertiseAreas = user.ExpertiseAreas ?? "";
-
-            SaveCommand = new AsyncRelayCommand(SaveUserAsync, CanSaveUser);
-            CancelCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() => CancelRequested?.Invoke());
         }
 
         /// <summary>
@@ -203,7 +198,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Değişiklikleri kaydet
         /// </summary>
-        private async System.Threading.Tasks.Task SaveUserAsync()
+        [RelayCommand(CanExecute = nameof(CanSaveUser))]
+        private async Task Save()
         {
             _loadingService.Show();
             try
@@ -279,5 +275,9 @@ namespace KamatekCrm.ViewModels
                 _ => "Technician"
             };
         }
+
+        [RelayCommand]
+        private void Cancel() => CancelRequested?.Invoke();
     }
 }
+

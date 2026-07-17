@@ -1,4 +1,8 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using KamatekCrm.Data;
 
 namespace KamatekCrm.Services
 {
@@ -42,59 +46,152 @@ namespace KamatekCrm.Services
         }
     }
 
-    public class DatabaseConnectionProvider : IDatabaseConnectionProvider
+    /// <summary>
+    /// PostgreSQL bağlantı dizesini yöneten thread-safe Singleton servis.
+    /// 
+    /// Eşzamanlılık stratejisi: <see cref="ReaderWriterLockSlim"/>
+    /// - Okumalar (GetConnectionString, CurrentServerIp, IsConnected): Birden fazla
+    ///   iş parçacığı eş zamanlı olarak okuyabilir (EnterReadLock).
+    /// - Yazmalar (SetServerIp, SetConnectionState): Tek yazıcı erişimi garanti
+    ///   edilir, tüm okuyucular yazma bitene kadar beklenir (EnterWriteLock).
+    /// 
+    /// Bu servis DI konteynerinde Singleton olarak kayıtlıdır.
+    /// <see cref="IDisposable"/> ile ReaderWriterLockSlim kaynağı temizlenir.
+    /// </summary>
+    public class DatabaseConnectionProvider : IDatabaseConnectionProvider, IDisposable
     {
+        #region Fields
+
         private string _currentServerIp = "";
         private bool _isConnected;
-        private readonly object _lockObj = new object();
+        private bool _disposed;
 
-        private const string DbUser = "postgres"; // varsayılan
-        private const string DbPass = "123456";   // varsayılan
-        private const string DbName = "kamatekcrm"; // varsayılan
+        /// <summary>
+        /// Read-heavy / Write-rare senaryo için optimize edilmiş kilit.
+        /// Recursion desteği kapatılmıştır (deadlock önleme).
+        /// </summary>
+        private readonly ReaderWriterLockSlim _rwLock = new(LockRecursionPolicy.NoRecursion);
 
-        public string CurrentServerIp 
+        private const string DbUser = "postgres";   // varsayılan
+        private const string DbPass = "123456";      // varsayılan
+        private const string DbName = "kamatekcrm";  // varsayılan
+
+        #endregion
+
+        #region Properties (Read-Locked)
+
+        /// <summary>
+        /// O anki aktif sunucu IP adresini thread-safe şekilde döner.
+        /// </summary>
+        public string CurrentServerIp
         {
             get
             {
-                lock (_lockObj) return _currentServerIp;
+                _rwLock.EnterReadLock();
+                try
+                {
+                    return _currentServerIp;
+                }
+                finally
+                {
+                    _rwLock.ExitReadLock();
+                }
             }
         }
 
+        /// <summary>
+        /// Veritabanına bağlı olup olmadığını thread-safe şekilde döner.
+        /// </summary>
         public bool IsConnected
         {
             get
             {
-                lock (_lockObj) return _isConnected;
+                _rwLock.EnterReadLock();
+                try
+                {
+                    return _isConnected;
+                }
+                finally
+                {
+                    _rwLock.ExitReadLock();
+                }
             }
         }
 
+        #endregion
+
+        #region Write Operations (Write-Locked)
+
+        /// <summary>
+        /// Aktif sunucu IP adresini günceller.
+        /// Yazma kilidi alır — tüm okuyucular yazma bitene kadar beklenir.
+        /// </summary>
         public void SetServerIp(string ipAddress)
         {
-            lock (_lockObj)
+            _rwLock.EnterWriteLock();
+            try
             {
-                _currentServerIp = ipAddress;
+                _currentServerIp = ipAddress ?? "";
+            }
+            finally
+            {
+                _rwLock.ExitWriteLock();
             }
         }
 
+        /// <summary>
+        /// Bağlantı durumunu günceller.
+        /// Yazma kilidi alır — tüm okuyucular yazma bitene kadar beklenir.
+        /// </summary>
         public void SetConnectionState(bool isConnected)
         {
-            lock (_lockObj)
+            _rwLock.EnterWriteLock();
+            try
             {
                 _isConnected = isConnected;
             }
-        }
-
-        public string GetConnectionString()
-        {
-            lock (_lockObj)
+            finally
             {
-                if (string.IsNullOrEmpty(_currentServerIp))
-                    throw new InvalidOperationException("Sunucu IP adresi henüz bulunamadı. Bağlantı dizesi oluşturulamaz.");
-
-                return $"Host={_currentServerIp};Database={DbName};Username={DbUser};Password={DbPass};Pooling=true;MinPoolSize=1;MaxPoolSize=100;CommandTimeout=20;";
+                _rwLock.ExitWriteLock();
             }
         }
 
+        #endregion
+
+        #region Read Operations (Read-Locked)
+
+        /// <summary>
+        /// Mevcut sunucu IP'sine göre tam bağlantı dizesi oluşturur.
+        /// Okuma kilidi alır — birden fazla ViewModel eş zamanlı çağırabilir.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Sunucu IP henüz ayarlanmamışsa.</exception>
+        public string GetConnectionString()
+        {
+            _rwLock.EnterReadLock();
+            try
+            {
+                if (string.IsNullOrEmpty(_currentServerIp))
+                    throw new InvalidOperationException(
+                        "Sunucu IP adresi henüz bulunamadı. Bağlantı dizesi oluşturulamaz.");
+
+                return $"Host={_currentServerIp};Database={DbName};Username={DbUser};" +
+                       $"Password={DbPass};Pooling=true;MinPoolSize=1;MaxPoolSize=100;CommandTimeout=20;";
+            }
+            finally
+            {
+                _rwLock.ExitReadLock();
+            }
+        }
+
+        #endregion
+
+        #region Connection Test (Kilitsiz — kendi parametreleriyle çalışır)
+
+        /// <summary>
+        /// Belirtilen IP adresine test bağlantısı yapar.
+        /// Bu metot paylaşılan durumu (state) okumaz veya değiştirmez;
+        /// parametre olarak aldığı IP'yi kullanır, bu nedenle kilide ihtiyaç duymaz.
+        /// </summary>
         public async Task<bool> TestConnectionAsync(string serverIp)
         {
             if (string.IsNullOrWhiteSpace(serverIp)) return false;
@@ -106,24 +203,22 @@ namespace KamatekCrm.Services
                 return false;
             }
 
+            // Strict Connection String for testing (Pooling=false prevents keeping bad connections open)
+            string testConnString = $"Host={cleanIp};Database={DbName};Username={DbUser};" +
+                                    $"Password={DbPass};Pooling=false;CommandTimeout=2;";
+
             // Offload DNS resolution and network waiting to background thread (Prevent UI Freeze)
             return await Task.Run(async () =>
             {
-                using var cts = new System.Threading.CancellationTokenSource(2000); // STRICTLY 2000ms Timeout
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2)); // STRICTLY 2000ms Timeout
                 try
                 {
-                    using var tcpClient = new System.Net.Sockets.TcpClient();
+                    var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+                    optionsBuilder.UseNpgsql(testConnString);
+                    using var dbContext = new AppDbContext(optionsBuilder.Options);
                     
-                    var connectTask = tcpClient.ConnectAsync(cleanIp, 5432);
-                    var delayTask = Task.Delay(2000, cts.Token);
-                    
-                    var completedTask = await Task.WhenAny(connectTask, delayTask);
-                    
-                    if (completedTask == connectTask && tcpClient.Connected)
-                    {
-                        return true;
-                    }
-                    return false;
+                    // This strictly validates that PostgreSQL is running AND the credentials/DB Name are correct
+                    return await dbContext.Database.CanConnectAsync(cts.Token);
                 }
                 catch
                 {
@@ -131,5 +226,25 @@ namespace KamatekCrm.Services
                 }
             });
         }
+
+        #endregion
+
+        #region IDisposable
+
+        /// <summary>
+        /// ReaderWriterLockSlim kaynağını temizler.
+        /// DI konteyneri Singleton ömrünü yönettiğinden,
+        /// uygulama kapanışında otomatik çağrılır.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _rwLock.Dispose();
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
     }
 }
+

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using GongSolutions.Wpf.DragDrop;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -19,7 +19,7 @@ namespace KamatekCrm.ViewModels
     /// Proje Teklif Editörü ViewModel - Üç Panelli Workbench
     /// Drag & Drop, Tree Yönetimi, Finansal Hesaplamalar
     /// </summary>
-    public class ProjectQuoteEditorViewModel : ViewModelBase, IDropTarget
+    public partial class ProjectQuoteEditorViewModel : ViewModelBase, IDropTarget
     {
         private readonly AppDbContext _context;
         private readonly ProjectScopeService _scopeService;
@@ -222,26 +222,12 @@ namespace KamatekCrm.ViewModels
         #region Commands
 
         // Yapı Oluşturma
-        public ICommand GenerateStructureCommand { get; }
 
         // Tree Yönetimi
-        public ICommand AddBlockCommand { get; }
-        public ICommand AddFloorCommand { get; }
-        public ICommand AddFlatCommand { get; }
-        public ICommand AddZoneCommand { get; }
-        public ICommand DuplicateNodeCommand { get; }
-        public ICommand RenameNodeCommand { get; }
-        public ICommand RemoveNodeCommand { get; }
-        public ICommand ApplyToSiblingsCommand { get; }
 
         // Kalem Yönetimi
-        public ICommand AddItemCommand { get; }
-        public ICommand RemoveItemCommand { get; }
 
         // Proje İşlemleri
-        public ICommand SaveCommand { get; }
-        public ICommand ExportPdfCommand { get; }
-        public ICommand CancelCommand { get; }
 
         #endregion
 
@@ -253,26 +239,9 @@ namespace KamatekCrm.ViewModels
             _scopeService = scopeService;
 
             // Commands
-            GenerateStructureCommand = new RelayCommand(_ => GenerateStructure());
 
-            AddBlockCommand = new RelayCommand(_ => AddBlock());
-            AddFloorCommand = new RelayCommand(_ => AddFloor(), _ => CanAddFloor);
-            AddFlatCommand = new RelayCommand(_ => AddFlat(), _ => CanAddFlat);
-            AddZoneCommand = new RelayCommand(_ => AddZone(), _ => HasSelectedNode);
-            DuplicateNodeCommand = new RelayCommand(_ => DuplicateNode(), _ => SelectedNode != null && SelectedNode.Type != NodeType.Project);
-            RenameNodeCommand = new RelayCommand(_ => RenameNode(), _ => HasSelectedNode);
-            RemoveNodeCommand = new RelayCommand(_ => RemoveNode(), _ => SelectedNode != null && SelectedNode.Type != NodeType.Project);
-            ApplyToSiblingsCommand = new RelayCommand(_ => ApplyToSiblings(), _ => SelectedNode?.Parent != null);
 
-            AddItemCommand = new RelayCommand(_ => AddItemToNode(), _ => HasSelectedNode && SelectedProduct != null);
-            RemoveItemCommand = new RelayCommand(_ => RemoveItemFromNode(), _ => SelectedItem != null);
-
-            SaveCommand = new RelayCommand(_ => Save(), _ => CanSave());
-            ExportPdfCommand = new RelayCommand(_ => ExportPdf());
-            SendEmailCommand = new RelayCommand(_ => SendEmail(), _ => CanSave());
-            CancelCommand = new RelayCommand(CloseWindow);
-
-            LoadData();
+            Refresh();
         }
 
         /// <summary>
@@ -287,7 +256,7 @@ namespace KamatekCrm.ViewModels
 
         #region Data Loading
 
-        private void LoadData()
+        private void Refresh()
         {
             // Müşterileri yükle
             var customers = _context.Customers.OrderBy(c => c.FullName).ToList();
@@ -354,6 +323,7 @@ namespace KamatekCrm.ViewModels
 
         #region Yapı Oluşturma
 
+        [RelayCommand]
         private void GenerateStructure()
         {
             if (string.IsNullOrWhiteSpace(ProjectName))
@@ -390,6 +360,7 @@ namespace KamatekCrm.ViewModels
 
         #region Tree Yönetimi
 
+        [RelayCommand]
         private void AddBlock()
         {
             var projectNode = RootNodes.FirstOrDefault();
@@ -407,6 +378,7 @@ namespace KamatekCrm.ViewModels
             NotifyFinancialsChanged();
         }
 
+        [RelayCommand]
         private void AddFloor()
         {
             if (SelectedNode?.Type != NodeType.Block) return;
@@ -418,6 +390,7 @@ namespace KamatekCrm.ViewModels
             NotifyFinancialsChanged();
         }
 
+        [RelayCommand]
         private void AddFlat()
         {
             if (SelectedNode == null) return;
@@ -448,6 +421,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void AddZone()
         {
             if (SelectedNode == null) return;
@@ -459,6 +433,7 @@ namespace KamatekCrm.ViewModels
             NotifyFinancialsChanged();
         }
 
+        [RelayCommand]
         private void DuplicateNode()
         {
             if (SelectedNode == null || SelectedNode.Parent == null) return;
@@ -471,6 +446,7 @@ namespace KamatekCrm.ViewModels
             NotifyFinancialsChanged();
         }
 
+        [RelayCommand]
         private void RenameNode()
         {
             if (SelectedNode == null) return;
@@ -487,6 +463,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void RemoveNode()
         {
             if (SelectedNode == null || SelectedNode.Type == NodeType.Project) return;
@@ -515,6 +492,7 @@ namespace KamatekCrm.ViewModels
             NotifyFinancialsChanged();
         }
 
+        [RelayCommand]
         private void ApplyToSiblings()
         {
             if (SelectedNode?.Parent == null) return;
@@ -567,7 +545,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void AddItemToNode()
+        [RelayCommand]
+        private void AddItem()
         {
             if (SelectedNode == null || SelectedProduct == null) return;
 
@@ -584,7 +563,8 @@ namespace KamatekCrm.ViewModels
             NotifyFinancialsChanged();
         }
 
-        private void RemoveItemFromNode()
+        [RelayCommand]
+        private void RemoveItem()
         {
             if (SelectedNode == null || SelectedItem == null) return;
 
@@ -665,6 +645,7 @@ namespace KamatekCrm.ViewModels
                 && RootNodes.Any();
         }
 
+        [RelayCommand]
         private void Save()
         {
             try
@@ -726,6 +707,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
         private void ExportPdf()
         {
             if (RootNodes == null || !RootNodes.Any())
@@ -786,8 +768,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        public ICommand SendEmailCommand { get; }
-
+        [RelayCommand]
         private async void SendEmail()
         {
              if (SelectedCustomer == null || string.IsNullOrWhiteSpace(SelectedCustomer.Email))
@@ -851,7 +832,8 @@ namespace KamatekCrm.ViewModels
              }
         }
 
-        private void CloseWindow(object? parameter)
+        [RelayCommand]
+        private void Cancel(object? parameter)
         {
             if (parameter is Window window)
                 window.Close();
@@ -860,3 +842,4 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
+

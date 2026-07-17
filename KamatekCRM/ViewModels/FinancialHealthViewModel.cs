@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using KamatekCrm.Data;
@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
-    public class FinancialHealthViewModel : ViewModelBase
+    public partial class FinancialHealthViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
 
@@ -161,3 +161,4 @@ namespace KamatekCrm.ViewModels
         public decimal MarginPercent { get; set; }
     }
 }
+

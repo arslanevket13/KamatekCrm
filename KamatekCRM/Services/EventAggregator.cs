@@ -109,4 +109,14 @@ namespace KamatekCrm.Services
     /// Ağ bağlantısı veya veritabanı bağlantısı tekrar sağlandığında fırlatılır
     /// </summary>
     public class DatabaseConnectionRestoredEvent { }
+
+    /// <summary>
+    /// İlk kurulumda veya yeniden denemede veritabanı bağlantısı kesinleştiğinde fırlatılır
+    /// </summary>
+    public class DatabaseConnectionEstablishedEvent { }
+
+    /// <summary>
+    /// Hiçbir sunucu bulunamadığında UI tarafında manuel bağlantı sihirbazını göstermek için fırlatılır
+    /// </summary>
+    public class ShowManualConnectionWizardEvent { }
 }

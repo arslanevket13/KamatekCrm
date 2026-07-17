@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -18,7 +18,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Kullanıcı listesi ViewModel
     /// </summary>
-    public class UsersViewModel : ViewModelBase
+    public partial class UsersViewModel : ViewModelBase
     {
         private readonly ApiClient _apiClient;
         private readonly IAuthService _authService;
@@ -102,13 +102,6 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand AddUserCommand { get; }
-        public ICommand EditUserCommand { get; }
-        public IAsyncRelayCommand DeleteUserCommand { get; }
-        public IAsyncRelayCommand ResetPasswordCommand { get; }
-        public ICommand SetPasswordCommand { get; }
-        public IAsyncRelayCommand RefreshCommand { get; }
-
         #endregion
 
         /// <summary>
@@ -127,13 +120,6 @@ namespace KamatekCrm.ViewModels
             _apiClient = apiClient;
             _toastService = toastService;
             _loadingService = loadingService;
-
-            AddUserCommand = new RelayCommand(() => OpenAddUserWindow(), () => IsAdmin);
-            EditUserCommand = new RelayCommand(() => OpenEditUserWindow(SelectedUser!), () => SelectedUser != null && IsAdmin);
-            DeleteUserCommand = new AsyncRelayCommand(DeleteUserAsync, () => CanDeleteUser());
-            ResetPasswordCommand = new AsyncRelayCommand(ResetPasswordTo1234Async, () => SelectedUser != null && IsAdmin);
-            SetPasswordCommand = new RelayCommand(() => OpenSetPasswordWindow(), () => SelectedUser != null && IsAdmin);
-            RefreshCommand = new AsyncRelayCommand(LoadUsersAsync);
 
             // Execute initial load
             _ = LoadUsersAsync();
@@ -394,3 +380,5 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+
+

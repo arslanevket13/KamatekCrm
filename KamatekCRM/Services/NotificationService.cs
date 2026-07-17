@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace KamatekCrm.Services
 {
@@ -17,7 +19,7 @@ namespace KamatekCrm.Services
         // Servis sınıfı her çağrıldığında yeni instance oluşuyorsa Static kullanmak zorundayız.
         // Singleton olarak kaydedildiyse instance field olabilir. Güvence için static kullanıyoruz.
 
-        public List<NotificationItem> GetNotifications()
+        public async Task<List<NotificationItem>> GetNotificationsAsync()
         {
             var notifications = new List<NotificationItem>();
 
@@ -26,11 +28,11 @@ namespace KamatekCrm.Services
                 using (var context = new AppDbContext())
                 {
                     // 1. Düşük Stok Uyarısı
-                    var lowStock = context.Products
+                    var lowStock = await context.Products
                         .Where(p => p.TotalStockQuantity <= 5)
                         .Select(p => new { p.ProductName, p.TotalStockQuantity })
                         .Take(5)
-                        .ToList();
+                        .ToListAsync();
 
                     foreach (var item in lowStock)
                     {
@@ -50,12 +52,12 @@ namespace KamatekCrm.Services
 
                     // 2. Unutulmuş Teklifler (7 günden eski Lead/Quoted)
                     var staleDate = DateTime.Today.AddDays(-7);
-                    var staleQuotes = context.ServiceProjects
+                    var staleQuotes = await context.ServiceProjects
                         .Include(p => p.Customer)
                         .Where(p => (p.PipelineStage == PipelineStage.Lead || p.PipelineStage == PipelineStage.Quoted) 
                                  && p.CreatedDate <= staleDate)
                         .Take(5)
-                        .ToList();
+                        .ToListAsync();
 
                     foreach (var quote in staleQuotes)
                     {
@@ -74,9 +76,15 @@ namespace KamatekCrm.Services
                     }
                 }
             }
+            catch (PostgresException pgEx)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CRITICAL] Notification Service Database Error: {pgEx.Message}");
+                return new List<NotificationItem>(); // UI çökmesini engelle
+            }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Notification Service Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[ERROR] Notification Service General Error: {ex.Message}");
+                return new List<NotificationItem>(); // UI çökmesini engelle
             }
 
             return notifications;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using KamatekCrm.Data;
@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
-    public class AnalyticsViewModel : ViewModelBase
+    public partial class AnalyticsViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
 
@@ -27,7 +27,7 @@ namespace KamatekCrm.ViewModels
             _trendSeries = Array.Empty<ISeries>();
             _trendXAxes = Array.Empty<Axis>();
             
-            LoadData();
+            Refresh();
         }
 
         #region Charts Properties
@@ -82,7 +82,7 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        private void LoadData()
+        private void Refresh()
         {
             // Verileri çek (Include ile ilişkili tabloları almayı unutma gerekirse)
             var allJobs = _context.ServiceJobs.Include(j => j.AssignedUser).ToList();
@@ -193,3 +193,4 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+

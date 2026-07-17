@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using ClosedXML.Excel;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -23,7 +23,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Stok/Ürün yönetimi ViewModel - GÜNCELLENMİŞ VERSİYON
     /// </summary>
-    public class ProductViewModel : ViewModelBase
+    public partial class ProductViewModel : ViewModelBase
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private AppDbContext _context;
@@ -87,40 +87,8 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _isActionSuccessful, value);
         }
 
-        /// <summary>
-        /// Yeni Ürün Ekle Komutu
-        /// </summary>
-        public ICommand AddNewProductCommand { get; }
-
-        /// <summary>
-        /// Ürün Düzenle Komutu
-        /// </summary>
-        public ICommand EditProductCommand { get; }
-
-        /// <summary>
-        /// Excel'den İçe Aktar Komutu
-        /// </summary>
-        public ICommand ImportExcelCommand { get; }
-
-        /// <summary>
-        /// Ürün Sil Komutu
-        /// </summary>
-        public ICommand DeleteProductCommand { get; }
-
-        /// <summary>
-        /// Stok Transfer Komutu
-        /// </summary>
-        public ICommand TransferStockCommand { get; }
-
-        /// <summary>
-        /// Ürün Fotoğrafı Yükle
-        /// </summary>
-        public ICommand UploadProductPhotoCommand { get; }
-
-        /// <summary>
-        /// Ürün Fotoğrafını Sil
-        /// </summary>
-        public ICommand DeleteProductPhotoCommand { get; }
+        private bool IsProductSelected() => SelectedProduct != null;
+        private bool HasProductPhoto() => SelectedProduct?.ImagePath != null;
 
         /// <summary>
         /// Constructor
@@ -134,13 +102,6 @@ namespace KamatekCrm.ViewModels
             Products = new ObservableCollection<Product>();
 
             // Komutları tanımla
-            AddNewProductCommand = new RelayCommand(_ => AddNewProduct());
-            EditProductCommand = new RelayCommand(_ => EditProduct(), _ => SelectedProduct != null);
-            ImportExcelCommand = new RelayCommand(_ => ImportFromExcel());
-            DeleteProductCommand = new RelayCommand(_ => ExecuteDeleteProduct(), _ => SelectedProduct != null);
-            TransferStockCommand = new RelayCommand(_ => TransferStock(), _ => SelectedProduct != null);
-            UploadProductPhotoCommand = new RelayCommand(_ => ExecuteUploadProductPhoto(), _ => SelectedProduct != null);
-            DeleteProductPhotoCommand = new RelayCommand(_ => ExecuteDeleteProductPhoto(), _ => SelectedProduct?.ImagePath != null);
 
             // Verileri yükle
             LoadProducts();
@@ -189,6 +150,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Yeni ürün ekleme penceresini aç
         /// </summary>
+        [RelayCommand]
         private void AddNewProduct()
         {
             var window = new Views.AddProductWindow();
@@ -205,6 +167,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Seçili ürünü düzenle
         /// </summary>
+        [RelayCommand(CanExecute = nameof(IsProductSelected))]
         private void EditProduct()
         {
             if (SelectedProduct == null) return;
@@ -225,7 +188,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Seçili ürünü sil
         /// </summary>
-        private void ExecuteDeleteProduct()
+        [RelayCommand(CanExecute = nameof(IsProductSelected))]
+        private void DeleteProduct()
         {
             if (SelectedProduct == null) return;
 
@@ -257,7 +221,8 @@ namespace KamatekCrm.ViewModels
         /// Excel'den ürün içe aktar
         /// Excel formatı: SKU | Ürün Adı | Kategori | Alış Fiyatı | Satış Fiyatı | Stok Miktarı
         /// </summary>
-        private void ImportFromExcel()
+        [RelayCommand]
+        private void ImportExcel()
         {
             var openDialog = new OpenFileDialog
             {
@@ -444,6 +409,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Stok transfer penceresini aç
         /// </summary>
+        [RelayCommand(CanExecute = nameof(IsProductSelected))]
         private void TransferStock()
         {
             if (SelectedProduct == null) return;
@@ -478,7 +444,8 @@ namespace KamatekCrm.ViewModels
         /// Dosya seçici açar, seçilen görseli ProductImageService ile sıkıştırıp kaydeder
         /// ve Product.ImagePath'i günceller.
         /// </summary>
-        private async void ExecuteUploadProductPhoto()
+        [RelayCommand(CanExecute = nameof(IsProductSelected))]
+        private async Task UploadProductPhoto()
         {
             if (SelectedProduct == null) return;
 
@@ -525,7 +492,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Ürün fotoğrafını siler ve ImagePath'i temizler.
         /// </summary>
-        private void ExecuteDeleteProductPhoto()
+        [RelayCommand(CanExecute = nameof(HasProductPhoto))]
+        private void DeleteProductPhoto()
         {
             if (SelectedProduct?.ImagePath == null) return;
 

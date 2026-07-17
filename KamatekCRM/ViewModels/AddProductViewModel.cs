@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -18,7 +18,7 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Ürün Ekleme/Düzenleme ViewModel - Add ve Edit modlarını destekler
     /// </summary>
-    public class AddProductViewModel : ViewModelBase
+    public partial class AddProductViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
         private readonly IProductImageService _imageService;
@@ -103,12 +103,6 @@ namespace KamatekCrm.ViewModels
                 }
             }
 
-            // Komutları tanımla
-            SaveCommand = new RelayCommand(_ => SaveProduct(), _ => CanSave());
-            CancelCommand = new RelayCommand(_ => Cancel());
-            GenerateSKUCommand = new RelayCommand(_ => RegenerateSKU());
-            BrowseImageCommand = new RelayCommand(_ => BrowseImage());
-            RemoveImageCommand = new RelayCommand(_ => RemoveImage(), _ => !string.IsNullOrEmpty(_pendingImagePath) || !string.IsNullOrEmpty(NewProduct?.ImagePath));
 
             // Edit modunda mevcut resmi önizle
             if (_isEditMode && !string.IsNullOrEmpty(_newProduct.ImagePath))
@@ -236,14 +230,7 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        #region Commands
-
-        public ICommand SaveCommand { get; }
-        public ICommand CancelCommand { get; }
-        public ICommand GenerateSKUCommand { get; }
-        public ICommand BrowseImageCommand { get; }
-        public ICommand RemoveImageCommand { get; }
-
+        private bool CanRemoveImage() => !string.IsNullOrEmpty(_pendingImagePath) || !string.IsNullOrEmpty(NewProduct?.ImagePath);
         /// <summary>
         /// Pencere kapatma olayı
         /// </summary>
@@ -263,7 +250,6 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public bool HasImage => _selectedImagePreview != null;
 
-        #endregion
 
         #region Methods
 
@@ -319,6 +305,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// SKU'yu yeniden üretir
         /// </summary>
+        [RelayCommand]
         private void RegenerateSKU()
         {
             NewProduct.SKU = GenerateSKU();
@@ -337,7 +324,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Ürünü kaydet veya güncelle
         /// </summary>
-        private async void SaveProduct()
+        [RelayCommand(CanExecute = nameof(CanSave))]
+        private async Task Save()
         {
             try
             {
@@ -406,6 +394,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İptal et
         /// </summary>
+        [RelayCommand]
         private void Cancel()
         {
             RequestClose?.Invoke(false);
@@ -539,6 +528,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Dosya seçici ile resim seç
         /// </summary>
+        [RelayCommand]
         private void BrowseImage()
         {
             var dialog = new OpenFileDialog
@@ -572,6 +562,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Seçilen resmi kaldır
         /// </summary>
+        [RelayCommand(CanExecute = nameof(CanRemoveImage))]
         private void RemoveImage()
         {
             _pendingImagePath = null;

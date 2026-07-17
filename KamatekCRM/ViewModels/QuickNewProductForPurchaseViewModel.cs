@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Commands;
+using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -14,7 +14,7 @@ namespace KamatekCrm.ViewModels
     /// Satın Alma ekranından hızlı yeni ürün oluşturma ViewModel.
     /// Kayıt sonrası SavedProduct set edilip pencere kapanır.
     /// </summary>
-    public class QuickNewProductForPurchaseViewModel : ViewModelBase
+    public partial class QuickNewProductForPurchaseViewModel : ViewModelBase
     {
         private readonly AppDbContext _context;
 
@@ -118,9 +118,6 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        public ICommand SaveProductCommand { get; }
-        public ICommand CancelCommand { get; }
-
         #endregion
 
         public event Action<bool>? RequestClose;
@@ -129,12 +126,6 @@ namespace KamatekCrm.ViewModels
         {
             _context = new AppDbContext();
             LoadCategories();
-
-            SaveProductCommand = new RelayCommand(
-                _ => ExecuteSaveProduct(),
-                _ => !string.IsNullOrWhiteSpace(ProductName) && !IsBusy);
-
-            CancelCommand = new RelayCommand(_ => RequestClose?.Invoke(false));
         }
 
         private void LoadCategories()
@@ -148,7 +139,14 @@ namespace KamatekCrm.ViewModels
             catch { /* silently ignore — category is optional */ }
         }
 
-        private void ExecuteSaveProduct()
+        private bool CanSaveProduct() => !string.IsNullOrWhiteSpace(ProductName) && !IsBusy;
+
+        [RelayCommand]
+        private void Cancel() => RequestClose?.Invoke(false);
+
+        [RelayCommand(CanExecute = nameof(CanSaveProduct))]
+        private void SaveProduct()
+
         {
             if (string.IsNullOrWhiteSpace(ProductName))
             {
@@ -218,3 +216,6 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
+
+
+
