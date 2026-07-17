@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -14,7 +14,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class PasswordResetViewModel : ViewModelBase
     {
-        private readonly ApiClient _apiClient;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly User _user;
 
@@ -89,11 +89,11 @@ namespace KamatekCrm.ViewModels
         public event Action? SaveSuccessful;
         public event Action? CancelRequested;
 
-        public PasswordResetViewModel(User user, IAuthService authService, ApiClient apiClient)
+        public PasswordResetViewModel(User user, IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory)
         {
             _user = user;
             _authService = authService;
-            _apiClient = apiClient;
+            _dbContextFactory = dbContextFactory;
         }
 
         private bool CanSavePassword()
@@ -123,12 +123,14 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
-                // API uzerinden sifre degistir
-                var payload = new { UserId = _user.Id, NewPassword = NewPassword };
-                var response = await _apiClient.PutAsync<object>($"api/users/{_user.Id}/password", payload);
-
-                if (response.Success)
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var dbUser = await context.Users.FindAsync(_user.Id);
+                
+                if (dbUser != null)
                 {
+                    dbUser.PasswordHash = NewPassword;
+                    await context.SaveChangesAsync();
+                    
                     IsSuccess = true;
                     StatusMessage = "Sifre basariyla guncellendi!";
                     SaveSuccessful?.Invoke();
@@ -136,7 +138,7 @@ namespace KamatekCrm.ViewModels
                 else
                 {
                     IsSuccess = false;
-                    StatusMessage = $"Hata: {response.Message}";
+                    StatusMessage = "Hata: Kullanici bulunamadi.";
                 }
             }
             catch (Exception ex)

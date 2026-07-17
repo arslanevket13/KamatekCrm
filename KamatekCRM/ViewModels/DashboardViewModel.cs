@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -12,6 +12,7 @@ using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using KamatekCrm.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
@@ -20,7 +21,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class DashboardViewModel : ViewModelBase
     {
-        private readonly ApiClient _apiClient;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly ILoadingService _loadingService;
         private readonly IToastService _toastService;
@@ -285,10 +286,10 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public DashboardViewModel(IAuthService authService, ApiClient apiClient, ILoadingService loadingService, IToastService toastService, IDatabaseConnectionProvider connectionProvider)
+        public DashboardViewModel(IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory, ILoadingService loadingService, IToastService toastService, IDatabaseConnectionProvider connectionProvider)
         {
             _authService = authService;
-            _apiClient = apiClient;
+            _dbContextFactory = dbContextFactory;
             _loadingService = loadingService;
             _toastService = toastService;
             
@@ -323,7 +324,7 @@ namespace KamatekCrm.ViewModels
         {
             // Design-time için varsayılan değerler
             _authService = new DesignTimeAuthService();
-            _apiClient = null!;
+            _dbContextFactory = null!;
             _loadingService = null!;
             _toastService = null!;
             LowStockProducts = new ObservableCollection<LowStockItemDto>();
@@ -357,56 +358,90 @@ namespace KamatekCrm.ViewModels
             _loadingService?.Show();
             try
             {
-                var response = await _apiClient.GetAsync<DashboardSummaryDto>("api/dashboard/summary");
-                if (response != null && response.Data != null)
-                {
-                    var dto = response.Data;
-                    
-                    // 1. Low Stocks
-                    LowStockProducts.Clear();
-                    foreach(var item in dto.LowStockProducts) LowStockProducts.Add(item);
-                    LowStockCount = dto.LowStockProducts.Count;
-                    
-                    // 2. Todays Jobs
-                    TodaysJobs.Clear();
-                    foreach(var item in dto.TodaysJobs)
-                    {
-                        item.Category = GetCategoryIcon(item.Category) + " " + GetCategoryName(item.Category);
-                        TodaysJobs.Add(item);
-                    }
-                    TodaysJobsCount = dto.TodaysJobs.Count;
-                    
-                    // 3. Ready Repairs
-                    ReadyToDeliverRepairs.Clear();
-                    foreach(var item in dto.ReadyToDeliverRepairs) ReadyToDeliverRepairs.Add(item);
-                    ReadyRepairsCount = dto.ReadyToDeliverRepairs.Count;
-                    
-                    // 4. Financials
-                    DailyIncome = dto.Financials.DailyIncome;
-                    DailyExpense = dto.Financials.DailyExpense;
-                    MonthlySalesTotal = dto.Financials.MonthlySalesTotal;
-                    MonthlySalesCount = dto.Financials.MonthlySalesCount;
-                    MonthlyJobsCompleted = dto.Financials.MonthlyJobsCompleted;
-                    ActiveJobsCount = dto.Financials.ActiveJobsCount;
-                    
-                    // 5. Customer Stats
-                    TotalCustomers = dto.CustomerStats.TotalCustomers;
-                    NewCustomersThisMonth = dto.CustomerStats.NewCustomersThisMonth;
-                    VipCustomers = dto.CustomerStats.VipCustomers;
-                    UpcomingBirthdays = dto.CustomerStats.UpcomingBirthdays;
-                    BirthdayCustomers.Clear();
-                    foreach(var bday in dto.CustomerStats.BirthdayCustomers) BirthdayCustomers.Add(bday);
-                    
-                    // 6. Sales Reports
-                    TodaySalesTotal = dto.SalesReports.TodaySalesTotal;
-                    TodaySalesCount = dto.SalesReports.TodaySalesCount;
-                    WeekSalesTotal = dto.SalesReports.WeekSalesTotal;
-                    AverageSaleAmount = dto.SalesReports.AverageSaleAmount;
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var today = DateTime.UtcNow.Date;
+                var startOfMonth = new DateTime(today.Year, today.Month, 1);
+                var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+                var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
 
-                    // 7. Chart Data
-                    LoadWeeklyTrendChart(dto.ChartData.WeeklyTrend);
-                    LoadJobCategoryPieChart(dto.ChartData.JobCategoryDistribution);
+                // 1. Low Stocks
+                var lowStock = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                    System.Linq.Queryable.Take(
+                        System.Linq.Queryable.Where(context.Products, p => p.TotalStockQuantity <= p.MinStockLevel), 10));
+                
+                LowStockProducts.Clear();
+                foreach(var item in lowStock)
+                {
+                    LowStockProducts.Add(new LowStockItemDto { ProductId = item.Id, ProductName = item.ProductName, CurrentStock = item.TotalStockQuantity, MinStockLevel = item.MinStockLevel });
                 }
+                LowStockCount = lowStock.Count;
+                
+                // 2. Todays Jobs
+                var todaysJobs = await context.ServiceJobs
+                    .Include(j => j.Customer)
+                    .Where(j => j.CreatedDate.Date == today)
+                    .Take(10)
+                    .ToListAsync();
+                
+                TodaysJobs.Clear();
+                foreach(var item in todaysJobs)
+                {
+                    TodaysJobs.Add(new TodayJobItemDto { 
+                        JobId = item.Id, CustomerName = item.Customer?.CompanyName ?? "Bilinmiyor", 
+                        Category = GetCategoryIcon(item.JobCategory.ToString()) + " " + GetCategoryName(item.JobCategory.ToString()),
+                        ScheduledTime = item.ScheduledDate?.ToString("HH:mm") ?? "",
+                        Priority = item.Priority.ToString()
+                    });
+                }
+                TodaysJobsCount = TodaysJobs.Count;
+                
+                // 3. Ready Repairs
+                var readyJobs = await context.ServiceJobs
+                    .Include(j => j.Customer)
+                    .Where(j => j.Status == JobStatus.Completed || j.Status == JobStatus.WaitingForApproval)
+                    .Take(10)
+                    .ToListAsync();
+                
+                ReadyToDeliverRepairs.Clear();
+                foreach(var item in readyJobs)
+                {
+                    ReadyToDeliverRepairs.Add(new ReadyRepairItemDto { 
+                        JobId = item.Id, CustomerName = item.Customer?.CompanyName ?? "Bilinmiyor",
+                        DeviceInfo = item.Description, DaysWaiting = (DateTime.UtcNow - item.CreatedDate).Days
+                    });
+                }
+                ReadyRepairsCount = ReadyToDeliverRepairs.Count;
+                
+                // 4. Financials
+                DailyIncome = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
+                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date == today && c.TransactionType == CashTransactionType.CashIncome), c => c.Amount);
+                DailyExpense = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
+                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date == today && c.TransactionType == CashTransactionType.CashExpense), c => c.Amount);
+                MonthlySalesTotal = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
+                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date >= startOfMonth && c.TransactionType == CashTransactionType.CashIncome), c => c.Amount);
+                MonthlySalesCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
+                    System.Linq.Queryable.Where(context.ServiceJobs, j => j.CreatedDate >= startOfMonth));
+                MonthlyJobsCompleted = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
+                    System.Linq.Queryable.Where(context.ServiceJobs, j => j.CreatedDate >= startOfMonth && j.Status == JobStatus.Completed));
+                ActiveJobsCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
+                    System.Linq.Queryable.Where(context.ServiceJobs, j => j.Status == JobStatus.Pending || j.Status == JobStatus.InProgress));
+                
+                // 5. Customer Stats
+                TotalCustomers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(context.Customers);
+                NewCustomersThisMonth = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
+                    System.Linq.Queryable.Where(context.Customers, c => c.CreatedDate >= startOfMonth));
+                VipCustomers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
+                    System.Linq.Queryable.Where(context.Customers, c => c.Type == CustomerType.Corporate));
+                UpcomingBirthdays = 0;
+                
+                // 6. Sales Reports
+                TodaySalesTotal = DailyIncome;
+                TodaySalesCount = TodaysJobsCount;
+                WeekSalesTotal = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
+                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date >= startOfWeek && c.TransactionType == CashTransactionType.CashIncome), c => c.Amount);
+                AverageSaleAmount = MonthlySalesCount > 0 ? MonthlySalesTotal / MonthlySalesCount : 0;
+                    
+
             }
             catch (Exception ex)
             {

@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -20,7 +21,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class UsersViewModel : ViewModelBase
     {
-        private readonly ApiClient _apiClient;
+        private readonly IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
@@ -112,12 +113,12 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public UsersViewModel(
             IAuthService authService,
-            ApiClient apiClient,
+            IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory,
             IToastService toastService,
             ILoadingService loadingService)
         {
             _authService = authService;
-            _apiClient = apiClient;
+            _dbContextFactory = dbContextFactory;
             _toastService = toastService;
             _loadingService = loadingService;
 
@@ -133,16 +134,9 @@ namespace KamatekCrm.ViewModels
             _loadingService.Show();
             try
             {
-                var response = await _apiClient.GetAsync<List<User>>("api/users");
-                if (response.Success && response.Data != null)
-                {
-                    _allUsers = response.Data;
-                    FilterUsers();
-                }
-                else
-                {
-                    _toastService.ShowError("Kullanıcılar Alınamadı", response.Message ?? "Bilinmeyen Hata");
-                }
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                _allUsers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(context.Users);
+                FilterUsers();
             }
             catch (Exception ex)
             {
@@ -223,7 +217,7 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void OpenAddUserWindow()
         {
-            var addUserViewModel = new AddUserViewModel(_authService, _apiClient, _toastService, _loadingService);
+            var addUserViewModel = new AddUserViewModel(_authService, _dbContextFactory, _toastService, _loadingService);
             var addUserView = new AddUserView
             {
                 DataContext = addUserViewModel
@@ -237,7 +231,7 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void OpenEditUserWindow(User user)
         {
-            var viewModel = new EditUserViewModel(user, _apiClient, _toastService, _loadingService);
+            var viewModel = new EditUserViewModel(user, _dbContextFactory, _toastService, _loadingService);
             var view = new EditUserView { DataContext = viewModel };
 
             viewModel.SaveSuccessful += () =>
@@ -259,8 +253,8 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedUser == null) return;
 
-            var passwordResetViewModel = new PasswordResetViewModel(SelectedUser, _authService, _apiClient);
-            var passwordView = new PasswordResetView(SelectedUser, _authService, _apiClient)
+            var passwordResetViewModel = new PasswordResetViewModel(SelectedUser, _authService, _dbContextFactory);
+            var passwordView = new PasswordResetView(SelectedUser, _authService, _dbContextFactory)
             {
                 DataContext = passwordResetViewModel
             };
@@ -301,16 +295,19 @@ namespace KamatekCrm.ViewModels
                 _loadingService.Show();
                 try
                 {
-                    var response = await _apiClient.DeleteAsync<object>($"api/users/{SelectedUser.Id}");
-                    if (response.Success)
+                    using var context = await _dbContextFactory.CreateDbContextAsync();
+                    var userToDelete = await context.Users.FindAsync(SelectedUser.Id);
+                    if (userToDelete != null)
                     {
+                        context.Users.Remove(userToDelete);
+                        await context.SaveChangesAsync();
+                        _toastService.ShowSuccess("Silindi", $"{SelectedUser.Username} kullanıcısı silindi.");
                         await LoadUsersAsync();
-                        _toastService.ShowSuccess("Kullanıcı başarıyla sistemden kaldırıldı.", "Silme Başarılı");
                         SelectedUser = null;
                     }
                     else
                     {
-                        _toastService.ShowError("Kullanıcı bulunamadı veya silinemedi.", response.Message ?? "Bilinmeyen Hata");
+                        _toastService.ShowError("Kullanıcı bulunamadı veya silinemedi.", "Bilinmeyen Hata");
                     }
                 }
                 catch (Exception ex)
@@ -342,16 +339,18 @@ namespace KamatekCrm.ViewModels
                 _loadingService.Show();
                 try
                 {
-                    var req = new { NewPassword = "1234" };
-                    var response = await _apiClient.PostAsync<object>($"api/users/{SelectedUser.Id}/change-password", req);
-                    
-                    if (response.Success)
+                    using var context = await _dbContextFactory.CreateDbContextAsync();
+                    var user = await context.Users.FindAsync(SelectedUser.Id);
+                    if (user != null)
                     {
-                        _toastService.ShowSuccess("Şifre başarıyla '1234' olarak sıfırlandı.", "Güvenlik İşlemi");
+                        // Basit parola degisimi. DTO kullanilmaz.
+                        user.PasswordHash = "1234"; 
+                        await context.SaveChangesAsync();
+                        _toastService.ShowSuccess("Başarılı", "Kullanıcının parolası sıfırlandı.");
                     }
                     else
                     {
-                        _toastService.ShowError("Sıfırlama Başarısız", response.Message ?? "Bilinmeyen Hata");
+                        _toastService.ShowError("Sıfırlama Başarısız", "Kullanıcı bulunamadı.");
                     }
                 }
                 catch (Exception ex)

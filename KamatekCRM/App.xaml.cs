@@ -26,7 +26,6 @@ namespace KamatekCrm
     public partial class App : System.Windows.Application
     {
         private IHost? _host;
-        private ITokenStorageService? _tokenStorage;
 
         public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
@@ -63,32 +62,13 @@ namespace KamatekCrm
                     })
                     .ConfigureServices((context, services) =>
                     {
-                        // Token Storage Service - JWT token'ları için
-                        services.AddSingleton<ITokenStorageService, FileTokenStorageService>();
-                        
-                        // AuthHeaderHandler - Her HTTP isteğine otomatik token ekler
-                        services.AddTransient<AuthHeaderHandler>();
+                        // JWT Token Storage Removed
                         
                         // WPF servisleri kaydet (DB, ViewModels, Navigation vs.)
                         services.AddApplicationServices(context.Configuration);
                         
                         // MainWindow'u DI container'a ekle
                         services.AddTransient<MainWindow>();
-
-                        // HttpClient — API iletişimi için (http://localhost:5050)
-                        // IHttpClientFactory ile socket exhaustion önlenir
-                        // AuthHeaderHandler ile JWT token otomatik eklenir
-                        services.AddHttpClient("KamatekAPI", client =>
-                        {
-                            var apiUrl = context.Configuration["AppSettings:ApiBaseUrl"] ?? "http://localhost:5050";
-                            client.BaseAddress = new Uri(apiUrl);
-                            client.Timeout = TimeSpan.FromSeconds(30);
-                            client.DefaultRequestHeaders.Add("Accept", "application/json");
-                        })
-                        .AddHttpMessageHandler<AuthHeaderHandler>();
-
-                        // ApiClient kaydı
-                        services.AddHttpClient<ApiClient>("KamatekAPI");
 
                         // 1. Thread-safe Provider'ı Singleton olarak ekliyoruz
                         services.AddSingleton<IDatabaseConnectionProvider, DatabaseConnectionProvider>();
@@ -122,8 +102,7 @@ namespace KamatekCrm
                 // Service Provider'ı global erişime aç
                 ServiceProvider = _host.Services;
                 
-                // Token storage referansını al (login sonrası kullanım için)
-                _tokenStorage = ServiceProvider.GetRequiredService<ITokenStorageService>();
+                // Token storage removed
 
                 // Global WPF exception handler'ları kur
                 DispatcherUnhandledException += OnDispatcherUnhandledException;
@@ -302,19 +281,7 @@ namespace KamatekCrm
         /// </summary>
         public static async Task SaveTokenAsync(string token)
         {
-            try
-            {
-                var tokenStorage = ServiceProvider?.GetService(typeof(ITokenStorageService)) as ITokenStorageService;
-                if (tokenStorage != null)
-                {
-                    await tokenStorage.SaveTokenAsync(token);
-                    Log.Information("JWT token saved successfully");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to save JWT token");
-            }
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -322,19 +289,7 @@ namespace KamatekCrm
         /// </summary>
         public static async Task ClearTokenAsync()
         {
-            try
-            {
-                var tokenStorage = ServiceProvider?.GetService(typeof(ITokenStorageService)) as ITokenStorageService;
-                if (tokenStorage != null)
-                {
-                    await tokenStorage.ClearTokenAsync();
-                    Log.Information("JWT token cleared on logout");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Failed to clear JWT token");
-            }
+            await Task.CompletedTask;
         }
 
         protected override async void OnExit(ExitEventArgs e)

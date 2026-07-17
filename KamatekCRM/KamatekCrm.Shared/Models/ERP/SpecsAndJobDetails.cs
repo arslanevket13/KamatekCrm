@@ -12,7 +12,7 @@ namespace KamatekCrm.Shared.Models.Specs
     /// Kullanım:
     ///   Serialize:  JsonSerializer.Serialize&lt;ProductSpecBase&gt;(specs, options)
     ///   Deserialize: JsonSerializer.Deserialize&lt;ProductSpecBase&gt;(json, options)
-    /// </summary>
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     [JsonDerivedType(typeof(CameraSpecs), typeDiscriminator: "camera")]
     [JsonDerivedType(typeof(IntercomSpecs), typeDiscriminator: "intercom")]
     [JsonDerivedType(typeof(FireAlarmSpecs), typeDiscriminator: "fire_alarm")]
@@ -121,4 +121,33 @@ namespace KamatekCrm.Shared.Models.Specs
 // hiçbir entity'de referansları yoktu ve veritabanında karşılıkları bulunmuyordu.
 // Eğer gelecekte iş detayı yapıları gerekirse, ServiceJob.CategoriesJson JSONB
 // alanı üzerinden yeni bir polimorfik yapı tasarlanmalıdır.
+
+namespace KamatekCrm.Shared.Models.JobDetails
+{
+    [JsonDerivedType(typeof(CctvJobDetail), typeDiscriminator: "cctv")]
+    [JsonDerivedType(typeof(VideoIntercomJobDetail), typeDiscriminator: "video_intercom")]
+    [JsonDerivedType(typeof(FireAlarmJobDetail), typeDiscriminator: "fire_alarm")]
+    [JsonDerivedType(typeof(BurglarAlarmJobDetail), typeDiscriminator: "burglar_alarm")]
+    [JsonDerivedType(typeof(SmartHomeJobDetail), typeDiscriminator: "smart_home")]
+    [JsonDerivedType(typeof(AccessControlJobDetail), typeDiscriminator: "access_control")]
+    [JsonDerivedType(typeof(SatelliteJobDetail), typeDiscriminator: "satellite")]
+    [JsonDerivedType(typeof(FiberOpticJobDetail), typeDiscriminator: "fiber_optic")]
+    [JsonDerivedType(typeof(GeneralJobDetail), typeDiscriminator: "general")]
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    public class JobDetailBase
+    {
+        public string Notes { get; set; } = string.Empty;
+    }
+
+    public class CctvJobDetail : JobDetailBase { public int CameraCount { get; set; } }
+    public class VideoIntercomJobDetail : JobDetailBase { public int ScreenCount { get; set; } }
+    public class FireAlarmJobDetail : JobDetailBase { public int DetectorCount { get; set; } }
+    public class BurglarAlarmJobDetail : JobDetailBase { public int SensorCount { get; set; } }
+    public class SmartHomeJobDetail : JobDetailBase { public int ModuleCount { get; set; } }
+    public class AccessControlJobDetail : JobDetailBase { public int DoorCount { get; set; } }
+    public class SatelliteJobDetail : JobDetailBase { public int DishCount { get; set; } }
+    public class FiberOpticJobDetail : JobDetailBase { public int CoreCount { get; set; } }
+    public class GeneralJobDetail : JobDetailBase { }
+}
 

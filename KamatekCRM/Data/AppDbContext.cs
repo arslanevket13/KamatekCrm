@@ -208,11 +208,25 @@ namespace KamatekCrm.Data
                 entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.SalePrice).HasColumnType("decimal(18,2)");
                 
-                // PostgreSQL JSONB Support
-                if (AppSettings.UsePostgreSql)
-                {
-                    entity.Property(e => e.TechSpecsJson).HasColumnType("jsonb");
-                }
+                // PostgreSQL JSONB Support (Polymorphic Value Converter)
+                // EF Core .ToJson() DOES NOT support polymorphism. We must use a ValueConverter.
+                entity.Property(e => e.Specifications)
+                      .HasColumnType("jsonb")
+                      .HasConversion(
+                          v => System.Text.Json.JsonSerializer.Serialize(v, new System.Text.Json.JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull }),
+                          v => System.Text.Json.JsonSerializer.Deserialize<KamatekCrm.Shared.Models.Specs.ProductSpecBase>(v, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new KamatekCrm.Shared.Models.Specs.GeneralSpecs()
+                      );
+            });
+
+            // ServiceJob JSONB Mapping
+            modelBuilder.Entity<ServiceJob>(entity =>
+            {
+                entity.Property(e => e.JobDetails)
+                      .HasColumnType("jsonb")
+                      .HasConversion(
+                          v => System.Text.Json.JsonSerializer.Serialize(v, new System.Text.Json.JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull }),
+                          v => System.Text.Json.JsonSerializer.Deserialize<KamatekCrm.Shared.Models.JobDetails.JobDetailBase>(v, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new KamatekCrm.Shared.Models.JobDetails.GeneralJobDetail()
+                      );
             });
 
             // Seed Data

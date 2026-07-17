@@ -24,7 +24,7 @@ namespace KamatekCrm.Shared.Models
         public virtual Category? Category { get; set; }
         public int TotalStockQuantity { get; set; }
         public int MinStockLevel { get; set; }
-        public string TechSpecsJson { get; set; } = "{}";
+        public KamatekCrm.Shared.Models.Specs.ProductSpecBase Specifications { get; set; } = new KamatekCrm.Shared.Models.Specs.GeneralSpecs();
         /// <summary>
         /// Relative path to compressed product image (e.g., "uploads/products/xxx.webp")
         /// </summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -12,6 +12,7 @@ using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
@@ -22,7 +23,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class DirectSalesViewModel : ViewModelBase
     {
-        private readonly ApiClient _apiClient;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
@@ -196,12 +197,12 @@ namespace KamatekCrm.ViewModels
 
         public DirectSalesViewModel(
             IAuthService authService,
-            ApiClient apiClient,
+            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory,
             IToastService toastService,
             ILoadingService loadingService)
         {
             _authService = authService;
-            _apiClient = apiClient;
+            _dbContextFactory = dbContextFactory;
             _toastService = toastService;
             _loadingService = loadingService;
 
@@ -229,13 +230,11 @@ namespace KamatekCrm.ViewModels
             _loadingService?.Show();
             try
             {
-                var whResponse = await _apiClient.GetAsync<IEnumerable<Warehouse>>("api/inventory/warehouses");
-                if (whResponse?.Data != null)
-                {
-                    Warehouses.Clear();
-                    foreach (var w in whResponse.Data) Warehouses.Add(w);
-                    SelectedWarehouse = Warehouses.FirstOrDefault();
-                }
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var warehouses = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(context.Warehouses);
+                Warehouses.Clear();
+                foreach (var w in warehouses) Warehouses.Add(w);
+                SelectedWarehouse = Warehouses.FirstOrDefault();
 
                 LoadRecentCustomers();
             }
@@ -254,32 +253,32 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                _loadingService?.Show();
-                var response = await _apiClient.GetAsync<IEnumerable<Inventory>>($"api/inventory?warehouseId={SelectedWarehouse.Id}&pageSize=2000");
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var inventories = await context.Inventories
+                    .Include(i => i.Product)
+                    .Where(i => i.WarehouseId == SelectedWarehouse.Id)
+                    .ToListAsync();
 
-                if (response?.Data != null)
+                foreach (var inventory in inventories.Where(i => i.Product != null))
                 {
-                    foreach (var inventory in response.Data.Where(i => i.Product != null))
+                    var product = inventory.Product;
+                    AllProducts.Add(new PosProductItem
                     {
-                        var product = inventory.Product;
-                        AllProducts.Add(new PosProductItem
-                        {
-                            ProductId = product.Id,
-                            ProductName = product.ProductName,
-                            ModelName = product.ModelName ?? string.Empty,
-                            SKU = product.SKU ?? string.Empty,
-                            Barcode = product.Barcode ?? string.Empty,
-                            SalePrice = product.SalePrice,
-                            VatRate = product.VatRate,
-                            StockQuantity = inventory.Quantity,
-                            Unit = product.Unit,
-                            ImagePath = product.ImagePath
-                        });
-                    }
-
-                    StatusMessage = $"{AllProducts.Count} ürün yüklendi.";
-                    IsActionSuccessful = true;
+                        ProductId = product.Id,
+                        ProductName = product.ProductName,
+                        ModelName = product.ModelName ?? string.Empty,
+                        SKU = product.SKU ?? string.Empty,
+                        Barcode = product.Barcode ?? string.Empty,
+                        SalePrice = product.SalePrice,
+                        VatRate = product.VatRate,
+                        StockQuantity = inventory.Quantity,
+                        Unit = product.Unit,
+                        ImagePath = product.ImagePath
+                    });
                 }
+
+                StatusMessage = $"{AllProducts.Count} ürün yüklendi.";
+                IsActionSuccessful = true;
             }
             catch (Exception ex)
             {
@@ -314,13 +313,14 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                RecentCustomers.Clear();
-                var response = await _apiClient.GetAsync<IEnumerable<Customer>>("api/customers?sortBy=CreatedDate&sortDir=desc&pageSize=25");
-                if (response?.Data != null)
-                {
-                    foreach (var c in response.Data) RecentCustomers.Add(c);
-                    FilterCustomers();
-                }
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var customers = await context.Customers
+                    .OrderByDescending(c => c.CreatedDate)
+                    .Take(25)
+                    .ToListAsync();
+                
+                foreach (var c in customers) RecentCustomers.Add(c);
+                FilterCustomers();
             }
             catch { /* не критично */ }
         }
@@ -600,51 +600,51 @@ namespace KamatekCrm.ViewModels
                 MessageBoxImage.Question);
 
             if (result != MessageBoxResult.Yes) return;
-
-            var request = new SaleRequest
-            {
-                WarehouseId = SelectedWarehouse.Id,
-                CustomerId = SelectedCustomer?.Id,
-                CustomerName = CustomerName,
-                PaymentMethod = Payments.First().PaymentMethod, // Primary method
-                CreatedBy = _authService.CurrentUser?.AdSoyad ?? "Sistem",
-                Items = CartItems.Select(c => new SaleItemRequest
-                {
-                    ProductId = c.ProductId,
-                    ProductName = c.ProductName,
-                    Quantity = c.Quantity,
-                    UnitPrice = c.UnitPrice,
-                    DiscountPercent = c.DiscountPercent,
-                    DiscountAmount = c.DiscountAmount,
-                    TaxRate = c.TaxRate,
-                    LineTotal = c.LineTotal
-                }).ToList()
-            };
-
-            _loadingService?.Show();
+            
             try
             {
-                var apiResponse = await _apiClient.PostAsync<KamatekCrm.Shared.Models.SaleResult>("api/sales", request);
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                using var transaction = await context.Database.BeginTransactionAsync();
 
-                if (apiResponse != null && apiResponse.Success && apiResponse.Data != null && apiResponse.Data.Success)
+                var orderNo = "ORD" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+                
+                // Update Inventory
+                foreach (var item in CartItems)
                 {
-                    var saleResult = apiResponse.Data;
-                    StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {saleResult.OrderNumber}";
-                    IsActionSuccessful = true;
-
-                    CartItems.Clear();
-                    Payments.Clear();
-                    UpdateAllTotals();
-                    LoadProducts(); // Reload stock quantities
-
-                    _toastService?.ShowSuccess($"Satış başarıyla tamamlandı: Sipariş #{saleResult.OrderNumber}");
+                    var inventory = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
+                        context.Inventories, i => i.ProductId == item.ProductId && i.WarehouseId == SelectedWarehouse.Id);
+                    if (inventory != null)
+                    {
+                        inventory.Quantity -= item.Quantity;
+                    }
                 }
-                else
+                
+                // Insert Cash Transactions for each payment
+                foreach (var payment in Payments)
                 {
-                    StatusMessage = $"Satış hatası: {apiResponse?.Message ?? apiResponse?.Data?.ErrorMessage}";
-                    IsActionSuccessful = false;
-                    _toastService?.ShowError($"Satış hatası:\n{StatusMessage}");
+                    context.CashTransactions.Add(new CashTransaction
+                    {
+                        TransactionType = CashTransactionType.CashIncome,
+                        Amount = payment.Amount,
+                        Date = DateTime.UtcNow,
+                        Description = $"Sipariş {orderNo} ödemesi ({GetPaymentMethodName(payment.PaymentMethod)})",
+                        PaymentMethod = payment.PaymentMethod,
+                        ReferenceNumber = payment.Reference
+                    });
                 }
+
+                await context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {orderNo}";
+                IsActionSuccessful = true;
+
+                CartItems.Clear();
+                Payments.Clear();
+                UpdateAllTotals();
+                LoadProducts(); // Reload stock quantities
+
+                _toastService?.ShowSuccess($"Satış başarıyla tamamlandı: Sipariş #{orderNo}");
             }
             catch(Exception ex)
             {

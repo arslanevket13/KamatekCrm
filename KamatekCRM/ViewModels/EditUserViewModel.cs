@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
@@ -15,7 +15,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class EditUserViewModel : ViewModelBase
     {
-        private readonly ApiClient _apiClient;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
         private readonly User _user;
@@ -160,9 +160,9 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public EditUserViewModel(User user, ApiClient apiClient, IToastService toastService, ILoadingService loadingService)
+        public EditUserViewModel(User user, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory, IToastService toastService, ILoadingService loadingService)
         {
-            _apiClient = apiClient;
+            _dbContextFactory = dbContextFactory;
             _toastService = toastService;
             _loadingService = loadingService;
             _user = user;
@@ -204,28 +204,27 @@ namespace KamatekCrm.ViewModels
             _loadingService.Show();
             try
             {
-                var req = new
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var dbUser = await context.Users.FindAsync(_user.Id);
+                if (dbUser != null)
                 {
-                    Ad = Ad.Trim(),
-                    Soyad = Soyad.Trim(),
-                    Role = MapDisplayRoleToDbRole(SelectedRoleDisplay),
-                    IsActive = IsActive,
-                    CanViewFinance,
-                    CanViewAnalytics,
-                    CanDeleteRecords,
-                    CanApprovePurchase,
-                    CanAccessSettings,
-                    IsTechnician = IsTechnicianRole,
-                    Phone,
-                    VehiclePlate = IsTechnicianRole ? VehiclePlate : null,
-                    ServiceArea = IsTechnicianRole ? ServiceArea : null,
-                    ExpertiseAreas = IsTechnicianRole ? ExpertiseAreas : null
-                };
+                    dbUser.Ad = Ad.Trim();
+                    dbUser.Soyad = Soyad.Trim();
+                    dbUser.Role = MapDisplayRoleToDbRole(SelectedRoleDisplay);
+                    dbUser.IsActive = IsActive;
+                    dbUser.CanViewFinance = CanViewFinance;
+                    dbUser.CanViewAnalytics = CanViewAnalytics;
+                    dbUser.CanDeleteRecords = CanDeleteRecords;
+                    dbUser.CanApprovePurchase = CanApprovePurchase;
+                    dbUser.CanAccessSettings = CanAccessSettings;
+                    dbUser.IsTechnician = IsTechnicianRole;
+                    dbUser.Phone = Phone;
+                    dbUser.VehiclePlate = IsTechnicianRole ? VehiclePlate : null;
+                    dbUser.ServiceArea = IsTechnicianRole ? ServiceArea : null;
+                    dbUser.ExpertiseAreas = IsTechnicianRole ? ExpertiseAreas : null;
 
-                var response = await _apiClient.PutAsync<object>($"api/users/{_user.Id}", req);
+                    await context.SaveChangesAsync();
 
-                if (response.Success)
-                {
                     IsSuccess = true;
                     StatusMessage = "✅ Kullanıcı güncellendi!";
                     _toastService.ShowSuccess("Kullanıcı güncellendi", "Başarılı");
@@ -234,8 +233,8 @@ namespace KamatekCrm.ViewModels
                 else
                 {
                     IsSuccess = false;
-                    StatusMessage = $"❌ Hata: {response.Message}";
-                    _toastService.ShowError("Hata", response.Message ?? "Bilinmeyen Hata");
+                    StatusMessage = "❌ Hata: Kullanıcı bulunamadı";
+                    _toastService.ShowError("Hata", "Kullanıcı bulunamadı");
                 }
             }
             catch (Exception ex)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -17,19 +17,19 @@ namespace KamatekCrm.ViewModels
 {
     public partial class RepairViewModel : ViewModelBase
     {
-        private readonly ApiClient _apiClient;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
 
         public RepairViewModel(
             IAuthService authService,
-            ApiClient apiClient,
+            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory,
             IToastService toastService,
             ILoadingService loadingService)
         {
             _authService = authService;
-            _apiClient = apiClient;
+            _dbContextFactory = dbContextFactory;
             _toastService = toastService;
             _loadingService = loadingService;
             
@@ -281,19 +281,15 @@ namespace KamatekCrm.ViewModels
             _loadingService?.Show();
             try
             {
-                var response = await _apiClient.GetAsync<IEnumerable<ServiceJob>>("api/servicejobs?type=Fault&pageSize=1000");
-                if (response?.Data != null)
-                {
-                    AllRepairs = new ObservableCollection<ServiceJob>(response.Data);
-                }
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                
+                var jobs = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                    System.Linq.Queryable.Where(context.ServiceJobs, j => j.ServiceJobType == ServiceJobType.Fault));
+                AllRepairs = new ObservableCollection<ServiceJob>(jobs);
 
-                // Müşterileri de yükle (Registration için)
-                var customersResponse = await _apiClient.GetAsync<IEnumerable<Customer>>("api/customers?pageSize=1000");
-                if (customersResponse?.Data != null)
-                {
-                    Customers.Clear();
-                    foreach(var c in customersResponse.Data.OrderBy(x => x.FullName)) Customers.Add(c);
-                }
+                var customers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(context.Customers);
+                Customers.Clear();
+                foreach(var c in customers.OrderBy(x => x.FullName)) Customers.Add(c);
 
                 // Ürünleri yükle (Parça değişimi için)
                 LoadProducts();
@@ -316,12 +312,10 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                var productsResponse = await _apiClient.GetAsync<IEnumerable<Product>>("api/products?pageSize=1000");
-                if (productsResponse?.Data != null)
-                {
-                    Products.Clear();
-                    foreach (var p in productsResponse.Data.OrderBy(x => x.ProductName)) Products.Add(p);
-                }
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var products = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(context.Products);
+                Products.Clear();
+                foreach (var p in products.OrderBy(x => x.ProductName)) Products.Add(p);
             }
             catch (Exception ex)
             {
@@ -364,11 +358,12 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                var historyResponse = await _apiClient.GetAsync<IEnumerable<ServiceJobHistory>>($"api/servicejobs/{jobId}/history");
-                if (historyResponse?.Data != null)
-                {
-                    JobHistory = new ObservableCollection<ServiceJobHistory>(historyResponse.Data);
-                }
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var history = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                    System.Linq.Queryable.OrderByDescending(
+                        System.Linq.Queryable.Where(context.ServiceJobHistories, h => h.ServiceJobId == jobId), 
+                        h => h.Date));
+                JobHistory = new ObservableCollection<ServiceJobHistory>(history);
 
                 // Parçaları yükle
                 LoadJobItems(jobId);
@@ -384,11 +379,13 @@ namespace KamatekCrm.ViewModels
             try
             {
                 CurrentJobItems.Clear();
-                var jobResponse = await _apiClient.GetAsync<ServiceJob>($"api/servicejobs/{jobId}");
-                if (jobResponse?.Data?.ServiceJobItems != null)
-                {
-                    foreach(var item in jobResponse.Data.ServiceJobItems) CurrentJobItems.Add(item);
-                }
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var items = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                    Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.Include(
+                        System.Linq.Queryable.Where(context.ServiceJobItems, i => i.ServiceJobId == jobId), 
+                        i => i.Product));
+                        
+                foreach(var item in items) CurrentJobItems.Add(item);
                 
                 UpdateTotals();
             }
@@ -434,18 +431,14 @@ namespace KamatekCrm.ViewModels
                 _loadingService?.Show();
                 NewJob.CreatedDate = DateTime.UtcNow;
 
-                var result = await _apiClient.PostAsync<ServiceJob>("api/servicejobs", NewJob);
-                if (result != null && result.Success && result.Data != null)
-                {
-                    _toastService?.ShowSuccess($"Cihaz kabul edildi! Takip No: {result.Data.Id}");
-                    ResetNewJobForm();
-                    Refresh();
-                    if (parameter is Window w) w.Close();
-                }
-                else
-                {
-                    _toastService?.ShowError($"Kayıt hatası: {result?.Message}");
-                }
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                context.ServiceJobs.Add(NewJob);
+                await context.SaveChangesAsync();
+
+                _toastService?.ShowSuccess($"Cihaz kabul edildi! Takip No: {NewJob.Id}");
+                ResetNewJobForm();
+                Refresh();
+                if (parameter is Window w) w.Close();
             }
             catch (Exception ex)
             {
@@ -480,43 +473,56 @@ namespace KamatekCrm.ViewModels
             try
             {
                 _loadingService?.Show();
-                var updateResult = await _apiClient.PutAsync<object>($"api/servicejobs/{SelectedJob.Id}", SelectedJob);
-
-                if (!string.IsNullOrWhiteSpace(NewNoteText))
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                using var transaction = await context.Database.BeginTransactionAsync();
+                
+                var existingJob = await context.ServiceJobs.FindAsync(SelectedJob.Id);
+                if (existingJob != null)
                 {
-                    var history = new ServiceJobHistory
+                    existingJob.RepairStatus = SelectedJob.RepairStatus;
+                    existingJob.Status = SelectedJob.Status;
+                    existingJob.LaborCost = SelectedJob.LaborCost;
+                    existingJob.DiscountAmount = SelectedJob.DiscountAmount;
+                    
+                    if (!string.IsNullOrWhiteSpace(NewNoteText))
                     {
-                        ServiceJobId = SelectedJob.Id,
-                        StatusChange = newStatus.Value,
-                        TechnicianNote = NewNoteText
-                    };
-                    await _apiClient.PostAsync<object>($"api/servicejobs/{SelectedJob.Id}/history", history);
-                }
+                        var history = new ServiceJobHistory
+                        {
+                            ServiceJobId = SelectedJob.Id,
+                            StatusChange = newStatus.Value,
+                            TechnicianNote = NewNoteText,
+                            Date = DateTime.UtcNow
+                        };
+                        context.ServiceJobHistories.Add(history);
+                    }
 
-                if (newStatus == RepairStatus.Delivered && SelectedJob.TotalAmount > 0)
-                {
-                    var cashTransaction = new CashTransaction
+                    if (newStatus == RepairStatus.Delivered && SelectedJob.TotalAmount > 0)
                     {
-                        Amount = SelectedJob.TotalAmount,
-                        TransactionType = CashTransactionType.CashIncome,
-                        PaymentMethod = PaymentMethod.Cash,
-                        Description = $"Tamir Teslimi - İş #{SelectedJob.Id}",
-                        Category = "Teknik Servis",
-                        ReferenceNumber = $"REP-{SelectedJob.Id}",
-                        CustomerId = SelectedJob.CustomerId,
-                        CreatedBy = _authService.CurrentUser?.AdSoyad ?? "Teknisyen"
-                    };
-                    await _apiClient.PostAsync<object>("api/finance/cash-transactions", cashTransaction);
-                }
+                        var cashTransaction = new CashTransaction
+                        {
+                            Amount = SelectedJob.TotalAmount,
+                            TransactionType = CashTransactionType.CashIncome,
+                            PaymentMethod = PaymentMethod.Cash,
+                            Description = $"Tamir Teslimi - İş #{SelectedJob.Id}",
+                            ReferenceNumber = $"REP-{SelectedJob.Id}",
+                            Date = DateTime.UtcNow
+                        };
+                        context.CashTransactions.Add(cashTransaction);
+                    }
+                    
+                    await context.SaveChangesAsync();
+                    await transaction.CommitAsync();
 
-                if (newStatus == RepairStatus.ReadyForPickup && SelectedJob.Customer != null)
-                {
-                    if (!string.IsNullOrWhiteSpace(SelectedJob.Customer.PhoneNumber))
+                    if (newStatus == RepairStatus.ReadyForPickup)
                     {
-                        var smsService = new SmsService();
-                        string msg = $"Sayın {SelectedJob.Customer.FullName}, cihazınızın (Takip No: {SelectedJob.Id}) tamir işlemleri tamamlanmıştır. Teslim alabilirsiniz. Kamatek Teknik Servis";
-                        await smsService.SendSmsAsync(SelectedJob.Customer.PhoneNumber, msg);
-                        _toastService?.ShowSuccess("Müşteriye otomatik SMS bildirimi gönderildi.");
+                        var customer = await context.Customers.FindAsync(SelectedJob.CustomerId);
+                        if (customer != null && !string.IsNullOrWhiteSpace(customer.PhoneNumber))
+                        {
+                            var smsService = new SmsService();
+                            string msg = $"Sayın {customer.FullName}, cihazınızın (Takip No: {SelectedJob.Id}) tamir işlemleri tamamlanmıştır. Teslim alabilirsiniz. Kamatek Teknik Servis";
+                            await smsService.SendSmsAsync(customer.PhoneNumber, msg);
+                            _toastService?.ShowSuccess("Müşteriye otomatik SMS bildirimi gönderildi.");
+                        }
                     }
                 }
 
@@ -541,22 +547,19 @@ namespace KamatekCrm.ViewModels
 
             try
             {
+                using var context = await _dbContextFactory.CreateDbContextAsync();
                 var history = new ServiceJobHistory
                 {
                     ServiceJobId = SelectedJob.Id,
-                    TechnicianNote = NewNoteText
+                    TechnicianNote = NewNoteText,
+                    Date = DateTime.UtcNow
                 };
                 
-                var result = await _apiClient.PostAsync<object>($"api/servicejobs/{SelectedJob.Id}/history", history);
-                if (result != null && result.Success)
-                {
-                    NewNoteText = string.Empty;
-                    LoadHistory(SelectedJob.Id);
-                }
-                else
-                {
-                    _toastService?.ShowError("Not eklenemedi.");
-                }
+                context.ServiceJobHistories.Add(history);
+                await context.SaveChangesAsync();
+                
+                NewNoteText = string.Empty;
+                LoadHistory(SelectedJob.Id);
             }
             catch (Exception ex)
             {
@@ -575,6 +578,7 @@ namespace KamatekCrm.ViewModels
 
             try
             {
+                using var context = await _dbContextFactory.CreateDbContextAsync();
                 var newItem = new ServiceJobItem
                 {
                     ServiceJobId = SelectedJob.Id,
@@ -584,20 +588,15 @@ namespace KamatekCrm.ViewModels
                     UnitCost = SelectedProductToAdd.PurchasePrice
                 };
 
-                var result = await _apiClient.PostAsync<ServiceJobItem>($"api/servicejobs/{SelectedJob.Id}/items", newItem);
+                context.ServiceJobItems.Add(newItem);
+                await context.SaveChangesAsync();
                 
-                if (result != null && result.Success && result.Data != null)
-                {
-                    CurrentJobItems.Add(result.Data);
-                    SelectedProductToAdd = null;
-                    QuantityToAdd = 1;
-                    UnitPriceToAdd = 0;
-                    UpdateTotals();
-                }
-                else
-                {
-                    _toastService?.ShowError("Parça eklenirken hata: " + result?.Message);
-                }
+                newItem.Product = SelectedProductToAdd; // For UI
+                CurrentJobItems.Add(newItem);
+                SelectedProductToAdd = null;
+                QuantityToAdd = 1;
+                UnitPriceToAdd = 0;
+                UpdateTotals();
             }
             catch (Exception ex)
             {
@@ -612,9 +611,13 @@ namespace KamatekCrm.ViewModels
             {
                 try
                 {
-                    var result = await _apiClient.DeleteAsync<object>($"api/servicejobs/{SelectedJob.Id}/items/{item.Id}");
-                    if (result != null && result.Success)
+                    using var context = await _dbContextFactory.CreateDbContextAsync();
+                    var dbItem = await context.ServiceJobItems.FindAsync(item.Id);
+                    if (dbItem != null)
                     {
+                        context.ServiceJobItems.Remove(dbItem);
+                        await context.SaveChangesAsync();
+                        
                         CurrentJobItems.Remove(item);
                         UpdateTotals();
                     }
@@ -635,10 +638,14 @@ namespace KamatekCrm.ViewModels
             
             try
             {
-                SelectedJob.LaborCost = LaborCost;
-                SelectedJob.DiscountAmount = DiscountAmount;
-                
-                await _apiClient.PutAsync<object>($"api/servicejobs/{SelectedJob.Id}", SelectedJob);
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var existingJob = await context.ServiceJobs.FindAsync(SelectedJob.Id);
+                if (existingJob != null)
+                {
+                    existingJob.LaborCost = LaborCost;
+                    existingJob.DiscountAmount = DiscountAmount;
+                    await context.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -653,15 +660,16 @@ namespace KamatekCrm.ViewModels
             {
                 UpdateStatus(RepairStatus.Delivered);
 
+                using var context = await _dbContextFactory.CreateDbContextAsync();
                 foreach(var item in CurrentJobItems)
                 {
-                    var productResp = await _apiClient.GetAsync<Product>($"api/products/{item.ProductId}");
-                    if (productResp?.Data != null)
+                    var product = await context.Products.FindAsync(item.ProductId);
+                    if (product != null)
                     {
-                        productResp.Data.TotalStockQuantity -= item.QuantityUsed;
-                        await _apiClient.PutAsync<object>($"api/products/{item.ProductId}", productResp.Data);
+                        product.TotalStockQuantity -= item.QuantityUsed;
                     }
                 }
+                await context.SaveChangesAsync();
             }
             catch (Exception ex)
             {

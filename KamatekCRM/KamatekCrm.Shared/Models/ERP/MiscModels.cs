@@ -77,7 +77,6 @@ namespace KamatekCrm.Shared.Models
         public string DisplayName => Category.ToString();
     }
 
-    public class JobDetailBase { public int Id { get; set; } }
 
     // Address lookup models
     public class City { public int Id { get; set; } public string Name { get; set; } = ""; public virtual System.Collections.Generic.ICollection<District> Districts { get; set; } = new System.Collections.Generic.List<District>(); }

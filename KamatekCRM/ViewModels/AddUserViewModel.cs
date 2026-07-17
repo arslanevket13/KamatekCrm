@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -15,7 +15,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class AddUserViewModel : ViewModelBase
     {
-        private readonly ApiClient _apiClient;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
@@ -174,10 +174,10 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public AddUserViewModel(IAuthService authService, ApiClient apiClient, IToastService toastService, ILoadingService loadingService)
+        public AddUserViewModel(IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory, IToastService toastService, ILoadingService loadingService)
         {
             _authService = authService;
-            _apiClient = apiClient;
+            _dbContextFactory = dbContextFactory;
             _toastService = toastService;
             _loadingService = loadingService;
 
@@ -221,42 +221,39 @@ namespace KamatekCrm.ViewModels
             {
                 var dbRole = MapDisplayRoleToDbRole(SelectedRoleDisplay);
 
-                var req = new
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                
+                if (await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AnyAsync(context.Users, u => u.Username == Username.Trim().ToLower()))
+                {
+                    _toastService.ShowError("Hata", "Bu kullanıcı adı zaten mevcut.");
+                    IsSuccess = false;
+                    return;
+                }
+
+                var newUser = new User
                 {
                     Username = Username.Trim().ToLower(),
-                    Password = "1234",
+                    PasswordHash = "1234",
                     Role = dbRole,
                     Ad = Ad.Trim(),
                     Soyad = Soyad.Trim(),
                     IsActive = true,
-                    CanViewFinance,
-                    CanViewAnalytics,
-                    CanDeleteRecords,
-                    CanApprovePurchase,
-                    CanAccessSettings,
-                    IsTechnician = IsTechnicianRole,
-                    VehiclePlate = IsTechnicianRole ? VehiclePlate : null,
-                    ServiceArea = IsTechnicianRole ? ServiceArea : null,
-                    ExpertiseAreas = IsTechnicianRole ? ExpertiseAreas : null
+                    CanViewFinance = CanViewFinance,
+                    CanViewAnalytics = CanViewAnalytics,
+                    CanDeleteRecords = CanDeleteRecords,
+                    CanApprovePurchase = CanApprovePurchase,
+                    CanAccessSettings = CanAccessSettings
                 };
 
-                var response = await _apiClient.PostAsync<object>("api/users", req);
+                context.Users.Add(newUser);
+                await context.SaveChangesAsync();
                 
-                if (response.Success)
-                {
-                    IsSuccess = true;
-                    StatusMessage = $"✅ {Ad} {Soyad} başarıyla eklendi!\nVarsayılan şifre: 1234";
-                    _toastService.ShowSuccess("Kullanıcı oluşturuldu", "Başarılı");
+                IsSuccess = true;
+                StatusMessage = $"✅ {Ad} {Soyad} başarıyla eklendi!\nVarsayılan şifre: 1234";
+                _toastService.ShowSuccess("Kullanıcı oluşturuldu", "Başarılı");
 
-                    ClearFormFields();
-                    FormCleared?.Invoke();
-                }
-                else
-                {
-                    IsSuccess = false;
-                    StatusMessage = $"❌ Hata: {response.Message}";
-                    _toastService.ShowError("Kayıt Başarısız", response.Message ?? "Bilinmeyen Hata");
-                }
+                ClearFormFields();
+                FormCleared?.Invoke();
             }
             catch (Exception ex)
             {

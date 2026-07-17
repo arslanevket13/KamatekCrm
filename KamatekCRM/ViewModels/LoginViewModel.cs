@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -100,18 +100,17 @@ namespace KamatekCrm.ViewModels
         private readonly IAuthService _authService;
         private readonly NavigationService _navigationService;
         private readonly NetworkDiscoveryService _discoveryService;
-        private readonly ApiClient _apiClient;
+
         private readonly IToastService _toastService;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public LoginViewModel(IAuthService authService, NavigationService navigationService, NetworkDiscoveryService discoveryService, ApiClient apiClient, IToastService toastService)
+        public LoginViewModel(IAuthService authService, NavigationService navigationService, NetworkDiscoveryService discoveryService, IToastService toastService)
         {
             _authService = authService;
             _navigationService = navigationService;
             _discoveryService = discoveryService;
-            _apiClient = apiClient;
             _toastService = toastService;
             
             // Load saved settings, then apply dev defaults if empty
@@ -140,7 +139,7 @@ namespace KamatekCrm.ViewModels
             // Sadece UI için kısa bir bekleme yapıp devam edelim.
             await Task.Delay(500);
 
-            _apiClient.SetBaseUrl("http://localhost:5050");
+            // ApiClient is removed in direct-db mode
             IsServerFound = true;
             ServerStatusMessage = "Bağlantı ayarları yüklendi.";
 

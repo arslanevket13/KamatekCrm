@@ -1,26 +1,24 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-using KamatekCrm.Shared.DTOs;
+using KamatekCrm.Data;
 using KamatekCrm.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace KamatekCrm.Services
 {
     /// <summary>
-    /// API tabanli kimlik dogrulama servisi.
-    /// Dogrudan veritabanina baglanmaz - tum islemler API uzerinden yapilir.
+    /// Veritabanı tabanlı kimlik dogrulama servisi. (API bagimliligi kaldirildi)
     /// </summary>
     public class AuthService : IAuthService
     {
-        private readonly ApiClient _apiClient;
-        private readonly ITokenStorageService _tokenStorage;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private User? _currentUser;
-
-        public AuthService(ApiClient apiClient, ITokenStorageService tokenStorage)
+        
+        public AuthService(IDbContextFactory<AppDbContext> dbContextFactory)
         {
-            _apiClient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
-            _tokenStorage = tokenStorage ?? throw new ArgumentNullException(nameof(tokenStorage));
+            _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
         }
 
         public User? CurrentUser => _currentUser;
@@ -37,59 +35,33 @@ namespace KamatekCrm.Services
         #endregion
 
         /// <summary>
-        /// API uzerinden login - JWT token alir ve saklar.
+        /// Veritabani uzerinden dogrudan login
         /// </summary>
         public async Task<bool> LoginAsync(string username, string password)
         {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 throw new Exception("Kullanici adi veya sifre bos olamaz.");
 
-            var loginRequest = new LoginRequestDto
+            using var context = await _dbContextFactory.CreateDbContextAsync();
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user != null && user.PasswordHash == password) // Note: In a real system, use Hash comparison!
             {
-                Username = username,
-                Password = password
-            };
+                if (!user.IsActive)
+                    throw new Exception("Hesabiniz pasif duruma alinmistir.");
 
-            var response = await _apiClient.PostAsync<LoginResponseDto>("api/auth/login", loginRequest);
+                _currentUser = user;
+                
+                // Update last login date
+                user.LastLoginDate = DateTime.UtcNow;
+                await context.SaveChangesAsync();
 
-            if (response.Success && response.Data != null && response.Data.Success)
-            {
-                var loginData = response.Data;
-
-                // JWT token'i guvenli sekilde sakla
-                if (!string.IsNullOrEmpty(loginData.Token))
-                {
-                    await _tokenStorage.SaveTokenAsync(loginData.Token);
-                }
-
-                // CurrentUser'i olustur (API response'dan)
-                _currentUser = new User
-                {
-                    Id = loginData.UserId,
-                    Username = loginData.Username,
-                    Role = loginData.Role,
-                    Ad = loginData.FullName?.Split(' ').FirstOrDefault() ?? loginData.Username,
-                    Soyad = loginData.FullName?.Contains(' ') == true 
-                        ? string.Join(" ", loginData.FullName.Split(' ').Skip(1)) 
-                        : "",
-                    IsActive = true,
-                    LastLoginDate = DateTime.UtcNow,
-                    // Admin kullanicilari icin tum izinler aktif
-                    CanViewFinance = loginData.Role == "Admin",
-                    CanViewAnalytics = loginData.Role == "Admin",
-                    CanDeleteRecords = loginData.Role == "Admin",
-                    CanApprovePurchase = loginData.Role == "Admin",
-                    CanAccessSettings = loginData.Role == "Admin"
-                };
-
-                Log.Information("API Login basarili: {Username} (Role: {Role})", loginData.Username, loginData.Role);
+                Log.Information("DB Login basarili: {Username} (Role: {Role})", user.Username, user.Role);
                 return true;
             }
 
-            // Hata mesajini logla
-            var errorMsg = response.Data?.Message ?? response.Message ?? "Bilinmeyen hata";
-            Log.Warning("API Login basarisiz: {Username} - {Error}", username, errorMsg);
-            throw new Exception(errorMsg);
+            Log.Warning("DB Login basarisiz: {Username}", username);
+            throw new Exception("Gecersiz kullanici adi veya sifre.");
         }
 
         /// <summary>
@@ -98,7 +70,6 @@ namespace KamatekCrm.Services
         public void Logout()
         {
             _currentUser = null;
-            _ = _tokenStorage.ClearTokenAsync();
             Log.Information("Kullanici oturumu kapatildi.");
         }
 

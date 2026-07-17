@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Input;
@@ -233,13 +233,6 @@ namespace KamatekCrm.ViewModels
             _isDarkMode = Properties.Settings.Default.IsDarkMode;
 
             // 4. Bağlantı Kopma / Geri Gelme Eventlerini Dinleme (UI Overlay için)
-            CommunityToolkit.Mvvm.Messaging.WeakReferenceMessenger.Default.Register<UnauthorizedMessage>(this, (r, m) =>
-            {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                {
-                    Logout();
-                });
-            });
 
             EventAggregator.Instance.Subscribe<DatabaseConnectionLostEvent>(_ =>
             {

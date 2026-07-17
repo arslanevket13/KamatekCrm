@@ -25,7 +25,8 @@ namespace KamatekCrm.Shared.Models
         
         // Deprecated fields might be missing in valid code, adding to be safe
         public JobCategory JobCategory { get; set; } = JobCategory.Other;
-        public string CategoriesJson { get; set; } = "[]"; 
+        public string CategoriesJson { get; set; } = "[]";
+        public KamatekCrm.Shared.Models.JobDetails.JobDetailBase JobDetails { get; set; } = new KamatekCrm.Shared.Models.JobDetails.GeneralJobDetail();
 
         [Required]
         [MaxLength(1000)]

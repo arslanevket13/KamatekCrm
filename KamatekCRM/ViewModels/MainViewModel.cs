@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
@@ -111,14 +111,7 @@ namespace KamatekCrm.ViewModels
             _toastService = toastService;
             _loadingService = loadingService;
 
-            // 401 Unauthorized yakalama
-            WeakReferenceMessenger.Default.Register<UnauthorizedMessage>(this, (r, m) =>
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    ForceLogout();
-                });
-            });
+            // Removed UnauthorizedMessage catch since API is removed
 
             // Komutları tanımla
 
