@@ -220,31 +220,52 @@
                     </StackPanel>
                 </Border>
                 
-                <!-- NETWORK DISCOVERY CARD -->
+                <!-- NETWORK SETTINGS CARD (Navigates to full NetworkSettingsView) -->
                 <Border Width="300" Margin="0,0,24,24" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="16">
+                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="16" Cursor="Hand">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding OpenNetworkSettingsCommand}"/>
+                    </Border.InputBindings>
                     <StackPanel>
                         <!-- Header -->
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <Border Background="{DynamicResource ThemePrimary}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
                                 <TextBlock Text="🌐" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="Ağ &amp; Sunucu" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                <TextBlock Text="Çoklu kullanıcı ayarları" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                                <TextBlock Text="Ağ &amp; Bağlantı" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                <TextBlock Text="Sunucu rolü ve ağ keşfi" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
                             </StackPanel>
+                            <TextBlock Grid.Column="2" Text="→" FontSize="20" FontWeight="Bold" 
+                                       Foreground="{DynamicResource ThemeTextTertiary}" VerticalAlignment="Center"/>
                         </Grid>
 
                         <Separator Margin="0,0,0,16" Background="{DynamicResource ThemeDivider}"/>
 
-                        <!-- Toggle -->
-                        <ui:ToggleSwitch IsChecked="{Binding IsMainServer}" Content="Bu bilgisayar Ana Sunucu mu?" 
-                                  FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,8"/>
-                        <TextBlock Text="Ana sunucu veritabanını diğer cihazlara yayınlar. İstemciler bu sunucuya bağlanır." TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                        <!-- Info -->
+                        <StackPanel Margin="0,0,0,8">
+                            <TextBlock Text="MEVCUT ROL" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemeTextTertiary}"/>
+                            <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,4,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="💻 İstemci"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMainServer}" Value="True">
+                                                <Setter Property="Text" Value="🖥️ Ana Sunucu"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <TextBlock Text="Detaylı ağ yönetimi, bağlantı izleme ve sunucu dashboard'u için tıklayın." 
+                                   TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
                     </StackPanel>
                 </Border>
             </WrapPanel>

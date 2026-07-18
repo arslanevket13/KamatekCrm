@@ -276,7 +276,7 @@ namespace KamatekCrm.ViewModels
         #region Methods
 
         [RelayCommand]
-        private async void Refresh()
+        private async Task Refresh()
         {
             _loadingService?.Show();
             try
@@ -308,7 +308,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async void LoadProducts()
+        private async Task LoadProducts()
         {
             try
             {
@@ -347,7 +347,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async void LoadHistory(int jobId)
+        private async Task LoadHistory(int jobId)
         {
             if (jobId == 0)
             {
@@ -374,7 +374,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async void LoadJobItems(int jobId)
+        private async Task LoadJobItems(int jobId)
         {
             try
             {
@@ -424,7 +424,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async void SaveNewRepair(object? parameter)
+        private async Task SaveNewRepair(object? parameter)
         {
             try
             {
@@ -451,7 +451,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async void UpdateStatus(RepairStatus? newStatus)
+        private async Task UpdateStatus(RepairStatus? newStatus)
         {
             if (SelectedJob == null || newStatus == null) return;
 
@@ -541,7 +541,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async void AddNote(object? parameter)
+        private async Task AddNote(object? parameter)
         {
             if (SelectedJob == null) return;
 
@@ -572,7 +572,7 @@ namespace KamatekCrm.ViewModels
         // ==========================================
 
         [RelayCommand]
-        private async void temToJob(object? parameter)
+        private async Task temToJob(object? parameter)
         {
             if (SelectedJob == null || SelectedProductToAdd == null) return;
 
@@ -605,7 +605,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async void temFromJob(object? parameter)
+        private async Task temFromJob(object? parameter)
         {
             if (parameter is ServiceJobItem item && SelectedJob != null)
             {
@@ -629,7 +629,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private async void UpdateTotals()
+        private async Task UpdateTotals()
         {
             if (SelectedJob == null) return;
 
@@ -654,7 +654,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async void CompleteJob(object? parameter)
+        private async Task CompleteJob(object? parameter)
         {
             try
             {
@@ -715,4 +715,5 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
+
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -117,6 +117,32 @@ namespace KamatekCrm.ViewModels
         #region Commands
 
         private bool IsNotBusy() => !IsBusy;
+
+        /// <summary>
+        /// Ağ Yönetimi sayfasına navigasyon yapar. (Modal Pencere olarak)
+        /// </summary>
+        [RelayCommand]
+        private void OpenNetworkSettings()
+        {
+            try
+            {
+                var networkVm = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<KamatekCrm.ViewModels.NetworkSettingsViewModel>(App.ServiceProvider);
+                var window = new System.Windows.Window
+                {
+                    Title = "Ağ ve Sunucu Yönetimi",
+                    Content = new KamatekCrm.Views.NetworkSettingsView { DataContext = networkVm },
+                    Width = 800,
+                    Height = 800,
+                    WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
+                    ResizeMode = System.Windows.ResizeMode.NoResize
+                };
+                window.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Network Settings modal error: {ex.Message}");
+            }
+        }
 
         #endregion
 

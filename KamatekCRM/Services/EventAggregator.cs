@@ -119,4 +119,10 @@ namespace KamatekCrm.Services
     /// Hiçbir sunucu bulunamadığında UI tarafında manuel bağlantı sihirbazını göstermek için fırlatılır
     /// </summary>
     public class ShowManualConnectionWizardEvent { }
+
+    /// <summary>
+    /// Ağ Yönetimi sayfasına navigasyon istendiğinde fırlatılır.
+    /// SettingsViewModel → MainContentViewModel iletişimi için kullanılır.
+    /// </summary>
+    public class NavigateToNetworkSettingsEvent { }
 }

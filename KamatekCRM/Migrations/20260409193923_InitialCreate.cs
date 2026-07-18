@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -794,7 +794,7 @@ namespace KamatekCrm.Migrations
                     CategoriesJson = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CompletedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CompletedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ScheduledDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     AssignedTechnician = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     AssignedUserId = table.Column<int>(type: "integer", nullable: true),

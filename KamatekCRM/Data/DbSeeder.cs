@@ -9,6 +9,21 @@ namespace KamatekCrm.Data
     {
         public static void SeedDemoData(AppDbContext context)
         {
+            // 0. Admin User Seeding
+            if (!context.Users.Any())
+            {
+                var adminUser = new KamatekCrm.Shared.Models.User
+                {
+                    Username = "admin",
+                    Ad = "Sistem",
+                    Soyad = "Yöneticisi",
+                    Role = "Admin",
+                    PasswordHash = "123"
+                };
+                context.Users.Add(adminUser);
+                context.SaveChanges();
+            }
+
             // Eğer müşteri varsa veritabanı dolu demektir, çık.
             if (context.Customers.Any()) return;
 

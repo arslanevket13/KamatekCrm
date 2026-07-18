@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -284,7 +284,7 @@ namespace KamatekCrm.ViewModels
             SidebarItem = new PurchasingLineItem { IsNewProduct = true };
         }
 
-        private async void PerformSearchDebounced(string query)
+        private async Task PerformSearchDebounced(string query)
         {
             _searchCts?.Cancel();
             _searchCts = new CancellationTokenSource();
@@ -521,6 +521,7 @@ namespace KamatekCrm.ViewModels
 
     }
 }
+
 
 
 

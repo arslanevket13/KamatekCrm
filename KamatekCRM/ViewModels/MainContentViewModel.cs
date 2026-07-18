@@ -247,6 +247,12 @@ namespace KamatekCrm.ViewModels
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() => IsConnectionLost = false);
             });
+
+            // Ağ Yönetimi sayfasına navigasyon event'i (SettingsView → NetworkSettingsView)
+            EventAggregator.Instance.Subscribe<NavigateToNetworkSettingsEvent>(_ =>
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() => NavigateTo<NetworkSettingsViewModel>());
+            });
             
             // Yeni komutlar
 
@@ -276,8 +282,27 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand] private void NavigateToDashboard() => NavigateTo<DashboardViewModel>();
+        [RelayCommand] private void NavigateToCustomers() => NavigateTo<CustomersViewModel>();
+        [RelayCommand] private void NavigateToProducts() => NavigateTo<ProductViewModel>();
+        [RelayCommand] private void NavigateToServiceJobs() => NavigateTo<ServiceJobViewModel>();
+        [RelayCommand] private void NavigateToRepairList() => NavigateTo<RepairListViewModel>();
+        [RelayCommand] private void NavigateToFieldJobList() => NavigateTo<FieldJobListViewModel>();
+        [RelayCommand] private void NavigateToRoutePlanning() => NavigateTo<RoutePlanningViewModel>();
+        // [RelayCommand] private void NavigateToPipeline() => NavigateTo<PipelineViewModel>();
+        // [RelayCommand] private void NavigateToScheduler() => NavigateTo<SchedulerViewModel>();
+        [RelayCommand] private void NavigateToFinance() => NavigateTo<FinanceViewModel>();
+        [RelayCommand] private void NavigateToAnalytics() => NavigateTo<AnalyticsViewModel>();
+        [RelayCommand] private void NavigateToPurchaseOrders() => NavigateTo<PurchaseOrderViewModel>();
+        [RelayCommand] private void NavigateToSuppliers() => NavigateTo<SuppliersViewModel>();
+        [RelayCommand] private void NavigateToFinancialHealth() => NavigateTo<FinancialHealthViewModel>();
+        [RelayCommand] private void NavigateToStockCount() => NavigateTo<StockCountViewModel>();
+        [RelayCommand] private void NavigateToReports() => NavigateTo<StockReportsViewModel>();
+        [RelayCommand] private void NavigateToUsers() => NavigateTo<UsersViewModel>();
+        [RelayCommand] private void NavigateToSystemLogs() => NavigateTo<SystemLogsViewModel>();
+        
         [RelayCommand]
-        private void GoToSettings()
+        private void NavigateToSettings()
         {
             IsConnectionLost = false; // Overlay'i gizle
             NavigateTo<SettingsViewModel>();

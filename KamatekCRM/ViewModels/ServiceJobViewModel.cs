@@ -1176,7 +1176,7 @@ namespace KamatekCrm.ViewModels
         /// Listeyi yenile
         /// </summary>
         [RelayCommand]
-        private async void RefreshList()
+        private async Task RefreshList()
         {
             await LoadServiceJobs();
             _serviceJobsView?.Refresh();
@@ -1526,7 +1526,7 @@ namespace KamatekCrm.ViewModels
         /// Yeni iş kaydet (Hibrit Cihaz Desteği ile)
         /// </summary>
         [RelayCommand]
-        private async void SaveServiceJob()
+        private async Task SaveServiceJob()
         {
             try
             {
@@ -1756,7 +1756,7 @@ namespace KamatekCrm.ViewModels
         /// İşi tamamla - KRİTİK İŞ MANTIĞI: STOK DÜŞME
         /// </summary>
         [RelayCommand]
-        private async void CompleteJob()
+        private async Task CompleteJob()
         {
             if (SelectedServiceJob == null) return;
 
@@ -1831,7 +1831,7 @@ namespace KamatekCrm.ViewModels
         /// Servis formunu PDF olarak yazdır
         /// </summary>
         [RelayCommand]
-        private async void PrintServiceForm(ServiceJob? job)
+        private async Task PrintServiceForm(ServiceJob? job)
         {
             if (job == null) return;
 
@@ -1996,7 +1996,7 @@ namespace KamatekCrm.ViewModels
         /// İş durumunu değiştir (Dashboard context menu)
         /// </summary>
         [RelayCommand]
-        private async void ChangeJobStatus(object? param)
+        private async Task ChangeJobStatus(object? param)
         {
             if (SelectedServiceJob == null || param == null) return;
 
@@ -2042,7 +2042,7 @@ namespace KamatekCrm.ViewModels
         /// İş sil (Dashboard context menu)
         /// </summary>
         [RelayCommand]
-        private async void DeleteJob()
+        private async Task DeleteJob()
         {
             if (SelectedServiceJob == null) return;
 
@@ -2075,4 +2075,5 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
+
 

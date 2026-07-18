@@ -1,0 +1,9 @@
+{
+  "solution": {
+    "path": "KamatekCRM.sln",
+    "projects": [
+      "KamatekCrm\\KamatekCrm.csproj",
+      "KamatekCrm\\KamatekCrm.Shared\\KamatekCrm.Shared.csproj"
+    ]
+  }
+}

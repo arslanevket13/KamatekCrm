@@ -24,7 +24,7 @@ namespace KamatekCrm.ViewModels
 
         partial void OnIsSearchingForServerChanged(bool value)
         {
-            CommandManager.InvalidateRequerySuggested();
+            LoginCommand.NotifyCanExecuteChanged();
         }
 
         [ObservableProperty]
@@ -43,6 +43,7 @@ namespace KamatekCrm.ViewModels
             {
                 SetProperty(ref _username, value);
                 ErrorMessage = string.Empty;
+                LoginCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -56,6 +57,7 @@ namespace KamatekCrm.ViewModels
             {
                 SetProperty(ref _password, value);
                 ErrorMessage = string.Empty;
+                LoginCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -87,7 +89,11 @@ namespace KamatekCrm.ViewModels
         public bool IsLoading
         {
             get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
+            set
+            {
+                SetProperty(ref _isLoading, value);
+                LoginCommand.NotifyCanExecuteChanged();
+            }
         }
 
         /// <summary>
@@ -100,18 +106,48 @@ namespace KamatekCrm.ViewModels
         private readonly IAuthService _authService;
         private readonly NavigationService _navigationService;
         private readonly NetworkDiscoveryService _discoveryService;
-
         private readonly IToastService _toastService;
+        private readonly IDatabaseConnectionProvider _connectionProvider;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public LoginViewModel(IAuthService authService, NavigationService navigationService, NetworkDiscoveryService discoveryService, IToastService toastService)
+        public LoginViewModel(IAuthService authService, NavigationService navigationService, NetworkDiscoveryService discoveryService, IToastService toastService, IDatabaseConnectionProvider connectionProvider)
         {
             _authService = authService;
             _navigationService = navigationService;
             _discoveryService = discoveryService;
             _toastService = toastService;
+            _connectionProvider = connectionProvider;
+
+            // Gerçek zamanlı sunucu durumunu dinle
+            EventAggregator.Instance.Subscribe<DatabaseConnectionRestoredEvent>(_ =>
+            {
+                if (System.Windows.Application.Current != null && System.Windows.Application.Current.Dispatcher != null)
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        IsServerFound = true;
+                        IsSearchingForServer = false;
+                        ServerStatusMessage = $"Sunucu bulundu ({_connectionProvider.CurrentServerIp})";
+                        LoginCommand.NotifyCanExecuteChanged();
+                    });
+                }
+            });
+
+            EventAggregator.Instance.Subscribe<DatabaseConnectionLostEvent>(_ =>
+            {
+                if (System.Windows.Application.Current != null && System.Windows.Application.Current.Dispatcher != null)
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        IsServerFound = false;
+                        IsSearchingForServer = false;
+                        ServerStatusMessage = "Sunucu bulunamadı! Lütfen ağ ayarlarını yapılandırın.";
+                        LoginCommand.NotifyCanExecuteChanged();
+                    });
+                }
+            });
             
             // Load saved settings, then apply dev defaults if empty
             LoadSavedCredentials();
@@ -129,21 +165,63 @@ namespace KamatekCrm.ViewModels
             _ = InitializeDiscoveryAsync();
         }
 
+        [ObservableProperty]
+        private bool _isServerNotFound;
+
         public async Task InitializeDiscoveryAsync()
         {
-            IsSearchingForServer = true;
-            ServerStatusMessage = "Ağ ayarları kontrol ediliyor...";
-            IsServerFound = false;
+            if (_connectionProvider.IsConnected)
+            {
+                IsServerFound = true;
+                IsSearchingForServer = false;
+                IsServerNotFound = false;
+                ServerStatusMessage = $"Sunucu bulundu ({_connectionProvider.CurrentServerIp})";
+                LoginCommand.NotifyCanExecuteChanged();
+            }
+            else
+            {
+                IsSearchingForServer = true;
+                IsServerNotFound = false;
+                ServerStatusMessage = "Ağda sunucu aranıyor...";
+                IsServerFound = false;
+                LoginCommand.NotifyCanExecuteChanged();
 
-            // Arka planda App.xaml.cs zaten discovery başlatıyor.
-            // Sadece UI için kısa bir bekleme yapıp devam edelim.
-            await Task.Delay(500);
+                // Start Timeout Fallback
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(7));
+                    if (IsSearchingForServer && !_connectionProvider.IsConnected)
+                    {
+                        if (System.Windows.Application.Current != null && System.Windows.Application.Current.Dispatcher != null)
+                        {
+                            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                IsSearchingForServer = false;
+                                IsServerNotFound = true;
+                                ServerStatusMessage = "Sunucuya bağlanılamadı. Lütfen ayarları kontrol edin.";
+                                LoginCommand.NotifyCanExecuteChanged();
+                            });
+                        }
+                    }
+                });
+            }
+            await Task.CompletedTask;
+        }
 
-            // ApiClient is removed in direct-db mode
-            IsServerFound = true;
-            ServerStatusMessage = "Bağlantı ayarları yüklendi.";
-
-            IsSearchingForServer = false;
+        [RelayCommand]
+        private void OpenConnectionSettings()
+        {
+            var networkViewModel = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<KamatekCrm.ViewModels.NetworkSettingsViewModel>(App.ServiceProvider);
+            var settingsWindow = new System.Windows.Window
+            {
+                Title = "Ağ ve Bağlantı Ayarları",
+                Content = new KamatekCrm.Views.NetworkSettingsView { DataContext = networkViewModel },
+                Width = 600,
+                Height = 500,
+                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
+                ResizeMode = System.Windows.ResizeMode.NoResize
+            };
+            settingsWindow.ShowDialog();
         }
 
         /// <summary>
@@ -206,6 +284,13 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public async Task ExecuteLoginAsync(object? parameter = null)
         {
+            if (!_connectionProvider.IsConnected)
+            {
+                ErrorMessage = "Sunucu bağlantısı yok. Lütfen ağ ayarlarını kontrol edin.";
+                _toastService.ShowError("Sunucu bağlantısı sağlanamadı!");
+                return;
+            }
+
             // Determine if we are auto-logging in with a token
             string? autoToken = parameter as string;
 

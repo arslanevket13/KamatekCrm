@@ -84,8 +84,8 @@ namespace KamatekCrm
                             }
                             catch (InvalidOperationException)
                             {
-                                // Henüz ağ keşfi yapılmadıysa Design-Time veya başlangıç için dummy string
-                                options.UseNpgsql("Host=0.0.0.0;Database=dummy;Username=postgres;Password=123456"); 
+                                // Henüz ağ keşfi yapılmadıysa Design-Time veya başlangıç için yedek string
+                                options.UseNpgsql("Host=127.0.0.1;Database=kamatekcrm;Username=postgres;Password=1313"); 
                             }
                         });
 
@@ -111,6 +111,30 @@ namespace KamatekCrm
 
                 // Host'u başlat (web server YOK, sadece DI lifecycle). IHostedService'ler otomatik başlar.
                 await _host.StartAsync();
+
+                // ---------------------------------------------------------
+                // MIGRATION & SEEDING GARANTİSİ (Uygulama açılışında zorla)
+                // ---------------------------------------------------------
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    try
+                    {
+                        var dbContext = scope.ServiceProvider.GetRequiredService<KamatekCrm.Data.AppDbContext>();
+                        
+                        // Veritabanının var olduğundan ve güncel olduğundan emin ol
+                        await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.MigrateAsync(dbContext.Database);
+
+                        // Eğer Users (Kullanıcılar) tablosu boşsa, varsayılan admin (123) hesabını oluştur.
+                        if (!System.Linq.Queryable.Any(dbContext.Users))
+                        {
+                            KamatekCrm.Data.DbSeeder.SeedDemoData(dbContext);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Veritabanı otomatik kurulumu sırasında hata oluştu. Lütfen bağlantı ayarlarını kontrol edin.");
+                    }
+                }
 
 
                 // MainWindow'u DI'dan al ve göster

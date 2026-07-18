@@ -21,7 +21,7 @@
     </UserControl.Resources>
 
     <Grid x:Name="MainGrid" Background="{DynamicResource ApplicationBackgroundBrush}">
-        <!-- Language Selector -->
+        <!-- Language Selector & Settings Button -->
         <StackPanel Orientation="Horizontal" 
                     HorizontalAlignment="Right" 
                     VerticalAlignment="Top" 
@@ -30,11 +30,19 @@
                       Width="100"
                       SelectedIndex="0"
                       FontSize="12"
+                      Margin="0,0,12,0"
                       Cursor="Hand">
                 <ComboBoxItem Content="🇹🇷 Türkçe" Tag="tr-TR"/>
                 <ComboBoxItem Content="🇬🇧 English" Tag="en-US"/>
                 <ComboBoxItem Content="🇩🇪 Deutsch" Tag="de-DE"/>
             </ComboBox>
+            <ui:Button Appearance="Transparent" 
+                       Command="{Binding OpenConnectionSettingsCommand}"
+                       ToolTip="Ağ Ayarları"
+                       Cursor="Hand"
+                       Padding="8">
+                <ui:SymbolIcon Symbol="Settings24" FontSize="18" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+            </ui:Button>
         </StackPanel>
 
         <!-- Login Card -->
@@ -139,6 +147,27 @@
                                        VerticalAlignment="Center"
                                        TextWrapping="Wrap"
                                        MaxWidth="300"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Server Not Found Fallback Banner -->
+                    <Border Background="{DynamicResource SystemFillColorCautionBackgroundBrush}" CornerRadius="8" 
+                            Padding="16,8" Margin="0,0,0,16"
+                            Visibility="{Binding IsServerNotFound, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <ui:SymbolIcon Symbol="Warning24" Foreground="{DynamicResource SystemFillColorCautionBrush}" Margin="0,0,12,0"/>
+                                <TextBlock Text="Sunucu Bulunamadı" 
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <ui:Button Content="Bağlantıyı Manuel Yapılandır"
+                                       Command="{Binding OpenConnectionSettingsCommand}"
+                                       Appearance="Secondary"
+                                       HorizontalAlignment="Stretch"
+                                       Cursor="Hand"/>
                         </StackPanel>
                     </Border>
 

@@ -130,12 +130,14 @@ namespace KamatekCrm.Extensions
             // Missing ViewModels from DI
             services.AddTransient<PurchaseOrderViewModel>();
             services.AddTransient<QuotationViewModel>();
+            services.AddTransient<NetworkSettingsViewModel>();
 
             // Window'ların da DI container'da kayıtlı olması gerekir
             services.AddTransient<Views.RepairTrackingWindow>();
             services.AddTransient<Views.FaultTicketWindow>();
             services.AddTransient<Views.DirectSalesWindow>();
             services.AddTransient<Views.ProjectQuoteEditorWindow>();
+            services.AddTransient<Views.NetworkSettingsView>();
 
             return services;
         }

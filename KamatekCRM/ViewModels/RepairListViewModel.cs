@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -692,7 +692,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async void CreateNewRepair(object? parameter)
+        private async Task CreateNewRepair(object? parameter)
         {
             var faultVm = _serviceProvider.GetRequiredService<FaultTicketViewModel>();
             var regWindow = new Views.FaultTicketWindow(faultVm);
@@ -782,6 +782,7 @@ namespace KamatekCrm.ViewModels
         public string FullDisplay => $"{Icon} {DisplayName}";
     }
 }
+
 
 
 

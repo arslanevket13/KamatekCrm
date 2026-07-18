@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -769,7 +769,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async void SendEmail()
+        private async Task SendEmail()
         {
              if (SelectedCustomer == null || string.IsNullOrWhiteSpace(SelectedCustomer.Email))
              {
@@ -842,4 +842,5 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
+
 

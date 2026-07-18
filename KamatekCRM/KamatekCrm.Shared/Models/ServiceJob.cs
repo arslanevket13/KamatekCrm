@@ -33,7 +33,7 @@ namespace KamatekCrm.Shared.Models
         public string Description { get; set; } = string.Empty;
         [Required]
         public JobStatus Status { get; set; } = JobStatus.Pending;
-        [Required]
+        
         // CreatedDate is in BaseEntity (CreatedAt)
         public DateTime? CompletedDate { get; set; }
         public DateTime? ScheduledDate { get; set; }

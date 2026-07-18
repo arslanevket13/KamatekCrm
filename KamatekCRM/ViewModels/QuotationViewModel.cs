@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -158,7 +158,7 @@ namespace KamatekCrm.ViewModels
             Refresh();
         }
 
-        private async void Refresh()
+        private async Task Refresh()
         {
             try
             {
@@ -360,11 +360,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-        }
     }
 }
+
 
 

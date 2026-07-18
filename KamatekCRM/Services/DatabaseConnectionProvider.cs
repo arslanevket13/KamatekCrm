@@ -73,7 +73,7 @@ namespace KamatekCrm.Services
         private readonly ReaderWriterLockSlim _rwLock = new(LockRecursionPolicy.NoRecursion);
 
         private const string DbUser = "postgres";   // varsayılan
-        private const string DbPass = "123456";      // varsayılan
+        private const string DbPass = "1313";      // varsayılan
         private const string DbName = "kamatekcrm";  // varsayılan
 
         #endregion
@@ -128,6 +128,11 @@ namespace KamatekCrm.Services
         /// </summary>
         public void SetServerIp(string ipAddress)
         {
+            if (ipAddress == "0.0.0.0" || ipAddress == "::" || ipAddress == System.Net.IPAddress.Any.ToString())
+            {
+                ipAddress = "127.0.0.1";
+            }
+
             _rwLock.EnterWriteLock();
             try
             {

@@ -85,6 +85,10 @@
                 <views:SettingsView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:NetworkSettingsViewModel}">
+                <views:NetworkSettingsView/>
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type vm:FinanceViewModel}">
                 <views:FinanceView/>
             </DataTemplate>
@@ -100,6 +104,9 @@
             <!-- Satın Alma ve Stok Giriş -->
             <DataTemplate DataType="{x:Type vm:PurchasingViewModel}">
                 <views:PurchasingView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:PurchaseOrderViewModel}">
+                <views:PurchaseOrderView />
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type vm:SuppliersViewModel}">

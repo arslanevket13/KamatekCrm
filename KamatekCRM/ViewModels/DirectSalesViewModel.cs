@@ -225,7 +225,7 @@ namespace KamatekCrm.ViewModels
             InitializeAsync();
         }
 
-        private async void InitializeAsync()
+        private async Task InitializeAsync()
         {
             _loadingService?.Show();
             try
@@ -246,7 +246,7 @@ namespace KamatekCrm.ViewModels
 
         #region Product Loading
 
-        private async void LoadProducts()
+        private async Task LoadProducts()
         {
             AllProducts.Clear();
             if (SelectedWarehouse == null) return;
@@ -309,7 +309,7 @@ namespace KamatekCrm.ViewModels
 
         #region Customer
 
-        private async void LoadRecentCustomers()
+        private async Task LoadRecentCustomers()
         {
             try
             {
@@ -584,7 +584,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async void CompleteSale()
+        private async Task CompleteSale()
         {
             if (!CanCompleteSale || SelectedWarehouse == null) return;
 
@@ -824,5 +824,6 @@ namespace KamatekCrm.ViewModels
     public class ProductDisplayItem : PosProductItem { }
     public class CartItem : PosCartItem { }
 }
+
 
 

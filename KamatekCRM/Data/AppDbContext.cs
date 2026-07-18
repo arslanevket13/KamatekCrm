@@ -92,9 +92,7 @@ namespace KamatekCrm.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                // PostgreSQL Migration enforce
-                optionsBuilder.UseNpgsql(AppSettings.PostgreSqlConnectionString)
-                              .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+                throw new InvalidOperationException("DbContext must be configured with a valid connection string. Fallback configuration is strictly prohibited to prevent split-brain risks.");
             }
         }
 

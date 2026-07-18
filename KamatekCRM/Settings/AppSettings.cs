@@ -26,9 +26,13 @@ namespace KamatekCrm.Settings
                     {
                         if (_configuration == null)
                         {
+                            var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+
                             var builder = new ConfigurationBuilder()
                                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                                .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
+                                .AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
 
                             _configuration = builder.Build();
                         }
