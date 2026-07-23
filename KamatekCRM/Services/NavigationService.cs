@@ -40,7 +40,7 @@ namespace KamatekCrm.Services
         public TViewModel NavigateTo<TViewModel>() where TViewModel : notnull
         {
             var vm = _serviceProvider.GetRequiredService<TViewModel>();
-            CurrentView = vm;
+            NavigateTo(vm);
             return vm;
         }
 
@@ -49,7 +49,22 @@ namespace KamatekCrm.Services
         /// </summary>
         public void NavigateTo(object viewModel)
         {
-            CurrentView = viewModel;
+            if (viewModel is LoginViewModel || viewModel is MainContentViewModel)
+            {
+                CurrentView = viewModel;
+            }
+            else
+            {
+                // Root view MainContentViewModel değilse önce MainContentViewModel'e geç
+                if (CurrentView is not MainContentViewModel mainContentVm)
+                {
+                    mainContentVm = _serviceProvider.GetRequiredService<MainContentViewModel>();
+                    CurrentView = mainContentVm;
+                }
+
+                // Alt sayfayı MainContentViewModel'in içindeki CurrentView'e yerleştir (Sidebar korunur)
+                mainContentVm.CurrentView = viewModel;
+            }
         }
 
         /// <summary>

@@ -13,22 +13,19 @@ namespace KamatekCrm.Views
         /// <summary>
         /// Yeni ürün ekleme modu
         /// </summary>
-        public AddProductWindow() : this(null) { }
-
-        /// <summary>
-        /// Ürün ekleme veya düzenleme modu
-        /// </summary>
-        /// <param name="productToEdit">Düzenlenecek ürün. Null ise yeni ürün eklenir.</param>
-        public AddProductWindow(Product? productToEdit)
+        public AddProductWindow()
         {
             InitializeComponent();
-            
-            var viewModel = new AddProductViewModel(productToEdit);
-            viewModel.RequestClose += OnRequestClose;
-            DataContext = viewModel;
-            
-            // Pencere başlığını güncelle
-            Title = viewModel.WindowTitle;
+
+            DataContextChanged += (s, e) =>
+            {
+                if (DataContext is AddProductViewModel vm)
+                {
+                    vm.RequestClose -= OnRequestClose;
+                    vm.RequestClose += OnRequestClose;
+                    Title = vm.WindowTitle;
+                }
+            };
         }
 
         private void OnRequestClose(bool result)

@@ -1172,6 +1172,14 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void NavigateBack()
+        {
+            _navigationService.NavigateTo<DashboardViewModel>();
+        }
+
+        public IRelayCommand BackCommand => NavigateBackCommand;
+
         /// <summary>
         /// Listeyi yenile
         /// </summary>

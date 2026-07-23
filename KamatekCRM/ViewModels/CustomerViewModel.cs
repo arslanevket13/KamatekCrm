@@ -612,17 +612,8 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedCustomer == null) return;
 
-            var window = new Views.CustomerDetailWindow();
-            window.Owner = System.Windows.Application.Current.MainWindow;
-            
-            if (window.DetailView.DataContext is ViewModels.CustomerDetailViewModel detailVm)
-            {
-                detailVm.Initialize(SelectedCustomer.Id);
-            }
-            
-            window.ShowDialog();
-            
-            _ = RefreshDataAsync();
+            var detailVm = _navigationService.NavigateTo<CustomerDetailViewModel>();
+            detailVm.Initialize(SelectedCustomer.Id);
         }
 
 

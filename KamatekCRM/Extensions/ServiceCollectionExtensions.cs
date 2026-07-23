@@ -19,9 +19,20 @@ namespace KamatekCrm.Extensions
 
             // DbContext
 
-            services.AddDbContext<AppDbContext>(options =>
+            services.AddDbContext<AppDbContext>((sp, options) =>
             {
-                 options.UseNpgsql(AppSettings.PostgreSqlConnectionString, npgsqlOptionsAction: sqlOptions =>
+                 var connectionProvider = sp.GetService<IDatabaseConnectionProvider>();
+                 string connString;
+                 try
+                 {
+                     connString = connectionProvider?.GetConnectionString() ?? AppSettings.PostgreSqlConnectionString;
+                 }
+                 catch
+                 {
+                     connString = "Host=127.0.0.1;Database=kamatekcrm;Username=postgres;Password=1313;Port=5432;";
+                 }
+
+                 options.UseNpgsql(connString, sqlOptions =>
                  {
                      // 1. EF Core Dirençliliği (Connection Resiliency)
                      sqlOptions.EnableRetryOnFailure(

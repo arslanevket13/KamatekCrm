@@ -239,22 +239,6 @@
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
-
-                            <!-- Cihaz Seçimi -->
-                            <TextBlock Text="🔌 Mevcut Cihaz" Style="{StaticResource FieldLabel}"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <RadioButton Content="Mevcut Cihaz" IsChecked="{Binding IsExistingAsset}" Margin="0,0,16,0"
-                                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                                <RadioButton Content="Yeni Cihaz Ekle" IsChecked="{Binding IsNewAsset}"
-                                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            </StackPanel>
-                            <ComboBox ItemsSource="{Binding CustomerAssets}"
-                                     SelectedItem="{Binding SelectedAsset}"
-                                     DisplayMemberPath="FullName"
-                                     Height="36"
-                                     Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                     Visibility="{Binding IsExistingAsset, Converter={StaticResource BoolToVis}}"
-                                     Margin="0,0,0,8"/>
                         </StackPanel>
 
                         <!-- Sağ: Yapı Tipi & Harita -->

@@ -9,6 +9,15 @@
 
     <FontFamily x:Key="MainFont">Segoe UI Variable, Segoe UI</FontFamily>
 
+    <!-- Validation Error Template -->
+    <ControlTemplate x:Key="ValidationErrorTemplate">
+        <DockPanel>
+            <AdornedElementPlaceholder x:Name="placeholder"/>
+            <TextBlock Foreground="Red" FontSize="20" FontWeight="Bold" Margin="2,0,0,0" 
+                       Text="!" ToolTip="{Binding ElementName=placeholder, Path=AdornedElement.(Validation.Errors)[0].ErrorContent}"/>
+        </DockPanel>
+    </ControlTemplate>
+
     <!-- ─────────── PREMIUM WINDOW STYLE ─────────── -->
     <Style x:Key="PremiumWindowStyle" TargetType="Window">
         <Setter Property="WindowStyle" Value="None" />
@@ -384,9 +393,7 @@
 
     <!-- ─────────── LEGACY MAPPINGS ─────────── -->
     <Style x:Key="ModernButton" TargetType="Button" BasedOn="{StaticResource BtnPrimary}">
-        <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
-        <Setter Property="Height" Value="40"/>
     </Style>
     
     <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource BtnSecondary}"/>
@@ -403,26 +410,148 @@
     <Style x:Key="ModernPasswordBox" TargetType="PasswordBox" BasedOn="{StaticResource PremiumPasswordBox}"/>
     
     <!-- Modern ComboBoxItem (Inherits default behavior, applies colors) -->
-    <Style x:Key="ModernComboBoxItem" TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
+    <Style x:Key="ModernComboBoxItem" TargetType="ComboBoxItem">
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="Padding" Value="12,8"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border x:Name="Bd"
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4"
+                            Margin="2,1">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- Modern ComboBox (Inherits default behavior, applies colors) -->
-    <Style x:Key="ModernComboBox" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+    <Style x:Key="ModernComboBox" TargetType="ComboBox">
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Height" Value="40"/>
-        <Setter Property="Padding" Value="16,0"/>
-        <Setter Property="Margin" Value="0,8"/>
+        <Setter Property="Padding" Value="12,0"/>
+        <Setter Property="Margin" Value="0,4"/>
         <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Background" Value="{DynamicResource SurfaceCardBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="ItemContainerStyle" Value="{StaticResource ModernComboBoxItem}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid x:Name="MainGrid">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="32"/>
+                        </Grid.ColumnDefinitions>
+
+                        <ToggleButton x:Name="ToggleButton"
+                                      Grid.ColumnSpan="2"
+                                      Background="{TemplateBinding Background}"
+                                      BorderBrush="{TemplateBinding BorderBrush}"
+                                      BorderThickness="{TemplateBinding BorderThickness}"
+                                      Focusable="False"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="Border"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="6">
+                                        <Grid HorizontalAlignment="Right" Width="30">
+                                            <Path x:Name="Arrow"
+                                                  Data="M 0 0 L 4 4 L 8 0 Z"
+                                                  Fill="{DynamicResource TextBodyBrush}"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+
+                        <ContentPresenter x:Name="ContentSite"
+                                          Grid.Column="0"
+                                          IsHitTestVisible="False"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+
+                        <TextBox x:Name="PART_EditableTextBox"
+                                 Grid.Column="0"
+                                 Style="{x:Null}"
+                                 Focusable="True"
+                                 Background="Transparent"
+                                 Foreground="{TemplateBinding Foreground}"
+                                 Visibility="Hidden"
+                                 IsReadOnly="{TemplateBinding IsReadOnly}"/>
+
+                        <Popup x:Name="PART_Popup"
+                               Grid.ColumnSpan="2"
+                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                               Placement="Bottom"
+                               AllowsTransparency="True"
+                               Focusable="False"
+                               PopupAnimation="Slide">
+                            <Border x:Name="DropDownBorder"
+                                    MinHeight="40"
+                                    MaxHeight="260"
+                                    MinWidth="{Binding ActualWidth, ElementName=MainGrid}"
+                                    Background="{DynamicResource SurfaceCardBrush}"
+                                    BorderBrush="{DynamicResource ThemeBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Margin="0,4,0,0">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="12" ShadowDepth="4" Opacity="0.3" Color="Black"/>
+                                </Border.Effect>
+                                <ScrollViewer Margin="4" SnapsToDevicePixels="True">
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="HasItems" Value="False">
+                            <Setter TargetName="DropDownBorder" Property="MinHeight" Value="65"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="ModernDataGrid" TargetType="DataGrid" BasedOn="{StaticResource PremiumDataGrid}"/>
@@ -462,20 +591,6 @@
         <Setter Property="HorizontalAlignment" Value="Left"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
-    
-    <!-- Validation Error Template -->
-    <ControlTemplate x:Key="ValidationErrorTemplate">
-        <StackPanel>
-            <Border BorderBrush="{DynamicResource ThemeError}" BorderThickness="1" CornerRadius="{DynamicResource RadiusSmall}">
-                <AdornedElementPlaceholder x:Name="placeholder"/>
-            </Border>
-            <TextBlock Text="{Binding [0].ErrorContent}" 
-                       Foreground="{DynamicResource ThemeError}" 
-                       FontSize="11" 
-                       Margin="0,2,0,0"
-                       FontWeight="Medium"/>
-        </StackPanel>
-    </ControlTemplate>
     
     <!-- NumericTextBox -->
     <Style x:Key="NumericTextBox" TargetType="TextBox" BasedOn="{StaticResource PremiumTextBox}">

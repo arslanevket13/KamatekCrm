@@ -1,3 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using KamatekCrm.Shared.Models;
 
 namespace KamatekCrm.Services
@@ -8,16 +15,23 @@ namespace KamatekCrm.Services
     public class AddressService
     {
         private static List<City>? _cities;
+        private static readonly object _lock = new object();
+
+        private class CityJsonItem
+        {
+            [JsonPropertyName("plaka")]
+            public int Plaka { get; set; }
+
+            [JsonPropertyName("ilceler")]
+            public Dictionary<string, List<string>>? Ilceler { get; set; }
+        }
 
         /// <summary>
         /// Tüm şehirleri alfabetik sıralı olarak getirir
         /// </summary>
         public static List<City> GetCities()
         {
-            if (_cities == null)
-            {
-                InitializeAddressData();
-            }
+            EnsureDataLoaded();
             return _cities!.OrderBy(c => c.Name).ToList();
         }
 
@@ -26,12 +40,10 @@ namespace KamatekCrm.Services
         /// </summary>
         public static List<District> GetDistricts(string cityName)
         {
-            if (_cities == null)
-            {
-                InitializeAddressData();
-            }
+            EnsureDataLoaded();
+            if (string.IsNullOrWhiteSpace(cityName)) return new List<District>();
 
-            var city = _cities!.FirstOrDefault(c => c.Name == cityName);
+            var city = _cities!.FirstOrDefault(c => string.Equals(c.Name, cityName, StringComparison.OrdinalIgnoreCase));
             if (city == null) return new List<District>();
 
             return city.Districts.OrderBy(d => d.Name).ToList();
@@ -42,178 +54,187 @@ namespace KamatekCrm.Services
         /// </summary>
         public static List<Neighborhood> GetNeighborhoods(string cityName, string districtName)
         {
-            if (_cities == null)
-            {
-                InitializeAddressData();
-            }
+            EnsureDataLoaded();
+            if (string.IsNullOrWhiteSpace(cityName) || string.IsNullOrWhiteSpace(districtName)) return new List<Neighborhood>();
 
-            var city = _cities!.FirstOrDefault(c => c.Name == cityName);
+            var city = _cities!.FirstOrDefault(c => string.Equals(c.Name, cityName, StringComparison.OrdinalIgnoreCase));
             if (city == null) return new List<Neighborhood>();
 
-            var district = city.Districts.FirstOrDefault(d => d.Name == districtName);
+            var district = city.Districts.FirstOrDefault(d => string.Equals(d.Name, districtName, StringComparison.OrdinalIgnoreCase));
             if (district == null) return new List<Neighborhood>();
 
             return district.Neighborhoods.OrderBy(n => n.Name).ToList();
         }
 
+        private static void EnsureDataLoaded()
+        {
+            if (_cities == null)
+            {
+                lock (_lock)
+                {
+                    if (_cities == null)
+                    {
+                        InitializeAddressData();
+                    }
+                }
+            }
+        }
+
         /// <summary>
-        /// Adres verilerini başlatır (Örnek: Eskişehir)
+        /// turkiye_ilce_mahalle.json veya turkiye-adres.json dosyasından adres verilerini okur
         /// </summary>
         private static void InitializeAddressData()
         {
-            _cities = new List<City>
+            try
+            {
+                string? filePath = FindJsonFilePath();
+                if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                {
+                    string jsonContent = File.ReadAllText(filePath);
+                    var jsonOptions = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+
+                    var rawData = JsonSerializer.Deserialize<Dictionary<string, CityJsonItem>>(jsonContent, jsonOptions);
+                    if (rawData != null && rawData.Count > 0)
+                    {
+                        var result = new List<City>();
+                        int cityId = 1;
+                        int districtId = 1;
+                        int neighborhoodId = 1;
+                        var trCulture = new CultureInfo("tr-TR");
+
+                        foreach (var kvp in rawData)
+                        {
+                            string rawName = kvp.Key;
+                            string formattedCityName = trCulture.TextInfo.ToTitleCase(rawName.ToLower(trCulture));
+                            var cityDto = kvp.Value;
+
+                            var city = new City
+                            {
+                                Id = cityDto.Plaka > 0 ? cityDto.Plaka : cityId++,
+                                Name = formattedCityName,
+                                Districts = new List<District>()
+                            };
+
+                            if (cityDto.Ilceler != null)
+                            {
+                                foreach (var distKvp in cityDto.Ilceler)
+                                {
+                                    string districtName = distKvp.Key;
+                                    var district = new District
+                                    {
+                                        Id = districtId++,
+                                        CityId = city.Id,
+                                        Name = districtName,
+                                        Neighborhoods = new List<Neighborhood>()
+                                    };
+
+                                    if (distKvp.Value != null)
+                                    {
+                                        foreach (var nName in distKvp.Value)
+                                        {
+                                            var neighborhood = new Neighborhood
+                                            {
+                                                Id = neighborhoodId++,
+                                                DistrictId = district.Id,
+                                                Name = nName
+                                            };
+                                            district.Neighborhoods.Add(neighborhood);
+                                        }
+                                    }
+
+                                    city.Districts.Add(district);
+                                }
+                            }
+
+                            result.Add(city);
+                        }
+
+                        _cities = result;
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AddressService] JSON parsing error: {ex.Message}");
+            }
+
+            // Fallback mock data if JSON file fails to load
+            _cities = GetFallbackData();
+        }
+
+        private static string? FindJsonFilePath()
+        {
+            string[] fileNames = new[] { "turkiye_ilce_mahalle.json", "turkiye-adres.json" };
+            string[] candidateDirectories = new[]
+            {
+                AppDomain.CurrentDomain.BaseDirectory,
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources"),
+                Directory.GetCurrentDirectory(),
+                Path.Combine(Directory.GetCurrentDirectory(), "Data"),
+                Path.Combine(Directory.GetCurrentDirectory(), "Resources")
+            };
+
+            foreach (var dir in candidateDirectories)
+            {
+                foreach (var fileName in fileNames)
+                {
+                    if (string.IsNullOrEmpty(dir)) continue;
+                    string fullPath = Path.Combine(dir, fileName);
+                    if (File.Exists(fullPath))
+                    {
+                        return fullPath;
+                    }
+                }
+            }
+
+            // Upward search for dev workspace root
+            string? currentDir = AppDomain.CurrentDomain.BaseDirectory;
+            while (!string.IsNullOrEmpty(currentDir))
+            {
+                foreach (var fileName in fileNames)
+                {
+                    string candidate = Path.Combine(currentDir, fileName);
+                    if (File.Exists(candidate)) return candidate;
+                }
+                var parent = Directory.GetParent(currentDir);
+                if (parent == null) break;
+                currentDir = parent.FullName;
+            }
+
+            return null;
+        }
+
+        private static List<City> GetFallbackData()
+        {
+            return new List<City>
             {
                 new City
                 {
-                    Id = 1,
+                    Id = 26,
                     Name = "Eskişehir",
                     Districts = new List<District>
                     {
                         new District
                         {
-                            Id = 1,
-                            Name = "Odunpazarı",
-                            CityId = 1,
+                            Id = 1, CityId = 26, Name = "Odunpazarı",
                             Neighborhoods = new List<Neighborhood>
                             {
-                                new Neighborhood { Id = 1, Name = "71 Evler", DistrictId = 1 },
-                                new Neighborhood { Id = 2, Name = "Alanönü", DistrictId = 1 },
-                                new Neighborhood { Id = 3, Name = "Arifiye", DistrictId = 1 },
-                                new Neighborhood { Id = 4, Name = "Batıkent", DistrictId = 1 },
-                                new Neighborhood { Id = 5, Name = "Büyükdere", DistrictId = 1 },
-                                new Neighborhood { Id = 6, Name = "Çamlıca", DistrictId = 1 },
-                                new Neighborhood { Id = 7, Name = "Emek", DistrictId = 1 },
-                                new Neighborhood { Id = 8, Name = "Ertuğrulgazi", DistrictId = 1 },
-                                new Neighborhood { Id = 9, Name = "Eskibağlar", DistrictId = 1 },
-                                new Neighborhood { Id = 10, Name = "Göztepe", DistrictId = 1 },
-                                new Neighborhood { Id = 11, Name = "Gültepe", DistrictId = 1 },
-                                new Neighborhood { Id = 12, Name = "Hacıalim", DistrictId = 1 },
-                                new Neighborhood { Id = 13, Name = "Karapınar", DistrictId = 1 },
-                                new Neighborhood { Id = 14, Name = "Kurtuluş", DistrictId = 1 },
-                                new Neighborhood { Id = 15, Name = "Mamure", DistrictId = 1 },
-                                new Neighborhood { Id = 16, Name = "Osman Gazi", DistrictId = 1 },
-                                new Neighborhood { Id = 17, Name = "Paşa", DistrictId = 1 },
-                                new Neighborhood { Id = 18, Name = "Şarhöyük", DistrictId = 1 },
-                                new Neighborhood { Id = 19, Name = "Şeker", DistrictId = 1 },
-                                new Neighborhood { Id = 20, Name = "Vişnelik", DistrictId = 1 },
-                                new Neighborhood { Id = 21, Name = "Yenibağlar", DistrictId = 1 }
+                                new Neighborhood { Id = 1, DistrictId = 1, Name = "71 Evler" },
+                                new Neighborhood { Id = 2, DistrictId = 1, Name = "Akarbaşı" }
                             }
                         },
                         new District
                         {
-                            Id = 2,
-                            Name = "Tepebaşı",
-                            CityId = 1,
+                            Id = 2, CityId = 26, Name = "Tepebaşı",
                             Neighborhoods = new List<Neighborhood>
                             {
-                                new Neighborhood { Id = 22, Name = "Atatürk", DistrictId = 2 },
-                                new Neighborhood { Id = 23, Name = "Bahçelievler", DistrictId = 2 },
-                                new Neighborhood { Id = 24, Name = "Çankaya", DistrictId = 2 },
-                                new Neighborhood { Id = 25, Name = "Cumhuriye", DistrictId = 2 },
-                                new Neighborhood { Id = 26, Name = "Erenköy", DistrictId = 2 },
-                                new Neighborhood { Id = 27, Name = "Eskişehir Osmangazi Üniversitesi", DistrictId = 2 },
-                                new Neighborhood { Id = 28, Name = "Fevziçakmak", DistrictId = 2 },
-                                new Neighborhood { Id = 29, Name = "Gazipaşa", DistrictId = 2 },
-                                new Neighborhood { Id = 30, Name = "Gülistan", DistrictId = 2 },
-                                new Neighborhood { Id = 31, Name = "Hoşnudiye", DistrictId = 2 },
-                                new Neighborhood { Id = 32, Name = "İhsaniye", DistrictId = 2 },
-                                new Neighborhood { Id = 33, Name = "İstiklal", DistrictId = 2 },
-                                new Neighborhood { Id = 34, Name = "Kızılay", DistrictId = 2 },
-                                new Neighborhood { Id = 35, Name = "Osmangazi", DistrictId = 2 },
-                                new Neighborhood { Id = 36, Name = "Şirintepe", DistrictId = 2 },
-                                new Neighborhood { Id = 37, Name = "Yenidoğan", DistrictId = 2 },
-                                new Neighborhood { Id = 38, Name = "Yıldıztepe", DistrictId = 2 }
-                            }
-                        },
-                        new District
-                        {
-                            Id = 3,
-                            Name = "Sivrihisar",
-                            CityId = 1,
-                            Neighborhoods = new List<Neighborhood>
-                            {
-                                new Neighborhood { Id = 39, Name = "Akarbaşı", DistrictId = 3 },
-                                new Neighborhood { Id = 40, Name = "Akpınar", DistrictId = 3 },
-                                new Neighborhood { Id = 41, Name = "Çukurhisar", DistrictId = 3 },
-                                new Neighborhood { Id = 42, Name = "Merkez", DistrictId = 3 }
-                            }
-                        },
-                        new District
-                        {
-                            Id = 4,
-                            Name = "Seyitgazi",
-                            CityId = 1,
-                            Neighborhoods = new List<Neighborhood>
-                            {
-                                new Neighborhood { Id = 43, Name = "Çukurca", DistrictId = 4 },
-                                new Neighborhood { Id = 44, Name = "Gümele", DistrictId = 4 },
-                                new Neighborhood { Id = 45, Name = "Merkez", DistrictId = 4 },
-                                new Neighborhood { Id = 46, Name = "Yazılıkaya", DistrictId = 4 }
-                            }
-                        }
-                    }
-                },
-                // Diğer şehirler buraya eklenebilir
-                new City
-                {
-                    Id = 2,
-                    Name = "Ankara",
-                    Districts = new List<District>
-                    {
-                        new District
-                        {
-                            Id = 5,
-                            Name = "Çankaya",
-                            CityId = 2,
-                            Neighborhoods = new List<Neighborhood>
-                            {
-                                new Neighborhood { Id = 47, Name = "Kızılay", DistrictId = 5 },
-                                new Neighborhood { Id = 48, Name = "Bahçelievler", DistrictId = 5 },
-                                new Neighborhood { Id = 49, Name = "Çankaya", DistrictId = 5 }
-                            }
-                        },
-                        new District
-                        {
-                            Id = 6,
-                            Name = "Keçiören",
-                            CityId = 2,
-                            Neighborhoods = new List<Neighborhood>
-                            {
-                                new Neighborhood { Id = 50, Name = "Aktepe", DistrictId = 6 },
-                                new Neighborhood { Id = 51, Name = "Bağlarbaşı", DistrictId = 6 },
-                                new Neighborhood { Id = 52, Name = "Etlik", DistrictId = 6 }
-                            }
-                        }
-                    }
-                },
-                new City
-                {
-                    Id = 3,
-                    Name = "İstanbul",
-                    Districts = new List<District>
-                    {
-                        new District
-                        {
-                            Id = 7,
-                            Name = "Kadıköy",
-                            CityId = 3,
-                            Neighborhoods = new List<Neighborhood>
-                            {
-                                new Neighborhood { Id = 53, Name = "Moda", DistrictId = 7 },
-                                new Neighborhood { Id = 54, Name = "Fenerbahçe", DistrictId = 7 },
-                                new Neighborhood { Id = 55, Name = "Göztepe", DistrictId = 7 }
-                            }
-                        },
-                        new District
-                        {
-                            Id = 8,
-                            Name = "Beşiktaş",
-                            CityId = 3,
-                            Neighborhoods = new List<Neighborhood>
-                            {
-                                new Neighborhood { Id = 56, Name = "Levent", DistrictId = 8 },
-                                new Neighborhood { Id = 57, Name = "Etiler", DistrictId = 8 },
-                                new Neighborhood { Id = 58, Name = "Ortaköy", DistrictId = 8 }
+                                new Neighborhood { Id = 3, DistrictId = 2, Name = "Hoşnudiye" },
+                                new Neighborhood { Id = 4, DistrictId = 2, Name = "Batıkent" }
                             }
                         }
                     }

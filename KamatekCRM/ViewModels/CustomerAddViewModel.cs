@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -13,7 +13,6 @@ namespace KamatekCrm.ViewModels
 {
     public partial class CustomerAddViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
         
         private string _fullName = string.Empty;
         private string _phoneNumber = string.Empty;
@@ -48,8 +47,10 @@ namespace KamatekCrm.ViewModels
             get => _fullName;
             set
             {
-                SetProperty(ref _fullName, value);
-                CommandManager.InvalidateRequerySuggested();
+                if (SetProperty(ref _fullName, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -58,8 +59,10 @@ namespace KamatekCrm.ViewModels
             get => _phoneNumber;
             set
             {
-                SetProperty(ref _phoneNumber, value);
-                CommandManager.InvalidateRequerySuggested();
+                if (SetProperty(ref _phoneNumber, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -72,7 +75,13 @@ namespace KamatekCrm.ViewModels
         public string City
         {
             get => _city;
-            set => SetProperty(ref _city, value);
+            set
+            {
+                if (SetProperty(ref _city, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         public string? District
@@ -163,6 +172,7 @@ namespace KamatekCrm.ViewModels
                     {
                         City = string.Empty;
                     }
+                    SaveCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -212,21 +222,29 @@ namespace KamatekCrm.ViewModels
         public bool IsBusy
         {
             get => _isBusy;
-            set => SetProperty(ref _isBusy, value);
+            set
+            {
+                if (SetProperty(ref _isBusy, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
+        public IRelayCommand SaveCustomerCommand => SaveCommand;
 
         public event Action<bool>? RequestClose;
 
-        public CustomerAddViewModel()
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
+
+        public CustomerAddViewModel(Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> dbContextFactory)
         {
-            _context = new AppDbContext();
+            _dbContextFactory = dbContextFactory;
             Cities = new ObservableCollection<City>();
             Districts = new ObservableCollection<District>();
             Neighborhoods = new ObservableCollection<Neighborhood>();
-
 
             LoadCities();
         }
@@ -235,16 +253,15 @@ namespace KamatekCrm.ViewModels
         {
             return !string.IsNullOrWhiteSpace(FullName) &&
                    !string.IsNullOrWhiteSpace(PhoneNumber) &&
-                   !string.IsNullOrWhiteSpace(City) &&
                    !IsBusy;
         }
 
         [RelayCommand(CanExecute = nameof(CanSaveCustomer))]
-        private void SaveCustomer()
+        private async Task SaveAsync()
         {
-            if (!CanSaveCustomer())
+            if (string.IsNullOrWhiteSpace(FullName) || string.IsNullOrWhiteSpace(PhoneNumber))
             {
-                ErrorMessage = "Lütfen zorunlu alanları doldurun (Ad Soyad, Telefon, Şehir).";
+                ErrorMessage = "Lütfen zorunlu alanları doldurun (Ad Soyad, Telefon).";
                 OnPropertyChanged(nameof(HasError));
                 return;
             }
@@ -255,7 +272,8 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                string customerCode = GenerateCustomerCode();
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                string customerCode = GenerateCustomerCode(context);
 
                 var customer = new Customer
                 {
@@ -279,8 +297,8 @@ namespace KamatekCrm.ViewModels
                     TaxOffice = NewCustomerType == CustomerType.Corporate ? NewTaxOffice : null
                 };
 
-                _context.Customers.Add(customer);
-                _context.SaveChanges();
+                context.Customers.Add(customer);
+                await context.SaveChangesAsync();
 
                 RequestClose?.Invoke(true);
             }
@@ -324,10 +342,10 @@ namespace KamatekCrm.ViewModels
             foreach (var city in cities) Cities.Add(city);
         }
 
-        private string GenerateCustomerCode()
+        private string GenerateCustomerCode(AppDbContext context)
         {
             int year = DateTime.UtcNow.Year;
-            int customerCount = _context.Customers
+            int customerCount = context.Customers
                 .Count(c => c.CustomerCode.StartsWith($"MŞ-{year}-"));
             int nextNumber = customerCount + 1;
             return $"MŞ-{year}-{nextNumber:D4}";

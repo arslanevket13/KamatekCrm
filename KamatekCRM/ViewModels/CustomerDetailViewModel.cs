@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -9,7 +9,9 @@ using KamatekCrm.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Views;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KamatekCrm.ViewModels
 {
@@ -18,8 +20,6 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class CustomerDetailViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
-        // _customerId removed from here, defined below or used from below
         private Customer? _customer;
 
         // Editable Properties
@@ -61,15 +61,20 @@ namespace KamatekCrm.ViewModels
         private readonly NavigationService _navigationService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
         private int _customerId;
 
-        public CustomerDetailViewModel(NavigationService navigationService, IToastService toastService, ILoadingService loadingService)
+        public CustomerDetailViewModel(
+            NavigationService navigationService, 
+            IToastService toastService, 
+            ILoadingService loadingService,
+            IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _navigationService = navigationService;
             _toastService = toastService;
             _loadingService = loadingService;
-            _context = new AppDbContext();
+            _dbContextFactory = dbContextFactory;
             
             ServiceJobs = new ObservableCollection<ServiceJob>();
             ActiveJobs = new ObservableCollection<ServiceJob>();
@@ -77,8 +82,6 @@ namespace KamatekCrm.ViewModels
             Transactions = new ObservableCollection<Transaction>();
             SalesOrders = new ObservableCollection<SalesOrder>();
             Activities = new ObservableCollection<CustomerActivity>();
-
-
         }
 
         public void Initialize(int customerId)
@@ -252,6 +255,10 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        public IRelayCommand BackCommand => NavigateBackCommand;
+        public IRelayCommand NewServiceJobCommand => CreateNewServiceJobCommand;
+        public IRelayCommand SaveCommand => SaveCustomerCommand;
+
         #endregion
 
         private bool CanSaveTags() => _customer != null;
@@ -263,11 +270,11 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
+                using var context = _dbContextFactory.CreateDbContext();
                 // EF Core Include ile ilişkili verileri yükle
-                _customer = _context.Customers
+                _customer = context.Customers
                     .Include(c => c.ServiceJobs)
                     .Include(c => c.Transactions)
-                    //.Include(c => c.SalesOrders) // SalesOrders ilişkisi Customer modelinde tanımlı olmalı
                     .FirstOrDefault(c => c.Id == _customerId);
 
                 if (_customer == null)
@@ -277,7 +284,7 @@ namespace KamatekCrm.ViewModels
                 }
 
                 // Customer modelinde SalesOrders koleksiyonu yoksa manuel yükle
-                var salesOrders = _context.SalesOrders.Where(s => s.CustomerId == _customerId).ToList();
+                var salesOrders = context.SalesOrders.Where(s => s.CustomerId == _customerId).ToList();
 
                 // Editable alanları doldur
                 FullName = _customer.FullName;
@@ -341,7 +348,7 @@ namespace KamatekCrm.ViewModels
 
                 // Customer Activities (Timeline) yükle
                 Activities.Clear();
-                var activities = _context.CustomerActivities
+                var activities = context.CustomerActivities
                     .Where(a => a.CustomerId == _customerId)
                     .OrderByDescending(a => a.CreatedDate)
                     .Take(50)
@@ -419,6 +426,7 @@ namespace KamatekCrm.ViewModels
 
             try
             {
+                using var context = _dbContextFactory.CreateDbContext();
                 var transaction = new Transaction
                 {
                     CustomerId = _customerId,
@@ -428,8 +436,8 @@ namespace KamatekCrm.ViewModels
                     Description = description
                 };
 
-                _context.Transactions.Add(transaction);
-                _context.SaveChanges();
+                context.Transactions.Add(transaction);
+                context.SaveChanges();
 
                 Transactions.Insert(0, transaction);
                 CalculateTotals();
@@ -448,37 +456,55 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanSaveCustomer))]
-        private void SaveCustomer()
+        private async Task SaveCustomerAsync()
         {
-            if (_customer == null) return;
+            if (_customerId <= 0) return;
 
             try
             {
-                // Müşteri bilgilerini güncelle
-                _customer.FullName = FullName;
-                _customer.PhoneNumber = PhoneNumber;
-                _customer.Email = Email;
-                _customer.City = City;
-                _customer.District = District;
-                _customer.Neighborhood = Neighborhood;
-                _customer.Street = Street;
-                _customer.BuildingNo = BuildingNo;
-                _customer.ApartmentNo = ApartmentNo;
-                _customer.Notes = Notes;
-                _customer.Type = CustomerType;
-                _customer.TcKimlikNo = TcKimlikNo;
-                _customer.CompanyName = CompanyName;
-                _customer.TaxNumber = TaxNumber;
-                _customer.TaxOffice = TaxOffice;
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var existingCustomer = await context.Customers.FindAsync(_customerId);
 
-                _context.Customers.Update(_customer);
-                _context.SaveChanges();
+                if (existingCustomer != null)
+                {
+                    existingCustomer.FullName = FullName;
+                    existingCustomer.PhoneNumber = PhoneNumber;
+                    existingCustomer.Email = Email;
+                    existingCustomer.City = City;
+                    existingCustomer.District = District;
+                    existingCustomer.Neighborhood = Neighborhood;
+                    existingCustomer.Street = Street;
+                    existingCustomer.BuildingNo = BuildingNo;
+                    existingCustomer.ApartmentNo = ApartmentNo;
+                    existingCustomer.Notes = Notes;
+                    existingCustomer.Type = CustomerType;
+                    existingCustomer.TcKimlikNo = TcKimlikNo;
+                    existingCustomer.CompanyName = CompanyName;
+                    existingCustomer.TaxNumber = TaxNumber;
+                    existingCustomer.TaxOffice = TaxOffice;
 
-                MessageBox.Show("Müşteri bilgileri başarıyla güncellendi!", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await context.SaveChangesAsync();
+
+                    if (_customer != null)
+                    {
+                        _customer.FullName = FullName;
+                        _customer.PhoneNumber = PhoneNumber;
+                        _customer.Email = Email;
+                        _customer.City = City;
+                        _customer.District = District;
+                        _customer.Neighborhood = Neighborhood;
+                        _customer.Street = Street;
+                        _customer.BuildingNo = BuildingNo;
+                        _customer.ApartmentNo = ApartmentNo;
+                        _customer.Notes = Notes;
+                    }
+
+                    _toastService.ShowSuccess("Müşteri bilgileri başarıyla güncellendi!");
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Kaydetme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"Kaydetme hatası: {ex.Message}");
             }
         }
 
@@ -490,21 +516,25 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void CreateNewServiceJob()
+        private async Task CreateNewServiceJobAsync()
         {
-            // ServiceJobViewModel'e git ve bu müşteriyi önceden seç
-            // ServiceJobViewModel DI ile çözülemiyor çünkü parametre (SelectedCustomer) aktarmak istiyoruz.
-            // Ancak ServiceJobViewModel property'si set edilebilir.
-            
-            
-            
-            // Refactored to use DI
-            var serviceJobViewModel = _navigationService.NavigateTo<ServiceJobViewModel>();
+            if (_customer == null) return;
 
-            // Müşteriyi önceden seç
-            if (_customer != null)
+            var serviceJobVm = App.ServiceProvider.GetService<ServiceJobViewModel>();
+            if (serviceJobVm == null) return;
+
+            serviceJobVm.SelectedCustomer = _customer;
+
+            var window = new NewServiceJobWindow(serviceJobVm)
             {
-                serviceJobViewModel.SelectedCustomer = _customer;
+                Owner = Application.Current?.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            var result = window.ShowDialog();
+            if (result == true)
+            {
+                LoadCustomerData();
             }
         }
 
@@ -520,6 +550,7 @@ namespace KamatekCrm.ViewModels
 
             try
             {
+                using var context = _dbContextFactory.CreateDbContext();
                 var activity = new CustomerActivity
                 {
                     CustomerId = _customerId,
@@ -529,22 +560,20 @@ namespace KamatekCrm.ViewModels
                     CreatedBy = "Kullanıcı"
                 };
 
-                _context.CustomerActivities.Add(activity);
-                _context.SaveChanges();
+                context.CustomerActivities.Add(activity);
 
-                // Activity'yi listeye ekle
-                Activities.Insert(0, activity);
-
-                // Müşterinin notlarını da güncelle
-                if (_customer != null)
+                var customerInDb = context.Customers.Find(_customerId);
+                if (customerInDb != null)
                 {
-                    _customer.Notes = string.IsNullOrEmpty(_customer.Notes) 
+                    customerInDb.Notes = string.IsNullOrEmpty(customerInDb.Notes) 
                         ? note 
-                        : _customer.Notes + "\n" + DateTime.UtcNow.ToString("dd.MM.yyyy") + ": " + note;
-                    _customer.LastInteractionDate = DateTime.UtcNow;
-                    _context.SaveChanges();
+                        : customerInDb.Notes + "\n" + DateTime.UtcNow.ToString("dd.MM.yyyy") + ": " + note;
+                    customerInDb.LastInteractionDate = DateTime.UtcNow;
                 }
 
+                context.SaveChanges();
+
+                Activities.Insert(0, activity);
                 Notes = string.Empty;
                 _toastService.ShowSuccess("Not başarıyla eklendi!");
             }
@@ -557,15 +586,18 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(CanSaveTags))]
         private void SaveTags()
         {
-            if (_customer == null) return;
+            if (_customerId <= 0) return;
 
             try
             {
-                _customer.Tags = Tags;
-                _customer.LastInteractionDate = DateTime.UtcNow;
-                _context.SaveChanges();
+                using var context = _dbContextFactory.CreateDbContext();
+                var customerInDb = context.Customers.Find(_customerId);
+                if (customerInDb != null)
+                {
+                    customerInDb.Tags = Tags;
+                    customerInDb.LastInteractionDate = DateTime.UtcNow;
+                }
 
-                // Etiket ekleme aktivitesi kaydet
                 var activity = new CustomerActivity
                 {
                     CustomerId = _customerId,
@@ -574,8 +606,8 @@ namespace KamatekCrm.ViewModels
                     CreatedDate = DateTime.UtcNow,
                     CreatedBy = "Kullanıcı"
                 };
-                _context.CustomerActivities.Add(activity);
-                _context.SaveChanges();
+                context.CustomerActivities.Add(activity);
+                context.SaveChanges();
 
                 Activities.Insert(0, activity);
                 _toastService.ShowSuccess("Etiketler kaydedildi!");
@@ -589,13 +621,18 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(CanSaveSegment))]
         private void SaveSegment()
         {
-            if (_customer == null) return;
+            if (_customerId <= 0) return;
 
             try
             {
-                _customer.Segment = Segment;
-                _customer.LastInteractionDate = DateTime.UtcNow;
-                _context.SaveChanges();
+                using var context = _dbContextFactory.CreateDbContext();
+                var customerInDb = context.Customers.Find(_customerId);
+                if (customerInDb != null)
+                {
+                    customerInDb.Segment = Segment;
+                    customerInDb.LastInteractionDate = DateTime.UtcNow;
+                    context.SaveChanges();
+                }
 
                 _toastService.ShowSuccess($"Müşteri segmenti '{Segment}' olarak güncellendi!");
             }

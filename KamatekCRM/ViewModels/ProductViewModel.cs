@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -16,6 +16,7 @@ using KamatekCrm.Shared.Models;
 using KamatekCrm.Services.Domain;
 using KamatekCrm.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 
 namespace KamatekCrm.ViewModels
@@ -51,7 +52,17 @@ namespace KamatekCrm.ViewModels
         public Product? SelectedProduct
         {
             get => _selectedProduct;
-            set => SetProperty(ref _selectedProduct, value);
+            set
+            {
+                if (SetProperty(ref _selectedProduct, value))
+                {
+                    OnPropertyChanged(nameof(IsProductSelected));
+                    OnPropertyChanged(nameof(HasProductPhoto));
+                    UploadProductPhotoCommand.NotifyCanExecuteChanged();
+                    DeleteProductPhotoCommand.NotifyCanExecuteChanged();
+                    TransferStockCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         /// <summary>
@@ -87,8 +98,8 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _isActionSuccessful, value);
         }
 
-        private bool IsProductSelected() => SelectedProduct != null;
-        private bool HasProductPhoto() => SelectedProduct?.ImagePath != null;
+        public bool IsProductSelected => SelectedProduct != null;
+        public bool HasProductPhoto => SelectedProduct != null && !string.IsNullOrWhiteSpace(SelectedProduct.ImagePath);
 
         /// <summary>
         /// Constructor
@@ -153,8 +164,14 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void AddNewProduct()
         {
-            var window = new Views.AddProductWindow();
-            window.Owner = System.Windows.Application.Current.MainWindow;
+            var editVm = App.ServiceProvider.GetRequiredService<AddProductViewModel>();
+            editVm.Initialize(null);
+
+            var window = new Views.AddProductWindow
+            {
+                DataContext = editVm,
+                Owner = System.Windows.Application.Current?.MainWindow
+            };
             var result = window.ShowDialog();
 
             if (result == true)
@@ -172,8 +189,14 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedProduct == null) return;
 
-            var window = new Views.AddProductWindow(SelectedProduct);
-            window.Owner = System.Windows.Application.Current.MainWindow;
+            var editVm = App.ServiceProvider.GetRequiredService<AddProductViewModel>();
+            editVm.Initialize(SelectedProduct);
+
+            var window = new Views.AddProductWindow
+            {
+                DataContext = editVm,
+                Owner = System.Windows.Application.Current?.MainWindow
+            };
             var result = window.ShowDialog();
 
             if (result == true)

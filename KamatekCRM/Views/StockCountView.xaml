@@ -7,15 +7,12 @@
              xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1000"
+             d:DataContext="{d:DesignInstance Type=viewmodels:StockCountViewModel, IsDesignTimeCreatable=False}"
              Background="{DynamicResource SurfacePageBrush}">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </UserControl.Resources>
-
-    <UserControl.DataContext>
-        <viewmodels:StockCountViewModel/>
-    </UserControl.DataContext>
 
     <Grid Margin="24">
         <Grid.RowDefinitions>

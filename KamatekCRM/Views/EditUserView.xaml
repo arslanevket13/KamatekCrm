@@ -68,7 +68,7 @@
                         <ComboBox ItemsSource="{Binding RoleDisplayOptions}"
                                   SelectedItem="{Binding SelectedRoleDisplay}"
                                   Style="{StaticResource ModernComboBox}"
-                                  Height="40" Margin="0,0,0,16"/>
+                                  Height="40" Margin="0,0,0,16" FontSize="16"/>
 
                         <!-- Aktif -->
                         <CheckBox IsChecked="{Binding IsActive}" 

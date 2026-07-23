@@ -88,6 +88,14 @@
     <sys:Double x:Key="AvatarSizeSM">28</sys:Double>
     <sys:Double x:Key="AvatarSizeMD">36</sys:Double>
     <sys:Double x:Key="AvatarSizeLG">48</sys:Double>
-    <sys:Double x:Key="AvatarSizeXL">64</sys:Double>
+    <!-- Fallback or base colors for unresolved brushes -->
+    <SolidColorBrush x:Key="AccentOverlayBrush" Color="#330078D7" />
+    <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush" Color="#33FFFFFF" />
+
+    <!-- Status Text Brushes -->
+    <SolidColorBrush x:Key="StatusSuccessFgDark" Color="#4CAF50" />
+    <SolidColorBrush x:Key="StatusErrorFgDark" Color="#F44336" />
+    <SolidColorBrush x:Key="StatusWarningFgDark" Color="#FF9800" />
+    <SolidColorBrush x:Key="StatusInfoFgDark" Color="#2196F3" />
 
 </ResourceDictionary>

@@ -44,9 +44,12 @@
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Row 0: Header -->
-            <RowDefinition Height="*"/>    <!-- Row 1: Body -->
-            <RowDefinition Height="Auto"/> <!-- Row 2: Footer -->
+            <RowDefinition Height="Auto"/>
+            <!-- Row 0: Header -->
+            <RowDefinition Height="*"/>
+            <!-- Row 1: Body -->
+            <RowDefinition Height="Auto"/>
+            <!-- Row 2: Footer -->
         </Grid.RowDefinitions>
 
         <!-- ROW 0: HEADER -->
@@ -59,7 +62,7 @@
         </StackPanel>
 
         <!-- ROW 1: BODY -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,18,0,34" Grid.RowSpan="2">
             <StackPanel Margin="0,0,16,0">
                 <!-- Müşteri Tipi Seçimi -->
                 <Border Background="{DynamicResource SurfaceCardBrush}" CornerRadius="8" Padding="16" BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}" Margin="0,0,0,16">
@@ -174,7 +177,7 @@
                 <Border Background="{DynamicResource SurfaceCardBrush}" CornerRadius="8" Padding="16" BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}" Margin="0,0,0,16">
                     <StackPanel>
                         <TextBlock Text="Adres Bilgileri" FontWeight="SemiBold" FontSize="16" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
-                        
+
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -189,17 +192,17 @@
 
                             <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,16">
                                 <Label Content="Şehir" Style="{StaticResource FieldLabel}"/>
-                                <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding SelectedCity}" DisplayMemberPath="Name" Style="{StaticResource ModernCombo}"/>
+                                <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding SelectedCity}" DisplayMemberPath="Name" Style="{StaticResource ModernComboBox}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,16">
                                 <Label Content="İlçe" Style="{StaticResource FieldLabel}"/>
-                                <ComboBox ItemsSource="{Binding Districts}" SelectedItem="{Binding SelectedDistrict}" DisplayMemberPath="Name" Style="{StaticResource ModernCombo}"/>
+                                <ComboBox ItemsSource="{Binding Districts}" SelectedItem="{Binding SelectedDistrict}" DisplayMemberPath="Name" Style="{StaticResource ModernComboBox}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="0" Grid.Row="1" Margin="0,0,0,16">
                                 <Label Content="Mahalle" Style="{StaticResource FieldLabel}"/>
-                                <ComboBox ItemsSource="{Binding Neighborhoods}" SelectedItem="{Binding SelectedNeighborhood}" DisplayMemberPath="Name" Style="{StaticResource ModernCombo}"/>
+                                <ComboBox ItemsSource="{Binding Neighborhoods}" SelectedItem="{Binding SelectedNeighborhood}" DisplayMemberPath="Name" Style="{StaticResource ModernComboBox}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Grid.Row="1" Margin="0,0,0,16">
@@ -231,7 +234,7 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
             <Button Content="Temizle" Command="{Binding ClearFormCommand}" Height="40" Padding="16,0" Margin="0,0,8,0" Style="{DynamicResource DefaultButtonStyle}"/>
             <Button Content="İptal" Command="{Binding CancelCommand}" Height="40" Padding="24,0" Margin="0,0,8,0" Style="{DynamicResource DefaultButtonStyle}" Click="CloseWindow_Click"/>
-            <Button Content="Kaydet" Command="{Binding SaveCustomerCommand}" IsDefault="True" Height="40" Padding="32,0" Style="{DynamicResource AccentButtonStyle}"/>
+            <Button Content="Kaydet" Command="{Binding SaveCommand}" IsDefault="True" Height="40" Padding="32,0" Style="{DynamicResource AccentButtonStyle}"/>
         </StackPanel>
     </Grid>
 </Window>

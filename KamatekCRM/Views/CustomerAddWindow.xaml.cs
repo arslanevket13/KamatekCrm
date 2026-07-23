@@ -7,13 +7,16 @@ namespace KamatekCrm.Views
         public CustomerAddWindow()
         {
             InitializeComponent();
-            var vm = new KamatekCrm.ViewModels.CustomerAddViewModel();
-            vm.RequestClose += success =>
+            var viewModel = App.ServiceProvider != null 
+                ? Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<ViewModels.CustomerAddViewModel>(App.ServiceProvider)
+                : new ViewModels.CustomerAddViewModel(Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<Data.AppDbContext>>(App.ServiceProvider!));
+
+            viewModel.RequestClose += success =>
             {
                 try { DialogResult = success; } catch { }
                 Close();
             };
-            DataContext = vm;
+            DataContext = viewModel;
         }
 
         public CustomerAddWindow(ViewModels.CustomerAddViewModel viewModel)

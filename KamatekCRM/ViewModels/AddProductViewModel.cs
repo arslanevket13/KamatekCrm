@@ -12,6 +12,7 @@ using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Models.Specs;
 using KamatekCrm.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
@@ -20,7 +21,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class AddProductViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IProductImageService _imageService;
         private ProductCategoryType _selectedCategory = ProductCategoryType.Other;
         private ProductSpecBase _currentSpecs = new GeneralSpecs();
@@ -37,20 +38,21 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Yeni ürün eklemek için constructor
         /// </summary>
-        public AddProductViewModel() : this(null) { }
+        /// <summary>
+        /// DI Constructor
+        /// </summary>
+        public AddProductViewModel(IDbContextFactory<AppDbContext> dbContextFactory, IProductImageService? imageService = null)
+        {
+            _dbContextFactory = dbContextFactory;
+            _imageService = imageService ?? new ProductImageService();
+        }
 
         /// <summary>
-        /// Ürün eklemek veya düzenlemek için constructor
+        /// Ürün eklemek veya düzenlemek için başlatma metodu
         /// </summary>
         /// <param name="productToEdit">Düzenlenecek ürün. Null ise yeni ürün eklenir.</param>
-        public AddProductViewModel(Product? productToEdit)
+        public void Initialize(Product? productToEdit)
         {
-            _context = new AppDbContext();
-            _imageService = new ProductImageService();
-            
-            // Ensure non-nullable fields are initialized to avoid warnings
-            // They are re-assigned below based on logic
-            // Inline initialization handles defaults, but this satisfies the compiler flow analysis if needed
             if (_currentSpecs == null) _currentSpecs = new GeneralSpecs();
             if (_newProduct == null) _newProduct = new Product(); 
 
@@ -59,15 +61,13 @@ namespace KamatekCrm.ViewModels
                 // EDIT MODE: Mevcut ürünü yükle
                 _isEditMode = true;
 
-                // Context'ten ürünü al (tracking için)
-                var existingProduct = _context.Products.Find(productToEdit.Id);
+                using var context = _dbContextFactory.CreateDbContext();
+                var existingProduct = context.Products.Find(productToEdit.Id);
                 if (existingProduct != null)
                 {
                     _newProduct = existingProduct;
                     _selectedCategory = existingProduct.ProductCategoryType;
 
-
-                    // Teknik özellikleri al (EF Core ToJson mapping)
                     if (existingProduct.Specifications != null)
                     {
                         _currentSpecs = existingProduct.Specifications;
@@ -79,7 +79,6 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
-                    // Ürün bulunamadı, yeni ürün moduna geç
                     InitializeNewProduct();
                 }
             }
@@ -88,7 +87,6 @@ namespace KamatekCrm.ViewModels
                 // ADD MODE: Yeni ürün oluştur
                 InitializeNewProduct();
 
-                // Eğer taslak ürün geldiyse (örn: Satın alma ekranından isimle gelmesi)
                 if (productToEdit != null && productToEdit.Id == 0)
                 {
                     if (!string.IsNullOrEmpty(productToEdit.ProductName))
@@ -96,8 +94,6 @@ namespace KamatekCrm.ViewModels
                 }
             }
 
-
-            // Edit modunda mevcut resmi önizle
             if (_isEditMode && !string.IsNullOrEmpty(_newProduct.ImagePath))
             {
                 LoadExistingImagePreview();
@@ -306,6 +302,8 @@ namespace KamatekCrm.ViewModels
                 // Teknik özellikleri ata (EF Core ToJson mapping)
                 NewProduct.Specifications = CurrentSpecs;
 
+                using var context = _dbContextFactory.CreateDbContext();
+
                 if (_isEditMode)
                 {
                     // Resim işleme (varsa)
@@ -317,8 +315,8 @@ namespace KamatekCrm.ViewModels
                     }
 
                     // UPDATE: Mevcut ürünü güncelle
-                    _context.Products.Update(NewProduct);
-                    _context.SaveChanges();
+                    context.Products.Update(NewProduct);
+                    context.SaveChanges();
 
                     // Stok düzeltme varsa işle
                     if (StockAdjustment != 0)
@@ -338,8 +336,8 @@ namespace KamatekCrm.ViewModels
                     }
 
                     // ADD: Yeni ürün ekle
-                    _context.Products.Add(NewProduct);
-                    _context.SaveChanges();
+                    context.Products.Add(NewProduct);
+                    context.SaveChanges();
 
                     // Açılış stoğu varsa Inventory ve Transaction oluştur
                     if (InitialStock > 0)
@@ -376,8 +374,9 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
+                using var context = _dbContextFactory.CreateDbContext();
                 // Varsayılan depoyu bul veya oluştur
-                var defaultWarehouse = _context.Warehouses.FirstOrDefault(w => w.IsActive);
+                var defaultWarehouse = context.Warehouses.FirstOrDefault(w => w.IsActive);
                 if (defaultWarehouse == null)
                 {
                     defaultWarehouse = new Warehouse
@@ -386,8 +385,8 @@ namespace KamatekCrm.ViewModels
                         Type = WarehouseType.MainWarehouse,
                         IsActive = true
                     };
-                    _context.Warehouses.Add(defaultWarehouse);
-                    _context.SaveChanges();
+                    context.Warehouses.Add(defaultWarehouse);
+                    context.SaveChanges();
                 }
 
                 // Inventory kaydı oluştur
@@ -397,7 +396,7 @@ namespace KamatekCrm.ViewModels
                     WarehouseId = defaultWarehouse.Id,
                     Quantity = InitialStock
                 };
-                _context.Inventories.Add(inventory);
+                context.Inventories.Add(inventory);
 
                 // StockTransaction kaydı oluştur
                 var transaction = new StockTransaction
@@ -410,13 +409,13 @@ namespace KamatekCrm.ViewModels
                     Date = DateTime.UtcNow,
                     Description = "Açılış Stoğu"
                 };
-                _context.StockTransactions.Add(transaction);
+                context.StockTransactions.Add(transaction);
 
                 // Ürün toplam stok güncelle
                 NewProduct.TotalStockQuantity = InitialStock;
-                _context.Products.Update(NewProduct);
+                context.Products.Update(NewProduct);
 
-                _context.SaveChanges();
+                context.SaveChanges();
             }
             catch (Exception ex)
             {
@@ -432,8 +431,9 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
+                using var context = _dbContextFactory.CreateDbContext();
                 // Varsayılan depoyu bul
-                var defaultWarehouse = _context.Warehouses.FirstOrDefault(w => w.IsActive);
+                var defaultWarehouse = context.Warehouses.FirstOrDefault(w => w.IsActive);
                 if (defaultWarehouse == null)
                 {
                     defaultWarehouse = new Warehouse
@@ -442,12 +442,12 @@ namespace KamatekCrm.ViewModels
                         Type = WarehouseType.MainWarehouse,
                         IsActive = true
                     };
-                    _context.Warehouses.Add(defaultWarehouse);
-                    _context.SaveChanges();
+                    context.Warehouses.Add(defaultWarehouse);
+                    context.SaveChanges();
                 }
 
                 // Mevcut inventory'yi bul veya oluştur
-                var inventory = _context.Inventories
+                var inventory = context.Inventories
                     .FirstOrDefault(i => i.ProductId == NewProduct.Id && i.WarehouseId == defaultWarehouse.Id);
 
                 if (inventory == null)
@@ -458,7 +458,7 @@ namespace KamatekCrm.ViewModels
                         WarehouseId = defaultWarehouse.Id,
                         Quantity = 0
                     };
-                    _context.Inventories.Add(inventory);
+                    context.Inventories.Add(inventory);
                 }
 
                 // Inventory miktarını güncelle
@@ -479,13 +479,13 @@ namespace KamatekCrm.ViewModels
                     Date = DateTime.UtcNow,
                     Description = StockAdjustment > 0 ? "Manuel Stok Artışı" : "Manuel Stok Azaltması"
                 };
-                _context.StockTransactions.Add(transaction);
+                context.StockTransactions.Add(transaction);
 
                 // Ürün toplam stok güncelle
                 NewProduct.TotalStockQuantity += StockAdjustment;
-                _context.Products.Update(NewProduct);
+                context.Products.Update(NewProduct);
 
-                _context.SaveChanges();
+                context.SaveChanges();
             }
             catch (Exception ex)
             {

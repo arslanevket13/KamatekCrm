@@ -43,17 +43,21 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock Text="🔧 İş Emri Yönetim Merkezi" 
-                               FontSize="22" FontWeight="Bold" 
-                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                    <TextBlock FontSize="12" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                        <Run Text="Toplam"/>
-                        <Run Text="{Binding TotalJobCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                        <Run Text="iş kaydı  •  Bugün"/>
-                        <Run Text="{Binding TodayCreatedCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                        <Run Text="yeni"/>
-                    </TextBlock>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="← Geri" Command="{Binding NavigateBackCommand}" 
+                            Style="{StaticResource SecondaryButton}" Padding="16,4" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="🔧 İş Emri Yönetim Merkezi" 
+                                   FontSize="22" FontWeight="Bold" 
+                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock FontSize="12" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                            <Run Text="Toplam"/>
+                            <Run Text="{Binding TotalJobCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <Run Text="iş kaydı  •  Bugün"/>
+                            <Run Text="{Binding TodayCreatedCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <Run Text="yeni"/>
+                        </TextBlock>
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">

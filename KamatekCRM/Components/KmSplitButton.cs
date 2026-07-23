@@ -37,7 +37,7 @@ namespace KamatekCrm.Components
             new PropertyMetadata(false));
 
         public static readonly DependencyProperty DropdownItemsProperty = DependencyProperty.Register(
-            nameof(DropdownItems), typeof(System.Collections.ObjectModel.ObservableCollection<SplitButtonItem>), typeof(KmSplitButton),
+            nameof(DropdownItems), typeof(FreezableCollection<SplitButtonItem>), typeof(KmSplitButton),
             new PropertyMetadata(null));
 
         public static readonly DependencyProperty ButtonStyleTypeProperty = DependencyProperty.Register(
@@ -78,9 +78,9 @@ namespace KamatekCrm.Components
             set => SetValue(IsDropdownOpenProperty, value);
         }
 
-        public System.Collections.ObjectModel.ObservableCollection<SplitButtonItem> DropdownItems
+        public FreezableCollection<SplitButtonItem> DropdownItems
         {
-            get => (System.Collections.ObjectModel.ObservableCollection<SplitButtonItem>)GetValue(DropdownItemsProperty);
+            get => (FreezableCollection<SplitButtonItem>)GetValue(DropdownItemsProperty);
             set => SetValue(DropdownItemsProperty, value);
         }
 
@@ -94,19 +94,60 @@ namespace KamatekCrm.Components
 
         public KmSplitButton()
         {
-            DropdownItems = new System.Collections.ObjectModel.ObservableCollection<SplitButtonItem>();
+            DropdownItems = new FreezableCollection<SplitButtonItem>();
         }
 
         public void ToggleDropdown() => IsDropdownOpen = !IsDropdownOpen;
     }
 
-    public class SplitButtonItem
+    public class SplitButtonItem : Freezable
     {
-        public string Text { get; set; } = "";
-        public string? Icon { get; set; }
-        public ICommand? Command { get; set; }
-        public object? CommandParameter { get; set; }
-        public bool IsSeparator { get; set; }
+        protected override Freezable CreateInstanceCore() => new SplitButtonItem();
+
+        public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
+            nameof(Text), typeof(string), typeof(SplitButtonItem), new PropertyMetadata(""));
+
+        public string Text
+        {
+            get => (string)GetValue(TextProperty);
+            set => SetValue(TextProperty, value);
+        }
+
+        public static readonly DependencyProperty IconProperty = DependencyProperty.Register(
+            nameof(Icon), typeof(string), typeof(SplitButtonItem), new PropertyMetadata(null));
+
+        public string? Icon
+        {
+            get => (string?)GetValue(IconProperty);
+            set => SetValue(IconProperty, value);
+        }
+
+        public static readonly DependencyProperty CommandProperty = DependencyProperty.Register(
+            nameof(Command), typeof(ICommand), typeof(SplitButtonItem), new PropertyMetadata(null));
+
+        public ICommand? Command
+        {
+            get => (ICommand?)GetValue(CommandProperty);
+            set => SetValue(CommandProperty, value);
+        }
+
+        public static readonly DependencyProperty CommandParameterProperty = DependencyProperty.Register(
+            nameof(CommandParameter), typeof(object), typeof(SplitButtonItem), new PropertyMetadata(null));
+
+        public object? CommandParameter
+        {
+            get => GetValue(CommandParameterProperty);
+            set => SetValue(CommandParameterProperty, value);
+        }
+
+        public static readonly DependencyProperty IsSeparatorProperty = DependencyProperty.Register(
+            nameof(IsSeparator), typeof(bool), typeof(SplitButtonItem), new PropertyMetadata(false));
+
+        public bool IsSeparator
+        {
+            get => (bool)GetValue(IsSeparatorProperty);
+            set => SetValue(IsSeparatorProperty, value);
+        }
     }
 
     public enum SplitButtonStyle
