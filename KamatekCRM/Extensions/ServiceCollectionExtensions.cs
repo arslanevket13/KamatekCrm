@@ -19,7 +19,7 @@ namespace KamatekCrm.Extensions
 
             // DbContext
 
-            services.AddDbContext<AppDbContext>((sp, options) =>
+            services.AddDbContextFactory<AppDbContext>((sp, options) =>
             {
                  var connectionProvider = sp.GetService<IDatabaseConnectionProvider>();
                  string connString;
@@ -41,7 +41,7 @@ namespace KamatekCrm.Extensions
                          errorCodesToAdd: null);
                  })
                  .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-            }, ServiceLifetime.Scoped);
+            });
 
              // Services
             services.AddSingleton<NavigationService>(); // Singleton as it holds state
@@ -68,8 +68,8 @@ namespace KamatekCrm.Extensions
             services.AddTransient<SmsService>();
             services.AddTransient<StructureGeneratorService>();
 
-            // More missing services
             services.AddTransient<AddressService>();
+            services.AddTransient<ISearchService, SearchService>();
 
             // Repositories
             services.AddScoped<IUnitOfWork, UnitOfWork>();

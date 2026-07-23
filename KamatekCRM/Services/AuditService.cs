@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -12,12 +13,24 @@ namespace KamatekCrm.Services
     /// </summary>
     public static class AuditService
     {
-        // Helper to resolve IAuthService from global ServiceProvider
         private static IAuthService? GetAuthService()
         {
             try
             {
                 return App.ServiceProvider?.GetService<IAuthService>();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static AppDbContext? CreateDbContext()
+        {
+            try
+            {
+                var factory = App.ServiceProvider?.GetService<IDbContextFactory<AppDbContext>>();
+                return factory?.CreateDbContext();
             }
             catch
             {
@@ -43,7 +56,8 @@ namespace KamatekCrm.Services
 
                 await Task.Run(() =>
                 {
-                    using var context = new AppDbContext();
+                    using var context = CreateDbContext();
+                    if (context == null) return;
 
                     var log = new ActivityLog
                     {
@@ -80,7 +94,8 @@ namespace KamatekCrm.Services
             {
                 var user = GetAuthService()?.CurrentUser;
                 
-                using var context = new AppDbContext();
+                using var context = CreateDbContext();
+                if (context == null) return;
 
                 var log = new ActivityLog
                 {

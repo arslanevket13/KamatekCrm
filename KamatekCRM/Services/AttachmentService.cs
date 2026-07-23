@@ -5,6 +5,7 @@ using System.Linq;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.Services
 {
@@ -14,14 +15,14 @@ namespace KamatekCrm.Services
     /// </summary>
     public class AttachmentService
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly string _archivePath;
 
-        public AttachmentService(IAuthService authService, AppDbContext? context = null)
+        public AttachmentService(IAuthService authService, IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _authService = authService;
-            _context = context ?? new AppDbContext();
+            _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
             
             // Arşiv klasörü: %AppData%/KamatekArchive
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -37,11 +38,6 @@ namespace KamatekCrm.Services
         /// <summary>
         /// Dosya yükle ve kaydet
         /// </summary>
-        /// <param name="entityType">Bağlı entity türü</param>
-        /// <param name="entityId">Bağlı entity ID</param>
-        /// <param name="sourceFilePath">Kaynak dosya yolu</param>
-        /// <param name="description">Açıklama (opsiyonel)</param>
-        /// <returns>Oluşturulan Attachment kaydı</returns>
         public Attachment UploadFile(AttachmentEntityType entityType, int entityId, string sourceFilePath, string? description = null)
         {
             if (!File.Exists(sourceFilePath))
@@ -53,17 +49,13 @@ namespace KamatekCrm.Services
                 var originalFileName = fileInfo.Name;
                 var extension = fileInfo.Extension.ToLowerInvariant();
                 
-                // GUID ile benzersiz dosya adı oluştur
                 var guidFileName = $"{Guid.NewGuid()}{extension}";
                 var destinationPath = Path.Combine(_archivePath, guidFileName);
 
-                // Dosyayı kopyala
                 File.Copy(sourceFilePath, destinationPath, overwrite: true);
 
-                // MIME type belirle
                 var contentType = GetContentType(extension);
 
-                // Veritabanına kaydet
                 var attachment = new Attachment
                 {
                     EntityType = entityType,
@@ -77,8 +69,9 @@ namespace KamatekCrm.Services
                     Description = description ?? string.Empty
                 };
 
-                _context.Attachments.Add(attachment);
-                _context.SaveChanges();
+                using var context = _dbContextFactory.CreateDbContext();
+                context.Attachments.Add(attachment);
+                context.SaveChanges();
 
                 return attachment;
             }
@@ -120,8 +113,9 @@ namespace KamatekCrm.Services
                     Description = description ?? string.Empty
                 };
 
-                _context.Attachments.Add(attachment);
-                _context.SaveChanges();
+                using var context = _dbContextFactory.CreateDbContext();
+                context.Attachments.Add(attachment);
+                context.SaveChanges();
 
                 return attachment;
             }
@@ -136,7 +130,8 @@ namespace KamatekCrm.Services
         /// </summary>
         public List<Attachment> GetAttachments(AttachmentEntityType entityType, int entityId)
         {
-            return _context.Attachments
+            using var context = _dbContextFactory.CreateDbContext();
+            return context.Attachments
                 .Where(a => a.EntityType == entityType && a.EntityId == entityId)
                 .OrderByDescending(a => a.UploadDate)
                 .ToList();
@@ -147,7 +142,8 @@ namespace KamatekCrm.Services
         /// </summary>
         public Attachment? GetById(int id)
         {
-            return _context.Attachments.Find(id);
+            using var context = _dbContextFactory.CreateDbContext();
+            return context.Attachments.Find(id);
         }
 
         /// <summary>
@@ -157,18 +153,17 @@ namespace KamatekCrm.Services
         {
             try
             {
-                var attachment = _context.Attachments.Find(id);
+                using var context = _dbContextFactory.CreateDbContext();
+                var attachment = context.Attachments.Find(id);
                 if (attachment == null) return false;
 
-                // Dosyayı sil
                 if (File.Exists(attachment.FilePath))
                 {
                     File.Delete(attachment.FilePath);
                 }
 
-                // Veritabanından sil
-                _context.Attachments.Remove(attachment);
-                _context.SaveChanges();
+                context.Attachments.Remove(attachment);
+                context.SaveChanges();
 
                 return true;
             }
@@ -193,9 +188,6 @@ namespace KamatekCrm.Services
             });
         }
 
-        /// <summary>
-        /// MIME type belirle
-        /// </summary>
         private static string GetContentType(string extension)
         {
             return extension switch

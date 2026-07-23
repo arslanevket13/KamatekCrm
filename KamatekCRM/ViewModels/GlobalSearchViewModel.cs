@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Services;
@@ -90,14 +90,14 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public GlobalSearchViewModel()
+        private readonly ISearchService _searchService;
+
+        public GlobalSearchViewModel(ISearchService searchService)
         {
+            _searchService = searchService;
         }
 
-        /// <summary>
-        /// Arama yap
-        /// </summary>
-        private void PerformSearch()
+        private async void PerformSearch()
         {
             Results.Clear();
 
@@ -114,7 +114,7 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                var results = SearchService.Search(SearchQuery);
+                var results = await _searchService.SearchAsync(SearchQuery);
                 foreach (var result in results)
                 {
                     Results.Add(result);

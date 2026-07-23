@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -7,12 +7,14 @@ using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
     public partial class QuickAssetAddViewModel : ViewModelBase
     {
         private readonly int _customerId;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private string _selectedCategoryTag;
         private string _brand;
         private string _model;
@@ -54,9 +56,10 @@ namespace KamatekCrm.ViewModels
         // Action to close the window (View Service / Interaction Request pattern)
         public Action<bool>? RequestClose { get; set; }
 
-        public QuickAssetAddViewModel(int customerId)
+        public QuickAssetAddViewModel(int customerId, IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _customerId = customerId;
+            _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
             _selectedCategoryTag = "CCTV"; // Default
             _brand = string.Empty;
             _model = string.Empty;
@@ -105,7 +108,7 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                using var context = new AppDbContext();
+                using var context = _dbContextFactory.CreateDbContext();
 
                 var asset = new CustomerAsset
                 {
@@ -132,4 +135,3 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
-

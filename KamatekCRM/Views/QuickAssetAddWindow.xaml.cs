@@ -14,8 +14,8 @@ namespace KamatekCrm.Views
         public QuickAssetAddWindow(int customerId)
         {
             InitializeComponent();
-            
-            var viewModel = new QuickAssetAddViewModel(customerId);
+            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext>>(App.ServiceProvider!);
+            var viewModel = new QuickAssetAddViewModel(customerId, dbContextFactory);
             viewModel.RequestClose += (result) =>
             {
                 DialogResult = result;

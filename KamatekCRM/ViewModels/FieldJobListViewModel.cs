@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -18,7 +18,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class FieldJobListViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private string _searchText = string.Empty;
         private DateTime? _startDate;
         private DateTime? _endDate;
@@ -61,9 +61,9 @@ namespace KamatekCrm.ViewModels
 
         // Commands
 
-        public FieldJobListViewModel()
+        public FieldJobListViewModel(IDbContextFactory<AppDbContext> dbContextFactory)
         {
-            _context = new AppDbContext();
+            _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
             AllFieldJobs = new ObservableCollection<FieldJobDisplayItem>();
             CategoryFilters = new ObservableCollection<CategoryFilterItem>();
 
@@ -99,7 +99,8 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                var fieldJobs = _context.ServiceJobs
+                using var context = _dbContextFactory.CreateDbContext();
+                var fieldJobs = context.ServiceJobs
                     .Include(j => j.Customer)
                     .Where(j => j.WorkOrderType == WorkOrderType.Installation 
                              || j.WorkOrderType == WorkOrderType.Maintenance
@@ -238,12 +239,13 @@ namespace KamatekCrm.ViewModels
                 {
                     try
                     {
-                        var dbJob = _context.ServiceJobs.Find(job.Id);
+                        using var context = _dbContextFactory.CreateDbContext();
+                        var dbJob = context.ServiceJobs.Find(job.Id);
                         if (dbJob != null)
                         {
                             dbJob.Status = JobStatus.Completed;
                             dbJob.CompletedDate = DateTime.UtcNow;
-                            _context.SaveChanges();
+                            context.SaveChanges();
                             
                             job.Status = JobStatus.Completed;
                             FilteredFieldJobs?.Refresh();

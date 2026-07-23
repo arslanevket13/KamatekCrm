@@ -17,9 +17,10 @@ namespace KamatekCrm.Repositories
 
 
 
-        public UnitOfWork(AppDbContext context)
+        public UnitOfWork(IDbContextFactory<AppDbContext> contextFactory)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            if (contextFactory == null) throw new ArgumentNullException(nameof(contextFactory));
+            _context = contextFactory.CreateDbContext();
         }
 
         public AppDbContext Context => _context;
@@ -182,7 +183,7 @@ namespace KamatekCrm.Repositories
                 if (disposing)
                 {
                     _currentTransaction?.Dispose();
-                    _context.Dispose();
+                    _context?.Dispose();
                 }
                 _disposed = true;
             }
@@ -191,6 +192,23 @@ namespace KamatekCrm.Repositories
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (!_disposed)
+            {
+                if (_currentTransaction != null)
+                {
+                    await _currentTransaction.DisposeAsync();
+                }
+                if (_context != null)
+                {
+                    await _context.DisposeAsync();
+                }
+                _disposed = true;
+            }
             GC.SuppressFinalize(this);
         }
     }

@@ -9,7 +9,7 @@ namespace KamatekCrm.Repositories
     /// <summary>
     /// Unit of Work arayüzü - Tüm veritabanı işlemlerini tek bir transaction altında yönetir.
     /// </summary>
-    public interface IUnitOfWork : IDisposable
+    public interface IUnitOfWork : IDisposable, IAsyncDisposable
     {
         /// <summary>
         /// Mevcut DbContext örneği

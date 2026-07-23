@@ -13,11 +13,11 @@ namespace KamatekCrm.Services
     /// </summary>
     public class ReportService
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
-        public ReportService()
+        public ReportService(IDbContextFactory<AppDbContext> dbContextFactory)
         {
-            _context = new AppDbContext();
+            _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
         }
 
         /// <summary>
@@ -33,7 +33,8 @@ namespace KamatekCrm.Services
                 Columns = new List<string> { "Tarih", "Satış Sayısı", "Toplam Tutar", "Ortalama" }
             };
 
-            var query = _context.SalesOrders.AsQueryable();
+            using var context = _dbContextFactory.CreateDbContext();
+            var query = context.SalesOrders.AsQueryable();
 
             if (startDate.HasValue)
                 query = query.Where(s => s.Date >= startDate.Value);
@@ -77,7 +78,8 @@ namespace KamatekCrm.Services
                 Columns = new List<string> { "Müşteri Kodu", "Ad Soyad", "Telefon", "Şehir", "Tip", "Toplam Harcama" }
             };
 
-            var customers = _context.Customers.ToList();
+            using var context = _dbContextFactory.CreateDbContext();
+            var customers = context.Customers.ToList();
 
             foreach (var customer in customers)
             {
@@ -113,11 +115,12 @@ namespace KamatekCrm.Services
                 Columns = new List<string> { "Ürün Kodu", "Ürün Adı", "Kategori", "Miktar", "Birim Fiyat", "Toplam Değer" }
             };
 
-            var products = _context.Products.Include(p => p.Category).ToList();
+            using var context = _dbContextFactory.CreateDbContext();
+            var products = context.Products.Include(p => p.Category).ToList();
 
             foreach (var product in products)
             {
-                var quantity = _context.Inventories.Where(i => i.ProductId == product.Id).Sum(i => i.Quantity);
+                var quantity = context.Inventories.Where(i => i.ProductId == product.Id).Sum(i => i.Quantity);
                 var totalValue = quantity * product.SalePrice;
 
                 result.Rows.Add(new Dictionary<string, object>
@@ -133,7 +136,7 @@ namespace KamatekCrm.Services
 
             result.TotalCount = products.Count;
             result.TotalAmount = products.Sum(p => 
-                _context.Inventories.Where(i => i.ProductId == p.Id).Sum(i => i.Quantity) * p.SalePrice);
+                context.Inventories.Where(i => i.ProductId == p.Id).Sum(i => i.Quantity) * p.SalePrice);
             result.Summary = new Dictionary<string, decimal>
             {
                 { "Toplam Ürün", result.TotalCount },
@@ -156,7 +159,8 @@ namespace KamatekCrm.Services
                 Columns = new List<string> { "İş No", "Müşteri", "Teknisyen", "Tarih", "Durum", "Tutar" }
             };
 
-            var query = _context.ServiceJobs.Include(j => j.Customer).AsQueryable();
+            using var context = _dbContextFactory.CreateDbContext();
+            var query = context.ServiceJobs.Include(j => j.Customer).AsQueryable();
 
             if (startDate.HasValue)
                 query = query.Where(j => j.CreatedDate >= startDate.Value);
@@ -200,7 +204,8 @@ namespace KamatekCrm.Services
                 Columns = new List<string> { "Sıra", "Müşteri Kodu", "Ad Soyad", "Telefon", "Toplam Harcama", "Alışveriş Sayısı" }
             };
 
-            var customers = _context.Customers
+            using var context = _dbContextFactory.CreateDbContext();
+            var customers = context.Customers
                 .OrderByDescending(c => c.TotalSpent)
                 .Take(topN)
                 .ToList();
@@ -242,7 +247,8 @@ namespace KamatekCrm.Services
                 Columns = new List<string> { "Kalem", "Tutar" }
             };
 
-            var query = _context.CashTransactions.AsQueryable();
+            using var context = _dbContextFactory.CreateDbContext();
+            var query = context.CashTransactions.AsQueryable();
             if (startDate.HasValue)
                 query = query.Where(t => t.Date >= startDate.Value);
             if (endDate.HasValue)
@@ -280,8 +286,6 @@ namespace KamatekCrm.Services
         /// </summary>
         public byte[] ExportToExcel(ReportResult report)
         {
-            // ClosedXML kullanılarak Excel export
-            // Bu metot Excel verisi döndürür
             var csv = string.Join(",", report.Columns) + "\n";
             
             foreach (var row in report.Rows)

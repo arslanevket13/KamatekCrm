@@ -225,8 +225,8 @@ namespace KamatekCrm.ViewModels
             _serviceProvider = serviceProvider;
 
             // Global arama başlat
-            SearchViewModel = new GlobalSearchViewModel();
-            _notificationService = new NotificationService();
+            SearchViewModel = _serviceProvider.GetRequiredService<GlobalSearchViewModel>();
+            _notificationService = _serviceProvider.GetRequiredService<NotificationService>();
 
             // Kayıtlı tercihleri yükle
             _isSidebarCollapsed = Properties.Settings.Default.SidebarCollapsed;

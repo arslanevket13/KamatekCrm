@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -20,7 +20,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class FinanceViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
 
         #region Properties
@@ -36,10 +36,15 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedDate, value))
                 {
+                    OnPropertyChanged(nameof(SelectedDateDisplay));
                     Refresh();
                 }
             }
         }
+
+        public string SelectedDateDisplay => ShowMonthly 
+            ? _selectedDate.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))
+            : _selectedDate.ToString("dd MMMM yyyy, dddd", new System.Globalization.CultureInfo("tr-TR"));
 
         private bool _showMonthly = false;
         public bool ShowMonthly
@@ -49,6 +54,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _showMonthly, value))
                 {
+                    OnPropertyChanged(nameof(SelectedDateDisplay));
                     Refresh();
                 }
             }
@@ -67,7 +73,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        // Özet Kartları
+        // Özet Metrikleri
         private decimal _cashIncome;
         public decimal CashIncome
         {
@@ -89,23 +95,35 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _totalExpense, value);
         }
 
-        public decimal NetBalance => CashIncome + CardIncome - TotalExpense;
-        public string NetBalanceDisplay => $"₺{NetBalance:N2}";
-        public string NetBalanceColor => NetBalance >= 0 ? "#4CAF50" : "#F44336";
+        public decimal NetBalance => (CashIncome + CardIncome) - TotalExpense;
+        public string NetBalanceDisplay => $"₺{Math.Abs(NetBalance):N2}";
+        public string NetBalanceColor => NetBalance >= 0 ? "#10B981" : "#EF4444";
 
-        // Gider Ekleme Formu
+        // Yeni Gider Ekleme Formu
         private decimal _newExpenseAmount;
         public decimal NewExpenseAmount
         {
             get => _newExpenseAmount;
-            set => SetProperty(ref _newExpenseAmount, value);
+            set
+            {
+                if (SetProperty(ref _newExpenseAmount, value))
+                {
+                    AddExpenseCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         private string _newExpenseDescription = string.Empty;
         public string NewExpenseDescription
         {
             get => _newExpenseDescription;
-            set => SetProperty(ref _newExpenseDescription, value);
+            set
+            {
+                if (SetProperty(ref _newExpenseDescription, value))
+                {
+                    AddExpenseCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         private string _newExpenseCategory = "Genel";
@@ -115,17 +133,15 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _newExpenseCategory, value);
         }
 
-        public ObservableCollection<string> ExpenseCategories { get; } = new()
+        public string[] ExpenseCategories { get; } = new[]
         {
             "Genel",
-            "Fatura",
-            "Kira",
-            "Malzeme Alımı",
-            "Personel",
-            "Yakıt",
-            "Yemek",
-            "Nakliye",
-            "Bakım/Onarım",
+            "Personel / Maaş",
+            "Yol / Ulaşım",
+            "Yemek / Temsil",
+            "Malzeme / Demirbaş",
+            "Kira / Fatura",
+            "Vergi / Harç",
             "Diğer"
         };
 
@@ -144,15 +160,14 @@ namespace KamatekCrm.ViewModels
 
         #region Constructor
 
-        public FinanceViewModel(IAuthService authService)
+        public FinanceViewModel(IAuthService authService, IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _authService = authService;
-            _context = new AppDbContext();
+            _dbContextFactory = dbContextFactory;
 
             FilteredTransactions = CollectionViewSource.GetDefaultView(Transactions);
             FilteredTransactions.Filter = FilterTransactions;
             FilteredTransactions.SortDescriptions.Add(new SortDescription(nameof(CashTransaction.Date), ListSortDirection.Descending));
-
 
             Refresh();
         }
@@ -174,7 +189,7 @@ namespace KamatekCrm.ViewModels
                 if (ShowMonthly)
                 {
                     startDate = new DateTime(SelectedDate.Year, SelectedDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-                    endDate = startDate.AddMonths(1).AddTicks(-1); // Ayın son günü 23:59:59.9999999
+                    endDate = startDate.AddMonths(1).AddTicks(-1);
                 }
                 else
                 {
@@ -182,7 +197,9 @@ namespace KamatekCrm.ViewModels
                     endDate = startDate.AddDays(1).AddTicks(-1);
                 }
 
-                var transactions = _context.CashTransactions
+                using var context = _dbContextFactory.CreateDbContext();
+
+                var transactions = context.CashTransactions
                     .Include(t => t.Customer)
                     .Where(t => t.Date >= startDate && t.Date <= endDate)
                     .OrderByDescending(t => t.Date)
@@ -257,8 +274,9 @@ namespace KamatekCrm.ViewModels
                     CreatedAt = DateTime.UtcNow
                 };
 
-                _context.CashTransactions.Add(expense);
-                _context.SaveChanges();
+                using var context = _dbContextFactory.CreateDbContext();
+                context.CashTransactions.Add(expense);
+                context.SaveChanges();
 
                 MessageBox.Show($"Gider kaydedildi: ₺{NewExpenseAmount:N2}", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
 
@@ -295,8 +313,9 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                _context.CashTransactions.Remove(transaction);
-                _context.SaveChanges();
+                using var context = _dbContextFactory.CreateDbContext();
+                context.CashTransactions.Remove(transaction);
+                context.SaveChanges();
                 Refresh();
             }
             catch (Exception ex)

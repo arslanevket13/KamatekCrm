@@ -7,7 +7,8 @@ namespace KamatekCrm.Views
         public QuickCustomerAddWindow()
         {
             InitializeComponent();
-            var vm = new KamatekCrm.ViewModels.QuickCustomerAddViewModel();
+            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext>>(App.ServiceProvider!);
+            var vm = new KamatekCrm.ViewModels.QuickCustomerAddViewModel(dbContextFactory);
             vm.RequestClose += success =>
             {
                 DialogResult = success;

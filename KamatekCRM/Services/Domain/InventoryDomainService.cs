@@ -40,7 +40,7 @@ namespace KamatekCrm.Services.Domain
             _stockLock.Wait();
             try
             {
-                using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+                using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
                 using var transaction = unitOfWork.BeginTransaction();
@@ -137,7 +137,7 @@ namespace KamatekCrm.Services.Domain
         /// </summary>
         public int GetAvailableStock(int productId, int warehouseId)
         {
-            using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             var inventory = context.Inventories
@@ -154,7 +154,7 @@ namespace KamatekCrm.Services.Domain
             _stockLock.Wait();
             try
             {
-                using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+                using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
                 using var transaction = unitOfWork.BeginTransaction();
@@ -227,7 +227,7 @@ namespace KamatekCrm.Services.Domain
              _stockLock.Wait();
             try
             {
-                using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+                using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
                 using var transaction = unitOfWork.BeginTransaction();
@@ -324,7 +324,7 @@ namespace KamatekCrm.Services.Domain
             await _stockLock.WaitAsync(cancellationToken);
             try
             {
-                using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+                using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
                 using var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
@@ -395,7 +395,7 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<int> GetAvailableStockAsync(int productId, int warehouseId, CancellationToken cancellationToken = default)
         {
-            using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             var inventory = await context.Inventories
@@ -409,7 +409,7 @@ namespace KamatekCrm.Services.Domain
             await _stockLock.WaitAsync(cancellationToken);
             try
             {
-                using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+                using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
                 var inventory = await context.Inventories
@@ -461,7 +461,7 @@ namespace KamatekCrm.Services.Domain
             await _stockLock.WaitAsync(cancellationToken);
             try
             {
-                using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+                using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
                 var inventory = await context.Inventories
@@ -526,7 +526,7 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<decimal> GetTotalInventoryValueAsync(int? warehouseId = null, CancellationToken cancellationToken = default)
         {
-            using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             var query = context.Inventories.AsQueryable();
@@ -543,7 +543,7 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<IEnumerable<LowStockProduct>> GetLowStockProductsAsync(int? warehouseId = null, CancellationToken cancellationToken = default)
         {
-            using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             var query = from i in context.Inventories
@@ -572,7 +572,7 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<IEnumerable<StockTransaction>> GetStockTransactionsAsync(StockTransactionQuery query, CancellationToken cancellationToken = default)
         {
-            using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             var q = context.StockTransactions.AsQueryable();
@@ -609,7 +609,7 @@ namespace KamatekCrm.Services.Domain
             await _stockLock.WaitAsync(cancellationToken);
             try
             {
-                using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+                using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
                 var availableStock = await GetAvailableStockAsync(request.ProductId, request.WarehouseId, cancellationToken);
@@ -646,7 +646,7 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<bool> CancelReservationAsync(int reservationId, CancellationToken cancellationToken = default)
         {
-            using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             var reservation = await context.StockReservations.FindAsync(new object[] { reservationId }, cancellationToken);
@@ -661,7 +661,7 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<int> GetReservedQuantityAsync(int productId, int warehouseId, CancellationToken cancellationToken = default)
         {
-            using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             return await context.StockReservations
@@ -674,7 +674,7 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<InventoryImage> AddInventoryImageAsync(InventoryImageRequest request, CancellationToken cancellationToken = default)
         {
-            using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             var image = new InventoryImage
@@ -696,7 +696,7 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<IEnumerable<InventoryImage>> GetInventoryImagesAsync(int productId, int warehouseId, CancellationToken cancellationToken = default)
         {
-            using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             return await context.InventoryImages
@@ -707,7 +707,7 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<bool> DeleteInventoryImageAsync(int imageId, CancellationToken cancellationToken = default)
         {
-            using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             var image = await context.InventoryImages.FindAsync(new object[] { imageId }, cancellationToken);
@@ -729,7 +729,7 @@ namespace KamatekCrm.Services.Domain
             await _stockLock.WaitAsync(cancellationToken);
             try
             {
-                using var unitOfWork = new UnitOfWork(_dbContextFactory.CreateDbContext());
+                using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
                 foreach (var entry in entries)
@@ -798,7 +798,7 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<IEnumerable<ExpiringStock>> GetExpiringStockAsync(int daysThreshold = 30, int? warehouseId = null, CancellationToken cancellationToken = default)
         {
-            using var unitOfWork = new UnitOfWork(new AppDbContext());
+            using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
             var thresholdDate = DateTime.Now.AddDays(daysThreshold);

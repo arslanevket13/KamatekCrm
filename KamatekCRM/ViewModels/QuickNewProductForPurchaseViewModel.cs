@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
@@ -16,7 +17,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class QuickNewProductForPurchaseViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
         #region Fields & Properties
 
@@ -122,9 +123,9 @@ namespace KamatekCrm.ViewModels
 
         public event Action<bool>? RequestClose;
 
-        public QuickNewProductForPurchaseViewModel()
+        public QuickNewProductForPurchaseViewModel(IDbContextFactory<AppDbContext> dbContextFactory)
         {
-            _context = new AppDbContext();
+            _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
             LoadCategories();
         }
 
@@ -133,7 +134,8 @@ namespace KamatekCrm.ViewModels
             try
             {
                 Categories.Clear();
-                foreach (var c in _context.Categories.OrderBy(x => x.Name).ToList())
+                using var context = _dbContextFactory.CreateDbContext();
+                foreach (var c in context.Categories.OrderBy(x => x.Name).ToList())
                     Categories.Add(c);
             }
             catch { /* silently ignore — category is optional */ }
@@ -146,7 +148,6 @@ namespace KamatekCrm.ViewModels
 
         [RelayCommand(CanExecute = nameof(CanSaveProduct))]
         private void SaveProduct()
-
         {
             if (string.IsNullOrWhiteSpace(ProductName))
             {
@@ -180,13 +181,14 @@ namespace KamatekCrm.ViewModels
                     CreatedBy = "Satın Alma-Hızlı"
                 };
 
-                _context.Products.Add(product);
-                _context.SaveChanges();
+                using var context = _dbContextFactory.CreateDbContext();
+                context.Products.Add(product);
+                context.SaveChanges();
 
                 // If initial quantity set, create stock entry
                 if (InitialQuantity > 0)
                 {
-                    var warehouse = _context.Warehouses.FirstOrDefault(w => w.IsActive);
+                    var warehouse = context.Warehouses.FirstOrDefault(w => w.IsActive);
                     if (warehouse != null)
                     {
                         var inv = new Inventory
@@ -196,9 +198,9 @@ namespace KamatekCrm.ViewModels
                             Quantity = InitialQuantity,
                             AverageCost = PurchasePrice
                         };
-                        _context.Inventories.Add(inv);
+                        context.Inventories.Add(inv);
                         product.TotalStockQuantity = InitialQuantity;
-                        _context.SaveChanges();
+                        context.SaveChanges();
                     }
                 }
 
@@ -216,6 +218,3 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
-
-
-

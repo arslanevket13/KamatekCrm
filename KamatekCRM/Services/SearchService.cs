@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.Services
 {
@@ -21,15 +24,28 @@ namespace KamatekCrm.Services
         public string EntityType { get; set; } = string.Empty;
     }
 
+    public interface ISearchService
+    {
+        List<SearchResult> Search(string query, int maxResults = 20);
+        Task<List<SearchResult>> SearchAsync(string query, int maxResults = 20, CancellationToken cancellationToken = default);
+    }
+
     /// <summary>
     /// Global arama servisi - Müşteri, Ürün, İş Emri arama
     /// </summary>
-    public static class SearchService
+    public class SearchService : ISearchService
     {
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+
+        public SearchService(IDbContextFactory<AppDbContext> dbContextFactory)
+        {
+            _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
+        }
+
         /// <summary>
-        /// Tüm entity'lerde arama yap
+        /// Tüm entity'lerde arama yap (Senkron)
         /// </summary>
-        public static List<SearchResult> Search(string query, int maxResults = 20)
+        public List<SearchResult> Search(string query, int maxResults = 20)
         {
             if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
                 return new List<SearchResult>();
@@ -39,7 +55,7 @@ namespace KamatekCrm.Services
 
             try
             {
-                using var context = new AppDbContext();
+                using var context = _dbContextFactory.CreateDbContext();
 
                 // Müşterilerde ara
                 var customers = context.Customers
@@ -109,6 +125,90 @@ namespace KamatekCrm.Services
             catch
             {
                 // Arama hatası sessizce geçilir
+            }
+
+            return results.Take(maxResults).ToList();
+        }
+
+        /// <summary>
+        /// Tüm entity'lerde arama yap (Asenkron)
+        /// </summary>
+        public async Task<List<SearchResult>> SearchAsync(string query, int maxResults = 20, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+                return new List<SearchResult>();
+
+            var results = new List<SearchResult>();
+            var search = query.ToLower().Trim();
+
+            try
+            {
+                await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+                var customers = await context.Customers
+                    .Where(c => c.FullName.ToLower().Contains(search) ||
+                               (c.PhoneNumber != null && c.PhoneNumber.Contains(search)) ||
+                               (c.Email != null && c.Email.ToLower().Contains(search)) ||
+                               (c.CustomerCode != null && c.CustomerCode.ToLower().Contains(search)))
+                    .Take(maxResults / 3)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var c in customers)
+                {
+                    results.Add(new SearchResult
+                    {
+                        Icon = "👤",
+                        Title = c.FullName,
+                        Subtitle = c.PhoneNumber ?? c.Email ?? "",
+                        Category = "Müşteri",
+                        CategoryColor = "#1976D2",
+                        Id = c.Id,
+                        EntityType = "Customer"
+                    });
+                }
+
+                var products = await context.Products
+                    .Where(p => p.ProductName.ToLower().Contains(search) ||
+                               (p.SKU != null && p.SKU.ToLower().Contains(search)) ||
+                               (p.Barcode != null && p.Barcode.Contains(search)))
+                    .Take(maxResults / 3)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var p in products)
+                {
+                    results.Add(new SearchResult
+                    {
+                        Icon = "📦",
+                        Title = p.ProductName,
+                        Subtitle = $"Stok: {p.TotalStockQuantity} | {p.SalePrice:N2} ₺",
+                        Category = "Ürün",
+                        CategoryColor = "#388E3C",
+                        Id = p.Id,
+                        EntityType = "Product"
+                    });
+                }
+
+                var jobs = await context.ServiceJobs
+                    .Where(j => j.Description.ToLower().Contains(search))
+                    .Take(maxResults / 3)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var j in jobs)
+                {
+                    results.Add(new SearchResult
+                    {
+                        Icon = "🔧",
+                        Title = $"İş #{j.Id}",
+                        Subtitle = j.Description.Length > 50 ? j.Description.Substring(0, 50) + "..." : j.Description,
+                        Category = GetStatusText(j.Status),
+                        CategoryColor = GetStatusColor(j.Status),
+                        Id = j.Id,
+                        EntityType = "ServiceJob"
+                    });
+                }
+            }
+            catch
+            {
             }
 
             return results.Take(maxResults).ToList();

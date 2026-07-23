@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using KamatekCrm.Data;
@@ -15,11 +15,11 @@ namespace KamatekCrm.ViewModels
 {
     public partial class FinancialHealthViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
-        public FinancialHealthViewModel(AppDbContext context)
+        public FinancialHealthViewModel(IDbContextFactory<AppDbContext> dbContextFactory)
         {
-            _context = context;
+            _dbContextFactory = dbContextFactory;
             // Initialize non-nullable properties
             MonthlyFinancialSeries = Array.Empty<ISeries>();
             MonthlyXAxes = Array.Empty<Axis>();
@@ -60,7 +60,7 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                using var context = new AppDbContext();
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
                 var projects = await context.ServiceProjects
                     .Include(p => p.Customer)
                     .Where(p => p.Status != ProjectStatus.Cancelled)

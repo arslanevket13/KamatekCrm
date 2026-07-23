@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
@@ -14,7 +15,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class QuickCustomerAddViewModel : ViewModelBase
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private string _fullName = string.Empty;
         private string _phone = string.Empty;
         private string _email = string.Empty;
@@ -79,9 +80,9 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        public QuickCustomerAddViewModel()
+        public QuickCustomerAddViewModel(IDbContextFactory<AppDbContext> dbContextFactory)
         {
-            _context = new AppDbContext();
+            _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
         }
 
         /// <summary>
@@ -96,7 +97,6 @@ namespace KamatekCrm.ViewModels
 
         [RelayCommand(CanExecute = nameof(CanSaveCustomer))]
         private void SaveCustomer()
-
         {
             if (string.IsNullOrWhiteSpace(FullName))
             {
@@ -122,8 +122,9 @@ namespace KamatekCrm.ViewModels
                     CreatedBy = "POS-QuickAdd"
                 };
 
-                _context.Customers.Add(customer);
-                _context.SaveChanges();
+                using var context = _dbContextFactory.CreateDbContext();
+                context.Customers.Add(customer);
+                context.SaveChanges();
 
                 SavedCustomer = customer;
                 RequestClose?.Invoke(true);
@@ -140,6 +141,3 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
-
-
-

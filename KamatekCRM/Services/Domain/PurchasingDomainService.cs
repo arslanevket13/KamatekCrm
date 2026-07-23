@@ -24,18 +24,20 @@ namespace KamatekCrm.Services.Domain
     {
         private static readonly SemaphoreSlim _lock = new(1, 1);
         private readonly IAuthService _authService;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
-        public PurchasingDomainService(IAuthService authService)
+        public PurchasingDomainService(IAuthService authService, IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _authService = authService;
+            _dbContextFactory = dbContextFactory;
         }
 
         /// <summary>
         /// Satın alma siparişini tamamla:
         /// 1) PurchaseOrder status → Completed
-        /// 2) Her kalem için stok artır (Inventory + StockTransaction)
-        /// 3) WAC (Moving Average Cost) yeniden hesapla
-        /// 4) Tedarikçi borç kaydı (CashTransaction → CashExpense)
+        /// 2) Stokları depoya ekle (WAC hesapla)
+        /// 3) Tedarikçi bakiye/borç güncelle
+        /// 4) Tedarikçi ürün fiyatlarını güncelle
         /// </summary>
         public async Task<PurchaseResult> CompletePurchaseOrderAsync(PurchaseCompletionRequest request)
         {
@@ -45,7 +47,7 @@ namespace KamatekCrm.Services.Domain
             await _lock.WaitAsync();
             try
             {
-                using var unitOfWork = new UnitOfWork(new AppDbContext());
+                using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
                 using var transaction = await unitOfWork.BeginTransactionAsync();
