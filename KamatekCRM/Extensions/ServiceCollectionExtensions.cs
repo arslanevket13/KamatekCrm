@@ -43,7 +43,7 @@ namespace KamatekCrm.Extensions
                  .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             });
 
-             // Services
+            services.AddMemoryCache();
             services.AddSingleton<NavigationService>(); // Singleton as it holds state
             services.AddSingleton<IToastService, ToastService>();
             services.AddSingleton<ToastViewModel>();
