@@ -31,3 +31,6 @@ keys_*.txt
 nul
 # Database Data
 PostgresData/
+
+# Graphify Output Directory
+graphify-out/
