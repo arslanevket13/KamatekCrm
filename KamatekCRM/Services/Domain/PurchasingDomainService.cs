@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
 using System.Threading;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Events;
-using KamatekCrm.Repositories;
+using KamatekCrm.Shared.Repositories;
+using KamatekCrm.Infrastructure.Repositories;
 
 using System.Threading.Tasks;
 
@@ -50,7 +51,7 @@ namespace KamatekCrm.Services.Domain
                 using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
-                using var transaction = await unitOfWork.BeginTransactionAsync();
+                await unitOfWork.BeginTransactionAsync();
                 try
                 {
                     // 1. PurchaseOrder'ı yükle

@@ -5,11 +5,12 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Events;
-using KamatekCrm.Exceptions;
+using KamatekCrm.Shared.Exceptions;
 using KamatekCrm.Shared.Models;
-using KamatekCrm.Repositories;
+using KamatekCrm.Shared.Repositories;
+using KamatekCrm.Infrastructure.Repositories;
 
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 namespace KamatekCrm.Services.Domain
 {
@@ -43,7 +44,7 @@ namespace KamatekCrm.Services.Domain
                 using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
-                using var transaction = unitOfWork.BeginTransaction();
+                unitOfWork.BeginTransaction();
                 try
                 {
                     // 1. Kaynak depo stok kontrolü
@@ -157,7 +158,7 @@ namespace KamatekCrm.Services.Domain
                 using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
-                using var transaction = unitOfWork.BeginTransaction();
+                unitOfWork.BeginTransaction();
                 try
                 {
                     var inventory = context.Inventories
@@ -230,7 +231,7 @@ namespace KamatekCrm.Services.Domain
                 using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
-                using var transaction = unitOfWork.BeginTransaction();
+                unitOfWork.BeginTransaction();
                 try
                 {
                     var inventory = context.Inventories
@@ -327,7 +328,7 @@ namespace KamatekCrm.Services.Domain
                 using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
-                using var transaction = await unitOfWork.BeginTransactionAsync(cancellationToken);
+                await unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     var sourceInventory = await context.Inventories

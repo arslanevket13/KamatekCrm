@@ -7,7 +7,7 @@ namespace KamatekCrm.Views
         public QuickNewProductForPurchaseWindow()
         {
             InitializeComponent();
-            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext>>(App.ServiceProvider!);
+            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>>(App.ServiceProvider!);
             var vm = new KamatekCrm.ViewModels.QuickNewProductForPurchaseViewModel(dbContextFactory);
             vm.RequestClose += success =>
             {

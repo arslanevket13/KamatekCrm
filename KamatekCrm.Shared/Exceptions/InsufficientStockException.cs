@@ -1,11 +1,11 @@
 using System;
 
-namespace KamatekCrm.Exceptions
+namespace KamatekCrm.Shared.Exceptions
 {
     /// <summary>
     /// Yetersiz stok durumunda fırlatılan özel exception
     /// </summary>
-    public class InsufficientStockException : Exception
+    public class InsufficientStockException : DomainException
     {
         public int ProductId { get; }
         public string? ProductName { get; }

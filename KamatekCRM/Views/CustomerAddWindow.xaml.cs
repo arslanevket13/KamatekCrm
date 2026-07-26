@@ -9,7 +9,7 @@ namespace KamatekCrm.Views
             InitializeComponent();
             var viewModel = App.ServiceProvider != null 
                 ? Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<ViewModels.CustomerAddViewModel>(App.ServiceProvider)
-                : new ViewModels.CustomerAddViewModel(Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<Data.AppDbContext>>(App.ServiceProvider!));
+                : new ViewModels.CustomerAddViewModel(Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<Infrastructure.Data.AppDbContext>>(App.ServiceProvider!));
 
             viewModel.RequestClose += success =>
             {

@@ -1,6 +1,6 @@
-namespace KamatekCrm.Exceptions
+namespace KamatekCrm.Shared.Exceptions
 {
-    public class BusinessRuleException : Exception
+    public class BusinessRuleException : DomainException
     {
         public string RuleName { get; }
 

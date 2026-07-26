@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;

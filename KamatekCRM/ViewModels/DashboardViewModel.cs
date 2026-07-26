@@ -12,6 +12,8 @@ using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using KamatekCrm.Services;
+using KamatekCrm.Shared.Services;
+using KamatekCrm.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
@@ -21,7 +23,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class DashboardViewModel : ViewModelBase
     {
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly ILoadingService _loadingService;
         private readonly IToastService _toastService;
@@ -286,7 +288,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public DashboardViewModel(IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory, ILoadingService loadingService, IToastService toastService, IDatabaseConnectionProvider connectionProvider)
+        public DashboardViewModel(IAuthService authService, IDbContextFactory<AppDbContext> dbContextFactory, ILoadingService loadingService, IToastService toastService, IDatabaseConnectionProvider connectionProvider)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;

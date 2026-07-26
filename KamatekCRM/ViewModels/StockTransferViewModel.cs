@@ -1,10 +1,10 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Services.Domain;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;

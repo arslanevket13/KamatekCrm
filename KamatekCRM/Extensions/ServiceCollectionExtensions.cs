@@ -1,11 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using KamatekCrm.Infrastructure;
 using KamatekCrm.Services;
 using KamatekCrm.Settings;
 using KamatekCrm.ViewModels;
-using KamatekCrm.Data;
-using Microsoft.EntityFrameworkCore;
-using KamatekCrm.Repositories;
 using KamatekCrm.Services.Domain;
 
 namespace KamatekCrm.Extensions
@@ -14,50 +12,25 @@ namespace KamatekCrm.Extensions
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
         {
-            // Configuration Setup
-            // Assuming configuration is loaded from appsettings.json in App.xaml.cs and passed here
+            // Infrastructure Layer Services (DbContext, UnitOfWork, Repositories, DatabaseConnectionProvider)
+            services.AddInfrastructureServices(configuration);
 
-            // DbContext
+            // Application Layer Services (Use Cases, DTOs, Application Services)
+            KamatekCrm.ApplicationCore.DependencyInjection.AddApplicationLayerServices(services);
 
-            services.AddDbContextFactory<AppDbContext>((sp, options) =>
-            {
-                 var connectionProvider = sp.GetService<IDatabaseConnectionProvider>();
-                 string connString;
-                 try
-                 {
-                     connString = connectionProvider?.GetConnectionString() ?? AppSettings.PostgreSqlConnectionString;
-                 }
-                 catch
-                 {
-                     connString = "Host=127.0.0.1;Database=kamatekcrm;Username=postgres;Password=1313;Port=5432;";
-                 }
-
-                 options.UseNpgsql(connString, sqlOptions =>
-                 {
-                     // 1. EF Core Dirençliliği (Connection Resiliency)
-                     sqlOptions.EnableRetryOnFailure(
-                         maxRetryCount: 5,
-                         maxRetryDelay: TimeSpan.FromSeconds(10),
-                         errorCodesToAdd: null);
-                 })
-                 .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-            });
-
+            // Core Application Services
             services.AddMemoryCache();
-            services.AddSingleton<NavigationService>(); // Singleton as it holds state
+            services.AddSingleton<NavigationService>();
             services.AddSingleton<IToastService, ToastService>();
             services.AddSingleton<ToastViewModel>();
             
             services.AddSingleton<ILoadingService, LoadingService>();
             services.AddSingleton<LoadingViewModel>();
             
-            // Registering AuthService. Since it was static, we need to handle it. 
-            // We will register IAuthService implementation.
             services.AddSingleton<IAuthService, AuthService>();
             services.AddTransient<AttachmentService>();
             services.AddScoped<ProjectScopeService>();
             
-            // NEW Services added during Absolute System Audit
             services.AddTransient<EmailService>();
             services.AddSingleton<EventAggregator>();
             services.AddTransient<InvoiceScannerService>();
@@ -71,9 +44,6 @@ namespace KamatekCrm.Extensions
             services.AddTransient<AddressService>();
             services.AddTransient<ISearchService, SearchService>();
 
-            // Repositories
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
-
             // Domain Services
             services.AddScoped<IInventoryDomainService, InventoryDomainService>();
             services.AddSingleton<IProductImageService, ProductImageService>();
@@ -82,13 +52,6 @@ namespace KamatekCrm.Extensions
             // Background Services
             services.AddScoped<ISlaService, SlaService>();
             services.AddScoped<IBackupService, BackupService>();
-
-            // Views (Register as needed, usually via ViewModel)
-            
-
-            // MainWindow is registered in App.xaml.cs as Singleton
-
-            // MainWindow is registered in App.xaml.cs as Singleton
 
             // ViewModels
             services.AddTransient<MainViewModel>();
@@ -113,7 +76,6 @@ namespace KamatekCrm.Extensions
             services.AddTransient<MainContentViewModel>();
             services.AddTransient<SuppliersViewModel>();
 
-            // v8.3 — Missing ViewModel Registrations (Navigation Crash Fix)
             services.AddTransient<AnalyticsViewModel>();
             services.AddTransient<RoutePlanningViewModel>();
             services.AddTransient<FinancialHealthViewModel>();
@@ -121,7 +83,6 @@ namespace KamatekCrm.Extensions
             services.AddTransient<StockTransferViewModel>();
             services.AddTransient<AddUserViewModel>();
 
-            // v8.4 — Additional Missing ViewModel Registrations (Complete DI Coverage)
             services.AddTransient<ProjectQuoteEditorViewModel>();
             services.AddTransient<ProjectQuoteViewModel>();
             services.AddTransient<QuoteListViewModel>();
@@ -131,19 +92,15 @@ namespace KamatekCrm.Extensions
             services.AddTransient<QuickAssetAddViewModel>();
             services.AddTransient<GlobalSearchViewModel>();
             
-            // Absolute System Audit - Missing ViewModels
             services.AddTransient<CustomerAddViewModel>();
-            services.AddTransient<CustomersViewModel>();
             services.AddTransient<QuickCustomerAddViewModel>();
             services.AddTransient<QuickNewProductForPurchaseViewModel>();
-            services.AddTransient<LoadingViewModel>();
             
-            // Missing ViewModels from DI
             services.AddTransient<PurchaseOrderViewModel>();
             services.AddTransient<QuotationViewModel>();
             services.AddTransient<NetworkSettingsViewModel>();
 
-            // Window'ların da DI container'da kayıtlı olması gerekir
+            // Windows
             services.AddTransient<Views.RepairTrackingWindow>();
             services.AddTransient<Views.FaultTicketWindow>();
             services.AddTransient<Views.DirectSalesWindow>();
@@ -154,4 +111,3 @@ namespace KamatekCrm.Extensions
         }
     }
 }
-

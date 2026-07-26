@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
@@ -24,7 +24,7 @@ namespace KamatekCrm.ViewModels
     // DZELTME 1: Snf ad 'CustomersViewModel' yapld (Sonunda 's' var)
     public partial class CustomersViewModel : KamatekCrm.ViewModels.Common.PaginationViewModel
     {
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
         private Customer? _selectedCustomer;
         private string _fullName = string.Empty;
         private string _phoneNumber = string.Empty;
@@ -297,7 +297,7 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
 
-        public CustomersViewModel(NavigationService navigationService, ILogger<CustomersViewModel> logger, IToastService toastService, ILoadingService loadingService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory)
+        public CustomersViewModel(NavigationService navigationService, ILogger<CustomersViewModel> logger, IToastService toastService, ILoadingService loadingService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory)
         {
             _navigationService = navigationService;
             _logger = logger;

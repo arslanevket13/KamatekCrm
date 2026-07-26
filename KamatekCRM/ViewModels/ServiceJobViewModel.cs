@@ -10,7 +10,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
@@ -25,7 +25,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class ServiceJobViewModel : ViewModelBase
     {
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
         private readonly NavigationService _navigationService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
@@ -60,7 +60,7 @@ namespace KamatekCrm.ViewModels
         private bool _isDetailPanelOpen;
         private ObservableCollection<ServiceJobHistory> _selectedJobHistory = new();
 
-        public ServiceJobViewModel(NavigationService navigationService, IToastService toastService, ILoadingService loadingService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory)
+        public ServiceJobViewModel(NavigationService navigationService, IToastService toastService, ILoadingService loadingService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory)
         {
             _navigationService = navigationService;
             _toastService = toastService;

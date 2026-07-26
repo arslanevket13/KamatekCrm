@@ -139,7 +139,7 @@ namespace KamatekCrm.Services
         /// stillerimizi MergedDictionaries'in sonuna yeniden ekler.
         /// Bu sayede "son eklenen kazanır" kuralıyla kendi stillerimiz öncelik alır.
         /// </summary>
-        private static void ReapplyCustomStyles(Application app)
+        private static void ReapplyCustomStyles(System.Windows.Application app)
         {
             try
             {

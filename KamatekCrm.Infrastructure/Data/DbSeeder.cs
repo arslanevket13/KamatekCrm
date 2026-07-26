@@ -1,18 +1,17 @@
-using KamatekCrm.Shared.Enums;
-using KamatekCrm.Shared.Models;
 using System;
 using System.Linq;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 
-namespace KamatekCrm.Data
+namespace KamatekCrm.Infrastructure.Data
 {
     public static class DbSeeder
     {
         public static void SeedDemoData(AppDbContext context)
         {
-            // 0. Admin User Seeding
             if (!context.Users.Any())
             {
-                var adminUser = new KamatekCrm.Shared.Models.User
+                var adminUser = new User
                 {
                     Username = "admin",
                     Ad = "Sistem",
@@ -24,10 +23,8 @@ namespace KamatekCrm.Data
                 context.SaveChanges();
             }
 
-            // Eğer müşteri varsa veritabanı dolu demektir, çık.
             if (context.Customers.Any()) return;
 
-            // 1. Müşteriler
             var customer1 = new Customer
             {
                 FullName = "Ahmet Yılmaz",
@@ -66,7 +63,6 @@ namespace KamatekCrm.Data
             context.Customers.AddRange(customer1, customer2);
             context.SaveChanges();
 
-            // 2. Transaksiyonlar (Ahmet Yılmaz borçlu olsun)
             var transaction1 = new Transaction
             {
                 CustomerId = customer1.Id,
@@ -88,7 +84,6 @@ namespace KamatekCrm.Data
             context.Transactions.AddRange(transaction1, transaction2);
             context.SaveChanges();
 
-            // 3. Ürünler
             var product1 = new Product
             {
                 ProductName = "Hikvision 4MP IP Dome Kamera",
@@ -112,7 +107,7 @@ namespace KamatekCrm.Data
                 SalePrice = 2500,
                 ProductCategoryType = ProductCategoryType.Intercom,
                 MinStockLevel = 10,
-                TotalStockQuantity = 3 // Kritik stok örneği için düşük
+                TotalStockQuantity = 3
             };
 
             var product3 = new Product
@@ -131,9 +126,6 @@ namespace KamatekCrm.Data
             context.Products.AddRange(product1, product2, product3);
             context.SaveChanges();
 
-            // 4. Envanter (Merkez Depo - ID: 1)
-            // Warehouse ID 1 (Merkez Depo) AppDbContext seed data içinde oluşuyor.
-            
             var inventory1 = new Inventory { ProductId = product1.Id, WarehouseId = 1, Quantity = 15 };
             var inventory2 = new Inventory { ProductId = product2.Id, WarehouseId = 1, Quantity = 3 };
             var inventory3 = new Inventory { ProductId = product3.Id, WarehouseId = 1, Quantity = 500 };
@@ -141,11 +133,10 @@ namespace KamatekCrm.Data
             context.Inventories.AddRange(inventory1, inventory2, inventory3);
             context.SaveChanges();
 
-            // 5. Servis İşleri
             var job1 = new ServiceJob
             {
                 CustomerId = customer1.Id,
-                JobCategory = JobCategory.SmartHome, // Telefon ekran değişimi kategorisi yoksa en yakını veya Other
+                JobCategory = JobCategory.SmartHome,
                 WorkOrderType = WorkOrderType.Repair,
                 Status = JobStatus.WaitingForParts,
                 Priority = JobPriority.Normal,

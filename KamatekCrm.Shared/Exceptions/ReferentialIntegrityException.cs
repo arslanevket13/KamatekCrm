@@ -1,11 +1,11 @@
 using System;
 
-namespace KamatekCrm.Exceptions
+namespace KamatekCrm.Shared.Exceptions
 {
     /// <summary>
     /// Bağlı kayıt varken silme denendiğinde fırlatılan özel exception
     /// </summary>
-    public class ReferentialIntegrityException : Exception
+    public class ReferentialIntegrityException : DomainException
     {
         public string EntityType { get; }
         public int EntityId { get; }

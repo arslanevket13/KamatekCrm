@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,7 +7,8 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
-using KamatekCrm.Repositories;
+using KamatekCrm.Shared.Repositories;
+using KamatekCrm.Infrastructure.Repositories;
 using KamatekCrm.Services.Domain;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Views;
@@ -121,15 +122,15 @@ namespace KamatekCrm.ViewModels
             try
             {
                 // Load Products
-                var products = await _unitOfWork.Context.Products.OrderBy(p => p.ProductName).ToListAsync();
+                var products = await ((UnitOfWork)_unitOfWork).Context.Products.OrderBy(p => p.ProductName).ToListAsync();
                 ProductList = new ObservableCollection<Product>(products);
 
                 // Load Suppliers
-                var suppliers = await _unitOfWork.Context.Suppliers.OrderBy(s => s.CompanyName).ToListAsync();
+                var suppliers = await ((UnitOfWork)_unitOfWork).Context.Suppliers.OrderBy(s => s.CompanyName).ToListAsync();
                 Suppliers = new ObservableCollection<Supplier>(suppliers);
 
                 // Load Orders (Recent 50?)
-                var orders = await _unitOfWork.Context.PurchaseOrders
+                var orders = await ((UnitOfWork)_unitOfWork).Context.PurchaseOrders
                     .Include(o => o.Supplier)
                     .OrderByDescending(o => o.OrderDate)
                     .Take(50)
@@ -323,14 +324,14 @@ namespace KamatekCrm.ViewModels
                     Items = new ObservableCollection<PurchaseOrderItem>(CurrentOrderItems)
                 };
 
-                _unitOfWork.Context.PurchaseOrders.Add(order);
+                ((UnitOfWork)_unitOfWork).Context.PurchaseOrders.Add(order);
                 await _unitOfWork.SaveChangesAsync();
 
                 // 2. Otomatik teslim al (stok artır + WAC hesapla + cari borç)
                 if (autoReceive)
                 {
                     // Varsayılan depoyu bul
-                    var warehouse = await _unitOfWork.Context.Warehouses
+                    var warehouse = await ((UnitOfWork)_unitOfWork).Context.Warehouses
                         .FirstOrDefaultAsync(w => w.IsActive);
                     var warehouseId = warehouse?.Id ?? 1;
 

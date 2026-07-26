@@ -14,7 +14,7 @@ using KamatekCrm.Configuration;
 using Serilog;
 using Wpf.Ui.Appearance;
 using Microsoft.EntityFrameworkCore;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 
 namespace KamatekCrm
 {
@@ -70,27 +70,7 @@ namespace KamatekCrm
                         // MainWindow'u DI container'a ekle
                         services.AddTransient<MainWindow>();
 
-                        // 1. Thread-safe Provider'ı Singleton olarak ekliyoruz
-                        services.AddSingleton<IDatabaseConnectionProvider, DatabaseConnectionProvider>();
-
-                        // 2. DbContextFactory'yi dinamik Connection String alacak şekilde yapılandırıyoruz
-                        services.AddDbContextFactory<KamatekCrm.Data.AppDbContext>((sp, options) =>
-                        {
-                            var connectionProvider = sp.GetRequiredService<IDatabaseConnectionProvider>();
-                            try
-                            {
-                                var connString = connectionProvider.GetConnectionString();
-                                options.UseNpgsql(connString);
-                            }
-                            catch (InvalidOperationException)
-                            {
-                                // Henüz ağ keşfi yapılmadıysa Design-Time veya başlangıç için yedek string
-                                options.UseNpgsql("Host=127.0.0.1;Database=kamatekcrm;Username=postgres;Password=1313"); 
-                            }
-                        });
-
-                        // 3. Arka plan servislerini ekliyoruz (Web server YOK, IHostedService olarak çalışacaklar)
-                        // Singleton olarak kaydet ki ViewModeller (LoginViewModel) inject edebilsin.
+                        // Arka plan servisleri (IHostedService)
                         services.AddSingleton<NetworkDiscoveryService>();
                         services.AddHostedService(provider => provider.GetRequiredService<NetworkDiscoveryService>());
 
@@ -101,33 +81,27 @@ namespace KamatekCrm
 
                 // Service Provider'ı global erişime aç
                 ServiceProvider = _host.Services;
-                
-                // Token storage removed
 
                 // Global WPF exception handler'ları kur
                 DispatcherUnhandledException += OnDispatcherUnhandledException;
                 AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
                 TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
-                // Host'u başlat (web server YOK, sadece DI lifecycle). IHostedService'ler otomatik başlar.
                 await _host.StartAsync();
 
                 // ---------------------------------------------------------
-                // MIGRATION & SEEDING GARANTİSİ (Uygulama açılışında zorla)
+                // MIGRATION & SEEDING GARANTİSİ (Uygulama açılışında)
                 // ---------------------------------------------------------
                 using (var scope = ServiceProvider.CreateScope())
                 {
                     try
                     {
-                        var dbContext = scope.ServiceProvider.GetRequiredService<KamatekCrm.Data.AppDbContext>();
-                        
-                        // Veritabanının var olduğundan ve güncel olduğundan emin ol
+                        var dbContext = scope.ServiceProvider.GetRequiredService<KamatekCrm.Infrastructure.Data.AppDbContext>();
                         await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.MigrateAsync(dbContext.Database);
 
-                        // Eğer Users (Kullanıcılar) tablosu boşsa, varsayılan admin (123) hesabını oluştur.
                         if (!System.Linq.Queryable.Any(dbContext.Users))
                         {
-                            KamatekCrm.Data.DbSeeder.SeedDemoData(dbContext);
+                            KamatekCrm.Infrastructure.Data.DbSeeder.SeedDemoData(dbContext);
                         }
                     }
                     catch (Exception ex)

@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
@@ -21,7 +21,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class UsersViewModel : ViewModelBase
     {
-        private readonly IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
+        private readonly IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
@@ -113,7 +113,7 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public UsersViewModel(
             IAuthService authService,
-            IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory,
+            IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory,
             IToastService toastService,
             ILoadingService loadingService)
         {

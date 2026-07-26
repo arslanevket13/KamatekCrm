@@ -1,6 +1,6 @@
-namespace KamatekCrm.Exceptions
+namespace KamatekCrm.Shared.Exceptions
 {
-    public class ValidationException : Exception
+    public class ValidationException : DomainException
     {
         public List<string> Errors { get; }
 

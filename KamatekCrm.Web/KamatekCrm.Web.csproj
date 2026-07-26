@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KamatekCRM\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
+    <ProjectReference Include="..\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

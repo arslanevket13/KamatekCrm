@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using LiveChartsCore;

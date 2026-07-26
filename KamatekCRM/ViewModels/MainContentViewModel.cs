@@ -5,7 +5,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
-using KamatekCrm.Repositories;
+using KamatekCrm.Shared.Repositories;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace KamatekCrm.ViewModels

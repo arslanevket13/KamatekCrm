@@ -1,6 +1,7 @@
 using System.Windows;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;
+using KamatekCrm.Infrastructure.Data;
 
 namespace KamatekCrm.Views
 {
@@ -14,7 +15,7 @@ namespace KamatekCrm.Views
         public QuickAssetAddWindow(int customerId)
         {
             InitializeComponent();
-            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext>>(App.ServiceProvider!);
+            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>>(App.ServiceProvider!);
             var viewModel = new QuickAssetAddViewModel(customerId, dbContextFactory);
             viewModel.RequestClose += (result) =>
             {

@@ -16,7 +16,7 @@ namespace KamatekCrm.Views
         }
 
         // Keep this for legacy if needed, but parameterless is preferred for our new flow
-        public EditUserView(User user, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory, IToastService toastService, ILoadingService loadingService)
+        public EditUserView(User user, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory, IToastService toastService, ILoadingService loadingService)
         {
             InitializeComponent();
             DataContext = new EditUserViewModel(user, dbContextFactory, toastService, loadingService);

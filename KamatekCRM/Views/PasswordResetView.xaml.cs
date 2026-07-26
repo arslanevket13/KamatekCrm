@@ -10,7 +10,7 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class PasswordResetView : Window
     {
-        public PasswordResetView(User user, IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory)
+        public PasswordResetView(User user, IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory)
         {
             InitializeComponent();
 

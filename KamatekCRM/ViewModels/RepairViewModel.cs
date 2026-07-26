@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -17,14 +17,14 @@ namespace KamatekCrm.ViewModels
 {
     public partial class RepairViewModel : ViewModelBase
     {
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
 
         public RepairViewModel(
             IAuthService authService,
-            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory,
+            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory,
             IToastService toastService,
             ILoadingService loadingService)
         {

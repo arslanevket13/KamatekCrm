@@ -1,22 +1,27 @@
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
-using KamatekCrm.Settings;
 using KamatekCrm.Shared.Models.Common;
+using KamatekCrm.Shared.Models.Specs;
+using KamatekCrm.Shared.Models.JobDetails;
 
-namespace KamatekCrm.Data
+namespace KamatekCrm.Infrastructure.Data
 {
     /// <summary>
     /// Entity Framework DbContext - Veri tabanı bağlantısı ve yapılandırması
-    /// Hibrit mimari: SQLite (geliştirme) ve SQL Server (production) desteği
+    /// Hibrit mimari: SQLite (geliştirme) ve SQL Server/PostgreSQL (production) desteği
     /// </summary>
     public class AppDbContext : DbContext
     {
-
         public AppDbContext()
         {
-            // EnsureCreated migration ile çakışır, kaldırıldı
-            // Database migration ile oluşturulur: dotnet ef database update
         }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
@@ -62,14 +67,13 @@ namespace KamatekCrm.Data
         public DbSet<Quote> Quotes { get; set; }
         public DbSet<QuoteLine> QuoteLines { get; set; }
 
-
         // --- Kasa / Finans ---
         public DbSet<CashTransaction> CashTransactions { get; set; }
 
         // --- Dijital Arşiv ---
         public DbSet<Attachment> Attachments { get; set; }
 
-        // --- Teknisyen Web App (YENİ) ---
+        // --- Teknisyen Web App ---
         public DbSet<TaskPhoto> TaskPhotos { get; set; }
 
         // --- ERP Major Update (POS & Purchasing) ---
@@ -87,7 +91,6 @@ namespace KamatekCrm.Data
         public DbSet<RoutePoint> RoutePoints { get; set; }
         public DbSet<TechnicianLocation> TechnicianLocations { get; set; }
 
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -103,34 +106,28 @@ namespace KamatekCrm.Data
             // Global Query Filter for Soft Delete
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
-                if (typeof(KamatekCrm.Shared.Models.Common.ISoftDeletable).IsAssignableFrom(entityType.ClrType))
+                if (typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
                 {
-                    var parameter = System.Linq.Expressions.Expression.Parameter(entityType.ClrType, "e");
-                    var body = System.Linq.Expressions.Expression.Equal(
-                        System.Linq.Expressions.Expression.Property(parameter, nameof(KamatekCrm.Shared.Models.Common.ISoftDeletable.IsDeleted)),
-                        System.Linq.Expressions.Expression.Constant(false)
+                    var parameter = Expression.Parameter(entityType.ClrType, "e");
+                    var body = Expression.Equal(
+                        Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted)),
+                        Expression.Constant(false)
                     );
-                    var lambda = System.Linq.Expressions.Expression.Lambda(body, parameter);
+                    var lambda = Expression.Lambda(body, parameter);
                     
                     modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
                 }
             }
 
             // PostgreSQL xmin Concurrency Global Configuration
-            if (AppSettings.UsePostgreSql)
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
-                foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-                {
-                    // Her Entity için xmin'i concurrency token olarak tanımla
-                    modelBuilder.Entity(entityType.ClrType)
-                                .Property<uint>("xmin")
-                                .HasColumnType("xid")
-                                .ValueGeneratedOnAddOrUpdate()
-                                .IsConcurrencyToken();
-                }
+                modelBuilder.Entity(entityType.ClrType)
+                            .Property<uint>("xmin")
+                            .HasColumnType("xid")
+                            .ValueGeneratedOnAddOrUpdate()
+                            .IsConcurrencyToken();
             }
-
-            // --- Inventory Modülü İlişkileri ---
 
             // Inventory - Composite Key (ProductId + WarehouseId)
             modelBuilder.Entity<Inventory>()
@@ -146,26 +143,22 @@ namespace KamatekCrm.Data
                 .WithMany(w => w.Inventories)
                 .HasForeignKey(i => i.WarehouseId);
 
-            // Warehouse Yapılandırması
             modelBuilder.Entity<Warehouse>().HasData(
                 new Warehouse { Id = 1, Name = "Merkez Depo", Type = WarehouseType.MainWarehouse, IsActive = true },
                 new Warehouse { Id = 2, Name = "Servis Aracı 1", Type = WarehouseType.Vehicle, IsActive = true }
              );
 
-            // Category - Tree Structure
             modelBuilder.Entity<Category>()
                 .HasOne(c => c.ParentCategory)
                 .WithMany(c => c.SubCategories)
                 .HasForeignKey(c => c.ParentCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-            // StockTransaction Yapılandırması
             modelBuilder.Entity<StockTransaction>()
                 .HasOne(t => t.SourceWarehouse)
                 .WithMany()
                 .HasForeignKey(t => t.SourceWarehouseId)
-                .OnDelete(DeleteBehavior.Restrict); // Döngüsel silmeyi önlemek için
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<StockTransaction>()
                 .HasOne(t => t.TargetWarehouse)
@@ -178,19 +171,14 @@ namespace KamatekCrm.Data
                 .WithMany(p => p.Transactions)
                 .HasForeignKey(t => t.ProductId);
 
-            // ProductUnique SKU
             modelBuilder.Entity<Product>()
                 .HasIndex(p => p.SKU)
                 .IsUnique();
 
-            // ProductSerial Unique SerialNumber
             modelBuilder.Entity<ProductSerial>()
                 .HasIndex(s => s.SerialNumber)
                 .IsUnique();
 
-            // --- Mevcut Konfigürasyonlar (Güncellendi) ---
-
-            // Customer Yapılandırması
             modelBuilder.Entity<Customer>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -199,47 +187,40 @@ namespace KamatekCrm.Data
                 entity.Ignore(e => e.FullAddress);
             });
 
-            // Product Yapılandırması
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.Property(e => e.ProductName).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.SalePrice).HasColumnType("decimal(18,2)");
                 
-                // PostgreSQL JSONB Support (Polymorphic Value Converter)
-                // EF Core .ToJson() DOES NOT support polymorphism. We must use a ValueConverter.
                 entity.Property(e => e.Specifications)
                       .HasColumnType("jsonb")
                       .HasConversion(
-                          v => System.Text.Json.JsonSerializer.Serialize(v, new System.Text.Json.JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull }),
-                          v => System.Text.Json.JsonSerializer.Deserialize<KamatekCrm.Shared.Models.Specs.ProductSpecBase>(v, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new KamatekCrm.Shared.Models.Specs.GeneralSpecs()
+                          v => JsonSerializer.Serialize(v, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }),
+                          v => JsonSerializer.Deserialize<ProductSpecBase>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new GeneralSpecs()
                       );
             });
 
-            // ServiceJob JSONB Mapping
             modelBuilder.Entity<ServiceJob>(entity =>
             {
                 entity.Property(e => e.JobDetails)
                       .HasColumnType("jsonb")
                       .HasConversion(
-                          v => System.Text.Json.JsonSerializer.Serialize(v, new System.Text.Json.JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull }),
-                          v => System.Text.Json.JsonSerializer.Deserialize<KamatekCrm.Shared.Models.JobDetails.JobDetailBase>(v, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new KamatekCrm.Shared.Models.JobDetails.GeneralJobDetail()
+                          v => JsonSerializer.Serialize(v, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }),
+                          v => JsonSerializer.Deserialize<JobDetailBase>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new GeneralJobDetail()
                       );
             });
 
-            // Seed Data
             modelBuilder.Entity<Brand>().HasData(
                 new Brand { Id = 1, Name = "Hikvision" },
                 new Brand { Id = 2, Name = "Dahua" },
                 new Brand { Id = 3, Name = "Next" }
             );
 
-            // Mevcut kategori verileri varsa çakışabilir, ancak parentId null olacağı için sorun olmaz.
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 3, Name = "Diafon" }
             );
 
-            // --- TaskPhoto Configuration ---
             modelBuilder.Entity<TaskPhoto>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -257,7 +238,6 @@ namespace KamatekCrm.Data
                 entity.HasIndex(e => new { e.TaskId, e.IsDeleted });
             });
 
-            // --- ServiceJobHistory Configuration ---
             modelBuilder.Entity<ServiceJobHistory>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -270,7 +250,6 @@ namespace KamatekCrm.Data
                 entity.HasIndex(e => e.PerformedAt);
             });
 
-            // --- SalesOrderPayment Configuration ---
             modelBuilder.Entity<SalesOrderPayment>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -280,9 +259,6 @@ namespace KamatekCrm.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // --- ERP Major Update Configurations ---
-
-            // Product — Barcode index for fast POS lookup
             modelBuilder.Entity<Product>()
                 .HasIndex(p => p.Barcode);
 
@@ -291,7 +267,6 @@ namespace KamatekCrm.Data
                 entity.Property(e => e.AverageCost).HasColumnType("decimal(18,4)");
             });
 
-            // --- POS Transaction ---
             modelBuilder.Entity<PosTransaction>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -318,7 +293,6 @@ namespace KamatekCrm.Data
                       .OnDelete(DeleteBehavior.SetNull);
             });
 
-            // --- POS Transaction Line ---
             modelBuilder.Entity<PosTransactionLine>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -335,7 +309,6 @@ namespace KamatekCrm.Data
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // --- Purchase Invoice ---
             modelBuilder.Entity<PurchaseInvoice>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -356,7 +329,6 @@ namespace KamatekCrm.Data
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // --- Purchase Invoice Line ---
             modelBuilder.Entity<PurchaseInvoiceLine>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -373,12 +345,6 @@ namespace KamatekCrm.Data
             });
         }
 
-            // Helper to get current user
-        private string GetCurrentUser()
-        {
-            return App.CurrentUser?.Username ?? "System";
-        }
-
         public override int SaveChanges()
         {
             ApplyAuditInformation();
@@ -393,9 +359,8 @@ namespace KamatekCrm.Data
 
         private void ApplyAuditInformation()
         {
-            var entries = ChangeTracker.Entries<KamatekCrm.Shared.Models.Common.BaseEntity>();
-            var currentUser = GetCurrentUser();
-            // PostgreSQL requires UTC
+            var entries = ChangeTracker.Entries<BaseEntity>();
+            var currentUser = "System";
             var timestamp = DateTime.UtcNow;
 
             foreach (var entry in entries)
@@ -409,21 +374,19 @@ namespace KamatekCrm.Data
                         break;
 
                     case EntityState.Modified:
-                        if (!entry.Entity.IsDeleted) // Don't overwrite delete info if it's being deleted
+                        if (!entry.Entity.IsDeleted)
                         {
                             entry.Entity.ModifiedDate = timestamp;
                             entry.Entity.ModifiedBy = currentUser;
                         }
                         break;
 
-                                        case EntityState.Deleted:
-                        // Convert physical delete to soft delete
+                    case EntityState.Deleted:
                         entry.State = EntityState.Modified;
                         entry.Entity.IsDeleted = true;
                         entry.Entity.DeletedAt = timestamp;
                         entry.Entity.DeletedBy = currentUser;
 
-                        // Soft Cascade Delete
                         foreach (var navigation in entry.Metadata.GetNavigations())
                         {
                             if (navigation.IsCollection)
@@ -438,7 +401,7 @@ namespace KamatekCrm.Data
                                 {
                                     foreach (var dependent in collection.CurrentValue)
                                     {
-                                        if (dependent is KamatekCrm.Shared.Models.Common.ISoftDeletable sd)
+                                        if (dependent is ISoftDeletable sd)
                                         {
                                             var dependentEntry = Entry(dependent);
                                             dependentEntry.State = EntityState.Modified;
@@ -456,5 +419,3 @@ namespace KamatekCrm.Data
         }
     }
 }
-
-

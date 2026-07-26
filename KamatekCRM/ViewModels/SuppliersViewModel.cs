@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,7 +6,8 @@ using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Models;
-using KamatekCrm.Repositories;
+using KamatekCrm.Shared.Repositories;
+using KamatekCrm.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
@@ -77,7 +78,7 @@ namespace KamatekCrm.ViewModels
             IsBusy = true;
             try
             {
-                var query = _unitOfWork.Context.Suppliers.AsQueryable();
+                var query = ((UnitOfWork)_unitOfWork).Context.Suppliers.AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(SearchText))
                 {
@@ -126,15 +127,15 @@ namespace KamatekCrm.ViewModels
             {
                 if (SelectedSupplier.Id == 0)
                 {
-                    _unitOfWork.Context.Suppliers.Add(SelectedSupplier);
+                    ((UnitOfWork)_unitOfWork).Context.Suppliers.Add(SelectedSupplier);
                 }
                 else
                 {
                      // Ensure attached if not tracked (simple approach for this task)
-                     if (_unitOfWork.Context.Entry(SelectedSupplier).State == EntityState.Detached)
+                     if (((UnitOfWork)_unitOfWork).Context.Entry(SelectedSupplier).State == EntityState.Detached)
                      {
-                        _unitOfWork.Context.Suppliers.Attach(SelectedSupplier);
-                        _unitOfWork.Context.Entry(SelectedSupplier).State = EntityState.Modified;
+                        ((UnitOfWork)_unitOfWork).Context.Suppliers.Attach(SelectedSupplier);
+                        ((UnitOfWork)_unitOfWork).Context.Entry(SelectedSupplier).State = EntityState.Modified;
                      }
                 }
 
@@ -163,7 +164,7 @@ namespace KamatekCrm.ViewModels
                 IsBusy = true;
                 try
                 {
-                    _unitOfWork.Context.Suppliers.Remove(SelectedSupplier);
+                    ((UnitOfWork)_unitOfWork).Context.Suppliers.Remove(SelectedSupplier);
                     await _unitOfWork.SaveChangesAsync();
                     SelectedSupplier = null;
                     await Refresh();

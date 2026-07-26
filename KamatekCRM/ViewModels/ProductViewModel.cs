@@ -10,7 +10,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using ClosedXML.Excel;
 using CommunityToolkit.Mvvm.Input;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services.Domain;

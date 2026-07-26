@@ -1,6 +1,6 @@
-namespace KamatekCrm.Exceptions
+namespace KamatekCrm.Shared.Exceptions
 {
-    public class NotFoundException : Exception
+    public class NotFoundException : DomainException
     {
         public string EntityName { get; }
         public object EntityId { get; }

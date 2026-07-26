@@ -8,7 +8,7 @@ namespace KamatekCrm.Views
         public QuotationWindow()
         {
             InitializeComponent();
-            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext>>(App.ServiceProvider);
+            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>>(App.ServiceProvider);
             DataContext = new KamatekCrm.ViewModels.QuotationViewModel(dbContextFactory);
         }
 

@@ -1,6 +1,6 @@
 using System;
 using FluentAssertions;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;

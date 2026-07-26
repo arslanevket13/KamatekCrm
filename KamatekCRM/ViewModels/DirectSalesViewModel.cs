@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
@@ -23,7 +23,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class DirectSalesViewModel : ViewModelBase
     {
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
@@ -197,7 +197,7 @@ namespace KamatekCrm.ViewModels
 
         public DirectSalesViewModel(
             IAuthService authService,
-            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory,
+            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory,
             IToastService toastService,
             ILoadingService loadingService)
         {

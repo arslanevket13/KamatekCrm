@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using KamatekCrm.Repositories;
+using KamatekCrm.Shared.Repositories;
+using KamatekCrm.Infrastructure.Repositories;
 using KamatekCrm.Services;
 using KamatekCrm.Services.Domain;
 using KamatekCrm.Shared.Enums;
@@ -260,7 +261,7 @@ namespace KamatekCrm.ViewModels
             IsBusy = true;
             try
             {
-                var suppliers = await _unitOfWork.Context.Suppliers
+                var suppliers = await ((UnitOfWork)_unitOfWork).Context.Suppliers
                     .Where(s => s.IsActive)
                     .OrderBy(s => s.CompanyName)
                     .ToListAsync();
@@ -302,7 +303,7 @@ namespace KamatekCrm.ViewModels
 
                 await Task.Delay(300, token); // Debounce
 
-                var results = await _unitOfWork.Context.Products
+                var results = await ((UnitOfWork)_unitOfWork).Context.Products
                     .Where(p => EF.Functions.ILike(p.ProductName, $"%{query}%") || 
                                 EF.Functions.ILike(p.SKU, $"%{query}%") || 
                                 EF.Functions.ILike(p.Barcode, $"%{query}%"))
@@ -430,7 +431,7 @@ namespace KamatekCrm.ViewModels
                             AverageCost = 0,
                             ProductCategoryType = ProductCategoryType.Other // Default
                         };
-                        _unitOfWork.Context.Products.Add(newProd);
+                        ((UnitOfWork)_unitOfWork).Context.Products.Add(newProd);
                         await _unitOfWork.SaveChangesAsync(); // To get the new ID
                         productId = newProd.Id;
                     }
@@ -438,7 +439,7 @@ namespace KamatekCrm.ViewModels
                     {
                         productId = line.ProductId!.Value;
                         // Opsiyonel: Ürünün mevcut KDV oranını da güncelleyebiliriz
-                        // var existingProduct = await _unitOfWork.Context.Products.FindAsync(productId);
+                        // var existingProduct = await ((UnitOfWork)_unitOfWork).Context.Products.FindAsync(productId);
                         // if(existingProduct != null) { existingProduct.VatRate = line.VatRate; }
                     }
 
@@ -457,11 +458,11 @@ namespace KamatekCrm.ViewModels
                     order.TotalAmount += poItem.LineTotal;
                 }
 
-                _unitOfWork.Context.PurchaseOrders.Add(order);
+                ((UnitOfWork)_unitOfWork).Context.PurchaseOrders.Add(order);
                 await _unitOfWork.SaveChangesAsync(); // Save PO to get PO Id
 
                 // Stok İşlemi İçin Domain Service Çağrısı
-                var defaultWarehouse = await _unitOfWork.Context.Warehouses.FirstOrDefaultAsync(w => w.IsActive);
+                var defaultWarehouse = await ((UnitOfWork)_unitOfWork).Context.Warehouses.FirstOrDefaultAsync(w => w.IsActive);
                 var warehouseId = defaultWarehouse?.Id ?? 1;
 
                 var result = await _purchasingService.CompletePurchaseOrderAsync(new PurchaseCompletionRequest
@@ -504,7 +505,7 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                var orders = await _unitOfWork.Context.PurchaseOrders
+                var orders = await ((UnitOfWork)_unitOfWork).Context.PurchaseOrders
                     .Include(o => o.Supplier)
                     .OrderByDescending(o => o.OrderDate)
                     .Take(20)

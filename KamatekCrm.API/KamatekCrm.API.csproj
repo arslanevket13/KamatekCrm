@@ -41,7 +41,7 @@
 
   <ItemGroup>
     <!-- Shared Project Reference -->
-    <ProjectReference Include="..\KamatekCrm\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
+    <ProjectReference Include="..\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

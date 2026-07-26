@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Services;
+using KamatekCrm.Shared.Services;
 using MediatR; // Or Prism.Events if they use Prism, wait the old code used EventAggregator.Instance.Publish
 
 namespace KamatekCrm.Services
@@ -75,10 +76,10 @@ namespace KamatekCrm.Services
                     {
                         _logger.LogInformation("Veritabanı yapılandırması kontrol ediliyor...");
                         using var scope = KamatekCrm.App.ServiceProvider.CreateScope();
-                        var dbContext = scope.ServiceProvider.GetRequiredService<KamatekCrm.Data.AppDbContext>();
+                        var dbContext = scope.ServiceProvider.GetRequiredService<KamatekCrm.Infrastructure.Data.AppDbContext>();
                         
                         await dbContext.Database.MigrateAsync(stoppingToken);
-                        KamatekCrm.Data.DbSeeder.SeedDemoData(dbContext);
+                        KamatekCrm.Infrastructure.Data.DbSeeder.SeedDemoData(dbContext);
                         _logger.LogInformation("Veritabanı yapılandırması ve tohumlama (Seeding) tamamlandı.");
                     }
                     catch (Exception ex)

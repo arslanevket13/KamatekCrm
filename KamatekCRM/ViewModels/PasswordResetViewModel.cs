@@ -14,7 +14,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class PasswordResetViewModel : ViewModelBase
     {
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> _dbContextFactory;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly User _user;
 
@@ -89,7 +89,7 @@ namespace KamatekCrm.ViewModels
         public event Action? SaveSuccessful;
         public event Action? CancelRequested;
 
-        public PasswordResetViewModel(User user, IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Data.AppDbContext> dbContextFactory)
+        public PasswordResetViewModel(User user, IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory)
         {
             _user = user;
             _authService = authService;
