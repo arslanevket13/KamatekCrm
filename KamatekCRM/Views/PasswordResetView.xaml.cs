@@ -17,13 +17,13 @@ namespace KamatekCrm.Views
             var viewModel = new PasswordResetViewModel(user, authService, dbContextFactory);
             viewModel.SaveSuccessful += () =>
             {
-                DialogResult = true;
+                try { DialogResult = true; } catch { }
                 Close();
             };
             
             viewModel.CancelRequested += () =>
             {
-                DialogResult = false;
+                try { DialogResult = false; } catch { }
                 Close();
             };
 

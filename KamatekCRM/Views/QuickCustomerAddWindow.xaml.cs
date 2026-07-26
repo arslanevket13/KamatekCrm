@@ -11,7 +11,7 @@ namespace KamatekCrm.Views
             var vm = new KamatekCrm.ViewModels.QuickCustomerAddViewModel(dbContextFactory);
             vm.RequestClose += success =>
             {
-                DialogResult = success;
+                try { DialogResult = success; } catch { }
                 Close();
             };
             DataContext = vm;

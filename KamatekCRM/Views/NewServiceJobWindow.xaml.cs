@@ -15,13 +15,13 @@ namespace KamatekCrm.Views
             
             vm.CancelRequested += () =>
             {
-                DialogResult = false;
+                try { DialogResult = false; } catch { }
                 Close();
             };
 
             vm.SaveCompleted += () =>
             {
-                DialogResult = true;
+                try { DialogResult = true; } catch { }
                 Close();
             };
 

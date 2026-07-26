@@ -19,7 +19,7 @@ namespace KamatekCrm.Views
             var viewModel = new QuickAssetAddViewModel(customerId, dbContextFactory);
             viewModel.RequestClose += (result) =>
             {
-                DialogResult = result;
+                try { DialogResult = result; } catch { }
                 Close();
             };
             

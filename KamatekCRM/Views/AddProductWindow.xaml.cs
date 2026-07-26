@@ -30,7 +30,7 @@ namespace KamatekCrm.Views
 
         private void OnRequestClose(bool result)
         {
-            DialogResult = result;
+            try { DialogResult = result; } catch { }
             Close();
         }
 
@@ -46,8 +46,8 @@ namespace KamatekCrm.Views
 
         private void CloseWindow_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
-            this.Close();
+            try { DialogResult = false; } catch { }
+            Close();
         }
     }
 }

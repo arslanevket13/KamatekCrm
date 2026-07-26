@@ -16,7 +16,7 @@ namespace KamatekCrm.Views
 
             viewModel.RequestClose += (result) =>
             {
-                DialogResult = result;
+                try { DialogResult = result; } catch { }
                 Close();
             };
         }
