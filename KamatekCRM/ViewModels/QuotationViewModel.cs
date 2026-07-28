@@ -288,6 +288,39 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
+        private void AddProductDirect(Product? product)
+        {
+            if (product == null) return;
+
+            var existingLine = QuoteLines.FirstOrDefault(l => l.ProductId == product.Id);
+            if (existingLine != null)
+            {
+                existingLine.Quantity += 1;
+                existingLine.LineTotal = CalculateLineTotal(existingLine);
+            }
+            else
+            {
+                var line = new QuoteLine
+                {
+                    ProductId = product.Id,
+                    Product = product,
+                    ProductName = product.ProductName,
+                    ProductCode = product.SKU,
+                    Quantity = 1,
+                    Unit = product.Unit ?? "Adet",
+                    UnitPrice = product.SalePrice,
+                    DiscountPercent = 0,
+                    TaxPercent = product.VatRate,
+                    CurrentStockQuantity = product.TotalStockQuantity
+                };
+                line.LineTotal = CalculateLineTotal(line);
+                QuoteLines.Add(line);
+            }
+
+            UpdateTotals();
+        }
+
+        [RelayCommand]
         private void RemoveLine(QuoteLine line)
         {
             if (line != null)

@@ -34,14 +34,23 @@
                     </StackPanel>
                     
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                        <Button Content="💾 Teklifi Kaydet" Command="{Binding SaveQuoteCommand}" 
-                                Height="36" Padding="16,0" Margin="0,0,8,0"
-                                Background="{DynamicResource ThemePrimary}" 
-                                Foreground="{DynamicResource TextInverseBrush}" FontWeight="SemiBold"/>
-                        <Button Content="🖨️ PDF Oluştur" Command="{Binding ExportPdfCommand}" 
-                                Height="36" Padding="16,0"
-                                Background="{DynamicResource ApplicationBackgroundBrush}" 
-                                Foreground="{DynamicResource TextBodyBrush}" BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}"/>
+                        <Button Command="{Binding SaveQuoteCommand}" 
+                                Style="{StaticResource ModernButton}" Height="36" Padding="16,0" Margin="0,0,8,0"
+                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Save24" Margin="0,0,6,0"/>
+                                <TextBlock Text="Teklifi Kaydet" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding ExportPdfCommand}" 
+                                Style="{StaticResource ModernButton}" Height="36" Padding="16,0"
+                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                                BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="DocumentPdf24" Margin="0,0,6,0"/>
+                                <TextBlock Text="PDF Oluştur" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </DockPanel>
             </Border>
@@ -90,16 +99,34 @@
 
                         <DockPanel Grid.Row="0" Margin="0,0,0,12">
                             <TextBlock Text="Teklif Kalemleri" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                            <Button Content="+ Malzeme Ekle" Command="{Binding ToggleSidebarCommand}" HorizontalAlignment="Right" Height="32" Padding="12,0"/>
+                            <Button Command="{Binding ToggleSidebarCommand}" Style="{StaticResource ModernButton}" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" HorizontalAlignment="Right" Height="32" Padding="12,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Add24" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Malzeme Ekle" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
                         </DockPanel>
 
                         <DataGrid Grid.Row="1" ItemsSource="{Binding QuoteLines}" AutoGenerateColumns="False" CanUserAddRows="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Ürün / Hizmet" Binding="{Binding ProductName}" Width="*"/>
                                 <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity, StringFormat={}{0:N0}}" Width="80"/>
-                                <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, StringFormat={}{0:C2}}" Width="100"/>
+                                <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, StringFormat={}{0:C2}}" Width="110"/>
                                 <DataGridTextColumn Header="İskonto %" Binding="{Binding DiscountPercent, StringFormat={}{0:N0}%}" Width="80"/>
-                                <DataGridTextColumn Header="Toplam" Binding="{Binding LineTotal, StringFormat={}{0:C2}}" Width="110"/>
+                                <DataGridTextColumn Header="Toplam" Binding="{Binding LineTotal, StringFormat={}{0:C2}}" Width="120" FontWeight="Bold"/>
+
+                                <!-- İŞLEMLER KOLONU (Sil) -->
+                                <DataGridTemplateColumn Header="İŞLEMLER" Width="80">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource ModernButton}" Background="Transparent" Padding="6" HorizontalAlignment="Center" ToolTip="Listeden Çıkar">
+                                                <ui:SymbolIcon Symbol="Delete24" Foreground="{DynamicResource SystemFillColorCriticalBrush}"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
 
@@ -154,7 +181,7 @@
 
                     <DockPanel Grid.Row="0" Margin="0,0,0,20">
                         <TextBlock Text="📦 Malzeme &amp; Hizmet Ekle" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                        <Button Content="✕" Command="{Binding ToggleSidebarCommand}" HorizontalAlignment="Right" Width="32" Height="32"/>
+                        <Button Content="✕" Command="{Binding ToggleSidebarCommand}" Style="{StaticResource ModernButton}" HorizontalAlignment="Right" Width="32" Height="32"/>
                     </DockPanel>
 
                     <!-- Search Input -->
@@ -163,9 +190,42 @@
                         <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
                     </StackPanel>
 
-                    <!-- Search Results List -->
-                    <Border Grid.Row="2" Background="{DynamicResource SurfacePageBackgroundBrush}" CornerRadius="8" Padding="8" Margin="0,0,0,16">
-                        <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedProduct}" DisplayMemberPath="ProductName" Height="300" Background="Transparent" BorderThickness="0"/>
+                    <!-- Search Results List with Rich Product Cards -->
+                    <Border Grid.Row="2" Background="{DynamicResource SurfacePageBackgroundBrush}" CornerRadius="8" Padding="4" Margin="0,0,0,16">
+                        <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedProduct}" Height="300" Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="6" Padding="10" Margin="0,0,0,6"
+                                            BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="{Binding ProductName}" FontWeight="Bold" FontSize="13" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                    <TextBlock Text="{Binding SKU, StringFormat='SKU: {0}'}" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,12,0"/>
+                                                    <TextBlock Text="{Binding TotalStockQuantity, StringFormat='Stok: {0}'}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource ThemeSuccess}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding SalePrice, StringFormat='₺{0:N2}'}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource ThemePrimary}"/>
+                                                <Button Command="{Binding DataContext.AddProductDirectCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource ModernButton}" Background="{DynamicResource ThemePrimaryLight}" Padding="6,2" Margin="0,4,0,0" HorizontalAlignment="Right">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <ui:SymbolIcon Symbol="Add12" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,4,0"/>
+                                                        <TextBlock Text="Ekle" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Border>
 
                     <!-- Quantity & Add Action -->
@@ -185,9 +245,14 @@
                             </StackPanel>
                         </Grid>
 
-                        <Button Content="➕ Teklife Ekle" Command="{Binding AddProductCommand}" 
-                                Height="40" Background="{DynamicResource AccentFillColorDefaultBrush}" 
-                                Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch"/>
+                        <Button Command="{Binding AddProductCommand}" 
+                                Style="{StaticResource ModernButton}" Height="40" Background="{DynamicResource ThemePrimary}" 
+                                Foreground="{DynamicResource TextInverseBrush}" FontWeight="Bold" HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Add24" Margin="0,0,8,0"/>
+                                <TextBlock Text="SEÇİLİ ÜRÜNÜ TEKLİFE EKLE" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Grid>
             </Border>
