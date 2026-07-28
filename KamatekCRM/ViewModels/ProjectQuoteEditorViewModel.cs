@@ -381,10 +381,39 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void AddFloor()
         {
-            if (SelectedNode?.Type != NodeType.Block) return;
+            var projectNode = RootNodes.FirstOrDefault();
+            if (projectNode == null)
+            {
+                projectNode = ProjectScopeService.CreateEmptyProjectTree(string.IsNullOrWhiteSpace(ProjectName) ? "Yeni Proje" : ProjectName);
+                RootNodes.Add(projectNode);
+            }
 
-            var floorCount = SelectedNode.Children.Count(c => c.Type == NodeType.Floor);
-            var floor = SelectedNode.AddChild($"{floorCount + 1}. Kat", NodeType.Floor);
+            ScopeNode? targetBlock = null;
+
+            if (SelectedNode?.Type == NodeType.Block)
+            {
+                targetBlock = SelectedNode;
+            }
+            else if (SelectedNode != null && SelectedNode.Parent != null)
+            {
+                var parent = SelectedNode.Parent;
+                while (parent != null && parent.Type != NodeType.Block)
+                {
+                    parent = parent.Parent;
+                }
+                targetBlock = parent;
+            }
+
+            // Fallback: If no block found in hierarchy, target the first block under project
+            targetBlock ??= projectNode.Children.FirstOrDefault(c => c.Type == NodeType.Block);
+
+            if (targetBlock == null)
+            {
+                targetBlock = projectNode.AddChild("A Blok", NodeType.Block);
+            }
+
+            var floorCount = targetBlock.Children.Count(c => c.Type == NodeType.Floor);
+            var floor = targetBlock.AddChild($"{floorCount + 1}. Kat", NodeType.Floor);
 
             SelectedNode = floor;
             NotifyFinancialsChanged();
@@ -393,29 +422,43 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void AddFlat()
         {
-            if (SelectedNode == null) return;
-
-            ScopeNode? targetParent = null;
-
-            // Eğer Kat seçiliyse, ona çocuk ekle
-            // Eğer Daire seçiliyse, onun ebeveynine (Kat) kardeş ekle
-            if (SelectedNode.Type == NodeType.Floor)
+            var projectNode = RootNodes.FirstOrDefault();
+            if (projectNode == null)
             {
-                targetParent = SelectedNode;
-            }
-            else if (SelectedNode.Type == NodeType.Flat && SelectedNode.Parent != null)
-            {
-                targetParent = SelectedNode.Parent;
+                projectNode = ProjectScopeService.CreateEmptyProjectTree(string.IsNullOrWhiteSpace(ProjectName) ? "Yeni Proje" : ProjectName);
+                RootNodes.Add(projectNode);
             }
 
-            // IMPORTANT: Ensure the new node's 'Parent' property is set correctly!
-            // Note: targetParent.AddChild() automatically sets the Parent property of the new child.
-            if (targetParent != null)
+            ScopeNode? targetFloor = null;
+
+            if (SelectedNode?.Type == NodeType.Floor)
             {
-                var flatCount = targetParent.Children.Count(c => c.Type == NodeType.Flat);
-                var flat = targetParent.AddChild($"Daire {flatCount + 1}", NodeType.Flat);
-                
-                // Yeni daireyi seç
+                targetFloor = SelectedNode;
+            }
+            else if (SelectedNode?.Type == NodeType.Flat && SelectedNode.Parent != null)
+            {
+                targetFloor = SelectedNode.Parent;
+            }
+            else if (SelectedNode?.Type == NodeType.Block)
+            {
+                targetFloor = SelectedNode.Children.FirstOrDefault(c => c.Type == NodeType.Floor);
+                if (targetFloor == null)
+                {
+                    targetFloor = SelectedNode.AddChild("1. Kat", NodeType.Floor);
+                }
+            }
+            else
+            {
+                // Find first available floor in any block
+                var firstBlock = projectNode.Children.FirstOrDefault(c => c.Type == NodeType.Block) ?? projectNode.AddChild("A Blok", NodeType.Block);
+                targetFloor = firstBlock.Children.FirstOrDefault(c => c.Type == NodeType.Floor) ?? firstBlock.AddChild("1. Kat", NodeType.Floor);
+            }
+
+            if (targetFloor != null)
+            {
+                var flatCount = targetFloor.Children.Count(c => c.Type == NodeType.Flat);
+                var flat = targetFloor.AddChild($"Daire {flatCount + 1}", NodeType.Flat);
+
                 SelectedNode = flat;
                 NotifyFinancialsChanged();
             }

@@ -8,12 +8,13 @@
         MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource PremiumWindowStyle}">
-    
+
     <Window.Resources>
         <!-- TreeView Item Template -->
         <HierarchicalDataTemplate x:Key="TreeNodeTemplate" ItemsSource="{Binding Children}">
-            <StackPanel Orientation="Horizontal" Margin="0">
-                <TextBlock Text="{Binding HeaderDisplay}" FontSize="14" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Margin="2,1">
+                <TextBlock Text="{Binding HeaderDisplay}" FontSize="13" FontWeight="Medium"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
             </StackPanel>
         </HierarchicalDataTemplate>
         
@@ -41,86 +42,68 @@
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>        <!-- Header -->
-        <Border Grid.Row="0" Background="{DynamicResource ThemePrimary}" CornerRadius="8" Padding="24,16" Margin="0,0,0,16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="🏗️ PROJE TEKLİF EDİTÖRÜ" 
-                               FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextInverseBrush}"/>
-                    <TextBlock Text="Profesyonel Mühendislik Tezgahı - Yapı Ağacı, Mahal Listesi, Ürün Kataloğu" 
-                               FontSize="12" Foreground="{DynamicResource TextInverseBrush}" Opacity="0.85" Margin="0,8,0,0"/>
-                </StackPanel>
-                
-                <!-- Proje Kodu -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding CurrentProject.ProjectCode}" FontSize="16" 
-                               FontWeight="Bold" Foreground="{DynamicResource TextInverseBrush}" Margin="0,0,24,0"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-        
-        <!-- Proje Bilgileri Bar -->
-        <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
+        </Grid.RowDefinitions>
+
+        <!-- Compact Sleek Header Bar -->
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,10" Margin="0,0,0,12"
                 BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250"/>
-                    <ColumnDefinition Width="250"/>
-                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                
-                <!-- Müşteri -->
-                <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                    <TextBlock Text="MÜŞTERİ" FontWeight="SemiBold" FontSize="10" 
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
-                    <ComboBox ItemsSource="{Binding Customers}"
-                               SelectedItem="{Binding SelectedCustomer}"
-                               DisplayMemberPath="FullName"
-                               Height="32"/>
+
+                <!-- Left: Compact Title & Code -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
+                    <ui:SymbolIcon Symbol="Building24" FontSize="20" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,8,0"/>
+                    <StackPanel>
+                        <TextBlock Text="PROJE TEKLİF EDİTÖRÜ" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="{Binding CurrentProject.ProjectCode}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}"/>
+                    </StackPanel>
                 </StackPanel>
-                
-                <!-- Proje Adı -->
-                <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                    <TextBlock Text="PROJE ADI" FontWeight="SemiBold" FontSize="10" 
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
-                    <TextBox Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged}"
-                             Height="32" Padding="8,4"/>
+
+                <!-- Customer Selection -->
+                <StackPanel Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <TextBlock Text="MÜŞTERİ" FontWeight="SemiBold" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                    <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="FullName" Height="30"/>
                 </StackPanel>
-                
-                <!-- Yapı Oluşturucu -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Bottom">
-                    <StackPanel Margin="0,0,16,0">
-                        <TextBlock Text="Blok" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <TextBox Text="{Binding BlockCount}" Width="50" Height="32" 
-                                 TextAlignment="Center" Padding="8"/>
+
+                <!-- Project Title -->
+                <StackPanel Grid.Column="2" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <TextBlock Text="PROJE ADI" FontWeight="SemiBold" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                    <TextBox Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged}" Height="30" Padding="6,2"/>
+                </StackPanel>
+
+                <!-- Compact Structure Generator -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <StackPanel Margin="0,0,8,0" VerticalAlignment="Center">
+                        <TextBlock Text="Blok" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBox Text="{Binding BlockCount}" Width="40" Height="28" TextAlignment="Center" Padding="0,2"/>
                     </StackPanel>
-                    <StackPanel Margin="0,0,16,0">
-                        <TextBlock Text="Kat" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <TextBox Text="{Binding FloorCount}" Width="50" Height="32" 
-                                 TextAlignment="Center" Padding="8"/>
+                    <StackPanel Margin="0,0,8,0" VerticalAlignment="Center">
+                        <TextBlock Text="Kat" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBox Text="{Binding FloorCount}" Width="40" Height="28" TextAlignment="Center" Padding="0,2"/>
                     </StackPanel>
-                    <StackPanel Margin="0,0,16,0">
-                        <TextBlock Text="Daire/Kat" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <TextBox Text="{Binding FlatsPerFloor}" Width="50" Height="32" 
-                                 TextAlignment="Center" Padding="8"/>
+                    <StackPanel Margin="0,0,12,0" VerticalAlignment="Center">
+                        <TextBlock Text="Daire/Kat" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBox Text="{Binding FlatsPerFloor}" Width="40" Height="28" TextAlignment="Center" Padding="0,2"/>
                     </StackPanel>
-                    <Button Content="🏗️ YAPI OLUŞTUR" Command="{Binding GenerateStructureCommand}"
-                            Background="{DynamicResource ThemeWarning}" Foreground="{DynamicResource TextInverseBrush}" FontWeight="SemiBold"
-                            Padding="16,4" BorderThickness="0" Height="32" Cursor="Hand"/>
+                    <Button Command="{Binding GenerateStructureCommand}" Style="{StaticResource ModernButton}" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" FontWeight="SemiBold" Padding="12,0" Height="30">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="AddSquare24" Margin="0,0,6,0"/>
+                            <TextBlock Text="Yapı Oluştur" FontSize="11" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
         
         <!-- Ana İçerik (3 Panel) -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280" MinWidth="200"/>
                 <ColumnDefinition Width="5"/>
@@ -146,14 +129,15 @@
                     
                     <!-- TreeView -->
                     <TreeView Grid.Row="1" ItemsSource="{Binding RootNodes}"
-                              ItemTemplate="{StaticResource TreeNodeTemplate}"
-                              BorderThickness="0" Padding="8"
-                              SelectedItemChanged="TreeView_SelectedItemChanged">
+                               ItemTemplate="{StaticResource TreeNodeTemplate}"
+                               BorderThickness="0" Padding="8"
+                               SelectedItemChanged="TreeView_SelectedItemChanged">
                         <TreeView.ItemContainerStyle>
                             <Style TargetType="TreeViewItem">
                                 <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
                                 <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
-                                <Setter Property="Padding" Value="3"/>
+                                <Setter Property="Padding" Value="4,2"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                             </Style>
                         </TreeView.ItemContainerStyle>
                         
@@ -174,16 +158,34 @@
                         </TreeView.ContextMenu>
                     </TreeView>
                     
-                    <!-- Tree Butonları -->
-                    <Border Grid.Row="2" Background="{DynamicResource ThemeSurface}" Padding="8" 
+                    <!-- Tree Action Buttons -->
+                    <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="8" 
                             BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,1,0,0">
                         <UniformGrid Columns="3">
-                            <Button Content="➕ Blok" Command="{Binding AddBlockCommand}"
-                                    Height="32" Margin="2,0" FontSize="11" FontWeight="SemiBold"/>
-                            <Button Content="📋 Kat" Command="{Binding AddFloorCommand}"
-                                    Height="32" Margin="2,0" FontSize="11" FontWeight="SemiBold"/>
-                            <Button Content="🏠 Daire" Command="{Binding AddFlatCommand}"
-                                    Height="32" Margin="2,0" FontSize="11" FontWeight="SemiBold"/>
+                            <Button Command="{Binding AddBlockCommand}"
+                                    Style="{StaticResource ModernButton}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                                    Height="32" Margin="2,0" Padding="4,0" ToolTip="Yeni Blok Ekle">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Add24" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Blok" FontSize="11" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding AddFloorCommand}"
+                                    Style="{StaticResource ModernButton}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                                    Height="32" Margin="2,0" Padding="4,0" ToolTip="Yeni Kat Ekle">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Add24" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Kat" FontSize="11" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding AddFlatCommand}"
+                                    Style="{StaticResource ModernButton}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                                    Height="32" Margin="2,0" Padding="4,0" ToolTip="Yeni Daire Ekle">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Add24" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Daire" FontSize="11" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
                         </UniformGrid>
                     </Border>
                 </Grid>
