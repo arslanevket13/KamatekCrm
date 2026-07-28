@@ -606,7 +606,7 @@ namespace KamatekCrm.ViewModels
 
         #region Finansal Güncellemeler
 
-        private void NotifyFinancialsChanged()
+        public void NotifyFinancialsChanged()
         {
             OnPropertyChanged(nameof(TotalRevenue));
             OnPropertyChanged(nameof(TotalCost));
