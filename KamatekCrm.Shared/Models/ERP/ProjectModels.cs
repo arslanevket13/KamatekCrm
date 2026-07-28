@@ -87,6 +87,7 @@ namespace KamatekCrm.Shared.Models
             set { _isSelected = value; OnPropertyChanged(nameof(IsSelected)); }
         }
 
+        [System.Text.Json.Serialization.JsonIgnore]
         public ScopeNode? Parent { get; set; }
         public virtual System.Collections.Generic.ICollection<ScopeNode> Children { get; set; } = new System.Collections.Generic.List<ScopeNode>();
         public virtual System.Collections.Generic.ICollection<ScopeNodeItem> Items { get; set; } = new System.Collections.Generic.List<ScopeNodeItem>();

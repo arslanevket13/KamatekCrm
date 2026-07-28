@@ -21,7 +21,8 @@ namespace KamatekCrm.Services
         {
             WriteIndented = false,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
         };
 
         public ProjectScopeService(AppDbContext context)
