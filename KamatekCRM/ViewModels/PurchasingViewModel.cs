@@ -154,6 +154,35 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _selectedSupplier, value);
         }
 
+        private ObservableCollection<Warehouse> _warehouses = new();
+        public ObservableCollection<Warehouse> Warehouses
+        {
+            get => _warehouses;
+            set => SetProperty(ref _warehouses, value);
+        }
+
+        private Warehouse? _selectedWarehouse;
+        public Warehouse? SelectedWarehouse
+        {
+            get => _selectedWarehouse;
+            set => SetProperty(ref _selectedWarehouse, value);
+        }
+
+        public string[] PaymentMethods { get; } = new[]
+        {
+            "Cari Borç (Vadeli)",
+            "Nakit Peşin",
+            "Kredi Kartı",
+            "Banka Havalesi"
+        };
+
+        private string _selectedPaymentMethod = "Cari Borç (Vadeli)";
+        public string SelectedPaymentMethod
+        {
+            get => _selectedPaymentMethod;
+            set => SetProperty(ref _selectedPaymentMethod, value);
+        }
+
         private string _invoiceNumber = "";
         public string InvoiceNumber
         {
@@ -261,15 +290,23 @@ namespace KamatekCrm.ViewModels
             IsBusy = true;
             try
             {
-                var suppliers = await ((UnitOfWork)_unitOfWork).Context.Suppliers
+                var context = ((UnitOfWork)_unitOfWork).Context;
+                var suppliers = await context.Suppliers
                     .Where(s => s.IsActive)
                     .OrderBy(s => s.CompanyName)
                     .ToListAsync();
                 Suppliers = new ObservableCollection<Supplier>(suppliers);
+
+                var warehouses = await context.Warehouses
+                    .Where(w => w.IsActive)
+                    .OrderBy(w => w.Name)
+                    .ToListAsync();
+                Warehouses = new ObservableCollection<Warehouse>(warehouses);
+                SelectedWarehouse = Warehouses.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                _toastService.ShowError($"Tedarikçiler yüklenirken hata oluştu: {ex.Message}");
+                _toastService.ShowError($"Veriler yüklenirken hata oluştu: {ex.Message}");
             }
             finally
             {
@@ -458,12 +495,12 @@ namespace KamatekCrm.ViewModels
                     order.TotalAmount += poItem.LineTotal;
                 }
 
-                ((UnitOfWork)_unitOfWork).Context.PurchaseOrders.Add(order);
+                var context = ((UnitOfWork)_unitOfWork).Context;
+                context.PurchaseOrders.Add(order);
                 await _unitOfWork.SaveChangesAsync(); // Save PO to get PO Id
 
                 // Stok İşlemi İçin Domain Service Çağrısı
-                var defaultWarehouse = await ((UnitOfWork)_unitOfWork).Context.Warehouses.FirstOrDefaultAsync(w => w.IsActive);
-                var warehouseId = defaultWarehouse?.Id ?? 1;
+                var warehouseId = SelectedWarehouse?.Id ?? (await context.Warehouses.FirstOrDefaultAsync(w => w.IsActive))?.Id ?? 1;
 
                 var result = await _purchasingService.CompletePurchaseOrderAsync(new PurchaseCompletionRequest
                 {
@@ -474,8 +511,33 @@ namespace KamatekCrm.ViewModels
 
                 if (result.Success)
                 {
+                    // Tedarikçi Cari Borç & Kasa Entegrasyonu
+                    var dbSupplier = await context.Suppliers.FindAsync(SelectedSupplier.Id);
+                    if (dbSupplier != null)
+                    {
+                        if (SelectedPaymentMethod.Contains("Cari Borç"))
+                        {
+                            dbSupplier.Balance += order.TotalAmount;
+                        }
+                        else
+                        {
+                            var cashExp = new CashTransaction
+                            {
+                                Date = DateTime.UtcNow,
+                                Amount = order.TotalAmount,
+                                TransactionType = SelectedPaymentMethod.Contains("Kart") ? CashTransactionType.Expense : CashTransactionType.Expense,
+                                Description = $"Satın Alma Faturası Peşin Ödeme: {InvoiceNumber} ({SelectedSupplier.CompanyName})",
+                                Category = "Malzeme / Demirbaş",
+                                CreatedBy = App.CurrentUser?.AdSoyad ?? "Sistem",
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            context.CashTransactions.Add(cashExp);
+                        }
+                    }
+
+                    await _unitOfWork.SaveChangesAsync();
                     await _unitOfWork.CommitAsync();
-                    _toastService.ShowSuccess("İşlem başarıyla tamamlandı, stoklar güncellendi.");
+                    _toastService.ShowSuccess("İşlem başarıyla tamamlandı, stoklar ve cari hesap güncellendi.");
                     
                     // Reset Form
                     OrderItems.Clear();

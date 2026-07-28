@@ -160,7 +160,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void tem()
+        private void AddManualItem()
         {
             if (SelectedProduct == null)
             {
