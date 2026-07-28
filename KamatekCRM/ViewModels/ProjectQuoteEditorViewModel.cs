@@ -687,10 +687,30 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void Save()
         {
+            if (SelectedCustomer == null)
+            {
+                MessageBox.Show(
+                    "Lütfen projeyi kaydetmeden önce bir MÜŞTERİ seçiniz.",
+                    "Müşteri Seçilmedi",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(ProjectName))
+            {
+                MessageBox.Show(
+                    "Lütfen projeyi kaydetmeden önce bir PROJE ADI giriniz.",
+                    "Proje Adı Eksik",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
                 CurrentProject.Title = ProjectName;
-                CurrentProject.CustomerId = SelectedCustomer!.Id;
+                CurrentProject.CustomerId = SelectedCustomer.Id;
 
                 // QuoteNumber ataması (ilk kayıtta)
                 if (string.IsNullOrEmpty(CurrentProject.QuoteNumber))
