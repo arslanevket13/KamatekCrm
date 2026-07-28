@@ -21,6 +21,7 @@ namespace KamatekCrm.ApplicationCore.Common
                 Id = entity.Id,
                 CustomerCode = entity.CustomerCode,
                 FullName = entity.FullName,
+                CompanyName = entity.CompanyName,
                 PhoneNumber = entity.PhoneNumber,
                 Email = entity.Email,
                 City = entity.City,
@@ -29,7 +30,8 @@ namespace KamatekCrm.ApplicationCore.Common
                 Segment = entity.Segment,
                 LoyaltyLevel = entity.LoyaltyLevel,
                 TotalSpent = entity.TotalSpent,
-                IsActive = !entity.IsDeleted
+                IsActive = !entity.IsDeleted,
+                CreatedDate = entity.CreatedDate
             };
         }
 
@@ -108,10 +110,11 @@ namespace KamatekCrm.ApplicationCore.Common
                 Soyad = entity.Soyad,
                 AdSoyad = entity.AdSoyad,
                 Role = entity.Role,
+                Phone = entity.Phone,
+                CreatedDate = entity.CreatedDate,
                 IsActive = entity.IsActive,
                 IsTechnician = entity.IsTechnician,
                 LastLoginDate = entity.LastLoginDate,
-                Phone = entity.Phone,
                 ServiceArea = entity.ServiceArea
             };
         }

@@ -8,8 +8,8 @@
         AllowsTransparency="True"
         Style="{StaticResource PremiumWindowStyle}"
         ShowInTaskbar="False"
-        ResizeMode="NoResize"
-        Topmost="True">
+        ResizeMode="CanResizeWithGrip"
+        MinWidth="500" MinHeight="350">
 
     <Window.Resources>
         <Style x:Key="ActionItemStyle" TargetType="Border">

@@ -122,6 +122,10 @@
                 <views:QuoteListView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:QuotationViewModel}">
+                <views:QuotationView/>
+            </DataTemplate>
+
             <!-- Global Converters -->
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
             <converters:IntToVisibilityConverter x:Key="IntToVis"/>

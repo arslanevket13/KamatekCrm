@@ -6,8 +6,8 @@
         mc:Ignorable="d"
         Title="➕ Hızlı Müşteri Ekle"
         Height="420" Width="450"
-        WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize"
+        ResizeMode="CanResizeWithGrip"
+        MinWidth="420" MinHeight="380"
         Style="{StaticResource PremiumWindowStyle}">
 
     <Window.Resources>
@@ -59,63 +59,65 @@
             </StackPanel>
 
             <!-- Form -->
-            <StackPanel Grid.Row="1">
-                <!-- Ad Soyad -->
-                <TextBlock Text="Ad Soyad *" Style="{StaticResource FieldLabel}"/>
-                <TextBox x:Name="FullNameBox"
-                         Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource FieldBox.Trigger}"
-                         Tag="Örn: Ahmet Yılmaz">
-                    <TextBox.Template>
-                        <ControlTemplate TargetType="TextBox">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="8">
-                                <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
-                            </Border>
-                        </ControlTemplate>
-                    </TextBox.Template>
-                </TextBox>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8">
+                <StackPanel Margin="0,0,8,0">
+                    <!-- Ad Soyad -->
+                    <TextBlock Text="Ad Soyad *" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="FullNameBox"
+                             Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FieldBox.Trigger}"
+                             Tag="Örn: Ahmet Yılmaz">
+                        <TextBox.Template>
+                            <ControlTemplate TargetType="TextBox">
+                                <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="8">
+                                    <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                                </Border>
+                            </ControlTemplate>
+                        </TextBox.Template>
+                    </TextBox>
 
-                <!-- Telefon -->
-                <TextBlock Text="Telefon" Style="{StaticResource FieldLabel}"/>
-                <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource FieldBox.Trigger}">
-                    <TextBox.Template>
-                        <ControlTemplate TargetType="TextBox">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="8">
-                                <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
-                            </Border>
-                        </ControlTemplate>
-                    </TextBox.Template>
-                </TextBox>
+                    <!-- Telefon -->
+                    <TextBlock Text="Telefon" Style="{StaticResource FieldLabel}"/>
+                    <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FieldBox.Trigger}">
+                        <TextBox.Template>
+                            <ControlTemplate TargetType="TextBox">
+                                <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="8">
+                                    <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                                </Border>
+                            </ControlTemplate>
+                        </TextBox.Template>
+                    </TextBox>
 
-                <!-- E-posta -->
-                <TextBlock Text="E-posta" Style="{StaticResource FieldLabel}"/>
-                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource FieldBox.Trigger}">
-                    <TextBox.Template>
-                        <ControlTemplate TargetType="TextBox">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="8">
-                                <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
-                            </Border>
-                        </ControlTemplate>
-                    </TextBox.Template>
-                </TextBox>
+                    <!-- E-posta -->
+                    <TextBlock Text="E-posta" Style="{StaticResource FieldLabel}"/>
+                    <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FieldBox.Trigger}">
+                        <TextBox.Template>
+                            <ControlTemplate TargetType="TextBox">
+                                <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="8">
+                                    <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                                </Border>
+                            </ControlTemplate>
+                        </TextBox.Template>
+                    </TextBox>
 
-                <!-- Hata mesajı -->
-                <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="8,8" Margin="0,16,0,0"
-                        Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
-                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"/>
-                </Border>
-            </StackPanel>
+                    <!-- Hata mesajı -->
+                    <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="8,8" Margin="0,16,0,0"
+                            Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"/>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
 
             <!-- Footer Buttons -->
             <Grid Grid.Row="2" Margin="0,16,0,0">
@@ -149,7 +151,7 @@
                         Command="{Binding SaveCustomerCommand}"
                         IsDefault="True"
                         Height="40" FontSize="14" FontWeight="SemiBold"
-                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
                         BorderThickness="0"
                         Cursor="Hand">
                     <Button.Template>

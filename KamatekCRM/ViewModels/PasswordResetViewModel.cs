@@ -89,6 +89,9 @@ namespace KamatekCrm.ViewModels
         public event Action? SaveSuccessful;
         public event Action? CancelRequested;
 
+        [RelayCommand]
+        private void Cancel() => CancelRequested?.Invoke();
+
         public PasswordResetViewModel(User user, IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory)
         {
             _user = user;

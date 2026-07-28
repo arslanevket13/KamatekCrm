@@ -16,7 +16,7 @@ namespace KamatekCrm.ViewModels
 {
     public partial class QuotationViewModel : ViewModelBase
     {
-        private AppDbContext _context;
+        private AppDbContext? _context;
         private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
 
         // Properties
@@ -24,8 +24,8 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<QuoteLine> QuoteLines { get; set; } = new ObservableCollection<QuoteLine>();
         public ObservableCollection<Product> SearchResults { get; set; } = new ObservableCollection<Product>();
 
-        private Customer _selectedCustomer;
-        public Customer SelectedCustomer
+        private Customer? _selectedCustomer;
+        public Customer? SelectedCustomer
         {
             get => _selectedCustomer;
             set
@@ -57,7 +57,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private string _termsAndConditions;
+        private string _termsAndConditions = string.Empty;
         public string TermsAndConditions
         {
             get => _termsAndConditions;
@@ -80,7 +80,7 @@ namespace KamatekCrm.ViewModels
         }
 
         // Sidebar Add Product Properties
-        private string _searchTerm;
+        private string _searchTerm = string.Empty;
         public string SearchTerm
         {
             get => _searchTerm;
@@ -92,8 +92,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private Product _selectedProduct;
-        public Product SelectedProduct
+        private Product? _selectedProduct;
+        public Product? SelectedProduct
         {
             get => _selectedProduct;
             set
@@ -155,21 +155,70 @@ namespace KamatekCrm.ViewModels
             _context = _dbContextFactory.CreateDbContext();
 
             QuoteLines.CollectionChanged += (s, e) => UpdateTotals();
-            Refresh();
+            _ = Refresh();
+        }
+
+        public async Task SelectCustomerByIdAsync(int customerId)
+        {
+            if (!Customers.Any())
+            {
+                await Refresh();
+            }
+
+            var customer = Customers.FirstOrDefault(c => c.Id == customerId);
+            if (customer != null)
+            {
+                SelectedCustomer = customer;
+            }
+            else
+            {
+                using var ctx = await _dbContextFactory.CreateDbContextAsync();
+                var dbCustomer = await ctx.Customers.FindAsync(customerId);
+                if (dbCustomer != null)
+                {
+                    Customers.Add(dbCustomer);
+                    SelectedCustomer = dbCustomer;
+                }
+            }
         }
 
         private async Task Refresh()
         {
             try
             {
+                Customers.Clear();
                 var customers = await _context.Customers.ToListAsync();
                 foreach (var c in customers) Customers.Add(c);
             }
             catch { /* handle error */ }
         }
 
+        [RelayCommand]
+        private void ToggleSidebar()
+        {
+            IsSidebarOpen = !IsSidebarOpen;
+        }
+
+        [RelayCommand]
+        private async Task SaveQuoteAsync()
+        {
+            if (SelectedCustomer == null)
+            {
+                System.Windows.MessageBox.Show("Lütfen önce bir müşteri seçin.", "Uyarı", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+            await SaveDraftAsync(QuoteStatus.Sent);
+            System.Windows.MessageBox.Show("Teklif başarıyla kaydedildi.", "Başarılı", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+        }
+
+        [RelayCommand]
+        private async Task ExportPdfAsync()
+        {
+            await ExportToPdfAsync();
+        }
+
         // --- Debounce Logic for Search ---
-        private System.Timers.Timer _debounceTimer;
+        private System.Timers.Timer? _debounceTimer;
         private void DebounceSearch()
         {
             if (_debounceTimer == null)
@@ -286,11 +335,11 @@ namespace KamatekCrm.ViewModels
 
                     var quote = new Quote
                     {
-                        QuoteNumber = $"TKLF-{DateTime.Now.Year}-{new Random().Next(1000, 9999)}",
+                        QuoteNumber = $"TKLF-{DateTime.UtcNow:yyyyMMddHHmmss}",
                         CustomerId = SelectedCustomer?.Id,
                         Customer = SelectedCustomer,
-                        Date = QuoteDate,
-                        ValidUntil = ValidUntil,
+                        Date = QuoteDate.ToUniversalTime(),
+                        ValidUntil = ValidUntil.ToUniversalTime(),
                         SubTotal = SubTotal,
                         TotalDiscount = TotalDiscount,
                         TotalTax = TotalTax,
@@ -322,15 +371,16 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task SaveDraftAsync(QuoteStatus status)
         {
+            if (SelectedCustomer == null) return;
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 var quote = new Quote
                 {
-                    QuoteNumber = $"TKLF-{DateTime.Now.Year}-{new Random().Next(1000, 9999)}", // Demo purpose
+                    QuoteNumber = $"TKLF-{DateTime.UtcNow:yyyyMMddHHmmss}",
                     CustomerId = SelectedCustomer.Id,
-                    Date = QuoteDate,
-                    ValidUntil = ValidUntil,
+                    Date = QuoteDate.ToUniversalTime(),
+                    ValidUntil = ValidUntil.ToUniversalTime(),
                     Status = status,
                     SubTotal = SubTotal,
                     TotalDiscount = TotalDiscount,
@@ -356,12 +406,9 @@ namespace KamatekCrm.ViewModels
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                // Show error message
+                Serilog.Log.Error(ex, "Teklif kaydedilirken hata oluştu");
             }
         }
-
     }
 }
-
-
 

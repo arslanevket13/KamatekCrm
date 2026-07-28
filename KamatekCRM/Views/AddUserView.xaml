@@ -4,12 +4,10 @@
         xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
         xmlns:converters="clr-namespace:KamatekCrm.Converters"
         Title="Yeni Kullanıcı Ekle" 
-        SizeToContent="Height"
-        Width="450"
-        MinHeight="500"
-        MaxHeight="700"
+        Width="480"
+        MinWidth="420" MinHeight="450"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize"
+        ResizeMode="CanResizeWithGrip"
         Style="{StaticResource PremiumWindowStyle}">
     
     <Window.Resources>

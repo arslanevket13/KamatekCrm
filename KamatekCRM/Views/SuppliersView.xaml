@@ -4,16 +4,20 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             mc:Ignorable="d" d:DesignHeight="600" d:DesignWidth="1000">
+             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="1100"
+             Background="{DynamicResource SurfacePageBrush}">
 
-    <Grid Margin="16">
+    <Grid Margin="24">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="380"/>
+            <ColumnDefinition Width="360"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Left Panel: List -->
-        <Border Grid.Column="0" Margin="0,0,16,0" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource SubtleShadow}">
+        <!-- ═══════════════ LEFT PANEL: SUPPLIER LIST ═══════════════ -->
+        <Border Grid.Column="0" Margin="0,0,24,0" CornerRadius="12" 
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1"
+                Effect="{DynamicResource Elevation2}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -22,117 +26,138 @@
                 </Grid.RowDefinitions>
 
                 <!-- Search Header -->
-                <Border Grid.Row="0" Background="{DynamicResource BackgroundSecondaryBrush}" Padding="16" CornerRadius="8,8,0,0">
+                <Border Grid.Row="0" Background="{DynamicResource ThemeSidebarHover}" Padding="16" CornerRadius="12,12,0,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
-                        <Button Grid.Column="1" Command="{Binding ClearSearchCommand}" Margin="8,0,0,0">
+                        <ui:TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                                    PlaceholderText="Tedarikçi veya yetkili ara..." 
+                                    Icon="{ui:SymbolIcon Search24}"
+                                    Height="40" FontSize="13"/>
+                        <ui:Button Grid.Column="1" Command="{Binding ClearSearchCommand}" Margin="8,0,0,0" Height="40" Padding="12,0" Appearance="Secondary">
                             <ui:SymbolIcon Symbol="Dismiss24"/>
-                        </Button>
+                        </ui:Button>
                     </Grid>
                 </Border>
 
                 <!-- Suppliers List -->
-                <ListBox Grid.Row="1" ItemsSource="{Binding FilteredSuppliers}" SelectedItem="{Binding SelectedSupplier}">
+                <ListBox Grid.Row="1" ItemsSource="{Binding FilteredSuppliers}" SelectedItem="{Binding SelectedSupplier}"
+                         BorderThickness="0" Background="Transparent" Padding="8">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="50" Width="40" Height="40" Margin="0,0,16,0">
-                                    <ui:SymbolIcon Symbol="Person24" Foreground="{DynamicResource PrimaryBrush}"/>
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding CompanyName}" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                                    <TextBlock Text="{Binding ContactPerson}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                </StackPanel>
-                            </Grid>
+                            <Border Padding="12,10" Margin="0,0,0,4" CornerRadius="8" Background="{DynamicResource HoverOverlayBrush}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Background="{DynamicResource StatusInfoBg}" CornerRadius="20" Width="40" Height="40" Margin="0,0,12,0" VerticalAlignment="Center">
+                                        <ui:SymbolIcon Symbol="Building24" Foreground="{DynamicResource StatusInfoFg}" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding CompanyName}" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextHeadingBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding ContactPerson}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
 
                 <!-- Add Button -->
-                <Button Grid.Row="2" Command="{Binding AddSupplierCommand}" Content="Yeni Tedarikçi Ekle" Margin="16" HorizontalAlignment="Stretch"/>
+                <Border Grid.Row="2" Padding="16" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource ThemeDivider}">
+                    <ui:Button Command="{Binding AddSupplierCommand}" Content="➕ Yeni Tedarikçi Ekle" Appearance="Primary" Height="40" HorizontalAlignment="Stretch"/>
+                </Border>
             </Grid>
         </Border>
 
-        <!-- Right Panel: Details -->
-        <Border Grid.Column="1" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource SubtleShadow}">
-            <Grid Margin="24">
+        <!-- ═══════════════ RIGHT PANEL: DETAILS & FORM ═══════════════ -->
+        <Border Grid.Column="1" CornerRadius="12" 
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1"
+                Effect="{DynamicResource Elevation2}">
+            <Grid Margin="32">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Header -->
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,24">
-                    <Border Background="{DynamicResource PrimaryBrush}" CornerRadius="50" Width="48" Height="48" Margin="0,0,16,0">
-                        <ui:SymbolIcon Symbol="Building24" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="24"/>
+                    <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="12" Width="52" Height="52" Margin="0,0,16,0">
+                        <ui:SymbolIcon Symbol="Building24" Foreground="{DynamicResource ThemePrimary}" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Tedarikçi Detayları" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                        <TextBlock Text="Tedarikçi bilgilerini düzenleyin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Text="Tedarikçi Detayları" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                        <TextBlock Text="Firma ve yetkili iletişim bilgilerini güncelleyin" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
                     </StackPanel>
                 </StackPanel>
 
+                <Separator Grid.Row="1" Margin="0,0,0,24" Background="{DynamicResource ThemeDivider}"/>
+
                 <!-- Form Fields -->
-                <Grid Grid.Row="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,16">
-                        <TextBlock Text="Şirket Adı" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding SelectedSupplier.CompanyName, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
-                    </StackPanel>
+                        <!-- Şirket Adı -->
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,20">
+                            <TextBlock Text="Şirket / Firma Adı" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+                            <ui:TextBox Text="{Binding SelectedSupplier.CompanyName, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Örn: ABC Elektronik A.Ş." Height="40" FontSize="14"/>
+                        </StackPanel>
 
-                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,16">
-                        <TextBlock Text="Yetkili Kişi" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding SelectedSupplier.ContactPerson, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
-                    </StackPanel>
+                        <!-- Yetkili Kişi -->
+                        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,20">
+                            <TextBlock Text="Yetkili Kişi" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+                            <ui:TextBox Text="{Binding SelectedSupplier.ContactPerson, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Örn: Ahmet Yılmaz" Height="40" FontSize="14"/>
+                        </StackPanel>
 
-                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,16">
-                        <TextBlock Text="Telefon" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding SelectedSupplier.Phone, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
-                    </StackPanel>
+                        <!-- Telefon -->
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,20">
+                            <TextBlock Text="Telefon Numarası" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+                            <ui:TextBox Text="{Binding SelectedSupplier.Phone, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Örn: 0212 555 0000" Height="40" FontSize="14"/>
+                        </StackPanel>
 
-                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,16">
-                        <TextBlock Text="E-posta" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding SelectedSupplier.Email, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
-                    </StackPanel>
+                        <!-- E-posta -->
+                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,20">
+                            <TextBlock Text="E-posta Adresi" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+                            <ui:TextBox Text="{Binding SelectedSupplier.Email, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Örn: bilgi@abcelektronik.com" Height="40" FontSize="14"/>
+                        </StackPanel>
 
-                    <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,8,16">
-                        <TextBlock Text="Vergi Numarası" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding SelectedSupplier.TaxNumber, UpdateSourceTrigger=PropertyChanged}" Padding="8"/>
-                    </StackPanel>
+                        <!-- Vergi Numarası -->
+                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,20">
+                            <TextBlock Text="Vergi Numarası / Vergi Dairesi" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+                            <ui:TextBox Text="{Binding SelectedSupplier.TaxNumber, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Örn: 1234567890" Height="40" FontSize="14"/>
+                        </StackPanel>
 
-                    <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,0,0,16">
-                        <TextBlock Text="Adres" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding SelectedSupplier.Address, UpdateSourceTrigger=PropertyChanged}" Padding="8" TextWrapping="Wrap" AcceptsReturn="True" Height="80"/>
-                    </StackPanel>
-                </Grid>
+                        <!-- Adres -->
+                        <StackPanel Grid.Row="3" Grid.ColumnSpan="3" Margin="0,0,0,20">
+                            <TextBlock Text="Firma Adresi" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+                            <ui:TextBox Text="{Binding SelectedSupplier.Address, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Tam adres giriniz..." TextWrapping="Wrap" AcceptsReturn="True" Height="90" FontSize="14"/>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
 
                 <!-- Action Buttons -->
-                <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right">
-                    <Button Command="{Binding DeleteSupplierCommand}" Content="Sil" Margin="0,0,8,0"/>
-                    <Button Command="{Binding SaveSupplierCommand}" Content="Kaydet"/>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+                    <ui:Button Command="{Binding DeleteSupplierCommand}" Content="🗑️ Tedarikçiyi Sil" Appearance="Secondary" Height="40" Padding="20,0" Margin="0,0,12,0"/>
+                    <ui:Button Command="{Binding SaveSupplierCommand}" Content="💾 Değişiklikleri Kaydet" Appearance="Primary" Height="40" Padding="24,0"/>
                 </StackPanel>
             </Grid>
         </Border>
     </Grid>
 </UserControl>
-
-

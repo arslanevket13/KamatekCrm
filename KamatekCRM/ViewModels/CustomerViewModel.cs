@@ -15,6 +15,9 @@ using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Common;
+using KamatekCrm.ApplicationCore.DTOs.Customers;
 
 namespace KamatekCrm.ViewModels
 {
@@ -24,7 +27,6 @@ namespace KamatekCrm.ViewModels
     // DZELTME 1: Snf ad 'CustomersViewModel' yapld (Sonunda 's' var)
     public partial class CustomersViewModel : KamatekCrm.ViewModels.Common.PaginationViewModel
     {
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
         private Customer? _selectedCustomer;
         private string _fullName = string.Empty;
         private string _phoneNumber = string.Empty;
@@ -296,27 +298,30 @@ namespace KamatekCrm.ViewModels
         private readonly ILogger<CustomersViewModel> _logger;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
+        private readonly ICustomerAppService _customerAppService;
 
-        public CustomersViewModel(NavigationService navigationService, ILogger<CustomersViewModel> logger, IToastService toastService, ILoadingService loadingService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory)
+        public CustomersViewModel(
+            NavigationService navigationService,
+            ILogger<CustomersViewModel> logger,
+            IToastService toastService,
+            ILoadingService loadingService,
+            ICustomerAppService customerAppService)
         {
             _navigationService = navigationService;
             _logger = logger;
             _toastService = toastService;
             _loadingService = loadingService;
-            _dbContextFactory = dbContextFactory;
+            _customerAppService = customerAppService;
             Customers = new ObservableCollection<Customer>();
             Cities = new ObservableCollection<City>();
             Districts = new ObservableCollection<District>();
             Neighborhoods = new ObservableCollection<Neighborhood>();
 
             _customersView = CollectionViewSource.GetDefaultView(Customers);
-            // _customersView.Filter = FilterCustomers; // DB Paging kullandığımız için kaldırıldı
-
 
             _logger.LogInformation("CustomersViewModel initialized");
 
             LoadCities();
-            // LoadCustomers(); replaced by RefreshDataAsync
             _ = RefreshDataAsync();
         }
 
@@ -326,40 +331,50 @@ namespace KamatekCrm.ViewModels
             {
                 _loadingService.Show("Müşteriler yükleniyor...");
 
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                
-                // İstatistikleri yükle
-                TotalCustomers = await context.Customers.CountAsync();
-                IndividualCount = await context.Customers.CountAsync(c => c.Type == CustomerType.Individual);
-                CorporateCount = await context.Customers.CountAsync(c => c.Type == CustomerType.Corporate);
-                WalkInCount = await context.Customers.CountAsync(c => c.Type == CustomerType.WalkIn);
+                var result = string.IsNullOrWhiteSpace(SearchText) 
+                    ? await _customerAppService.GetAllAsync()
+                    : await _customerAppService.SearchAsync(SearchText);
 
-                // Listeyi yükle
-                var query = context.Customers.AsQueryable();
-
-                if (SelectedTypeFilter.HasValue) 
-                    query = query.Where(c => c.Type == SelectedTypeFilter.Value);
-                    
-                if (!string.IsNullOrWhiteSpace(SearchText))
+                if (result.IsSuccess && result.Value != null)
                 {
-                    var search = SearchText.ToLower();
-                    query = query.Where(c => c.FullName.ToLower().Contains(search) || 
-                                             (c.CompanyName != null && c.CompanyName.ToLower().Contains(search)) ||
-                                             (c.PhoneNumber != null && c.PhoneNumber.Contains(search)));
+                    var items = result.Value;
+                    if (SelectedTypeFilter.HasValue)
+                    {
+                        items = items.Where(c => c.Type == SelectedTypeFilter.Value).ToList();
+                    }
+
+                    TotalCustomers = items.Count;
+                    IndividualCount = items.Count(c => c.Type == CustomerType.Individual);
+                    CorporateCount = items.Count(c => c.Type == CustomerType.Corporate);
+                    WalkInCount = items.Count(c => c.Type == CustomerType.WalkIn);
+                    TotalCount = items.Count;
+
+                    var pagedItems = items
+                        .Skip((CurrentPage - 1) * PageSize)
+                        .Take(PageSize);
+
+                    Customers.Clear();
+                    foreach (var item in pagedItems)
+                    {
+                        Customers.Add(new Customer
+                        {
+                            Id = item.Id,
+                            CustomerCode = item.CustomerCode,
+                            FullName = item.FullName,
+                            CompanyName = item.CompanyName,
+                            PhoneNumber = item.PhoneNumber,
+                            City = item.City,
+                            Type = item.Type,
+                            CreatedDate = item.CreatedDate
+                        });
+                    }
+
+                    _toastService.ShowSuccess("Müşteri verileri güncellendi.");
                 }
-
-                TotalCount = await query.CountAsync();
-                
-                var customers = await query
-                    .OrderByDescending(c => c.CreatedDate)
-                    .Skip((CurrentPage - 1) * PageSize)
-                    .Take(PageSize)
-                    .ToListAsync();
-
-                Customers.Clear();
-                foreach (var item in customers) Customers.Add(item);
-                
-                _toastService.ShowSuccess("Müşteri verileri güncellendi.");
+                else
+                {
+                    _toastService.ShowError("Hata", result.Error ?? "Müşteriler yüklenemedi.");
+                }
             }
             catch (Exception ex)
             {
@@ -390,57 +405,46 @@ namespace KamatekCrm.ViewModels
             {
                 _loadingService.Show("Müşteri kaydediliyor...");
 
-                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var dto = new CustomerCreateUpdateDto
+                {
+                    Id = SelectedCustomer?.Id ?? 0,
+                    FullName = FullName,
+                    PhoneNumber = PhoneNumber,
+                    Email = Email,
+                    City = City,
+                    District = District,
+                    Neighborhood = Neighborhood,
+                    Street = Street,
+                    BuildingNo = BuildingNo,
+                    ApartmentNo = ApartmentNo,
+                    Type = NewCustomerType,
+                    TcKimlikNo = NewCustomerType == CustomerType.Individual ? NewTcKimlikNo : null,
+                    CompanyName = NewCustomerType == CustomerType.Corporate ? NewCompanyName : null,
+                    TaxNumber = NewCustomerType == CustomerType.Corporate ? NewTaxNumber : null,
+                    TaxOffice = NewCustomerType == CustomerType.Corporate ? NewTaxOffice : null
+                };
 
+                Result res;
                 if (SelectedCustomer != null)
                 {
-                    var existingCustomer = await context.Customers.FindAsync(SelectedCustomer.Id);
-                    if (existingCustomer != null)
-                    {
-                        existingCustomer.FullName = FullName;
-                        existingCustomer.PhoneNumber = PhoneNumber;
-                        existingCustomer.Email = Email;
-                        existingCustomer.City = City;
-                        existingCustomer.District = District;
-                        existingCustomer.Neighborhood = Neighborhood;
-                        existingCustomer.Street = Street;
-                        existingCustomer.BuildingNo = BuildingNo;
-                        existingCustomer.ApartmentNo = ApartmentNo;
-                        await context.SaveChangesAsync();
-                    }
+                    res = await _customerAppService.UpdateAsync(dto);
                 }
                 else
                 {
-                    var newCustomer = new Customer
-                    {
-                        Type = NewCustomerType,
-                        CreatedDate = DateTime.UtcNow,
-                        FullName = FullName,
-                        PhoneNumber = PhoneNumber,
-                        Email = Email,
-                        City = City,
-                        District = District,
-                        Neighborhood = Neighborhood,
-                        Street = Street,
-                        BuildingNo = BuildingNo,
-                        ApartmentNo = ApartmentNo,
-                        
-                        // Bireysel müşteri için
-                        TcKimlikNo = NewCustomerType == CustomerType.Individual ? NewTcKimlikNo : null,
-                        
-                        // Kurumsal müşteri için
-                        CompanyName = NewCustomerType == CustomerType.Corporate ? NewCompanyName : null,
-                        TaxNumber = NewCustomerType == CustomerType.Corporate ? NewTaxNumber : null,
-                        TaxOffice = NewCustomerType == CustomerType.Corporate ? NewTaxOffice : null
-                    };
-
-                    context.Customers.Add(newCustomer);
-                    await context.SaveChangesAsync();
+                    var createRes = await _customerAppService.CreateAsync(dto);
+                    res = createRes.IsSuccess ? Result.Success() : Result.Failure(createRes.Error ?? "Hata");
                 }
 
-                _ = RefreshDataAsync();
-                ClearForm();
-                _toastService.ShowSuccess("Müşteri başarıyla kaydedildi!");
+                if (res.IsSuccess)
+                {
+                    _ = RefreshDataAsync();
+                    ClearForm();
+                    _toastService.ShowSuccess("Müşteri başarıyla kaydedildi!");
+                }
+                else
+                {
+                    _toastService.ShowError($"Hata: {res.Error}");
+                }
             }
             catch (Exception ex)
             {
@@ -465,17 +469,17 @@ namespace KamatekCrm.ViewModels
                 try
                 {
                     _loadingService.Show("Müşteri siliniyor...");
-                    using var context = await _dbContextFactory.CreateDbContextAsync();
-                    var customerToDelete = await context.Customers.FindAsync(SelectedCustomer.Id);
-                    if (customerToDelete != null)
+                    var res = await _customerAppService.DeleteAsync(SelectedCustomer.Id);
+                    if (res.IsSuccess)
                     {
-                        context.Customers.Remove(customerToDelete);
-                        await context.SaveChangesAsync();
+                        _ = RefreshDataAsync();
+                        ClearForm();
+                        _toastService.ShowSuccess("Müşteri başarıyla silindi!");
                     }
-
-                    _ = RefreshDataAsync();
-                    ClearForm();
-                    _toastService.ShowSuccess("Müşteri başarıyla silindi!");
+                    else
+                    {
+                        _toastService.ShowError($"Hata: {res.Error}");
+                    }
                 }
                 catch (Exception ex)
                 {

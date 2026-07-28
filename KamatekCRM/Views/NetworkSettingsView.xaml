@@ -143,13 +143,13 @@
                         </Grid>
 
                         <!-- Unsaved Changes Warning -->
-                        <Border CornerRadius="6" Padding="12,8" Background="#FEF3C7" 
+                        <Border CornerRadius="6" Padding="12,8" Background="{DynamicResource StatusWarningBgLight}" 
                                 Visibility="{Binding HasUnsavedChanges, Converter={StaticResource BoolToVis}}"
                                 Margin="0,8,0,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="⚠️" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Kaydedilmemiş değişiklikler var. Etkili olması için 'Kaydet ve Yeniden Başlat' butonuna basın." 
-                                           FontSize="11" Foreground="#92400E" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                           FontSize="11" Foreground="{DynamicResource StatusWarningFgLight}" TextWrapping="Wrap" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -172,7 +172,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Background="#6366F1" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
+                            <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
                                 <TextBlock Text="📡" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -203,7 +203,7 @@
                         <!-- Scan Network Button -->
                         <Button Command="{Binding ScanNetworkCommand}" Margin="0,0,0,16"
                                 Visibility="{Binding IsAutoDiscoveryEnabled, Converter={StaticResource BoolToVis}}"
-                                Background="#6366F1" Foreground="White" FontWeight="Bold" 
+                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" FontWeight="Bold" 
                                 Padding="16,10" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📡" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -232,7 +232,7 @@
                                              BorderBrush="{DynamicResource ThemeBorder}"/>
 
                                     <Button Grid.Column="1" Command="{Binding TestConnectionCommand}" 
-                                            Margin="8,0,0,0" Background="#2563EB" Foreground="White" 
+                                            Margin="8,0,0,0" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" 
                                             FontWeight="Bold" Padding="16,10" BorderThickness="0" Cursor="Hand">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="🔌" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -266,7 +266,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <Border Background="#059669" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
+                            <Border Background="{DynamicResource StatusSuccessBg}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
                                 <TextBlock Text="👥" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -280,7 +280,7 @@
 
                             <!-- Refresh Button -->
                             <Button Grid.Column="2" Command="{Binding RefreshClientsCommand}" 
-                                    Background="#059669" Foreground="White" FontWeight="Bold" 
+                                    Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}" FontWeight="Bold" 
                                     Padding="12,8" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🔄" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>

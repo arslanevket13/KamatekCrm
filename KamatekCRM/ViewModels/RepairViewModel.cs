@@ -35,7 +35,7 @@ namespace KamatekCrm.ViewModels
             
             // Komutlar
             
-            Refresh();
+            _ = Refresh();
             UpdateDeviceTypeOptions();
         }
 
@@ -45,7 +45,7 @@ namespace KamatekCrm.ViewModels
             get => _laborCost;
             set
             {
-                if (SetProperty(ref _laborCost, value)) UpdateTotals();
+                if (SetProperty(ref _laborCost, value)) _ = UpdateTotals();
             }
         }
 
@@ -55,7 +55,7 @@ namespace KamatekCrm.ViewModels
             get => _discountAmount;
             set
             {
-                if (SetProperty(ref _discountAmount, value)) UpdateTotals();
+                if (SetProperty(ref _discountAmount, value)) _ = UpdateTotals();
             }
         }
 
@@ -115,7 +115,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedJob, value))
                 {
-                    LoadHistory(value?.Id ?? 0);
+                    _ = LoadHistory(value?.Id ?? 0);
                     OnPropertyChanged(nameof(IsJobSelected));
                     // Yeni not alanını temizle
                     NewNoteText = string.Empty;
@@ -292,7 +292,7 @@ namespace KamatekCrm.ViewModels
                 foreach(var c in customers.OrderBy(x => x.FullName)) Customers.Add(c);
 
                 // Ürünleri yükle (Parça değişimi için)
-                LoadProducts();
+                await LoadProducts();
 
                 OnPropertyChanged(nameof(PendingRepairs));
                 OnPropertyChanged(nameof(InProgressRepairs));
@@ -366,7 +366,7 @@ namespace KamatekCrm.ViewModels
                 JobHistory = new ObservableCollection<ServiceJobHistory>(history);
 
                 // Parçaları yükle
-                LoadJobItems(jobId);
+                await LoadJobItems(jobId);
             }
             catch (Exception ex)
             {
@@ -387,7 +387,7 @@ namespace KamatekCrm.ViewModels
                         
                 foreach(var item in items) CurrentJobItems.Add(item);
                 
-                UpdateTotals();
+                await UpdateTotals();
             }
             catch (Exception ex)
             {
@@ -437,7 +437,7 @@ namespace KamatekCrm.ViewModels
 
                 _toastService?.ShowSuccess($"Cihaz kabul edildi! Takip No: {NewJob.Id}");
                 ResetNewJobForm();
-                Refresh();
+                await Refresh();
                 if (parameter is Window w) w.Close();
             }
             catch (Exception ex)
@@ -527,8 +527,8 @@ namespace KamatekCrm.ViewModels
                 }
 
                 NewNoteText = string.Empty; // Notu temizle
-                LoadHistory(SelectedJob.Id);
-                Refresh(); // Listeleri güncelle
+                await LoadHistory(SelectedJob.Id);
+                await Refresh(); // Listeleri güncelle
             }
             catch (Exception ex)
             {
@@ -559,7 +559,7 @@ namespace KamatekCrm.ViewModels
                 await context.SaveChangesAsync();
                 
                 NewNoteText = string.Empty;
-                LoadHistory(SelectedJob.Id);
+                await LoadHistory(SelectedJob.Id);
             }
             catch (Exception ex)
             {
@@ -596,7 +596,7 @@ namespace KamatekCrm.ViewModels
                 SelectedProductToAdd = null;
                 QuantityToAdd = 1;
                 UnitPriceToAdd = 0;
-                UpdateTotals();
+                await UpdateTotals();
             }
             catch (Exception ex)
             {
@@ -619,7 +619,7 @@ namespace KamatekCrm.ViewModels
                         await context.SaveChangesAsync();
                         
                         CurrentJobItems.Remove(item);
-                        UpdateTotals();
+                        await UpdateTotals();
                     }
                 }
                 catch (Exception ex)
@@ -658,7 +658,7 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                UpdateStatus(RepairStatus.Delivered);
+                await UpdateStatus(RepairStatus.Delivered);
 
                 using var context = await _dbContextFactory.CreateDbContextAsync();
                 foreach(var item in CurrentJobItems)

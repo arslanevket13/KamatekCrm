@@ -190,7 +190,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _sidebarSearchQuery, value))
                 {
-                    PerformSearchDebounced(value);
+                    _ = PerformSearchDebounced(value);
                 }
             }
         }

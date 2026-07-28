@@ -9,10 +9,8 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewmodels:AddProductViewModel, IsDesignTimeCreatable=False}"
         Title="{Binding WindowTitle}" 
-        SizeToContent="Height"
-        MinWidth="850"
-        MaxWidth="1000"
-        MaxHeight="800"
+        Height="750" Width="900"
+        MinWidth="850" MinHeight="600"
         WindowStartupLocation="CenterOwner"
         Style="{DynamicResource PremiumWindowStyle}">
 

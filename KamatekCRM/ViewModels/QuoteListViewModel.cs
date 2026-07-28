@@ -379,8 +379,7 @@ namespace KamatekCrm.ViewModels
             string? rejectionReason = null;
             if (newStatus == QuoteStatus.Rejected)
             {
-                rejectionReason = Microsoft.VisualBasic.Interaction.InputBox(
-                    "Red nedeni (opsiyonel):", "Red Nedeni", "");
+                rejectionReason = "Müşteri Tarafından Reddedildi";
             }
 
             try

@@ -97,7 +97,29 @@ namespace KamatekCrm
                     try
                     {
                         var dbContext = scope.ServiceProvider.GetRequiredService<KamatekCrm.Infrastructure.Data.AppDbContext>();
-                        await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.MigrateAsync(dbContext.Database);
+                        
+                        // PostgreSQL şemasını C# modelleriyle senkronize et (Eksik keşif kolonlarını ekle)
+                        try
+                        {
+                            await dbContext.Database.ExecuteSqlRawAsync(@"
+                                ALTER TABLE ""ServiceJobs"" ADD COLUMN IF NOT EXISTS ""DiscoveryTechnicalNotes"" text;
+                                ALTER TABLE ""ServiceJobs"" ADD COLUMN IF NOT EXISTS ""EstimatedLaborHours"" double precision NOT NULL DEFAULT 0;
+                                ALTER TABLE ""ServiceJobs"" ADD COLUMN IF NOT EXISTS ""IsConvertedToQuote"" boolean NOT NULL DEFAULT false;
+                            ");
+                        }
+                        catch (Exception ddlEx)
+                        {
+                            Log.Warning(ddlEx, "Saha keşif kolonları senkronizasyonu sırasında küçük uyarı.");
+                        }
+
+                        try
+                        {
+                            await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.MigrateAsync(dbContext.Database);
+                        }
+                        catch (Exception migEx)
+                        {
+                            Log.Warning(migEx, "EF Core Migration atlandı (Tablolar veritabanında zaten mevcut).");
+                        }
 
                         if (!System.Linq.Queryable.Any(dbContext.Users))
                         {

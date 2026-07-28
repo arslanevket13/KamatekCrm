@@ -17,9 +17,9 @@
         <Border Grid.Row="0" Background="{DynamicResource ThemePrimary}" CornerRadius="8" Padding="24,16" Margin="0,0,0,16">
             <StackPanel>
                 <TextBlock Text="🏗️ PROJE &amp; TEKLİF OLUŞTUR" 
-                           FontSize="22" FontWeight="Bold" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+                           FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextInverseBrush}"/>
                 <TextBlock Text="Müşteri seçin, yapı tanımlayın ve teklif hazırlayın" 
-                           FontSize="12" Foreground="{DynamicResource StatusInfoBg}" Margin="0,8,0,0"/>
+                           FontSize="12" Foreground="{DynamicResource TextInverseBrush}" Opacity="0.85" Margin="0,8,0,0"/>
             </StackPanel>
         </Border>
         
@@ -152,7 +152,7 @@
                                     </StackPanel>
                                     <Button Content="➕ TEKLİFE EKLE" 
                                             Command="{Binding AddToQuoteCommand}"
-                                            Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                            Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}"
                                             FontWeight="SemiBold" Height="35"
                                             BorderThickness="0" Cursor="Hand"/>
                                 </StackPanel>
@@ -203,7 +203,7 @@
                                     
                                     <Button Grid.Column="0" Content="🗑️ Kaldır"
                                             Command="{Binding RemoveFromQuoteCommand}"
-                                            Background="{DynamicResource ThemeError}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                            Background="{DynamicResource StatusErrorBg}" Foreground="{DynamicResource StatusErrorFg}"
                                             Padding="16,8" BorderThickness="0"/>
                                     
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -225,14 +225,14 @@
             <Button Content="❌ İPTAL" 
                     Command="{Binding CancelCommand}"
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                    Background="{DynamicResource ThemeMuted}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                    FontWeight="SemiBold" Padding="24,16"
-                    Margin="0,0,16,0" BorderThickness="0" Cursor="Hand"/>
+                    Background="{DynamicResource ApplicationBackgroundBrush}" Foreground="{DynamicResource TextBodyBrush}"
+                    FontWeight="SemiBold" Padding="24,12" Height="40"
+                    Margin="0,0,16,0" BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}" Cursor="Hand"/>
             
             <Button Content="💾 KAYDET" 
                     Command="{Binding SaveCommand}"
-                    Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                    FontWeight="Bold" FontSize="14" Padding="32,16"
+                    Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}"
+                    FontWeight="Bold" FontSize="14" Padding="32,12" Height="40"
                     BorderThickness="0" Cursor="Hand"/>
         </StackPanel>
     </Grid>

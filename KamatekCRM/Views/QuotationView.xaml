@@ -1,0 +1,196 @@
+<UserControl x:Class="KamatekCrm.Views.QuotationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d" 
+             d:DesignHeight="768" d:DesignWidth="1024">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <Grid Background="{DynamicResource SurfacePageBrush}">
+        <!-- Main Form Container -->
+        <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <Border Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                    CornerRadius="12" Padding="20,16" Margin="0,0,0,16"
+                    BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                <DockPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="📄 " FontSize="22"/>
+                        <StackPanel Margin="8,0,0,0">
+                            <TextBlock Text="Teklif Düzenleyici (Quotation Editor)" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Müşteriye özel teknik ve ticari teklif oluşturun" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
+                        <Button Content="💾 Teklifi Kaydet" Command="{Binding SaveQuoteCommand}" 
+                                Height="36" Padding="16,0" Margin="0,0,8,0"
+                                Background="{DynamicResource ThemePrimary}" 
+                                Foreground="{DynamicResource TextInverseBrush}" FontWeight="SemiBold"/>
+                        <Button Content="🖨️ PDF Oluştur" Command="{Binding ExportPdfCommand}" 
+                                Height="36" Padding="16,0"
+                                Background="{DynamicResource ApplicationBackgroundBrush}" 
+                                Foreground="{DynamicResource TextBodyBrush}" BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Content Area: Master Customer/Dates & Lines -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="320"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Info Card -->
+                <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                        CornerRadius="12" Padding="16"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Text="MÜŞTERİ BİLGİLERİ" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,12"/>
+                            
+                            <TextBlock Text="Müşteri Seçin" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="FullName" Height="36" Margin="0,0,0,16"/>
+
+                            <TextBlock Text="Teklif Tarihi" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                            <DatePicker SelectedDate="{Binding QuoteDate}" Height="36" Margin="0,0,0,16"/>
+
+                            <TextBlock Text="Geçerlilik Tarihi" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                            <DatePicker SelectedDate="{Binding ValidUntil}" Height="36" Margin="0,0,0,16"/>
+
+                            <TextBlock Text="Şartlar ve Notlar" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding TermsAndConditions, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" Height="120"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Right Quote Lines Table -->
+                <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                        CornerRadius="12" Padding="16"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+                            <TextBlock Text="Teklif Kalemleri" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                            <Button Content="+ Malzeme Ekle" Command="{Binding ToggleSidebarCommand}" HorizontalAlignment="Right" Height="32" Padding="12,0"/>
+                        </DockPanel>
+
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding QuoteLines}" AutoGenerateColumns="False" CanUserAddRows="False" GridLinesVisibility="Horizontal" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Ürün / Hizmet" Binding="{Binding ProductName}" Width="*"/>
+                                <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity, StringFormat={}{0:N0}}" Width="80"/>
+                                <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, StringFormat={}{0:C2}}" Width="100"/>
+                                <DataGridTextColumn Header="İskonto %" Binding="{Binding DiscountPercent, StringFormat={}{0:N0}%}" Width="80"/>
+                                <DataGridTextColumn Header="Toplam" Binding="{Binding LineTotal, StringFormat={}{0:C2}}" Width="110"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Totals Summary -->
+                        <Border Grid.Row="2" Background="{DynamicResource SurfacePageBackgroundBrush}" CornerRadius="8" Padding="16" Margin="0,16,0,0">
+                            <StackPanel HorizontalAlignment="Right" Width="260">
+                                <DockPanel Margin="0,0,0,4">
+                                    <TextBlock Text="Ara Toplam:" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding SubTotal, StringFormat={}{0:C2}}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,4">
+                                    <TextBlock Text="İskonto Toplamı:" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding TotalDiscount, StringFormat={}{-}{0:C2}}" HorizontalAlignment="Right" Foreground="#D9381E"/>
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,8">
+                                    <TextBlock Text="KDV Toplamı:" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding TotalTax, StringFormat={}{0:C2}}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                </DockPanel>
+                                <Separator Margin="0,0,0,8"/>
+                                <DockPanel>
+                                    <TextBlock Text="GENEL TOPLAM:" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                    <TextBlock Text="{Binding GrandTotal, StringFormat={}{0:C2}}" HorizontalAlignment="Right" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- Product Search Drawer (Sidebar Popup when IsSidebarOpen = true) -->
+        <Grid Visibility="{Binding IsSidebarOpen, Converter={StaticResource BooleanToVisibilityConverter}}" Panel.ZIndex="100">
+            <!-- Dim Backdrop -->
+            <Border Background="#60000000">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding ToggleSidebarCommand}"/>
+                </Border.InputBindings>
+            </Border>
+
+            <!-- Right Drawer Container -->
+            <Border HorizontalAlignment="Right" Width="400" 
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1,0,0,0"
+                    Padding="24">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <DockPanel Grid.Row="0" Margin="0,0,0,20">
+                        <TextBlock Text="📦 Malzeme &amp; Hizmet Ekle" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                        <Button Content="✕" Command="{Binding ToggleSidebarCommand}" HorizontalAlignment="Right" Width="32" Height="32"/>
+                    </DockPanel>
+
+                    <!-- Search Input -->
+                    <StackPanel Grid.Row="1" Margin="0,0,0,16">
+                        <TextBlock Text="Ürün veya Stok Kodu Ara" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+                        <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Search Results List -->
+                    <Border Grid.Row="2" Background="{DynamicResource SurfacePageBackgroundBrush}" CornerRadius="8" Padding="8" Margin="0,0,0,16">
+                        <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedProduct}" DisplayMemberPath="ProductName" Height="300" Background="Transparent" BorderThickness="0"/>
+                    </Border>
+
+                    <!-- Quantity & Add Action -->
+                    <StackPanel Grid.Row="3">
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <TextBlock Text="Miktar" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding NewQuantity, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <TextBlock Text="İskonto %" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding NewDiscount, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Button Content="➕ Teklife Ekle" Command="{Binding AddProductCommand}" 
+                                Height="40" Background="{DynamicResource AccentFillColorDefaultBrush}" 
+                                Foreground="White" FontWeight="Bold" HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

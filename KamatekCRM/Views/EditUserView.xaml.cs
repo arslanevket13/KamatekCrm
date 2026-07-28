@@ -15,7 +15,15 @@ namespace KamatekCrm.Views
             InitializeComponent();
         }
 
-        // Keep this for legacy if needed, but parameterless is preferred for our new flow
+        public EditUserView(User user)
+        {
+            InitializeComponent();
+            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>>(App.ServiceProvider!);
+            var toastService = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IToastService>(App.ServiceProvider!);
+            var loadingService = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<ILoadingService>(App.ServiceProvider!);
+            DataContext = new EditUserViewModel(user, dbContextFactory, toastService, loadingService);
+        }
+
         public EditUserView(User user, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory, IToastService toastService, ILoadingService loadingService)
         {
             InitializeComponent();
@@ -25,11 +33,7 @@ namespace KamatekCrm.Views
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
-            
-            if (GetTemplateChild("PART_CloseButton") is System.Windows.Controls.Button closeButton)
-            {
-                closeButton.Click += (s, e) => this.Close();
-            }
+            KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
         }
     }
 }

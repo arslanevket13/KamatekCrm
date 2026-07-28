@@ -138,7 +138,7 @@ namespace KamatekCrm.ViewModels
             set
             {
                 if (SetProperty(ref _selectedWarehouse, value))
-                    LoadProducts();
+                    _ = LoadProducts();
             }
         }
 
@@ -222,7 +222,7 @@ namespace KamatekCrm.ViewModels
 
             CartItems.CollectionChanged += (s, e) => UpdateAllTotals();
 
-            InitializeAsync();
+            _ = InitializeAsync();
         }
 
         private async Task InitializeAsync()
@@ -236,7 +236,7 @@ namespace KamatekCrm.ViewModels
                 foreach (var w in warehouses) Warehouses.Add(w);
                 SelectedWarehouse = Warehouses.FirstOrDefault();
 
-                LoadRecentCustomers();
+                await LoadRecentCustomers();
             }
             finally
             {
@@ -354,6 +354,20 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void SelectCustomer(Customer? customer)
+        {
+            SelectedCustomer = customer;
+            CustomerSearch = string.Empty;
+        }
+
+        [RelayCommand]
+        private void ClearCustomer()
+        {
+            SelectedCustomer = null;
+            CustomerSearch = string.Empty;
+        }
+
         #endregion
 
         #region Global Discount
@@ -402,6 +416,11 @@ namespace KamatekCrm.ViewModels
             BarcodeText = string.Empty;
         }
 
+        private void OnCartItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            UpdateAllTotals();
+        }
+
         private void AddProductToCart(int productId, string productName, decimal salePrice, int vatRate, int maxQty)
         {
             // Düşük stok kontrolü (5 ve altı)
@@ -445,7 +464,7 @@ namespace KamatekCrm.ViewModels
                     DiscountPercent = 0,
                     DiscountType = DiscountType.Percentage
                 };
-                item.PropertyChanged += (s, e) => UpdateAllTotals();
+                item.PropertyChanged += OnCartItemPropertyChanged;
                 CartItems.Add(item);
             }
 
@@ -460,8 +479,15 @@ namespace KamatekCrm.ViewModels
         {
             if (parameter is PosCartItem item)
             {
-                item.Quantity++;
-                UpdateAllTotals();
+                if (item.Quantity < item.MaxQuantity)
+                {
+                    item.Quantity++;
+                    UpdateAllTotals();
+                }
+                else
+                {
+                    StatusMessage = $"❌ Yetersiz stok! Maksimum stok: {item.MaxQuantity}";
+                }
             }
         }
 
@@ -477,6 +503,7 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
+                    item.PropertyChanged -= OnCartItemPropertyChanged;
                     CartItems.Remove(item);
                     UpdateAllTotals();
                 }
@@ -488,6 +515,7 @@ namespace KamatekCrm.ViewModels
         {
             if (parameter is PosCartItem item)
             {
+                item.PropertyChanged -= OnCartItemPropertyChanged;
                 CartItems.Remove(item);
                 UpdateAllTotals();
                 StatusMessage = $"'{item.ProductName}' sepetten çıkarıldı.";
@@ -503,6 +531,10 @@ namespace KamatekCrm.ViewModels
                 MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (result == MessageBoxResult.Yes)
             {
+                foreach (var item in CartItems)
+                {
+                    item.PropertyChanged -= OnCartItemPropertyChanged;
+                }
                 CartItems.Clear();
                 Payments.Clear();
                 UpdateAllTotals();
@@ -548,7 +580,7 @@ namespace KamatekCrm.ViewModels
             // Auto-complete sale if fully paid
             if (CanCompleteSale)
             {
-                CompleteSale();
+                _ = CompleteSale();
             }
         }
 
@@ -563,10 +595,22 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// F8/F9 shortcut: pay full amount with a single method
+        /// F8 shortcut: pay full amount with Cash
         /// </summary>
         [RelayCommand]
-        private void PayFull(PaymentMethod method)
+        private async Task PayFullCash() => await PayFull(PaymentMethod.Cash);
+
+        /// <summary>
+        /// F9 shortcut: pay full amount with Credit Card
+        /// </summary>
+        [RelayCommand]
+        private async Task PayFullCard() => await PayFull(PaymentMethod.CreditCard);
+
+        /// <summary>
+        /// Pay full amount with a single method
+        /// </summary>
+        [RelayCommand]
+        private async Task PayFull(PaymentMethod method)
         {
             if (CartItems.Count == 0 || GrandTotal <= 0) return;
 
@@ -580,7 +624,7 @@ namespace KamatekCrm.ViewModels
             });
 
             UpdateAllTotals();
-            CompleteSale();
+            await CompleteSale();
         }
 
         [RelayCommand]
@@ -603,14 +647,44 @@ namespace KamatekCrm.ViewModels
             
             try
             {
+                _loadingService?.Show();
                 using var context = await _dbContextFactory.CreateDbContextAsync();
                 using var transaction = await context.Database.BeginTransactionAsync();
 
                 var orderNo = "ORD" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-                
-                // Update Inventory
+
+                // 1. Create SalesOrder entity
+                var salesOrder = new SalesOrder
+                {
+                    OrderNumber = orderNo,
+                    CustomerId = SelectedCustomer?.Id,
+                    CustomerName = CustomerDisplayName,
+                    Date = DateTime.UtcNow,
+                    PaymentMethod = string.Join(", ", Payments.Select(p => GetPaymentMethodName(p.PaymentMethod))),
+                    SubTotal = SubTotal,
+                    DiscountTotal = DiscountTotal,
+                    TaxTotal = TaxTotal,
+                    TotalAmount = GrandTotal,
+                    Status = SalesOrderStatus.Completed,
+                    Notes = $"POS Hızlı Satış ({SelectedWarehouse.Name})"
+                };
+
+                // 2. Add SalesOrderItems
                 foreach (var item in CartItems)
                 {
+                    salesOrder.Items.Add(new SalesOrderItem
+                    {
+                        ProductId = item.ProductId,
+                        ProductName = item.ProductName,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                        DiscountPercent = item.DiscountPercent,
+                        DiscountAmount = item.DiscountAmount,
+                        TaxRate = item.TaxRate,
+                        LineTotal = item.LineTotal
+                    });
+
+                    // Update Inventory Quantity
                     var inventory = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
                         context.Inventories, i => i.ProductId == item.ProductId && i.WarehouseId == SelectedWarehouse.Id);
                     if (inventory != null)
@@ -618,8 +692,22 @@ namespace KamatekCrm.ViewModels
                         inventory.Quantity -= item.Quantity;
                     }
                 }
-                
-                // Insert Cash Transactions for each payment
+
+                // 3. Add SalesOrderPayments
+                foreach (var p in Payments)
+                {
+                    salesOrder.Payments.Add(new SalesOrderPayment
+                    {
+                        PaymentMethod = p.PaymentMethod,
+                        Amount = p.Amount,
+                        Reference = p.Reference ?? string.Empty
+                    });
+                }
+
+                context.SalesOrders.Add(salesOrder);
+                await context.SaveChangesAsync();
+
+                // 4. Insert Cash Transactions for each payment linked with SalesOrderId & CustomerId
                 foreach (var payment in Payments)
                 {
                     context.CashTransactions.Add(new CashTransaction
@@ -627,9 +715,11 @@ namespace KamatekCrm.ViewModels
                         TransactionType = CashTransactionType.CashIncome,
                         Amount = payment.Amount,
                         Date = DateTime.UtcNow,
-                        Description = $"Sipariş {orderNo} ödemesi ({GetPaymentMethodName(payment.PaymentMethod)})",
+                        Description = $"Sipariş #{orderNo} ödemesi ({GetPaymentMethodName(payment.PaymentMethod)})",
                         PaymentMethod = payment.PaymentMethod,
-                        ReferenceNumber = payment.Reference
+                        ReferenceNumber = payment.Reference,
+                        SalesOrderId = salesOrder.Id,
+                        CustomerId = SelectedCustomer?.Id
                     });
                 }
 
@@ -639,10 +729,14 @@ namespace KamatekCrm.ViewModels
                 StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {orderNo}";
                 IsActionSuccessful = true;
 
+                foreach (var item in CartItems)
+                {
+                    item.PropertyChanged -= OnCartItemPropertyChanged;
+                }
                 CartItems.Clear();
                 Payments.Clear();
                 UpdateAllTotals();
-                LoadProducts(); // Reload stock quantities
+                await LoadProducts(); // Reload stock quantities
 
                 _toastService?.ShowSuccess($"Satış başarıyla tamamlandı: Sipariş #{orderNo}");
             }
@@ -736,7 +830,11 @@ namespace KamatekCrm.ViewModels
         public decimal UnitPrice
         {
             get => _unitPrice;
-            set { if (_unitPrice != value) { _unitPrice = value; Notify(); NotifyTotals(); } }
+            set
+            {
+                var sanitized = Math.Max(0m, value);
+                if (_unitPrice != sanitized) { _unitPrice = sanitized; Notify(); NotifyTotals(); }
+            }
         }
 
         public DiscountType DiscountType
@@ -748,7 +846,11 @@ namespace KamatekCrm.ViewModels
         public decimal DiscountPercent
         {
             get => _discountPercent;
-            set { if (_discountPercent != value) { _discountPercent = value; Notify(); NotifyTotals(); } }
+            set
+            {
+                var sanitized = Math.Clamp(value, 0m, 100m);
+                if (_discountPercent != sanitized) { _discountPercent = sanitized; Notify(); NotifyTotals(); }
+            }
         }
 
         public decimal DiscountFlatAmount

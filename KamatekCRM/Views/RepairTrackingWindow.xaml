@@ -21,7 +21,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- ================= SOL PANEL: LİSTE ================= -->
-        <Border Grid.Column="0" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,1,0" Style="{StaticResource PremiumWindowStyle}">
+        <Border Grid.Column="0" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,1,0" Background="{DynamicResource ThemeSurface}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

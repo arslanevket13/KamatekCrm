@@ -10,6 +10,7 @@ namespace KamatekCrm.ApplicationCore.DTOs.ServiceJobs
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
+        public string CustomerFullName => CustomerName;
         public int CustomerId { get; set; }
         public JobStatus Status { get; set; }
         public string StatusDisplay { get; set; } = string.Empty;

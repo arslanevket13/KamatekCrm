@@ -68,6 +68,22 @@ namespace KamatekCrm.Shared.Models
 
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer Customer { get; set; } = null!;
+
+        [NotMapped]
+        public string CustomerFullName
+        {
+            get
+            {
+                if (Customer != null && !string.IsNullOrWhiteSpace(Customer.FullName))
+                    return Customer.FullName;
+                if (Customer != null && !string.IsNullOrWhiteSpace(Customer.CompanyName))
+                    return Customer.CompanyName;
+                if (CustomerId > 0)
+                    return $"Müşteri #{CustomerId}";
+                return "Müşteri Atanmadı";
+            }
+        }
+
         [ForeignKey(nameof(ServiceProjectId))]
         public virtual ServiceProject? ServiceProject { get; set; }
         [ForeignKey(nameof(CustomerAssetId))]
@@ -100,6 +116,21 @@ namespace KamatekCrm.Shared.Models
         /// </summary>
         [MaxLength(2000)]
         public string? TechnicianNotes { get; set; }
+
+        /// <summary>
+        /// Keşif sonuç notları (Saha tespitleri)
+        /// </summary>
+        public string? DiscoveryTechnicalNotes { get; set; }
+
+        /// <summary>
+        /// Tahmini işçilik süresi (saat cinsinden)
+        /// </summary>
+        public double EstimatedLaborHours { get; set; } = 0;
+
+        /// <summary>
+        /// Keşif kaydı teklife dönüştürüldü mü?
+        /// </summary>
+        public bool IsConvertedToQuote { get; set; } = false;
         
         /// <summary>
         /// Müşteri imzası (base64)

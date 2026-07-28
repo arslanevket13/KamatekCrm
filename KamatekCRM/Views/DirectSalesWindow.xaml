@@ -6,11 +6,13 @@
         mc:Ignorable="d"
         Title="💰 Perakende Satış (POS)" 
         Height="740" Width="1280"
+        MinHeight="680" MinWidth="1100"
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource PremiumWindowStyle}">
 
     <Window.InputBindings>
         <KeyBinding Key="F5" Command="{Binding ClearCartCommand}"/>
+        <KeyBinding Key="F7" Command="{Binding QuickAddCustomerCommand}"/>
         <KeyBinding Key="F8" Command="{Binding PayFullCashCommand}"/>
         <KeyBinding Key="F9" Command="{Binding PayFullCardCommand}"/>
         <KeyBinding Key="F12" Command="{Binding CompleteSaleCommand}"/>
@@ -335,8 +337,8 @@
                                     <Button Content="➕"
                                             Command="{Binding DataContext.AddToCartCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}"
-                                            Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                            FontSize="15" Width="38" Height="30"
+                                            Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}"
+                                            FontSize="16" Width="44" Height="36"
                                             BorderThickness="0" Cursor="Hand" ToolTip="Sepete Ekle">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
@@ -364,44 +366,47 @@
             </Grid>
         </Border>
 
-        <!-- ========================= RIGHT: CART ========================= -->
         <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16">
             <Border.Effect><DropShadowEffect BlurRadius="12" Opacity="0.07" ShadowDepth="2"/></Border.Effect>
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>  <!-- header -->
-                    <RowDefinition Height="Auto"/>  <!-- customer panel -->
-                    <RowDefinition Height="*"/>     <!-- cart grid -->
-                    <RowDefinition Height="Auto"/>  <!-- global discount -->
-                    <RowDefinition Height="Auto"/>  <!-- totals -->
-                    <RowDefinition Height="Auto"/>  <!-- payment buttons -->
-                    <RowDefinition Height="Auto"/>  <!-- status -->
+                    <RowDefinition Height="Auto"/>  <!-- 0: header -->
+                    <RowDefinition Height="Auto"/>  <!-- 1: customer panel -->
+                    <RowDefinition Height="*"/>     <!-- 2: cart grid -->
+                    <RowDefinition Height="Auto"/>  <!-- 3: global discount -->
+                    <RowDefinition Height="Auto"/>  <!-- 4: totals -->
+                    <RowDefinition Height="Auto"/>  <!-- 5: payment buttons -->
+                    <RowDefinition Height="Auto"/>  <!-- 6: stock warning -->
+                    <RowDefinition Height="Auto"/>  <!-- 7: status -->
                 </Grid.RowDefinitions>
 
                 <!-- Header -->
                 <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
                     <TextBlock Text="🛒" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
                     <TextBlock Text="Sepetim" FontSize="19" FontWeight="Bold"
-                               Foreground="{DynamicResource ThemeWarning}" VerticalAlignment="Center"/>
-                    <Border Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="8,4" Margin="16,0,0,0"
+                               Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center"/>
+                    <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="8" Padding="8,4" Margin="16,0,0,0"
                             Visibility="{Binding CartItemCount, Converter={StaticResource BoolVis}}">
                         <TextBlock Text="{Binding CartItemCount, StringFormat='{}{0} ürün'}"
-                                   Foreground="{DynamicResource StatusWarningFg}" FontWeight="SemiBold" FontSize="12"/>
+                                   Foreground="{DynamicResource ThemePrimaryDark}" FontWeight="SemiBold" FontSize="12"/>
                     </Border>
                     <!-- F Shortcut hints -->
                     <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="4,0" Margin="0,0">
-                            <TextBlock Text="F8=Nakit" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="4,2" Margin="0,0,4,0">
+                            <TextBlock Text="F7=Müşteri" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         </Border>
-                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="4,0" Margin="0,0">
-                            <TextBlock Text="F9=Kart" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="4,2" Margin="0,0,4,0">
+                            <TextBlock Text="F8=Nakit" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </Border>
+                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="4,2" Margin="0,0">
+                            <TextBlock Text="F9=Kart" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         </Border>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- Customer Panel -->
-                <Border Grid.Row="1" Background="{DynamicResource StatusWarningBgLight}" CornerRadius="8" Padding="16"
-                        Margin="0,0,0,16" BorderBrush="{DynamicResource StatusWarningFgLight}" BorderThickness="1">
+                <Border Grid.Row="1" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="12"
+                        Margin="0,0,0,16" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -415,28 +420,25 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="👤" FontSize="16" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="👤" FontSize="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
                             <TextBlock Grid.Column="1"
                                        Text="{Binding CustomerDisplayName}"
                                        FontSize="12" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource StatusWarningFgDark}" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis"/>
                             <!-- Clear customer -->
                             <Button Grid.Column="2" Content="✕"
                                     Command="{Binding ClearCustomerCommand}"
-                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"
+                                    Foreground="{DynamicResource StatusErrorFg}" FontSize="12"
                                     Background="Transparent" BorderThickness="0"
-                                    Cursor="Hand" Margin="4,0,0,0"
+                                    Cursor="Hand" Margin="4,0,4,0"
                                     ToolTip="Müşteriyi temizle">
                                 <Button.Style>
                                     <Style TargetType="Button">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Setter Property="Visibility" Value="Visible"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding SelectedCustomer}" Value="{x:Null}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding SelectedCustomer}" Value="{x:Null}">
-                                                <!-- nothing — show only when NOT null -->
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -445,14 +447,14 @@
                             <!-- Quick add customer -->
                             <Button Grid.Column="3" Content="➕ Yeni"
                                     Command="{Binding QuickAddCustomerCommand}"
-                                    Background="{DynamicResource ThemeWarning}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
                                     FontSize="11" FontWeight="SemiBold"
                                     BorderThickness="0" Cursor="Hand"
                                     Padding="8,4" ToolTip="Yeni müşteri ekle (F7)">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,4"/>
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,2"/>
                                         </Border>
                                     </ControlTemplate>
                                 </Button.Template>
@@ -466,14 +468,14 @@
                             </Grid.ColumnDefinitions>
                             <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}"
                                      FontSize="12" Padding="8,4"
-                                     BorderBrush="{DynamicResource ThemeWarning}" BorderThickness="1"
+                                     BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1"
                                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" TabIndex="3">
                                 <TextBox.Template>
                                     <ControlTemplate TargetType="TextBox">
                                         <Border Background="{TemplateBinding Background}"
                                                 BorderBrush="{TemplateBinding BorderBrush}"
                                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                                CornerRadius="8">
+                                                CornerRadius="6">
                                             <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
                                         </Border>
                                     </ControlTemplate>
@@ -481,11 +483,11 @@
                             </TextBox>
                             <!-- Customer dropdown -->
                             <Popup Grid.Column="0" IsOpen="{Binding CustomerSearch, Converter={StaticResource BoolVis}}"
-                                   Placement="Bottom" AllowsTransparency="True">
+                                   Placement="Bottom" AllowsTransparency="True" StaysOpen="False">
                                 <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="4">
                                     <Border.Effect><DropShadowEffect BlurRadius="10" Opacity="0.12"/></Border.Effect>
                                     <ListBox ItemsSource="{Binding FilteredCustomers}"
-                                             Width="220"
+                                             Width="240"
                                              BorderThickness="0"
                                              Background="Transparent">
                                         <ListBox.ItemTemplate>
@@ -493,7 +495,7 @@
                                                 <Button Command="{Binding DataContext.SelectCustomerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}"
                                                         Background="Transparent" BorderThickness="0"
-                                                        HorizontalContentAlignment="Left" Cursor="Hand">
+                                                        HorizontalContentAlignment="Left" Cursor="Hand" Width="230">
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="12"/>
                                                         <TextBlock Text="{Binding PhoneNumber, StringFormat=' · {0}'}"
@@ -523,8 +525,8 @@
 
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="{DynamicResource ThemeWarningBg}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource ThemeWarning}"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemePrimaryDark}"/>
                                 <Setter Property="FontWeight" Value="SemiBold"/>
                                 <Setter Property="FontSize" Value="11"/>
                                 <Setter Property="Padding" Value="6,5"/>
@@ -588,7 +590,7 @@
                                     <DataTemplate>
                                         <TextBox Text="{Binding UnitPrice, UpdateSourceTrigger=LostFocus, StringFormat='N2'}"
                                                  FontSize="11" FontWeight="SemiBold"
-                                                 Foreground="{DynamicResource StatusInfoFg}"
+                                                 Foreground="{DynamicResource TextHeadingBrush}"
                                                  BorderThickness="0" Background="Transparent"
                                                  TextAlignment="Right" VerticalAlignment="Center"
                                                  Padding="4,0"/>
@@ -601,8 +603,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBox Text="{Binding DiscountPercent, UpdateSourceTrigger=LostFocus, StringFormat='N1'}"
-                                                 FontSize="11" Foreground="{DynamicResource ThemeWarning}"
-                                                 BorderThickness="0" Background="{DynamicResource StatusWarningBgLight}"
+                                                 FontSize="11" Foreground="{DynamicResource ThemePrimary}"
+                                                 BorderThickness="0" Background="{DynamicResource ThemePrimaryLight}"
                                                  TextAlignment="Center" VerticalAlignment="Center"
                                                  Padding="4,0"/>
                                     </DataTemplate>
@@ -616,7 +618,7 @@
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="HorizontalAlignment" Value="Right"/>
                                         <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="Foreground" Value="{DynamicResource ThemeWarning}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource ThemePrimaryDark}"/>
                                         <Setter Property="Margin" Value="0,0,4,0"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
@@ -640,8 +642,8 @@
                 </Border>
 
                 <!-- Global Discount Row -->
-                <Border Grid.Row="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="8,8" Margin="0,8,0,4"
-                        BorderBrush="{DynamicResource StatusWarningFg}" BorderThickness="1">
+                <Border Grid.Row="3" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="8,8" Margin="0,8,0,4"
+                        BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -650,32 +652,32 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="🎯 Genel İndirim (%)" VerticalAlignment="Center"
-                                   FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFgDark}"/>
+                                   FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}"/>
                         <TextBlock Grid.Column="1" Text="Tüm ürünlere uygula:"
-                                   VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource StatusWarningFg}" Margin="0,0,8,0"/>
+                                   VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,8,0"/>
                         <TextBox Grid.Column="2" TabIndex="4"
                                  Text="{Binding GlobalDiscountPercent, UpdateSourceTrigger=LostFocus, StringFormat='N1'}"
                                  FontSize="14" FontWeight="Bold" TextAlignment="Center"
-                                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource ThemeWarning}" BorderThickness="1"
-                                 Padding="4,4" Foreground="{DynamicResource ThemeWarning}">
+                                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1"
+                                 Padding="4,4" Foreground="{DynamicResource ThemePrimary}">
                             <TextBox.Template>
                                 <ControlTemplate TargetType="TextBox">
                                     <Border Background="{TemplateBinding Background}"
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="8">
+                                            CornerRadius="6">
                                         <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
                                     </Border>
                                 </ControlTemplate>
                             </TextBox.Template>
                         </TextBox>
                         <TextBlock Grid.Column="3" Text=" %" VerticalAlignment="Center"
-                                   FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ThemeWarningDark}"/>
+                                   FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ThemePrimaryDark}"/>
                     </Grid>
                 </Border>
 
                 <!-- Totals -->
-                <Border Grid.Row="4" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="16,8" Margin="0,0,0,8">
+                <Border Grid.Row="4" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="16,8" Margin="0,0,0,8">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -691,23 +693,23 @@
                                        HorizontalAlignment="Right" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"/>
                         </Grid>
                         <Grid Grid.Row="1" Margin="0,4,0,0">
-                            <TextBlock Text="İndirim" Foreground="{DynamicResource ThemeWarning}" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="İndirim" Foreground="{DynamicResource ThemePrimary}" FontSize="12" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding DiscountTotal, StringFormat='- {0:N2} ₺'}"
-                                       HorizontalAlignment="Right" Foreground="{DynamicResource ThemeWarning}" FontSize="12"/>
+                                       HorizontalAlignment="Right" Foreground="{DynamicResource ThemePrimary}" FontSize="12"/>
                         </Grid>
                         <Grid Grid.Row="2" Margin="0,4,0,0">
                             <TextBlock Text="KDV" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding TaxTotal, StringFormat='{}{0:N2} ₺'}"
                                        HorizontalAlignment="Right" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12"/>
                         </Grid>
-                        <Separator Grid.Row="3" Background="{DynamicResource ThemeWarningLight}" Margin="0,8"/>
+                        <Separator Grid.Row="3" Background="{DynamicResource BorderDefaultBrush}" Margin="0,8"/>
                         <!-- Grand Total -->
                         <Grid Grid.Row="4">
                             <TextBlock Text="TOPLAM" FontSize="17" FontWeight="Bold"
-                                       Foreground="{DynamicResource ThemeWarningDark}" VerticalAlignment="Center"/>
+                                       Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding GrandTotal, StringFormat='{}{0:N2} ₺'}"
                                        HorizontalAlignment="Right" FontSize="26" FontWeight="Bold"
-                                       Foreground="{DynamicResource ThemeWarningDark}"/>
+                                       Foreground="{DynamicResource ThemePrimaryDark}"/>
                         </Grid>
                     </Grid>
                 </Border>
@@ -747,12 +749,13 @@
                     </Button>
                 </StackPanel>
 
-                <!-- Status -->
-                <Border Grid.Row="5" Background="{DynamicResource StatusWarningBgLight}" CornerRadius="8" Padding="8,8" Margin="0,0,0,8"
+                <!-- Stock Warning -->
+                <Border Grid.Row="6" Background="{DynamicResource StatusWarningBgLight}" CornerRadius="8" Padding="8,8" Margin="0,8,0,4"
                         Visibility="{Binding HasStockWarning, Converter={StaticResource BoolVis}}">
                     <TextBlock Text="{Binding StockWarningMessage}" FontSize="12" Foreground="{DynamicResource StatusWarningFgDark}" FontWeight="SemiBold"/>
                 </Border>
 
+                <!-- Status Message -->
                 <TextBlock Grid.Row="7"
                            Text="{Binding StatusMessage}"
                            Margin="0,8,0,0" FontSize="12" TextWrapping="Wrap">

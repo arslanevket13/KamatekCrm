@@ -6,8 +6,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         Title="📦 Hızlı Ürün Oluştur"
         Height="580" Width="520"
-        WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize"
+        ResizeMode="CanResizeWithGrip"
+        MinWidth="480" MinHeight="450"
         Style="{StaticResource PremiumWindowStyle}">
 
     <Window.Resources>

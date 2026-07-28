@@ -18,16 +18,17 @@
         </DockPanel>
     </ControlTemplate>
 
-    <!-- ─────────── PREMIUM WINDOW STYLE ─────────── -->
+    <!-- ─────────── PREMIUM WINDOW STYLE (Serbest Taşınabilir & Boyutlandırılabilir) ─────────── -->
     <Style x:Key="PremiumWindowStyle" TargetType="Window">
         <Setter Property="WindowStyle" Value="None" />
         <Setter Property="AllowsTransparency" Value="True" />
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}" />
         <Setter Property="FontFamily" Value="{StaticResource MainFont}" />
+        <Setter Property="ResizeMode" Value="CanResizeWithGrip" />
         <Setter Property="WindowChrome.WindowChrome">
             <Setter.Value>
-                <WindowChrome CaptionHeight="0" CornerRadius="8" GlassFrameThickness="0" ResizeBorderThickness="4" UseAeroCaptionButtons="False" />
+                <WindowChrome CaptionHeight="44" CornerRadius="12" GlassFrameThickness="0" ResizeBorderThickness="6" UseAeroCaptionButtons="False" />
             </Setter.Value>
         </Setter>
         <Setter Property="Template">
@@ -35,41 +36,80 @@
                 <ControlTemplate TargetType="Window">
                     <!-- Gölge ve Kenar Yumuşatma için Dış Container -->
                     <Grid Background="Transparent">
-                        <Border Margin="10" 
-                                Background="{DynamicResource ApplicationBackgroundBrush}" 
-                                CornerRadius="8" 
-                                BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}" 
+                        <Border Margin="8" 
+                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                                CornerRadius="12" 
+                                BorderBrush="{DynamicResource BorderDefaultBrush}" 
                                 BorderThickness="1"
                                 ClipToBounds="True">
                             <Border.Effect>
-                                <!-- Yumuşak bir DropShadow -->
-                                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.15" Color="Black" />
+                                <DropShadowEffect BlurRadius="24" ShadowDepth="4" Opacity="0.18" Color="Black" />
                             </Border.Effect>
 
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <!-- Özel Başlık Çubuğu Alanı -->
-                                    <RowDefinition Height="Auto" />
+                                    <!-- Özel Sürüklenebilir Başlık Çubuğu Alanı (CaptionHeight=44) -->
+                                    <RowDefinition Height="44" />
                                     <!-- Ana İçerik -->
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
 
-                                <!-- Üst Bar: Sadece Kapatma Butonu (Title Bar gizli) -->
-                                <Grid Grid.Row="0" Height="40" Background="Transparent" WindowChrome.IsHitTestVisibleInChrome="True">
-                                    <Button x:Name="PART_CloseButton"
-                                            Content="✕" 
-                                            HorizontalAlignment="Right" 
-                                            VerticalAlignment="Top" 
-                                            Width="48" Height="32" 
-                                            BorderThickness="0" 
-                                            Background="Transparent" 
-                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
-                                            FontSize="14">
-                                        <!-- Hover state works automatically if BasedOn empty or if standard Button template supports it -->
-                                    </Button>
-                                </Grid>
+                                <!-- Üst Başlık Barı: Pencere İkonu, Başlık ve Kontrol Butonları -->
+                                <Border Grid.Row="0" Background="{DynamicResource ThemeSidebarHover}" BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,0,0,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
 
-                                <!-- Holy Grail Layout İçeriğinin Geleceği Alan -->
+                                        <!-- Sol: Pencere Başlığı ve Simge -->
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0" IsHitTestVisible="False">
+                                            <TextBlock Text="{TemplateBinding Title}" 
+                                                       FontWeight="SemiBold" FontSize="13" 
+                                                       Foreground="{DynamicResource TextHeadingBrush}" 
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+
+                                        <!-- Sağ: Pencere Kontrol Butonları (Küçült, Büyüt/Eski Boyut, Kapat) -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Stretch" WindowChrome.IsHitTestVisibleInChrome="True">
+                                            <!-- Küçült (_) -->
+                                            <Button x:Name="PART_MinimizeButton"
+                                                    Content="─" 
+                                                    ToolTip="Simge Durumuna Küçült"
+                                                    Width="44" Height="36" 
+                                                    BorderThickness="0" 
+                                                    Background="Transparent" 
+                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                                    FontSize="11" FontWeight="Bold"
+                                                    Cursor="Hand"/>
+
+                                            <!-- Ekranı Kapla / Normal Boyut (🗖) -->
+                                            <Button x:Name="PART_MaximizeButton"
+                                                    Content="🗖" 
+                                                    ToolTip="Ekranı Kapla / Normal Boyut"
+                                                    Width="44" Height="36" 
+                                                    BorderThickness="0" 
+                                                    Background="Transparent" 
+                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                                    FontSize="12"
+                                                    Cursor="Hand"/>
+
+                                            <!-- Kapat (✕) -->
+                                            <Button x:Name="PART_CloseButton"
+                                                    Content="✕" 
+                                                    ToolTip="Kapat"
+                                                    Width="48" Height="36" 
+                                                    BorderThickness="0" 
+                                                    Background="Transparent" 
+                                                    Foreground="{DynamicResource StatusErrorFg}" 
+                                                    FontSize="14" FontWeight="Bold"
+                                                    Cursor="Hand"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Ana İçerik Alanı -->
                                 <ContentPresenter Grid.Row="1" ClipToBounds="True" />
                             </Grid>
                         </Border>

@@ -93,6 +93,7 @@ namespace KamatekCrm.Infrastructure.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             if (!optionsBuilder.IsConfigured)
             {
                 throw new InvalidOperationException("DbContext must be configured with a valid connection string. Fallback configuration is strictly prohibited to prevent split-brain risks.");

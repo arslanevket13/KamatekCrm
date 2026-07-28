@@ -861,6 +861,156 @@ namespace KamatekCrm.Services
             });
         }
 
+        #region Keşif & Servis Formu PDF Şablonları
+
+        public void GenerateServiceJobPdf(ServiceJob job, string filePath)
+        {
+            if (job.WorkOrderType == WorkOrderType.Discovery)
+            {
+                GenerateDiscoveryReportPdf(job, filePath);
+                return;
+            }
+
+            GenerateDiscoveryReportPdf(job, filePath);
+        }
+
+        public void GenerateDiscoveryReportPdf(ServiceJob job, string filePath)
+        {
+            var logoBytes = GetLogoBytes();
+
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(30);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
+
+                    page.Header().Element(c =>
+                    {
+                        c.Column(col =>
+                        {
+                            col.Item().Row(row =>
+                            {
+                                row.RelativeItem().Column(r =>
+                                {
+                                    if (logoBytes != null)
+                                    {
+                                        r.Item().Width(200).Image(logoBytes).FitArea();
+                                    }
+                                    else
+                                    {
+                                        r.Item().Text("KAMATEK").FontSize(28).Bold().FontColor(BrandColors.Primary);
+                                        r.Item().Text("ELEKTRİK VE GÜVENLİK SİSTEMLERİ").FontSize(9).FontColor(BrandColors.Secondary);
+                                    }
+                                });
+
+                                row.ConstantItem(250).AlignRight().Column(r =>
+                                {
+                                    r.Item().Text("KEŞİF VE SAHA TESPİT RAPORU").FontSize(16).Bold().FontColor(BrandColors.Primary);
+                                    r.Item().Text($"Takip No: #{job.Id}").FontSize(10).Bold().FontColor(BrandColors.Secondary);
+                                    r.Item().Text($"Tarih: {DateTime.Now:dd MMMM yyyy}").FontSize(9).FontColor(BrandColors.TextSecondary);
+                                });
+                            });
+
+                            col.Item().PaddingTop(10).LineHorizontal(2).LineColor(BrandColors.Secondary);
+                        });
+                    });
+
+                    page.Content().Element(c =>
+                    {
+                        c.PaddingTop(15).Column(col =>
+                        {
+                            col.Spacing(15);
+
+                            // 1. Müşteri ve Saha Konum Bilgileri
+                            col.Item().Border(1).BorderColor("#E0E0E0").Background("#F8F9FA").Padding(12).Column(c1 =>
+                            {
+                                c1.Item().Text("MÜŞTERİ VE SAHA KONUM BİLGİLERİ").FontSize(11).Bold().FontColor(BrandColors.Primary);
+                                c1.Item().PaddingTop(6).Row(r =>
+                                {
+                                    r.RelativeItem().Column(c2 =>
+                                    {
+                                        c2.Item().Text($"Müşteri / Firma: {job.Customer?.FullName ?? job.Customer?.CompanyName ?? "Belirtilmedi"}").Bold();
+                                        c2.Item().Text($"Telefon: {job.Customer?.PhoneNumber ?? "-"}").FontSize(9);
+                                        c2.Item().Text($"Adres: {job.Customer?.FullAddress ?? "Adres Belirtilmemiş"}").FontSize(9);
+                                    });
+                                    r.RelativeItem().Column(c3 =>
+                                    {
+                                        c3.Item().Text($"Teknisyen: {job.AssignedTechnician ?? "Atanmadı"}").FontSize(9);
+                                        c3.Item().Text($"Planlanan Tarih: {(job.ScheduledDate.HasValue ? job.ScheduledDate.Value.ToString("dd.MM.yyyy HH:mm") : "-")}").FontSize(9);
+                                        c3.Item().Text($"Öncellik: {job.Priority}").FontSize(9);
+                                    });
+                                });
+                            });
+
+                            // 2. Müşteri Talebi / İhtiyaç Açıklaması
+                            col.Item().Border(1).BorderColor("#E0E0E0").Padding(12).Column(c1 =>
+                            {
+                                c1.Item().Text("MÜŞTERİ TALEBİ / İHTİYAÇ AÇIKLAMASI").FontSize(11).Bold().FontColor(BrandColors.Primary);
+                                c1.Item().PaddingTop(6).Text(string.IsNullOrWhiteSpace(job.Description) ? "Özel bir açıklama belirtilmedi." : job.Description).FontSize(9);
+                            });
+
+                            // 3. Teknisyenin Sahadaki Teknik Tespitleri
+                            col.Item().Border(1).BorderColor("#E0E0E0").Padding(12).Column(c1 =>
+                            {
+                                c1.Item().Text("TEKNİSYENİN SAHADAKİ TESPİTLERİ VE ALTYAPI DURUMU").FontSize(11).Bold().FontColor(BrandColors.Secondary);
+                                c1.Item().PaddingTop(6).Text(string.IsNullOrWhiteSpace(job.DiscoveryTechnicalNotes ?? job.TechnicianNotes)
+                                    ? "Saha tespit notu eklenmedi."
+                                    : (job.DiscoveryTechnicalNotes ?? job.TechnicianNotes)).FontSize(9);
+                            });
+
+                            // 4. Saha Çizim / Kroki / Taslak Alanı (Grid/Dotted Box)
+                            col.Item().Border(1).BorderColor("#B0BEC5").Padding(10).Column(c1 =>
+                            {
+                                c1.Item().Text("SAHA KROKİ / TEKNİK ÇİZİM VE EK NOTLAR ALANI").FontSize(10).Bold().FontColor(BrandColors.Primary);
+                                c1.Item().PaddingTop(4).Text("Bu alana sahada montaj yeri, kablolama güzergahı ve yerleşim planı çizilebilir.").FontSize(8).Italic().FontColor("#78909C");
+                                c1.Item().PaddingTop(8).Height(180).Border(1).BorderColor("#CFD8DC").Background("#FAFAFA").Padding(10).Text("");
+                            });
+
+                            // 5. İmza Bloğu
+                            col.Item().PaddingTop(10).Row(r =>
+                            {
+                                r.RelativeItem().Border(1).BorderColor("#E0E0E0").Padding(10).Column(c1 =>
+                                {
+                                    c1.Item().Text("TEKNİSYEN İMZA").FontSize(9).Bold().FontColor(BrandColors.Primary);
+                                    c1.Item().PaddingTop(30).Text(job.AssignedTechnician ?? "Teknisyen").FontSize(8).AlignRight();
+                                });
+                                r.ConstantItem(20);
+                                r.RelativeItem().Border(1).BorderColor("#E0E0E0").Padding(10).Column(c1 =>
+                                {
+                                    c1.Item().Text("MÜŞTERİ ONAY / İMZA").FontSize(9).Bold().FontColor(BrandColors.Primary);
+                                    c1.Item().PaddingTop(30).Text(job.Customer?.FullName ?? "Müşteri").FontSize(8).AlignRight();
+                                });
+                            });
+                        });
+                    });
+
+                    page.Footer().Element(c =>
+                    {
+                        c.Column(col =>
+                        {
+                            col.Item().LineHorizontal(1).LineColor("#E0E0E0");
+                            col.Item().PaddingTop(4).Row(r =>
+                            {
+                                r.RelativeItem().Text("Kamatek CRM Keşif Servis Formu").FontSize(8).FontColor("#9E9E9E");
+                                r.RelativeItem().AlignRight().Text(x =>
+                                {
+                                    x.Span("Sayfa ");
+                                    x.CurrentPageNumber();
+                                    x.Span(" / ");
+                                    x.TotalPages();
+                                });
+                            });
+                        });
+                    });
+                });
+            })
+            .GeneratePdf(filePath);
+        }
+
+        #endregion
+
         #endregion
 
         #endregion

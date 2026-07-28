@@ -10,6 +10,28 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class PasswordResetView : Window
     {
+        public PasswordResetView(User user)
+        {
+            InitializeComponent();
+            var authService = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IAuthService>(App.ServiceProvider!);
+            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>>(App.ServiceProvider!);
+
+            var viewModel = new PasswordResetViewModel(user, authService, dbContextFactory);
+            viewModel.SaveSuccessful += () =>
+            {
+                try { DialogResult = true; } catch { }
+                Close();
+            };
+            
+            viewModel.CancelRequested += () =>
+            {
+                try { DialogResult = false; } catch { }
+                Close();
+            };
+
+            DataContext = viewModel;
+        }
+
         public PasswordResetView(User user, IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory)
         {
             InitializeComponent();
@@ -49,11 +71,7 @@ namespace KamatekCrm.Views
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
-            
-            if (GetTemplateChild("PART_CloseButton") is System.Windows.Controls.Button closeButton)
-            {
-                closeButton.Click += (s, e) => this.Close();
-            }
+            KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
         }
     }
 }

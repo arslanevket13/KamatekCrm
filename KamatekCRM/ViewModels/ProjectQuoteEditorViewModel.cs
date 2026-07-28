@@ -447,19 +447,15 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void RenameNode()
+        private void RenameNode(object? parameter)
         {
             if (SelectedNode == null) return;
 
-            // Basit input dialog (Microsoft.VisualBasic.Interaction.InputBox)
-            var newName = Microsoft.VisualBasic.Interaction.InputBox(
-                "Yeni isim veya müşteri bilgisi (Örn: 'Daire 5 - Ahmet Bey'):", 
-                "Birim Adı / Müşteri Bilgisi", 
-                SelectedNode.Name);
-
+            var newName = parameter as string;
             if (!string.IsNullOrWhiteSpace(newName))
             {
                 SelectedNode.Name = newName;
+                OnPropertyChanged(nameof(SelectedNodeName));
             }
         }
 

@@ -62,7 +62,7 @@
         </StackPanel>
 
         <!-- ROW 1: BODY -->
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,18,0,34" Grid.RowSpan="2">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,18,0,16">
             <StackPanel Margin="0,0,16,0">
                 <!-- Müşteri Tipi Seçimi -->
                 <Border Background="{DynamicResource SurfaceCardBrush}" CornerRadius="8" Padding="16" BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}" Margin="0,0,0,16">

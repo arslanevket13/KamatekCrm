@@ -142,42 +142,49 @@
                         <StackPanel>
                             <TextBlock Style="{StaticResource SectionHeader}" Text="1. Müşteri Bilgisi"/>
                             
-                            <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
-                                    BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
-                                <CheckBox Content="⚡ Hızlı Yeni Müşteri Kısayolu" 
-                                          IsChecked="{Binding IsQuickAddCustomer}"
-                                          FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}"/>
-                            </Border>
-                            
-                            <!-- Mevcut Müşteri Seçimi -->
-                            <StackPanel Visibility="{Binding IsQuickAddCustomer, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}">
-                                <TextBlock Style="{StaticResource FieldLabel}" Text="Müşteri Arayın Veya Seçin *"/>
-                                <ComboBox ItemsSource="{Binding Customers}"
+                            <!-- Müşteri Seçimi + Hızlı Ekleme Butonu -->
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="Müşteri Arayın Veya Seçin *"/>
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <ComboBox Grid.Column="0"
+                                          ItemsSource="{Binding Customers}"
                                           SelectedItem="{Binding SelectedCustomer}"
                                           DisplayMemberPath="FullName"
                                           IsEditable="True" IsTextSearchEnabled="True"
                                           Style="{StaticResource ModernComboBox}"
-                                          Height="44" Margin="0,0,0,16"/>
+                                          Height="44"/>
                                 
-                                <!-- Müşteri Adres Box -->
-                                <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="16" MinHeight="60"
-                                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
-                                    <TextBlock Text="{Binding CustomerAddress}" 
-                                               TextWrapping="Wrap" FontSize="12" 
-                                               Foreground="{DynamicResource ThemeForegroundMuted}"/>
-                                </Border>
-                            </StackPanel>
-
-                            <!-- Yeni Müşteri Ekle Alanları -->
-                            <StackPanel Visibility="{Binding IsQuickAddCustomer, Converter={StaticResource BoolToVis}}">
-                                <TextBlock Style="{StaticResource FieldLabel}" Text="Ad Soyad / Firma Adı *"/>
-                                <TextBox Text="{Binding QuickCustomerName, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource ModernTextBox}" Height="44" Margin="0,0,0,16"/>
-                                
-                                <TextBlock Style="{StaticResource FieldLabel}" Text="Telefon Numarası"/>
-                                <TextBox Text="{Binding QuickCustomerPhone, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource ModernTextBox}" Height="44"/>
-                            </StackPanel>
+                                <!-- ➕ Hızlı Yeni Müşteri Butonu -->
+                                <Button Grid.Column="2"
+                                        Command="{Binding OpenQuickCustomerAddCommand}"
+                                        Style="{StaticResource ModernButton}"
+                                        Background="{DynamicResource StatusSuccessBg}"
+                                        BorderBrush="{DynamicResource StatusSuccessFg}"
+                                        BorderThickness="1"
+                                        Height="44" Padding="16,0"
+                                        ToolTip="Hızlı yeni müşteri ekle"
+                                        Cursor="Hand">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="➕" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="Yeni Müşteri" FontSize="12" FontWeight="SemiBold" 
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource StatusSuccessFg}"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                            
+                            <!-- Müşteri Adres Box -->
+                            <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="16" MinHeight="60"
+                                    BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
+                                <TextBlock Text="{Binding CustomerAddress}" 
+                                           TextWrapping="Wrap" FontSize="12" 
+                                           Foreground="{DynamicResource ThemeForegroundMuted}"/>
+                            </Border>
                         </StackPanel>
                     </Border>
                     
@@ -352,7 +359,7 @@
                                                 <Button Content="✕" 
                                                         Command="{Binding DataContext.RemovePhotoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                         CommandParameter="{Binding}"
-                                                        Background="{DynamicResource CardShadowBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                                                        Background="{DynamicResource StatusErrorBg}" Foreground="{DynamicResource StatusErrorFg}" 
                                                         Width="20" Height="20" FontSize="10" Padding="0"
                                                         HorizontalAlignment="Right" VerticalAlignment="Top"
                                                         Margin="4" BorderThickness="0" Cursor="Hand"
@@ -399,7 +406,7 @@
                         Height="44" Padding="24,0" FontSize="14" Margin="0,0,16,0"/>
                 
                 <Button Command="{Binding SaveFaultTicketCommand}"
-                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
                         Height="44" Padding="32,0" FontSize="15" FontWeight="SemiBold"
                         BorderThickness="0">
                     <Button.Content>

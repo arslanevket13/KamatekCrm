@@ -1,4 +1,5 @@
 using System;
+using KamatekCrm.ApplicationCore.DTOs.ServiceJobs;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -939,6 +940,8 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedServiceJob, value))
                 {
                     _ = LoadJobItems();
+                    (ChangeJobStatusCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
+                    (DeleteJobCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -1108,6 +1111,9 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public event Action? CancelRequested;
 
+        [RelayCommand]
+        private void CancelForm() => CancelRequested?.Invoke();
+
         /// <summary>
         /// Kayıt/Güncelleme başarılı event (UX düzeltmesi)
         /// </summary>
@@ -1151,7 +1157,7 @@ namespace KamatekCrm.ViewModels
         /// Yeni iş formunu aç
         /// </summary>
         [RelayCommand]
-        private void OpenNewJobForm()
+        private async Task OpenNewJobForm()
         {
             // Create a new ViewModel with dependencies
             var newVm = new ServiceJobViewModel(_navigationService, _toastService, _loadingService, _dbContextFactory);
@@ -1168,7 +1174,7 @@ namespace KamatekCrm.ViewModels
 
             if (result == true)
             {
-                RefreshList();
+                await RefreshList();
             }
         }
 
@@ -1191,17 +1197,20 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// İş detayını görüntüle
+        /// İş detayını görüntüle (Sağ Çekmece Panelini Aç)
         /// </summary>
         [RelayCommand]
         private void ViewJobDetail(ServiceJob? job)
         {
-            if (job == null) return;
-            MessageBox.Show($"İş Detayı: #{job.Id}\n{job.Description}", "Detay", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (job != null)
+            {
+                SelectedServiceJob = job;
+            }
+            IsDetailPanelOpen = true;
         }
 
         [RelayCommand]
-        private void EditJob(ServiceJob? job)
+        private async Task EditJob(ServiceJob? job)
         {
             if (job == null) return;
 
@@ -1250,7 +1259,7 @@ namespace KamatekCrm.ViewModels
             window.Owner = System.Windows.Application.Current.MainWindow;
             var result = window.ShowDialog();
 
-            if (result == true) RefreshList();
+            if (result == true) await RefreshList();
         }
 
         /// <summary>
@@ -1312,6 +1321,61 @@ namespace KamatekCrm.ViewModels
 
             if (result == true) _ = LoadServiceJobs();
         }
+
+        /// <summary>
+        /// Keşif kaydını teklife dönüştürür ve Teklif Ekranına (QuotationViewModel) yönlendirir.
+        /// </summary>
+        [RelayCommand]
+        private async Task ConvertToQuote(object? param)
+        {
+            int? jobId = param switch
+            {
+                ServiceJobListItemDto dto => dto.Id,
+                ServiceJob job => job.Id,
+                _ => null
+            };
+
+            if (!jobId.HasValue) return;
+
+            try
+            {
+                _loadingService?.Show("Keşif teklife dönüştürülüyor...");
+
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var job = await context.ServiceJobs
+                    .Include(j => j.Customer)
+                    .FirstOrDefaultAsync(j => j.Id == jobId.Value);
+
+                if (job == null)
+                {
+                    _toastService?.ShowError("İş emri bulunamadı.");
+                    return;
+                }
+
+                // Keşif durum güncellemesi
+                job.Status = JobStatus.Quoting;
+                job.IsConvertedToQuote = true;
+                await context.SaveChangesAsync();
+
+                _toastService?.ShowSuccess($"İş #{job.Id} teklif aşamasına alındı. Teklif ekranına yönlendiriliyorsunuz.");
+
+                // Teklif ekranına yönlendir ve müşteriyi otomatik seç
+                var quoteVm = _navigationService?.NavigateTo<QuotationViewModel>();
+                if (quoteVm != null && job.CustomerId > 0)
+                {
+                    await quoteVm.SelectCustomerByIdAsync(job.CustomerId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Teklife dönüştürülürken hata: {ex.Message}");
+            }
+            finally
+            {
+                _loadingService?.Hide();
+            }
+        }
+
 
         [RelayCommand]
         private void BrowsePhotos()
@@ -1466,7 +1530,9 @@ namespace KamatekCrm.ViewModels
         private async Task LoadServiceJobs()
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
-            var query = context.ServiceJobs.AsQueryable();
+            var query = context.ServiceJobs
+                .Include(j => j.Customer)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(SearchText))
                 query = query.Where(j => j.Description.Contains(SearchText) || (j.Customer != null && j.Customer.FullName.Contains(SearchText)));
@@ -1839,9 +1905,16 @@ namespace KamatekCrm.ViewModels
         /// Servis formunu PDF olarak yazdır
         /// </summary>
         [RelayCommand]
-        private async Task PrintServiceForm(ServiceJob? job)
+        private async Task PrintServiceForm(object? param)
         {
-            if (job == null) return;
+            int? jobId = param switch
+            {
+                ServiceJobListItemDto dto => dto.Id,
+                ServiceJob job => job.Id,
+                _ => null
+            };
+
+            if (!jobId.HasValue) return;
 
             try
             {
@@ -1850,7 +1923,7 @@ namespace KamatekCrm.ViewModels
                     .Include(j => j.Customer)
                     .Include(j => j.CustomerAsset)
                     .Include(j => j.ServiceJobItems)
-                    .FirstOrDefaultAsync(j => j.Id == job.Id);
+                    .FirstOrDefaultAsync(j => j.Id == jobId.Value);
 
                 if (fullJob == null)
                 {
@@ -1871,7 +1944,7 @@ namespace KamatekCrm.ViewModels
                 {
                     // PDF oluştur
                     var pdfService = new PdfService();
-                    pdfService.GenerateServiceForm(fullJob, saveDialog.FileName);
+                    pdfService.GenerateServiceJobPdf(fullJob, saveDialog.FileName);
 
                     // PDF'i aç
                     var processInfo = new ProcessStartInfo
@@ -2000,26 +2073,48 @@ namespace KamatekCrm.ViewModels
             };
         }
 
+        private bool CanChangeJobStatus(object? param) => SelectedServiceJob != null;
+
         /// <summary>
-        /// İş durumunu değiştir (Dashboard context menu)
+        /// İş durumunu değiştir (Dashboard / Context Menu)
+        /// Fail-Fast & Null-Safe prensiplerine uygun olarak refactor edilmiştir.
         /// </summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanChangeJobStatus))]
         private async Task ChangeJobStatus(object? param)
         {
-            if (SelectedServiceJob == null || param == null) return;
+            // ── Guard Clause 1: Parametre ve Seçili İş Kontrolü (Fail-Fast) ──
+            var targetJob = SelectedServiceJob;
+            if (targetJob is null)
+            {
+                _toastService?.ShowWarning("Lütfen durumunu değiştirmek istediğiniz iş emrini seçin.");
+                return;
+            }
+
+            if (param is null) return;
+
+            // ── Guard Clause 2: Yeni Durum Parse Kontrolü ──
+            JobStatus newStatus;
+            if (param is JobStatus js)
+            {
+                newStatus = js;
+            }
+            else if (Enum.TryParse<JobStatus>(param.ToString(), out var parsed))
+            {
+                newStatus = parsed;
+            }
+            else
+            {
+                _toastService?.ShowError("Geçersiz iş durumu.");
+                return;
+            }
+
+            // ── Local Capture (Async işlem sırasında NullReference olmasını engeller) ──
+            int targetJobId = targetJob.Id;
 
             try
             {
-                JobStatus newStatus;
-                if (param is JobStatus js)
-                    newStatus = js;
-                else if (Enum.TryParse<JobStatus>(param.ToString(), out var parsed))
-                    newStatus = parsed;
-                else
-                    return;
-
                 using var context = await _dbContextFactory.CreateDbContextAsync();
-                var existingJob = await context.ServiceJobs.FindAsync(SelectedServiceJob.Id);
+                var existingJob = await context.ServiceJobs.FindAsync(targetJobId);
                 
                 if (existingJob != null)
                 {
@@ -2030,19 +2125,30 @@ namespace KamatekCrm.ViewModels
                     }
                     
                     await context.SaveChangesAsync();
-                    
-                    SelectedServiceJob.Status = newStatus;
-                    if (newStatus == JobStatus.Completed)
-                        SelectedServiceJob.CompletedDate = existingJob.CompletedDate;
+
+                    // Bellekteki nesneyi null-safe güncelle
+                    if (targetJob != null)
+                    {
+                        targetJob.Status = newStatus;
+                        if (newStatus == JobStatus.Completed)
+                        {
+                            targetJob.CompletedDate = existingJob.CompletedDate;
+                        }
+                    }
 
                     await LoadServiceJobs();
                     await LoadDashboardAsync();
-                    _toastService?.ShowSuccess($"İş #{SelectedServiceJob.Id} durumu güncellendi: {newStatus}");
+
+                    _toastService?.ShowSuccess($"İş #{targetJobId} durumu güncellendi: {newStatus}");
+                }
+                else
+                {
+                    _toastService?.ShowError($"İş #{targetJobId} veritabanında bulunamadı.");
                 }
             }
             catch (Exception ex)
             {
-                _toastService?.ShowError($"Hata: {ex.Message}");
+                _toastService?.ShowError($"Durum güncelleme hatası: {ex.Message}");
             }
         }
 

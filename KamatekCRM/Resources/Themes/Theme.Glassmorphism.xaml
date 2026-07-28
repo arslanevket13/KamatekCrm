@@ -116,13 +116,35 @@
         <GradientStop Color="#EA580C" Offset="1"/>
     </LinearGradientBrush>
 
-    <!-- Legacy Gradient Mappings -->
     <LinearGradientBrush x:Key="ThemePrimaryGradient" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#6366F1" Offset="0"/>
         <GradientStop Color="#A855F7" Offset="1"/>
     </LinearGradientBrush>
 
+    <LinearGradientBrush x:Key="KpiGradientPurple" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#C084FC" Offset="0"/>
+        <GradientStop Color="#9333EA" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <LinearGradientBrush x:Key="KpiGradientGreen" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#34D399" Offset="0"/>
+        <GradientStop Color="#059669" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientOrange" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FBBF24" Offset="0"/>
+        <GradientStop Color="#EA580C" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientCyan" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#38BDF8" Offset="0"/>
+        <GradientStop Color="#0284C7" Offset="1"/>
+    </LinearGradientBrush>
+
     <!-- ─────────── GLASSMORPHISM (Subtle Hover / Overlay states) ─────────── -->
+    <Color x:Key="GlassOverlayColorValue">#33FFFFFF</Color>
+    <Color x:Key="GlassBrushLowColorValue">#0DFFFFFF</Color>
+
     <SolidColorBrush x:Key="GlassBrushLow" Color="#FFFFFF" Opacity="0.05"/>
     <SolidColorBrush x:Key="GlassBrushMedium" Color="#FFFFFF" Opacity="0.10"/>
     <SolidColorBrush x:Key="GlassBrushHigh" Color="#FFFFFF" Opacity="0.15"/>

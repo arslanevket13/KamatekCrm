@@ -11,6 +11,7 @@ namespace KamatekCrm.ApplicationCore.DTOs.Customers
         public int Id { get; set; }
         public string CustomerCode { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
+        public string? CompanyName { get; set; }
         public string PhoneNumber { get; set; } = string.Empty;
         public string? Email { get; set; }
         public string City { get; set; } = string.Empty;
@@ -20,5 +21,6 @@ namespace KamatekCrm.ApplicationCore.DTOs.Customers
         public string LoyaltyLevel { get; set; } = string.Empty;
         public decimal TotalSpent { get; set; }
         public bool IsActive { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 }

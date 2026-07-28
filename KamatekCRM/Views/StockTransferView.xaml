@@ -28,94 +28,105 @@
                    Margin="0,0,0,24"/>
 
         <!-- Content -->
-        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="24">
-            <StackPanel>
-                <!-- Warehouses -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <StackPanel Grid.Column="0">
-                        <Label Content="Kaynak Depo" Style="{StaticResource ModernLabel}"/>
-                        <ComboBox ItemsSource="{Binding Warehouses}"
-                                  SelectedItem="{Binding SourceWarehouse}"
-                                  DisplayMemberPath="Name"
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Border Style="{StaticResource CardPanel}" Padding="24">
+                <StackPanel>
+                    <!-- Warehouses -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0">
+                            <Label Content="Kaynak Depo" Style="{StaticResource ModernLabel}"/>
+                            <ComboBox ItemsSource="{Binding Warehouses}"
+                                      SelectedItem="{Binding SourceWarehouse}"
+                                      DisplayMemberPath="Name"
+                                      Style="{StaticResource ModernComboBox}"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="1" Text="➜" 
+                                   FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Bottom" 
+                                   Margin="0,0,0,16" Foreground="{DynamicResource ThemePrimary}"/>
+
+                        <StackPanel Grid.Column="2">
+                            <Label Content="Hedef Depo" Style="{StaticResource ModernLabel}"/>
+                            <ComboBox ItemsSource="{Binding Warehouses}"
+                                      SelectedItem="{Binding TargetWarehouse}"
+                                      DisplayMemberPath="Name"
+                                      Style="{StaticResource ModernComboBox}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Product Selection -->
+                    <StackPanel Margin="0,24,0,0">
+                        <Label Content="Transfer Edilecek Ürün" Style="{StaticResource ModernLabel}"/>
+                        <ComboBox ItemsSource="{Binding Products}"
+                                  SelectedItem="{Binding SelectedProduct}"
+                                  DisplayMemberPath="ProductName"
                                   Style="{StaticResource ModernComboBox}"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Column="1" Text="➜" 
-                               FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Bottom" 
-                               Margin="0,0,0,16" Foreground="{DynamicResource ThemePrimary}"/>
+                    <!-- Quantity and Available Stock -->
+                    <Grid Margin="0,24,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="2">
-                        <Label Content="Hedef Depo" Style="{StaticResource ModernLabel}"/>
-                        <ComboBox ItemsSource="{Binding Warehouses}"
-                                  SelectedItem="{Binding TargetWarehouse}"
-                                  DisplayMemberPath="Name"
-                                  Style="{StaticResource ModernComboBox}"/>
-                    </StackPanel>
-                </Grid>
+                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                            <Label Content="Transfer Miktarı" Style="{StaticResource ModernLabel}"/>
+                            <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource ModernTextBox}"/>
+                        </StackPanel>
 
-                <!-- Product Selection -->
-                <StackPanel Margin="0,24,0,0">
-                    <Label Content="Transfer Edilecek Ürün" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox ItemsSource="{Binding Products}"
-                              SelectedItem="{Binding SelectedProduct}"
-                              DisplayMemberPath="ProductName"
-                              Style="{StaticResource ModernComboBox}"/>
+                        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                            <Label Content="Mevcut Stok (Kaynak)" Style="{StaticResource ModernLabel}"/>
+                            <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="8,8">
+                                <TextBlock Text="{Binding AvailableStock, StringFormat='{}{0} adet'}" 
+                                           FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Status Message -->
+                    <TextBlock Text="{Binding StatusMessage}" 
+                               Margin="0,24,0,0"
+                               TextWrapping="Wrap"
+                               HorizontalAlignment="Center"
+                               FontWeight="Medium">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsActionSuccessful}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </StackPanel>
-
-                <!-- Quantity and Available Stock -->
-                <Grid Margin="0,24,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
-                        <Label Content="Transfer Miktarı" Style="{StaticResource ModernLabel}"/>
-                        <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource ModernTextBox}"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Margin="16,0,0,0">
-                        <Label Content="Mevcut Stok (Kaynak)" Style="{StaticResource ModernLabel}"/>
-                        <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="4" Padding="8,8">
-                            <TextBlock Text="{Binding AvailableStock, StringFormat='{}{0} adet'}" 
-                                       FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        </Border>
-                    </StackPanel>
-                </Grid>
-
-                <!-- Status Message -->
-                <TextBlock Text="{Binding StatusMessage}" 
-                           Margin="0,24,0,0"
-                           TextWrapping="Wrap"
-                           HorizontalAlignment="Center"
-                           FontWeight="Medium">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsActionSuccessful}" Value="True">
-                                    <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-            </StackPanel>
-        </Border>
+            </Border>
+        </ScrollViewer>
 
         <!-- Footer Buttons -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
             <Button Content="Kapat" Command="{Binding CloseCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                    Style="{StaticResource SecondaryButton}" Width="100" Margin="0,0,16,0"/>
+                    Style="{StaticResource SecondaryButton}" Height="40" Padding="20,0" Margin="0,0,16,0"/>
             <Button Content="Transferi Tamamla" Command="{Binding TransferCommand}"
-                    Style="{StaticResource ModernButton}" Width="150"/>
+                    Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
+                    Height="40" Padding="24,0" FontWeight="SemiBold" Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
         </StackPanel>
     </Grid>
 </Window>

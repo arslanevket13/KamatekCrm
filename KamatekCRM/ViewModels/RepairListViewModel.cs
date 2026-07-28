@@ -114,12 +114,49 @@ namespace KamatekCrm.ViewModels
                 {
                     OnPropertyChanged(nameof(IsJobSelected));
                     NewNoteText = string.Empty;
+
+                    // Müşteri bilgi property'lerini güncelle
+                    OnPropertyChanged(nameof(SelectedCustomerFullName));
+                    OnPropertyChanged(nameof(SelectedCustomerPhone));
+                    OnPropertyChanged(nameof(SelectedCustomerEmail));
+                    OnPropertyChanged(nameof(SelectedCustomerAddress));
+                    OnPropertyChanged(nameof(SelectedCustomerCompanyName));
+                    OnPropertyChanged(nameof(SelectedCustomerCode));
+                    OnPropertyChanged(nameof(SelectedCustomerSegment));
+                    OnPropertyChanged(nameof(SelectedCustomerLoyaltyLevel));
+                    OnPropertyChanged(nameof(SelectedCustomerLoyaltyPoints));
+                    OnPropertyChanged(nameof(SelectedCustomerTotalSpent));
+                    OnPropertyChanged(nameof(SelectedCustomerTotalPurchaseCount));
+                    OnPropertyChanged(nameof(SelectedCustomerLastInteraction));
+                    OnPropertyChanged(nameof(SelectedCustomerNotes));
+                    OnPropertyChanged(nameof(SelectedCustomerType));
+                    OnPropertyChanged(nameof(SelectedCustomerTcKimlikNo));
+                    OnPropertyChanged(nameof(HasCustomerCompany));
+                    OnPropertyChanged(nameof(HasCustomerNotes));
                 }
             }
         }
 
         public bool IsJobSelected => SelectedJob != null;
 
+        // ═══════ Müşteri Bilgi Property'leri ═══════
+        public string SelectedCustomerFullName => SelectedJob?.Customer?.FullName ?? "";
+        public string SelectedCustomerPhone => SelectedJob?.Customer?.PhoneNumber ?? "";
+        public string SelectedCustomerEmail => SelectedJob?.Customer?.Email ?? "";
+        public string SelectedCustomerAddress => SelectedJob?.Customer?.FullAddress ?? "";
+        public string SelectedCustomerNotes => SelectedJob?.Customer?.Notes ?? "";
+        public string SelectedCustomerSegment => SelectedJob?.Customer?.Segment.ToString() ?? "";
+        public string SelectedCustomerLoyaltyLevel => SelectedJob?.Customer?.LoyaltyLevel ?? "";
+        public int SelectedCustomerLoyaltyPoints => SelectedJob?.Customer?.LoyaltyPoints ?? 0;
+        public decimal SelectedCustomerTotalSpent => SelectedJob?.Customer?.TotalSpent ?? 0;
+        public int SelectedCustomerTotalPurchaseCount => SelectedJob?.Customer?.TotalPurchaseCount ?? 0;
+        public DateTime? SelectedCustomerLastInteraction => SelectedJob?.Customer?.LastInteractionDate;
+        public string SelectedCustomerType => SelectedJob?.Customer?.Type.ToString() ?? "";
+        public string SelectedCustomerCode => SelectedJob?.Customer?.CustomerCode ?? "";
+        public string SelectedCustomerCompanyName => SelectedJob?.Customer?.CompanyName ?? "";
+        public string SelectedCustomerTcKimlikNo => SelectedJob?.Customer?.TcKimlikNo ?? "";
+        public bool HasCustomerCompany => !string.IsNullOrWhiteSpace(SelectedJob?.Customer?.CompanyName);
+        public bool HasCustomerNotes => !string.IsNullOrWhiteSpace(SelectedJob?.Customer?.Notes);
         public ObservableCollection<ServiceJobHistory> JobHistory { get; set; } = new();
         public ObservableCollection<ServiceJobItem> CurrentJobItems { get; set; } = new();
         public ObservableCollection<Product> Products { get; set; } = new();
@@ -211,7 +248,10 @@ namespace KamatekCrm.ViewModels
                 using var scope = _serviceProvider.CreateScope();
                 var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                var job = await ctx.ServiceJobs.Include(j => j.Customer).FirstOrDefaultAsync(j => j.Id == id);
+                var job = await ctx.ServiceJobs
+                    .Include(j => j.Customer)
+                        .ThenInclude(c => c.ServiceJobs)  // Müşterinin diğer tamir kayıtları
+                    .FirstOrDefaultAsync(j => j.Id == id);
                 if (job != null)
                 {
                     SelectedJob = job;
@@ -334,6 +374,24 @@ namespace KamatekCrm.ViewModels
                     UserId = App.CurrentUser?.Username ?? "System"
                 };
                 ctx.ServiceJobHistories.Add(history);
+
+                // ═══════ Müşteri Profil Senkronizasyonu ═══════
+                var customer = await ctx.Customers.FindAsync(job.CustomerId);
+                if (customer != null)
+                {
+                    customer.LastInteractionDate = DateTime.UtcNow;
+                }
+
+                // ═══════ Müşteri Aktivite Kaydı ═══════
+                ctx.CustomerActivities.Add(new CustomerActivity
+                {
+                    CustomerId = job.CustomerId,
+                    Type = newStatus == RepairStatus.Delivered ? ActivityType.ServiceJobCompleted : ActivityType.ServiceJobCreated,
+                    Description = $"Tamir durumu güncellendi: {oldStatus} → {newStatus} (#{job.Id})",
+                    RelatedId = job.Id,
+                    RelatedType = "ServiceJob",
+                    CreatedBy = App.CurrentUser?.Username ?? "System"
+                });
 
                 await ctx.SaveChangesAsync();
 
@@ -466,10 +524,32 @@ namespace KamatekCrm.ViewModels
                         UserId = App.CurrentUser?.Username ?? "System"
                     });
 
+                    // ═══════ Müşteri Profil Senkronizasyonu ═══════
+                    var customerId = job?.CustomerId ?? SelectedJob.CustomerId;
+                    var customer = await ctx.Customers.FindAsync(customerId);
+                    if (customer != null)
+                    {
+                        customer.LastInteractionDate = DateTime.UtcNow;
+                        customer.LastPurchaseDate = DateTime.UtcNow;
+                        customer.TotalSpent += GrandTotal;
+                        customer.LoyaltyPoints += (int)(GrandTotal / 100);  // 100 TL = 1 puan
+                    }
+
+                    // ═══════ Müşteri Aktivite Kaydı ═══════
+                    ctx.CustomerActivities.Add(new CustomerActivity
+                    {
+                        CustomerId = customerId,
+                        Type = ActivityType.ServiceJobCompleted,
+                        Description = $"Tamir tamamlandı: #{SelectedJob.Id} - Toplam: {GrandTotal:N2} ₺",
+                        RelatedId = SelectedJob.Id,
+                        RelatedType = "ServiceJob",
+                        CreatedBy = App.CurrentUser?.Username ?? "System"
+                    });
+
                     await ctx.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    _toastService.ShowSuccess("İş tamamlandı ve stok güncellendi!");
+                    _toastService.ShowSuccess("İş tamamlandı, stok ve müşteri profili güncellendi!");
                     await LoadFullJobAsync(SelectedJob.Id);
                     
                     var listItem = AllRepairJobs.FirstOrDefault(x => x.Id == SelectedJob.Id);

@@ -8,6 +8,9 @@ namespace KamatekCrm.Shared.Enums
         WaitingForApproval,
         Completed,
         Cancelled,
-        Rejected // Müşterinin keşif sonrası teklifi reddetmesi
+        Rejected, // Müşterinin keşif sonrası teklifi reddetmesi
+        PendingDiscovery,   // Keşif Bekliyor
+        DiscoveryCompleted, // Keşif Yapıldı
+        Quoting             // Teklif Aşamasında
     }
 }

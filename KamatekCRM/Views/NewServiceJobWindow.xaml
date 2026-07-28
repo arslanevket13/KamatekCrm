@@ -73,13 +73,13 @@
                                     <Setter Property="Background" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsStep1}" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource SystemAccentColorPrimaryBrush}"/>
+                                            <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
                             <TextBlock Text="1" FontSize="14" FontWeight="Bold" 
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       Foreground="{DynamicResource TextInverseBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="Müşteri" FontSize="11" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -94,13 +94,13 @@
                                     <Setter Property="Background" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsStep2}" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource SystemAccentColorPrimaryBrush}"/>
+                                            <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
                             <TextBlock Text="2" FontSize="14" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       Foreground="{DynamicResource TextInverseBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="İş Detayları" FontSize="11" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -115,13 +115,13 @@
                                     <Setter Property="Background" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsStep3}" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource SystemAccentColorPrimaryBrush}"/>
+                                            <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
                             <TextBlock Text="3" FontSize="14" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       Foreground="{DynamicResource TextInverseBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="Malzeme" FontSize="11" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -136,13 +136,13 @@
                                     <Setter Property="Background" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsStep4}" Value="True">
-                                            <Setter Property="Background" Value="{DynamicResource SystemAccentColorPrimaryBrush}"/>
+                                            <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
                             <TextBlock Text="4" FontSize="14" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       Foreground="{DynamicResource TextInverseBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="Özet" FontSize="11" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -151,7 +151,7 @@
 
                 <!-- Progress Bar -->
                 <ProgressBar Value="{Binding WizardProgress, Mode=OneWay}" Maximum="100" Height="4"
-                             Margin="0,16,0,0" Foreground="{DynamicResource SystemAccentColorPrimaryBrush}"/>
+                             Margin="0,16,0,0" Foreground="{DynamicResource ThemePrimary}"/>
             </StackPanel>
         </Border>
 
@@ -296,7 +296,7 @@
                             </Grid>
 
                             <!-- Birim Badge -->
-                            <Border Background="{DynamicResource SystemAccentColorPrimaryBrush}" CornerRadius="8" Padding="8,4"
+                            <Border Background="{DynamicResource ThemePrimary}" CornerRadius="8" Padding="8,4"
                                     HorizontalAlignment="Left" Margin="0,0,0,16"
                                     Visibility="{Binding ShowFlatCount, Converter={StaticResource BoolToVis}}">
                                 <TextBlock Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="12">
@@ -367,7 +367,7 @@
                             <!-- Sadece Keşif -->
                             <CheckBox Content="Sadece Keşif Yapılacak (Malzeme Girilmez)" 
                                       IsChecked="{Binding IsDiscoveryOnly}" 
-                                      Foreground="{DynamicResource SystemAccentColorPrimaryBrush}"
+                                      Foreground="{DynamicResource ThemePrimary}"
                                       FontWeight="SemiBold"
                                       Margin="0,0,0,16"/>
 

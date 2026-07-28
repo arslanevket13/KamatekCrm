@@ -285,43 +285,181 @@
                         <!-- Customer + Device Header Card -->
                         <Border Background="{DynamicResource ThemeSurface}" CornerRadius="12" Padding="24" Margin="0,0,0,16"
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <!-- Avatar -->
-                                <Border Grid.Column="0" Width="56" Height="56" CornerRadius="28"
-                                        Background="{DynamicResource ThemePrimaryLight}" Margin="0,0,16,0">
-                                    <TextBlock Text="👤" FontSize="24" 
-                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <!-- Avatar -->
+                                    <Border Grid.Column="0" Width="56" Height="56" CornerRadius="28"
+                                            Background="{DynamicResource ThemePrimaryLight}" Margin="0,0,16,0">
+                                        <TextBlock Text="👤" FontSize="24" 
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Info -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding SelectedJob.Customer.FullName}" 
+                                                   FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource ThemeForeground}"/>
+                                        <TextBlock Foreground="{DynamicResource ThemeForegroundMuted}" FontSize="12" Margin="0,4,0,0">
+                                            <Run Text="{Binding SelectedJob.DeviceBrand}"/>
+                                            <Run Text="{Binding SelectedJob.DeviceModel}"/>
+                                            <Run Text=" · SN:"/>
+                                            <Run Text="{Binding SelectedJob.SerialNumber}"/>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding SelectedJob.Description}" 
+                                                   FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="400"
+                                                   Foreground="{DynamicResource ThemeForegroundMuted}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Status + Print -->
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                        <Button Content="🖨️ PDF" Command="{Binding PrintTicketCommand}"
+                                                Style="{StaticResource ModernButton}"
+                                                Height="30" Padding="16,0" FontSize="11"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- ═══════ Müşteri Profil Detayları ═══════ -->
+                                <Border BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,1,0,0" 
+                                        Margin="0,16,0,0" Padding="0,16,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="16"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Satır 1: Telefon + E-posta -->
+                                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,10">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="📞"/>
+                                                <Run Text="TELEFON"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding SelectedCustomerPhone}" FontSize="12" 
+                                                       Foreground="{DynamicResource ThemeForeground}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,10">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="📧"/>
+                                                <Run Text="E-POSTA"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding SelectedCustomerEmail}" FontSize="12" 
+                                                       Foreground="{DynamicResource ThemeForeground}" Margin="0,2,0,0"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+
+                                        <!-- Satır 2: Adres + Müşteri Kodu -->
+                                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,10">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="📍"/>
+                                                <Run Text="ADRES"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding SelectedCustomerAddress}" FontSize="11" 
+                                                       Foreground="{DynamicResource ThemeForeground}" Margin="0,2,0,0"
+                                                       TextWrapping="Wrap" MaxWidth="250"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,10">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="🆔"/>
+                                                <Run Text="MÜŞTERİ KODU"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding SelectedCustomerCode}" FontSize="12" 
+                                                       Foreground="{DynamicResource ThemeForeground}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+
+                                        <!-- Satır 3: Segment Badge + Sadakat -->
+                                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,10">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="🧬"/>
+                                                <Run Text="SEGMENT"/>
+                                            </TextBlock>
+                                            <Border Background="{DynamicResource StatusInfoBg}" CornerRadius="6" 
+                                                    Padding="8,2" Margin="0,2,0,0" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding SelectedCustomerSegment}" FontSize="11" 
+                                                           FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFg}"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,10">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="⭐"/>
+                                                <Run Text="SADAKAT"/>
+                                            </TextBlock>
+                                            <TextBlock FontSize="12" Foreground="{DynamicResource ThemeForeground}" Margin="0,2,0,0">
+                                                <Run Text="{Binding SelectedCustomerLoyaltyLevel, Mode=OneWay}"/>
+                                                <Run Text=" · " Foreground="{DynamicResource ThemeForegroundMuted}"/>
+                                                <Run Text="{Binding SelectedCustomerLoyaltyPoints, Mode=OneWay}"/>
+                                                <Run Text=" puan" Foreground="{DynamicResource ThemeForegroundMuted}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+
+                                        <!-- Satır 4: Toplam Harcama + İşlem Sayısı -->
+                                        <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,0,10">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="💰"/>
+                                                <Run Text="TOPLAM HARCAMA"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding SelectedCustomerTotalSpent, StringFormat='{}{0:N2} ₺'}" 
+                                                       FontSize="12" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource ThemePrimary}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="3" Grid.Column="2" Margin="0,0,0,10">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="📊"/>
+                                                <Run Text="İŞLEM SAYISI"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding SelectedCustomerTotalPurchaseCount}" FontSize="12" 
+                                                       Foreground="{DynamicResource ThemeForeground}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+
+                                        <!-- Satır 5: Son Etkileşim + Şirket -->
+                                        <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,0,0,10">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="📅"/>
+                                                <Run Text="SON ETKİLEŞİM"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding SelectedCustomerLastInteraction, StringFormat='dd.MM.yyyy HH:mm', TargetNullValue='—'}" 
+                                                       FontSize="12" Foreground="{DynamicResource ThemeForeground}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Row="4" Grid.Column="2" Margin="0,0,0,10"
+                                                    Visibility="{Binding HasCustomerCompany, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="🏢"/>
+                                                <Run Text="FİRMA"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding SelectedCustomerCompanyName}" FontSize="12" 
+                                                       Foreground="{DynamicResource ThemeForeground}" Margin="0,2,0,0"/>
+                                        </StackPanel>
+
+                                        <!-- Satır 6: Notlar (varsa) -->
+                                        <StackPanel Grid.Row="5" Grid.ColumnSpan="3" 
+                                                    Visibility="{Binding HasCustomerNotes, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock FontSize="10" Foreground="{DynamicResource ThemeForegroundMuted}" FontWeight="SemiBold">
+                                                <Run Text="📝"/>
+                                                <Run Text="NOTLAR"/>
+                                            </TextBlock>
+                                            <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" 
+                                                    Padding="8,6" Margin="0,2,0,0">
+                                                <TextBlock Text="{Binding SelectedCustomerNotes}" FontSize="11" 
+                                                           Foreground="{DynamicResource ThemeForegroundMuted}"
+                                                           TextWrapping="Wrap" MaxHeight="60"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
                                 </Border>
-
-                                <!-- Info -->
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SelectedJob.Customer.FullName}" 
-                                               FontSize="16" FontWeight="Bold"
-                                               Foreground="{DynamicResource ThemeForeground}"/>
-                                    <TextBlock Foreground="{DynamicResource ThemeForegroundMuted}" FontSize="12" Margin="0,4,0,0">
-                                        <Run Text="{Binding SelectedJob.DeviceBrand}"/>
-                                        <Run Text="{Binding SelectedJob.DeviceModel}"/>
-                                        <Run Text=" · SN:"/>
-                                        <Run Text="{Binding SelectedJob.SerialNumber}"/>
-                                    </TextBlock>
-                                    <TextBlock Text="{Binding SelectedJob.Description}" 
-                                               FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="400"
-                                               Foreground="{DynamicResource ThemeForegroundMuted}" Margin="0,4,0,0"/>
-                                </StackPanel>
-
-                                <!-- Status + Print -->
-                                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                    <Button Content="🖨️ PDF" Command="{Binding PrintTicketCommand}"
-                                            Style="{StaticResource ModernButton}"
-                                            Height="30" Padding="16,0" FontSize="11"/>
-                                </StackPanel>
-                            </Grid>
+                            </StackPanel>
                         </Border>
 
                         <!-- ========== WORKFLOW TIMELINE ========== -->

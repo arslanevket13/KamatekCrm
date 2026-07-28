@@ -72,22 +72,22 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal">
-                    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="12" Width="48" Height="48" Margin="0,0,16,0">
-                        <ui:SymbolIcon Symbol="Cart24" Foreground="{DynamicResource PrimaryBrush}" FontSize="24"/>
+                    <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="12" Width="48" Height="48" Margin="0,0,16,0">
+                        <ui:SymbolIcon Symbol="Cart24" Foreground="{DynamicResource ThemePrimary}" FontSize="24"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Satın Alma &amp; Stok Giriş" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="Satın Alma &amp; Stok Giriş" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                         <TextBlock Text="Tedarikçi bilgileri ve ürün faturası işlemleri" FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Command="{Binding OpenHistoryCommand}" Height="40" Padding="16,0" Margin="0,0,16,0" Style="{StaticResource ModernButton}" Background="{DynamicResource ControlFillColorDefaultBrush}">
+                    <Button Command="{Binding OpenHistoryCommand}" Height="40" Padding="16,0" Margin="0,0,16,0" Style="{StaticResource ModernButton}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="History24" Margin="0,0,8,0"/>
                             <TextBlock Text="Geçmiş İşlemler"/>
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding OpenSidebarCommand}" Height="40" Padding="16,0" Style="{StaticResource ModernButton}" Background="{DynamicResource PrimaryBrush}" Foreground="{DynamicResource TextFillColorPrimaryInverseBrush}">
+                    <Button Command="{Binding OpenSidebarCommand}" Height="40" Padding="16,0" Style="{StaticResource ModernButton}" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Add24" Margin="0,0,8,0"/>
                             <TextBlock Text="Yeni Ürün Ekle" FontWeight="SemiBold"/>
@@ -97,7 +97,7 @@
             </Grid>
 
             <!-- Tedarikçi ve Fatura Seçim Kartı -->
-            <Border Grid.Row="1" Margin="0,0,0,24" Padding="24" CornerRadius="12" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Effect="{DynamicResource SubtleShadow}">
+            <Border Grid.Row="1" Margin="0,0,0,24" Padding="24" CornerRadius="12" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Effect="{DynamicResource Elevation2}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>

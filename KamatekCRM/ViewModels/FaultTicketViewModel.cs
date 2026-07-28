@@ -9,6 +9,7 @@ using KamatekCrm.Shared.Enums;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
+using KamatekCrm.Views;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -55,10 +56,7 @@ namespace KamatekCrm.ViewModels
         private bool _accessoryCable;
         private bool _accessoryRemote;
 
-        // Hızlı müşteri ekleme
-        private bool _isQuickAddCustomer;
-        private string _quickCustomerName = string.Empty;
-        private string _quickCustomerPhone = string.Empty;
+
 
         // Save spinner
         private bool _isSaving;
@@ -221,9 +219,7 @@ namespace KamatekCrm.ViewModels
         public bool AccessoryAdapter { get => _accessoryAdapter; set => SetProperty(ref _accessoryAdapter, value); }
         public bool AccessoryCable { get => _accessoryCable; set => SetProperty(ref _accessoryCable, value); }
         public bool AccessoryRemote { get => _accessoryRemote; set => SetProperty(ref _accessoryRemote, value); }
-        public bool IsQuickAddCustomer { get => _isQuickAddCustomer; set => SetProperty(ref _isQuickAddCustomer, value); }
-        public string QuickCustomerName { get => _quickCustomerName; set => SetProperty(ref _quickCustomerName, value); }
-        public string QuickCustomerPhone { get => _quickCustomerPhone; set => SetProperty(ref _quickCustomerPhone, value); }
+
         public bool IsSaving { get => _isSaving; set => SetProperty(ref _isSaving, value); }
 
         #endregion
@@ -325,9 +321,37 @@ namespace KamatekCrm.ViewModels
 
         private bool CanSave()
         {
-            return (SelectedCustomer != null || IsQuickAddCustomer) &&
+            return SelectedCustomer != null &&
                    !string.IsNullOrWhiteSpace(Description) &&
                    !IsSaving;
+        }
+
+        [RelayCommand]
+        private void OpenQuickCustomerAdd()
+        {
+            try
+            {
+                var quickAddWindow = new QuickCustomerAddWindow
+                {
+                    Owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive)
+                };
+
+                if (quickAddWindow.ShowDialog() == true)
+                {
+                    var vm = quickAddWindow.DataContext as QuickCustomerAddViewModel;
+                    if (vm?.SavedCustomer != null)
+                    {
+                        // Yeni müşteriyi listeye ekle ve seç
+                        Customers.Add(vm.SavedCustomer);
+                        SelectedCustomer = vm.SavedCustomer;
+                        _toastService.ShowSuccess($"Müşteri eklendi: {vm.SavedCustomer.FullName}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Müşteri eklenirken hata: {ex.Message}");
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanSave))]
@@ -341,124 +365,139 @@ namespace KamatekCrm.ViewModels
                 using var scope = _serviceProvider.CreateScope();
                 var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                int customerId;
-
-                // Hızlı müşteri ekleme
-                if (IsQuickAddCustomer)
+                if (SelectedCustomer == null)
                 {
-                    if (string.IsNullOrWhiteSpace(QuickCustomerName))
-                    {
-                        _toastService.ShowError("Müşteri adı zorunludur!");
-                        return;
-                    }
-
-                    var newCustomer = new Customer
-                    {
-                        FullName = QuickCustomerName.Trim(),
-                        PhoneNumber = QuickCustomerPhone?.Trim() ?? string.Empty,
-                        CreatedDate = DateTime.UtcNow
-                    };
-                    ctx.Customers.Add(newCustomer);
-                    await ctx.SaveChangesAsync();
-                    customerId = newCustomer.Id;
-                }
-                else
-                {
-                    if (SelectedCustomer == null)
-                    {
-                        _toastService.ShowError("Müşteri seçilmedi!");
-                        return;
-                    }
-                    customerId = SelectedCustomer.Id;
+                    _toastService.ShowError("Müşteri seçilmedi!");
+                    return;
                 }
 
-                int? assetId = null;
+                int customerId = SelectedCustomer.Id;
 
-                // Yeni cihaz
-                if (IsNewAsset)
+                // Transaction ile tüm işlemleri atomik yap
+                await using var transaction = await ctx.Database.BeginTransactionAsync();
+                try
                 {
-                    if (string.IsNullOrWhiteSpace(NewAssetBrand) || string.IsNullOrWhiteSpace(NewAssetModel))
+                    int? assetId = null;
+
+                    // Yeni cihaz
+                    if (IsNewAsset)
                     {
-                        _toastService.ShowError("Yeni cihaz için Marka ve Model zorunludur.");
-                        return;
+                        if (string.IsNullOrWhiteSpace(NewAssetBrand) || string.IsNullOrWhiteSpace(NewAssetModel))
+                        {
+                            _toastService.ShowError("Yeni cihaz için Marka ve Model zorunludur.");
+                            return;
+                        }
+
+                        var newAsset = new CustomerAsset
+                        {
+                            CustomerId = customerId,
+                            Category = SelectedCategory,
+                            Brand = NewAssetBrand.Trim(),
+                            Model = NewAssetModel.Trim(),
+                            SerialNumber = string.IsNullOrWhiteSpace(NewAssetSerialNumber) ? null : NewAssetSerialNumber.Trim(),
+                            Location = string.IsNullOrWhiteSpace(NewAssetLocation) ? null : NewAssetLocation.Trim(),
+                            Status = AssetStatus.NeedsRepair,
+                            CreatedDate = DateTime.UtcNow
+                        };
+
+                        ctx.CustomerAssets.Add(newAsset);
+                        await ctx.SaveChangesAsync();
+                        assetId = newAsset.Id;
+                    }
+                    else if (SelectedAsset != null)
+                    {
+                        assetId = SelectedAsset.Id;
+                        var assetInDb = await ctx.CustomerAssets.FindAsync(SelectedAsset.Id);
+                        if (assetInDb != null)
+                        {
+                            assetInDb.Status = AssetStatus.NeedsRepair;
+                        }
                     }
 
-                    var newAsset = new CustomerAsset
+                    // Arıza kaydı
+                    var accessories = new System.Collections.Generic.List<string>();
+                    if (AccessoryAdapter) accessories.Add("Adaptör");
+                    if (AccessoryCable) accessories.Add("Kablo");
+                    if (AccessoryRemote) accessories.Add("Kumanda");
+
+                    var faultTicket = new ServiceJob
                     {
                         CustomerId = customerId,
-                        Category = SelectedCategory,
-                        Brand = NewAssetBrand.Trim(),
-                        Model = NewAssetModel.Trim(),
-                        SerialNumber = string.IsNullOrWhiteSpace(NewAssetSerialNumber) ? null : NewAssetSerialNumber.Trim(),
-                        Location = string.IsNullOrWhiteSpace(NewAssetLocation) ? null : NewAssetLocation.Trim(),
-                        Status = AssetStatus.NeedsRepair,
-                        CreatedDate = DateTime.UtcNow
+                        CustomerAssetId = assetId,
+                        ServiceJobType = ServiceJobType.Fault,
+                        WorkOrderType = WorkOrderType.Repair,
+                        WorkflowStatus = WorkflowStatus.Draft,
+                        JobCategory = SelectedCategory,
+                        Priority = SelectedPriority,
+                        Description = $"CİHAZ TİPİ: {SelectedDeviceTypeName}\nARIZA: {FaultSymptom}\n\n{Description}",
+                        PhysicalCondition = PhysicalCondition,
+                        Accessories = accessories.Count > 0 ? string.Join(", ", accessories) : null,
+                        DeviceBrand = IsNewAsset ? NewAssetBrand.Trim() : SelectedAsset?.Brand,
+                        DeviceModel = IsNewAsset ? NewAssetModel.Trim() : SelectedAsset?.Model,
+                        SerialNumber = IsNewAsset ? NewAssetSerialNumber?.Trim() : SelectedAsset?.SerialNumber,
+                        Status = JobStatus.Pending,
+                        RepairStatus = RepairStatus.Registered,
+                        LaborCost = LaborCost,
+                        CreatedDate = DateTime.UtcNow,
+                        CreatedBy = App.CurrentUser?.Username ?? "System"
                     };
 
-                    ctx.CustomerAssets.Add(newAsset);
-                    await ctx.SaveChangesAsync();
-                    assetId = newAsset.Id;
-                }
-                else if (SelectedAsset != null)
-                {
-                    assetId = SelectedAsset.Id;
-                    SelectedAsset.Status = AssetStatus.NeedsRepair;
-                    ctx.CustomerAssets.Update(SelectedAsset);
-                }
-
-                // Arıza kaydı
-                var accessories = new System.Collections.Generic.List<string>();
-                if (AccessoryAdapter) accessories.Add("Adaptör");
-                if (AccessoryCable) accessories.Add("Kablo");
-                if (AccessoryRemote) accessories.Add("Kumanda");
-
-                var faultTicket = new ServiceJob
-                {
-                    CustomerId = customerId,
-                    CustomerAssetId = assetId,
-                    ServiceJobType = ServiceJobType.Fault,
-                    WorkOrderType = WorkOrderType.Repair,
-                    WorkflowStatus = WorkflowStatus.Draft,
-                    JobCategory = SelectedCategory,
-                    Priority = SelectedPriority,
-                    Description = $"CİHAZ TİPİ: {SelectedDeviceTypeName}\nARIZA: {FaultSymptom}\n\n{Description}",
-                    PhysicalCondition = PhysicalCondition,
-                    Accessories = accessories.Count > 0 ? string.Join(", ", accessories) : null,
-                    DeviceBrand = IsNewAsset ? NewAssetBrand.Trim() : SelectedAsset?.Brand,
-                    DeviceModel = IsNewAsset ? NewAssetModel.Trim() : SelectedAsset?.Model,
-                    SerialNumber = IsNewAsset ? NewAssetSerialNumber?.Trim() : SelectedAsset?.SerialNumber,
-                    Status = JobStatus.Pending,
-                    RepairStatus = RepairStatus.Registered,
-                    LaborCost = LaborCost,
-                    CreatedDate = DateTime.UtcNow,
-                    CreatedBy = App.CurrentUser?.Username ?? "System"
-                };
-
-                // Fotoğraf kaydet
-                if (TempPhotoPaths.Any())
-                {
-                    string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                    string photoDir = System.IO.Path.Combine(appData, "KamatekCrm", "Photos");
-                    if (!System.IO.Directory.Exists(photoDir)) System.IO.Directory.CreateDirectory(photoDir);
-
-                    var finalPaths = new System.Collections.Generic.List<string>();
-                    foreach (var src in TempPhotoPaths)
+                    // Fotoğraf kaydet
+                    if (TempPhotoPaths.Any())
                     {
-                        string fileName = $"NewJob_{Guid.NewGuid()}{System.IO.Path.GetExtension(src)}";
-                        string destPath = System.IO.Path.Combine(photoDir, fileName);
-                        System.IO.File.Copy(src, destPath);
-                        finalPaths.Add(destPath);
+                        string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                        string photoDir = System.IO.Path.Combine(appData, "KamatekCrm", "Photos");
+                        if (!System.IO.Directory.Exists(photoDir)) System.IO.Directory.CreateDirectory(photoDir);
+
+                        var finalPaths = new System.Collections.Generic.List<string>();
+                        foreach (var src in TempPhotoPaths)
+                        {
+                            string fileName = $"NewJob_{Guid.NewGuid()}{System.IO.Path.GetExtension(src)}";
+                            string destPath = System.IO.Path.Combine(photoDir, fileName);
+                            System.IO.File.Copy(src, destPath);
+                            finalPaths.Add(destPath);
+                        }
+                        faultTicket.PhotoPathsJson = System.Text.Json.JsonSerializer.Serialize(finalPaths);
                     }
-                    faultTicket.PhotoPathsJson = System.Text.Json.JsonSerializer.Serialize(finalPaths);
+
+                    ctx.ServiceJobs.Add(faultTicket);
+                    await ctx.SaveChangesAsync();
+
+                    // ═══════ Müşteri Profil Senkronizasyonu ═══════
+                    var customerInDb = await ctx.Customers.FindAsync(customerId);
+                    if (customerInDb != null)
+                    {
+                        customerInDb.LastInteractionDate = DateTime.UtcNow;
+                        customerInDb.TotalPurchaseCount += 1;
+                        // Not: Puan ve TotalSpent hesabı iş tamamlandığında (CompleteJob) yapılacak.
+                        // Kayıt aşamasında fiyat henüz kesin değil.
+                    }
+
+                    // ═══════ Müşteri Aktivite Kaydı ═══════
+                    var activity = new CustomerActivity
+                    {
+                        CustomerId = customerId,
+                        Type = ActivityType.ServiceJobCreated,
+                        Description = $"Yeni tamir kaydı oluşturuldu: #{faultTicket.Id} - {faultTicket.DeviceBrand} {faultTicket.DeviceModel}",
+                        RelatedId = faultTicket.Id,
+                        RelatedType = "ServiceJob",
+                        CreatedBy = App.CurrentUser?.Username ?? "System"
+                    };
+                    ctx.CustomerActivities.Add(activity);
+
+                    await ctx.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _toastService.ShowSuccess($"Arıza kaydı oluşturuldu: #{faultTicket.Id}");
+
+                    // Pencereyi kapat
+                    RequestClose?.Invoke(true);
                 }
-
-                ctx.ServiceJobs.Add(faultTicket);
-                await ctx.SaveChangesAsync();
-
-                _toastService.ShowSuccess($"Arıza kaydı oluşturuldu: #{faultTicket.Id}");
-
-                // Pencereyi kapat
-                RequestClose?.Invoke(true);
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
             catch (Exception ex)
             {
@@ -496,9 +535,7 @@ namespace KamatekCrm.ViewModels
             AccessoryAdapter = false;
             AccessoryCable = false;
             AccessoryRemote = false;
-            IsQuickAddCustomer = false;
-            QuickCustomerName = string.Empty;
-            QuickCustomerPhone = string.Empty;
+
             TempPhotoPaths.Clear();
         }
 

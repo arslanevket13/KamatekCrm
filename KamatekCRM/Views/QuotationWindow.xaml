@@ -127,7 +127,9 @@
                                     <DataGridTemplateColumn Width="60">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Content="✕" Background="Transparent" BorderThickness="0" Foreground="Red" FontSize="16" Cursor="Hand"
+                                                <Button Content="✕" Background="Transparent" BorderThickness="0" 
+                                                        Foreground="{DynamicResource StatusErrorFg}" FontSize="16" Cursor="Hand"
+                                                        Width="36" Height="36" ToolTip="Satırı Sil"
                                                         Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                         CommandParameter="{Binding}"/>
                                             </DataTemplate>
@@ -165,7 +167,7 @@
                                 BorderThickness="1" BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}">
                             <StackPanel>
                                 <Grid Margin="0,0,0,8"><TextBlock Text="Ara Toplam:" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/><TextBlock Text="{Binding SubTotal, StringFormat=C2}" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/></Grid>
-                                <Grid Margin="0,0,0,8"><TextBlock Text="Toplam İskonto:" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/><TextBlock Text="{Binding TotalDiscount, StringFormat=C2}" HorizontalAlignment="Right" Foreground="Red" FontWeight="SemiBold"/></Grid>
+                                <Grid Margin="0,0,0,8"><TextBlock Text="Toplam İskonto:" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/><TextBlock Text="{Binding TotalDiscount, StringFormat=C2}" HorizontalAlignment="Right" Foreground="{DynamicResource StatusErrorFg}" FontWeight="SemiBold"/></Grid>
                                 <Grid Margin="0,0,0,16"><TextBlock Text="Toplam KDV:" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/><TextBlock Text="{Binding TotalTax, StringFormat=C2}" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/></Grid>
                                 <Rectangle Height="1" Fill="{DynamicResource SurfaceStrokeColorDefaultBrush}" Margin="0,0,0,16"/>
                                 <Grid Margin="0,0,0,8"><TextBlock Text="Genel Toplam:" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/><TextBlock Text="{Binding GrandTotal, StringFormat=C2}" FontWeight="Bold" FontSize="20" HorizontalAlignment="Right" Foreground="{DynamicResource SystemFillColorSuccessBrush}"/></Grid>
@@ -242,7 +244,7 @@
                                 <TextBlock Text="{Binding ProductName}" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                 <TextBlock Text="{Binding SKU}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                 <DockPanel Margin="0,4,0,0">
-                                    <TextBlock DockPanel.Dock="Left" Text="{Binding TotalStockQuantity, StringFormat='Stok: {0}'}" Foreground="{DynamicResource SystemFillColorSuccessBrush}" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock DockPanel.Dock="Left" Text="{Binding TotalStockQuantity, StringFormat='Stok: {0}'}" Foreground="{DynamicResource StatusSuccessFg}" FontSize="12" FontWeight="SemiBold"/>
                                     <TextBlock DockPanel.Dock="Right" Text="{Binding SalePrice, StringFormat=C2}" HorizontalAlignment="Right" FontSize="12" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                 </DockPanel>
                             </StackPanel>

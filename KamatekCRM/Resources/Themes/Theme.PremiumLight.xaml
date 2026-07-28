@@ -164,10 +164,32 @@
         <GradientStop Color="#3B82F6" Offset="1"/>
     </LinearGradientBrush>
 
+    <LinearGradientBrush x:Key="KpiGradientPurple" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#8B5CF6" Offset="0"/>
+        <GradientStop Color="#6D28D9" Offset="1"/>
+    </LinearGradientBrush>
+    
+    <LinearGradientBrush x:Key="KpiGradientGreen" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#10B981" Offset="0"/>
+        <GradientStop Color="#047857" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientOrange" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F59E0B" Offset="0"/>
+        <GradientStop Color="#D97706" Offset="1"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="KpiGradientCyan" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#06B6D4" Offset="0"/>
+        <GradientStop Color="#0E7490" Offset="1"/>
+    </LinearGradientBrush>
+
     <!-- ═══════════════════════════════════════════════════════════════════
          GLASSMORPHISM EFFECTS - Modern Depth
     ═══════════════════════════════════════════════════════════════════ -->
     
+    <Color x:Key="GlassOverlayColorValue">#CCFFFFFF</Color>
+    <Color x:Key="GlassBrushLowColorValue">#08111827</Color>
     <SolidColorBrush x:Key="GlassBrush" Color="#FFFFFF" Opacity="0.95"/>
     <SolidColorBrush x:Key="GlassBrushLow" Color="#111827" Opacity="0.03"/>
     <SolidColorBrush x:Key="GlassBrushMedium" Color="#111827" Opacity="0.05"/>

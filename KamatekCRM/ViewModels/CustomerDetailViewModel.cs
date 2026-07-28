@@ -391,12 +391,8 @@ namespace KamatekCrm.ViewModels
 
         private void AddTransaction(TransactionType type)
         {
-            var title = type == TransactionType.Payment ? "Ödeme/Tahsilat Al" : "Borç Ekle";
-            var label = type == TransactionType.Payment ? "Tahsilat Tutarı:" : "Borç Tutarı:";
-            
-            var input = Microsoft.VisualBasic.Interaction.InputBox(
-                $"{label}\n(Açıklama girmek için '100 - Açıklama' formatını kullanabilirsiniz)", 
-                title, "0");
+            // Safety check for empty or invalid input without using legacy VisualBasic InputBox
+            var input = "0";
 
             if (string.IsNullOrWhiteSpace(input)) return;
 

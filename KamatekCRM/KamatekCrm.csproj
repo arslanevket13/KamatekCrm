@@ -47,7 +47,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\Images\KamatekLogo.jpg" />
     <Resource Include="Assets\Images\KamatekLogo.png" />
   </ItemGroup>
 

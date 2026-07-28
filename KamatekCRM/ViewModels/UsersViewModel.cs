@@ -11,7 +11,7 @@ using KamatekCrm.Views;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.DTOs;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using KamatekCrm.ApplicationCore.Interfaces;
 using CommunityToolkit.Mvvm.Input;
 
 namespace KamatekCrm.ViewModels
@@ -21,7 +21,7 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class UsersViewModel : ViewModelBase
     {
-        private readonly IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
+        private readonly IUserAppService _userAppService;
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
@@ -75,50 +75,23 @@ namespace KamatekCrm.ViewModels
 
         public ObservableCollection<string> CategoryItems { get; } = new ObservableCollection<string> { "Tümü", "Patron", "Personel", "İzleyici" };
         public ObservableCollection<string> StatusItems { get; } = new ObservableCollection<string> { "Tümü", "Aktif", "Pasif" };
-        /// <summary>
-        /// Mevcut kullanıcı (giriş yapmış)
-        /// </summary>
-        /// <summary>
-        /// Mevcut kullanıcı (giriş yapmış)
-        /// </summary>
+
         public User? CurrentUser => _authService.CurrentUser;
-
-        /// <summary>
-        /// Mevcut kullanıcı ad soyad
-        /// </summary>
         public string CurrentUserName => _authService.CurrentUser?.AdSoyad ?? "Misafir";
-
-        /// <summary>
-        /// Mevcut kullanıcı rol gösterimi
-        /// </summary>
-        /// <summary>
-        /// Mevcut kullanıcı rol gösterimi
-        /// </summary>
         public string CurrentUserRole => GetDisplayRole(_authService.CurrentUser?.Role);
-
-        /// <summary>
-        /// Admin mi?
-        /// </summary>
         public bool IsAdmin => _authService.IsAdmin;
 
-        #region Commands
-
-        #endregion
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
         /// <summary>
         /// Constructor
         /// </summary>
         public UsersViewModel(
             IAuthService authService,
-            IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory,
+            IUserAppService userAppService,
             IToastService toastService,
             ILoadingService loadingService)
         {
             _authService = authService;
-            _dbContextFactory = dbContextFactory;
+            _userAppService = userAppService;
             _toastService = toastService;
             _loadingService = loadingService;
 
@@ -134,9 +107,26 @@ namespace KamatekCrm.ViewModels
             _loadingService.Show();
             try
             {
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                _allUsers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(context.Users);
-                FilterUsers();
+                var result = await _userAppService.GetAllAsync();
+                if (result.IsSuccess && result.Value != null)
+                {
+                    _allUsers = result.Value.Select(u => new User
+                    {
+                        Id = u.Id,
+                        Username = u.Username,
+                        Ad = u.Ad,
+                        Soyad = u.Soyad,
+                        Role = u.Role,
+                        Phone = u.Phone,
+                        IsActive = u.IsActive,
+                        CreatedDate = u.CreatedDate
+                    }).ToList();
+                    FilterUsers();
+                }
+                else
+                {
+                    _toastService.ShowError("Hata", result.Error ?? "Kullanıcılar yüklenemedi.");
+                }
             }
             catch (Exception ex)
             {
@@ -209,77 +199,36 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(AdminCount));
         }
 
-        /// <summary>
-        /// Yeni kullanıcı penceresi aç
-        /// </summary>
-        /// <summary>
-        /// Yeni kullanıcı penceresi aç
-        /// </summary>
         private void OpenAddUserWindow()
         {
-            var addUserViewModel = new AddUserViewModel(_authService, _dbContextFactory, _toastService, _loadingService);
-            var addUserView = new AddUserView
-            {
-                DataContext = addUserViewModel
-            };
-            addUserView.ShowDialog();
+            // Note: View constructors resolve required services via DI
+            var view = new AddUserView();
+            view.ShowDialog();
             _ = LoadUsersAsync();
         }
 
-        /// <summary>
-        /// Kullanıcı düzenleme penceresi aç
-        /// </summary>
         private void OpenEditUserWindow(User user)
         {
-            var viewModel = new EditUserViewModel(user, _dbContextFactory, _toastService, _loadingService);
-            var view = new EditUserView { DataContext = viewModel };
-
-            viewModel.SaveSuccessful += () =>
-            {
-                view.Close();
-                _ = LoadUsersAsync();
-            };
-
-            viewModel.CancelRequested += () => view.Close();
-
+            var view = new EditUserView(user);
             view.Owner = Application.Current.MainWindow;
             view.ShowDialog();
+            _ = LoadUsersAsync();
         }
 
-        /// <summary>
-        /// Şifre değiştirme penceresi aç
-        /// </summary>
         private void OpenSetPasswordWindow()
         {
             if (SelectedUser == null) return;
-
-            var passwordResetViewModel = new PasswordResetViewModel(SelectedUser, _authService, _dbContextFactory);
-            var passwordView = new PasswordResetView(SelectedUser, _authService, _dbContextFactory)
-            {
-                DataContext = passwordResetViewModel
-            };
-            // Note: PasswordResetView constructor sets DataContext, but we can override or just not set it here if constructor does it.
-            // The constructor we refactored does: viewModel = new...; DataContext = viewModel;
-            // But we passed authService to View constructor, which passes to VM.
-            // So we don't need to instantiate VM here!
-            // Wait, we need to correct this. The View constructor handles VM creation.
-             passwordView.ShowDialog();
+            var passwordView = new PasswordResetView(SelectedUser);
+            passwordView.ShowDialog();
         }
 
-        /// <summary>
-        /// Kullanıcı silinebilir mi?
-        /// </summary>
         private bool CanDeleteUser()
         {
             if (!IsAdmin || SelectedUser == null) return false;
-            // Kendini silemez
             if (SelectedUser.Id == CurrentUser?.Id) return false;
             return true;
         }
 
-        /// <summary>
-        /// Kullanıcı sil
-        /// </summary>
         private async Task DeleteUserAsync()
         {
             if (SelectedUser == null) return;
@@ -295,19 +244,16 @@ namespace KamatekCrm.ViewModels
                 _loadingService.Show();
                 try
                 {
-                    using var context = await _dbContextFactory.CreateDbContextAsync();
-                    var userToDelete = await context.Users.FindAsync(SelectedUser.Id);
-                    if (userToDelete != null)
+                    var res = await _userAppService.DeactivateAsync(SelectedUser.Id);
+                    if (res.IsSuccess)
                     {
-                        context.Users.Remove(userToDelete);
-                        await context.SaveChangesAsync();
-                        _toastService.ShowSuccess("Silindi", $"{SelectedUser.Username} kullanıcısı silindi.");
+                        _toastService.ShowSuccess("Silindi", $"{SelectedUser.Username} kullanıcısı pasife alındı.");
                         await LoadUsersAsync();
                         SelectedUser = null;
                     }
                     else
                     {
-                        _toastService.ShowError("Kullanıcı bulunamadı veya silinemedi.", "Bilinmeyen Hata");
+                        _toastService.ShowError("Hata", res.Error ?? "Kullanıcı pasife alınamadı.");
                     }
                 }
                 catch (Exception ex)
@@ -321,9 +267,6 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// Şifre sıfırla (1234 yap)
-        /// </summary>
         private async Task ResetPasswordTo1234Async()
         {
             if (SelectedUser == null) return;
@@ -339,18 +282,26 @@ namespace KamatekCrm.ViewModels
                 _loadingService.Show();
                 try
                 {
-                    using var context = await _dbContextFactory.CreateDbContextAsync();
-                    var user = await context.Users.FindAsync(SelectedUser.Id);
-                    if (user != null)
+                    var updateDto = new KamatekCrm.ApplicationCore.DTOs.Users.UserCreateUpdateDto
                     {
-                        // Basit parola degisimi. DTO kullanilmaz.
-                        user.PasswordHash = "1234"; 
-                        await context.SaveChangesAsync();
-                        _toastService.ShowSuccess("Başarılı", "Kullanıcının parolası sıfırlandı.");
+                        Id = SelectedUser.Id,
+                        Username = SelectedUser.Username,
+                        Ad = SelectedUser.Ad,
+                        Soyad = SelectedUser.Soyad,
+                        Phone = SelectedUser.Phone,
+                        Role = SelectedUser.Role,
+                        Password = "1234",
+                        IsActive = SelectedUser.IsActive
+                    };
+
+                    var res = await _userAppService.UpdateAsync(updateDto);
+                    if (res.IsSuccess)
+                    {
+                        _toastService.ShowSuccess("Başarılı", "Kullanıcının parolası 1234 olarak sıfırlandı.");
                     }
                     else
                     {
-                        _toastService.ShowError("Sıfırlama Başarısız", "Kullanıcı bulunamadı.");
+                        _toastService.ShowError("Sıfırlama Başarısız", res.Error ?? "Hata");
                     }
                 }
                 catch (Exception ex)

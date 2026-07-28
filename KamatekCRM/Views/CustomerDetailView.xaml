@@ -46,8 +46,8 @@
                 <!-- Avatar & Basic Info -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Avatar Placeholder -->
-                    <Border Width="89" Height="91" CornerRadius="32" Background="{DynamicResource StatusInfoBg}" BorderBrush="{DynamicResource StatusInfoFg}" BorderThickness="2" Margin="0,0,16,0">
-                        <TextBlock Text="👤" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="-0.608,0.598" Width="38" Height="48"/>
+                    <Border Width="64" Height="64" CornerRadius="32" Background="{DynamicResource StatusInfoBg}" BorderBrush="{DynamicResource StatusInfoFg}" BorderThickness="2" Margin="0,0,16,0">
+                        <TextBlock Text="👤" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
 
                     <StackPanel VerticalAlignment="Center">
@@ -61,24 +61,24 @@
                         </StackPanel>
                         <TextBlock Text="{Binding City}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
 
-                        <!-- Yeni Alanlar: Segment, Etiketler, Doğum Günü -->
+                        <!-- Alanlar: Segment, Etiketler, Doğum Günü -->
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <!-- Segment -->
                             <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0"
                                     Background="{Binding Segment, Converter={StaticResource SegmentToColorConverter}, FallbackValue=Transparent}">
-                                <TextBlock Text="{Binding Segment, FallbackValue='Segment Yok'}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                <TextBlock Text="{Binding Segment, FallbackValue='Segment Yok'}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextInverseBrush}"/>
                             </Border>
 
                             <!-- Sadakat Seviyesi -->
                             <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0" Background="{DynamicResource ThemeWarning}"
                                     Visibility="{Binding LoyaltyLevel, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}">
-                                <TextBlock Text="{Binding LoyaltyLevel, FallbackValue=VIP}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                <TextBlock Text="{Binding LoyaltyLevel, FallbackValue=VIP}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextInverseBrush}"/>
                             </Border>
 
                             <!-- Doğum Günü Yaklaşıyor -->
                             <Border CornerRadius="4" Padding="8,4" Background="{DynamicResource ThemeError}"
                                     Visibility="{Binding HasUpcomingBirthday, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <TextBlock Text="🎂 Doğum Günü Yaklaşıyor!" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+                                <TextBlock Text="🎂 Doğum Günü Yaklaşıyor!" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextInverseBrush}"/>
                             </Border>
                         </StackPanel>
 
@@ -91,7 +91,7 @@
                 <!-- Balance Widget -->
                 <Border Grid.Column="2" Background="{DynamicResource ThemeSidebarHover}" CornerRadius="8" Padding="24,8" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                     <StackPanel HorizontalAlignment="Right">
-                        <TextBlock Text="GÜNCEL BAKİYE" FontSize="16" Foreground="{DynamicResource ThemeTextSecondary}" FontWeight="Bold" HorizontalAlignment="Right" FontFamily="Arial Black"/>
+                        <TextBlock Text="GÜNCEL BAKİYE" FontSize="14" Foreground="{DynamicResource ThemeTextSecondary}" FontWeight="Bold" HorizontalAlignment="Right"/>
                         <TextBlock Text="{Binding TotalBalance, StringFormat=c2}" 
                                    FontSize="28" FontWeight="Bold" 
                                    Foreground="{Binding BalanceColor}" 
@@ -117,7 +117,7 @@
                     <!-- Actions Toolbar -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16" HorizontalAlignment="Right">
                         <Button Content="➕ Tahsilat Al" Command="{Binding AddPaymentCommand}"
-                                Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource StatusSuccessFgDark}" BorderThickness="0"
+                                Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}" BorderThickness="0"
                                 Padding="16,8" FontSize="14" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,16,0">
                             <Button.Resources>
                                 <Style TargetType="Border">
@@ -126,7 +126,7 @@
                             </Button.Resources>
                         </Button>
                         <Button Content="➖ Borç Ekle" Command="{Binding AddDebtCommand}"
-                                Background="{DynamicResource StatusErrorFg}" Foreground="{DynamicResource StatusErrorFgDark}" BorderThickness="0"
+                                Background="{DynamicResource StatusErrorFg}" Foreground="{DynamicResource TextInverseBrush}" BorderThickness="0"
                                 Padding="16,8" FontSize="14" FontWeight="SemiBold" Cursor="Hand">
                             <Button.Resources>
                                 <Style TargetType="Border">
