@@ -293,7 +293,7 @@ namespace KamatekCrm.ViewModels
         // [RelayCommand] private void NavigateToScheduler() => NavigateTo<SchedulerViewModel>();
         [RelayCommand] private void NavigateToFinance() => NavigateTo<FinanceViewModel>();
         [RelayCommand] private void NavigateToAnalytics() => NavigateTo<AnalyticsViewModel>();
-        [RelayCommand] private void NavigateToPurchaseOrders() => NavigateTo<PurchaseOrderViewModel>();
+        [RelayCommand] private void NavigateToPurchaseOrders() => NavigateTo<PurchasingViewModel>();
         [RelayCommand] private void NavigateToSuppliers() => NavigateTo<SuppliersViewModel>();
         [RelayCommand] private void NavigateToFinancialHealth() => NavigateTo<FinancialHealthViewModel>();
         [RelayCommand] private void NavigateToStockCount() => NavigateTo<StockCountViewModel>();

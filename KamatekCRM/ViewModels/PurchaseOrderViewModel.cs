@@ -60,6 +60,35 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _selectedSupplier, value);
         }
 
+        private ObservableCollection<Warehouse> _warehouses = new ObservableCollection<Warehouse>();
+        public ObservableCollection<Warehouse> Warehouses
+        {
+            get => _warehouses;
+            set => SetProperty(ref _warehouses, value);
+        }
+
+        private Warehouse? _selectedWarehouse;
+        public Warehouse? SelectedWarehouse
+        {
+            get => _selectedWarehouse;
+            set => SetProperty(ref _selectedWarehouse, value);
+        }
+
+        public string[] PaymentMethods { get; } = new[]
+        {
+            "Cari Borç (Vadeli)",
+            "Nakit Peşin",
+            "Kredi Kartı",
+            "Banka Havalesi"
+        };
+
+        private string _selectedPaymentMethod = "Cari Borç (Vadeli)";
+        public string SelectedPaymentMethod
+        {
+            get => _selectedPaymentMethod;
+            set => SetProperty(ref _selectedPaymentMethod, value);
+        }
+
         // The working list for the new order
         private ObservableCollection<PurchaseOrderItem> _currentOrderItems = new ObservableCollection<PurchaseOrderItem>();
         public ObservableCollection<PurchaseOrderItem> CurrentOrderItems
@@ -128,6 +157,11 @@ namespace KamatekCrm.ViewModels
                 // Load Suppliers
                 var suppliers = await ((UnitOfWork)_unitOfWork).Context.Suppliers.OrderBy(s => s.CompanyName).ToListAsync();
                 Suppliers = new ObservableCollection<Supplier>(suppliers);
+
+                // Load Warehouses
+                var warehouses = await ((UnitOfWork)_unitOfWork).Context.Warehouses.Where(w => w.IsActive).OrderBy(w => w.Name).ToListAsync();
+                Warehouses = new ObservableCollection<Warehouse>(warehouses);
+                SelectedWarehouse = Warehouses.FirstOrDefault();
 
                 // Load Orders (Recent 50?)
                 var orders = await ((UnitOfWork)_unitOfWork).Context.PurchaseOrders
@@ -330,16 +364,13 @@ namespace KamatekCrm.ViewModels
                 // 2. Otomatik teslim al (stok artır + WAC hesapla + cari borç)
                 if (autoReceive)
                 {
-                    // Varsayılan depoyu bul
-                    var warehouse = await ((UnitOfWork)_unitOfWork).Context.Warehouses
-                        .FirstOrDefaultAsync(w => w.IsActive);
-                    var warehouseId = warehouse?.Id ?? 1;
+                    var warehouseId = SelectedWarehouse?.Id ?? (await ((UnitOfWork)_unitOfWork).Context.Warehouses.FirstOrDefaultAsync(w => w.IsActive))?.Id ?? 1;
 
                     var result = await _purchasingService.CompletePurchaseOrderAsync(new PurchaseCompletionRequest
                     {
                         PurchaseOrderId = order.Id,
                         WarehouseId = warehouseId,
-                        CreatedBy = "Sistem"
+                        CreatedBy = App.CurrentUser?.AdSoyad ?? "Sistem"
                     });
 
                     if (!result.Success)
@@ -348,7 +379,33 @@ namespace KamatekCrm.ViewModels
                     }
                     else
                     {
-                        MessageBox.Show($"Sipariş kaydedildi ve STOKLARA İŞLENDİ.\nToplam: {result.TotalAmount:C}", "Başarılı");
+                        // Tedarikçi Cari Borç & Kasa Entegrasyonu
+                        var context = ((UnitOfWork)_unitOfWork).Context;
+                        var dbSupplier = await context.Suppliers.FindAsync(SelectedSupplier.Id);
+                        if (dbSupplier != null)
+                        {
+                            if (SelectedPaymentMethod.Contains("Cari Borç"))
+                            {
+                                dbSupplier.Balance += result.TotalAmount;
+                            }
+                            else
+                            {
+                                var cashExp = new CashTransaction
+                                {
+                                    Date = DateTime.UtcNow,
+                                    Amount = result.TotalAmount,
+                                    TransactionType = CashTransactionType.Expense,
+                                    Description = $"Satın Alma Faturası Peşin Ödeme: {order.InvoiceNumber} ({SelectedSupplier.CompanyName})",
+                                    Category = "Malzeme / Demirbaş",
+                                    CreatedBy = App.CurrentUser?.AdSoyad ?? "Sistem",
+                                    CreatedAt = DateTime.UtcNow
+                                };
+                                context.CashTransactions.Add(cashExp);
+                            }
+                            await _unitOfWork.SaveChangesAsync();
+                        }
+
+                        MessageBox.Show($"Sipariş kaydedildi, stoklar ve cari hesap güncellendi.\nToplam: {result.TotalAmount:C}", "Başarılı");
                     }
                 }
                 else

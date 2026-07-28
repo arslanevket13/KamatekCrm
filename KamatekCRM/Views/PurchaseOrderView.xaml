@@ -19,26 +19,42 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1.5*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="50" Width="40" Height="40" Margin="0,0,16,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="50" Width="40" Height="40" Margin="0,0,12,0">
                         <ui:SymbolIcon Symbol="Cart24" Foreground="{DynamicResource PrimaryBrush}" FontSize="24"/>
                     </Border>
-                    <StackPanel>
-                        <TextBlock Text="Satın Alma Siparişi" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                        <TextBlock Text="Tedarikçi seçimi ve ürün girişi yapınız" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Satın Alma Siparişi" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="Tedarikçi &amp; Depo Seçimi" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
                 </StackPanel>
 
-                <ComboBox Grid.Column="1" ItemsSource="{Binding Suppliers}" SelectedItem="{Binding SelectedSupplier}" 
-                          DisplayMemberPath="CompanyName" Margin="32,0"
-                          VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <TextBlock Text="TEDARİKÇİ" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding Suppliers}" SelectedItem="{Binding SelectedSupplier}" 
+                              DisplayMemberPath="CompanyName" Height="36" FontSize="13"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Margin="0,0,12,0" VerticalAlignment="Center">
+                    <TextBlock Text="GİRİŞ DEPOSU" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding Warehouses}" SelectedItem="{Binding SelectedWarehouse}" 
+                              DisplayMemberPath="Name" Height="36" FontSize="13"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Margin="0,0,16,0" VerticalAlignment="Center">
+                    <TextBlock Text="ÖDEME YÖNTEMİ" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,0,0,4"/>
+                    <ComboBox ItemsSource="{Binding PaymentMethods}" SelectedItem="{Binding SelectedPaymentMethod}" 
+                              Height="36" FontSize="13"/>
+                </StackPanel>
                 
-                <Button Grid.Column="2" Command="{Binding CreateOrderCommand}"
-                        Content="TEMİZLE / YENİ" Style="{StaticResource {x:Type Button}}"/>
+                <Button Grid.Column="4" Command="{Binding CreateOrderCommand}"
+                        Content="TEMİZLE / YENİ" VerticalAlignment="Bottom" Height="36" Style="{StaticResource {x:Type Button}}"/>
             </Grid>
         </Border>
 
