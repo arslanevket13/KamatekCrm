@@ -66,9 +66,21 @@ namespace KamatekCrm.ViewModels
                     .Where(p => p.Status != ProjectStatus.Cancelled)
                     .ToListAsync();
 
-                // --- KPI ---
-                TotalRevenue = projects.Sum(p => p.TotalCost + p.TotalProfit); // Satış = Maliyet + Kar
-                TotalCost = projects.Sum(p => p.TotalCost);     // Maliyet
+                // Load Cash Transactions for expenses & income consolidation
+                var cashTransactions = await context.CashTransactions
+                    .Where(t => t.TransactionType == CashTransactionType.Expense || t.TransactionType == CashTransactionType.TransferExpense)
+                    .ToListAsync();
+
+                var salesOrders = await context.SalesOrders.ToListAsync();
+
+                // --- KPI Consolidation ---
+                var projectRevenue = projects.Sum(p => p.TotalCost + p.TotalProfit);
+                var posRevenue = salesOrders.Sum(s => s.TotalAmount);
+                TotalRevenue = projectRevenue + posRevenue;
+
+                var projectCost = projects.Sum(p => p.TotalCost);
+                var directExpenses = cashTransactions.Sum(t => t.Amount);
+                TotalCost = projectCost + directExpenses;
                 NetProfit = TotalRevenue - TotalCost;
 
                 // --- 1. Aylık Gelir/Gider (Line Chart) ---
@@ -83,11 +95,15 @@ namespace KamatekCrm.ViewModels
 
                 foreach (var date in last6Months)
                 {
-                    // Basitlik için: Projenin oluşturulduğu tarihe göre finansal veriyi alıyoruz
                     var monthlyProjects = projects.Where(p => p.CreatedDate.Month == date.Month && p.CreatedDate.Year == date.Year).ToList();
-                    
-                    revenueValues.Add(monthlyProjects.Sum(p => p.TotalCost + p.TotalProfit));
-                    costValues.Add(monthlyProjects.Sum(p => p.TotalCost));
+                    var monthlySales = salesOrders.Where(s => s.Date.Month == date.Month && s.Date.Year == date.Year).ToList();
+                    var monthlyExp = cashTransactions.Where(t => t.Date.Month == date.Month && t.Date.Year == date.Year).ToList();
+
+                    var mRev = monthlyProjects.Sum(p => p.TotalCost + p.TotalProfit) + monthlySales.Sum(s => s.TotalAmount);
+                    var mCost = monthlyProjects.Sum(p => p.TotalCost) + monthlyExp.Sum(t => t.Amount);
+
+                    revenueValues.Add(mRev);
+                    costValues.Add(mCost);
                     labels.Add(date.ToString("MMM"));
                 }
 
@@ -113,14 +129,31 @@ namespace KamatekCrm.ViewModels
 
                 MonthlyXAxes = new Axis[] { new Axis { Labels = labels.ToArray() } };
 
+                // --- 2. Gerçek Maliyet Dağılımı (Pie Chart - Kategori Bazlı) ---
+                var categoryExpenses = cashTransactions
+                    .GroupBy(t => string.IsNullOrWhiteSpace(t.Category) ? "Genel Gider" : t.Category)
+                    .Select(g => new { Category = g.Key, Total = g.Sum(x => x.Amount) })
+                    .OrderByDescending(g => g.Total)
+                    .Take(6)
+                    .ToList();
 
-                // --- 2. Maliyet Dağılımı (Pie Chart - Simülasyon) ---
-                CostBreakdownSeries = new ISeries[]
+                if (projectCost > 0)
                 {
-                    new PieSeries<decimal> { Values = new[] { TotalCost * 0.7m }, Name = "Malzeme", InnerRadius = 50 },
-                    new PieSeries<decimal> { Values = new[] { TotalCost * 0.3m }, Name = "İşçilik", InnerRadius = 50 }
-                };
+                    categoryExpenses.Insert(0, new { Category = "Proje Maliyeti", Total = projectCost });
+                }
 
+                var pieSeries = new List<ISeries>();
+                foreach (var cat in categoryExpenses)
+                {
+                    pieSeries.Add(new PieSeries<decimal>
+                    {
+                        Values = new[] { cat.Total },
+                        Name = cat.Category,
+                        InnerRadius = 50
+                    });
+                }
+
+                CostBreakdownSeries = pieSeries.ToArray();
 
                 // --- 3. Proje Kârlılık Listesi (DataGrid) ---
                 var profitList = projects.Select(p => new ProjectProfitItem
@@ -137,8 +170,7 @@ namespace KamatekCrm.ViewModels
                 .ToList();
 
                 ProjectProfits = new ObservableCollection<ProjectProfitItem>(profitList);
-                
-                // Notify UI of changes if necessary (properties are notifying, but collections/arrays might need PropertyChanged if replaced)
+
                 OnPropertyChanged(nameof(MonthlyFinancialSeries));
                 OnPropertyChanged(nameof(MonthlyXAxes));
                 OnPropertyChanged(nameof(CostBreakdownSeries));

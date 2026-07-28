@@ -85,51 +85,57 @@
         </Grid>
 
         <!-- SUMMARY CARDS -->
-        <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,16">
+        <UniformGrid Grid.Row="1" Columns="5" Margin="0,0,0,16">
             
+            <!-- Devreden Bakiye -->
+            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="DEVREDEN BAKİYE" Style="{StaticResource CardLabel}"/>
+                    <TextBlock Text="{Binding CarriedOverDisplay}" Style="{StaticResource BigAmount}"/>
+                    <TextBlock Text="🏛️ Geçmiş Net Toplam" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
             <!-- Nakit Gelir -->
-            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource ThemeSuccessDark}">
+            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                 <StackPanel>
                     <TextBlock Text="NAKİT GELİR" Style="{StaticResource CardLabel}"/>
-                    <TextBlock Text="{Binding CashIncome, StringFormat='₺{0:N2}'}" 
-                               Style="{StaticResource BigAmount}"/>
-                    <TextBlock Text="💵 Nakit Ödemeler" Foreground="{DynamicResource ThemeSuccessLight}" FontSize="11" Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding CashIncome, StringFormat='₺{0:N2}'}" Style="{StaticResource BigAmount}" Foreground="{DynamicResource StatusSuccessFg}"/>
+                    <TextBlock Text="💵 Nakit Ödemeler" Foreground="{DynamicResource StatusSuccessFg}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Kredi Kartı Gelir -->
-            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource ThemePrimaryDark}">
+            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                 <StackPanel>
                     <TextBlock Text="KREDİ KARTI" Style="{StaticResource CardLabel}"/>
-                    <TextBlock Text="{Binding CardIncome, StringFormat='₺{0:N2}'}" 
-                               Style="{StaticResource BigAmount}"/>
-                    <TextBlock Text="💳 Kart Ödemeleri" Foreground="{DynamicResource ThemePrimaryLight}" FontSize="11" Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding CardIncome, StringFormat='₺{0:N2}'}" Style="{StaticResource BigAmount}" Foreground="{DynamicResource ThemePrimary}"/>
+                    <TextBlock Text="💳 Kart Ödemeleri" Foreground="{DynamicResource ThemePrimary}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Giderler -->
-            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource ThemeErrorDark}">
+            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                 <StackPanel>
                     <TextBlock Text="GİDERLER" Style="{StaticResource CardLabel}"/>
-                    <TextBlock Text="{Binding TotalExpense, StringFormat='₺{0:N2}'}" 
-                               Style="{StaticResource BigAmount}"/>
-                    <TextBlock Text="📤 Masraflar" Foreground="{DynamicResource ThemeErrorLight}" FontSize="11" Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding TotalExpense, StringFormat='₺{0:N2}'}" Style="{StaticResource BigAmount}" Foreground="{DynamicResource StatusErrorFg}"/>
+                    <TextBlock Text="📤 Masraflar" Foreground="{DynamicResource StatusErrorFg}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
-            <!-- Net Kasa -->
-            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource ThemeInfoDark}">
+            <!-- Net Kasa Mevcudu -->
+            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource ThemePrimaryLight}" BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1.5">
                 <StackPanel>
-                    <TextBlock Text="NET KASA" Style="{StaticResource CardLabel}"/>
-                    <TextBlock Text="{Binding NetBalanceDisplay}" 
-                               Style="{StaticResource BigAmount}"/>
-                    <TextBlock Text="📊 Gün Sonu Bakiye" Foreground="{DynamicResource ThemeInfoLight}" FontSize="11" Margin="0,8,0,0"/>
+                    <TextBlock Text="TOPLAM KASA MEVCUDU" Style="{StaticResource CardLabel}" Foreground="{DynamicResource ThemePrimaryDark}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding NetBalanceDisplay}" Style="{StaticResource BigAmount}" Foreground="{DynamicResource ThemePrimaryDark}"/>
+                    <TextBlock Text="📊 Gün Sonu Net Mevcut" Foreground="{DynamicResource ThemePrimaryDark}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
         </UniformGrid>
 
         <!-- GİDER EKLEME BÖLÜMÜ -->
-        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="24" Margin="0,0,0,16">
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="24" Margin="0,0,0,16"
+                BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -165,8 +171,8 @@
 
                 <Button Grid.Column="4" Content="💾 KAYDET" 
                         Command="{Binding AddExpenseCommand}"
-                        Padding="24,16" FontSize="14" FontWeight="Bold"
-                        Background="{DynamicResource ThemeWarning}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
+                        Padding="24,14" FontSize="14" FontWeight="Bold"
+                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" BorderThickness="0"
                         VerticalAlignment="Bottom" Cursor="Hand">
                     <Button.Style>
                         <Style TargetType="Button">

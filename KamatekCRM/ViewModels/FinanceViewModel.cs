@@ -37,7 +37,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedDate, value))
                 {
                     OnPropertyChanged(nameof(SelectedDateDisplay));
-                    Refresh();
+                    _ = RefreshAsync();
                 }
             }
         }
@@ -55,7 +55,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _showMonthly, value))
                 {
                     OnPropertyChanged(nameof(SelectedDateDisplay));
-                    Refresh();
+                    _ = RefreshAsync();
                 }
             }
         }
@@ -95,9 +95,18 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _totalExpense, value);
         }
 
-        public decimal NetBalance => (CashIncome + CardIncome) - TotalExpense;
-        public string NetBalanceDisplay => $"₺{Math.Abs(NetBalance):N2}";
-        public string NetBalanceColor => NetBalance >= 0 ? "#10B981" : "#EF4444";
+        private decimal _carriedOverBalance;
+        public decimal CarriedOverBalance
+        {
+            get => _carriedOverBalance;
+            set => SetProperty(ref _carriedOverBalance, value);
+        }
+
+        public decimal DailyNetBalance => (CashIncome + CardIncome) - TotalExpense;
+        public decimal TotalVaultBalance => CarriedOverBalance + DailyNetBalance;
+        public string NetBalanceDisplay => $"₺{TotalVaultBalance:N2}";
+        public string CarriedOverDisplay => $"₺{CarriedOverBalance:N2}";
+        public string NetBalanceColor => TotalVaultBalance >= 0 ? "#10B981" : "#EF4444";
 
         // Yeni Gider Ekleme Formu
         private decimal _newExpenseAmount;
@@ -169,7 +178,7 @@ namespace KamatekCrm.ViewModels
             FilteredTransactions.Filter = FilterTransactions;
             FilteredTransactions.SortDescriptions.Add(new SortDescription(nameof(CashTransaction.Date), ListSortDirection.Descending));
 
-            Refresh();
+            _ = RefreshAsync();
         }
 
         #endregion
@@ -177,7 +186,7 @@ namespace KamatekCrm.ViewModels
         #region Methods
 
         [RelayCommand]
-        private void Refresh()
+        private async System.Threading.Tasks.Task RefreshAsync()
         {
             IsBusy = true;
             try
@@ -197,13 +206,28 @@ namespace KamatekCrm.ViewModels
                     endDate = startDate.AddDays(1).AddTicks(-1);
                 }
 
-                using var context = _dbContextFactory.CreateDbContext();
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-                var transactions = context.CashTransactions
+                // Devir Bakiye (startDate öncesindeki tüm kasa hareketlerinin net bakiyesi)
+                var pastTransactions = await context.CashTransactions
+                    .Where(t => t.Date < startDate)
+                    .ToListAsync();
+
+                var pastIncome = pastTransactions
+                    .Where(t => t.TransactionType == CashTransactionType.CashIncome || t.TransactionType == CashTransactionType.CardIncome || t.TransactionType == CashTransactionType.TransferIncome)
+                    .Sum(t => t.Amount);
+
+                var pastExpense = pastTransactions
+                    .Where(t => t.TransactionType == CashTransactionType.Expense || t.TransactionType == CashTransactionType.TransferExpense)
+                    .Sum(t => t.Amount);
+
+                CarriedOverBalance = pastIncome - pastExpense;
+
+                var transactions = await context.CashTransactions
                     .Include(t => t.Customer)
                     .Where(t => t.Date >= startDate && t.Date <= endDate)
                     .OrderByDescending(t => t.Date)
-                    .ToList();
+                    .ToListAsync();
 
                 foreach (var t in transactions)
                 {
@@ -224,8 +248,10 @@ namespace KamatekCrm.ViewModels
                                 t.TransactionType == CashTransactionType.TransferExpense)
                     .Sum(t => t.Amount);
 
-                OnPropertyChanged(nameof(NetBalance));
+                OnPropertyChanged(nameof(DailyNetBalance));
+                OnPropertyChanged(nameof(TotalVaultBalance));
                 OnPropertyChanged(nameof(NetBalanceDisplay));
+                OnPropertyChanged(nameof(CarriedOverDisplay));
                 OnPropertyChanged(nameof(NetBalanceColor));
             }
             catch (Exception ex)
@@ -285,7 +311,7 @@ namespace KamatekCrm.ViewModels
                 NewExpenseDescription = string.Empty;
                 NewExpenseCategory = "Genel";
 
-                Refresh();
+                _ = RefreshAsync();
             }
             catch (Exception ex)
             {
@@ -316,7 +342,7 @@ namespace KamatekCrm.ViewModels
                 using var context = _dbContextFactory.CreateDbContext();
                 context.CashTransactions.Remove(transaction);
                 context.SaveChanges();
-                Refresh();
+                _ = RefreshAsync();
             }
             catch (Exception ex)
             {
