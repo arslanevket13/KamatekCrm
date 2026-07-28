@@ -349,13 +349,55 @@ namespace KamatekCrm.Infrastructure.Data
         public override int SaveChanges()
         {
             ApplyAuditInformation();
-            return base.SaveChanges();
+            try
+            {
+                return base.SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                ResolveConcurrencyConflicts(ex);
+                return base.SaveChanges();
+            }
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             ApplyAuditInformation();
-            return await base.SaveChangesAsync(cancellationToken);
+            try
+            {
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                ResolveConcurrencyConflicts(ex);
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        private void ResolveConcurrencyConflicts(DbUpdateConcurrencyException ex)
+        {
+            foreach (var entry in ex.Entries)
+            {
+                try
+                {
+                    var databaseValues = entry.GetDatabaseValues();
+                    if (databaseValues == null)
+                    {
+                        // Entity was deleted from database
+                        entry.State = EntityState.Detached;
+                    }
+                    else
+                    {
+                        // Refresh original tracking values with latest database values (including xmin concurrency token)
+                        entry.OriginalValues.SetValues(databaseValues);
+                    }
+                }
+                catch
+                {
+                    // Fallback: detach entry if conflict cannot be resolved
+                    entry.State = EntityState.Detached;
+                }
+            }
         }
 
         private void ApplyAuditInformation()
