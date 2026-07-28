@@ -87,7 +87,7 @@ namespace KamatekCrm.ViewModels
         public decimal LineTotal
         {
             get => _lineTotal;
-            private set => SetProperty(ref _lineTotal, value);
+            set => SetProperty(ref _lineTotal, value);
         }
 
         public void UpdateTotal()
@@ -317,9 +317,96 @@ namespace KamatekCrm.ViewModels
         private void ResetSidebar()
         {
             SidebarSearchQuery = "";
-            SidebarSearchResults.Clear();
+            SidebarSearchResults?.Clear();
             IsShowingSearchResults = false;
             SidebarItem = new PurchasingLineItem { IsNewProduct = true };
+        }
+
+        [RelayCommand]
+        private void OpenSidebar(PurchasingLineItem? item = null)
+        {
+            if (item != null)
+            {
+                SidebarItem = item;
+                IsSidebarOpen = true;
+            }
+            else
+            {
+                ResetSidebar();
+                IsSidebarOpen = true;
+            }
+        }
+
+        [RelayCommand]
+        private void CloseSidebar()
+        {
+            IsSidebarOpen = false;
+        }
+
+        [RelayCommand]
+        private void OpenHistory()
+        {
+            IsHistoryOpen = !IsHistoryOpen;
+        }
+
+        [RelayCommand]
+        private void UploadPdf()
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "PDF Dosyaları (*.pdf)|*.pdf",
+                Title = "Fatura Yükle (PDF)"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                IsBusy = true;
+                try
+                {
+                    var parser = new Services.PdfInvoiceParserService();
+                    var items = parser.Parse(dialog.FileName);
+
+                    if (items.Count == 0)
+                    {
+                        _toastService.ShowWarning("PDF'ten okunabilen uygun kalem bulunamadı.");
+                        return;
+                    }
+
+                    var vm = new PdfImportPreviewViewModel(items);
+                    var window = new Views.PdfImportPreviewWindow
+                    {
+                        DataContext = vm
+                    };
+
+                    window.ShowDialog();
+
+                    if (vm.IsConfirmed)
+                    {
+                        foreach (var item in vm.ParsedItems)
+                        {
+                            OrderItems.Add(new PurchasingLineItem
+                            {
+                                ProductName = item.ProductName,
+                                Quantity = item.Quantity,
+                                UnitPrice = item.UnitPrice,
+                                VatRate = (int)item.TaxRate,
+                                LineTotal = item.LineTotal,
+                                IsNewProduct = true
+                            });
+                        }
+                        OnPropertyChanged(nameof(GrandTotal));
+                        _toastService.ShowSuccess($"{vm.ParsedItems.Count} kalem PDF faturadan başarıyla eklendi.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _toastService.ShowError($"PDF Okuma Hatası: {ex.Message}");
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+            }
         }
 
         private async Task PerformSearchDebounced(string query)
