@@ -442,6 +442,12 @@ namespace KamatekCrm.ViewModels
                 Serilog.Log.Error(ex, "Teklif kaydedilirken hata oluştu");
             }
         }
+
+        [RelayCommand]
+        private async Task SaveAndSendAsync()
+        {
+            await SaveDraftAsync(QuoteStatus.Sent);
+        }
     }
 }
 

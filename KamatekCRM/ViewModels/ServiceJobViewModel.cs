@@ -2186,6 +2186,18 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void AddItemToJob()
+        {
+            _toastService?.ShowInfo("İş kaydına parça/ürün ekleme alanı açıldı.");
+        }
+
+        [RelayCommand]
+        private void Cancel(Window? window = null)
+        {
+            window?.Close();
+        }
+
         #endregion
     }
 }

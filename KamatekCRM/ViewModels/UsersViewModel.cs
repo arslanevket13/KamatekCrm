@@ -199,6 +199,18 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(AdminCount));
         }
 
+        [RelayCommand]
+        private async Task Refresh()
+        {
+            await LoadUsersAsync();
+        }
+
+        [RelayCommand]
+        private void AddUser()
+        {
+            OpenAddUserWindow();
+        }
+
         private void OpenAddUserWindow()
         {
             // Note: View constructors resolve required services via DI
@@ -207,12 +219,28 @@ namespace KamatekCrm.ViewModels
             _ = LoadUsersAsync();
         }
 
+        [RelayCommand]
+        private void EditUser(User? user = null)
+        {
+            var target = user ?? SelectedUser;
+            if (target != null)
+            {
+                OpenEditUserWindow(target);
+            }
+        }
+
         private void OpenEditUserWindow(User user)
         {
             var view = new EditUserView(user);
             view.Owner = Application.Current.MainWindow;
             view.ShowDialog();
             _ = LoadUsersAsync();
+        }
+
+        [RelayCommand]
+        private void SetPassword()
+        {
+            OpenSetPasswordWindow();
         }
 
         private void OpenSetPasswordWindow()
@@ -229,6 +257,7 @@ namespace KamatekCrm.ViewModels
             return true;
         }
 
+        [RelayCommand]
         private async Task DeleteUserAsync()
         {
             if (SelectedUser == null) return;
@@ -265,6 +294,12 @@ namespace KamatekCrm.ViewModels
                     _loadingService.Hide();
                 }
             }
+        }
+
+        [RelayCommand]
+        private async Task ResetPasswordAsync()
+        {
+            await ResetPasswordTo1234Async();
         }
 
         private async Task ResetPasswordTo1234Async()

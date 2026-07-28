@@ -91,6 +91,12 @@ namespace KamatekCrm.Shared.Models
         public int? CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer? Customer { get; set; }
+
+        [NotMapped]
+        public bool IsIncome => TransactionType == CashTransactionType.Income;
+
+        [NotMapped]
+        public bool IsExpense => TransactionType == CashTransactionType.Expense;
     }
 }
 

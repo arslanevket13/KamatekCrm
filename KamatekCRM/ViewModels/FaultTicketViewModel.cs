@@ -218,7 +218,10 @@ namespace KamatekCrm.ViewModels
         public string PhysicalCondition { get => _physicalCondition; set => SetProperty(ref _physicalCondition, value); }
         public bool AccessoryAdapter { get => _accessoryAdapter; set => SetProperty(ref _accessoryAdapter, value); }
         public bool AccessoryCable { get => _accessoryCable; set => SetProperty(ref _accessoryCable, value); }
+        private bool _accessoryBox;
+
         public bool AccessoryRemote { get => _accessoryRemote; set => SetProperty(ref _accessoryRemote, value); }
+        public bool AccessoryBox { get => _accessoryBox; set => SetProperty(ref _accessoryBox, value); }
 
         public bool IsSaving { get => _isSaving; set => SetProperty(ref _isSaving, value); }
 

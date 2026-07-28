@@ -28,8 +28,16 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<Supplier> Suppliers
         {
             get => _suppliers;
-            set => SetProperty(ref _suppliers, value);
+            set
+            {
+                if (SetProperty(ref _suppliers, value))
+                {
+                    OnPropertyChanged(nameof(FilteredSuppliers));
+                }
+            }
         }
+
+        public ObservableCollection<Supplier> FilteredSuppliers => Suppliers;
 
         private Supplier? _selectedSupplier;
         public Supplier? SelectedSupplier
@@ -65,6 +73,12 @@ namespace KamatekCrm.ViewModels
 
         [RelayCommand]
         private void Clear()
+        {
+            SearchText = string.Empty;
+        }
+
+        [RelayCommand]
+        private void ClearSearch()
         {
             SearchText = string.Empty;
         }

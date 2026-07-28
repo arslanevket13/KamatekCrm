@@ -23,9 +23,9 @@ namespace KamatekCrm.Shared.Models
         public string UrgencyLevel { get; set; } = string.Empty;
         public string UrgencyBadgeStatus => UrgencyLevel switch
         {
-            "Critical" or "Kritik" => "Kritik",
-            "Warning" or "Uyarı" => "Uyarı",
-            _ => string.IsNullOrEmpty(UrgencyLevel) ? "Normal" : UrgencyLevel
+            "Critical" or "Kritik" => "Error",
+            "Warning" or "Uyarı" => "Warning",
+            _ => "Neutral"
         };
     }
 

@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 
 namespace KamatekCrm.ViewModels.Common
 {
-    public abstract class PaginationViewModel : ViewModelBase
+    public abstract partial class PaginationViewModel : ViewModelBase
     {
         private int _currentPage = 1;
         private int _pageSize = 20;
@@ -78,12 +78,14 @@ namespace KamatekCrm.ViewModels.Common
         {
         }
 
-        private void NextPage()
+        [RelayCommand]
+        protected void NextPage()
         {
             if (HasNextPage) CurrentPage++;
         }
 
-        private void PreviousPage()
+        [RelayCommand]
+        protected void PreviousPage()
         {
             if (HasPreviousPage) CurrentPage--;
         }

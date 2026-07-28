@@ -978,6 +978,12 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(ManualTotalNegativeDifference));
             OnPropertyChanged(nameof(ManualTotalItemCount));
         }
+
+        [RelayCommand]
+        private void CloseHistory()
+        {
+            IsHistoryVisible = false;
+        }
     }
 
     /// <summary>

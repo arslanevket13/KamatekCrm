@@ -781,6 +781,12 @@ namespace KamatekCrm.ViewModels
                 await RefreshAsync();
             }
         }
+
+        [RelayCommand]
+        private void AddItemToJob()
+        {
+            _toastService?.ShowInfo("Parça / malzeme ekleme alanı hazırlandı.");
+        }
     }
 
     /// <summary>
