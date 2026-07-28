@@ -117,6 +117,21 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
+        [RelayCommand]
+        private void FilterAll() => StatusFilter = null;
+
+        [RelayCommand]
+        private void FilterDraft() => StatusFilter = QuoteStatus.Draft;
+
+        [RelayCommand]
+        private void FilterSent() => StatusFilter = QuoteStatus.Sent;
+
+        [RelayCommand]
+        private void FilterApproved() => StatusFilter = QuoteStatus.Approved;
+
+        [RelayCommand]
+        private void FilterRejected() => StatusFilter = QuoteStatus.Rejected;
+
         #endregion
 
         #region Constructor

@@ -100,8 +100,16 @@ namespace KamatekCrm.ViewModels
         public object? CurrentView
         {
             get => _currentView;
-            set => SetProperty(ref _currentView, value);
+            set
+            {
+                if (SetProperty(ref _currentView, value))
+                {
+                    OnPropertyChanged(nameof(CurrentViewName));
+                }
+            }
         }
+
+        public string CurrentViewName => CurrentView?.GetType().Name.Replace("ViewModel", "").Replace("View", "") ?? "Dashboard";
 
         private bool _isConnectionLost;
         /// <summary>
@@ -289,8 +297,24 @@ namespace KamatekCrm.ViewModels
         [RelayCommand] private void NavigateToRepairList() => NavigateTo<RepairListViewModel>();
         [RelayCommand] private void NavigateToFieldJobList() => NavigateTo<FieldJobListViewModel>();
         [RelayCommand] private void NavigateToRoutePlanning() => NavigateTo<RoutePlanningViewModel>();
-        // [RelayCommand] private void NavigateToPipeline() => NavigateTo<PipelineViewModel>();
-        // [RelayCommand] private void NavigateToScheduler() => NavigateTo<SchedulerViewModel>();
+        [RelayCommand] private void ToggleSidebar() => IsSidebarCollapsed = !IsSidebarCollapsed;
+        [RelayCommand] private void ToggleDarkMode() => IsDarkMode = !IsDarkMode;
+        [RelayCommand] private void ToggleNotifications() => IsNotificationsOpen = !IsNotificationsOpen;
+        [RelayCommand] private void GoToSettings() => NavigateToSettings();
+
+        [RelayCommand]
+        private void NavigateToPipeline()
+        {
+            NavigateTo<ServiceJobViewModel>();
+            _toastService?.ShowInfo("Pipeline görünümü Servis İşleri sayfasına yönlendirildi.");
+        }
+
+        [RelayCommand]
+        private void NavigateToScheduler()
+        {
+            NavigateTo<FieldJobListViewModel>();
+            _toastService?.ShowInfo("Zamanlayıcı görünümü Saha Görevleri sayfasına yönlendirildi.");
+        }
         [RelayCommand] private void NavigateToFinance() => NavigateTo<FinanceViewModel>();
         [RelayCommand] private void NavigateToAnalytics() => NavigateTo<AnalyticsViewModel>();
         [RelayCommand] private void NavigateToPurchaseOrders() => NavigateTo<PurchasingViewModel>();
