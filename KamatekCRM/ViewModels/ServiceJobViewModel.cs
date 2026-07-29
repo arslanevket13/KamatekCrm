@@ -2153,15 +2153,16 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// İş sil (Dashboard context menu)
+        /// İş sil (Dashboard context menu & DataGrid action)
         /// </summary>
         [RelayCommand]
-        private async Task DeleteJob()
+        private async Task DeleteJob(ServiceJob? job = null)
         {
-            if (SelectedServiceJob == null) return;
+            var target = job ?? SelectedServiceJob;
+            if (target == null) return;
 
             var result = MessageBox.Show(
-                $"İş #{SelectedServiceJob.Id} silinecek. Emin misiniz?",
+                $"İş #{target.Id} ({target.Description}) silinecek. Emin misiniz?",
                 "Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result != MessageBoxResult.Yes) return;
@@ -2169,7 +2170,7 @@ namespace KamatekCrm.ViewModels
             try
             {
                 using var context = await _dbContextFactory.CreateDbContextAsync();
-                var jobToDelete = await context.ServiceJobs.FindAsync(SelectedServiceJob.Id);
+                var jobToDelete = await context.ServiceJobs.FindAsync(target.Id);
                 if (jobToDelete != null)
                 {
                     context.ServiceJobs.Remove(jobToDelete);
