@@ -19,6 +19,8 @@ namespace KamatekCrm.Shared.Models
         
         public QuoteStatus Status { get; set; } = QuoteStatus.Draft;
         
+        public string QuoteTitle { get; set; } = string.Empty;
+        public string Currency { get; set; } = "TRY";
         public decimal SubTotal { get; set; }
         public decimal TotalDiscount { get; set; }
         public decimal TotalTax { get; set; }
@@ -47,6 +49,7 @@ namespace KamatekCrm.Shared.Models
         public int Quantity { get; set; }
         public string Unit { get; set; } = string.Empty;
         
+        public decimal PurchasePrice { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal DiscountPercent { get; set; }
         public decimal TaxPercent { get; set; }
@@ -55,5 +58,11 @@ namespace KamatekCrm.Shared.Models
         
         [NotMapped]
         public int CurrentStockQuantity { get; set; }
+
+        [NotMapped]
+        public decimal LineCost => Quantity * PurchasePrice;
+
+        [NotMapped]
+        public decimal LineProfit => LineTotal - LineCost;
     }
 }

@@ -125,12 +125,40 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        // Totals
+        // Totals & Profit Calculations
         public decimal SubTotal => QuoteLines.Sum(l => l.Quantity * l.UnitPrice);
         public decimal TotalDiscount => QuoteLines.Sum(l => (l.Quantity * l.UnitPrice) * (l.DiscountPercent / 100m));
+        public decimal SubTotalAfterDiscount => SubTotal - TotalDiscount;
         public decimal TotalTax => QuoteLines.Sum(l => ((l.Quantity * l.UnitPrice) - ((l.Quantity * l.UnitPrice) * (l.DiscountPercent / 100m))) * (l.TaxPercent / 100m));
-        public decimal GrandTotal => SubTotal - TotalDiscount + TotalTax;
+        public decimal GrandTotal => SubTotalAfterDiscount + TotalTax;
+        public decimal TotalCost => QuoteLines.Sum(l => l.Quantity * l.PurchasePrice);
+        public decimal TotalProfit => SubTotalAfterDiscount - TotalCost;
 
+        public decimal ProfitMarginPercent => TotalCost > 0 ? Math.Round((TotalProfit / TotalCost) * 100, 1) : 0;
+
+        public string ProfitDisplay => TotalProfit >= 0
+            ? $"📈 Kar: ₺{TotalProfit:N2} (%{ProfitMarginPercent:F1})"
+            : $"📉 Zarar: ₺{Math.Abs(TotalProfit):N2} (%{ProfitMarginPercent:F1})";
+
+        public System.Windows.Media.Brush ProfitColor => TotalProfit >= 0
+            ? (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#4CAF50")!
+            : (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#F44336")!;
+
+        private string _quoteNumber = $"TKLF-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
+        public string QuoteNumber
+        {
+            get => _quoteNumber;
+            set => SetProperty(ref _quoteNumber, value);
+        }
+
+        private string _selectedCurrency = "TRY";
+        public string SelectedCurrency
+        {
+            get => _selectedCurrency;
+            set => SetProperty(ref _selectedCurrency, value);
+        }
+
+        public string[] Currencies => new[] { "TRY", "USD", "EUR" };
 
         private bool _isBusy;
         public bool IsBusy
@@ -275,6 +303,7 @@ namespace KamatekCrm.ViewModels
                     Quantity = NewQuantity,
                     Unit = SelectedProduct.Unit ?? "Adet",
                     UnitPrice = SelectedProduct.SalePrice,
+                    PurchasePrice = SelectedProduct.PurchasePrice,
                     DiscountPercent = NewDiscount,
                     TaxPercent = SelectedProduct.VatRate,
                     CurrentStockQuantity = SelectedProduct.TotalStockQuantity
@@ -309,6 +338,7 @@ namespace KamatekCrm.ViewModels
                     Quantity = 1,
                     Unit = product.Unit ?? "Adet",
                     UnitPrice = product.SalePrice,
+                    PurchasePrice = product.PurchasePrice,
                     DiscountPercent = 0,
                     TaxPercent = product.VatRate,
                     CurrentStockQuantity = product.TotalStockQuantity
@@ -318,6 +348,32 @@ namespace KamatekCrm.ViewModels
             }
 
             UpdateTotals();
+        }
+
+        [RelayCommand]
+        private void IncreaseLineQuantity(QuoteLine? line)
+        {
+            if (line == null) return;
+            line.Quantity += 1;
+            line.LineTotal = CalculateLineTotal(line);
+            UpdateTotals();
+        }
+
+        [RelayCommand]
+        private void DecreaseLineQuantity(QuoteLine? line)
+        {
+            if (line == null) return;
+            if (line.Quantity > 1)
+            {
+                line.Quantity -= 1;
+                line.LineTotal = CalculateLineTotal(line);
+                UpdateTotals();
+            }
+            else
+            {
+                QuoteLines.Remove(line);
+                UpdateTotals();
+            }
         }
 
         [RelayCommand]
@@ -343,8 +399,14 @@ namespace KamatekCrm.ViewModels
         {
             OnPropertyChanged(nameof(SubTotal));
             OnPropertyChanged(nameof(TotalDiscount));
+            OnPropertyChanged(nameof(SubTotalAfterDiscount));
             OnPropertyChanged(nameof(TotalTax));
             OnPropertyChanged(nameof(GrandTotal));
+            OnPropertyChanged(nameof(TotalCost));
+            OnPropertyChanged(nameof(TotalProfit));
+            OnPropertyChanged(nameof(ProfitMarginPercent));
+            OnPropertyChanged(nameof(ProfitDisplay));
+            OnPropertyChanged(nameof(ProfitColor));
         }
 
         [RelayCommand]
