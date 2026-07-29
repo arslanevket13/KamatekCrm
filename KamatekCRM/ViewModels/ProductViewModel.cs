@@ -101,6 +101,54 @@ namespace KamatekCrm.ViewModels
         public bool IsProductSelected => SelectedProduct != null;
         public bool HasProductPhoto => SelectedProduct != null && !string.IsNullOrWhiteSpace(SelectedProduct.ImagePath);
 
+        // ===== KPI METRİK PROPERTİES =====
+        public int TotalProductCount => Products.Count;
+        public int TotalStockQuantityCount => Products.Sum(p => p.TotalStockQuantity);
+        public int LowStockCount => Products.Count(p => p.TotalStockQuantity <= 5);
+        public decimal TotalInventoryValue => Products.Sum(p => p.TotalStockQuantity * p.PurchasePrice);
+        public string TotalInventoryValueDisplay => $"₺{TotalInventoryValue:N0}";
+
+        // ===== FİLTRELEME PROPERTİES =====
+        private string _selectedCategoryFilter = "Tümü";
+        public string SelectedCategoryFilter
+        {
+            get => _selectedCategoryFilter;
+            set
+            {
+                if (SetProperty(ref _selectedCategoryFilter, value))
+                {
+                    _productsView?.Refresh();
+                }
+            }
+        }
+
+        private string _stockStatusFilter = "Tümü";
+        public string StockStatusFilter
+        {
+            get => _stockStatusFilter;
+            set
+            {
+                if (SetProperty(ref _stockStatusFilter, value))
+                {
+                    _productsView?.Refresh();
+                }
+            }
+        }
+
+        public ObservableCollection<string> CategoryFilterItems { get; } = new()
+        {
+            "Tümü", "Kamera", "Diyafon", "Yangın Alarmı", "Hırsız Alarmı", "Akıllı Ev", "Erişim Kontrolü", "Uydu", "Fiber Optik", "Genel"
+        };
+
+        public void NotifyKpiMetrics()
+        {
+            OnPropertyChanged(nameof(TotalProductCount));
+            OnPropertyChanged(nameof(TotalStockQuantityCount));
+            OnPropertyChanged(nameof(LowStockCount));
+            OnPropertyChanged(nameof(TotalInventoryValue));
+            OnPropertyChanged(nameof(TotalInventoryValueDisplay));
+        }
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -140,6 +188,8 @@ namespace KamatekCrm.ViewModels
 
                 Products.Add(product);
             }
+
+            NotifyKpiMetrics();
         }
 
         /// <summary>
@@ -148,14 +198,33 @@ namespace KamatekCrm.ViewModels
         private bool FilterProducts(object obj)
         {
             if (obj is not Product product) return false;
-            if (string.IsNullOrWhiteSpace(SearchText)) return true;
 
-            var search = SearchText.ToLower();
+            // 1. Metin Araması
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var search = SearchText.ToLower();
+                bool matchesText = (product.ProductName != null && product.ProductName.ToLower().Contains(search)) ||
+                                   (product.SKU != null && product.SKU.ToLower().Contains(search)) ||
+                                   (product.Category != null && product.Category.Name != null && product.Category.Name.ToLower().Contains(search)) ||
+                                   (product.Brand != null && product.Brand.BrandName != null && product.Brand.BrandName.ToLower().Contains(search));
+                if (!matchesText) return false;
+            }
 
-            // Ürün Adı, SKU veya Kategori Adı içinde arama yap
-            return product.ProductName.ToLower().Contains(search) ||
-                   (product.SKU != null && product.SKU.ToLower().Contains(search)) ||
-                   (product.Category != null && product.Category.Name.ToLower().Contains(search));
+            // 2. Kategori Filtresi
+            if (SelectedCategoryFilter != "Tümü" && !string.IsNullOrEmpty(SelectedCategoryFilter))
+            {
+                if (product.Category?.Name != SelectedCategoryFilter) return false;
+            }
+
+            // 3. Stok Durumu Filtresi
+            if (StockStatusFilter != "Tümü" && !string.IsNullOrEmpty(StockStatusFilter))
+            {
+                if (StockStatusFilter == "Stokta Var" && product.TotalStockQuantity <= 0) return false;
+                if (StockStatusFilter == "Kritik Stok" && (product.TotalStockQuantity > 5 || product.TotalStockQuantity <= 0)) return false;
+                if (StockStatusFilter == "Tükenenler" && product.TotalStockQuantity > 0) return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -550,6 +619,27 @@ namespace KamatekCrm.ViewModels
             {
                 StatusMessage = $"Fotoğraf silme hatası: {ex.Message}";
                 IsActionSuccessful = false;
+            }
+        }
+
+        [RelayCommand]
+        private void QuickAdjustStock(Product? product)
+        {
+            var target = product ?? SelectedProduct;
+            if (target == null) return;
+
+            var editVm = App.ServiceProvider.GetRequiredService<AddProductViewModel>();
+            editVm.Initialize(target);
+
+            var window = new Views.AddProductWindow
+            {
+                DataContext = editVm,
+                Owner = System.Windows.Application.Current?.MainWindow
+            };
+            var result = window.ShowDialog();
+            if (result == true)
+            {
+                RefreshProductList();
             }
         }
 

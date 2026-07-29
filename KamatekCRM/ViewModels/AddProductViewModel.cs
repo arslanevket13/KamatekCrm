@@ -265,6 +265,40 @@ namespace KamatekCrm.ViewModels
 
 
         /// <summary>
+        /// Kar Tutarı (₺)
+        /// </summary>
+        public decimal ProfitAmount => (NewProduct?.SalePrice ?? 0) - (NewProduct?.PurchasePrice ?? 0);
+
+        /// <summary>
+        /// Kar Marjı (%)
+        /// </summary>
+        public decimal ProfitMarginPercent
+        {
+            get
+            {
+                var cost = NewProduct?.PurchasePrice ?? 0;
+                if (cost <= 0) return 0;
+                return Math.Round((ProfitAmount / cost) * 100, 1);
+            }
+        }
+
+        public string ProfitMarginDisplay => ProfitAmount >= 0 
+            ? $"📈 Kar: ₺{ProfitAmount:N2} (%{ProfitMarginPercent:F1})"
+            : $"📉 Zarar: ₺{Math.Abs(ProfitAmount):N2} (%{ProfitMarginPercent:F1})";
+
+        public System.Windows.Media.Brush ProfitColor => ProfitAmount >= 0
+            ? (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#4CAF50")!
+            : (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#F44336")!;
+
+        public void NotifyFinancialCalculations()
+        {
+            OnPropertyChanged(nameof(ProfitAmount));
+            OnPropertyChanged(nameof(ProfitMarginPercent));
+            OnPropertyChanged(nameof(ProfitMarginDisplay));
+            OnPropertyChanged(nameof(ProfitColor));
+        }
+
+        /// <summary>
         /// Benzersiz SKU kodu üretir
         /// </summary>
         private string GenerateSKU()
@@ -279,6 +313,17 @@ namespace KamatekCrm.ViewModels
         private void RegenerateSKU()
         {
             NewProduct.SKU = GenerateSKU();
+            OnPropertyChanged(nameof(NewProduct));
+        }
+
+        /// <summary>
+        /// Barkod otomatik üretir
+        /// </summary>
+        [RelayCommand]
+        private void GenerateBarcode()
+        {
+            var random = new Random();
+            NewProduct.Barcode = $"869{DateTime.UtcNow:yyMMdd}{random.Next(1000, 9999)}";
             OnPropertyChanged(nameof(NewProduct));
         }
 

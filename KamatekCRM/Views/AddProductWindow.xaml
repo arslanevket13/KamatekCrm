@@ -5,30 +5,33 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KamatekCrm.Views"
         xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:converters="clr-namespace:KamatekCrm.Converters"
         xmlns:specs="clr-namespace:KamatekCrm.Shared.Models.Specs;assembly=KamatekCrm.Shared"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewmodels:AddProductViewModel, IsDesignTimeCreatable=False}"
         Title="{Binding WindowTitle}" 
-        Height="750" Width="900"
+        Height="720" Width="920"
         MinWidth="850" MinHeight="600"
         WindowStartupLocation="CenterOwner"
-        Style="{DynamicResource PremiumWindowStyle}">
+        Style="{DynamicResource PremiumWindowStyle}"
+        Background="{DynamicResource SurfacePageBrush}">
 
     <Window.Resources>
-        <!-- Boolean to Visibility Converter -->
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        
+        <converters:ImagePathConverter x:Key="ImagePathConverter"/>
+
         <!-- Camera Specs Template -->
         <DataTemplate DataType="{x:Type specs:CameraSpecs}">
-            <Grid>
+            <Grid Margin="0,8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="0" Margin="0,0,16,16">
+                <StackPanel Grid.Column="0" Margin="0,0,0,12">
                     <Label Content="Çözünürlük" Style="{StaticResource ModernLabel}"/>
                     <ComboBox SelectedValuePath="Content" SelectedValue="{Binding Resolution}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="2MP"/>
@@ -38,7 +41,7 @@
                     </ComboBox>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Margin="0,0,16,16">
+                <StackPanel Grid.Column="2" Margin="0,0,0,12">
                     <Label Content="Lens Tipi" Style="{StaticResource ModernLabel}"/>
                     <ComboBox SelectedValuePath="Content" SelectedValue="{Binding LensType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Fixed"/>
@@ -47,7 +50,7 @@
                     </ComboBox>
                 </StackPanel>
 
-                <StackPanel Grid.Column="2" Margin="0,0,0,16">
+                <StackPanel Grid.Column="4" Margin="0,0,0,12">
                     <Label Content="Kamera Tipi" Style="{StaticResource ModernLabel}"/>
                     <ComboBox SelectedValuePath="Content" SelectedValue="{Binding CameraType}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="Dome"/>
@@ -57,12 +60,12 @@
                     </ComboBox>
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,16,16">
+                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,12">
                     <Label Content="IR Mesafesi (m)" Style="{StaticResource ModernLabel}"/>
                     <TextBox Text="{Binding IRDistance}" Style="{StaticResource ModernTextBox}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,16,16">
+                <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,12">
                     <Label Content="IP Koruma" Style="{StaticResource ModernLabel}"/>
                     <ComboBox SelectedValuePath="Content" SelectedValue="{Binding IpRating}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="IP65"/>
@@ -71,7 +74,7 @@
                     </ComboBox>
                 </StackPanel>
 
-                <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,16">
+                <StackPanel Grid.Row="1" Grid.Column="4" Margin="0,0,0,12">
                     <Label Content="Sıkıştırma" Style="{StaticResource ModernLabel}"/>
                     <ComboBox SelectedValuePath="Content" SelectedValue="{Binding Compression}" Style="{StaticResource ModernComboBox}">
                         <ComboBoxItem Content="H.264"/>
@@ -80,7 +83,7 @@
                     </ComboBox>
                 </StackPanel>
 
-                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal">
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Orientation="Horizontal" Margin="0,4,0,0">
                     <CheckBox Content="PoE Destekli" IsChecked="{Binding IsPoE}" Margin="0,0,24,0"/>
                     <CheckBox Content="Sesli" IsChecked="{Binding HasAudio}" Margin="0,0,24,0"/>
                     <CheckBox Content="ColorVu (Renkli Gece)" IsChecked="{Binding HasColorVu}"/>
@@ -88,366 +91,24 @@
             </Grid>
         </DataTemplate>
 
-        <!-- Intercom Specs Template -->
-        <DataTemplate DataType="{x:Type specs:IntercomSpecs}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Column="0" Margin="0,0,16,16">
-                    <Label Content="Ekran Boyutu" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ScreenSize}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="4.3 inç"/>
-                        <ComboBoxItem Content="7 inç"/>
-                        <ComboBoxItem Content="10 inç"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1" Margin="0,0,16,16">
-                    <Label Content="Bağlantı Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ConnectionType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="IP"/>
-                        <ComboBoxItem Content="2-Wire"/>
-                        <ComboBoxItem Content="4-Wire"/>
-                        <ComboBoxItem Content="Analog"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="2" Margin="0,0,0,16">
-                    <Label Content="Montaj Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding MountingType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Sıva Üstü"/>
-                        <ComboBoxItem Content="Sıva Altı"/>
-                        <ComboBoxItem Content="Masa Üstü"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal">
-                    <CheckBox Content="WiFi Destekli" IsChecked="{Binding HasWiFi}" Margin="0,0,24,0"/>
-                    <CheckBox Content="Mobil Uygulama" IsChecked="{Binding HasMobileApp}" Margin="0,0,24,0"/>
-                    <CheckBox Content="Kayıt Özelliği" IsChecked="{Binding HasMemory}"/>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-
-        <!-- Fire Alarm Specs Template -->
-        <DataTemplate DataType="{x:Type specs:FireAlarmSpecs}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Column="0" Margin="0,0,16,16">
-                    <Label Content="Dedektör Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding DetectorType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Duman"/>
-                        <ComboBoxItem Content="Isı"/>
-                        <ComboBoxItem Content="Multi-Sensor"/>
-                        <ComboBoxItem Content="Beam"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1" Margin="0,0,16,16">
-                    <Label Content="Sistem Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding SystemType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Adresli"/>
-                        <ComboBoxItem Content="Konvansiyonel"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="2" Margin="0,0,0,16">
-                    <Label Content="Bileşen Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Panel"/>
-                        <ComboBoxItem Content="Dedektör"/>
-                        <ComboBoxItem Content="Siren"/>
-                        <ComboBoxItem Content="Modül"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal">
-                    <CheckBox Content="Kablosuz" IsChecked="{Binding IsWireless}" Margin="0,0,24,0"/>
-                    <CheckBox Content="Röle Çıkışı Var" IsChecked="{Binding HasRelay}"/>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-
-        <!-- Burglar Alarm Specs Template -->
-        <DataTemplate DataType="{x:Type specs:BurglarAlarmSpecs}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Column="0" Margin="0,0,16,16">
-                    <Label Content="Bağlantı Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ConnectionType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Kablolu"/>
-                        <ComboBoxItem Content="Kablosuz"/>
-                        <ComboBoxItem Content="Hibrit"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1" Margin="0,0,16,16">
-                    <Label Content="Bileşen Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Panel"/>
-                        <ComboBoxItem Content="PIR"/>
-                        <ComboBoxItem Content="Manyetik Kontak"/>
-                        <ComboBoxItem Content="Siren"/>
-                        <ComboBoxItem Content="Keypad"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="2" Margin="0,0,0,16">
-                    <Label Content="Algılama Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding DetectionType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Hareket"/>
-                        <ComboBoxItem Content="Kapı/Pencere"/>
-                        <ComboBoxItem Content="Titreşim"/>
-                        <ComboBoxItem Content="Cam Kırılma"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal">
-                    <CheckBox Content="GSM Modülü" IsChecked="{Binding HasGSM}" Margin="0,0,24,0"/>
-                    <CheckBox Content="WiFi Destekli" IsChecked="{Binding HasWiFi}" Margin="0,0,24,0"/>
-                    <CheckBox Content="Pet Immune" IsChecked="{Binding IsPetImmune}"/>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-
-        <!-- Smart Home Specs Template -->
-        <DataTemplate DataType="{x:Type specs:SmartHomeSpecs}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Column="0" Margin="0,0,16,16">
-                    <Label Content="Protokol" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding Protocol}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="KNX"/>
-                        <ComboBoxItem Content="Zigbee"/>
-                        <ComboBoxItem Content="Z-Wave"/>
-                        <ComboBoxItem Content="WiFi"/>
-                        <ComboBoxItem Content="Matter"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1" Margin="0,0,16,16">
-                    <Label Content="Modül Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ModuleType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Anahtar"/>
-                        <ComboBoxItem Content="Dimmer"/>
-                        <ComboBoxItem Content="Röle"/>
-                        <ComboBoxItem Content="Sensör"/>
-                        <ComboBoxItem Content="Termostat"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="2" Margin="0,0,0,16">
-                    <Label Content="Yük Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding LoadType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="LED"/>
-                        <ComboBoxItem Content="Akkor"/>
-                        <ComboBoxItem Content="Motor"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal">
-                    <CheckBox Content="Hub Gerekli" IsChecked="{Binding RequiresHub}" Margin="0,0,24,0"/>
-                    <CheckBox Content="Senaryo Desteği" IsChecked="{Binding HasSceneSupport}"/>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-
-        <!-- Access Control Specs Template -->
-        <DataTemplate DataType="{x:Type specs:AccessControlSpecs}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Column="0" Margin="0,0,16,16">
-                    <Label Content="Okuyucu Frekansı" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ReaderFrequency}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="125kHz"/>
-                        <ComboBoxItem Content="13.56MHz"/>
-                        <ComboBoxItem Content="Dual Frekans"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1" Margin="0,0,16,16">
-                    <Label Content="Bileşen Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Kontrol Ünitesi"/>
-                        <ComboBoxItem Content="Okuyucu"/>
-                        <ComboBoxItem Content="Elektrikli Kilit"/>
-                        <ComboBoxItem Content="Çıkış Butonu"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="2" Margin="0,0,0,16">
-                    <Label Content="Haberleşme" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding CommunicationType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Wiegand"/>
-                        <ComboBoxItem Content="RS485"/>
-                        <ComboBoxItem Content="TCP/IP"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal">
-                    <CheckBox Content="Su Geçirmez" IsChecked="{Binding IsWaterproof}" Margin="0,0,24,0"/>
-                    <CheckBox Content="Parmak İzi" IsChecked="{Binding HasFingerprint}" Margin="0,0,24,0"/>
-                    <CheckBox Content="Yüz Tanıma" IsChecked="{Binding HasFaceRecognition}"/>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-
-        <!-- Satellite Specs Template -->
-        <DataTemplate DataType="{x:Type specs:SatelliteSpecs}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Column="0" Margin="0,0,16,16">
-                    <Label Content="Bileşen Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ComponentType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Çanak"/>
-                        <ComboBoxItem Content="LNB"/>
-                        <ComboBoxItem Content="Receiver"/>
-                        <ComboBoxItem Content="DiSEqC Switch"/>
-                        <ComboBoxItem Content="Kablo"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1" Margin="0,0,16,16">
-                    <Label Content="Çanak Çapı (cm)" Style="{StaticResource ModernLabel}"/>
-                    <TextBox Text="{Binding DishDiameter}" Style="{StaticResource ModernTextBox}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Column="2" Margin="0,0,0,16">
-                    <Label Content="LNB Çıkış Sayısı" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding LnbOutputs}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="1"/>
-                        <ComboBoxItem Content="2"/>
-                        <ComboBoxItem Content="4"/>
-                        <ComboBoxItem Content="8"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,16,16">
-                    <Label Content="Malzeme" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding Material}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Çelik"/>
-                        <ComboBoxItem Content="Alüminyum"/>
-                        <ComboBoxItem Content="Fiberglas"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Bottom">
-                    <CheckBox Content="Motorlu" IsChecked="{Binding IsMotorized}" Margin="0,0,24,0"/>
-                    <CheckBox Content="Kart Yuvası" IsChecked="{Binding HasCardSlot}"/>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-
-        <!-- Fiber Specs Template -->
-        <DataTemplate DataType="{x:Type specs:FiberSpecs}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel Grid.Column="0" Margin="0,0,16,16">
-                    <Label Content="Fiber Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding FiberMode}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="SingleMode"/>
-                        <ComboBoxItem Content="MultiMode"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1" Margin="0,0,16,16">
-                    <Label Content="Kor Sayısı" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding CoreCount}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="2"/>
-                        <ComboBoxItem Content="4"/>
-                        <ComboBoxItem Content="8"/>
-                        <ComboBoxItem Content="12"/>
-                        <ComboBoxItem Content="24"/>
-                        <ComboBoxItem Content="48"/>
-                        <ComboBoxItem Content="96"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Column="2" Margin="0,0,0,16">
-                    <Label Content="Kablo Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding CableType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="Indoor"/>
-                        <ComboBoxItem Content="Outdoor"/>
-                        <ComboBoxItem Content="ADSS"/>
-                        <ComboBoxItem Content="Direct Burial"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,16,16">
-                    <Label Content="Konnektör Tipi" Style="{StaticResource ModernLabel}"/>
-                    <ComboBox SelectedValuePath="Content" SelectedValue="{Binding ConnectorType}" Style="{StaticResource ModernComboBox}">
-                        <ComboBoxItem Content="SC"/>
-                        <ComboBoxItem Content="LC"/>
-                        <ComboBoxItem Content="FC"/>
-                        <ComboBoxItem Content="ST"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Bottom">
-                    <CheckBox Content="Zırhlı" IsChecked="{Binding IsArmored}"/>
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-
         <!-- General Specs Template -->
         <DataTemplate DataType="{x:Type specs:GeneralSpecs}">
-            <Grid>
+            <Grid Margin="0,8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Margin="0,0,16,16">
+                <StackPanel Grid.Column="0">
                     <Label Content="Malzeme" Style="{StaticResource ModernLabel}"/>
                     <TextBox Text="{Binding Material}" Style="{StaticResource ModernTextBox}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Margin="0,0,16,16">
+                <StackPanel Grid.Column="2">
                     <Label Content="Renk" Style="{StaticResource ModernLabel}"/>
                     <TextBox Text="{Binding Color}" Style="{StaticResource ModernTextBox}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="2" Margin="0,0,0,16">
+                <StackPanel Grid.Column="4">
                     <Label Content="Garanti" Style="{StaticResource ModernLabel}"/>
                     <TextBox Text="{Binding Warranty}" Style="{StaticResource ModernTextBox}"/>
                 </StackPanel>
@@ -455,222 +116,294 @@
         </DataTemplate>
     </Window.Resources>
 
-    <Grid Margin="24" Background="{DynamicResource ApplicationBackgroundBrush}">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Row 0: Header -->
-            <RowDefinition Height="*"/>    <!-- Row 1: Body -->
+            <RowDefinition Height="*"/>    <!-- Row 1: Tabbed Form Body -->
             <RowDefinition Height="Auto"/> <!-- Row 2: Footer -->
         </Grid.RowDefinitions>
 
-        <!-- ROW 0: HEADER -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                <TextBlock Text="📦" FontSize="20" Margin="0,0,8,0" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                <TextBlock Text="{Binding WindowTitle}" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}"/>
+        <!-- ════════ ROW 0: HEADER ════════ -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource ThemePrimary}" Margin="0,0,12,0">
+                    <ui:SymbolIcon Symbol="Box24" FontSize="20" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding WindowTitle}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                    <TextBlock Text="Stok kartı bilgilerini ve dinamik teknik parametreleri yönetin" FontSize="13" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                </StackPanel>
             </StackPanel>
-            <Rectangle Height="1" Fill="{DynamicResource ThemeDivider}" />
-        </StackPanel>
+        </DockPanel>
 
-        <!-- ROW 1: BODY -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <Grid Margin="0,0,16,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-            <!-- Section 1: Identity -->
-            <Border Grid.Row="0" Style="{StaticResource CardPanel}" Margin="0,0,0,16" Padding="24">
-                <StackPanel>
-                    <TextBlock Text="Ürün Kimliği" FontSize="16" FontWeight="SemiBold" 
-                               Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="16"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,16">
-                            <Label Content="SKU / Stok Kodu" Style="{StaticResource ModernLabel}"/>
+        <!-- ════════ ROW 1: TABBED FORM BODY ════════ -->
+        <TabControl Grid.Row="1" Style="{DynamicResource ModernTabControl}" Background="Transparent" BorderThickness="0">
+            
+            <!-- 📌 TAB 1: TEMEL BİLGİLER -->
+            <TabItem Header="📋 Temel Bilgiler">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
+                    <StackPanel>
+                        <Border Style="{StaticResource CardPanel}" Padding="20">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Text="{Binding NewProduct.SKU, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}"/>
-                                <Button Grid.Column="1" Content="🔄" Command="{Binding RegenerateSKUCommand}" 
-                                        Width="40" Margin="8,0,0,0" ToolTip="Yeni SKU Üret"/>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- SKU -->
+                                <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,16">
+                                    <Label Content="SKU / Stok Kodu *" Style="{StaticResource ModernLabel}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" Text="{Binding NewProduct.SKU, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}"/>
+                                        <ui:Button Grid.Column="1" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RegenerateSKUCommand}" 
+                                                   Height="38" Width="38" Margin="8,0,0,0" ToolTip="Yeni SKU Üret" Appearance="Secondary"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- Barkod -->
+                                <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,16">
+                                    <Label Content="Barkod (EAN/UPC)" Style="{StaticResource ModernLabel}"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" Text="{Binding NewProduct.Barcode, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}"/>
+                                        <ui:Button Grid.Column="1" Icon="{ui:SymbolIcon BarcodeScanner24}" Command="{Binding GenerateBarcodeCommand}" 
+                                                   Height="38" Width="38" Margin="8,0,0,0" ToolTip="Otomatik Barkod Oluştur" Appearance="Secondary"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- Ürün Adı -->
+                                <StackPanel Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,16">
+                                    <Label Content="Ürün Adı *" Style="{StaticResource ModernLabel}"/>
+                                    <TextBox Text="{Binding NewProduct.ProductName, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBox}" FontSize="14" FontWeight="SemiBold"/>
+                                </StackPanel>
+
+                                <!-- Kategori -->
+                                <StackPanel Grid.Column="0" Grid.Row="2">
+                                    <Label Content="Kategori *" Style="{StaticResource ModernLabel}"/>
+                                    <ComboBox ItemsSource="{Binding Categories}" 
+                                              SelectedItem="{Binding SelectedCategory}"
+                                              Style="{StaticResource ModernComboBox}"/>
+                                </StackPanel>
+
+                                <!-- Marka & Model -->
+                                <Grid Grid.Column="2" Grid.Row="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <Label Content="Marka" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding NewProduct.BrandName, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <Label Content="Model" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding NewProduct.ModelName, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                </Grid>
                             </Grid>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,16">
-                            <Label Content="Ürün Adı *" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding NewProduct.ProductName, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="0" Grid.Row="1" Margin="0,0,0,16">
-                            <Label Content="Kategori *" Style="{StaticResource ModernLabel}"/>
-                            <ComboBox ItemsSource="{Binding Categories}" 
-                                      SelectedItem="{Binding SelectedCategory}"
-                                      Style="{StaticResource ModernComboBox}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Grid.Row="1" Margin="0,0,0,16">
-                            <Label Content="Marka" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding NewProduct.Brand.BrandName, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="0" Grid.Row="2">
-                            <Label Content="Model" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding NewProduct.ModelName, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Grid.Row="2">
-                            <Label Content="Barkod" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding NewProduct.Barcode, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}"/>
-                        </StackPanel>
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-            <!-- Section 2: Financial -->
-            <Border Grid.Row="1" Style="{StaticResource CardPanel}" Margin="0,0,0,16" Padding="24">
-                <StackPanel>
-                    <TextBlock Text="Finansal Bilgiler" FontSize="16" FontWeight="SemiBold" 
-                               Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="16"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,16">
-                            <Label Content="Tedarikçi" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding NewProduct.SupplierName, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,16">
-                            <Label Content="Alış Fiyatı" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding NewProduct.PurchasePrice, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="0" Grid.Row="1" Margin="0,0,0,16">
-                            <Label Content="Satış Fiyatı *" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding NewProduct.SalePrice, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Grid.Row="1" Margin="0,0,0,16">
-                            <Label Content="Para Birimi" Style="{StaticResource ModernLabel}"/>
-                            <ComboBox ItemsSource="{Binding Currencies}" 
-                                      SelectedItem="{Binding NewProduct.Currency}"
-                                      Style="{StaticResource ModernComboBox}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="0" Grid.Row="2" Margin="0,0,0,16">
-                            <Label Content="KDV Oranı (%)" Style="{StaticResource ModernLabel}"/>
-                            <ComboBox ItemsSource="{Binding VatRates}" 
-                                      SelectedItem="{Binding NewProduct.VatRate}"
-                                      Style="{StaticResource ModernComboBox}"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Grid.Row="2" Margin="0,0,0,16">
-                            <Label Content="Birim" Style="{StaticResource ModernLabel}"/>
-                            <ComboBox ItemsSource="{Binding Units}" 
-                                      Text="{Binding NewProduct.Unit, UpdateSourceTrigger=PropertyChanged}"
-                                      IsEditable="True"
-                                      Style="{StaticResource ModernComboBox}"/>
-                        </StackPanel>
-
-                        <!-- Açılış Stoğu - Sadece Add modunda görünür -->
-                        <StackPanel Grid.Column="0" Grid.Row="3"
-                                    Visibility="{Binding IsInitialStockVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <Label Content="Açılış Stoğu" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding InitialStock, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}"
-                                     ToolTip="Yeni ürün için başlangıç stok miktarı"/>
-                        </StackPanel>
-
-                        <!-- Mevcut Stok - Sadece Edit modunda görünür (ReadOnly) -->
-                        <StackPanel Grid.Column="0" Grid.Row="3"
-                                    Visibility="{Binding IsStockAdjustmentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <Label Content="Mevcut Stok" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding CurrentTotalStock, Mode=OneWay}" 
-                                     Style="{StaticResource ModernTextBox}"
-                                     IsReadOnly="True"
-                                     Background="{DynamicResource SurfacePageBrush}"
-                                     ToolTip="Toplam mevcut stok miktarı"/>
-                        </StackPanel>
-
-                        <!-- Stok Düzeltme - Sadece Edit modunda görünür -->
-                        <StackPanel Grid.Column="2" Grid.Row="3"
-                                    Visibility="{Binding IsStockAdjustmentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <Label Content="Stok Düzeltme (+/-)" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding StockAdjustment, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBox}"
-                                     ToolTip="Pozitif: artır, Negatif: azalt (örn: 5 veya -3)"/>
-                        </StackPanel>
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-            <!-- Section 3: Dynamic Specs -->
-            <Border Grid.Row="2" Style="{StaticResource CardPanel}" Margin="0,0,0,16" Padding="24">
-                <StackPanel>
-                    <TextBlock Text="Teknik Özellikler" FontSize="16" FontWeight="SemiBold" 
-                               Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
-                    
-                    <!-- Dynamic Content based on Category -->
-                    <ContentControl Content="{Binding CurrentSpecs}"/>
-                    
-                    <!-- Notes -->
-                    <StackPanel Margin="0,16,0,0">
-                        <Label Content="Notlar" Style="{StaticResource ModernLabel}"/>
-                        <TextBox Text="{Binding CurrentSpecs.Notes, UpdateSourceTrigger=PropertyChanged}" 
-                                 Style="{StaticResource ModernTextBox}"
-                                 TextWrapping="Wrap" AcceptsReturn="True" Height="60"/>
+                        </Border>
                     </StackPanel>
-                </StackPanel>
-            </Border>
+                </ScrollViewer>
+            </TabItem>
 
-            <!-- Section 4: Description -->
-            <Border Grid.Row="3" Style="{StaticResource CardPanel}" Margin="0,0,0,24" Padding="24">
-                <StackPanel>
-                    <Label Content="Ürün Açıklaması" Style="{StaticResource ModernLabel}" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                    <TextBox Text="{Binding NewProduct.Description, UpdateSourceTrigger=PropertyChanged}" 
-                             Style="{StaticResource ModernTextBox}"
-                             TextWrapping="Wrap" AcceptsReturn="True" Height="80"/>
-                </StackPanel>
-            </Border>
+            <!-- 💰 TAB 2: FİYATLANDIRMA & STOK -->
+            <TabItem Header="💰 Fiyatlandırma &amp; Stok">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
+                    <StackPanel>
+                        <!-- Fiyatlandırma Kartı -->
+                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,16">
+                                    <TextBlock Text="Fiyatlandırma &amp; Marj Analizi" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                    <!-- Dynamic Profit Badge -->
+                                    <Border DockPanel.Dock="Right" Background="{Binding ProfitColor}" CornerRadius="12" Padding="12,4" HorizontalAlignment="Right">
+                                        <TextBlock Text="{Binding ProfitMarginDisplay}" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                                    </Border>
+                                </DockPanel>
 
-            </Grid>
-        </ScrollViewer>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-        <!-- ROW 2: FOOTER (Eylem Butonları) -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="İptal" Command="{Binding CancelCommand}" Height="40" Padding="24,0" Margin="0,0,8,0" Style="{DynamicResource DefaultButtonStyle}" Click="CloseWindow_Click"/>
-            <Button Content="Kaydet" Command="{Binding SaveCommand}" IsDefault="True" Height="40" Padding="32,0" Style="{DynamicResource AccentButtonStyle}"/>
-        </StackPanel>
+                                    <!-- Alış Fiyatı -->
+                                    <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,16">
+                                        <Label Content="Alış Fiyatı (Maliyet)" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding NewProduct.PurchasePrice, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+
+                                    <!-- Satış Fiyatı -->
+                                    <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,16">
+                                        <Label Content="Satış Fiyatı *" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding NewProduct.SalePrice, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}" FontWeight="Bold"/>
+                                    </StackPanel>
+
+                                    <!-- Para Birimi & KDV -->
+                                    <StackPanel Grid.Column="0" Grid.Row="1" Margin="0,0,0,16">
+                                        <Label Content="Para Birimi" Style="{StaticResource ModernLabel}"/>
+                                        <ComboBox ItemsSource="{Binding Currencies}" 
+                                                  SelectedItem="{Binding NewProduct.Currency}"
+                                                  Style="{StaticResource ModernComboBox}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" Grid.Row="1" Margin="0,0,0,16">
+                                        <Label Content="KDV Oranı (%)" Style="{StaticResource ModernLabel}"/>
+                                        <ComboBox ItemsSource="{Binding VatRates}" 
+                                                  SelectedItem="{Binding NewProduct.VatRate}"
+                                                  Style="{StaticResource ModernComboBox}"/>
+                                    </StackPanel>
+
+                                    <!-- Birim -->
+                                    <StackPanel Grid.Column="0" Grid.Row="2">
+                                        <Label Content="Birim" Style="{StaticResource ModernLabel}"/>
+                                        <ComboBox ItemsSource="{Binding Units}" 
+                                                  Text="{Binding NewProduct.Unit, UpdateSourceTrigger=PropertyChanged}"
+                                                  IsEditable="True"
+                                                  Style="{StaticResource ModernComboBox}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" Grid.Row="2">
+                                        <Label Content="Tedarikçi Adı" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding NewProduct.SupplierName, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Stok Kartı -->
+                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                            <StackPanel>
+                                <TextBlock Text="Stok Durumu" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Açılış Stoğu (Sadece Add modunda) -->
+                                    <StackPanel Grid.Column="0" Visibility="{Binding IsInitialStockVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Label Content="Açılış Stoğu (İlk Miktar)" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding InitialStock, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}"
+                                                 ToolTip="Yeni ürün için başlangıç deposundaki stok miktarı"/>
+                                    </StackPanel>
+
+                                    <!-- Mevcut Stok (Sadece Edit modunda) -->
+                                    <StackPanel Grid.Column="0" Visibility="{Binding IsStockAdjustmentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Label Content="Mevcut Depo Stoğu" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding CurrentTotalStock, Mode=OneWay}" 
+                                                 Style="{StaticResource ModernTextBox}"
+                                                 IsReadOnly="True" FontWeight="Bold"
+                                                 Background="{DynamicResource SurfacePageBrush}"/>
+                                    </StackPanel>
+
+                                    <!-- Stok Düzeltme (Sadece Edit modunda) -->
+                                    <StackPanel Grid.Column="2" Visibility="{Binding IsStockAdjustmentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Label Content="Stok Düzeltme (+ / -)" Style="{StaticResource ModernLabel}"/>
+                                        <TextBox Text="{Binding StockAdjustment, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBox}"
+                                                 ToolTip="Pozitif stok girerek artırın, negatif girerek düşürün (Örn: +10 veya -3)"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- 🖼️ TAB 3: GÖRSEL & ÖZELLİKLER -->
+            <TabItem Header="🖼️ Görsel &amp; Özellikler">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
+                    <StackPanel>
+                        <!-- Fotoğraf Yükleme Dropzone -->
+                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                            <StackPanel>
+                                <TextBlock Text="Ürün Görseli" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,12"/>
+                                
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Preview Image Frame -->
+                                    <Border Grid.Column="0" Width="120" Height="120" CornerRadius="12"
+                                            Background="{DynamicResource SurfacePageBrush}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
+                                            HorizontalAlignment="Left" ClipToBounds="True">
+                                        <Grid>
+                                            <ui:SymbolIcon Symbol="Image24" FontSize="36" Opacity="0.3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Image Source="{Binding SelectedImagePreview}" Stretch="UniformToFill"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Controls -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Ürün görseli ekleyerek tekliflerde ve aramalarda kolay bulunmasını sağlayın."
+                                                   Foreground="{DynamicResource ThemeTextSecondary}" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <ui:Button Content="Fotoğraf Seç" Icon="{ui:SymbolIcon Folder24}" Command="{Binding BrowseImageCommand}"
+                                                       Appearance="Primary" Height="36" Margin="0,0,8,0"/>
+                                            <ui:Button Content="Fotoğrafı Kaldır" Icon="{ui:SymbolIcon Delete24}" Command="{Binding RemoveImageCommand}"
+                                                       Appearance="Secondary" Height="36"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Dinamik Teknik Özellikler -->
+                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                            <StackPanel>
+                                <TextBlock Text="Teknik Özellikler (Kategoriye Özel)" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,12"/>
+                                <ContentControl Content="{Binding CurrentSpecs}"/>
+                                
+                                <StackPanel Margin="0,12,0,0">
+                                    <Label Content="Notlar / Özel Belirteçler" Style="{StaticResource ModernLabel}"/>
+                                    <TextBox Text="{Binding CurrentSpecs.Notes, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="50"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Ürün Açıklaması -->
+                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                            <StackPanel>
+                                <Label Content="Ürün Detaylı Açıklaması" Style="{StaticResource ModernLabel}" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding NewProduct.Description, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="70"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- ════════ ROW 2: FOOTER ════════ -->
+        <DockPanel Grid.Row="2" Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                <ui:Button Content="İptal" Command="{Binding CancelCommand}" Height="40" Padding="24,0" Margin="0,0,8,0" Appearance="Secondary"/>
+                <ui:Button Content="{Binding SaveButtonText}" Icon="{ui:SymbolIcon Checkmark24}" Command="{Binding SaveCommand}" IsDefault="True" Height="40" Padding="28,0" Appearance="Primary"/>
+            </StackPanel>
+        </DockPanel>
     </Grid>
 </Window>
