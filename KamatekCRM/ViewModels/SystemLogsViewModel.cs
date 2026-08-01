@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
@@ -21,11 +22,21 @@ namespace KamatekCrm.ViewModels
         private string _selectedEntityFilter = "Tümü";
         private DateTime? _startDate;
         private DateTime? _endDate;
+        private string _integritySummary = "Bütünlük denetimi bekleniyor";
 
         /// <summary>
         /// Log kayıtları
         /// </summary>
         public ObservableCollection<ActivityLog> Logs { get; } = new ObservableCollection<ActivityLog>();
+
+        /// <summary>
+        /// Görüntülenen kayıtların kriptografik bütünlük durumunu özetler.
+        /// </summary>
+        public string IntegritySummary
+        {
+            get => _integritySummary;
+            private set => SetProperty(ref _integritySummary, value);
+        }
 
         /// <summary>
         /// Arama metni
@@ -113,6 +124,7 @@ namespace KamatekCrm.ViewModels
             "Create",
             "Update",
             "Delete",
+            "View",
             "PasswordChange",
             "PasswordReset"
         };
@@ -126,7 +138,10 @@ namespace KamatekCrm.ViewModels
             "User",
             "Customer",
             "Product",
-            "ServiceJob"
+            "ServiceJob",
+            "CustomerPersonalData",
+            "CustomerReport",
+            "CustomerDocument"
         };
 
         /// <summary>
@@ -200,11 +215,25 @@ namespace KamatekCrm.ViewModels
                     (l.Description != null && l.Description.ToLower().Contains(search)));
             }
 
-            // Son kayıtlar önce
-            foreach (var log in query.OrderByDescending(l => l.Timestamp).Take(500))
+            // Son kayıtlar önce; denetim ekranı izleme amacıyla salt okunurdur.
+            var visibleLogs = query
+                .AsNoTracking()
+                .OrderByDescending(l => l.Timestamp)
+                .Take(500)
+                .ToList();
+
+            foreach (var log in visibleLogs)
             {
                 Logs.Add(log);
             }
+
+            var verified = visibleLogs.Count(ActivityLogIntegrity.Verify);
+            var legacy = visibleLogs.Count(log =>
+                log.IntegrityVersion == 0 && string.IsNullOrWhiteSpace(log.IntegrityHash));
+            var invalid = visibleLogs.Count - verified - legacy;
+            IntegritySummary = invalid > 0
+                ? $"⚠ {invalid} şüpheli · {verified} doğrulandı · {legacy} eski kayıt"
+                : $"✓ {verified} doğrulandı · {legacy} mühürleme öncesi kayıt";
         }
 
         /// <summary>

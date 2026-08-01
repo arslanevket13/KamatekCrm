@@ -15,7 +15,7 @@
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <Grid Margin="24">
+        <Grid Style="{StaticResource PageRoot}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -36,11 +36,8 @@
 
                 <!-- Left: Welcome & Date -->
                 <StackPanel>
-                    <TextBlock Text="{Binding WelcomeMessage}" 
-                               FontSize="26" FontWeight="Bold" 
-                               Foreground="{DynamicResource TextHeadingBrush}"/>
-                    <TextBlock FontSize="13" Margin="0,4,0,0"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                    <TextBlock Text="{Binding WelcomeMessage}" Style="{StaticResource PageTitle}"/>
+                    <TextBlock Style="{StaticResource PageSubtitle}">
                         <Run Text="Komut Merkezi • "/>
                         <Run Text="{Binding TodayDate, Mode=OneWay}"/>
                     </TextBlock>
@@ -83,7 +80,7 @@
                 <km:KmKpiCard Title="Bugünkü Satış"
                                Value="{Binding TodaySalesTotal}"
                                Prefix="₺" Format="N0"
-                               Icon="💰"
+                               Icon="&#xEAFD;"
                                Subtitle="{Binding TodaySalesCountText}"
                                AccentBrush="{DynamicResource KpiGradientPurple}"
                                Margin="0,0,16,0"/>
@@ -91,21 +88,21 @@
                 <km:KmKpiCard Title="Aylık Satış"
                                Value="{Binding MonthlySalesTotal}"
                                Prefix="₺" Format="N0"
-                               Icon="📈"
+                               Icon="&#xE9D2;"
                                Subtitle="{Binding CurrentMonthName}"
                                AccentBrush="{DynamicResource KpiGradientGreen}"
                                Margin="0,0,16,0"/>
 
                 <km:KmKpiCard Title="Aktif İşler" 
                                Value="{Binding ActiveJobsCount}" 
-                               Icon="🔧"
+                               Icon="&#xE90F;"
                                Subtitle="devam ediyor"
                                AccentBrush="{DynamicResource KpiGradientOrange}"
                                Margin="0,0,16,0"/>
 
                 <km:KmKpiCard Title="Teslime Hazır" 
                                Value="{Binding ReadyRepairsCount}" 
-                               Icon="✅"
+                               Icon="&#xE73E;"
                                Subtitle="cihaz bekliyor"
                                AccentBrush="{DynamicResource KpiGradientCyan}"
                                Margin="0,0,0,0"/>
@@ -213,7 +210,7 @@
                                     </ItemsControl>
 
                                     <!-- Empty State -->
-                                    <km:KmEmptyState Icon="✅" Title="Stoklar Yeterli"
+                                    <km:KmEmptyState Icon="&#xE73E;" Title="Stoklar Yeterli"
                                                      Message="Tüm ürünlerin stok seviyeleri normal."
                                                      Visibility="{Binding IsLowStockEmpty, Converter={StaticResource BoolToVis}}"/>
                                 </StackPanel>
@@ -288,7 +285,7 @@
                                     </ItemsControl>
 
                                     <!-- Empty State -->
-                                    <km:KmEmptyState Icon="📅" Title="İş Yok"
+                                    <km:KmEmptyState Icon="&#xE787;" Title="İş Yok"
                                                      Message="Bugün planlanmış iş bulunmuyor."
                                                      Visibility="{Binding IsTodaysJobsEmpty, Converter={StaticResource BoolToVis}}"/>
                                 </StackPanel>
@@ -351,7 +348,7 @@
                                     </ItemsControl>
 
                                     <!-- Empty State -->
-                                    <km:KmEmptyState Icon="📦" Title="Bekleyen Cihaz Yok"
+                                    <km:KmEmptyState Icon="&#xE7B8;" Title="Bekleyen Cihaz Yok"
                                                      Message="Teslim edilmeyi bekleyen tamir cihazı yok."
                                                      Visibility="{Binding IsReadyRepairsEmpty, Converter={StaticResource BoolToVis}}"/>
                                 </StackPanel>

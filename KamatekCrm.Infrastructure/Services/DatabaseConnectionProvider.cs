@@ -2,6 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Npgsql;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Services;
 
@@ -40,12 +42,18 @@ namespace KamatekCrm.Infrastructure.Services
         private string _currentServerIp = "";
         private bool _isConnected;
         private bool _disposed;
+        private readonly string _configuredConnectionString;
 
         private readonly ReaderWriterLockSlim _rwLock = new(LockRecursionPolicy.NoRecursion);
 
-        private const string DbUser = "postgres";
-        private const string DbPass = "1313";
-        private const string DbName = "kamatekcrm";
+        public DatabaseConnectionProvider(IConfiguration configuration)
+        {
+            _configuredConnectionString = configuration.GetConnectionString("PostgreSQL")
+                ?? configuration["DatabaseSettings:ConnectionStrings:PostgreSQL"]
+                ?? throw new InvalidOperationException(
+                    "PostgreSQL bağlantı dizesi yapılandırılmamış. " +
+                    "ConnectionStrings:PostgreSQL veya DatabaseSettings:ConnectionStrings:PostgreSQL ayarını tanımlayın.");
+        }
 
         public string CurrentServerIp
         {
@@ -115,12 +123,11 @@ namespace KamatekCrm.Infrastructure.Services
             _rwLock.EnterReadLock();
             try
             {
-                if (string.IsNullOrEmpty(_currentServerIp))
-                    throw new InvalidOperationException(
-                        "Sunucu IP adresi henüz bulunamadı. Bağlantı dizesi oluşturulamaz.");
+                var builder = new NpgsqlConnectionStringBuilder(_configuredConnectionString);
+                if (!string.IsNullOrWhiteSpace(_currentServerIp))
+                    builder.Host = _currentServerIp;
 
-                return $"Host={_currentServerIp};Database={DbName};Username={DbUser};" +
-                       $"Password={DbPass};Pooling=true;MinPoolSize=1;MaxPoolSize=100;CommandTimeout=20;";
+                return builder.ConnectionString;
             }
             finally
             {
@@ -139,8 +146,14 @@ namespace KamatekCrm.Infrastructure.Services
                 return false;
             }
 
-            string testConnString = $"Host={cleanIp};Database={DbName};Username={DbUser};" +
-                                    $"Password={DbPass};Pooling=false;CommandTimeout=2;";
+            var connectionBuilder = new NpgsqlConnectionStringBuilder(_configuredConnectionString)
+            {
+                Host = cleanIp,
+                Pooling = false,
+                CommandTimeout = 2,
+                Timeout = 2
+            };
+            string testConnString = connectionBuilder.ConnectionString;
 
             return await Task.Run(async () =>
             {

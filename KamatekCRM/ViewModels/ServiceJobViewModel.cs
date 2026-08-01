@@ -1,7 +1,9 @@
 using System;
 using KamatekCrm.ApplicationCore.DTOs.ServiceJobs;
+using KamatekCrm.ApplicationCore.Interfaces;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
@@ -16,6 +18,7 @@ using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 using KamatekCrm.Views;
+using KamatekCrm.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32;
 
@@ -30,6 +33,7 @@ namespace KamatekCrm.ViewModels
         private readonly NavigationService _navigationService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
+        private readonly IServiceJobCommandService _serviceJobCommandService;
         private ServiceJob? _selectedServiceJob;
         private CancellationTokenSource? _searchCts;
 
@@ -61,12 +65,18 @@ namespace KamatekCrm.ViewModels
         private bool _isDetailPanelOpen;
         private ObservableCollection<ServiceJobHistory> _selectedJobHistory = new();
 
-        public ServiceJobViewModel(NavigationService navigationService, IToastService toastService, ILoadingService loadingService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory)
+        public ServiceJobViewModel(
+            NavigationService navigationService,
+            IToastService toastService,
+            ILoadingService loadingService,
+            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory,
+            IServiceJobCommandService serviceJobCommandService)
         {
             _navigationService = navigationService;
             _toastService = toastService;
             _loadingService = loadingService;
             _dbContextFactory = dbContextFactory;
+            _serviceJobCommandService = serviceJobCommandService;
 
             ServiceJobs = new ObservableCollection<ServiceJob>();
             Customers = new ObservableCollection<Customer>();
@@ -78,6 +88,7 @@ namespace KamatekCrm.ViewModels
                 UpdateTotals();
                 OnPropertyChanged(nameof(ItemCount));
             };
+            ErrorsChanged += (_, _) => SaveServiceJobCommand.NotifyCanExecuteChanged();
 
             CategoryItems = new ObservableCollection<CategorySelectItem>
             {
@@ -104,7 +115,7 @@ namespace KamatekCrm.ViewModels
             UpdateDeviceTypeOptions();
         }
 
-        public ServiceJobViewModel() : this(null!, null!, null!, null!)
+        public ServiceJobViewModel() : this(null!, null!, null!, null!, null!)
         {
         }
 
@@ -191,6 +202,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [Range(1, 1000, ErrorMessage = "Blok sayısı 1-1000 arasında olmalıdır.")]
         public int BlockCount
         {
             get => _blockCount;
@@ -203,6 +215,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [Range(1, 100000, ErrorMessage = "Daire sayısı 1-100000 arasında olmalıdır.")]
         public int FlatCount
         {
             get => _flatCount;
@@ -243,6 +256,7 @@ namespace KamatekCrm.ViewModels
         }
 
         private int? _estimatedDuration;
+        [Range(1, 100000, ErrorMessage = "Tahmini süre 1 dakikadan büyük olmalıdır.")]
         public int? EstimatedDuration
         {
             get => _estimatedDuration;
@@ -429,6 +443,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İşçilik ücreti
         /// </summary>
+        [Range(typeof(decimal), "0", "999999999", ErrorMessage = "İşçilik ücreti negatif olamaz.")]
         public decimal LaborCost
         {
             get => _laborCost;
@@ -444,6 +459,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İndirim tutarı
         /// </summary>
+        [Range(typeof(decimal), "0", "999999999", ErrorMessage = "İndirim tutarı negatif olamaz.")]
         public decimal DiscountAmount
         {
             get => _discountAmount;
@@ -604,7 +620,12 @@ namespace KamatekCrm.ViewModels
             set
             {
                 if (SetProperty(ref _isQuickAddCustomer, value))
+                {
+                    ValidateProperty(QuickCustomerName, nameof(QuickCustomerName));
+                    ValidateProperty(QuickCustomerPhone, nameof(QuickCustomerPhone));
                     (GoNextStepCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
+                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -615,32 +636,49 @@ namespace KamatekCrm.ViewModels
         public bool IsDiscoveryOnly
         {
             get => _isDiscoveryOnly;
-            set => SetProperty(ref _isDiscoveryOnly, value);
+            set
+            {
+                if (SetProperty(ref _isDiscoveryOnly, value))
+                {
+                    ValidateProperty(Description, nameof(Description));
+                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         /// <summary>
         /// Hızlı müşteri adı
         /// </summary>
+        [RequiredWhen(nameof(IsQuickAddCustomer), true, ErrorMessage = "Yeni müşteri adı zorunludur.")]
+        [StringLength(150, ErrorMessage = "Müşteri adı en fazla 150 karakter olabilir.")]
         public string QuickCustomerName
         {
             get => _quickCustomerName;
             set
             {
                 if (SetProperty(ref _quickCustomerName, value))
+                {
                     (GoNextStepCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
+                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
         /// <summary>
         /// Hızlı müşteri telefonu
         /// </summary>
+        [RequiredWhen(nameof(IsQuickAddCustomer), true, ErrorMessage = "Yeni müşteri telefonu zorunludur.")]
+        [RegularExpression(@"^\+?[0-9\s()\-]{10,20}$", ErrorMessage = "Geçerli bir telefon numarası girin.")]
         public string QuickCustomerPhone
         {
             get => _quickCustomerPhone;
             set
             {
                 if (SetProperty(ref _quickCustomerPhone, value))
+                {
                     (GoNextStepCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
+                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -942,6 +980,7 @@ namespace KamatekCrm.ViewModels
                     _ = LoadJobItems();
                     (ChangeJobStatusCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
                     (DeleteJobCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
+                    CompleteJobCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -962,6 +1001,7 @@ namespace KamatekCrm.ViewModels
                     // Müşteri değiştiğinde cihaz ve projeleri yükle
                     _ = LoadCustomerAssets();
                     _ = LoadCustomerProjects();
+                    SaveServiceJobCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -1003,10 +1043,18 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İş açıklaması
         /// </summary>
+        [RequiredWhen(nameof(IsDiscoveryOnly), false, ErrorMessage = "İş açıklaması zorunludur.")]
+        [StringLength(2000, ErrorMessage = "İş açıklaması en fazla 2000 karakter olabilir.")]
         public string Description
         {
             get => _description;
-            set => SetProperty(ref _description, value);
+            set
+            {
+                if (SetProperty(ref _description, value))
+                {
+                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         /// <summary>
@@ -1022,16 +1070,24 @@ namespace KamatekCrm.ViewModels
                     // Varsayılan birim fiyatı ayarla
                     UnitPriceToAdd = value.SalePrice;
                 }
+                AddItemToJobCommand.NotifyCanExecuteChanged();
             }
         }
 
         /// <summary>
         /// Eklenecek miktar
         /// </summary>
+        [Range(1, 100000, ErrorMessage = "Malzeme miktarı 1 veya daha büyük olmalıdır.")]
         public int QuantityToAdd
         {
             get => _quantityToAdd;
-            set => SetProperty(ref _quantityToAdd, value);
+            set
+            {
+                if (SetProperty(ref _quantityToAdd, value))
+                {
+                    AddItemToJobCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         #endregion
@@ -1160,7 +1216,12 @@ namespace KamatekCrm.ViewModels
         private async Task OpenNewJobForm()
         {
             // Create a new ViewModel with dependencies
-            var newVm = new ServiceJobViewModel(_navigationService, _toastService, _loadingService, _dbContextFactory);
+            var newVm = new ServiceJobViewModel(
+                _navigationService,
+                _toastService,
+                _loadingService,
+                _dbContextFactory,
+                _serviceJobCommandService);
             
             // Veri aktarımı (YENI: API cagrisini beklememek icin ana VM'den listeleri gonderiyoruz)
             foreach (var cust in Customers) newVm.Customers.Add(cust);
@@ -1341,29 +1402,22 @@ namespace KamatekCrm.ViewModels
             {
                 _loadingService?.Show("Keşif teklife dönüştürülüyor...");
 
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                var job = await context.ServiceJobs
-                    .Include(j => j.Customer)
-                    .FirstOrDefaultAsync(j => j.Id == jobId.Value);
-
-                if (job == null)
+                var conversion = await _serviceJobCommandService.ConvertToQuoteAsync(
+                    jobId.Value,
+                    App.CurrentUser?.Username ?? "Sistem");
+                if (conversion.IsFailure)
                 {
-                    _toastService?.ShowError("İş emri bulunamadı.");
+                    _toastService?.ShowError(conversion.Error);
                     return;
                 }
 
-                // Keşif durum güncellemesi
-                job.Status = JobStatus.Quoting;
-                job.IsConvertedToQuote = true;
-                await context.SaveChangesAsync();
-
-                _toastService?.ShowSuccess($"İş #{job.Id} teklif aşamasına alındı. Teklif ekranına yönlendiriliyorsunuz.");
+                _toastService?.ShowSuccess($"İş #{conversion.Value!.JobId} teklif aşamasına alındı. Teklif ekranına yönlendiriliyorsunuz.");
 
                 // Teklif ekranına yönlendir ve müşteriyi otomatik seç
                 var quoteVm = _navigationService?.NavigateTo<QuotationViewModel>();
-                if (quoteVm != null && job.CustomerId > 0)
+                if (quoteVm != null && conversion.Value.CustomerId > 0)
                 {
-                    await quoteVm.SelectCustomerByIdAsync(job.CustomerId);
+                    await quoteVm.SelectCustomerByIdAsync(conversion.Value.CustomerId);
                 }
             }
             catch (Exception ex)
@@ -1591,17 +1645,31 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private bool CanSaveServiceJob()
         {
-            // Keşif sırasında müşteri seçiliyse description istenmeden kayıt yapılabilir (Hızlı Kayıt)
-            if (IsDiscoveryOnly && SelectedCustomer != null) return true;
-            return SelectedCustomer != null && !string.IsNullOrWhiteSpace(Description);
+            bool hasCustomer = SelectedCustomer != null ||
+                               (IsQuickAddCustomer &&
+                                !string.IsNullOrWhiteSpace(QuickCustomerName) &&
+                                !string.IsNullOrWhiteSpace(QuickCustomerPhone));
+
+            return !IsSaving && hasCustomer &&
+                   !HasErrors &&
+                   (IsDiscoveryOnly || !string.IsNullOrWhiteSpace(Description));
         }
 
         /// <summary>
         /// Yeni iş kaydet (Hibrit Cihaz Desteği ile)
         /// </summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanSaveServiceJob))]
         private async Task SaveServiceJob()
         {
+            ValidateAllProperties();
+            if (HasErrors)
+            {
+                _toastService?.ShowWarning("Lütfen işaretlenen zorunlu alanları kontrol edin.");
+                return;
+            }
+
+            IsSaving = true;
+            SaveServiceJobCommand.NotifyCanExecuteChanged();
             try
             {
                 int? assetId = null;
@@ -1611,8 +1679,7 @@ namespace KamatekCrm.ViewModels
                 {
                     if (string.IsNullOrWhiteSpace(QuickCustomerName) || string.IsNullOrWhiteSpace(QuickCustomerPhone))
                     {
-                        MessageBox.Show("Yeni müşteri için Ad Soyad ve Telefon zorunludur.", "Uyarı",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        _toastService?.ShowWarning("Yeni müşteri için ad soyad ve telefon zorunludur.");
                         return;
                     }
                     var newCustomer = new Customer
@@ -1638,7 +1705,7 @@ namespace KamatekCrm.ViewModels
 
                 if (SelectedCustomer == null)
                 {
-                    MessageBox.Show("Lütfen müşteri seçin veya oluşturun.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    _toastService?.ShowWarning("Lütfen müşteri seçin veya oluşturun.");
                     return;
                 }
 
@@ -1648,8 +1715,7 @@ namespace KamatekCrm.ViewModels
                     // Validasyon
                     if (string.IsNullOrWhiteSpace(NewAssetBrand) || string.IsNullOrWhiteSpace(NewAssetModel))
                     {
-                        MessageBox.Show("Yeni cihaz için Marka ve Model zorunludur.", "Uyarı",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        _toastService?.ShowWarning("Yeni cihaz için marka ve model zorunludur.");
                         return;
                     }
 
@@ -1727,50 +1793,43 @@ namespace KamatekCrm.ViewModels
                 jobToSave.TotalAmount = GrandTotal;
                 jobToSave.TaxAmount = KdvAmount;
 
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                
+                bool wasEditing = _isEditing;
                 if (_loadingService != null) _loadingService.Show("İş emri kaydediliyor...");
-                if (_isEditing)
-                {
-                    var existingJob = await context.ServiceJobs.FindAsync(jobToSave.Id);
-                    if (existingJob != null)
-                    {
-                        context.Entry(existingJob).CurrentValues.SetValues(jobToSave);
-                        
-                        // Handle items update
-                        var existingItems = await context.ServiceJobItems.Where(i => i.ServiceJobId == existingJob.Id).ToListAsync();
-                        context.ServiceJobItems.RemoveRange(existingItems);
-                        foreach (var item in CurrentJobItems)
-                        {
-                            item.ServiceJobId = existingJob.Id;
-                            context.ServiceJobItems.Add(item);
-                        }
-                        
-                        await context.SaveChangesAsync();
-                        if (_loadingService != null) _loadingService.Hide();
-                        
-                        await LoadServiceJobs();
-                        ClearForm();
-                        _toastService?.ShowSuccess("İş kaydı başarıyla güncellendi!");
-                        SaveCompleted?.Invoke();
-                    }
-                }
-                else
-                {
-                    context.ServiceJobs.Add(jobToSave);
-                    await context.SaveChangesAsync();
-                    
-                    if (_loadingService != null) _loadingService.Hide();
+                var saveResult = await _serviceJobCommandService.SaveAsync(new ServiceJobSaveRequest(
+                    jobToSave,
+                    CurrentJobItems.ToList(),
+                    wasEditing,
+                    App.CurrentUser?.Username ?? "Sistem"));
 
-                    await LoadServiceJobs();
-                    ClearForm();
-                    _toastService?.ShowSuccess("İş kaydı başarıyla oluşturuldu!");
-                    SaveCompleted?.Invoke();
+                if (saveResult.IsFailure || saveResult.Value is null)
+                {
+                    _toastService?.ShowError(saveResult.Error);
+                    return;
                 }
+
+                jobToSave.Id = saveResult.Value.JobId;
+                jobToSave.IsStockReserved = saveResult.Value.IsStockReserved;
+
+                await LoadServiceJobs();
+                ClearForm();
+
+                string reservationMessage = saveResult.Value.ReservationCount > 0
+                    ? $" {saveResult.Value.ReservationCount} stok rezervasyonu oluşturuldu."
+                    : string.Empty;
+                _toastService?.ShowSuccess(
+                    (wasEditing ? "İş kaydı başarıyla güncellendi." : "İş kaydı başarıyla oluşturuldu.") +
+                    reservationMessage);
+                SaveCompleted?.Invoke();
             }
             catch (Exception ex)
             {
                 _toastService.ShowError($"Hata: {ex.Message}");
+            }
+            finally
+            {
+                IsSaving = false;
+                SaveServiceJobCommand.NotifyCanExecuteChanged();
+                _loadingService?.Hide();
             }
         }
 
@@ -1785,8 +1844,8 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// İşe ürün ekle
         /// </summary>
-        [RelayCommand]
-        private void temToJob()
+        [RelayCommand(CanExecute = nameof(CanAddItem))]
+        private void AddItemToJob()
         {
             if (SelectedProductToAdd == null) return;
 
@@ -1809,7 +1868,7 @@ namespace KamatekCrm.ViewModels
         /// İşten ürün çıkar
         /// </summary>
         [RelayCommand]
-        private void temFromJob(ServiceJobItem? item)
+        private void RemoveItemFromJob(ServiceJobItem? item)
         {
             if (item != null)
             {
@@ -1823,36 +1882,38 @@ namespace KamatekCrm.ViewModels
         private bool CanCompleteJob()
         {
             return SelectedServiceJob != null &&
-                   SelectedServiceJob.Status != JobStatus.Completed;
+                   SelectedServiceJob.Status == JobStatus.InProgress;
         }
 
         /// <summary>
         /// İşi tamamla - KRİTİK İŞ MANTIĞI: STOK DÜŞME
         /// </summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanCompleteJob))]
         private async Task CompleteJob()
         {
             if (SelectedServiceJob == null) return;
 
             try
             {
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                var existingJob = await context.ServiceJobs.FindAsync(SelectedServiceJob.Id);
-                
-                if (existingJob != null)
-                {
-                    existingJob.Status = JobStatus.Completed;
-                    existingJob.CompletedDate = DateTime.UtcNow;
-                    await context.SaveChangesAsync();
-                    
-                    SelectedServiceJob.Status = JobStatus.Completed;
-                    SelectedServiceJob.CompletedDate = existingJob.CompletedDate;
-                    
-                    await LoadServiceJobs();
-                    await LoadProducts();
+                var result = await _serviceJobCommandService.ChangeStatusAsync(
+                    SelectedServiceJob.Id,
+                    JobStatus.Completed,
+                    App.CurrentUser?.Username ?? "Sistem");
 
-                    _toastService.ShowSuccess("İş başarıyla tamamlandı!\nStok miktarları güncellendi.");
+                if (result.IsFailure || result.Value is null)
+                {
+                    _toastService.ShowError(result.Error);
+                    return;
                 }
+
+                SelectedServiceJob.Status = result.Value.CurrentStatus;
+                SelectedServiceJob.CompletedDate = result.Value.CompletedDate;
+
+                await LoadServiceJobs();
+                await LoadProducts();
+                await LoadDashboardAsync();
+
+                _toastService.ShowSuccess("İş tamamlandı; stok, müşteri profili ve tarihçe atomik olarak güncellendi.");
             }
             catch (Exception ex)
             {
@@ -2113,38 +2174,24 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                var existingJob = await context.ServiceJobs.FindAsync(targetJobId);
-                
-                if (existingJob != null)
+                var result = await _serviceJobCommandService.ChangeStatusAsync(
+                    targetJobId,
+                    newStatus,
+                    App.CurrentUser?.Username ?? "Sistem");
+
+                if (result.IsFailure || result.Value is null)
                 {
-                    existingJob.Status = newStatus;
-                    if (newStatus == JobStatus.Completed)
-                    {
-                        existingJob.CompletedDate = DateTime.UtcNow;
-                    }
-                    
-                    await context.SaveChangesAsync();
-
-                    // Bellekteki nesneyi null-safe güncelle
-                    if (targetJob != null)
-                    {
-                        targetJob.Status = newStatus;
-                        if (newStatus == JobStatus.Completed)
-                        {
-                            targetJob.CompletedDate = existingJob.CompletedDate;
-                        }
-                    }
-
-                    await LoadServiceJobs();
-                    await LoadDashboardAsync();
-
-                    _toastService?.ShowSuccess($"İş #{targetJobId} durumu güncellendi: {newStatus}");
+                    _toastService?.ShowError(result.Error);
+                    return;
                 }
-                else
-                {
-                    _toastService?.ShowError($"İş #{targetJobId} veritabanında bulunamadı.");
-                }
+
+                targetJob.Status = result.Value.CurrentStatus;
+                targetJob.CompletedDate = result.Value.CompletedDate;
+
+                await LoadServiceJobs();
+                await LoadDashboardAsync();
+
+                _toastService?.ShowSuccess($"İş #{targetJobId} durumu güncellendi: {newStatus}");
             }
             catch (Exception ex)
             {
@@ -2185,12 +2232,6 @@ namespace KamatekCrm.ViewModels
             {
                 _toastService?.ShowError($"Hata: {ex.Message}");
             }
-        }
-
-        [RelayCommand]
-        private void AddItemToJob()
-        {
-            _toastService?.ShowInfo("İş kaydına parça/ürün ekleme alanı açıldı.");
         }
 
         [RelayCommand]

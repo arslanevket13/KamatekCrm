@@ -234,7 +234,7 @@
                                                     <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12" 
                                                                Foreground="{DynamicResource TextHeadingBrush}" TextTrimming="CharacterEllipsis" Margin="0,0,0,0"/>
                                                     <TextBlock Text="{Binding CustomerName}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                                    <TextBlock Text="{Binding Address}" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                                                    <TextBlock Text="{Binding Address, Converter={StaticResource SensitiveData}, ConverterParameter=Address}" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                                TextTrimming="CharacterEllipsis"/>
                                                 </StackPanel>
                                                 

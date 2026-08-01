@@ -3,6 +3,7 @@ using KamatekCrm.ApplicationCore.DTOs.Users;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Repositories;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.ApplicationCore.Services
 {
@@ -13,14 +14,21 @@ namespace KamatekCrm.ApplicationCore.Services
     public class UserAppService : IUserAppService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IApplicationAuthorizationService _authorizationService;
 
-        public UserAppService(IUnitOfWork unitOfWork)
+        public UserAppService(
+            IUnitOfWork unitOfWork,
+            IApplicationAuthorizationService authorizationService)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+            _authorizationService = authorizationService;
         }
 
         public async Task<Result<List<UserListItemDto>>> GetAllAsync(CancellationToken cancellationToken = default)
         {
+            var authorization = AuthorizeUserManagement<List<UserListItemDto>>();
+            if (authorization is not null) return authorization;
+
             try
             {
                 var users = await _unitOfWork.Repository<User>()
@@ -40,6 +48,9 @@ namespace KamatekCrm.ApplicationCore.Services
 
         public async Task<Result<UserListItemDto>> GetByIdAsync(int id, CancellationToken cancellationToken = default)
         {
+            var authorization = AuthorizeUserManagement<UserListItemDto>();
+            if (authorization is not null) return authorization;
+
             try
             {
                 var user = await _unitOfWork.Repository<User>()
@@ -58,6 +69,9 @@ namespace KamatekCrm.ApplicationCore.Services
 
         public async Task<Result<int>> CreateAsync(UserCreateUpdateDto dto, CancellationToken cancellationToken = default)
         {
+            var authorization = AuthorizeUserManagement<int>();
+            if (authorization is not null) return authorization;
+
             try
             {
                 // İş kuralı: Kullanıcı adı benzersiz olmalı
@@ -71,9 +85,14 @@ namespace KamatekCrm.ApplicationCore.Services
                 if (string.IsNullOrWhiteSpace(dto.Password))
                     return Result.Failure<int>("Yeni kullanıcı için şifre zorunludur.");
 
+                var passwordError = UserPasswordPolicy.Validate(dto.Password);
+                if (passwordError is not null)
+                    return Result.Failure<int>(passwordError);
+
                 var entity = new User();
                 dto.ApplyToEntity(entity);
                 entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                entity.MustChangePassword = true;
                 entity.CreatedDate = DateTime.UtcNow;
 
                 await _unitOfWork.Repository<User>().AddAsync(entity, cancellationToken);
@@ -89,6 +108,9 @@ namespace KamatekCrm.ApplicationCore.Services
 
         public async Task<Result> UpdateAsync(UserCreateUpdateDto dto, CancellationToken cancellationToken = default)
         {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.ManageUsers);
+            if (authorization.IsFailure) return authorization;
+
             try
             {
                 var entity = await _unitOfWork.Repository<User>()
@@ -112,7 +134,12 @@ namespace KamatekCrm.ApplicationCore.Services
                 // Şifre sadece doluysa güncelle (boş bırakılırsa mevcut hash korunur)
                 if (!string.IsNullOrWhiteSpace(dto.Password))
                 {
+                    var passwordError = UserPasswordPolicy.Validate(dto.Password);
+                    if (passwordError is not null)
+                        return Result.Failure(passwordError);
+
                     entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                    entity.MustChangePassword = true;
                 }
 
                 entity.ModifiedDate = DateTime.UtcNow;
@@ -129,6 +156,9 @@ namespace KamatekCrm.ApplicationCore.Services
 
         public async Task<Result> DeactivateAsync(int id, CancellationToken cancellationToken = default)
         {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.ManageUsers);
+            if (authorization.IsFailure) return authorization;
+
             try
             {
                 var entity = await _unitOfWork.Repository<User>()
@@ -149,6 +179,12 @@ namespace KamatekCrm.ApplicationCore.Services
             {
                 return Result.Failure($"Kullanıcı deaktive edilirken hata oluştu: {ex.Message}");
             }
+        }
+
+        private Result<T>? AuthorizeUserManagement<T>()
+        {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.ManageUsers);
+            return authorization.IsFailure ? Result.Failure<T>(authorization.Error) : null;
         }
     }
 }

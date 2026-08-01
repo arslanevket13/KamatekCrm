@@ -7,6 +7,7 @@ using KamatekCrm.Infrastructure.Repositories;
 using KamatekCrm.Infrastructure.Services;
 using KamatekCrm.Shared.Repositories;
 using KamatekCrm.Shared.Services;
+using KamatekCrm.ApplicationCore.Interfaces;
 
 namespace KamatekCrm.Infrastructure
 {
@@ -15,29 +16,22 @@ namespace KamatekCrm.Infrastructure
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddSingleton<IDatabaseConnectionProvider, DatabaseConnectionProvider>();
+            services.AddSingleton<IDatabaseInitializationService, DatabaseInitializationService>();
+            services.AddTransient<IServiceJobCommandService, ServiceJobCommandService>();
 
             services.AddDbContextFactory<AppDbContext>((sp, options) =>
             {
                 var connectionProvider = sp.GetRequiredService<IDatabaseConnectionProvider>();
-                string connString;
-                try
-                {
-                    connString = connectionProvider.GetConnectionString();
-                }
-                catch
-                {
-                    connString = configuration.GetConnectionString("PostgreSQL") 
-                        ?? "Host=127.0.0.1;Database=kamatekcrm;Username=postgres;Password=1313;Port=5432;";
-                }
+                var connString = connectionProvider.GetConnectionString();
 
                 options.UseNpgsql(connString, sqlOptions =>
                 {
+                    sqlOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
                     sqlOptions.EnableRetryOnFailure(
                         maxRetryCount: 5,
                         maxRetryDelay: TimeSpan.FromSeconds(10),
                         errorCodesToAdd: null);
-                })
-                .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+                });
             });
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();

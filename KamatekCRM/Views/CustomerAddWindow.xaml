@@ -10,6 +10,7 @@
         MinWidth="540" MinHeight="600"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
+        AutomationProperties.Name="Yeni müşteri oluşturma formu"
         Background="{DynamicResource SurfacePageBrush}">
 
     <Window.Resources>
@@ -30,8 +31,8 @@
             <StackPanel Orientation="Horizontal">
                 <ui:SymbolIcon Symbol="PersonAdd24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Yeni Müşteri Oluştur" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
-                    <TextBlock Text="Bireysel, kurumsal veya perakende yeni müşteri kartı ekleyin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="Yeni Müşteri Oluştur" Style="{StaticResource PageTitle}" FontSize="20"/>
+                    <TextBlock Text="Bireysel, kurumsal veya perakende yeni müşteri kartı ekleyin" Style="{StaticResource PageSubtitle}"/>
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -68,7 +69,10 @@
                         Visibility="{Binding NewCustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Individual}">
                     <StackPanel>
                         <Label Content="TC Kimlik No" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <ui:TextBox Text="{Binding NewTcKimlikNo, UpdateSourceTrigger=PropertyChanged}" MaxLength="11" Height="38"/>
+                        <ui:TextBox Text="{Binding NewTcKimlikNo, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                    MaxLength="11" Height="40" Validation.ErrorTemplate="{StaticResource ValidationErrorTemplate}"
+                                    AutomationProperties.Name="T.C. Kimlik No"
+                                    AutomationProperties.HelpText="İsteğe bağlıdır; girilirse 11 rakam olmalıdır."/>
                     </StackPanel>
                 </Border>
 
@@ -84,7 +88,10 @@
 
                         <StackPanel Margin="0,0,0,12">
                             <Label Content="Şirket Tam Ünvanı *" FontWeight="SemiBold"/>
-                            <ui:TextBox Text="{Binding NewCompanyName, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                            <ui:TextBox Text="{Binding NewCompanyName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                        Height="40" Validation.ErrorTemplate="{StaticResource ValidationErrorTemplate}"
+                                        AutomationProperties.Name="Şirket tam ünvanı"
+                                        AutomationProperties.HelpText="Kurumsal müşteri için zorunludur."/>
                         </StackPanel>
 
                         <Grid>
@@ -95,12 +102,16 @@
 
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                 <Label Content="Vergi Numarası" FontWeight="SemiBold"/>
-                                <ui:TextBox Text="{Binding NewTaxNumber, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                <ui:TextBox Text="{Binding NewTaxNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                            Height="40" MaxLength="10" Validation.ErrorTemplate="{StaticResource ValidationErrorTemplate}"
+                                            AutomationProperties.Name="Vergi numarası"
+                                            AutomationProperties.HelpText="İsteğe bağlıdır; girilirse 10 rakam olmalıdır."/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Margin="8,0,0,0">
                                 <Label Content="Vergi Dairesi" FontWeight="SemiBold"/>
-                                <ui:TextBox Text="{Binding NewTaxOffice, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                <ui:TextBox Text="{Binding NewTaxOffice, UpdateSourceTrigger=PropertyChanged}" Height="40"
+                                            AutomationProperties.Name="Vergi dairesi"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -123,12 +134,19 @@
 
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                 <Label Content="Ad Soyad *" FontWeight="SemiBold"/>
-                                <ui:TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                <ui:TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                            Height="40" Validation.ErrorTemplate="{StaticResource ValidationErrorTemplate}"
+                                            AutomationProperties.Name="Ad soyad"
+                                            AutomationProperties.HelpText="Zorunlu alan; en az 2 karakter girin."/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Margin="8,0,0,0">
                                 <Label Content="Telefon *" FontWeight="SemiBold"/>
-                                <ui:TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="05XX XXX XX XX" Height="38"/>
+                                <ui:TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                            PlaceholderText="05XX XXX XX XX" Height="40"
+                                            Validation.ErrorTemplate="{StaticResource ValidationErrorTemplate}"
+                                            AutomationProperties.Name="Telefon numarası"
+                                            AutomationProperties.HelpText="Zorunlu alan; örnek: 0532 123 45 67."/>
                             </StackPanel>
                         </Grid>
 
@@ -140,7 +158,10 @@
 
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                 <Label Content="E-posta" FontWeight="SemiBold"/>
-                                <ui:TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="ornek@domain.com" Height="38"/>
+                                <ui:TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                            PlaceholderText="ornek@domain.com" Height="40"
+                                            Validation.ErrorTemplate="{StaticResource ValidationErrorTemplate}"
+                                            AutomationProperties.Name="E-posta adresi"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Margin="8,0,0,0">
@@ -216,7 +237,8 @@
                 <!-- Error Message Overlay -->
                 <Border CornerRadius="8" Padding="14,10" Margin="0,0,0,16" Background="{DynamicResource StatusErrorBg}"
                         Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
-                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"
+                               AutomationProperties.LiveSetting="Assertive" AutomationProperties.Name="Form hata özeti"/>
                 </Border>
             </StackPanel>
         </ScrollViewer>
@@ -228,7 +250,8 @@
 
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                 <ui:Button Content="İptal" Command="{Binding CancelCommand}" Appearance="Secondary" Height="38" Padding="20,0" Margin="0,0,8,0" Click="CloseWindow_Click" Cursor="Hand"/>
-                <ui:Button Content="Müşteriyi Kaydet" Icon="{ui:SymbolIcon Save24}" Command="{Binding SaveCommand}" Appearance="Primary" Height="38" Padding="20,0" IsDefault="True" Cursor="Hand"/>
+                <ui:Button Content="Müşteriyi Kaydet" Icon="{ui:SymbolIcon Save24}" Command="{Binding SaveCommand}" Appearance="Primary" Height="40" Padding="20,0" IsDefault="True" Cursor="Hand"
+                           AutomationProperties.HelpText="Tüm zorunlu alanlar geçerli olduğunda müşteri kaydını oluşturur."/>
             </StackPanel>
         </DockPanel>
     </Grid>

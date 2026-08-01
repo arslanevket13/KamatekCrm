@@ -5,6 +5,8 @@ using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.Services
 {
@@ -14,10 +16,14 @@ namespace KamatekCrm.Services
     public class ReportService
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly IPersonalDataProtectionService _personalDataProtection;
 
-        public ReportService(IDbContextFactory<AppDbContext> dbContextFactory)
+        public ReportService(
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            IPersonalDataProtectionService personalDataProtection)
         {
             _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
+            _personalDataProtection = personalDataProtection;
         }
 
         /// <summary>
@@ -72,6 +78,10 @@ namespace KamatekCrm.Services
         /// </summary>
         public ReportResult GetCustomerListReport()
         {
+            _ = AuditService.LogAsync(
+                AuditActionType.View,
+                "CustomerReport",
+                description: "Müşteri listesi raporu oluşturuldu; kişisel veri alanları rol politikasına göre işlendi.");
             var result = new ReportResult
             {
                 Title = "Müşteri Listesi Raporu",
@@ -87,7 +97,7 @@ namespace KamatekCrm.Services
                 {
                     { "Müşteri Kodu", customer.CustomerCode },
                     { "Ad Soyad", customer.FullName },
-                    { "Telefon", customer.PhoneNumber },
+                    { "Telefon", _personalDataProtection.Protect(customer.PhoneNumber, PersonalDataKind.Phone) },
                     { "Şehir", customer.City },
                     { "Tip", customer.Type.ToString() },
                     { "Toplam Harcama", customer.TotalSpent }
@@ -198,6 +208,10 @@ namespace KamatekCrm.Services
         /// </summary>
         public ReportResult GetTopCustomersReport(int topN = 10)
         {
+            _ = AuditService.LogAsync(
+                AuditActionType.View,
+                "CustomerReport",
+                description: "En değerli müşteriler raporu oluşturuldu; kişisel veri alanları rol politikasına göre işlendi.");
             var result = new ReportResult
             {
                 Title = $"En Çok Harcayan {topN} Müşteri",
@@ -218,7 +232,7 @@ namespace KamatekCrm.Services
                     { "Sıra", rank++ },
                     { "Müşteri Kodu", customer.CustomerCode },
                     { "Ad Soyad", customer.FullName },
-                    { "Telefon", customer.PhoneNumber },
+                    { "Telefon", _personalDataProtection.Protect(customer.PhoneNumber, PersonalDataKind.Phone) },
                     { "Toplam Harcama", customer.TotalSpent },
                     { "Alışveriş Sayısı", customer.TotalPurchaseCount }
                 });

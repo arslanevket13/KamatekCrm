@@ -9,14 +9,46 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 using KamatekCrm.Shared.Services;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KamatekCrm.Services
 {
     public class PdfService : IQuotePdfService, IServiceReportPdfService, IInvoicePdfService, IPurchaseOrderPdfService
     {
+        private readonly IPersonalDataProtectionService? _personalDataProtection;
+
         static PdfService()
         {
             QuestPDF.Settings.License = LicenseType.Community;
+        }
+
+        public PdfService()
+        {
+            _personalDataProtection = App.ServiceProvider?.GetService<IPersonalDataProtectionService>();
+        }
+
+        public PdfService(IPersonalDataProtectionService personalDataProtection)
+        {
+            _personalDataProtection = personalDataProtection;
+        }
+
+        private string Protect(string? value, PersonalDataKind kind)
+        {
+            if (_personalDataProtection is not null)
+                return _personalDataProtection.Protect(value, kind);
+
+            return kind == PersonalDataKind.Address ? "Adres bilgisi kısıtlı" : "••••";
+        }
+
+        private static void AuditSensitiveDocumentAccess(string documentType, int? customerId)
+        {
+            _ = AuditService.LogAsync(
+                AuditActionType.View,
+                "CustomerDocument",
+                customerId?.ToString(),
+                $"{documentType} oluşturma sırasında müşteri iletişim verilerine erişildi.");
         }
 
         private static class BrandColors
@@ -59,6 +91,7 @@ namespace KamatekCrm.Services
 
         public void GenerateProjectQuote(ServiceProject project, List<ScopeNode> rootNodes, string filePath)
         {
+            AuditSensitiveDocumentAccess("Proje teklifi", project.Customer?.Id);
             var logoBytes = GetLogoBytes();
 
             var flattenedItems = FlattenScopeNodesWithImages(rootNodes);
@@ -180,10 +213,10 @@ namespace KamatekCrm.Services
                 {
                     c.Item().Text("MÜŞTERİ BİLGİLERİ").FontSize(10).Bold().FontColor(BrandColors.Primary).FontColor(BrandColors.Secondary);
                     c.Item().PaddingTop(5).Text(project.Customer?.FullName ?? "Belirtilmemiş").Bold();
-                    c.Item().Text(project.Customer?.FullAddress ?? "Adres bilgisi girilmemiş").FontSize(9);
-                    c.Item().Text($"Tel: {project.Customer?.PhoneNumber ?? "-"}").FontSize(9);
+                    c.Item().Text(Protect(project.Customer?.FullAddress, PersonalDataKind.Address)).FontSize(9);
+                    c.Item().Text($"Tel: {Protect(project.Customer?.PhoneNumber, PersonalDataKind.Phone)}").FontSize(9);
                     if (!string.IsNullOrEmpty(project.Customer?.Email))
-                        c.Item().Text($"E-posta: {project.Customer.Email}").FontSize(9);
+                        c.Item().Text($"E-posta: {Protect(project.Customer.Email, PersonalDataKind.Email)}").FontSize(9);
                 });
 
                 row.ConstantItem(15);
@@ -608,6 +641,7 @@ namespace KamatekCrm.Services
 
         public void GenerateServiceForm(ServiceJob job, string filePath)
         {
+            AuditSensitiveDocumentAccess("Servis formu", job.Customer?.Id);
             var logoBytes = GetLogoBytes();
 
              Document.Create(container =>
@@ -690,6 +724,7 @@ namespace KamatekCrm.Services
 
         public void GenerateStandardQuote(Quote quote, string filePath)
         {
+            AuditSensitiveDocumentAccess("Standart teklif", quote.Customer?.Id);
             var logoBytes = GetLogoBytes();
             var totalItems = quote.Lines.Sum(l => l.Quantity);
 
@@ -752,11 +787,11 @@ namespace KamatekCrm.Services
                         c.Item().Text(quote.Customer?.FullName ?? "Değerli Müşterimiz").FontSize(12).Bold().FontColor(BrandColors.Primary);
                         if (!string.IsNullOrWhiteSpace(quote.Customer?.FullAddress))
                         {
-                            c.Item().Text(quote.Customer.FullAddress).FontSize(9).FontColor(BrandColors.TextSecondary);
+                            c.Item().Text(Protect(quote.Customer.FullAddress, PersonalDataKind.Address)).FontSize(9).FontColor(BrandColors.TextSecondary);
                         }
                         if (!string.IsNullOrWhiteSpace(quote.Customer?.PhoneNumber))
                         {
-                            c.Item().Text("Tel: " + quote.Customer.PhoneNumber).FontSize(9).FontColor(BrandColors.TextSecondary);
+                            c.Item().Text("Tel: " + Protect(quote.Customer.PhoneNumber, PersonalDataKind.Phone)).FontSize(9).FontColor(BrandColors.TextSecondary);
                         }
                     });
                 });
@@ -867,6 +902,7 @@ namespace KamatekCrm.Services
 
         public void GenerateServiceJobPdf(ServiceJob job, string filePath)
         {
+            AuditSensitiveDocumentAccess("Servis işi belgesi", job.Customer?.Id);
             if (job.WorkOrderType == WorkOrderType.Discovery)
             {
                 GenerateDiscoveryReportPdf(job, filePath);
@@ -878,6 +914,7 @@ namespace KamatekCrm.Services
 
         public void GenerateDiscoveryReportPdf(ServiceJob job, string filePath)
         {
+            AuditSensitiveDocumentAccess("Keşif raporu", job.Customer?.Id);
             var logoBytes = GetLogoBytes();
 
             Document.Create(container =>
@@ -934,8 +971,8 @@ namespace KamatekCrm.Services
                                     r.RelativeItem().Column(c2 =>
                                     {
                                         c2.Item().Text($"Müşteri / Firma: {job.Customer?.FullName ?? job.Customer?.CompanyName ?? "Belirtilmedi"}").Bold();
-                                        c2.Item().Text($"Telefon: {job.Customer?.PhoneNumber ?? "-"}").FontSize(9);
-                                        c2.Item().Text($"Adres: {job.Customer?.FullAddress ?? "Adres Belirtilmemiş"}").FontSize(9);
+                                        c2.Item().Text($"Telefon: {Protect(job.Customer?.PhoneNumber, PersonalDataKind.Phone)}").FontSize(9);
+                                        c2.Item().Text($"Adres: {Protect(job.Customer?.FullAddress, PersonalDataKind.Address)}").FontSize(9);
                                     });
                                     r.RelativeItem().Column(c3 =>
                                     {

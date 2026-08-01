@@ -494,7 +494,7 @@
                                                         HorizontalContentAlignment="Left" Cursor="Hand" Width="240">
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock Text="{Binding FullName}" FontWeight="Bold" FontSize="12"/>
-                                                        <TextBlock Text="{Binding PhoneNumber, StringFormat=' · {0}'}"
+                                                        <TextBlock Text="{Binding PhoneNumber, Converter={StaticResource SensitiveData}, ConverterParameter=Phone, StringFormat=' · {0}'}"
                                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="4,0,0,0"/>
                                                     </StackPanel>
                                                 </Button>

@@ -14,6 +14,8 @@ using KamatekCrm.Services.Domain;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.ViewModels
 {
@@ -103,11 +105,18 @@ namespace KamatekCrm.ViewModels
         private readonly IPurchasingDomainService _purchasingService;
         private readonly IToastService _toastService;
 
-        public PurchasingViewModel(IUnitOfWork unitOfWork, IPurchasingDomainService purchasingService, IToastService toastService)
+        private readonly IApplicationAuthorizationService _authorizationService;
+
+        public PurchasingViewModel(
+            IUnitOfWork unitOfWork,
+            IPurchasingDomainService purchasingService,
+            IToastService toastService,
+            IApplicationAuthorizationService authorizationService)
         {
             _unitOfWork = unitOfWork;
             _purchasingService = purchasingService;
             _toastService = toastService;
+            _authorizationService = authorizationService;
 
             OrderItems = new ObservableCollection<PurchasingLineItem>();
             OrderItems.CollectionChanged += (s, e) => OnPropertyChanged(nameof(GrandTotal));
@@ -509,6 +518,13 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task SaveAndReceive()
         {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.ApprovePurchase);
+            if (authorization.IsFailure)
+            {
+                _toastService.ShowError(authorization.Error);
+                return;
+            }
+
             if (SelectedSupplier == null)
             {
                 _toastService.ShowWarning("Lütfen bir tedarikçi seçin.");

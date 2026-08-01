@@ -189,7 +189,7 @@
                             <!-- Müşteri Adres Box -->
                             <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="14" MinHeight="54"
                                     BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
-                                <TextBlock Text="{Binding CustomerAddress}" 
+                                <TextBlock Text="{Binding CustomerAddress, Converter={StaticResource SensitiveData}, ConverterParameter=Address}"
                                            TextWrapping="Wrap" FontSize="12" 
                                            Foreground="{DynamicResource ThemeForegroundMuted}"/>
                             </Border>

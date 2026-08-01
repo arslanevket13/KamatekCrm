@@ -11,13 +11,23 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,24">
-            <TextBlock Text="📋 Sistem Logları" 
-                       FontSize="28" FontWeight="Bold"
-                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-            <TextBlock Text="Tüm kullanıcı işlemlerini görüntüle ve denetle"
-                       FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
-        </StackPanel>
+        <Grid Grid.Row="0" Margin="0,0,0,24">
+            <StackPanel>
+                <TextBlock Text="📋 Sistem Logları"
+                           FontSize="28" FontWeight="Bold"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                <TextBlock Text="Tüm kullanıcı işlemlerini görüntüle ve denetle"
+                           FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+            </StackPanel>
+            <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderDefaultBrush}"
+                    BorderThickness="1" CornerRadius="12" Padding="14,8">
+                <TextBlock Text="{Binding IntegritySummary}"
+                           FontSize="11" FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+            </Border>
+        </Grid>
 
         <!-- Filters -->
         <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">

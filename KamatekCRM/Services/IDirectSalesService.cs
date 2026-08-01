@@ -14,6 +14,7 @@ namespace KamatekCrm.Services
             IEnumerable<PosCartItem> cartItems,
             IEnumerable<PosPaymentEntry> payments,
             string? notes,
-            string? currentUserName);
+            string? currentUserName,
+            string idempotencyKey);
     }
 }

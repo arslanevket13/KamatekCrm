@@ -14,6 +14,8 @@ using KamatekCrm.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.ViewModels
 {
@@ -32,6 +34,7 @@ namespace KamatekCrm.ViewModels
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IToastService _toastService;
         private readonly ILogger<NetworkSettingsViewModel> _logger;
+        private readonly IApplicationAuthorizationService _authorizationService;
         private readonly System.Windows.Threading.DispatcherTimer _refreshTimer;
 
         #endregion
@@ -44,7 +47,8 @@ namespace KamatekCrm.ViewModels
             NetworkDiscoveryService discoveryService,
             IDbContextFactory<AppDbContext> dbContextFactory,
             IToastService toastService,
-            ILogger<NetworkSettingsViewModel> logger)
+            ILogger<NetworkSettingsViewModel> logger,
+            IApplicationAuthorizationService authorizationService)
         {
             _configuration = configuration;
             _connectionProvider = connectionProvider;
@@ -52,6 +56,7 @@ namespace KamatekCrm.ViewModels
             _dbContextFactory = dbContextFactory;
             _toastService = toastService;
             _logger = logger;
+            _authorizationService = authorizationService;
 
             ConnectedClients = new ObservableCollection<ConnectedClientModel>();
 
@@ -241,7 +246,8 @@ namespace KamatekCrm.ViewModels
 
         #region Commands
 
-        private bool IsNotBusy() => !IsBusy;
+        private bool IsNotBusy() =>
+            !IsBusy && _authorizationService.IsAuthorized(ApplicationPermission.AccessSettings);
 
         /// <summary>
         /// Değişiklikleri appsettings.json'a yazar ve kullanıcıya yeniden başlatma teklif eder.
@@ -249,6 +255,13 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(IsNotBusy))]
         private async Task SaveAndRestart()
         {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.AccessSettings);
+            if (authorization.IsFailure)
+            {
+                _toastService.ShowError(authorization.Error);
+                return;
+            }
+
             IsBusy = true;
             try
             {

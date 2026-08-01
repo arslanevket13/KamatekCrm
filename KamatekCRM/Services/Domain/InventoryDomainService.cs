@@ -12,6 +12,8 @@ using KamatekCrm.Infrastructure.Repositories;
 
 using KamatekCrm.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 namespace KamatekCrm.Services.Domain
 {
     /// <summary>
@@ -23,15 +25,24 @@ namespace KamatekCrm.Services.Domain
         private static readonly SemaphoreSlim _stockLock = new(1, 1);
         private readonly IAuthService _authService;
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly IApplicationAuthorizationService _authorizationService;
 
-        public InventoryDomainService(IAuthService authService, IDbContextFactory<AppDbContext> dbContextFactory)
+        public InventoryDomainService(
+            IAuthService authService,
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            IApplicationAuthorizationService authorizationService)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
+            _authorizationService = authorizationService;
         }
 
         public TransferResult TransferStock(TransferRequest request)
         {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.AdjustInventory);
+            if (authorization.IsFailure)
+                return TransferResult.Fail(authorization.Error);
+
             if (request.Quantity <= 0)
                 return TransferResult.Fail("Transfer miktarı sıfırdan büyük olmalıdır.");
 
@@ -152,6 +163,8 @@ namespace KamatekCrm.Services.Domain
         /// </summary>
         public void AdjustStock(StockAdjustmentRequest request)
         {
+            EnsureInventoryMutationAuthorized();
+
             _stockLock.Wait();
             try
             {
@@ -225,6 +238,8 @@ namespace KamatekCrm.Services.Domain
         /// </summary>
         public void AddStock(int productId, int warehouseId, int quantity, decimal unitCost, string referenceId)
         {
+            EnsureInventoryMutationAuthorized();
+
              _stockLock.Wait();
             try
             {
@@ -316,6 +331,10 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<TransferResult> TransferStockAsync(TransferRequest request, CancellationToken cancellationToken = default)
         {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.AdjustInventory);
+            if (authorization.IsFailure)
+                return TransferResult.Fail(authorization.Error);
+
             if (request.Quantity <= 0)
                 return TransferResult.Fail("Transfer miktarı sıfırdan büyük olmalıdır.");
 
@@ -407,6 +426,8 @@ namespace KamatekCrm.Services.Domain
 
         public async Task AdjustStockAsync(StockAdjustmentRequest request, CancellationToken cancellationToken = default)
         {
+            EnsureInventoryMutationAuthorized();
+
             await _stockLock.WaitAsync(cancellationToken);
             try
             {
@@ -459,6 +480,8 @@ namespace KamatekCrm.Services.Domain
 
         public async Task AddStockAsync(int productId, int warehouseId, int quantity, decimal unitCost, string referenceId, CancellationToken cancellationToken = default)
         {
+            EnsureInventoryMutationAuthorized();
+
             await _stockLock.WaitAsync(cancellationToken);
             try
             {
@@ -604,6 +627,10 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<ReservationResult> ReserveStockAsync(StockReservationRequest request, CancellationToken cancellationToken = default)
         {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.AdjustInventory);
+            if (authorization.IsFailure)
+                return ReservationResult.Fail(authorization.Error);
+
             if (request.Quantity <= 0)
                 return ReservationResult.Fail("Rezervasyon miktarı sıfırdan büyük olmalıdır.");
 
@@ -647,6 +674,9 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<bool> CancelReservationAsync(int reservationId, CancellationToken cancellationToken = default)
         {
+            if (!_authorizationService.IsAuthorized(ApplicationPermission.AdjustInventory))
+                return false;
+
             using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
@@ -675,6 +705,8 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<InventoryImage> AddInventoryImageAsync(InventoryImageRequest request, CancellationToken cancellationToken = default)
         {
+            EnsureInventoryMutationAuthorized();
+
             using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
@@ -708,6 +740,9 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<bool> DeleteInventoryImageAsync(int imageId, CancellationToken cancellationToken = default)
         {
+            if (!_authorizationService.IsAuthorized(ApplicationPermission.DeleteRecords))
+                return false;
+
             using var unitOfWork = new UnitOfWork(_dbContextFactory);
             var context = unitOfWork.Context;
 
@@ -725,6 +760,14 @@ namespace KamatekCrm.Services.Domain
 
         public async Task<BatchOperationResult> AddStockBatchAsync(IEnumerable<BatchStockEntry> entries, CancellationToken cancellationToken = default)
         {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.AdjustInventory);
+            if (authorization.IsFailure)
+            {
+                var denied = new BatchOperationResult { Success = false, FailureCount = 1 };
+                denied.Errors.Add(authorization.Error);
+                return denied;
+            }
+
             var result = new BatchOperationResult { Success = true };
 
             await _stockLock.WaitAsync(cancellationToken);
@@ -793,6 +836,13 @@ namespace KamatekCrm.Services.Domain
             }
 
             return result;
+        }
+
+        private void EnsureInventoryMutationAuthorized()
+        {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.AdjustInventory);
+            if (authorization.IsFailure)
+                throw new UnauthorizedAccessException(authorization.Error);
         }
 
         // ======================== SON KULLANMA TARİHİ ========================

@@ -120,6 +120,16 @@ namespace KamatekCrm.Infrastructure.Data
                 }
             }
 
+            modelBuilder.Entity<ActivityLog>(entity =>
+            {
+                entity.Property(log => log.IntegrityHash)
+                    .HasMaxLength(64)
+                    .HasDefaultValue("");
+                entity.Property(log => log.IntegrityVersion)
+                    .HasDefaultValue(0);
+                entity.HasIndex(log => log.IntegrityHash);
+            });
+
             // PostgreSQL xmin Concurrency Global Configuration
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
@@ -145,8 +155,8 @@ namespace KamatekCrm.Infrastructure.Data
                 .HasForeignKey(i => i.WarehouseId);
 
             modelBuilder.Entity<Warehouse>().HasData(
-                new Warehouse { Id = 1, Name = "Merkez Depo", Type = WarehouseType.MainWarehouse, IsActive = true },
-                new Warehouse { Id = 2, Name = "Servis Aracı 1", Type = WarehouseType.Vehicle, IsActive = true }
+                new Warehouse { Id = 1, Name = "Merkez Depo", Type = WarehouseType.MainWarehouse, IsActive = true, CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new Warehouse { Id = 2, Name = "Servis Aracı 1", Type = WarehouseType.Vehicle, IsActive = true, CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
              );
 
             modelBuilder.Entity<Category>()
@@ -260,6 +270,14 @@ namespace KamatekCrm.Infrastructure.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            modelBuilder.Entity<SalesOrder>(entity =>
+            {
+                entity.Property(e => e.IdempotencyKey).HasMaxLength(36);
+                entity.HasIndex(e => e.IdempotencyKey)
+                    .IsUnique()
+                    .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+            });
+
             modelBuilder.Entity<Product>()
                 .HasIndex(p => p.Barcode);
 
@@ -346,31 +364,73 @@ namespace KamatekCrm.Infrastructure.Data
             });
         }
 
-        public override int SaveChanges()
+        public override int SaveChanges() => SaveChanges(acceptAllChangesOnSuccess: true);
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
-            ApplyAuditInformation();
+            PrepareChanges();
             try
             {
-                return base.SaveChanges();
+                return base.SaveChanges(acceptAllChangesOnSuccess);
             }
             catch (DbUpdateConcurrencyException ex)
             {
                 ResolveConcurrencyConflicts(ex);
-                return base.SaveChanges();
+                return base.SaveChanges(acceptAllChangesOnSuccess);
             }
         }
 
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
+            SaveChangesAsync(acceptAllChangesOnSuccess: true, cancellationToken);
+
+        public override async Task<int> SaveChangesAsync(
+            bool acceptAllChangesOnSuccess,
+            CancellationToken cancellationToken = default)
         {
-            ApplyAuditInformation();
+            PrepareChanges();
             try
             {
-                return await base.SaveChangesAsync(cancellationToken);
+                return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
             }
             catch (DbUpdateConcurrencyException ex)
             {
                 ResolveConcurrencyConflicts(ex);
-                return await base.SaveChangesAsync(cancellationToken);
+                return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+            }
+        }
+
+        private void PrepareChanges()
+        {
+            ProtectAndSealActivityLogs();
+            ApplyAuditInformation();
+        }
+
+        private void ProtectAndSealActivityLogs()
+        {
+            foreach (var entry in ChangeTracker.Entries<ActivityLog>())
+            {
+                if (entry.State is EntityState.Modified or EntityState.Deleted)
+                {
+                    throw new InvalidOperationException(
+                        "Denetim kayıtları değiştirilemez veya silinemez. Düzeltme gerekiyorsa yeni bir denetim kaydı ekleyin.");
+                }
+
+                if (entry.State != EntityState.Added)
+                {
+                    continue;
+                }
+
+                var log = entry.Entity;
+                log.ActionType = string.IsNullOrWhiteSpace(log.ActionType) ? log.Action : log.ActionType;
+                log.Action = string.IsNullOrWhiteSpace(log.Action) ? log.ActionType : log.Action;
+                log.RecordId ??= log.ReferenceId;
+                log.ReferenceId ??= log.RecordId;
+                log.Timestamp = log.Timestamp == default
+                    ? DateTime.UtcNow
+                    : log.Timestamp.Kind == DateTimeKind.Unspecified
+                        ? DateTime.SpecifyKind(log.Timestamp, DateTimeKind.Utc)
+                        : log.Timestamp.ToUniversalTime();
+                ActivityLogIntegrity.Seal(log);
             }
         }
 

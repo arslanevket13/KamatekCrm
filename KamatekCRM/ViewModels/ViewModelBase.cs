@@ -10,15 +10,13 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class ViewModelBase : ObservableValidator
     {
-        // ObservableValidator already handles INotifyPropertyChanged and SetProperty.
-        // Keeping this for backwards compatibility if any derived classes strictly call SetProperty with ref.
-        
         /// <summary>
-        /// Property değerini set eder ve değişikliği bildirir (Geriye dönük uyumluluk için)
+        /// Property değerini set eder, değişikliği bildirir ve varsa DataAnnotations
+        /// kurallarını çalıştırır. Böylece tüm formlar aynı doğrulama sözleşmesini kullanır.
         /// </summary>
         protected new bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
-            return base.SetProperty(ref field, value, propertyName);
+            return base.SetProperty(ref field, value, validate: true, propertyName);
         }
     }
 }

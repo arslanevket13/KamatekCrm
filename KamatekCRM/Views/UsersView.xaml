@@ -50,17 +50,17 @@
         <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,16">
             <components:KmKpiCard Title="Toplam Kullanıcı"
                                    Value="{Binding TotalUsersCount}"
-                                   Icon="👥"
+                                   Icon="&#xE716;"
                                    AccentBrush="{DynamicResource ThemePrimary}"
                                    Margin="0,0,12,0"/>
             <components:KmKpiCard Title="Aktif Personel"
                                    Value="{Binding ActiveTechniciansCount}"
-                                   Icon="🔧"
+                                   Icon="&#xE90F;"
                                    AccentBrush="{DynamicResource ThemeSuccess}"
                                    Margin="0,0,12,0"/>
             <components:KmKpiCard Title="Yöneticiler"
                                    Value="{Binding AdminCount}"
-                                   Icon="👑"
+                                   Icon="&#xE7EF;"
                                    AccentBrush="{DynamicResource ThemeWarning}"
                                    Margin="0,0,0,0"/>
         </UniformGrid>
@@ -247,7 +247,7 @@
                     BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                 <Grid>
                     <!-- Empty State when no user is selected -->
-                    <components:KmEmptyState Icon="👤" Title="Kullanıcı Seçilmedi"
+                    <components:KmEmptyState Icon="&#xE77B;" Title="Kullanıcı Seçilmedi"
                                              Message="Detaylarını görüntülemek ve işlem yapmak için listeden bir kullanıcı seçin."
                                              Visibility="{Binding HasSelectedUser, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
 

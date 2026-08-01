@@ -6,6 +6,8 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using KamatekCrm.ApplicationCore.DTOs.ServiceJobs;
+using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -22,19 +24,22 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
         private readonly SmsService _smsService;
+        private readonly IServiceJobCommandService _serviceJobCommandService;
 
         public RepairViewModel(
             IAuthService authService,
             Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory,
             IToastService toastService,
             ILoadingService loadingService,
-            SmsService smsService)
+            SmsService smsService,
+            IServiceJobCommandService serviceJobCommandService)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
             _toastService = toastService;
             _loadingService = loadingService;
             _smsService = smsService;
+            _serviceJobCommandService = serviceJobCommandService;
             
             // Komutlar
             
@@ -460,12 +465,42 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedJob == null || newStatus == null) return;
 
+            if (newStatus == RepairStatus.Delivered)
+            {
+                try
+                {
+                    _loadingService?.Show();
+                    var completion = await _serviceJobCommandService.CompleteAsync(
+                        SelectedJob.Id,
+                        LaborCost,
+                        DiscountAmount,
+                        NewNoteText,
+                        App.CurrentUser?.Username ?? "Sistem");
+                    if (completion.IsFailure)
+                    {
+                        _toastService?.ShowError(completion.Error);
+                        return;
+                    }
+
+                    SelectedJob.Status = JobStatus.Completed;
+                    SelectedJob.RepairStatus = RepairStatus.Delivered;
+                    NewNoteText = string.Empty;
+                    await LoadHistory(SelectedJob.Id);
+                    await Refresh();
+                    _toastService?.ShowSuccess("İş emri tamamlandı ve ayrılan stoklar düşüldü.");
+                }
+                finally
+                {
+                    _loadingService?.Hide();
+                }
+                return;
+            }
+
              var oldStatus = SelectedJob.RepairStatus;
             SelectedJob.RepairStatus = newStatus.Value;
             
             // ServiceJob.Status (Genel) mapping
-            if (newStatus == RepairStatus.Delivered) SelectedJob.Status = JobStatus.Completed;
-            else if (newStatus == RepairStatus.Unrepairable) SelectedJob.Status = JobStatus.Cancelled;
+            if (newStatus == RepairStatus.Unrepairable) SelectedJob.Status = JobStatus.Cancelled;
             else SelectedJob.Status = JobStatus.InProgress;
 
             if (newStatus == RepairStatus.ReadyForPickup || newStatus == RepairStatus.Delivered)
@@ -576,13 +611,12 @@ namespace KamatekCrm.ViewModels
         // ==========================================
 
         [RelayCommand]
-        private async Task temToJob(object? parameter)
+        private async Task AddItemToJob(object? parameter)
         {
             if (SelectedJob == null || SelectedProductToAdd == null) return;
 
             try
             {
-                using var context = await _dbContextFactory.CreateDbContextAsync();
                 var newItem = new ServiceJobItem
                 {
                     ServiceJobId = SelectedJob.Id,
@@ -592,15 +626,22 @@ namespace KamatekCrm.ViewModels
                     UnitCost = SelectedProductToAdd.PurchasePrice
                 };
 
-                context.ServiceJobItems.Add(newItem);
-                await context.SaveChangesAsync();
-                
-                newItem.Product = SelectedProductToAdd; // For UI
-                CurrentJobItems.Add(newItem);
+                var proposedItems = CurrentJobItems.Concat([newItem]).ToList();
+                var save = await _serviceJobCommandService.SaveAsync(new ServiceJobSaveRequest(
+                    SelectedJob,
+                    proposedItems,
+                    true,
+                    App.CurrentUser?.Username ?? "Sistem"));
+                if (save.IsFailure)
+                {
+                    _toastService?.ShowError(save.Error);
+                    return;
+                }
+
+                await LoadJobItems(SelectedJob.Id);
                 SelectedProductToAdd = null;
                 QuantityToAdd = 1;
                 UnitPriceToAdd = 0;
-                await UpdateTotals();
             }
             catch (Exception ex)
             {
@@ -609,22 +650,25 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async Task temFromJob(object? parameter)
+        private async Task RemoveItemFromJob(object? parameter)
         {
             if (parameter is ServiceJobItem item && SelectedJob != null)
             {
                 try
                 {
-                    using var context = await _dbContextFactory.CreateDbContextAsync();
-                    var dbItem = await context.ServiceJobItems.FindAsync(item.Id);
-                    if (dbItem != null)
+                    var proposedItems = CurrentJobItems.Where(existing => existing.Id != item.Id).ToList();
+                    var save = await _serviceJobCommandService.SaveAsync(new ServiceJobSaveRequest(
+                        SelectedJob,
+                        proposedItems,
+                        true,
+                        App.CurrentUser?.Username ?? "Sistem"));
+                    if (save.IsFailure)
                     {
-                        context.ServiceJobItems.Remove(dbItem);
-                        await context.SaveChangesAsync();
-                        
-                        CurrentJobItems.Remove(item);
-                        await UpdateTotals();
+                        _toastService?.ShowError(save.Error);
+                        return;
                     }
+
+                    await LoadJobItems(SelectedJob.Id);
                 }
                 catch (Exception ex)
                 {
@@ -660,25 +704,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task CompleteJob(object? parameter)
         {
-            try
-            {
-                await UpdateStatus(RepairStatus.Delivered);
-
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                foreach(var item in CurrentJobItems)
-                {
-                    var product = await context.Products.FindAsync(item.ProductId);
-                    if (product != null)
-                    {
-                        product.TotalStockQuantity -= item.QuantityUsed;
-                    }
-                }
-                await context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _toastService?.ShowError($"İş tamamlanırken hata: {ex.Message}");
-            }
+            await UpdateStatus(RepairStatus.Delivered);
         }
 
         [RelayCommand]

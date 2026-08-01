@@ -495,22 +495,36 @@ namespace KamatekCrm.ViewModels
                 AverageSaleAmount = MonthlySalesCount > 0 ? MonthlySalesTotal / MonthlySalesCount : 0;
                 
                 // 7. 7-Day Trend Chart Population
-                var weeklyTrendList = new List<WeeklyTrendItemDto>();
+                // Gün başına iki sorgu çalıştırmak yerine iki toplu GROUP BY sorgusu kullanılır.
+                // Böylece dashboard yenilemesindeki 14 veritabanı çağrısı 2 çağrıya iner.
+                var trendStartDate = today.AddDays(-6);
+                var trendEndDate = today.AddDays(1);
+                var incomeByDate = await context.CashTransactions
+                    .Where(c => c.Date >= trendStartDate &&
+                                c.Date < trendEndDate &&
+                                c.TransactionType == CashTransactionType.CashIncome)
+                    .GroupBy(c => c.Date.Date)
+                    .Select(group => new { Date = group.Key, Total = group.Sum(item => item.Amount) })
+                    .ToDictionaryAsync(item => item.Date, item => item.Total);
+
+                var completedJobsByDate = await context.ServiceJobs
+                    .Where(j => j.CreatedDate >= trendStartDate &&
+                                j.CreatedDate < trendEndDate &&
+                                j.Status == JobStatus.Completed)
+                    .GroupBy(j => j.CreatedDate.Date)
+                    .Select(group => new { Date = group.Key, Count = group.Count() })
+                    .ToDictionaryAsync(item => item.Date, item => item.Count);
+
+                var weeklyTrendList = new List<WeeklyTrendItemDto>(capacity: 7);
                 for (int i = 6; i >= 0; i--)
                 {
                     var targetDate = today.AddDays(-i);
-                    var dayIncome = await context.CashTransactions
-                        .Where(c => c.Date.Date == targetDate && c.TransactionType == CashTransactionType.CashIncome)
-                        .SumAsync(c => (decimal?)c.Amount) ?? 0m;
-                    var dayJobs = await context.ServiceJobs
-                        .Where(j => j.CreatedDate.Date == targetDate && j.Status == JobStatus.Completed)
-                        .CountAsync();
 
                     weeklyTrendList.Add(new WeeklyTrendItemDto
                     {
                         DayName = targetDate.ToString("ddd", new System.Globalization.CultureInfo("tr-TR")),
-                        Income = dayIncome,
-                        CompletedJobs = dayJobs
+                        Income = incomeByDate.GetValueOrDefault(targetDate),
+                        CompletedJobs = completedJobsByDate.GetValueOrDefault(targetDate)
                     });
                 }
                 LoadWeeklyTrendChart(weeklyTrendList);

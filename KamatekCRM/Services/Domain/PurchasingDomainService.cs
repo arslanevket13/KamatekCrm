@@ -10,6 +10,8 @@ using KamatekCrm.Shared.Repositories;
 using KamatekCrm.Infrastructure.Repositories;
 
 using System.Threading.Tasks;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.Services.Domain
 {
@@ -26,11 +28,16 @@ namespace KamatekCrm.Services.Domain
         private static readonly SemaphoreSlim _lock = new(1, 1);
         private readonly IAuthService _authService;
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly IApplicationAuthorizationService _authorizationService;
 
-        public PurchasingDomainService(IAuthService authService, IDbContextFactory<AppDbContext> dbContextFactory)
+        public PurchasingDomainService(
+            IAuthService authService,
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            IApplicationAuthorizationService authorizationService)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
+            _authorizationService = authorizationService;
         }
 
         /// <summary>
@@ -42,6 +49,10 @@ namespace KamatekCrm.Services.Domain
         /// </summary>
         public async Task<PurchaseResult> CompletePurchaseOrderAsync(PurchaseCompletionRequest request)
         {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.ApprovePurchase);
+            if (authorization.IsFailure)
+                return PurchaseResult.Fail(authorization.Error);
+
             if (request.PurchaseOrderId <= 0)
                 return PurchaseResult.Fail("Geçersiz sipariş ID.");
 

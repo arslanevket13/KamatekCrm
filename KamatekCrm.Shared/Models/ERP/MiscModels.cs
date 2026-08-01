@@ -66,6 +66,12 @@ namespace KamatekCrm.Shared.Models
         public long DurationMs { get; set; }
         public string? IpAddress { get; set; }
         public string? UserAgent { get; set; }
+        /// <summary>
+        /// Kaydın değişmez alanlarından üretilen SHA-256 bütünlük mührü.
+        /// Boş değerler, mühürleme özelliğinden önce oluşturulmuş eski kayıtları ifade eder.
+        /// </summary>
+        public string IntegrityHash { get; set; } = "";
+        public int IntegrityVersion { get; set; }
     }
 
     public class CategorySelectItem
@@ -83,4 +89,3 @@ namespace KamatekCrm.Shared.Models
     public class District { public int Id { get; set; } public string Name { get; set; } = ""; public int CityId { get; set; } public virtual System.Collections.Generic.ICollection<Neighborhood> Neighborhoods { get; set; } = new System.Collections.Generic.List<Neighborhood>(); }
     public class Neighborhood { public int Id { get; set; } public string Name { get; set; } = ""; public int DistrictId { get; set; } }
 }
-

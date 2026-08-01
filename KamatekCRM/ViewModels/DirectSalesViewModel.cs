@@ -13,6 +13,8 @@ using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.ViewModels
 {
@@ -28,6 +30,8 @@ namespace KamatekCrm.ViewModels
         private readonly ILoadingService _loadingService;
         private readonly IDirectSalesService _directSalesService;
         private readonly IThermalReceiptPrintService _thermalPrintService;
+        private readonly IPersonalDataProtectionService _personalDataProtection;
+        private Guid _saleAttemptId = Guid.NewGuid();
 
         private string _searchText = string.Empty;
         private string _barcodeText = string.Empty;
@@ -108,7 +112,7 @@ namespace KamatekCrm.ViewModels
 
         public string CustomerDisplayName =>
             SelectedCustomer != null
-                ? $"{SelectedCustomer.FullName} ({SelectedCustomer.PhoneNumber})"
+                ? $"{SelectedCustomer.FullName} ({_personalDataProtection.Protect(SelectedCustomer.PhoneNumber, PersonalDataKind.Phone)})"
                 : "Perakende Müşteri";
 
         public ObservableCollection<Customer> RecentCustomers { get; } = new();
@@ -233,7 +237,8 @@ namespace KamatekCrm.ViewModels
             IToastService toastService,
             ILoadingService loadingService,
             IDirectSalesService directSalesService,
-            IThermalReceiptPrintService thermalPrintService)
+            IThermalReceiptPrintService thermalPrintService,
+            IPersonalDataProtectionService personalDataProtection)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
@@ -241,6 +246,7 @@ namespace KamatekCrm.ViewModels
             _loadingService = loadingService;
             _directSalesService = directSalesService;
             _thermalPrintService = thermalPrintService;
+            _personalDataProtection = personalDataProtection;
 
             AllProducts = new ObservableCollection<PosProductItem>();
             CartItems = new ObservableCollection<PosCartItem>();
@@ -367,10 +373,11 @@ namespace KamatekCrm.ViewModels
         {
             FilteredCustomers.Clear();
             var src = RecentCustomers.AsEnumerable();
+            var canSearchPhone = _personalDataProtection.CanView(PersonalDataKind.Phone);
             if (!string.IsNullOrWhiteSpace(CustomerSearch))
                 src = src.Where(c =>
                     c.FullName.Contains(CustomerSearch, StringComparison.OrdinalIgnoreCase) ||
-                    (c.PhoneNumber?.Contains(CustomerSearch, StringComparison.OrdinalIgnoreCase) ?? false));
+                    (canSearchPhone && c.PhoneNumber?.Contains(CustomerSearch, StringComparison.OrdinalIgnoreCase) == true));
             foreach (var c in src.Take(10)) FilteredCustomers.Add(c);
         }
 
@@ -581,6 +588,7 @@ namespace KamatekCrm.ViewModels
             }
             CartItems.Clear();
             Payments.Clear();
+            _saleAttemptId = Guid.NewGuid();
             TenderedAmount = 0m;
             UpdateAllTotals();
         }
@@ -791,7 +799,8 @@ namespace KamatekCrm.ViewModels
                     CartItems,
                     Payments,
                     $"POS Perakende Satış ({SelectedWarehouse.Name})",
-                    currentUserName);
+                    currentUserName,
+                    _saleAttemptId.ToString());
 
                 LastCompletedOrder = salesOrder;
                 StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {salesOrder.OrderNumber}";

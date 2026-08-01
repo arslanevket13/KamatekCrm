@@ -71,22 +71,6 @@ namespace KamatekCrm.Services
                 {
                     ConfirmConnection("127.0.0.1");
 
-                    // AUTO-MIGRATION & SEEDING LOGIC (Sadece Ana Sunucu Yapar)
-                    try
-                    {
-                        _logger.LogInformation("Veritabanı yapılandırması kontrol ediliyor...");
-                        using var scope = KamatekCrm.App.ServiceProvider.CreateScope();
-                        var dbContext = scope.ServiceProvider.GetRequiredService<KamatekCrm.Infrastructure.Data.AppDbContext>();
-                        
-                        await dbContext.Database.MigrateAsync(stoppingToken);
-                        KamatekCrm.Infrastructure.Data.DbSeeder.SeedDemoData(dbContext);
-                        _logger.LogInformation("Veritabanı yapılandırması ve tohumlama (Seeding) tamamlandı.");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Veritabanı migration veya seeding sırasında hata oluştu!");
-                    }
-
                     _logger.LogInformation("Bu cihaz Ana Sunucu. UDP Broadcast başlatılıyor.");
                     // Sunucu olduğumuz için ağdaki diğer istemcilere yayın yapmaya devam et
                     _ = BroadcastLoopAsync(stoppingToken); 

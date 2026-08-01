@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -8,6 +9,7 @@ using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Validation;
 
 namespace KamatekCrm.ViewModels
 {
@@ -42,6 +44,8 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<District> Districts { get; set; }
         public ObservableCollection<Neighborhood> Neighborhoods { get; set; }
 
+        [Required(ErrorMessage = "Ad soyad zorunludur.")]
+        [StringLength(150, MinimumLength = 2, ErrorMessage = "Ad soyad 2-150 karakter olmalıdır.")]
         public string FullName
         {
             get => _fullName;
@@ -54,6 +58,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [Required(ErrorMessage = "Telefon numarası zorunludur.")]
+        [RegularExpression(@"^\+?[0-9\s()\-]{10,20}$", ErrorMessage = "Geçerli bir telefon numarası girin.")]
         public string PhoneNumber
         {
             get => _phoneNumber;
@@ -66,10 +72,17 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [EmailAddress(ErrorMessage = "Geçerli bir e-posta adresi girin.")]
         public string? Email
         {
             get => _email;
-            set => SetProperty(ref _email, value);
+            set
+            {
+                if (SetProperty(ref _email, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         public string City
@@ -123,25 +136,56 @@ namespace KamatekCrm.ViewModels
         public CustomerType NewCustomerType
         {
             get => _newCustomerType;
-            set => SetProperty(ref _newCustomerType, value);
+            set
+            {
+                if (SetProperty(ref _newCustomerType, value))
+                {
+                    ValidateProperty(NewTcKimlikNo, nameof(NewTcKimlikNo));
+                    ValidateProperty(NewCompanyName, nameof(NewCompanyName));
+                    ValidateProperty(NewTaxNumber, nameof(NewTaxNumber));
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
+        [RegularExpression(@"^\d{11}$", ErrorMessage = "T.C. Kimlik No 11 rakam olmalıdır.")]
         public string? NewTcKimlikNo
         {
             get => _newTcKimlikNo;
-            set => SetProperty(ref _newTcKimlikNo, value);
+            set
+            {
+                if (SetProperty(ref _newTcKimlikNo, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
+        [RequiredWhen(nameof(NewCustomerType), CustomerType.Corporate, ErrorMessage = "Şirket tam ünvanı zorunludur.")]
+        [StringLength(200, ErrorMessage = "Şirket ünvanı en fazla 200 karakter olabilir.")]
         public string? NewCompanyName
         {
             get => _newCompanyName;
-            set => SetProperty(ref _newCompanyName, value);
+            set
+            {
+                if (SetProperty(ref _newCompanyName, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "Vergi numarası 10 rakam olmalıdır.")]
         public string? NewTaxNumber
         {
             get => _newTaxNumber;
-            set => SetProperty(ref _newTaxNumber, value);
+            set
+            {
+                if (SetProperty(ref _newTaxNumber, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         public string? NewTaxOffice
@@ -216,7 +260,13 @@ namespace KamatekCrm.ViewModels
         public string ErrorMessage
         {
             get => _errorMessage;
-            set => SetProperty(ref _errorMessage, value);
+            set
+            {
+                if (SetProperty(ref _errorMessage, value))
+                {
+                    OnPropertyChanged(nameof(HasError));
+                }
+            }
         }
 
         public bool IsBusy
@@ -246,6 +296,8 @@ namespace KamatekCrm.ViewModels
             Districts = new ObservableCollection<District>();
             Neighborhoods = new ObservableCollection<Neighborhood>();
 
+            ErrorsChanged += (_, _) => SaveCommand.NotifyCanExecuteChanged();
+
             LoadCities();
         }
 
@@ -253,22 +305,23 @@ namespace KamatekCrm.ViewModels
         {
             return !string.IsNullOrWhiteSpace(FullName) &&
                    !string.IsNullOrWhiteSpace(PhoneNumber) &&
+                   (NewCustomerType != CustomerType.Corporate || !string.IsNullOrWhiteSpace(NewCompanyName)) &&
+                   !HasErrors &&
                    !IsBusy;
         }
 
         [RelayCommand(CanExecute = nameof(CanSaveCustomer))]
         private async Task SaveAsync()
         {
-            if (string.IsNullOrWhiteSpace(FullName) || string.IsNullOrWhiteSpace(PhoneNumber))
+            ValidateAllProperties();
+            if (HasErrors || !CanSaveCustomer())
             {
-                ErrorMessage = "Lütfen zorunlu alanları doldurun (Ad Soyad, Telefon).";
-                OnPropertyChanged(nameof(HasError));
+                ErrorMessage = "Lütfen işaretlenen alanları kontrol edin.";
                 return;
             }
 
             IsBusy = true;
             ErrorMessage = string.Empty;
-            OnPropertyChanged(nameof(HasError));
 
             try
             {
@@ -305,7 +358,6 @@ namespace KamatekCrm.ViewModels
             catch (Exception ex)
             {
                 ErrorMessage = $"Kayıt hatası: {ex.Message}";
-                OnPropertyChanged(nameof(HasError));
             }
             finally
             {
@@ -333,6 +385,8 @@ namespace KamatekCrm.ViewModels
             NewCompanyName = null;
             NewTaxNumber = null;
             NewTaxOffice = null;
+            ErrorMessage = string.Empty;
+            ClearErrors();
         }
 
         private void LoadCities()

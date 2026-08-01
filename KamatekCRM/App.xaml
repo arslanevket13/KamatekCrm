@@ -24,6 +24,7 @@
                 <ResourceDictionary Source="Resources/FixedScrollBar.xaml"/>
                 <ResourceDictionary Source="Resources/Animations.xaml"/>
                 <ResourceDictionary Source="Resources/Styles.xaml"/>
+                <ResourceDictionary Source="Resources/UxFoundation.xaml"/>
                 <ResourceDictionary Source="Resources/ComponentStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
@@ -137,6 +138,8 @@
             <converters:QuoteStatusTextConverter x:Key="QuoteStatusText"/>
             <converters:QuoteStatusColorConverter x:Key="QuoteStatusColor"/>
             <converters:DateDisplayConverter x:Key="DateDisplay"/>
+            <converters:SensitiveDataConverter x:Key="SensitiveData"/>
+            <converters:InverseBooleanConverter x:Key="InverseBoolConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -11,6 +11,7 @@
         Width="1220" Height="800"
         MinWidth="1040" MinHeight="680"
         WindowStartupLocation="CenterOwner"
+        AutomationProperties.Name="İş emri ve keşif formu"
         Style="{DynamicResource PremiumWindowStyle}"
         Background="{DynamicResource SurfacePageBrush}">
 
@@ -53,8 +54,8 @@
                         <ui:SymbolIcon Symbol="Wrench24" FontSize="22" Foreground="{DynamicResource ThemePrimary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="İŞ EMRİ &amp; KEŞİF FORMU" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                        <TextBlock Text="Müşteri talebini, altyapıyı, malzemeleri ve maliyeti tek ekranda yönetin" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,3,0,0"/>
+                        <TextBlock Text="İş Emri ve Keşif Formu" Style="{StaticResource PageTitle}" FontSize="20"/>
+                        <TextBlock Text="Müşteri talebini, altyapıyı, malzemeleri ve maliyeti tek ekranda yönetin" Style="{StaticResource PageSubtitle}"/>
                     </StackPanel>
                 </StackPanel>
 
@@ -86,7 +87,7 @@
                     <!-- BÖLÜM 1: MÜŞTERİ & YAPI BİLGİLERİ -->
                     <Border Style="{StaticResource CardPanel}" Padding="20" Margin="0,0,0,16">
                         <StackPanel>
-                            <TextBlock Text="👤 1. Müşteri &amp; Yapı Türü" Style="{StaticResource SectionHeader}"/>
+                            <TextBlock Text="1. Müşteri ve Yapı Türü" Style="{StaticResource SectionHeader}" AutomationProperties.HeadingLevel="Level2"/>
 
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                 <RadioButton x:Name="RbExisting" Content="Mevcut Müşteri" IsChecked="True" Margin="0,0,20,0" Foreground="{DynamicResource ThemeTextPrimary}" GroupName="CstT"/>
@@ -112,13 +113,15 @@
                                           DisplayMemberPath="FullName"
                                           IsEditable="True" IsTextSearchEnabled="True"
                                           Style="{StaticResource ModernComboBox}"
-                                          Height="38" Margin="0,0,0,12"/>
+                                          Height="40" Margin="0,0,0,12"
+                                          AutomationProperties.Name="Mevcut müşteri seçimi"
+                                          AutomationProperties.HelpText="Müşteri adını yazarak arayın veya listeden seçin."/>
 
                                 <!-- Müşteri Adres Kartı -->
                                 <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,12" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                     <StackPanel>
                                         <TextBlock Text="{Binding SummaryCustomerName, FallbackValue='Müşteri Seçilmedi'}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                        <TextBlock Text="{Binding SummaryCustomerAddress, FallbackValue='Adres bilgisi yok'}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,4,0,0"/>
+                                        <TextBlock Text="{Binding SummaryCustomerAddress, Converter={StaticResource SensitiveData}, ConverterParameter=Address, FallbackValue='Adres bilgisi yok'}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,4,0,0"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
@@ -133,11 +136,17 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
                                         <Label Content="Ad Soyad *" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding QuickCustomerName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="38"/>
+                                        <TextBox Text="{Binding QuickCustomerName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                 Style="{StaticResource ModernTextBox}" Height="40"
+                                                 AutomationProperties.Name="Yeni müşteri adı"
+                                                 AutomationProperties.HelpText="Hızlı yeni müşteri için zorunludur."/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
                                         <Label Content="Telefon *" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding QuickCustomerPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="38"/>
+                                        <TextBox Text="{Binding QuickCustomerPhone, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                                                 Style="{StaticResource ModernTextBox}" Height="40"
+                                                 AutomationProperties.Name="Yeni müşteri telefonu"
+                                                 AutomationProperties.HelpText="En az 10 rakam içeren geçerli bir telefon numarası girin."/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
@@ -168,12 +177,14 @@
 
                                 <StackPanel Grid.Column="2" Visibility="{Binding ShowBlockCount, Converter={StaticResource BoolToVis}}">
                                     <Label Content="Blok Sayısı" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding BlockCount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="36"/>
+                                    <TextBox Text="{Binding BlockCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
+                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="Blok sayısı"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="4" Visibility="{Binding ShowFlatCount, Converter={StaticResource BoolToVis}}">
                                     <Label Content="Daire Sayısı" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding FlatCount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="36"/>
+                                    <TextBox Text="{Binding FlatCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
+                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="Daire sayısı"/>
                                 </StackPanel>
                             </Grid>
 
@@ -192,7 +203,7 @@
                     <!-- BÖLÜM 2: İŞ KATEGORİLERİ & AÇIKLAMA -->
                     <Border Style="{StaticResource CardPanel}" Padding="20" Margin="0,0,0,16">
                         <StackPanel>
-                            <TextBlock Text="📝 2. İş Tanımı &amp; Kategoriler" Style="{StaticResource SectionHeader}"/>
+                            <TextBlock Text="2. İş Tanımı ve Kategoriler" Style="{StaticResource SectionHeader}" AutomationProperties.HeadingLevel="Level2"/>
 
                             <TextBlock Text="İş Kategorileri" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,0,8"/>
                             <ItemsControl ItemsSource="{Binding CategoryItems}" Margin="0,0,0,12">
@@ -212,10 +223,12 @@
                             </ItemsControl>
 
                             <Label Content="İş Açıklaması / Arıza Detayı *" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
                                      Style="{StaticResource ModernTextBox}"
                                      Height="110" TextWrapping="Wrap" AcceptsReturn="True"
-                                     VerticalScrollBarVisibility="Auto" Padding="10" Margin="0,0,0,12"/>
+                                     VerticalScrollBarVisibility="Auto" Padding="10" Margin="0,0,0,12"
+                                     AutomationProperties.Name="İş açıklaması veya arıza detayı"
+                                     AutomationProperties.HelpText="Keşif dışındaki iş emirleri için zorunludur."/>
 
                             <CheckBox Content="Sadece Keşif Yapılacak (Malzeme Girilmez)" 
                                       IsChecked="{Binding IsDiscoveryOnly}" 
@@ -227,7 +240,7 @@
                     <!-- BÖLÜM 3: İŞ AYARLARI & TEKNİSYEN & SLA -->
                     <Border Style="{StaticResource CardPanel}" Padding="20">
                         <StackPanel>
-                            <TextBlock Text="⚙️ 3. Planlama &amp; Teknisyen Atama" Style="{StaticResource SectionHeader}"/>
+                            <TextBlock Text="3. Planlama ve Teknisyen Atama" Style="{StaticResource SectionHeader}" AutomationProperties.HeadingLevel="Level2"/>
 
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
@@ -276,7 +289,8 @@
 
                                 <StackPanel Grid.Column="4">
                                     <Label Content="Tahmini Süre (Dk)" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding EstimatedDuration, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="36"/>
+                                    <TextBox Text="{Binding EstimatedDuration, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
+                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="Tahmini süre dakika"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
@@ -289,7 +303,7 @@
                     <!-- BÖLÜM 4: MALZEME VE ÜRÜN YÖNETİMİ -->
                     <Border Style="{StaticResource CardPanel}" Padding="20" Margin="0,0,0,16">
                         <StackPanel>
-                            <TextBlock Text="📦 4. Malzeme / Ürün Ekleme" Style="{StaticResource SectionHeader}"/>
+                            <TextBlock Text="4. Malzeme ve Ürün Ekleme" Style="{StaticResource SectionHeader}" AutomationProperties.HeadingLevel="Level2"/>
 
                             <!-- Ekleme Çubuğu -->
                             <Grid Margin="0,0,0,12">
@@ -310,29 +324,32 @@
                                               DisplayMemberPath="ProductName"
                                               IsEditable="True" IsTextSearchEnabled="True"
                                               Style="{StaticResource ModernComboBox}"
-                                              Height="36"/>
+                                              Height="40" AutomationProperties.Name="İş emrine eklenecek ürün"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
                                     <Label Content="Miktar" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding QuantityToAdd, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="36"/>
+                                    <TextBox Text="{Binding QuantityToAdd, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
+                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="Malzeme miktarı"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="4">
                                     <Label Content="Birim Fiyat" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding UnitPriceToAdd, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="36"/>
+                                    <TextBox Text="{Binding UnitPriceToAdd, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
+                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="Malzeme birim fiyatı"/>
                                 </StackPanel>
 
                                 <ui:Button Grid.Column="6" Content="Ekle" Icon="{ui:SymbolIcon Add24}"
                                            Command="{Binding AddItemToJobCommand}"
-                                           Appearance="Primary" Height="36" Padding="14,0" VerticalAlignment="Bottom"/>
+                                           Appearance="Primary" Height="40" Padding="14,0" VerticalAlignment="Bottom"
+                                           AutomationProperties.HelpText="Seçilen ürünü miktar ve fiyatıyla iş emrine ekler."/>
                             </Grid>
 
                             <!-- Malzeme Tablosu -->
                             <DataGrid ItemsSource="{Binding CurrentJobItems}"
-                                      Style="{StaticResource ModernDataGrid}"
+                                      Style="{StaticResource AccessibleDataGrid}"
                                       ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
-                                      AutoGenerateColumns="False" CanUserAddRows="False"
+                                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="False"
                                       MinHeight="180" MaxHeight="260"
                                       GridLinesVisibility="Horizontal" HeadersVisibility="Column">
                                 <DataGrid.Columns>
@@ -345,7 +362,8 @@
                                                 <ui:Button Icon="{ui:SymbolIcon Delete24}"
                                                            Command="{Binding DataContext.RemoveItemFromJobCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                            CommandParameter="{Binding}"
-                                                           Appearance="Secondary" Height="26" Width="26" Padding="0" Foreground="#F44336" ToolTip="Sil"/>
+                                                           Appearance="Secondary" Height="28" Width="28" Padding="0" Foreground="{DynamicResource StatusErrorFg}" ToolTip="Malzemeyi kaldır"
+                                                           AutomationProperties.Name="Malzemeyi iş emrinden kaldır"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -372,11 +390,13 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <Label Content="İşçilik Ücreti (₺)" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="36"/>
+                                    <TextBox Text="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
+                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="İşçilik ücreti"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <Label Content="İskonto / İndirim (₺)" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="36"/>
+                                    <TextBox Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
+                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="İskonto tutarı"/>
                                 </StackPanel>
                             </Grid>
 
@@ -419,11 +439,26 @@
 
                 <!-- Kaydet (Ctrl+S) -->
                 <ui:Button HorizontalAlignment="Right" Command="{Binding SaveServiceJobCommand}"
-                           Appearance="Primary" Height="42" Padding="32,0">
+                           Appearance="Primary" Height="42" Padding="32,0"
+                           AutomationProperties.HelpText="Geçerli alanlarla iş emrini, malzemeleri ve stok rezervasyonlarını birlikte kaydeder.">
                     <ui:Button.Content>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Save24" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="İŞ EMRİNİ KAYDET (Ctrl+S)" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <ui:ProgressRing IsIndeterminate="True" Width="18" Height="18" Margin="0,0,8,0"
+                                             Visibility="{Binding IsSaving, Converter={StaticResource BoolToVis}}"/>
+                            <ui:SymbolIcon Symbol="Save24" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"
+                                           Visibility="{Binding IsSaving, Converter={StaticResource InvertedBoolToVis}}"/>
+                            <TextBlock FontSize="14" FontWeight="Bold" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="İŞ EMRİNİ KAYDET (Ctrl+S)"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSaving}" Value="True">
+                                                <Setter Property="Text" Value="KAYDEDİLİYOR..."/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </StackPanel>
                     </ui:Button.Content>
                 </ui:Button>

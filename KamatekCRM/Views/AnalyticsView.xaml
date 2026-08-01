@@ -58,7 +58,7 @@
                 <!-- KPI 1: Toplam İşler -->
                 <km:KmKpiCard Title="Toplam İş Hacmi"
                               Value="{Binding TotalJobs}"
-                              Icon="📊"
+                              Icon="&#xE9D2;"
                               Subtitle="kayıtlı iş emri"
                               AccentBrush="{DynamicResource KpiGradientPurple}"
                               Margin="0,0,24,0"/>
@@ -66,7 +66,7 @@
                 <!-- KPI 2: Tamamlanan -->
                 <km:KmKpiCard Title="Tamamlanan İşler"
                               Value="{Binding CompletedJobs}"
-                              Icon="✅"
+                              Icon="&#xE73E;"
                               Subtitle="başarıyla teslim edildi"
                               AccentBrush="{DynamicResource KpiGradientGreen}"
                               Margin="0,0,24,0"/>
@@ -75,7 +75,7 @@
                 <km:KmKpiCard Title="Servis Başarı Oranı"
                               Value="{Binding SuccessRate}"
                               Suffix="%" Format="N1"
-                              Icon="🎯"
+                              Icon="&#xF272;"
                               Subtitle="müşteri memnuniyet hedefi"
                               AccentBrush="{DynamicResource KpiGradientCyan}"
                               Margin="0,0,0,0"/>

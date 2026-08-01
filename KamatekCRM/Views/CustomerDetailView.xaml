@@ -365,7 +365,8 @@
                                 <TextBlock Text="Bireysel Müşteri Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,16"/>
                                 <Label Content="TC Kimlik No" Style="{StaticResource ModernLabel}"/>
                                 <TextBox Text="{Binding TcKimlikNo, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" MaxLength="11" Width="200" HorizontalAlignment="Left"/>
+                                         Style="{StaticResource ModernTextBox}" MaxLength="11" Width="200" HorizontalAlignment="Left"
+                                         IsReadOnly="{Binding CanViewIdentityData, Converter={StaticResource InverseBoolConverter}}"/>
                             </StackPanel>
                         </Border>
 
@@ -390,7 +391,8 @@
 
                                     <StackPanel Grid.Column="2">
                                         <Label Content="Vergi Numarası" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                        <TextBox Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"
+                                                 IsReadOnly="{Binding CanViewIdentityData, Converter={StaticResource InverseBoolConverter}}"/>
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="4">
@@ -421,12 +423,14 @@
 
                                     <StackPanel Grid.Column="2">
                                         <Label Content="Telefon *" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                        <TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"
+                                                 IsReadOnly="{Binding CanViewContactData, Converter={StaticResource InverseBoolConverter}}"/>
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="4">
                                         <Label Content="E-posta" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"
+                                                 IsReadOnly="{Binding CanViewContactData, Converter={StaticResource InverseBoolConverter}}"/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
@@ -436,7 +440,10 @@
                         <Border Grid.Row="3" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
                             <StackPanel>
                                 <TextBlock Text="Adres Bilgileri" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,16"/>
-                                <Grid>
+                                <TextBlock Text="Adres bilgisi bu rol için kısıtlıdır."
+                                           Visibility="{Binding CanViewContactData, Converter={StaticResource InvertedBoolToVis}}"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <Grid Visibility="{Binding CanViewContactData, Converter={StaticResource BoolToVis}}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="16"/>

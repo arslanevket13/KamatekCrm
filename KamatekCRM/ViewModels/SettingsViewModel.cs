@@ -6,6 +6,8 @@ using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Services;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.ViewModels
 {
@@ -26,13 +28,18 @@ namespace KamatekCrm.ViewModels
 
     public partial class SettingsViewModel : ViewModelBase
     {
-        private readonly BackupService _backupService;
+        private readonly IBackupService _backupService;
         private readonly IToastService? _toastService;
+        private readonly IApplicationAuthorizationService _authorizationService;
 
-        public SettingsViewModel(IToastService? toastService = null)
+        public SettingsViewModel(
+            IToastService toastService,
+            IApplicationAuthorizationService authorizationService,
+            IBackupService backupService)
         {
             _toastService = toastService;
-            _backupService = new BackupService();
+            _authorizationService = authorizationService;
+            _backupService = backupService;
             
             // Ayarları Properties.Settings.Default'tan yükle
             string savedThemeId = Properties.Settings.Default.ThemePreference;
@@ -60,11 +67,16 @@ namespace KamatekCrm.ViewModels
         }
 
         private bool _isBusy;
-        public bool IsBusy
-        {
-            get => _isBusy;
-            set => SetProperty(ref _isBusy, value);
-        }
+          public bool IsBusy
+          {
+              get => _isBusy;
+              set
+              {
+                  if (!SetProperty(ref _isBusy, value)) return;
+                  TakeBackupCommand.NotifyCanExecuteChanged();
+                  RestoreBackupCommand.NotifyCanExecuteChanged();
+              }
+          }
 
         private string _lastBackupText = "Hiç alınmadı";
         public string LastBackupText
@@ -160,6 +172,7 @@ namespace KamatekCrm.ViewModels
             get => _isMainServer;
             set
             {
+                if (!EnsureSettingsAuthorized()) return;
                 if (SetProperty(ref _isMainServer, value))
                 {
                     Properties.Settings.Default.IsMainServer = value;
@@ -231,6 +244,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void OpenNetworkSettings()
         {
+            if (!EnsureSettingsAuthorized()) return;
             try
             {
                 var networkVm = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<KamatekCrm.ViewModels.NetworkSettingsViewModel>(App.ServiceProvider);
@@ -259,13 +273,14 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                var docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                var backupFolder = Path.Combine(docPath, "KamatekBackups");
+                var backupFolder = string.IsNullOrWhiteSpace(CustomBackupPath)
+                    ? _backupService.DefaultBackupDirectory
+                    : CustomBackupPath;
 
                 if (Directory.Exists(backupFolder))
                 {
                     var lastFile = new DirectoryInfo(backupFolder)
-                        .GetFiles("*.zip")
+                        .GetFiles(_backupService.BackupFilePattern)
                         .OrderByDescending(f => f.LastWriteTime)
                         .FirstOrDefault();
 
@@ -288,13 +303,15 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(IsNotBusy))]
         private async Task TakeBackup()
         {
+            if (!EnsureSettingsAuthorized()) return;
             IsBusy = true;
             try
             {
                 string backupPath = "";
                 await Task.Run(() => 
                 {
-                    backupPath = _backupService.BackupDatabase();
+                    backupPath = _backupService.BackupDatabase(
+                        string.IsNullOrWhiteSpace(CustomBackupPath) ? null : CustomBackupPath);
                 });
 
                 LoadLastBackupInfo();
@@ -313,18 +330,32 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(IsNotBusy))]
         private async Task RestoreBackup()
         {
+            if (!EnsureSettingsAuthorized()) return;
             // 1. Dosya seçme dialogu
             var docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var backupFolder = Path.Combine(docPath, "KamatekBackups");
+            var backupFolder = string.IsNullOrWhiteSpace(CustomBackupPath)
+                ? _backupService.DefaultBackupDirectory
+                : CustomBackupPath;
 
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
                 Title = "Geri Yüklenecek Yedek Dosyasını Seçin",
-                Filter = "ZIP Dosyaları (*.zip)|*.zip",
+                Filter = "Kamatek PostgreSQL Yedeği (*.backup)|*.backup",
                 InitialDirectory = Directory.Exists(backupFolder) ? backupFolder : docPath
             };
 
             if (dialog.ShowDialog() != true) return;
+
+            var validation = await Task.Run(() => _backupService.ValidateBackup(dialog.FileName));
+            if (!validation.IsValid)
+            {
+                MessageBox.Show(
+                    $"Bu yedek güvenli biçimde doğrulanamadı:\n\n{validation.Message}",
+                    "Geçersiz Yedek",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
 
             // 2. Kullanıcı onayı
             var confirm = MessageBox.Show(
@@ -340,9 +371,10 @@ namespace KamatekCrm.ViewModels
             IsBusy = true;
             try
             {
+                string recoveryBackup = string.Empty;
                 await Task.Run(() =>
                 {
-                    _backupService.RestoreDatabase(dialog.FileName);
+                    recoveryBackup = _backupService.RestoreDatabase(dialog.FileName);
                 });
 
                 // ═══════════════════════════════════════════════════════════════════
@@ -352,7 +384,7 @@ namespace KamatekCrm.ViewModels
                 
                 // Kullanıcıya bilgi ver ve hemen yeniden başlat
                 MessageBox.Show(
-                    "Geri yükleme başarılı!\n\nProgram şimdi yeniden başlatılacak.",
+                    $"Geri yükleme başarılı!\n\nİşlem öncesi kurtarma yedeği:\n{recoveryBackup}\n\nProgram şimdi yeniden başlatılacak.",
                     "Başarılı",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
@@ -550,6 +582,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void SaveCompanyInfo()
         {
+            if (!EnsureSettingsAuthorized()) return;
             SaveCompanySettings();
             _toastService?.ShowSuccess("Firma ve sistem ayarları başarıyla kaydedildi.");
         }
@@ -557,6 +590,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void SelectBackupFolder()
         {
+            if (!EnsureSettingsAuthorized()) return;
             var dialog = new Microsoft.Win32.OpenFolderDialog
             {
                 Title = "Yedekleme Klasörü Seçin"
@@ -568,6 +602,15 @@ namespace KamatekCrm.ViewModels
                 SaveCompanySettings();
                 _toastService?.ShowInfo($"Yedekleme konumu güncellendi: {CustomBackupPath}");
             }
+        }
+
+        private bool EnsureSettingsAuthorized()
+        {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.AccessSettings);
+            if (authorization.IsSuccess) return true;
+
+            _toastService?.ShowError("Yetkisiz işlem", authorization.Error);
+            return false;
         }
 
         #endregion

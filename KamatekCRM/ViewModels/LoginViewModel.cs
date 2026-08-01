@@ -109,17 +109,25 @@ namespace KamatekCrm.ViewModels
         private readonly NetworkDiscoveryService _discoveryService;
         private readonly IToastService _toastService;
         private readonly IDatabaseConnectionProvider _connectionProvider;
+        private readonly IForcedPasswordChangeService _forcedPasswordChangeService;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        public LoginViewModel(IAuthService authService, NavigationService navigationService, NetworkDiscoveryService discoveryService, IToastService toastService, IDatabaseConnectionProvider connectionProvider)
+        public LoginViewModel(
+            IAuthService authService,
+            NavigationService navigationService,
+            NetworkDiscoveryService discoveryService,
+            IToastService toastService,
+            IDatabaseConnectionProvider connectionProvider,
+            IForcedPasswordChangeService forcedPasswordChangeService)
         {
             _authService = authService;
             _navigationService = navigationService;
             _discoveryService = discoveryService;
             _toastService = toastService;
             _connectionProvider = connectionProvider;
+            _forcedPasswordChangeService = forcedPasswordChangeService;
 
             // Gerçek zamanlı sunucu durumunu dinle
             EventAggregator.Instance.Subscribe<DatabaseConnectionRestoredEvent>(_ =>
@@ -282,10 +290,7 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            // Determine if we are auto-logging in with a token
-            string? autoToken = parameter as string;
-
-            if (string.IsNullOrEmpty(autoToken) && (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password)))
+            if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
             {
                  if(string.IsNullOrWhiteSpace(Username)) ErrorMessage = "Kullanici adi gerekli!";
                  else if(string.IsNullOrWhiteSpace(Password)) ErrorMessage = "Sifre gerekli!";
@@ -299,31 +304,35 @@ namespace KamatekCrm.ViewModels
             {
                 bool isAuthenticated = false;
 
-                if (!string.IsNullOrEmpty(autoToken))
+                // Masaüstü sürümünde API/token oturumu kullanılmıyor. Her giriş yerel
+                // kimlik bilgileriyle doğrulanır; parametreyle kimlik atlama yapılmaz.
+                if (await _authService.LoginAsync(Username, Password))
                 {
-                    // Token Login (pre-existing session)
-                    if (!string.IsNullOrEmpty(Username))
-                    {
-                         isAuthenticated = true;
-                    }
+                    isAuthenticated = true;
+                    App.CurrentUser = _authService.CurrentUser;
                 }
                 else
                 {
-                    // API-based Login via AuthService
-                    if (await _authService.LoginAsync(Username, Password))
-                    {
-                        isAuthenticated = true;
-                        // Set global current user
-                        App.CurrentUser = _authService.CurrentUser;
-                    }
-                    else
-                    {
-                        ErrorMessage = "Hatali kullanici adi veya sifre!";
-                    }
+                    ErrorMessage = "Hatali kullanici adi veya sifre!";
                 }
 
                 if (isAuthenticated)
                 {
+                    if (_authService.CurrentUser?.MustChangePassword == true)
+                    {
+                        var changed = await _forcedPasswordChangeService.RequireChangeAsync(_authService.CurrentUser);
+                        if (!changed)
+                        {
+                            _authService.Logout();
+                            App.CurrentUser = null;
+                            ErrorMessage = "Devam etmek için geçici parolanızı değiştirmeniz gerekir.";
+                            Password = string.Empty;
+                            return;
+                        }
+
+                        _authService.CurrentUser.MustChangePassword = false;
+                    }
+
                     // Basarili giris - Ayarlari kaydet
                     SaveCredentials(null);
                     

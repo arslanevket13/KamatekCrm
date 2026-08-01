@@ -50,6 +50,18 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<string>("EntityName")
                         .HasColumnType("text");
 
+                    b.Property<string>("IntegrityHash")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("IntegrityVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("IpAddress")
                         .HasColumnType("text");
 
@@ -78,6 +90,8 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .HasColumnName("xmin");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IntegrityHash");
 
                     b.ToTable("ActivityLogs");
                 });
@@ -1234,6 +1248,10 @@ namespace KamatekCrm.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int?>("CustomerId")
                         .HasColumnType("integer");
 
@@ -1244,6 +1262,10 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<string>("QuoteNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("QuoteTitle")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -1303,6 +1325,9 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<decimal>("PurchasePrice")
+                        .HasColumnType("numeric");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
@@ -1413,6 +1438,10 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<decimal>("DiscountTotal")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
                     b.Property<bool>("IsReprinted")
                         .HasColumnType("boolean");
 
@@ -1452,6 +1481,10 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
 
                     b.ToTable("SalesOrders");
                 });
@@ -2342,9 +2375,6 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<double?>("AverageRating")
-                        .HasColumnType("double precision");
-
                     b.Property<bool>("CanAccessSettings")
                         .HasColumnType("boolean");
 
@@ -2367,10 +2397,6 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("CurrentGpsLocation")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2378,8 +2404,8 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("ExpertiseAreas")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -2387,14 +2413,8 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsOnDuty")
-                        .HasColumnType("boolean");
-
                     b.Property<bool>("IsTechnician")
                         .HasColumnType("boolean");
-
-                    b.Property<DateTime?>("LastLocationUpdate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("LastLoginDate")
                         .HasColumnType("timestamp with time zone");
@@ -2404,6 +2424,9 @@ namespace KamatekCrm.Infrastructure.Migrations
 
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -2427,9 +2450,6 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
-
-                    b.Property<int>("TotalJobsCompleted")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -2506,7 +2526,7 @@ namespace KamatekCrm.Infrastructure.Migrations
                         {
                             Id = 1,
                             CreatedBy = "",
-                            CreatedDate = new DateTime(2026, 7, 26, 22, 22, 41, 390, DateTimeKind.Utc).AddTicks(8807),
+                            CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Merkez Depo",
@@ -2516,7 +2536,7 @@ namespace KamatekCrm.Infrastructure.Migrations
                         {
                             Id = 2,
                             CreatedBy = "",
-                            CreatedDate = new DateTime(2026, 7, 26, 22, 22, 41, 390, DateTimeKind.Utc).AddTicks(9425),
+                            CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Servis Aracı 1",

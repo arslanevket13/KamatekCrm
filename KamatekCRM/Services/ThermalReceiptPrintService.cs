@@ -6,11 +6,20 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.Services
 {
     public class ThermalReceiptPrintService : IThermalReceiptPrintService
     {
+        private readonly IPersonalDataProtectionService _personalDataProtection;
+
+        public ThermalReceiptPrintService(IPersonalDataProtectionService personalDataProtection)
+        {
+            _personalDataProtection = personalDataProtection;
+        }
+
         public Task PrintReceiptAsync(SalesOrder salesOrder, string? printerName = null)
         {
             if (salesOrder == null) throw new ArgumentNullException(nameof(salesOrder));
@@ -220,7 +229,8 @@ namespace KamatekCrm.Services
             g.DrawString($"Servis No: #{job.Id}", titleFont, Brushes.Black, leftMargin, y); y += 18;
             g.DrawString($"Tarih    : {job.CreatedDate.ToLocalTime():dd.MM.yyyy HH:mm}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
             g.DrawString($"Müşteri  : {job.Customer?.FullName ?? "Belirtilmedi"}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
-            g.DrawString($"Tel      : {job.Customer?.PhoneNumber ?? "-"}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
+            var protectedPhone = _personalDataProtection.Protect(job.Customer?.PhoneNumber, PersonalDataKind.Phone);
+            g.DrawString($"Tel      : {protectedPhone}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
 
             g.DrawString("------------------------------------------", bodyFont, Brushes.Black, leftMargin, y);
             y += 12;

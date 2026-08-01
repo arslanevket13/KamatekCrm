@@ -224,6 +224,11 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void AddUser()
         {
+            if (!IsAdmin)
+            {
+                _toastService.ShowError("Yetkisiz işlem", "Kullanıcı oluşturmak için yönetici yetkisi gerekir.");
+                return;
+            }
             OpenAddUserWindow();
         }
 
@@ -244,7 +249,7 @@ namespace KamatekCrm.ViewModels
             _ = LoadUsersAsync();
         }
 
-        [RelayCommand(CanExecute = nameof(HasSelectedUser))]
+        [RelayCommand(CanExecute = nameof(CanManageSelectedUser))]
         private void EditUser(User? user = null)
         {
             var target = user ?? SelectedUser;
@@ -262,7 +267,7 @@ namespace KamatekCrm.ViewModels
             _ = LoadUsersAsync();
         }
 
-        [RelayCommand(CanExecute = nameof(HasSelectedUser))]
+        [RelayCommand(CanExecute = nameof(CanManageSelectedUser))]
         private void SetPassword()
         {
             OpenSetPasswordWindow();
@@ -281,6 +286,8 @@ namespace KamatekCrm.ViewModels
             if (SelectedUser.Id == CurrentUser?.Id) return false;
             return true;
         }
+
+        private bool CanManageSelectedUser() => IsAdmin && SelectedUser != null;
 
         [RelayCommand(CanExecute = nameof(CanDeleteUser))]
         private async Task DeleteUserAsync()
@@ -321,18 +328,20 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(HasSelectedUser))]
+        [RelayCommand(CanExecute = nameof(CanManageSelectedUser))]
         private async Task ResetPasswordAsync()
         {
-            await ResetPasswordTo1234Async();
+            await ResetPasswordToTemporaryAsync();
         }
 
-        private async Task ResetPasswordTo1234Async()
+        private async Task ResetPasswordToTemporaryAsync()
         {
             if (SelectedUser == null) return;
 
+            var temporaryPassword = PasswordPolicy.GenerateTemporaryPassword();
+
             var result = MessageBox.Show(
-                $"{SelectedUser.AdSoyad} kullanıcısının şifresini '1234' olarak sıfırlamak istiyor musunuz?",
+                $"{SelectedUser.AdSoyad} kullanıcısı için güçlü bir geçici parola üretmek istiyor musunuz?",
                 "Şifre Sıfırla",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
@@ -350,14 +359,14 @@ namespace KamatekCrm.ViewModels
                         Soyad = SelectedUser.Soyad,
                         Phone = SelectedUser.Phone,
                         Role = SelectedUser.Role,
-                        Password = "1234",
+                        Password = temporaryPassword,
                         IsActive = SelectedUser.IsActive
                     };
 
                     var res = await _userAppService.UpdateAsync(updateDto);
                     if (res.IsSuccess)
                     {
-                        _toastService.ShowSuccess("Başarılı", "Kullanıcının parolası 1234 olarak sıfırlandı.");
+                        _toastService.ShowSuccess("Geçici parola oluşturuldu", $"Yeni geçici parola: {temporaryPassword}");
                     }
                     else
                     {

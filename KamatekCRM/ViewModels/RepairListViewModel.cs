@@ -7,6 +7,9 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using KamatekCrm.ApplicationCore.DTOs.ServiceJobs;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
@@ -23,6 +26,8 @@ namespace KamatekCrm.ViewModels
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IToastService _toastService;
+        private readonly IServiceJobCommandService _serviceJobCommandService;
+        private readonly IPersonalDataProtectionService _personalDataProtection;
 
         private string _searchText = string.Empty;
         private RepairStatus? _selectedStatus;
@@ -141,9 +146,9 @@ namespace KamatekCrm.ViewModels
 
         // ═══════ Müşteri Bilgi Property'leri ═══════
         public string SelectedCustomerFullName => SelectedJob?.Customer?.FullName ?? "";
-        public string SelectedCustomerPhone => SelectedJob?.Customer?.PhoneNumber ?? "";
-        public string SelectedCustomerEmail => SelectedJob?.Customer?.Email ?? "";
-        public string SelectedCustomerAddress => SelectedJob?.Customer?.FullAddress ?? "";
+        public string SelectedCustomerPhone => _personalDataProtection.Protect(SelectedJob?.Customer?.PhoneNumber, PersonalDataKind.Phone);
+        public string SelectedCustomerEmail => _personalDataProtection.Protect(SelectedJob?.Customer?.Email, PersonalDataKind.Email);
+        public string SelectedCustomerAddress => _personalDataProtection.Protect(SelectedJob?.Customer?.FullAddress, PersonalDataKind.Address);
         public string SelectedCustomerNotes => SelectedJob?.Customer?.Notes ?? "";
         public string SelectedCustomerSegment => SelectedJob?.Customer?.Segment.ToString() ?? "";
         public string SelectedCustomerLoyaltyLevel => SelectedJob?.Customer?.LoyaltyLevel ?? "";
@@ -154,7 +159,7 @@ namespace KamatekCrm.ViewModels
         public string SelectedCustomerType => SelectedJob?.Customer?.Type.ToString() ?? "";
         public string SelectedCustomerCode => SelectedJob?.Customer?.CustomerCode ?? "";
         public string SelectedCustomerCompanyName => SelectedJob?.Customer?.CompanyName ?? "";
-        public string SelectedCustomerTcKimlikNo => SelectedJob?.Customer?.TcKimlikNo ?? "";
+        public string SelectedCustomerTcKimlikNo => _personalDataProtection.Protect(SelectedJob?.Customer?.TcKimlikNo, PersonalDataKind.NationalIdentity);
         public bool HasCustomerCompany => !string.IsNullOrWhiteSpace(SelectedJob?.Customer?.CompanyName);
         public bool HasCustomerNotes => !string.IsNullOrWhiteSpace(SelectedJob?.Customer?.Notes);
         public ObservableCollection<ServiceJobHistory> JobHistory { get; set; } = new();
@@ -184,10 +189,16 @@ namespace KamatekCrm.ViewModels
 
         // ===== WORKFLOW COMMANDS =====
 
-        public RepairListViewModel(IServiceProvider serviceProvider, IToastService toastService)
+        public RepairListViewModel(
+            IServiceProvider serviceProvider,
+            IToastService toastService,
+            IServiceJobCommandService serviceJobCommandService,
+            IPersonalDataProtectionService personalDataProtection)
         {
             _serviceProvider = serviceProvider;
             _toastService = toastService;
+            _serviceJobCommandService = serviceJobCommandService;
+            _personalDataProtection = personalDataProtection;
 
             AllRepairJobs = new ObservableCollection<RepairJobDisplayItem>();
             StatusOptions = new ObservableCollection<RepairStatusOption>();
@@ -343,6 +354,29 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedJob == null || newStatus == null) return;
 
+            if (newStatus == RepairStatus.Delivered)
+            {
+                var completion = await _serviceJobCommandService.CompleteAsync(
+                    SelectedJob.Id,
+                    SelectedJob.LaborCost,
+                    SelectedJob.DiscountAmount,
+                    NewNoteText,
+                    App.CurrentUser?.Username ?? "Sistem");
+                if (completion.IsFailure)
+                {
+                    _toastService.ShowError(completion.Error);
+                    return;
+                }
+
+                SelectedJob.Status = JobStatus.Completed;
+                SelectedJob.RepairStatus = RepairStatus.Delivered;
+                NewNoteText = string.Empty;
+                await LoadHistoryAsync(SelectedJob.Id);
+                await RefreshAsync();
+                _toastService.ShowSuccess("İş emri tamamlandı ve ayrılan stoklar düşüldü.");
+                return;
+            }
+
             try
             {
                 using var scope = _serviceProvider.CreateScope();
@@ -356,8 +390,7 @@ namespace KamatekCrm.ViewModels
                 job.ModifiedDate = DateTime.UtcNow;
 
                 // Map to ServiceJob.Status
-                if (newStatus == RepairStatus.Delivered) job.Status = JobStatus.Completed;
-                else if (newStatus == RepairStatus.Unrepairable) job.Status = JobStatus.Cancelled;
+                if (newStatus == RepairStatus.Unrepairable) job.Status = JobStatus.Cancelled;
                 else job.Status = JobStatus.InProgress;
 
                 ctx.ServiceJobs.Update(job);
@@ -424,15 +457,12 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async Task temToJobAsync()
+        private async Task AddItemToJobAsync()
         {
             if (SelectedJob == null || SelectedProductToAdd == null) return;
 
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
                 var newItem = new ServiceJobItem
                 {
                     ServiceJobId = SelectedJob.Id,
@@ -442,11 +472,20 @@ namespace KamatekCrm.ViewModels
                     UnitPrice = UnitPriceToAdd,
                     UnitCost = SelectedProductToAdd.PurchasePrice
                 };
-                ctx.ServiceJobItems.Add(newItem);
-                await ctx.SaveChangesAsync();
 
-                CurrentJobItems.Add(newItem);
-                NotifyCostChanged();
+                var proposedItems = CurrentJobItems.Concat([newItem]).ToList();
+                var save = await _serviceJobCommandService.SaveAsync(new ServiceJobSaveRequest(
+                    SelectedJob,
+                    proposedItems,
+                    true,
+                    App.CurrentUser?.Username ?? "Sistem"));
+                if (save.IsFailure)
+                {
+                    _toastService.ShowError(save.Error);
+                    return;
+                }
+
+                await LoadJobItemsAsync(SelectedJob.Id);
 
                 _toastService.ShowSuccess($"{SelectedProductToAdd.ProductName} eklendi");
                 SelectedProductToAdd = null;
@@ -459,24 +498,26 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private async Task temFromJobAsync(object? param)
+        private async Task RemoveItemFromJobAsync(object? param)
         {
             if (param is not ServiceJobItem item) return;
 
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                var dbItem = await ctx.ServiceJobItems.FindAsync(item.Id);
-                if (dbItem != null)
+                if (SelectedJob == null) return;
+                var proposedItems = CurrentJobItems.Where(existing => existing.Id != item.Id).ToList();
+                var save = await _serviceJobCommandService.SaveAsync(new ServiceJobSaveRequest(
+                    SelectedJob,
+                    proposedItems,
+                    true,
+                    App.CurrentUser?.Username ?? "Sistem"));
+                if (save.IsFailure)
                 {
-                    ctx.ServiceJobItems.Remove(dbItem);
-                    await ctx.SaveChangesAsync();
+                    _toastService.ShowError(save.Error);
+                    return;
                 }
 
-                CurrentJobItems.Remove(item);
-                NotifyCostChanged();
+                await LoadJobItemsAsync(SelectedJob.Id);
                 _toastService.ShowSuccess("Parça kaldırıldı");
             }
             catch (Exception ex)
@@ -492,77 +533,24 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                await using var transaction = await ctx.Database.BeginTransactionAsync();
-                try
+                var result = await _serviceJobCommandService.ChangeStatusAsync(
+                    SelectedJob.Id,
+                    JobStatus.Completed,
+                    App.CurrentUser?.Username ?? "Sistem");
+                if (result.IsFailure)
                 {
-                    // Stok düşümü
-                    foreach (var item in CurrentJobItems)
-                    {
-                        var product = await ctx.Products.FindAsync(item.ProductId);
-                        if (product != null) product.TotalStockQuantity -= item.QuantityUsed;
-                    }
-
-                    var job = await ctx.ServiceJobs.FindAsync(SelectedJob.Id);
-                    if (job != null)
-                    {
-                        job.RepairStatus = RepairStatus.Delivered;
-                        job.Status = JobStatus.Completed;
-                        job.CompletedDate = DateTime.UtcNow;
-                        job.ModifiedDate = DateTime.UtcNow;
-                    }
-
-                    // History
-                    ctx.ServiceJobHistories.Add(new ServiceJobHistory
-                    {
-                        ServiceJobId = SelectedJob.Id,
-                        Date = DateTime.UtcNow,
-                        StatusChange = RepairStatus.Delivered,
-                        TechnicianNote = "İş tamamlandı — stok düşümü yapıldı",
-                        UserId = App.CurrentUser?.Username ?? "System"
-                    });
-
-                    // ═══════ Müşteri Profil Senkronizasyonu ═══════
-                    var customerId = job?.CustomerId ?? SelectedJob.CustomerId;
-                    var customer = await ctx.Customers.FindAsync(customerId);
-                    if (customer != null)
-                    {
-                        customer.LastInteractionDate = DateTime.UtcNow;
-                        customer.LastPurchaseDate = DateTime.UtcNow;
-                        customer.TotalSpent += GrandTotal;
-                        customer.LoyaltyPoints += (int)(GrandTotal / 100);  // 100 TL = 1 puan
-                    }
-
-                    // ═══════ Müşteri Aktivite Kaydı ═══════
-                    ctx.CustomerActivities.Add(new CustomerActivity
-                    {
-                        CustomerId = customerId,
-                        Type = ActivityType.ServiceJobCompleted,
-                        Description = $"Tamir tamamlandı: #{SelectedJob.Id} - Toplam: {GrandTotal:N2} ₺",
-                        RelatedId = SelectedJob.Id,
-                        RelatedType = "ServiceJob",
-                        CreatedBy = App.CurrentUser?.Username ?? "System"
-                    });
-
-                    await ctx.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    _toastService.ShowSuccess("İş tamamlandı, stok ve müşteri profili güncellendi!");
-                    await LoadFullJobAsync(SelectedJob.Id);
-                    
-                    var listItem = AllRepairJobs.FirstOrDefault(x => x.Id == SelectedJob.Id);
-                    if (listItem != null)
-                    {
-                        listItem.RepairStatus = RepairStatus.Delivered;
-                        FilteredRepairJobs.Refresh();
-                    }
+                    _toastService.ShowError(result.Error);
+                    return;
                 }
-                catch
+
+                _toastService.ShowSuccess("İş tamamlandı; stok, müşteri profili ve tarihçe güncellendi.");
+                await LoadFullJobAsync(SelectedJob.Id);
+
+                var listItem = AllRepairJobs.FirstOrDefault(x => x.Id == SelectedJob.Id);
+                if (listItem != null)
                 {
-                    await transaction.RollbackAsync();
-                    throw;
+                    listItem.RepairStatus = RepairStatus.Delivered;
+                    FilteredRepairJobs.Refresh();
                 }
             }
             catch (Exception ex)
@@ -782,11 +770,6 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        [RelayCommand]
-        private void AddItemToJob()
-        {
-            _toastService?.ShowInfo("Parça / malzeme ekleme alanı hazırlandı.");
-        }
     }
 
     /// <summary>

@@ -7,8 +7,11 @@ namespace KamatekCrm.Infrastructure.Data
 {
     public static class DbSeeder
     {
-        public static void SeedDemoData(AppDbContext context)
+        public static void SeedDemoData(AppDbContext context, string initialAdminPassword)
         {
+            if (string.IsNullOrWhiteSpace(initialAdminPassword))
+                throw new ArgumentException("Başlangıç yönetici parolası boş olamaz.", nameof(initialAdminPassword));
+
             if (!context.Users.Any())
             {
                 var adminUser = new User
@@ -17,7 +20,9 @@ namespace KamatekCrm.Infrastructure.Data
                     Ad = "Sistem",
                     Soyad = "Yöneticisi",
                     Role = "Admin",
-                    PasswordHash = "123"
+                    // Geliştirme hesabının parolası veritabanında hiçbir zaman düz metin tutulmaz.
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(initialAdminPassword),
+                    MustChangePassword = true
                 };
                 context.Users.Add(adminUser);
                 context.SaveChanges();

@@ -17,7 +17,7 @@
         <converters:ImagePathConverter x:Key="ImagePathConverter"/>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Style="{StaticResource PageRoot}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Row 0: Header & Action Buttons -->
             <RowDefinition Height="Auto"/> <!-- Row 1: KPI Metrics Panel -->
@@ -28,12 +28,9 @@
         <!-- ════════ ROW 0: HEADER & MAIN ACTIONS ════════ -->
         <DockPanel Grid.Row="0" Margin="0,0,0,20">
             <StackPanel VerticalAlignment="Center">
-                <TextBlock Text="Stok &amp; Envanter Yönetimi" 
-                           FontSize="26" FontWeight="Bold"
-                           Foreground="{DynamicResource ThemeTextPrimary}"/>
+                <TextBlock Text="Ürünler ve Stok" Style="{StaticResource PageTitle}"/>
                 <TextBlock Text="Ürün envanterinizi izleyin, stok seviyelerini ve fiyatları yönetin" 
-                           FontSize="13" Foreground="{DynamicResource ThemeTextSecondary}"
-                           Margin="0,4,0,0"/>
+                           Style="{StaticResource PageSubtitle}"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
@@ -72,8 +69,8 @@
             <!-- Card 1: Total Products -->
             <Border Grid.Column="0" Style="{StaticResource CardPanel}" Padding="16">
                 <DockPanel>
-                    <Border Width="42" Height="42" CornerRadius="10" Background="#262196F3" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="Box24" FontSize="20" Foreground="#2196F3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="42" Height="42" CornerRadius="10" Background="{DynamicResource StatusInfoBg}" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Box24" FontSize="20" Foreground="{DynamicResource StatusInfoFg}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="Toplam Çeşit" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}"/>
@@ -85,8 +82,8 @@
             <!-- Card 2: Total Stock Items -->
             <Border Grid.Column="2" Style="{StaticResource CardPanel}" Padding="16">
                 <DockPanel>
-                    <Border Width="42" Height="42" CornerRadius="10" Background="#269C27B0" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="GroupList24" FontSize="20" Foreground="#9C27B0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="42" Height="42" CornerRadius="10" Background="{DynamicResource ThemePrimaryMuted}" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="GroupList24" FontSize="20" Foreground="{DynamicResource ThemePrimary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="Toplam Stok Adedi" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}"/>
@@ -98,12 +95,12 @@
             <!-- Card 3: Low Stock Warnings -->
             <Border Grid.Column="4" Style="{StaticResource CardPanel}" Padding="16">
                 <DockPanel>
-                    <Border Width="42" Height="42" CornerRadius="10" Background="#26F44336" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="Warning24" FontSize="20" Foreground="#F44336" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="42" Height="42" CornerRadius="10" Background="{DynamicResource StatusErrorBg}" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Warning24" FontSize="20" Foreground="{DynamicResource StatusErrorFg}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="Kritik Stok Uyarısı (≤5)" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                        <TextBlock Text="{Binding LowStockCount}" FontSize="20" FontWeight="Bold" Foreground="#F44336"/>
+                        <TextBlock Text="{Binding LowStockCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusErrorFg}"/>
                     </StackPanel>
                 </DockPanel>
             </Border>
@@ -111,19 +108,19 @@
             <!-- Card 4: Total Inventory Value -->
             <Border Grid.Column="6" Style="{StaticResource CardPanel}" Padding="16">
                 <DockPanel>
-                    <Border Width="42" Height="42" CornerRadius="10" Background="#264CAF50" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="Money24" FontSize="20" Foreground="#4CAF50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="42" Height="42" CornerRadius="10" Background="{DynamicResource StatusSuccessBg}" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Money24" FontSize="20" Foreground="{DynamicResource StatusSuccessFg}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="Toplam Envanter Değeri" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                        <TextBlock Text="{Binding TotalInventoryValueDisplay}" FontSize="20" FontWeight="Bold" Foreground="#4CAF50"/>
+                        <TextBlock Text="{Binding TotalInventoryValueDisplay}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
                     </StackPanel>
                 </DockPanel>
             </Border>
         </Grid>
 
         <!-- ════════ ROW 2: FILTER TOOLBAR ════════ -->
-        <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
+        <Border Grid.Row="2" Style="{StaticResource FilterToolbarCard}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -138,19 +135,23 @@
                             PlaceholderText="Ürün Adı, SKU, Marka veya Barkod Arayın..." 
                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
                             Icon="{ui:SymbolIcon Search24}" 
-                            Height="38" VerticalAlignment="Center"/>
+                            Height="40" VerticalAlignment="Center"
+                            AutomationProperties.Name="Ürün ara"
+                            AutomationProperties.HelpText="Ürün adı, stok kodu, marka veya barkoda göre arar"/>
 
                 <!-- Category Filter -->
                 <StackPanel Grid.Column="2">
                     <ComboBox ItemsSource="{Binding CategoryFilterItems}"
                               SelectedItem="{Binding SelectedCategoryFilter}"
-                              Style="{StaticResource ModernComboBox}" Height="38"/>
+                              Style="{StaticResource AccessibleComboBox}"
+                              AutomationProperties.Name="Kategori filtresi"/>
                 </StackPanel>
 
                 <!-- Stock Status Filter -->
                 <StackPanel Grid.Column="4">
                     <ComboBox SelectedValuePath="Content" SelectedValue="{Binding StockStatusFilter}"
-                              Style="{StaticResource ModernComboBox}" Height="38">
+                              Style="{StaticResource AccessibleComboBox}"
+                              AutomationProperties.Name="Stok durumu filtresi">
                         <ComboBoxItem Content="Tümü"/>
                         <ComboBoxItem Content="Stokta Var"/>
                         <ComboBoxItem Content="Kritik Stok"/>
@@ -170,7 +171,7 @@
 
                 <DataGrid Grid.Row="0" ItemsSource="{Binding ProductsView}"
                           SelectedItem="{Binding SelectedProduct}"
-                          Style="{StaticResource ModernDataGrid}"
+                          Style="{StaticResource AccessibleDataGrid}"
                           ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
@@ -303,7 +304,7 @@
                                         <ui:Button Icon="{ui:SymbolIcon Delete24}"
                                                    Command="{Binding DataContext.DeleteProductCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                    CommandParameter="{Binding}"
-                                                   Appearance="Secondary" Height="28" Width="28" Padding="0" Foreground="#F44336" ToolTip="Sil"/>
+                                                   Appearance="Secondary" Height="28" Width="28" Padding="0" Foreground="{DynamicResource StatusErrorFg}" ToolTip="Sil"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

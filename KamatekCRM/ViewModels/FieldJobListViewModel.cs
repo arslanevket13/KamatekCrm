@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -19,6 +20,7 @@ namespace KamatekCrm.ViewModels
     public partial class FieldJobListViewModel : ViewModelBase
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly IServiceJobCommandService _serviceJobCommandService;
         private string _searchText = string.Empty;
         private DateTime? _startDate;
         private DateTime? _endDate;
@@ -61,9 +63,12 @@ namespace KamatekCrm.ViewModels
 
         // Commands
 
-        public FieldJobListViewModel(IDbContextFactory<AppDbContext> dbContextFactory)
+        public FieldJobListViewModel(
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            IServiceJobCommandService serviceJobCommandService)
         {
             _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
+            _serviceJobCommandService = serviceJobCommandService;
             AllFieldJobs = new ObservableCollection<FieldJobDisplayItem>();
             CategoryFilters = new ObservableCollection<CategoryFilterItem>();
 
@@ -225,7 +230,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void CompleteFieldJob(object? parameter)
+        private async Task CompleteFieldJob(object? parameter)
         {
             if (parameter is FieldJobDisplayItem job)
             {
@@ -239,19 +244,19 @@ namespace KamatekCrm.ViewModels
                 {
                     try
                     {
-                        using var context = _dbContextFactory.CreateDbContext();
-                        var dbJob = context.ServiceJobs.Find(job.Id);
-                        if (dbJob != null)
+                        var completion = await _serviceJobCommandService.ChangeStatusAsync(
+                            job.Id,
+                            JobStatus.Completed,
+                            App.CurrentUser?.Username ?? "Sistem");
+                        if (completion.IsFailure)
                         {
-                            dbJob.Status = JobStatus.Completed;
-                            dbJob.CompletedDate = DateTime.UtcNow;
-                            context.SaveChanges();
-                            
-                            job.Status = JobStatus.Completed;
-                            FilteredFieldJobs?.Refresh();
-                            
-                            MessageBox.Show("İş başarıyla tamamlandı!", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show(completion.Error, "İş tamamlanamadı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
                         }
+
+                        job.Status = JobStatus.Completed;
+                        FilteredFieldJobs?.Refresh();
+                        MessageBox.Show("İş başarıyla tamamlandı!", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     catch (Exception ex)
                     {

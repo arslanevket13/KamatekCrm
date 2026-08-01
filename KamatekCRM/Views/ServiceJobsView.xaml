@@ -187,14 +187,14 @@
                         <MenuItem Header="📋 Detay Göster" Command="{Binding ViewJobDetailCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
                         <MenuItem Header="✏️ İşi Düzenle" Command="{Binding EditJobCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
                         <Separator/>
-                        <MenuItem Header="📄 Teklife Dönüştür" Command="{Binding ConvertToQuoteCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
+                        <MenuItem Header="Teklife Dönüştür" Command="{Binding ConvertToQuoteCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
                         <Separator/>
-                        <MenuItem Header="⏳ Bekliyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Pending"/>
-                        <MenuItem Header="🔵 Devam Ediyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="InProgress"/>
-                        <MenuItem Header="✅ Tamamla" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Completed"/>
-                        <MenuItem Header="❌ İptal Et" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Cancelled"/>
+                        <MenuItem Header="Bekliyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Pending"/>
+                        <MenuItem Header="Devam Ediyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="InProgress"/>
+                        <MenuItem Header="Tamamla" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Completed"/>
+                        <MenuItem Header="İptal Et" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Cancelled"/>
                         <Separator/>
-                        <MenuItem Header="🖨️ PDF Yazdır" Command="{Binding PrintServiceFormCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
+                        <MenuItem Header="PDF Yazdır" Command="{Binding PrintServiceFormCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
                         <Separator/>
                         <MenuItem Header="🗑️ Sil" Command="{Binding DeleteJobCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
                     </ContextMenu>
@@ -218,7 +218,7 @@
                             <DataTemplate>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="{Binding CustomerFullName}" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                    <TextBlock Text="{Binding CustomerPhone}" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                                    <TextBlock Text="{Binding CustomerPhone, Converter={StaticResource SensitiveData}, ConverterParameter=Phone}" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>

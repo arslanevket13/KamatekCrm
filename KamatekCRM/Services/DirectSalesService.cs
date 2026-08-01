@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -7,16 +8,22 @@ using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.Services
 {
     public class DirectSalesService : IDirectSalesService
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly IApplicationAuthorizationService _authorizationService;
 
-        public DirectSalesService(IDbContextFactory<AppDbContext> dbContextFactory)
+        public DirectSalesService(
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            IApplicationAuthorizationService authorizationService)
         {
             _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
+            _authorizationService = authorizationService;
         }
 
         public async Task<SalesOrder> ProcessSaleAsync(
@@ -26,18 +33,47 @@ namespace KamatekCrm.Services
             IEnumerable<PosCartItem> cartItems,
             IEnumerable<PosPaymentEntry> payments,
             string? notes,
-            string? currentUserName)
+            string? currentUserName,
+            string idempotencyKey)
         {
+            var authorization = _authorizationService.Authorize(ApplicationPermission.ExecuteSales);
+            if (authorization.IsFailure)
+                throw new UnauthorizedAccessException(authorization.Error);
+
+            if (!Guid.TryParse(idempotencyKey, out _))
+                throw new ArgumentException("Geçerli bir satış işlem anahtarı gereklidir.", nameof(idempotencyKey));
+
             var cartList = cartItems?.ToList() ?? new List<PosCartItem>();
             if (cartList.Count == 0)
                 throw new InvalidOperationException("Sepet boş, satış tamamlanamaz.");
+            if (warehouseId <= 0)
+                throw new InvalidOperationException("Geçerli bir depo seçilmelidir.");
+            if (cartList.Any(i => i.ProductId <= 0 || i.Quantity <= 0 || i.UnitPrice < 0))
+                throw new InvalidOperationException("Satış kalemlerinde ürün, miktar veya fiyat bilgisi geçersiz.");
 
             var paymentList = payments?.ToList() ?? new List<PosPaymentEntry>();
             if (paymentList.Count == 0)
                 throw new InvalidOperationException("Ödeme yöntemi girilmedi.");
+            if (paymentList.Any(p => p.Amount <= 0))
+                throw new InvalidOperationException("Ödeme tutarları sıfırdan büyük olmalıdır.");
+
+            var grandTotal = cartList.Sum(i => i.LineTotal);
+            if (grandTotal <= 0)
+                throw new InvalidOperationException("Satış toplamı sıfırdan büyük olmalıdır.");
+            if (paymentList.Sum(p => p.Amount) != grandTotal)
+                throw new InvalidOperationException("Ödeme toplamı satış toplamına eşit olmalıdır.");
 
             using var context = await _dbContextFactory.CreateDbContextAsync();
-            using var transaction = await context.Database.BeginTransactionAsync();
+
+            var existingSale = await context.SalesOrders
+                .Include(s => s.Items)
+                .Include(s => s.Payments)
+                .AsNoTracking()
+                .SingleOrDefaultAsync(s => s.IdempotencyKey == idempotencyKey);
+            if (existingSale != null)
+                return existingSale;
+
+            using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
 
             try
             {
@@ -47,13 +83,14 @@ namespace KamatekCrm.Services
                     .Where(i => i.WarehouseId == warehouseId && i.ProductId.HasValue && productIds.Contains(i.ProductId.Value))
                     .ToListAsync();
 
-                foreach (var item in cartList)
+                foreach (var productGroup in cartList.GroupBy(i => i.ProductId))
                 {
-                    var inv = inventories.FirstOrDefault(i => i.ProductId == item.ProductId);
-                    if (inv == null || inv.Quantity < item.Quantity)
+                    var requestedQuantity = productGroup.Sum(i => i.Quantity);
+                    var inv = inventories.FirstOrDefault(i => i.ProductId == productGroup.Key);
+                    if (inv == null || inv.Quantity < requestedQuantity)
                     {
                         var available = inv?.Quantity ?? 0;
-                        throw new InvalidOperationException($"'{item.ProductName}' için yetersiz stok! Mevcut Stok: {available}, İstenen: {item.Quantity}");
+                        throw new InvalidOperationException($"'{productGroup.First().ProductName}' için yetersiz stok! Mevcut Stok: {available}, İstenen: {requestedQuantity}");
                     }
                 }
 
@@ -63,14 +100,13 @@ namespace KamatekCrm.Services
                 var subTotal = cartList.Sum(i => i.SubTotal);
                 var discountTotal = cartList.Sum(i => i.DiscountAmount);
                 var taxTotal = cartList.Sum(i => i.TaxAmount);
-                var grandTotal = cartList.Sum(i => i.LineTotal);
-
                 var paymentSummary = string.Join(", ", paymentList.Select(p => $"{p.DisplayName}: {p.Amount:N2} ₺"));
 
                 // 3. Build SalesOrder Header
                 var salesOrder = new SalesOrder
                 {
                     OrderNumber = orderNo,
+                    IdempotencyKey = idempotencyKey,
                     CustomerId = customerId,
                     CustomerName = string.IsNullOrWhiteSpace(customerName) ? "Perakende Müşteri" : customerName,
                     Date = DateTime.UtcNow,

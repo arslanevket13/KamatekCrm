@@ -17,7 +17,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Style="{StaticResource PageRoot}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -35,8 +35,8 @@
             <StackPanel Grid.Column="0" Orientation="Horizontal">
                 <ui:SymbolIcon Symbol="People24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Müşteri Yönetim Merkezi" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
-                    <TextBlock Text="Bireysel, kurumsal ve perakende müşteri kayıtlarını yönetin ve takibini yapın" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="Müşteriler" Style="{StaticResource PageTitle}"/>
+                    <TextBlock Text="Müşteri ilişkilerini, cari durumu ve servis geçmişini tek noktadan yönetin" Style="{StaticResource PageSubtitle}"/>
                 </StackPanel>
             </StackPanel>
 
@@ -52,30 +52,28 @@
         <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,16">
             <components:KmKpiCard Title="Toplam Müşteri"
                                    Value="{Binding TotalCustomers}"
-                                   Icon="👥"
+                                   Icon="&#xE716;"
                                    AccentBrush="{DynamicResource ThemePrimary}"
                                    Margin="0,0,10,0"/>
             <components:KmKpiCard Title="Bireysel Müşteri"
                                    Value="{Binding IndividualCount}"
-                                   Icon="👤"
+                                   Icon="&#xE77B;"
                                    AccentBrush="{DynamicResource ThemeSuccess}"
                                    Margin="0,0,10,0"/>
             <components:KmKpiCard Title="Kurumsal Şirketler"
                                    Value="{Binding CorporateCount}"
-                                   Icon="🏢"
+                                   Icon="&#xE80F;"
                                    AccentBrush="{DynamicResource ThemeWarning}"
                                    Margin="0,0,10,0"/>
             <components:KmKpiCard Title="Perakende Müşteri"
                                    Value="{Binding WalkInCount}"
-                                   Icon="🛒"
+                                   Icon="&#xE7BF;"
                                    AccentBrush="{DynamicResource ThemeInfo}"
                                    Margin="0,0,0,0"/>
         </UniformGrid>
 
         <!-- ═══════════════ ROW 2: SEARCH & FILTER TOOLBAR ═══════════════ -->
-        <Border Grid.Row="2" CornerRadius="12" Padding="16" Margin="0,0,0,16"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+        <Border Grid.Row="2" Style="{StaticResource FilterToolbarCard}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MaxWidth="360"/>
@@ -87,7 +85,9 @@
                             PlaceholderText="Müşteri adı, telefon veya şehir ara..."
                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                             Icon="{ui:SymbolIcon Search24}"
-                            Height="38"/>
+                            Height="40"
+                            AutomationProperties.Name="Müşteri ara"
+                            AutomationProperties.HelpText="Ad, telefon veya şehir bilgisine göre müşteri arar"/>
 
                 <!-- Type Filters Toolbar Pills -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -136,6 +136,17 @@
                               GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                               AlternatingRowBackground="{DynamicResource HoverOverlayBrush}"
                               IsReadOnly="True">
+                        <DataGrid.Style>
+                            <Style TargetType="DataGrid" BasedOn="{StaticResource AccessibleDataGrid}">
+                                <Setter Property="RowHeight" Value="54"/>
+                                <Setter Property="AlternatingRowBackground" Value="{DynamicResource HoverOverlayBrush}"/>
+                            </Style>
+                        </DataGrid.Style>
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                                <Setter Property="AutomationProperties.Name" Value="{Binding FullName}"/>
+                            </Style>
+                        </DataGrid.Resources>
                         <DataGrid.InputBindings>
                             <MouseBinding Gesture="LeftDoubleClick" Command="{Binding OpenCustomerProfileCommand}"/>
                         </DataGrid.InputBindings>
@@ -195,15 +206,15 @@
                                                     <Style TargetType="TextBlock">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Type}" Value="Individual">
-                                                                <Setter Property="Text" Value="👤 Bireysel"/>
+                                                                <Setter Property="Text" Value="Bireysel"/>
                                                                 <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Type}" Value="Corporate">
-                                                                <Setter Property="Text" Value="🏢 Kurumsal"/>
+                                                                <Setter Property="Text" Value="Kurumsal"/>
                                                                 <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding Type}" Value="WalkIn">
-                                                                <Setter Property="Text" Value="🛒 Perakende"/>
+                                                                <Setter Property="Text" Value="Perakende"/>
                                                                 <Setter Property="Foreground" Value="{DynamicResource StatusInfoFg}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
@@ -229,8 +240,8 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Telefon" Binding="{Binding PhoneNumber}" Width="120"/>
-                            <DataGridTextColumn Header="E-posta" Binding="{Binding Email, TargetNullValue='-'}" Width="160"/>
+                            <DataGridTextColumn Header="Telefon" Binding="{Binding PhoneNumber, Converter={StaticResource SensitiveData}, ConverterParameter=Phone}" Width="120"/>
+                            <DataGridTextColumn Header="E-posta" Binding="{Binding Email, Converter={StaticResource SensitiveData}, ConverterParameter=Email, TargetNullValue='-'}" Width="160"/>
                             <DataGridTextColumn Header="Şehir" Binding="{Binding City, TargetNullValue='-'}" Width="110"/>
                             <DataGridTextColumn Header="Toplam Harcama" Binding="{Binding TotalSpent, StringFormat='{}{0:C2}'}" Width="120"/>
                         </DataGrid.Columns>
@@ -261,7 +272,7 @@
                     BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                 <Grid>
                     <!-- Empty State when no customer is selected -->
-                    <components:KmEmptyState Icon="👤" Title="Müşteri Seçilmedi"
+                    <components:KmEmptyState Icon="&#xE77B;" Title="Müşteri Seçilmedi"
                                              Message="Detaylarını görüntülemek ve hızlı işlem yapmak için listeden bir müşteri seçin."
                                              Visibility="{Binding HasSelectedCustomer, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
 
@@ -281,13 +292,13 @@
                             <!-- Contact Info List -->
                             <StackPanel Margin="0,0,0,16">
                                 <TextBlock Text="TELEFON" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                <TextBlock Text="{Binding PhoneNumber}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,12"/>
+                                <TextBlock Text="{Binding PhoneNumber, Converter={StaticResource SensitiveData}, ConverterParameter=Phone}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,12"/>
 
                                 <TextBlock Text="E-POSTA" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                <TextBlock Text="{Binding Email, TargetNullValue='Belirtilmemiş'}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,12"/>
+                                <TextBlock Text="{Binding Email, Converter={StaticResource SensitiveData}, ConverterParameter=Email, TargetNullValue='Belirtilmemiş'}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,12"/>
 
                                 <TextBlock Text="ŞEHİR / ADRES" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                <TextBlock Text="{Binding FullAddress, TargetNullValue='Adres girilmedi'}" FontSize="12" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,2,0,12"/>
+                                <TextBlock Text="{Binding FullAddress, Converter={StaticResource SensitiveData}, ConverterParameter=Address, TargetNullValue='Adres girilmedi'}" FontSize="12" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,2,0,12"/>
 
                                 <TextBlock Text="TOPLAM HARCAMA" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                 <TextBlock Text="{Binding TotalSpent, StringFormat='{}{0:C2}'}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}" Margin="0,2,0,0"/>

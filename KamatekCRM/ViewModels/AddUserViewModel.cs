@@ -7,6 +7,8 @@ using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
+using KamatekCrm.ApplicationCore.DTOs.Users;
+using KamatekCrm.ApplicationCore.Interfaces;
 
 namespace KamatekCrm.ViewModels
 {
@@ -15,8 +17,8 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class AddUserViewModel : ViewModelBase
     {
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
+        private readonly IUserAppService _userAppService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
 
@@ -41,7 +43,7 @@ namespace KamatekCrm.ViewModels
         private string _expertiseAreas = string.Empty;
 
         private string _phone = string.Empty;
-        private string _initialPassword = "1234";
+        private string _initialPassword = PasswordPolicy.GenerateTemporaryPassword();
         private bool _isCustomPassword;
 
         /// <summary>
@@ -89,7 +91,11 @@ namespace KamatekCrm.ViewModels
         public string InitialPassword
         {
             get => _initialPassword;
-            set => SetProperty(ref _initialPassword, value);
+            set
+            {
+                if (SetProperty(ref _initialPassword, value))
+                    SaveCommand.NotifyCanExecuteChanged();
+            }
         }
 
         /// <summary>
@@ -102,7 +108,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _isCustomPassword, value) && !value)
                 {
-                    InitialPassword = "1234";
+                    InitialPassword = PasswordPolicy.GenerateTemporaryPassword();
                 }
             }
         }
@@ -224,10 +230,14 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public AddUserViewModel(IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory, IToastService toastService, ILoadingService loadingService)
+        public AddUserViewModel(
+            IAuthService authService,
+            IUserAppService userAppService,
+            IToastService toastService,
+            ILoadingService loadingService)
         {
             _authService = authService;
-            _dbContextFactory = dbContextFactory;
+            _userAppService = userAppService;
             _toastService = toastService;
             _loadingService = loadingService;
 
@@ -255,7 +265,9 @@ namespace KamatekCrm.ViewModels
             return !string.IsNullOrWhiteSpace(Ad) &&
                    !string.IsNullOrWhiteSpace(Soyad) &&
                    !string.IsNullOrWhiteSpace(Username) &&
-                   !string.IsNullOrWhiteSpace(SelectedRoleDisplay);
+                   !string.IsNullOrWhiteSpace(SelectedRoleDisplay) &&
+                   _authService.IsAdmin &&
+                   PasswordPolicy.Validate(InitialPassword) is null;
         }
 
         /// <summary>
@@ -267,24 +279,26 @@ namespace KamatekCrm.ViewModels
             _loadingService.Show();
             try
             {
-                var dbRole = MapDisplayRoleToDbRole(SelectedRoleDisplay);
-
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                
-                if (await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AnyAsync(context.Users, u => u.Username == Username.Trim().ToLower()))
+                if (!_authService.IsAdmin)
                 {
-                    _toastService.ShowError("Hata", "Bu kullanıcı adı zaten mevcut.");
-                    IsSuccess = false;
+                    _toastService.ShowError("Yetkisiz işlem", "Kullanıcı oluşturmak için yönetici yetkisi gerekir.");
                     return;
                 }
 
-                string rawPassword = string.IsNullOrWhiteSpace(InitialPassword) ? "1234" : InitialPassword.Trim();
-                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(rawPassword);
+                var dbRole = MapDisplayRoleToDbRole(SelectedRoleDisplay);
 
-                var newUser = new User
+                string rawPassword = InitialPassword.Trim();
+                var passwordError = PasswordPolicy.Validate(rawPassword);
+                if (passwordError is not null)
+                {
+                    _toastService.ShowError("Zayıf parola", passwordError);
+                    return;
+                }
+
+                var create = await _userAppService.CreateAsync(new UserCreateUpdateDto
                 {
                     Username = Username.Trim().ToLower(),
-                    PasswordHash = hashedPassword,
+                    Password = rawPassword,
                     Role = dbRole,
                     Ad = Ad.Trim(),
                     Soyad = Soyad.Trim(),
@@ -295,10 +309,12 @@ namespace KamatekCrm.ViewModels
                     CanDeleteRecords = CanDeleteRecords,
                     CanApprovePurchase = CanApprovePurchase,
                     CanAccessSettings = CanAccessSettings
-                };
-
-                context.Users.Add(newUser);
-                await context.SaveChangesAsync();
+                });
+                if (create.IsFailure)
+                {
+                    _toastService.ShowError("Kullanıcı oluşturulamadı", create.Error);
+                    return;
+                }
                 
                 IsSuccess = true;
                 StatusMessage = $"✓ {Ad} {Soyad} başarıyla eklendi!\nBaşlangıç Parolası: {rawPassword}";
@@ -339,6 +355,7 @@ namespace KamatekCrm.ViewModels
             Soyad = string.Empty;
             Username = string.Empty;
             SelectedRoleDisplay = "Personel";
+            InitialPassword = PasswordPolicy.GenerateTemporaryPassword();
             IsUsernameAvailable = true;
         }
 

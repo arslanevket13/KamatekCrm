@@ -64,11 +64,14 @@ namespace KamatekCrm.Services
                         UserId = userId,
                         Username = username,
                         ActionType = actionType.ToString(),
+                        Action = actionType.ToString(),
                         EntityName = entityName,
                         RecordId = recordId,
+                        ReferenceId = recordId,
                         Description = description,
                         AdditionalData = additionalData,
-                        Timestamp = DateTime.Now
+                        Timestamp = DateTime.UtcNow,
+                        UserAgent = "WPF Client"
                     };
 
                     context.ActivityLogs.Add(log);
@@ -101,11 +104,13 @@ namespace KamatekCrm.Services
                 {
                     UserId = user?.Id,
                     Username = user?.Username ?? "System/Anonymous",
+                    ActionType = actionType.ToString(),
                     Action = actionType.ToString(),
                     EntityName = entityName,
+                    RecordId = recordId,
                     ReferenceId = recordId,
                     Description = description,
-                    Timestamp = DateTime.Now,
+                    Timestamp = DateTime.UtcNow,
                     DurationMs = 0, 
                     IpAddress = "127.0.0.1", 
                     UserAgent = "WPF Client" 
@@ -194,7 +199,7 @@ namespace KamatekCrm.Services
                 AuditActionType.PasswordReset,
                 "User",
                 targetUser.Id.ToString(),
-                $"{targetUser.AdSoyad} ({targetUser.Username}) için şifre '1234' olarak sıfırlandı");
+                $"{targetUser.AdSoyad} ({targetUser.Username}) için güçlü geçici parola oluşturuldu");
         }
 
         /// <summary>

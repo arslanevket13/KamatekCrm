@@ -16,6 +16,9 @@ namespace KamatekCrm.ApplicationCore
             services.AddScoped<ICustomerAppService, CustomerAppService>();
             services.AddScoped<IUserAppService, UserAppService>();
             services.AddScoped<IServiceJobAppService, ServiceJobAppService>();
+            services.AddSingleton<IServiceJobStatusPolicy, ServiceJobStatusPolicy>();
+            services.AddSingleton<IApplicationAuthorizationService, ApplicationAuthorizationService>();
+            services.AddSingleton<IPersonalDataProtectionService, PersonalDataProtectionService>();
 
             return services;
         }

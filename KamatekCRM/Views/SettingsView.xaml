@@ -333,7 +333,7 @@
                             </StackPanel.Style>
 
                             <TextBlock Text="💾 Veritabanı &amp; Yedekleme Yönetimi" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,4"/>
-                            <TextBlock Text="Veri güvenliğini sağlamak için sistem veritabanını yedekleyin veya geri yükleyin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20"/>
+                            <TextBlock Text="SHA-256 manifestiyle doğrulanan yedek oluşturun; geri yüklemeden önce otomatik kurtarma noktası alınır." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20"/>
 
                             <!-- Backup Folder Setting -->
                             <Border Padding="16" CornerRadius="10" Margin="0,0,0,16" Background="{DynamicResource SurfacePageBrush}">
@@ -344,7 +344,7 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <ui:TextBox Grid.Column="0" Text="{Binding CustomBackupPath, TargetNullValue='Varsayılan Belgelerim/KamatekBackups Klasörü'}" IsReadOnly="True" Height="36"/>
+                                        <ui:TextBox Grid.Column="0" Text="{Binding CustomBackupPath}" PlaceholderText="Varsayılan: Belgeler/KamatekCRM/Backups" IsReadOnly="True" Height="36"/>
                                         <ui:Button Grid.Column="1" Content="Klasör Seç" Command="{Binding SelectBackupFolderCommand}" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
                                     </Grid>
                                 </StackPanel>
@@ -357,7 +357,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Son Manuel / Otomatik Yedekleme" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="Son Doğrulanmış Yedek" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                         <TextBlock Text="{Binding LastBackupText}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" Margin="0,4,0,0"/>
                                     </StackPanel>
 

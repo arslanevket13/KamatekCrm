@@ -34,6 +34,7 @@ namespace KamatekCrm.ViewModels
                 SetProperty(ref _newPassword, value);
                 OnPropertyChanged(nameof(PasswordsMatch));
                 OnPropertyChanged(nameof(PasswordMatchMessage));
+                SaveCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -45,6 +46,7 @@ namespace KamatekCrm.ViewModels
                 SetProperty(ref _confirmPassword, value);
                 OnPropertyChanged(nameof(PasswordsMatch));
                 OnPropertyChanged(nameof(PasswordMatchMessage));
+                SaveCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -103,15 +105,23 @@ namespace KamatekCrm.ViewModels
         {
             return !string.IsNullOrWhiteSpace(NewPassword) &&
                    !string.IsNullOrWhiteSpace(ConfirmPassword) &&
-                   NewPassword.Length >= 4 &&
-                   PasswordsMatch;
+                   PasswordPolicy.Validate(NewPassword) is null &&
+                   PasswordsMatch &&
+                   CanChangeTargetPassword();
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanSavePassword))]
         private async Task SaveAsync()
         {
             try
             {
+                if (!CanChangeTargetPassword())
+                {
+                    IsSuccess = false;
+                    StatusMessage = "Bu kullanıcının parolasını değiştirme yetkiniz yok.";
+                    return;
+                }
+
                 if (!PasswordsMatch)
                 {
                     IsSuccess = false;
@@ -119,10 +129,11 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
-                if (NewPassword.Length < 4)
+                var policyError = PasswordPolicy.Validate(NewPassword);
+                if (policyError != null)
                 {
                     IsSuccess = false;
-                    StatusMessage = "Sifre en az 4 karakter olmali!";
+                    StatusMessage = policyError;
                     return;
                 }
 
@@ -131,7 +142,8 @@ namespace KamatekCrm.ViewModels
                 
                 if (dbUser != null)
                 {
-                    dbUser.PasswordHash = NewPassword;
+                    dbUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(NewPassword);
+                    dbUser.MustChangePassword = false;
                     await context.SaveChangesAsync();
                     
                     IsSuccess = true;
@@ -150,6 +162,9 @@ namespace KamatekCrm.ViewModels
                 StatusMessage = $"Hata: {ex.Message}";
             }
         }
+
+        private bool CanChangeTargetPassword() =>
+            _authService.IsAdmin || _authService.CurrentUser?.Id == _user.Id;
     }
 }
 

@@ -7,6 +7,8 @@ using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.Services
 {
@@ -36,10 +38,14 @@ namespace KamatekCrm.Services
     public class SearchService : ISearchService
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly IPersonalDataProtectionService _personalDataProtection;
 
-        public SearchService(IDbContextFactory<AppDbContext> dbContextFactory)
+        public SearchService(
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            IPersonalDataProtectionService personalDataProtection)
         {
             _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
+            _personalDataProtection = personalDataProtection;
         }
 
         /// <summary>
@@ -52,6 +58,7 @@ namespace KamatekCrm.Services
 
             var results = new List<SearchResult>();
             var search = query.ToLower().Trim();
+            var canSearchContactData = _personalDataProtection.CanView(PersonalDataKind.Phone);
 
             try
             {
@@ -60,8 +67,8 @@ namespace KamatekCrm.Services
                 // Müşterilerde ara
                 var customers = context.Customers
                     .Where(c => c.FullName.ToLower().Contains(search) ||
-                               (c.PhoneNumber != null && c.PhoneNumber.Contains(search)) ||
-                               (c.Email != null && c.Email.ToLower().Contains(search)) ||
+                               (canSearchContactData && c.PhoneNumber != null && c.PhoneNumber.Contains(search)) ||
+                               (canSearchContactData && c.Email != null && c.Email.ToLower().Contains(search)) ||
                                (c.CustomerCode != null && c.CustomerCode.ToLower().Contains(search)))
                     .Take(maxResults / 3)
                     .ToList();
@@ -72,7 +79,9 @@ namespace KamatekCrm.Services
                     {
                         Icon = "👤",
                         Title = c.FullName,
-                        Subtitle = c.PhoneNumber ?? c.Email ?? "",
+                        Subtitle = _personalDataProtection.Protect(
+                            c.PhoneNumber ?? c.Email,
+                            string.IsNullOrWhiteSpace(c.PhoneNumber) ? PersonalDataKind.Email : PersonalDataKind.Phone),
                         Category = "Müşteri",
                         CategoryColor = "#1976D2",
                         Id = c.Id,
@@ -140,6 +149,7 @@ namespace KamatekCrm.Services
 
             var results = new List<SearchResult>();
             var search = query.ToLower().Trim();
+            var canSearchContactData = _personalDataProtection.CanView(PersonalDataKind.Phone);
 
             try
             {
@@ -147,8 +157,8 @@ namespace KamatekCrm.Services
 
                 var customers = await context.Customers
                     .Where(c => c.FullName.ToLower().Contains(search) ||
-                               (c.PhoneNumber != null && c.PhoneNumber.Contains(search)) ||
-                               (c.Email != null && c.Email.ToLower().Contains(search)) ||
+                               (canSearchContactData && c.PhoneNumber != null && c.PhoneNumber.Contains(search)) ||
+                               (canSearchContactData && c.Email != null && c.Email.ToLower().Contains(search)) ||
                                (c.CustomerCode != null && c.CustomerCode.ToLower().Contains(search)))
                     .Take(maxResults / 3)
                     .ToListAsync(cancellationToken);
@@ -159,7 +169,9 @@ namespace KamatekCrm.Services
                     {
                         Icon = "👤",
                         Title = c.FullName,
-                        Subtitle = c.PhoneNumber ?? c.Email ?? "",
+                        Subtitle = _personalDataProtection.Protect(
+                            c.PhoneNumber ?? c.Email,
+                            string.IsNullOrWhiteSpace(c.PhoneNumber) ? PersonalDataKind.Email : PersonalDataKind.Phone),
                         Category = "Müşteri",
                         CategoryColor = "#1976D2",
                         Id = c.Id,

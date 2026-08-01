@@ -12,6 +12,8 @@ using KamatekCrm.Shared.Models;
 using KamatekCrm.Views;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.ViewModels
 {
@@ -62,6 +64,7 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly IPersonalDataProtectionService _personalDataProtection;
 
         private int _customerId;
 
@@ -69,12 +72,14 @@ namespace KamatekCrm.ViewModels
             NavigationService navigationService, 
             IToastService toastService, 
             ILoadingService loadingService,
-            IDbContextFactory<AppDbContext> dbContextFactory)
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            IPersonalDataProtectionService personalDataProtection)
         {
             _navigationService = navigationService;
             _toastService = toastService;
             _loadingService = loadingService;
             _dbContextFactory = dbContextFactory;
+            _personalDataProtection = personalDataProtection;
             
             ServiceJobs = new ObservableCollection<ServiceJob>();
             ActiveJobs = new ObservableCollection<ServiceJob>();
@@ -101,50 +106,74 @@ namespace KamatekCrm.ViewModels
 
         public string PhoneNumber
         {
-            get => _phoneNumber;
-            set => SetProperty(ref _phoneNumber, value);
+            get => _personalDataProtection.Protect(_phoneNumber, PersonalDataKind.Phone);
+            set
+            {
+                if (CanViewContactData) SetProperty(ref _phoneNumber, value);
+            }
         }
 
         public string? Email
         {
-            get => _email;
-            set => SetProperty(ref _email, value);
+            get => _personalDataProtection.Protect(_email, PersonalDataKind.Email);
+            set
+            {
+                if (CanViewContactData) SetProperty(ref _email, value);
+            }
         }
 
         public string City
         {
-            get => _city;
-            set => SetProperty(ref _city, value);
+            get => _personalDataProtection.Protect(_city, PersonalDataKind.Address);
+            set
+            {
+                if (CanViewContactData) SetProperty(ref _city, value);
+            }
         }
 
         public string? District
         {
-            get => _district;
-            set => SetProperty(ref _district, value);
+            get => _personalDataProtection.Protect(_district, PersonalDataKind.Address);
+            set
+            {
+                if (CanViewContactData) SetProperty(ref _district, value);
+            }
         }
 
         public string? Neighborhood
         {
-            get => _neighborhood;
-            set => SetProperty(ref _neighborhood, value);
+            get => _personalDataProtection.Protect(_neighborhood, PersonalDataKind.Address);
+            set
+            {
+                if (CanViewContactData) SetProperty(ref _neighborhood, value);
+            }
         }
 
         public string? Street
         {
-            get => _street;
-            set => SetProperty(ref _street, value);
+            get => _personalDataProtection.Protect(_street, PersonalDataKind.Address);
+            set
+            {
+                if (CanViewContactData) SetProperty(ref _street, value);
+            }
         }
 
         public string? BuildingNo
         {
-            get => _buildingNo;
-            set => SetProperty(ref _buildingNo, value);
+            get => _personalDataProtection.Protect(_buildingNo, PersonalDataKind.Address);
+            set
+            {
+                if (CanViewContactData) SetProperty(ref _buildingNo, value);
+            }
         }
 
         public string? ApartmentNo
         {
-            get => _apartmentNo;
-            set => SetProperty(ref _apartmentNo, value);
+            get => _personalDataProtection.Protect(_apartmentNo, PersonalDataKind.Address);
+            set
+            {
+                if (CanViewContactData) SetProperty(ref _apartmentNo, value);
+            }
         }
 
         public string? Notes
@@ -167,8 +196,11 @@ namespace KamatekCrm.ViewModels
 
         public string? TcKimlikNo
         {
-            get => _tcKimlikNo;
-            set => SetProperty(ref _tcKimlikNo, value);
+            get => _personalDataProtection.Protect(_tcKimlikNo, PersonalDataKind.NationalIdentity);
+            set
+            {
+                if (CanViewIdentityData) SetProperty(ref _tcKimlikNo, value);
+            }
         }
 
         public string? CompanyName
@@ -179,9 +211,18 @@ namespace KamatekCrm.ViewModels
 
         public string? TaxNumber
         {
-            get => _taxNumber;
-            set => SetProperty(ref _taxNumber, value);
+            get => _personalDataProtection.Protect(_taxNumber, PersonalDataKind.TaxNumber);
+            set
+            {
+                if (CanViewIdentityData) SetProperty(ref _taxNumber, value);
+            }
         }
+
+        public bool CanViewIdentityData =>
+            _personalDataProtection.CanView(PersonalDataKind.NationalIdentity);
+
+        public bool CanViewContactData =>
+            _personalDataProtection.CanView(PersonalDataKind.Phone);
 
         public string? TaxOffice
         {
@@ -283,25 +324,44 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
+                if (CanViewContactData || CanViewIdentityData)
+                {
+                    _ = AuditService.LogAsync(
+                        AuditActionType.View,
+                        "CustomerPersonalData",
+                        _customerId.ToString(),
+                        "Müşteri kişisel veri detayları görüntülendi.");
+                }
+
                 // Customer modelinde SalesOrders koleksiyonu yoksa manuel yükle
                 var salesOrders = context.SalesOrders.Where(s => s.CustomerId == _customerId).ToList();
 
                 // Editable alanları doldur
                 FullName = _customer.FullName;
-                PhoneNumber = _customer.PhoneNumber;
-                Email = _customer.Email;
-                City = _customer.City;
-                District = _customer.District;
-                Neighborhood = _customer.Neighborhood;
-                Street = _customer.Street;
-                BuildingNo = _customer.BuildingNo;
-                ApartmentNo = _customer.ApartmentNo;
+                _phoneNumber = _customer.PhoneNumber;
+                _email = _customer.Email;
+                _city = _customer.City;
+                _district = _customer.District;
+                _neighborhood = _customer.Neighborhood;
+                _street = _customer.Street;
+                _buildingNo = _customer.BuildingNo;
+                _apartmentNo = _customer.ApartmentNo;
+                OnPropertyChanged(nameof(PhoneNumber));
+                OnPropertyChanged(nameof(Email));
+                OnPropertyChanged(nameof(City));
+                OnPropertyChanged(nameof(District));
+                OnPropertyChanged(nameof(Neighborhood));
+                OnPropertyChanged(nameof(Street));
+                OnPropertyChanged(nameof(BuildingNo));
+                OnPropertyChanged(nameof(ApartmentNo));
                 Notes = _customer.Notes;
                 CustomerType = _customer.Type;
                 CustomerCode = _customer.CustomerCode;
-                TcKimlikNo = _customer.TcKimlikNo;
+                _tcKimlikNo = _customer.TcKimlikNo;
+                OnPropertyChanged(nameof(TcKimlikNo));
                 CompanyName = _customer.CompanyName;
-                TaxNumber = _customer.TaxNumber;
+                _taxNumber = _customer.TaxNumber;
+                OnPropertyChanged(nameof(TaxNumber));
                 TaxOffice = _customer.TaxOffice;
 
                 // Yeni alanları doldur
@@ -447,8 +507,8 @@ namespace KamatekCrm.ViewModels
         private bool CanSaveCustomer()
         {
             return !string.IsNullOrWhiteSpace(FullName) &&
-                   !string.IsNullOrWhiteSpace(PhoneNumber) &&
-                   !string.IsNullOrWhiteSpace(City);
+                   !string.IsNullOrWhiteSpace(_phoneNumber) &&
+                   !string.IsNullOrWhiteSpace(_city);
         }
 
         [RelayCommand(CanExecute = nameof(CanSaveCustomer))]
@@ -464,19 +524,19 @@ namespace KamatekCrm.ViewModels
                 if (existingCustomer != null)
                 {
                     existingCustomer.FullName = FullName;
-                    existingCustomer.PhoneNumber = PhoneNumber;
-                    existingCustomer.Email = Email;
-                    existingCustomer.City = City;
-                    existingCustomer.District = District;
-                    existingCustomer.Neighborhood = Neighborhood;
-                    existingCustomer.Street = Street;
-                    existingCustomer.BuildingNo = BuildingNo;
-                    existingCustomer.ApartmentNo = ApartmentNo;
+                    existingCustomer.PhoneNumber = _phoneNumber;
+                    existingCustomer.Email = _email;
+                    existingCustomer.City = _city;
+                    existingCustomer.District = _district;
+                    existingCustomer.Neighborhood = _neighborhood;
+                    existingCustomer.Street = _street;
+                    existingCustomer.BuildingNo = _buildingNo;
+                    existingCustomer.ApartmentNo = _apartmentNo;
                     existingCustomer.Notes = Notes;
                     existingCustomer.Type = CustomerType;
-                    existingCustomer.TcKimlikNo = TcKimlikNo;
+                    existingCustomer.TcKimlikNo = _tcKimlikNo;
                     existingCustomer.CompanyName = CompanyName;
-                    existingCustomer.TaxNumber = TaxNumber;
+                    existingCustomer.TaxNumber = _taxNumber;
                     existingCustomer.TaxOffice = TaxOffice;
 
                     await context.SaveChangesAsync();
@@ -484,14 +544,14 @@ namespace KamatekCrm.ViewModels
                     if (_customer != null)
                     {
                         _customer.FullName = FullName;
-                        _customer.PhoneNumber = PhoneNumber;
-                        _customer.Email = Email;
-                        _customer.City = City;
-                        _customer.District = District;
-                        _customer.Neighborhood = Neighborhood;
-                        _customer.Street = Street;
-                        _customer.BuildingNo = BuildingNo;
-                        _customer.ApartmentNo = ApartmentNo;
+                        _customer.PhoneNumber = _phoneNumber;
+                        _customer.Email = _email;
+                        _customer.City = _city;
+                        _customer.District = _district;
+                        _customer.Neighborhood = _neighborhood;
+                        _customer.Street = _street;
+                        _customer.BuildingNo = _buildingNo;
+                        _customer.ApartmentNo = _apartmentNo;
                         _customer.Notes = Notes;
                     }
 

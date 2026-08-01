@@ -42,7 +42,7 @@ namespace KamatekCrm.Tests.DomainServices
         {
             // Arrange
             var factory = CreateInMemoryDbContextFactory(Guid.NewGuid().ToString());
-            var service = new InventoryDomainService(_authServiceMock.Object, factory);
+            var service = new InventoryDomainService(_authServiceMock.Object, factory, new TestAuthorizationService());
 
             var request = new TransferRequest
             {
@@ -65,7 +65,7 @@ namespace KamatekCrm.Tests.DomainServices
         {
             // Arrange
             var factory = CreateInMemoryDbContextFactory(Guid.NewGuid().ToString());
-            var service = new InventoryDomainService(_authServiceMock.Object, factory);
+            var service = new InventoryDomainService(_authServiceMock.Object, factory, new TestAuthorizationService());
 
             var request = new TransferRequest
             {
@@ -89,7 +89,7 @@ namespace KamatekCrm.Tests.DomainServices
             // Arrange
             string dbName = Guid.NewGuid().ToString();
             var factory = CreateInMemoryDbContextFactory(dbName);
-            var service = new InventoryDomainService(_authServiceMock.Object, factory);
+            var service = new InventoryDomainService(_authServiceMock.Object, factory, new TestAuthorizationService());
 
             // Seed initial stock of 5
             using (var context = factory.CreateDbContext())
@@ -125,7 +125,7 @@ namespace KamatekCrm.Tests.DomainServices
             // Arrange
             string dbName = Guid.NewGuid().ToString();
             var factory = CreateInMemoryDbContextFactory(dbName);
-            var service = new InventoryDomainService(_authServiceMock.Object, factory);
+            var service = new InventoryDomainService(_authServiceMock.Object, factory, new TestAuthorizationService());
 
             // Seed initial stock of 20 in Warehouse 1
             using (var context = factory.CreateDbContext())

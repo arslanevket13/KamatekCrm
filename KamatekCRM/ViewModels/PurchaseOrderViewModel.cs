@@ -12,6 +12,8 @@ using KamatekCrm.Infrastructure.Repositories;
 using KamatekCrm.Services.Domain;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Views;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Security;
 
 namespace KamatekCrm.ViewModels
 {
@@ -19,11 +21,16 @@ namespace KamatekCrm.ViewModels
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPurchasingDomainService _purchasingService;
+        private readonly IApplicationAuthorizationService _authorizationService;
 
-        public PurchaseOrderViewModel(IUnitOfWork unitOfWork, IPurchasingDomainService purchasingService)
+        public PurchaseOrderViewModel(
+            IUnitOfWork unitOfWork,
+            IPurchasingDomainService purchasingService,
+            IApplicationAuthorizationService authorizationService)
         {
             _unitOfWork = unitOfWork;
             _purchasingService = purchasingService;
+            _authorizationService = authorizationService;
 
             // Init
             _ = Refresh();
@@ -332,6 +339,16 @@ namespace KamatekCrm.ViewModels
 
         private async Task SaveOrderInternal(bool autoReceive)
         {
+            if (autoReceive)
+            {
+                var authorization = _authorizationService.Authorize(ApplicationPermission.ApprovePurchase);
+                if (authorization.IsFailure)
+                {
+                    MessageBox.Show(authorization.Error, "Yetkisiz işlem", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
             if (SelectedSupplier == null)
             {
                 MessageBox.Show("Tedarikçi seçmelisiniz.", "Hata");

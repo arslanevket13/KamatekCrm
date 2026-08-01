@@ -32,6 +32,8 @@ namespace KamatekCrm.Extensions
             services.AddSingleton<LoadingViewModel>();
             
             services.AddSingleton<IAuthService, AuthService>();
+            services.AddSingleton<KamatekCrm.ApplicationCore.Interfaces.ICurrentUserContext, DesktopCurrentUserContext>();
+            services.AddTransient<IForcedPasswordChangeService, ForcedPasswordChangeService>();
             services.AddTransient<AttachmentService>();
             services.AddScoped<ProjectScopeService>();
             
@@ -65,6 +67,7 @@ namespace KamatekCrm.Extensions
             // Background Services
             services.AddScoped<ISlaService, SlaService>();
             services.AddScoped<IBackupService, BackupService>();
+            services.AddSingleton<IBackupIntegrityService, BackupIntegrityService>();
 
             // ViewModels
             services.AddTransient<MainViewModel>();

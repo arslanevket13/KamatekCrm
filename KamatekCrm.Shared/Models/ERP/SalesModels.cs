@@ -9,6 +9,11 @@ namespace KamatekCrm.Shared.Models
         public int Id { get; set; }
         public int? CustomerId { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
+        /// <summary>
+        /// İstemcinin bir satış denemesi için ürettiği benzersiz anahtar.
+        /// Ağ tekrarı veya çift tıklamanın ikinci satış oluşturmasını engeller.
+        /// </summary>
+        public string? IdempotencyKey { get; set; }
         public DateTime Date { get; set; } = DateTime.UtcNow;
         public string PaymentMethod { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
@@ -99,4 +104,3 @@ namespace KamatekCrm.Shared.Models
         public bool IsExpense => TransactionType == CashTransactionType.Expense;
     }
 }
-

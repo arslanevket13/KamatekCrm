@@ -5,16 +5,21 @@ namespace KamatekCrm.Services
     /// </summary>
     public interface IBackupService
     {
+        string DefaultBackupDirectory { get; }
+        string BackupFilePattern { get; }
+
         /// <summary>
         /// Veritabanını yedekle
         /// </summary>
         /// <returns>Yedek dosya yolu</returns>
-        string BackupDatabase();
+        string BackupDatabase(string? destinationDirectory = null, string? label = null);
+
+        BackupValidationResult ValidateBackup(string backupPath);
 
         /// <summary>
         /// Veritabanını yedekten geri yükle
         /// </summary>
         /// <param name="backupZipPath">Yedek dosya yolu</param>
-        void RestoreDatabase(string backupZipPath);
+        string RestoreDatabase(string backupPath);
     }
 }

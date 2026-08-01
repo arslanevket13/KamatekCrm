@@ -15,13 +15,13 @@ using Serilog;
 using Wpf.Ui.Appearance;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Infrastructure.Data;
+using KamatekCrm.Infrastructure.Services;
 
 namespace KamatekCrm
 {
     /// <summary>
-    /// WPF Desktop Application Launcher — Dumb Client
-    /// Hiçbir web server, JWT, veya EF Migration barındırmaz.
-    /// Tüm iş mantığı KamatekCrm.API üzerinden HttpClient ile erişilir.
+    /// WPF masaüstü uygulaması başlangıç noktası.
+    /// API kullanılmadan, uygulama ve altyapı katmanları üzerinden PostgreSQL'e bağlanır.
     /// </summary>
     public partial class App : System.Windows.Application
     {
@@ -33,6 +33,16 @@ namespace KamatekCrm
 
         protected override async void OnStartup(StartupEventArgs e)
         {
+            // WPF binding formatları işletim sistemi dilinden bağımsız olarak Türkçe CRM
+            // bağlamında para, sayı ve tarih üretmelidir.
+            var applicationCulture = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+            System.Globalization.CultureInfo.DefaultThreadCurrentCulture = applicationCulture;
+            System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = applicationCulture;
+            FrameworkElement.LanguageProperty.OverrideMetadata(
+                typeof(FrameworkElement),
+                new FrameworkPropertyMetadata(
+                    System.Windows.Markup.XmlLanguage.GetLanguage(applicationCulture.IetfLanguageTag)));
+
             // PostgreSQL Legacy Timestamp Behavior (Fix for Kind=Local error)
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -41,7 +51,7 @@ namespace KamatekCrm
             
             try
             {
-                Log.Information("=== KamatekCRM Desktop Starting (Dumb Client Mode) ===");
+                Log.Information("=== KamatekCRM Desktop Starting (Direct Database Mode) ===");
                 
                 // ÖNCE base.OnStartup çağrılmalı - WPF-UI için önemli!
                 base.OnStartup(e);
@@ -89,47 +99,23 @@ namespace KamatekCrm
 
                 await _host.StartAsync();
 
-                // ---------------------------------------------------------
-                // MIGRATION & SEEDING GARANTİSİ (Uygulama açılışında)
-                // ---------------------------------------------------------
-                using (var scope = ServiceProvider.CreateScope())
+                // Şema hazırlama Infrastructure katmanında yürütülür; UI sağlayıcıya özel DDL içermez.
+                try
                 {
-                    try
+                    var databaseInitializer = ServiceProvider.GetRequiredService<IDatabaseInitializationService>();
+                    var initializationResult = await databaseInitializer.InitializeAsync();
+                    if (initializationResult.AdminCreated)
                     {
-                        var dbContext = scope.ServiceProvider.GetRequiredService<KamatekCrm.Infrastructure.Data.AppDbContext>();
-                        
-                        // PostgreSQL şemasını C# modelleriyle senkronize et (Eksik keşif kolonlarını ekle)
-                        try
-                        {
-                            await dbContext.Database.ExecuteSqlRawAsync(@"
-                                ALTER TABLE ""ServiceJobs"" ADD COLUMN IF NOT EXISTS ""DiscoveryTechnicalNotes"" text;
-                                ALTER TABLE ""ServiceJobs"" ADD COLUMN IF NOT EXISTS ""EstimatedLaborHours"" double precision NOT NULL DEFAULT 0;
-                                ALTER TABLE ""ServiceJobs"" ADD COLUMN IF NOT EXISTS ""IsConvertedToQuote"" boolean NOT NULL DEFAULT false;
-                            ");
-                        }
-                        catch (Exception ddlEx)
-                        {
-                            Log.Warning(ddlEx, "Saha keşif kolonları senkronizasyonu sırasında küçük uyarı.");
-                        }
-
-                        try
-                        {
-                            await Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.MigrateAsync(dbContext.Database);
-                        }
-                        catch (Exception migEx)
-                        {
-                            Log.Warning(migEx, "EF Core Migration atlandı (Tablolar veritabanında zaten mevcut).");
-                        }
-
-                        if (!System.Linq.Queryable.Any(dbContext.Users))
-                        {
-                            KamatekCrm.Infrastructure.Data.DbSeeder.SeedDemoData(dbContext);
-                        }
+                        MessageBox.Show(
+                            $"İlk yönetici hesabı oluşturuldu.\n\nKullanıcı adı: admin\nGeçici şifre: {initializationResult.TemporaryAdminPassword}\n\nBu şifre yalnızca bir kez gösterilir. Giriş yaptıktan sonra hemen değiştirin.",
+                            "Güvenli İlk Kurulum",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
                     }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Veritabanı otomatik kurulumu sırasında hata oluştu. Lütfen bağlantı ayarlarını kontrol edin.");
-                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Veritabanı otomatik kurulumu sırasında hata oluştu. Lütfen bağlantı ayarlarını kontrol edin.");
                 }
 
 

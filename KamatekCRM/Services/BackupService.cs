@@ -1,215 +1,285 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text.RegularExpressions;
-using KamatekCrm.Services;
-using KamatekCrm.Settings;
+using System.Linq;
+using System.Threading.Tasks;
+using Npgsql;
+using KamatekCrm.Shared.Services;
 using Serilog;
 
-namespace KamatekCrm.Services
+namespace KamatekCrm.Services;
+
+/// <summary>
+/// PostgreSQL custom-format arşiv üretir, manifest/checksum ve pg_restore liste
+/// provasıyla doğrular; geri yüklemeden hemen önce otomatik kurtarma yedeği alır.
+/// </summary>
+public sealed class BackupService : IBackupService
 {
-    /// <summary>
-    /// PostgreSQL yedekleme ve geri yükleme servisi.
-    /// pg_dump.exe ve pg_restore.exe araçlarını uygulama kök dizinindeki
-    /// "PostgresTools" klasöründen çözümler. Sistem PATH bağımlılığı YOKTUR.
-    /// </summary>
-    public class BackupService : IBackupService
+    private static readonly TimeSpan ProcessTimeout = TimeSpan.FromMinutes(15);
+    private static readonly string PostgresToolsDirectory =
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PostgresTools");
+    private static readonly string PgDumpPath = Path.Combine(PostgresToolsDirectory, "pg_dump.exe");
+    private static readonly string PgRestorePath = Path.Combine(PostgresToolsDirectory, "pg_restore.exe");
+
+    private readonly IDatabaseConnectionProvider _connectionProvider;
+    private readonly IBackupIntegrityService _integrityService;
+
+    public BackupService(
+        IDatabaseConnectionProvider connectionProvider,
+        IBackupIntegrityService integrityService)
     {
-        /// <summary>
-        /// Uygulama kök dizinine göre PostgreSQL araçlarının bulunduğu alt klasör.
-        /// Dağıtım sırasında bu klasör uygulama ile birlikte paketlenmelidir.
-        /// </summary>
-        private static readonly string PostgresToolsDir =
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PostgresTools");
-
-        private static readonly string PgDumpPath =
-            Path.Combine(PostgresToolsDir, "pg_dump.exe");
-
-        private static readonly string PgRestorePath =
-            Path.Combine(PostgresToolsDir, "pg_restore.exe");
-
-        private const string ToolsMissingMessage =
-            "Yedekleme araçları bulunamadı. Lütfen uygulama klasöründe 'PostgresTools' dizininin " +
-            "(pg_dump.exe ve pg_restore.exe ile birlikte) mevcut olduğundan emin olun.";
-
-        #region Public API
-
-        /// <summary>
-        /// Veritabanının tam yedeğini alır ve .sql dosyasının yolunu döner.
-        /// </summary>
-        /// <returns>Oluşturulan yedek dosyasının tam yolu.</returns>
-        public string BackupDatabase()
-        {
-            try
-            {
-                // ── 1. Araç varlık kontrolü (Fast-Fail) ──
-                if (!File.Exists(PgDumpPath))
-                {
-                    Log.Error("Backup failed: pg_dump.exe not found at {PgDumpPath}.", PgDumpPath);
-                    throw new FileNotFoundException(ToolsMissingMessage, PgDumpPath);
-                }
-
-                // ── 2. Bağlantı dizesini al ve parse et ──
-                var connectionString = AppSettings.PostgreSqlConnectionString;
-                if (string.IsNullOrEmpty(connectionString))
-                {
-                    Log.Error("Backup failed: Connection string is empty.");
-                    throw new InvalidOperationException("PostgreSQL bağlantı dizesi bulunamadı.");
-                }
-
-                var dbInfo = ParseConnectionString(connectionString);
-
-                // ── 3. Yedekleme klasörünü hazırla ──
-                string backupFolder = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    "KamatekCRM", "Backups");
-
-                Directory.CreateDirectory(backupFolder); // Zaten varsa sessizce geçer
-
-                // ── 4. Dosya adını oluştur ──
-                string fileName = $"KamatekBackup_{DateTime.Now:yyyyMMdd_HHmm}.sql";
-                string backupPath = Path.Combine(backupFolder, fileName);
-
-                Log.Information("Starting database backup to: {BackupPath} using tool: {PgDumpPath}",
-                    backupPath, PgDumpPath);
-
-                // ── 5. pg_dump işlemini başlat ──
-                var psi = new ProcessStartInfo
-                {
-                    FileName = PgDumpPath,
-                    Arguments = $"-h {dbInfo.Host} -p {dbInfo.Port} -U {dbInfo.User} " +
-                                $"-d {dbInfo.Database} -F p -f \"{backupPath}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                // Şifreyi çevre değişkeni olarak ver (Güvenli yöntem — komut satırında görünmez)
-                psi.EnvironmentVariables["PGPASSWORD"] = dbInfo.Password;
-
-                using var process = Process.Start(psi);
-                if (process == null)
-                    throw new InvalidOperationException("pg_dump process başlatılamadı.");
-
-                string error = process.StandardError.ReadToEnd();
-                process.WaitForExit();
-
-                if (process.ExitCode != 0)
-                {
-                    Log.Error("pg_dump failed with exit code {ExitCode}. Error: {Error}",
-                        process.ExitCode, error);
-                    throw new InvalidOperationException(
-                        $"Yedekleme işlemi başarısız oldu (Exit Code: {process.ExitCode}). Hata: {error}");
-                }
-
-                Log.Information("Database backup completed successfully: {BackupPath}", backupPath);
-                return backupPath;
-            }
-            catch (Exception ex) when (ex is not FileNotFoundException and not InvalidOperationException)
-            {
-                Log.Error(ex, "Backup process encountered an unexpected error.");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Belirtilen .sql yedek dosyasından veritabanını geri yükler.
-        /// </summary>
-        /// <param name="backupPath">Geri yüklenecek .sql dosyasının tam yolu.</param>
-        public void RestoreDatabase(string backupPath)
-        {
-            try
-            {
-                // ── 1. Araç varlık kontrolü (Fast-Fail) ──
-                if (!File.Exists(PgRestorePath))
-                {
-                    Log.Error("Restore failed: pg_restore.exe not found at {PgRestorePath}.", PgRestorePath);
-                    throw new FileNotFoundException(ToolsMissingMessage, PgRestorePath);
-                }
-
-                // ── 2. Yedek dosya varlık kontrolü ──
-                if (string.IsNullOrWhiteSpace(backupPath) || !File.Exists(backupPath))
-                {
-                    Log.Error("Restore failed: Backup file not found at {BackupPath}.", backupPath);
-                    throw new FileNotFoundException(
-                        $"Yedek dosyası bulunamadı: {backupPath}", backupPath);
-                }
-
-                // ── 3. Bağlantı dizesini al ve parse et ──
-                var connectionString = AppSettings.PostgreSqlConnectionString;
-                if (string.IsNullOrEmpty(connectionString))
-                {
-                    Log.Error("Restore failed: Connection string is empty.");
-                    throw new InvalidOperationException("PostgreSQL bağlantı dizesi bulunamadı.");
-                }
-
-                var dbInfo = ParseConnectionString(connectionString);
-
-                Log.Information("Starting database restore from: {BackupPath} using tool: {PgRestorePath}",
-                    backupPath, PgRestorePath);
-
-                // ── 4. pg_restore işlemini başlat ──
-                var psi = new ProcessStartInfo
-                {
-                    FileName = PgRestorePath,
-                    Arguments = $"-h {dbInfo.Host} -p {dbInfo.Port} -U {dbInfo.User} " +
-                                $"-d {dbInfo.Database} --clean --if-exists \"{backupPath}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                psi.EnvironmentVariables["PGPASSWORD"] = dbInfo.Password;
-
-                using var process = Process.Start(psi);
-                if (process == null)
-                    throw new InvalidOperationException("pg_restore process başlatılamadı.");
-
-                string error = process.StandardError.ReadToEnd();
-                process.WaitForExit();
-
-                if (process.ExitCode != 0)
-                {
-                    Log.Error("pg_restore failed with exit code {ExitCode}. Error: {Error}",
-                        process.ExitCode, error);
-                    throw new InvalidOperationException(
-                        $"Geri yükleme işlemi başarısız oldu (Exit Code: {process.ExitCode}). Hata: {error}");
-                }
-
-                Log.Information("Database restore completed successfully from: {BackupPath}", backupPath);
-            }
-            catch (Exception ex) when (ex is not FileNotFoundException and not InvalidOperationException)
-            {
-                Log.Error(ex, "Restore process encountered an unexpected error.");
-                throw;
-            }
-        }
-
-        #endregion
-
-        #region Private Helpers
-
-        /// <summary>
-        /// Npgsql connection string'ini bileşenlerine ayırır.
-        /// </summary>
-        private static (string Host, string Port, string Database, string User, string Password)
-            ParseConnectionString(string connectionString)
-        {
-            var host = Regex.Match(connectionString, @"Host=([^;]+)", RegexOptions.IgnoreCase).Groups[1].Value;
-            var port = Regex.Match(connectionString, @"Port=([^;]+)", RegexOptions.IgnoreCase).Groups[1].Value;
-            var database = Regex.Match(connectionString, @"Database=([^;]+)", RegexOptions.IgnoreCase).Groups[1].Value;
-            var user = Regex.Match(connectionString, @"User(?:name)?=([^;]+)", RegexOptions.IgnoreCase).Groups[1].Value;
-            var password = Regex.Match(connectionString, @"Password=([^;]+)", RegexOptions.IgnoreCase).Groups[1].Value;
-
-            if (string.IsNullOrEmpty(host)) host = "localhost";
-            if (string.IsNullOrEmpty(port)) port = "5432";
-
-            return (host, port, database, user, password);
-        }
-
-        #endregion
+        _connectionProvider = connectionProvider;
+        _integrityService = integrityService;
     }
-}
 
+    public string DefaultBackupDirectory => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+        "KamatekCRM",
+        "Backups");
+
+    public string BackupFilePattern => "*.backup";
+
+    public string BackupDatabase(string? destinationDirectory = null, string? label = null)
+    {
+        EnsureToolExists(PgDumpPath, "pg_dump.exe");
+        EnsureToolExists(PgRestorePath, "pg_restore.exe");
+
+        var connection = ParseConnectionString();
+        var targetDirectory = string.IsNullOrWhiteSpace(destinationDirectory)
+            ? DefaultBackupDirectory
+            : Path.GetFullPath(destinationDirectory);
+        Directory.CreateDirectory(targetDirectory);
+
+        var safeLabel = SanitizeLabel(label);
+        var suffix = string.IsNullOrEmpty(safeLabel) ? string.Empty : $"_{safeLabel}";
+        var baseFileName = $"KamatekCRM_{DateTime.UtcNow:yyyyMMdd_HHmmss}{suffix}_{Guid.NewGuid():N}";
+        if (baseFileName.Length > 80) baseFileName = baseFileName[..80];
+        var fileName = baseFileName + ".backup";
+        var backupPath = Path.Combine(targetDirectory, fileName);
+
+        try
+        {
+            var result = RunPostgresTool(
+                PgDumpPath,
+                [
+                    "--host", connection.Host!,
+                    "--port", connection.Port.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    "--username", connection.Username!,
+                    "--dbname", connection.Database!,
+                    "--format", "custom",
+                    "--compress", "6",
+                    "--no-owner",
+                    "--no-privileges",
+                    "--file", backupPath
+                ],
+                connection.Password);
+
+            EnsureSuccessful(result, "Yedekleme");
+            ValidateArchiveStructure(backupPath, connection.Password);
+            _integrityService.CreateManifest(backupPath, connection.Database);
+
+            var validation = ValidateBackup(backupPath);
+            if (!validation.IsValid)
+                throw new InvalidOperationException(validation.Message);
+
+            Log.Information(
+                "Database backup verified. Path: {BackupPath}, SHA256: {Sha256}",
+                backupPath,
+                validation.Manifest?.Sha256);
+            return backupPath;
+        }
+        catch
+        {
+            TryDeletePartialBackup(backupPath);
+            throw;
+        }
+    }
+
+    public BackupValidationResult ValidateBackup(string backupPath)
+    {
+        var integrity = _integrityService.Validate(backupPath);
+        if (!integrity.IsValid) return integrity;
+
+        if (!string.Equals(Path.GetExtension(backupPath), ".backup", StringComparison.OrdinalIgnoreCase))
+            return BackupValidationResult.Invalid("Desteklenmeyen yedek biçimi. PostgreSQL custom .backup arşivi gereklidir.");
+
+        try
+        {
+            EnsureToolExists(PgRestorePath, "pg_restore.exe");
+            var connection = ParseConnectionString();
+            ValidateArchiveStructure(backupPath, connection.Password);
+            return integrity;
+        }
+        catch (Exception ex)
+        {
+            return BackupValidationResult.Invalid($"PostgreSQL arşiv doğrulaması başarısız: {ex.Message}");
+        }
+    }
+
+    public string RestoreDatabase(string backupPath)
+    {
+        var validation = ValidateBackup(backupPath);
+        if (!validation.IsValid)
+            throw new InvalidOperationException(validation.Message);
+
+        var connection = ParseConnectionString();
+        var recoveryDirectory = Path.Combine(DefaultBackupDirectory, "Recovery");
+        var recoveryBackup = BackupDatabase(recoveryDirectory, "pre_restore");
+
+        try
+        {
+            RestoreArchive(backupPath, connection, "Geri yükleme");
+        }
+        catch (Exception restoreException)
+        {
+            Log.Error(
+                restoreException,
+                "Restore failed for {BackupPath}; automatic recovery is starting from {RecoveryBackup}",
+                backupPath,
+                recoveryBackup);
+
+            try
+            {
+                RestoreArchive(recoveryBackup, connection, "Otomatik geri alma");
+            }
+            catch (Exception recoveryException)
+            {
+                Log.Fatal(
+                    recoveryException,
+                    "Automatic recovery failed after restore error. Recovery backup: {RecoveryBackup}",
+                    recoveryBackup);
+                throw new AggregateException(
+                    $"Geri yükleme ve otomatik geri alma başarısız oldu. Kurtarma yedeğini koruyun: {recoveryBackup}",
+                    restoreException,
+                    recoveryException);
+            }
+
+            throw new InvalidOperationException(
+                $"Seçilen yedek geri yüklenemedi; veritabanı işlem öncesi kurtarma yedeğine döndürüldü: {recoveryBackup}",
+                restoreException);
+        }
+
+        Log.Warning(
+            "Database restored from {BackupPath}. Automatic recovery point: {RecoveryBackup}",
+            backupPath,
+            recoveryBackup);
+        return recoveryBackup;
+    }
+
+    private static void RestoreArchive(
+        string backupPath,
+        NpgsqlConnectionStringBuilder connection,
+        string operation)
+    {
+        var result = RunPostgresTool(
+            PgRestorePath,
+            [
+                "--host", connection.Host!,
+                "--port", connection.Port.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--username", connection.Username!,
+                "--dbname", connection.Database!,
+                "--clean",
+                "--if-exists",
+                "--exit-on-error",
+                "--no-owner",
+                "--no-privileges",
+                backupPath
+            ],
+            connection.Password);
+        EnsureSuccessful(result, operation);
+    }
+
+    private void ValidateArchiveStructure(string backupPath, string password)
+    {
+        var result = RunPostgresTool(PgRestorePath, ["--list", backupPath], password);
+        EnsureSuccessful(result, "Yedek arşivi doğrulama");
+        if (string.IsNullOrWhiteSpace(result.StandardOutput) ||
+            !result.StandardOutput.Contains("Archive", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("pg_restore arşiv içeriğini okuyamadı.");
+    }
+
+    private NpgsqlConnectionStringBuilder ParseConnectionString()
+    {
+        var connectionString = _connectionProvider.GetConnectionString();
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("PostgreSQL bağlantı dizesi bulunamadı.");
+
+        var builder = new NpgsqlConnectionStringBuilder(connectionString);
+        if (string.IsNullOrWhiteSpace(builder.Host) ||
+            string.IsNullOrWhiteSpace(builder.Database) ||
+            string.IsNullOrWhiteSpace(builder.Username))
+            throw new InvalidOperationException("PostgreSQL bağlantı dizesinde host, veritabanı veya kullanıcı eksik.");
+
+        return builder;
+    }
+
+    private static ProcessResult RunPostgresTool(
+        string executable,
+        IReadOnlyCollection<string> arguments,
+        string? password)
+    {
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = executable,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WorkingDirectory = PostgresToolsDirectory
+        };
+        foreach (var argument in arguments) startInfo.ArgumentList.Add(argument);
+        startInfo.Environment["PGPASSWORD"] = password ?? string.Empty;
+
+        using var process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException($"{Path.GetFileName(executable)} başlatılamadı.");
+        var standardOutput = process.StandardOutput.ReadToEndAsync();
+        var standardError = process.StandardError.ReadToEndAsync();
+
+        if (!process.WaitForExit((int)ProcessTimeout.TotalMilliseconds))
+        {
+            try { process.Kill(entireProcessTree: true); } catch { }
+            throw new TimeoutException($"{Path.GetFileName(executable)} zaman aşımına uğradı.");
+        }
+
+        Task.WaitAll(standardOutput, standardError);
+        return new ProcessResult(process.ExitCode, standardOutput.Result, standardError.Result);
+    }
+
+    private static void EnsureSuccessful(ProcessResult result, string operation)
+    {
+        if (result.ExitCode == 0) return;
+        var error = string.IsNullOrWhiteSpace(result.StandardError)
+            ? "PostgreSQL aracı ayrıntılı hata döndürmedi."
+            : result.StandardError.Trim();
+        throw new InvalidOperationException($"{operation} başarısız (kod {result.ExitCode}): {error}");
+    }
+
+    private static void EnsureToolExists(string path, string toolName)
+    {
+        if (!File.Exists(path))
+            throw new FileNotFoundException(
+                $"{toolName} bulunamadı. PostgresTools paketini kontrol edin.",
+                path);
+    }
+
+    private static string SanitizeLabel(string? label)
+    {
+        if (string.IsNullOrWhiteSpace(label)) return string.Empty;
+        var safe = new string(label.Where(character => char.IsLetterOrDigit(character) || character is '-' or '_').ToArray());
+        return safe[..Math.Min(safe.Length, 24)];
+    }
+
+    private static void TryDeletePartialBackup(string backupPath)
+    {
+        try { if (File.Exists(backupPath)) File.Delete(backupPath); } catch { }
+        try
+        {
+            var manifest = BackupIntegrityService.GetManifestPath(backupPath);
+            if (File.Exists(manifest)) File.Delete(manifest);
+        }
+        catch { }
+    }
+
+    private sealed record ProcessResult(int ExitCode, string StandardOutput, string StandardError);
+}

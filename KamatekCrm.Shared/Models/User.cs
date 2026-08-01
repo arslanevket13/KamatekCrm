@@ -36,6 +36,7 @@ namespace KamatekCrm.Shared.Models
         public bool IsActive { get; set; } = true;
         // CreatedDate is in BaseEntity (CreatedAt)
         public DateTime? LastLoginDate { get; set; }
+        public bool MustChangePassword { get; set; }
 
         #region RBAC - Granular Permissions
         public bool CanViewFinance { get; set; } = false;

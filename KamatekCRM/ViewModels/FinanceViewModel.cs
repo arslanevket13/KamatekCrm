@@ -281,12 +281,20 @@ namespace KamatekCrm.ViewModels
 
         private bool CanAddExpense()
         {
-            return NewExpenseAmount > 0 && !string.IsNullOrWhiteSpace(NewExpenseDescription);
+            return _authService.CanViewFinance &&
+                   NewExpenseAmount > 0 &&
+                   !string.IsNullOrWhiteSpace(NewExpenseDescription);
         }
 
         [RelayCommand(CanExecute = nameof(CanAddExpense))]
         private void AddExpense()
         {
+            if (!_authService.CanViewFinance)
+            {
+                MessageBox.Show("Finansal işlem oluşturma yetkiniz yok.", "Yetkisiz işlem", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
                 var expense = new CashTransaction
@@ -328,6 +336,11 @@ namespace KamatekCrm.ViewModels
         private void DeleteTransaction(object? parameter)
         {
             if (parameter is not CashTransaction transaction) return;
+            if (!_authService.IsAdmin)
+            {
+                MessageBox.Show("Finansal kayıt silmek için yönetici yetkisi gerekir.", "Yetkisiz işlem", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             var result = MessageBox.Show(
                 $"Bu işlemi silmek istediğinize emin misiniz?\n\n{transaction.Description}\nTutar: ₺{transaction.Amount:N2}",

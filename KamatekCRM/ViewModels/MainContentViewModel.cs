@@ -105,11 +105,41 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _currentView, value))
                 {
                     OnPropertyChanged(nameof(CurrentViewName));
+                    OnPropertyChanged(nameof(CurrentViewTitle));
                 }
             }
         }
 
         public string CurrentViewName => CurrentView?.GetType().Name.Replace("ViewModel", "").Replace("View", "") ?? "Dashboard";
+
+        /// <summary>
+        /// Teknik ViewModel adını kullanıcıya göstermeden, breadcrumb için yerelleştirilmiş başlık üretir.
+        /// CurrentViewName menü seçimi gibi iç mantıkta kullanılmaya devam eder.
+        /// </summary>
+        public string CurrentViewTitle => CurrentViewName switch
+        {
+            "Dashboard" => "Ana Sayfa",
+            "Customers" => "Müşteriler",
+            "CustomerDetail" => "Müşteri Profili",
+            "Product" => "Ürünler ve Stok",
+            "ServiceJob" => "İş Emirleri",
+            "RepairList" => "Tamir Listesi",
+            "FieldJobList" => "Saha İşleri",
+            "RoutePlanning" => "Rota Planlama",
+            "QuoteList" => "Proje ve Teklifler",
+            "Finance" => "Finans",
+            "Analytics" => "Analitik",
+            "Purchasing" => "Satın Alma",
+            "Suppliers" => "Tedarikçiler",
+            "FinancialHealth" => "Finansal Rapor",
+            "StockCount" => "Stok Sayımı",
+            "StockReports" => "Standart Raporlar",
+            "Users" => "Kullanıcılar",
+            "SystemLogs" => "Sistem Kayıtları",
+            "Settings" => "Ayarlar",
+            "NetworkSettings" => "Ağ Ayarları",
+            _ => "Çalışma Alanı"
+        };
 
         private bool _isConnectionLost;
         /// <summary>
@@ -371,19 +401,42 @@ namespace KamatekCrm.ViewModels
             NavigateTo<FieldJobListViewModel>();
             _toastService?.ShowInfo("Zamanlayıcı görünümü Saha Görevleri sayfasına yönlendirildi.");
         }
-        [RelayCommand] private void NavigateToFinance() => NavigateTo<FinanceViewModel>();
-        [RelayCommand] private void NavigateToAnalytics() => NavigateTo<AnalyticsViewModel>();
+        [RelayCommand]
+        private void NavigateToFinance()
+        {
+            if (!CanViewFinance) { _toastService.ShowError("Finans ekranına erişim yetkiniz yok."); return; }
+            NavigateTo<FinanceViewModel>();
+        }
+
+        [RelayCommand]
+        private void NavigateToAnalytics()
+        {
+            if (!CanViewAnalytics) { _toastService.ShowError("Analitik ekranına erişim yetkiniz yok."); return; }
+            NavigateTo<AnalyticsViewModel>();
+        }
         [RelayCommand] private void NavigateToPurchaseOrders() => NavigateTo<PurchasingViewModel>();
         [RelayCommand] private void NavigateToSuppliers() => NavigateTo<SuppliersViewModel>();
         [RelayCommand] private void NavigateToFinancialHealth() => NavigateTo<FinancialHealthViewModel>();
         [RelayCommand] private void NavigateToStockCount() => NavigateTo<StockCountViewModel>();
         [RelayCommand] private void NavigateToReports() => NavigateTo<StockReportsViewModel>();
-        [RelayCommand] private void NavigateToUsers() => NavigateTo<UsersViewModel>();
-        [RelayCommand] private void NavigateToSystemLogs() => NavigateTo<SystemLogsViewModel>();
+        [RelayCommand]
+        private void NavigateToUsers()
+        {
+            if (!IsAdmin) { _toastService.ShowError("Kullanıcı yönetimi için yönetici yetkisi gerekir."); return; }
+            NavigateTo<UsersViewModel>();
+        }
+
+        [RelayCommand]
+        private void NavigateToSystemLogs()
+        {
+            if (!IsAdmin) { _toastService.ShowError("Sistem kayıtları için yönetici yetkisi gerekir."); return; }
+            NavigateTo<SystemLogsViewModel>();
+        }
         
         [RelayCommand]
         private void NavigateToSettings()
         {
+            if (!CanAccessSettings) { _toastService.ShowError("Sistem ayarlarına erişim yetkiniz yok."); return; }
             IsConnectionLost = false; // Overlay'i gizle
             NavigateTo<SettingsViewModel>();
         }
@@ -391,6 +444,12 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void ForceMainServer()
         {
+            if (!CanAccessSettings)
+            {
+                _toastService.ShowError("Sunucu rolünü değiştirme yetkiniz yok.");
+                return;
+            }
+
             // Zorla Ana Sunucu moduna geç ve yeniden başlat
             Properties.Settings.Default.IsMainServerManualOverride = true;
             Properties.Settings.Default.IsMainServer = true;

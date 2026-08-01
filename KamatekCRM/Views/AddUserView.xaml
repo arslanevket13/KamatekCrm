@@ -108,7 +108,7 @@
                                 Visibility="{Binding IsCustomPassword, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}">
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="Info24" FontSize="16" Foreground="{DynamicResource StatusInfoFg}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Varsayılan parola '1234' olarak ayarlanacaktır." FontSize="11" Foreground="{DynamicResource StatusInfoFg}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Güçlü ve tek kullanımlık geçici parola otomatik üretilecektir." FontSize="11" Foreground="{DynamicResource StatusInfoFg}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
