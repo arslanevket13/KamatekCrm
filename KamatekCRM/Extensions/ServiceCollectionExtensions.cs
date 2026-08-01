@@ -18,7 +18,11 @@ namespace KamatekCrm.Extensions
             // Application Layer Services (Use Cases, DTOs, Application Services)
             KamatekCrm.ApplicationCore.DependencyInjection.AddApplicationLayerServices(services);
 
-            // Core Application Services
+            // Core Application Services & UI Abstractions
+            services.AddHttpClient();
+            services.AddSingleton<KamatekCrm.Shared.Services.IDialogService, Services.WpfDialogService>();
+            services.AddSingleton<KamatekCrm.Shared.Services.IUIService, Services.WpfUIService>();
+
             services.AddMemoryCache();
             services.AddSingleton<NavigationService>();
             services.AddSingleton<IToastService, ToastService>();
@@ -36,7 +40,14 @@ namespace KamatekCrm.Extensions
             services.AddTransient<InvoiceScannerService>();
             services.AddTransient<NotificationService>();
             services.AddTransient<PdfInvoiceParserService>();
+
+            // PDF Engine Services
             services.AddTransient<PdfService>();
+            services.AddTransient<KamatekCrm.Shared.Services.IQuotePdfService>(sp => sp.GetRequiredService<PdfService>());
+            services.AddTransient<KamatekCrm.Shared.Services.IPurchaseOrderPdfService>(sp => sp.GetRequiredService<PdfService>());
+            services.AddTransient<KamatekCrm.Shared.Services.IInvoicePdfService>(sp => sp.GetRequiredService<PdfService>());
+            services.AddTransient<KamatekCrm.Shared.Services.IServiceReportPdfService>(sp => sp.GetRequiredService<PdfService>());
+
             services.AddTransient<ReportService>();
             services.AddTransient<SmsService>();
             services.AddTransient<StructureGeneratorService>();

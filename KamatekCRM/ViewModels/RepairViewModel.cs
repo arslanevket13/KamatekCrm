@@ -21,17 +21,20 @@ namespace KamatekCrm.ViewModels
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
+        private readonly SmsService _smsService;
 
         public RepairViewModel(
             IAuthService authService,
             Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory,
             IToastService toastService,
-            ILoadingService loadingService)
+            ILoadingService loadingService,
+            SmsService smsService)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
             _toastService = toastService;
             _loadingService = loadingService;
+            _smsService = smsService;
             
             // Komutlar
             
@@ -520,9 +523,8 @@ namespace KamatekCrm.ViewModels
                         var customer = await context.Customers.FindAsync(SelectedJob.CustomerId);
                         if (customer != null && !string.IsNullOrWhiteSpace(customer.PhoneNumber))
                         {
-                            var smsService = new SmsService();
                             string msg = $"Sayın {customer.FullName}, cihazınızın (Takip No: {SelectedJob.Id}) tamir işlemleri tamamlanmıştır. Teslim alabilirsiniz. Kamatek Teknik Servis";
-                            await smsService.SendSmsAsync(customer.PhoneNumber, msg);
+                            await _smsService.SendSmsAsync(customer.PhoneNumber, msg);
                             _toastService?.ShowSuccess("Müşteriye otomatik SMS bildirimi gönderildi.");
                         }
                     }

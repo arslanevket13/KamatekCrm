@@ -8,9 +8,11 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
+using KamatekCrm.Shared.Services;
+
 namespace KamatekCrm.Services
 {
-    public class PdfService
+    public class PdfService : IQuotePdfService, IServiceReportPdfService, IInvoicePdfService, IPurchaseOrderPdfService
     {
         static PdfService()
         {
@@ -1009,6 +1011,31 @@ namespace KamatekCrm.Services
             .GeneratePdf(filePath);
         }
 
+        #endregion
+
+        #region Invoice & Purchase Order PDF
+        public void GenerateInvoice(SalesOrder order, string filePath)
+        {
+            GenerateStandardQuote(new Quote
+            {
+                QuoteNumber = $"INV-{order.Id}",
+                Date = order.Date,
+                ValidUntil = order.Date.AddDays(30),
+                Customer = order.Customer,
+                TermsAndConditions = order.Notes
+            }, filePath);
+        }
+
+        public void GeneratePurchaseOrder(PurchaseInvoice invoice, string filePath)
+        {
+            GenerateStandardQuote(new Quote
+            {
+                QuoteNumber = $"PO-{invoice.Id}",
+                Date = invoice.Date,
+                ValidUntil = invoice.Date.AddDays(30),
+                TermsAndConditions = invoice.Notes ?? string.Empty
+            }, filePath);
+        }
         #endregion
 
         #endregion

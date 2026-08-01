@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using Microsoft.Extensions.Logging;
 
 namespace KamatekCrm.API.Services

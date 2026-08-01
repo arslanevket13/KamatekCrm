@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Models;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 
 namespace KamatekCrm.API.Controllers
@@ -93,8 +93,8 @@ namespace KamatekCrm.API.Controllers
                     u.ExpertiseAreas,
                     u.VehiclePlate,
                     u.CreatedDate,
-                    u.TotalJobsCompleted,
-                    u.AverageRating,
+                    u.CompletedJobCount,
+                    u.Rating,
                     u.CanViewFinance,
                     u.CanViewAnalytics,
                     u.CanDeleteRecords,

@@ -40,8 +40,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Shared Project Reference -->
+    <!-- Shared & Infrastructure Project References -->
     <ProjectReference Include="..\KamatekCrm.Shared\KamatekCrm.Shared.csproj" />
+    <ProjectReference Include="..\KamatekCrm.Infrastructure\KamatekCrm.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

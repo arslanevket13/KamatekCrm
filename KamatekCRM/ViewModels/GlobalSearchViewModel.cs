@@ -25,7 +25,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchQuery, value))
                 {
-                    PerformSearch();
+                    _ = PerformSearchAsync();
                 }
             }
         }
@@ -97,7 +97,7 @@ namespace KamatekCrm.ViewModels
             _searchService = searchService;
         }
 
-        private async void PerformSearch()
+        private async Task PerformSearchAsync()
         {
             Results.Clear();
 

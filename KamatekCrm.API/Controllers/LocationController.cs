@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Models;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.API.Models;
 using KamatekCrm.API.Hubs;
 using Microsoft.AspNetCore.Authorization;

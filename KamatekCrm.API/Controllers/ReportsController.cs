@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Enums;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.API.Models;
 using KamatekCrm.API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -41,8 +41,8 @@ namespace KamatekCrm.API.Controllers
                     u.ServiceArea,
                     TotalJobs = _context.ServiceJobs.Count(j => j.AssignedUserId == u.Id && j.CreatedDate >= start && j.CreatedDate <= end),
                     CompletedJobs = _context.ServiceJobs.Count(j => j.AssignedUserId == u.Id && j.Status == JobStatus.Completed && j.CreatedDate >= start),
-                    u.AverageRating,
-                    u.TotalJobsCompleted
+                    u.Rating,
+                    u.CompletedJobCount
                 })
                 .OrderByDescending(x => x.CompletedJobs)
                 .ToListAsync();

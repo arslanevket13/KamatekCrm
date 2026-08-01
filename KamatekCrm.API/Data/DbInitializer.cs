@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Enums;
 
-namespace KamatekCrm.Data
+namespace KamatekCrm.Infrastructure.Data
 {
     public static class DbInitializer
     {
