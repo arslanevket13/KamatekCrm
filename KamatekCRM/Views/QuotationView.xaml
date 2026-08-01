@@ -246,7 +246,7 @@
                     </StackPanel>
 
                     <!-- Search Results List with Rich Product Cards -->
-                    <Border Grid.Row="2" Background="{DynamicResource CardPanel}" CornerRadius="8" Padding="6" Margin="0,0,0,16">
+                    <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="6" Margin="0,0,0,16">
                         <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedProduct}" Height="300" Background="Transparent" BorderThickness="0"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListBox.ItemTemplate>

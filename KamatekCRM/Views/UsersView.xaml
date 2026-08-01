@@ -2,7 +2,12 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:components="clr-namespace:KamatekCrm.Components"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              Background="{DynamicResource SurfacePageBrush}">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -12,133 +17,153 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Grid Grid.Row="0" Margin="0,0,0,24">
+        <!-- ═══════════════ ROW 0: HEADER ═══════════════ -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="👥 Kullanıcı Yönetimi" 
-                           FontSize="28" FontWeight="Bold"
-                           Foreground="{DynamicResource TextHeadingBrush}"/>
-                <TextBlock Text="Sistem kullanıcılarını görüntüle ve yönet"
-                           FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <ui:SymbolIcon Symbol="People24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Kullanıcı Yönetim Merkezi" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                    <TextBlock Text="Sistem kullanıcı yetkilerini, hesap durumlarını ve parolalarını yönetin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
             </StackPanel>
 
             <!-- Current User Info -->
-            <Border Grid.Column="2" Background="{DynamicResource ThemePrimaryLight}" CornerRadius="8" Padding="16,8">
+            <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="14,8"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="👤" FontSize="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <ui:SymbolIcon Symbol="Person24" FontSize="20" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding CurrentUserName}" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextHeadingBrush}" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Text="{Binding CurrentUserRole}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}"/>
+                        <TextBlock Text="{Binding CurrentUserName}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}"/>
+                        <TextBlock Text="{Binding CurrentUserRole}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
         </Grid>
 
-        <!-- KPI Cards -->
+        <!-- ═══════════════ ROW 1: KPI CARDS ═══════════════ -->
         <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,16">
             <components:KmKpiCard Title="Toplam Kullanıcı"
-                                  Value="{Binding TotalUsersCount}"
-                                  Icon="👥"
-                                  AccentBrush="{DynamicResource ThemePrimary}"
-                                  Margin="0,0,8,0"/>
+                                   Value="{Binding TotalUsersCount}"
+                                   Icon="👥"
+                                   AccentBrush="{DynamicResource ThemePrimary}"
+                                   Margin="0,0,12,0"/>
             <components:KmKpiCard Title="Aktif Personel"
-                                  Value="{Binding ActiveTechniciansCount}"
-                                  Icon="🔧"
-                                  AccentBrush="{DynamicResource ThemeSuccess}"
-                                  Margin="8,0"/>
+                                   Value="{Binding ActiveTechniciansCount}"
+                                   Icon="🔧"
+                                   AccentBrush="{DynamicResource ThemeSuccess}"
+                                   Margin="0,0,12,0"/>
             <components:KmKpiCard Title="Yöneticiler"
-                                  Value="{Binding AdminCount}"
-                                  Icon="👑"
-                                  AccentBrush="{DynamicResource ThemeWarning}"
-                                  Margin="8,0,0,0"/>
+                                   Value="{Binding AdminCount}"
+                                   Icon="👑"
+                                   AccentBrush="{DynamicResource ThemeWarning}"
+                                   Margin="0,0,0,0"/>
         </UniformGrid>
 
-        <!-- Toolbar -->
-        <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
+        <!-- ═══════════════ ROW 2: TOOLBAR & SEARCH ═══════════════ -->
+        <Border Grid.Row="2" CornerRadius="12" Padding="16" Margin="0,0,0,16"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MaxWidth="300"/>
+                    <ColumnDefinition Width="*" MaxWidth="320"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Search -->
-                <Grid Grid.Column="0">
-                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource ModernTextBox}"
-                             Height="40" Padding="40,8,16,8"/>
-                    <TextBlock Text="🔍" FontSize="16" VerticalAlignment="Center" 
-                               Margin="16,0,0,0" IsHitTestVisible="False"/>
-                </Grid>
+                <!-- Search Input -->
+                <ui:TextBox Grid.Column="0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                            PlaceholderText="Kullanıcı adı veya ad soyad ile ara..."
+                            Icon="{ui:SymbolIcon Search24}" Height="38"/>
 
                 <!-- Filters -->
                 <components:KmFilterPanel Grid.Column="1" Margin="16,0,0,0"
-                                          CategoryItems="{Binding CategoryItems}"
-                                          SelectedCategory="{Binding SelectedCategory}"
-                                          StatusItems="{Binding StatusItems}"
-                                          SelectedStatus="{Binding SelectedStatus}"/>
+                                           CategoryItems="{Binding CategoryItems}"
+                                           SelectedCategory="{Binding SelectedCategory}"
+                                           StatusItems="{Binding StatusItems}"
+                                           SelectedStatus="{Binding SelectedStatus}"/>
 
                 <!-- Actions -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Content="🔄 Yenile"
-                            Style="{StaticResource SecondaryButton}"
-                            Command="{Binding RefreshCommand}"
-                            Height="40" Padding="16,0" Margin="0,0,8,0"/>
+                    <ui:Button Content="Yenile" Icon="{ui:SymbolIcon ArrowSync24}"
+                               Command="{Binding RefreshCommand}" Appearance="Secondary"
+                               Height="38" Padding="14,0" Margin="0,0,8,0" Cursor="Hand"/>
                     
-                    <Button Content="➕ Yeni Kullanıcı"
-                            Style="{StaticResource ModernButton}"
-                            Command="{Binding AddUserCommand}"
-                            Height="40" Padding="16,0"
-                            IsEnabled="{Binding IsAdmin}"/>
+                    <ui:Button Content="Yeni Kullanıcı Ekle" Icon="{ui:SymbolIcon PersonAdd24}"
+                               Command="{Binding AddUserCommand}" Appearance="Primary"
+                               Height="38" Padding="16,0" IsEnabled="{Binding IsAdmin}" Cursor="Hand"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Users Grid -->
-        <Border Grid.Row="3" Style="{StaticResource CardPanel}" Padding="0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <!-- ═══════════════ ROW 3: MAIN GRID (LEFT: USERS TABLE, RIGHT: USER PROFILE PREVIEW CARD) ═══════════════ -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="310"/>
+            </Grid.ColumnDefinitions>
 
-                <DataGrid Grid.Row="0"
-                          ItemsSource="{Binding Users}"
+            <!-- LEFT: USERS DATAGRID -->
+            <Border Grid.Column="0" Margin="0,0,16,0" CornerRadius="12" Padding="0"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <DataGrid ItemsSource="{Binding Users}"
                           SelectedItem="{Binding SelectedUser}"
-                          Style="{StaticResource ModernDataGrid}"
-                          ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           SelectionMode="Single"
-                          RowHeight="50">
+                          RowHeight="54"
+                          Background="Transparent" BorderThickness="0"
+                          GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                          AlternatingRowBackground="{DynamicResource HoverOverlayBrush}">
+
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="FontSize" Value="11"/>
+                            <Setter Property="Padding" Value="12,8"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Padding" Value="12,0"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="DataGridCell">
+                                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                            <ContentPresenter VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.CellStyle>
                     
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="50">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Margin" Value="12,0"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="50"/>
 
-                        <DataGridTemplateColumn Header="Kullanıcı" Width="*" MinWidth="200">
+                        <DataGridTemplateColumn Header="Kullanıcı Bilgisi" Width="*" MinWidth="180">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="16,0">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <components:KmAvatar FullName="{Binding AdSoyad}" 
                                                              Size="Medium" 
                                                              VerticalAlignment="Center" 
-                                                             Margin="0,0,16,0"/>
+                                                             Margin="0,0,12,0"/>
                                         <StackPanel VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding AdSoyad}" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding AdSoyad}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}"/>
                                             <TextBlock Text="{Binding Username}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"/>
                                         </StackPanel>
                                     </StackPanel>
@@ -149,31 +174,31 @@
                         <DataGridTemplateColumn Header="Rol" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="12" Padding="8,4" HorizontalAlignment="Left" Margin="16,0">
+                                    <Border CornerRadius="10" Padding="8,4" HorizontalAlignment="Left" VerticalAlignment="Center">
                                         <Border.Style>
                                             <Style TargetType="Border">
-                                                <Setter Property="Background" Value="{DynamicResource BorderDefaultBrush}"/>
+                                                <Setter Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Role}" Value="Admin">
-                                                        <Setter Property="Background" Value="{DynamicResource ThemeWarningLight}"/>
+                                                        <Setter Property="Background" Value="{DynamicResource StatusWarningBg}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Role}" Value="Technician">
-                                                        <Setter Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
+                                                        <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock FontSize="12" FontWeight="SemiBold">
+                                        <TextBlock FontSize="11" FontWeight="Bold">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Role}" Value="Admin">
                                                             <Setter Property="Text" Value="👑 Patron"/>
-                                                            <Setter Property="Foreground" Value="{DynamicResource ThemeWarning}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Role}" Value="Technician">
                                                             <Setter Property="Text" Value="🔧 Personel"/>
-                                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource StatusInfoFg}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Role}" Value="Viewer">
                                                             <Setter Property="Text" Value="👁️ İzleyici"/>
@@ -188,10 +213,10 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="Durum" Width="100">
+                        <DataGridTemplateColumn Header="Durum" Width="90">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <components:KmStatusBadge VerticalAlignment="Center" Margin="16,0">
+                                    <components:KmStatusBadge VerticalAlignment="Center">
                                         <components:KmStatusBadge.Style>
                                             <Style TargetType="components:KmStatusBadge">
                                                 <Style.Triggers>
@@ -211,74 +236,87 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Son Giriş" Binding="{Binding LastLoginDate, StringFormat={}{0:dd.MM.yyyy HH:mm}, TargetNullValue='-'}" Width="140">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Margin" Value="12,0"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Kayıt Tarihi" Binding="{Binding CreatedDate, StringFormat={}{0:dd.MM.yyyy}, TargetNullValue='-'}" Width="110"/>
                     </DataGrid.Columns>
                 </DataGrid>
+            </Border>
 
-                <!-- Action Buttons -->
-                <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderDefaultBrush}" Padding="16">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <!-- Edit Button -->
-                        <Button Content="✏️ Düzenle"
-                                Style="{StaticResource SecondaryButton}"
-                                Command="{Binding EditUserCommand}"
-                                Height="36" Padding="16,0" Margin="0,0,8,0"/>
+            <!-- RIGHT: SELECTED USER PROFILE PREVIEW CARD -->
+            <Border Grid.Column="1" CornerRadius="12" Padding="20"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <Grid>
+                    <!-- Empty State when no user is selected -->
+                    <components:KmEmptyState Icon="👤" Title="Kullanıcı Seçilmedi"
+                                             Message="Detaylarını görüntülemek ve işlem yapmak için listeden bir kullanıcı seçin."
+                                             Visibility="{Binding HasSelectedUser, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
 
-                        <!-- Set Password Button -->
-                        <Button Content="🔐 Şifre Belirle"
-                                Height="36" Padding="16,0" Margin="0,0,8,0"
-                                Command="{Binding SetPasswordCommand}"
-                                Background="{DynamicResource StatusWarningBg}" Foreground="{DynamicResource StatusWarningFg}"
-                                BorderBrush="{DynamicResource StatusWarningFg}" BorderThickness="1"
-                                Cursor="Hand">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" 
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="8">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
+                    <!-- User Detail Content -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  Visibility="{Binding HasSelectedUser, Converter={StaticResource BoolToVis}}">
+                        <StackPanel DataContext="{Binding SelectedUser}">
+                            <!-- Header Avatar & Name -->
+                            <StackPanel HorizontalAlignment="Center" Margin="0,0,0,16">
+                                <components:KmAvatar FullName="{Binding AdSoyad}" Size="Large" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                <TextBlock Text="{Binding AdSoyad}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" HorizontalAlignment="Center" TextAlignment="Center"/>
+                                <TextBlock Text="{Binding Username, StringFormat='@{0}'}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                            </StackPanel>
 
-                        <!-- Quick Reset Button -->
-                        <Button Content="🔑 1234'e Sıfırla"
-                                Style="{StaticResource SecondaryButton}"
-                                Command="{Binding ResetPasswordCommand}"
-                                Height="36" Padding="16,0" Margin="0,0,8,0"/>
-                        
-                        <!-- Delete Button -->
-                        <Button Content="🗑️ Sil"
-                                Height="36" Padding="16,0"
-                                Command="{Binding DeleteUserCommand}"
-                                Background="{DynamicResource StatusErrorBg}" Foreground="{DynamicResource StatusErrorFg}"
-                                BorderBrush="{DynamicResource StatusErrorFg}" BorderThickness="1"
-                                Cursor="Hand">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" 
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="8">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Button.Template>
-                        </Button>
-                    </StackPanel>
-                </Border>
-            </Grid>
-        </Border>
+                            <Separator Margin="0,0,0,16" Background="{DynamicResource BorderSubtleBrush}"/>
+
+                            <!-- User Info List -->
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="TELEFON" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding Phone, TargetNullValue='Belirtilmemiş'}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,12"/>
+
+                                <TextBlock Text="HESAP DURUMU" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,12">
+                                    <components:KmStatusBadge>
+                                        <components:KmStatusBadge.Style>
+                                            <Style TargetType="components:KmStatusBadge">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                        <Setter Property="Status" Value="Success"/>
+                                                        <Setter Property="Text" Value="Aktif Kullanıcı"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                        <Setter Property="Status" Value="Error"/>
+                                                        <Setter Property="Text" Value="Pasif / Engelli"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </components:KmStatusBadge.Style>
+                                    </components:KmStatusBadge>
+                                </StackPanel>
+
+                                <TextBlock Text="KAYIT TARİHİ" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding CreatedDate, StringFormat={}{0:dd MMMM yyyy HH:mm}}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <Separator Margin="0,0,0,16" Background="{DynamicResource BorderSubtleBrush}"/>
+
+                            <!-- Actions for Selected User -->
+                            <StackPanel>
+                                <ui:Button Content="Bilgileri Düzenle" Icon="{ui:SymbolIcon Edit24}"
+                                           Command="{Binding DataContext.EditUserCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           Appearance="Primary" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
+                                <ui:Button Content="Şifre Değiştir" Icon="{ui:SymbolIcon Password24}"
+                                           Command="{Binding DataContext.SetPasswordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           Appearance="Secondary" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
+                                <ui:Button Content="Şifreyi 1234'e Sıfırla" Icon="{ui:SymbolIcon Key24}"
+                                           Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           Appearance="Secondary" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
+                                <ui:Button Content="Hesabı Pasife Al / Sil" Icon="{ui:SymbolIcon Delete24}"
+                                           Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           Appearance="Danger" Height="36" HorizontalAlignment="Stretch" Cursor="Hand"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>
-

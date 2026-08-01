@@ -2,19 +2,17 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
-        xmlns:converters="clr-namespace:KamatekCrm.Converters"
-        Title="Yeni Kullanıcı Ekle" 
-        Width="480"
-        MinWidth="420" MinHeight="450"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Yeni Kullanıcı Oluştur" 
+        Width="520" Height="680"
+        MinWidth="460" MinHeight="550"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
-        Style="{StaticResource PremiumWindowStyle}">
-    
+        Background="{DynamicResource SurfacePageBrush}">
+
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
-    
-
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -23,219 +21,186 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,24">
-            <TextBlock Text="👤 Yeni Kullanıcı Ekle" 
-                       FontSize="22" FontWeight="Bold" 
-                       Foreground="{DynamicResource StatusInfoFg}"/>
-            <TextBlock Text="Admin tarafından kullanıcı oluşturma" 
-                       FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
-        </StackPanel>
-
-        <!-- Form -->
-        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
-            <TabControl.Resources>
-                <Style TargetType="TabItem">
-                    <Setter Property="HeaderTemplate">
-                        <Setter.Value>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding}" FontSize="14" FontWeight="SemiBold" Margin="8,4"/>
-                            </DataTemplate>
-                        </Setter.Value>
-                    </Setter>
-                    <Setter Property="Padding" Value="12,8"/>
-                </Style>
-            </TabControl.Resources>
-
-            <!-- TAB 1: Temel Bilgiler -->
-            <TabItem Header="👤 Temel Bilgiler">
-                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
-                        Padding="24" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,16,0,0">
-                    <StackPanel>
-                        <!-- Ad -->
-                        <TextBlock Text="Ad *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
-                        <TextBox x:Name="AdTextBox"
-                                 Text="{Binding Ad, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource PremiumTextBox}"
-                                 Height="40" Margin="0,0,0,16"/>
-
-                        <!-- Soyad -->
-                        <TextBlock Text="Soyad *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,8,0,8"/>
-                        <TextBox Text="{Binding Soyad, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource PremiumTextBox}"
-                                 Height="40" Margin="0,0,0,16"/>
-
-                        <!-- Kullanıcı Adı -->
-                        <TextBlock Text="Kullanıcı Adı *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,8,0,8"/>
-                        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource PremiumTextBox}"
-                                 Height="40"/>
-                        
-                        <TextBlock Text="{Binding UsernameValidationMessage}" 
-                                   FontSize="11" Margin="0,4,0,0"
-                                   Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsUsernameAvailable}" Value="False">
-                                            <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-
-                        <!-- Rol -->
-                        <TextBlock Text="Rol *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,16,0,8"/>
-                        <ComboBox ItemsSource="{Binding RoleDisplayOptions}"
-                                  SelectedItem="{Binding SelectedRoleDisplay}"
-                                  Style="{StaticResource ModernComboBox}"
-                                  Height="40"/>
-
-                        <!-- Bilgi notu -->
-                        <Border Background="{DynamicResource StatusInfoBg}" CornerRadius="8" Padding="16,8" Margin="0,16,0,0">
-                            <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource StatusInfoFg}">
-                                <Run FontWeight="SemiBold">ℹ️ Varsayılan şifre: 1234</Run>
-                                <LineBreak/>
-                                <Run>Kullanıcı giriş yaptıktan sonra şifresini değiştirebilir.</Run>
-                            </TextBlock>
-                        </Border>
-                    </StackPanel>
-                </Border>
-            </TabItem>
-
-            <!-- TAB 2: Yetkiler (RBAC) -->
-            <TabItem Header="🛡️ Yetkiler">
-                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
-                        Padding="24" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,16,0,0">
-                    <StackPanel>
-                        <TextBlock Text="Modül Erişim Yetkileri" FontSize="15" FontWeight="Bold" Margin="0,0,0,16" Foreground="{DynamicResource ThemePrimary}"/>
-                        
-                        <CheckBox Content="Finansal Kayıtları Gör" IsChecked="{Binding CanViewFinance}" Margin="0,0,0,16" Style="{StaticResource {x:Type CheckBox}}"/>
-                        <CheckBox Content="Analiz ve Raporları Gör" IsChecked="{Binding CanViewAnalytics}" Margin="0,0,0,16"/>
-                        <CheckBox Content="Kayıt Silme Yetkisi" IsChecked="{Binding CanDeleteRecords}" Margin="0,0,0,16"/>
-                        <CheckBox Content="Satın Alma Onay Yetkisi" IsChecked="{Binding CanApprovePurchase}" Margin="0,0,0,16"/>
-                        <CheckBox Content="Sistem Ayarlarına Erişim" IsChecked="{Binding CanAccessSettings}" Margin="0,0,0,16"/>
-                        
-                        <Border Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="16,8" Margin="0,8,0,0">
-                            <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource StatusWarningFg}">
-                                <Run FontWeight="SemiBold">⚠️ Uyarı:</Run>
-                                <Run>Yetkiler kullanıcının rolünden bağımsız olarak verilebilir.</Run>
-                            </TextBlock>
-                        </Border>
-                    </StackPanel>
-                </Border>
-            </TabItem>
-
-            <!-- TAB 3: Saha Bilgileri (Sadece Teknisyenler için) -->
-            <TabItem Header="🔧 Saha Bilgileri" Visibility="{Binding IsTechnicianRole, Converter={StaticResource BoolToVis}}">
-                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
-                        Padding="24" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Margin="0,16,0,0">
-                    <StackPanel>
-                        <TextBlock Text="Teknisyen Detayları" FontSize="15" FontWeight="Bold" Margin="0,0,0,16" Foreground="{DynamicResource ThemeSuccess}"/>
-
-                        <!-- Araç Plakası -->
-                        <TextBlock Text="Araç Plakası" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
-                        <TextBox Text="{Binding VehiclePlate}" Style="{StaticResource PremiumTextBox}" Height="40" Margin="0,0,0,16" Tag="34 KV 1234"/>
-
-                        <!-- Hizmet Bölgesi -->
-                        <TextBlock Text="Hizmet Bölgesi" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,8,0,8"/>
-                        <TextBox Text="{Binding ServiceArea}" Style="{StaticResource PremiumTextBox}" Height="40" Margin="0,0,0,16" Tag="Eskişehir Merkez"/>
-
-                        <!-- Uzmanlık Alanları -->
-                        <TextBlock Text="Uzmanlık Alanları" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,8,0,8"/>
-                        <TextBox Text="{Binding ExpertiseAreas}" Style="{StaticResource PremiumTextBox}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Tag="Kombi, Klima, Beyaz Eşya"/>
-                    </StackPanel>
-                </Border>
-            </TabItem>
-        </TabControl>
-
-        <!-- Status Message Overlay -->
-        <Border Grid.Row="1" VerticalAlignment="Bottom" Margin="16" CornerRadius="8" Padding="16,8" Panel.ZIndex="10"
-                Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVis}}"
-                Effect="{DynamicResource Elevation2}">
-            <Border.Style>
-                <Style TargetType="Border">
-                    <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsSuccess}" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Border.Style>
-            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" FontSize="12">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSuccess}" Value="True">
-                                <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
+        <!-- ═══════════════ HEADER ═══════════════ -->
+        <Border Grid.Row="0" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal">
+                <ui:SymbolIcon Symbol="PersonAdd24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Yeni Kullanıcı Oluştur" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                    <TextBlock Text="Yönetici (Admin) yetkisi ile yeni personel veya yönetici tanımı yapın" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+            </StackPanel>
         </Border>
 
-        <!-- Buttons -->
-        <Grid Grid.Row="2" Margin="0,24,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <!-- ═══════════════ FORM CONTENT ═══════════════ -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- BÖLÜM 1: TEMEL BİLGİLER -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" 
+                        Padding="20" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,16">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <ui:SymbolIcon Symbol="Person24" FontSize="18" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Temel Kullanıcı Bilgileri" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
 
-            <Button Grid.Column="0" Content="🗑️ Temizle" 
-                    Command="{Binding ClearCommand}"
-                    Height="44" FontSize="14"
-                    Background="{DynamicResource ApplicationBackgroundBrush}" Foreground="{DynamicResource TextHeadingBrush}"
-                    BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1"
-                    Cursor="Hand">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <Label Content="Ad *" FontWeight="SemiBold"/>
+                                <ui:TextBox x:Name="AdTextBox" Text="{Binding Ad, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <Label Content="Soyad *" FontWeight="SemiBold"/>
+                                <ui:TextBox Text="{Binding Soyad, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <Label Content="Kullanıcı Adı *" FontWeight="SemiBold"/>
+                                <ui:TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                <TextBlock Text="{Binding UsernameValidationMessage}" FontSize="11" Margin="0,4,0,0" Foreground="{DynamicResource ThemePrimary}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <Label Content="Telefon Numarası" FontWeight="SemiBold"/>
+                                <ui:TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="05XX XXX XX XX" Height="38"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Margin="0,0,0,4">
+                            <Label Content="Kullanıcı Rolü *" FontWeight="SemiBold"/>
+                            <ComboBox ItemsSource="{Binding RoleDisplayOptions}"
+                                      SelectedItem="{Binding SelectedRoleDisplay}"
+                                      Height="38"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- BÖLÜM 2: BAŞLANGIÇ PAROLASI -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" 
+                        Padding="20" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,16">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <ui:SymbolIcon Symbol="LockClosed24" FontSize="18" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Başlangıç Parolası" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <CheckBox Content="Özel Başlangıç Parolası Belirle" IsChecked="{Binding IsCustomPassword}" Margin="0,0,0,12"/>
+
+                        <StackPanel Visibility="{Binding IsCustomPassword, Converter={StaticResource BoolToVis}}">
+                            <Label Content="Özel Parola *" FontWeight="SemiBold"/>
+                            <ui:TextBox Text="{Binding InitialPassword, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                        </StackPanel>
+
+                        <Border Background="{DynamicResource StatusInfoBg}" CornerRadius="8" Padding="12,8" Margin="0,4,0,0"
+                                Visibility="{Binding IsCustomPassword, Converter={StaticResource BoolToVis}, ConverterParameter=Invert}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Info24" FontSize="16" Foreground="{DynamicResource StatusInfoFg}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Varsayılan parola '1234' olarak ayarlanacaktır." FontSize="11" Foreground="{DynamicResource StatusInfoFg}" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Border>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
+                    </StackPanel>
+                </Border>
 
-            <Button Grid.Column="2" Content="💾 Kaydet" 
-                    Command="{Binding SaveCommand}"
-                    Height="44" FontSize="14" FontWeight="SemiBold"
-                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                    Cursor="Hand">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Background" Value="{DynamicResource ThemeSuccess}"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="8">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource ThemeSuccess}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="{DynamicResource BorderDefaultBrush}"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
-        </Grid>
+                <!-- BÖLÜM 3: MODÜL ERİŞİM YETKİLERİ (RBAC) -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" 
+                        Padding="20" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,16">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <ui:SymbolIcon Symbol="Shield24" FontSize="18" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Modül Erişim Yetkileri" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <CheckBox Content="Finansal Kayıtları Gör" IsChecked="{Binding CanViewFinance}" Margin="0,0,0,10"/>
+                        <CheckBox Content="Analiz ve Raporları Gör" IsChecked="{Binding CanViewAnalytics}" Margin="0,0,0,10"/>
+                        <CheckBox Content="Kayıt Silme Yetkisi" IsChecked="{Binding CanDeleteRecords}" Margin="0,0,0,10"/>
+                        <CheckBox Content="Satın Alma Onay Yetkisi" IsChecked="{Binding CanApprovePurchase}" Margin="0,0,0,10"/>
+                        <CheckBox Content="Sistem Ayarlarına Erişim" IsChecked="{Binding CanAccessSettings}" Margin="0,0,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- BÖLÜM 4: SAHA & TEKNİSYEN DETAYLARI -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" 
+                        Padding="20" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,16"
+                        Visibility="{Binding IsTechnicianRole, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                            <ui:SymbolIcon Symbol="Wrench24" FontSize="18" Foreground="{DynamicResource ThemeSuccess}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Saha &amp; Teknisyen Detayları" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <Label Content="Araç Plakası" FontWeight="SemiBold"/>
+                                <ui:TextBox Text="{Binding VehiclePlate}" PlaceholderText="34 ABC 123" Height="38"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                <Label Content="Hizmet Bölgesi" FontWeight="SemiBold"/>
+                                <ui:TextBox Text="{Binding ServiceArea}" PlaceholderText="Örn: Eskişehir Merkez" Height="38"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel>
+                            <Label Content="Uzmanlık Alanları" FontWeight="SemiBold"/>
+                            <ui:TextBox Text="{Binding ExpertiseAreas}" PlaceholderText="CCTV, Diafon, Yangın Alarm..." Height="60" TextWrapping="Wrap" AcceptsReturn="True"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Status Message Overlay -->
+                <Border CornerRadius="8" Padding="14,10" Margin="0,0,0,16"
+                        Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVis}}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSuccess}" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" FontSize="12">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSuccess}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══════════════ BOTTOM BUTTONS ═══════════════ -->
+        <DockPanel Grid.Row="2" Margin="0,20,0,0">
+            <ui:Button DockPanel.Dock="Left" Content="Temizle" Icon="{ui:SymbolIcon Dismiss24}"
+                       Command="{Binding ClearCommand}" Appearance="Secondary" Height="38" Padding="16,0" Cursor="Hand"/>
+
+            <ui:Button DockPanel.Dock="Right" Content="Kullanıcıyı Kaydet" Icon="{ui:SymbolIcon Save24}"
+                       Command="{Binding SaveCommand}" Appearance="Primary" Height="38" Padding="20,0" Cursor="Hand"/>
+        </DockPanel>
     </Grid>
 </Window>
-
-

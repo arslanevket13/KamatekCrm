@@ -283,8 +283,10 @@ namespace KamatekCrm.ViewModels
             {
                 using var context = await _dbContextFactory.CreateDbContextAsync();
                 
-                var jobs = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
-                    System.Linq.Queryable.Where(context.ServiceJobs, j => j.ServiceJobType == ServiceJobType.Fault));
+                var jobs = await context.ServiceJobs
+                    .Include(j => j.Customer)
+                    .Where(j => j.ServiceJobType == ServiceJobType.Fault)
+                    .ToListAsync();
                 AllRepairs = new ObservableCollection<ServiceJob>(jobs);
 
                 var customers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(context.Customers);

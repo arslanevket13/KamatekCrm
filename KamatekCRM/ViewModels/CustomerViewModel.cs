@@ -128,34 +128,40 @@ namespace KamatekCrm.ViewModels
             get => _selectedCustomer;
             set
             {
-                if (SetProperty(ref _selectedCustomer, value) && value != null)
+                if (SetProperty(ref _selectedCustomer, value))
                 {
-                    // Se�ili m��teriyi forma y�kle
-                    FullName = value.FullName;
-                    PhoneNumber = value.PhoneNumber;
-                    Email = value.Email;
+                    OnPropertyChanged(nameof(HasSelectedCustomer));
+                    if (value != null)
+                    {
+                        // Seili mteriyi forma ykle
+                        FullName = value.FullName;
+                        PhoneNumber = value.PhoneNumber;
+                        Email = value.Email;
 
-                    // �ehir se�imini y�kle
-                    if (!string.IsNullOrWhiteSpace(value.City))
-                        SelectedCity = Cities.FirstOrDefault(c => c.Name == value.City);
+                        // ehir seimini ykle
+                        if (!string.IsNullOrWhiteSpace(value.City))
+                            SelectedCity = Cities.FirstOrDefault(c => c.Name == value.City);
 
-                    // �l�e se�imini y�kle
-                    if (!string.IsNullOrWhiteSpace(value.District) && SelectedCity != null)
-                        SelectedDistrict = Districts.FirstOrDefault(d => d.Name == value.District);
+                        // le seimini ykle
+                        if (!string.IsNullOrWhiteSpace(value.District) && SelectedCity != null)
+                            SelectedDistrict = Districts.FirstOrDefault(d => d.Name == value.District);
 
-                    // Mahalle se�imini y�kle
-                    if (!string.IsNullOrWhiteSpace(value.Neighborhood) && SelectedDistrict != null)
-                        SelectedNeighborhood = Neighborhoods.FirstOrDefault(n => n.Name == value.Neighborhood);
+                        // Mahalle seimini ykle
+                        if (!string.IsNullOrWhiteSpace(value.Neighborhood) && SelectedDistrict != null)
+                            SelectedNeighborhood = Neighborhoods.FirstOrDefault(n => n.Name == value.Neighborhood);
 
-                    Street = value.Street;
-                    BuildingNo = value.BuildingNo;
-                    ApartmentNo = value.ApartmentNo;
+                        Street = value.Street;
+                        BuildingNo = value.BuildingNo;
+                        ApartmentNo = value.ApartmentNo;
 
-                    // Haritay� g�ncelle (Mevcut m��teri y�klendi�inde)
-                    UpdateMapUrl();
+                        // Haritay gncelle (Mevcut mteri yklendiinde)
+                        UpdateMapUrl();
+                    }
                 }
             }
         }
+
+        public bool HasSelectedCustomer => SelectedCustomer != null;
 
         public string FullName { get => _fullName; set => SetProperty(ref _fullName, value); }
         public string PhoneNumber { get => _phoneNumber; set => SetProperty(ref _phoneNumber, value); }
@@ -620,6 +626,36 @@ namespace KamatekCrm.ViewModels
             detailVm.Initialize(SelectedCustomer.Id);
         }
 
+        [RelayCommand]
+        private void CreateQuoteForCustomer(object? parameter)
+        {
+            var customer = parameter switch
+            {
+                Customer c => c,
+                CustomerListItemDto dto => Customers.FirstOrDefault(c => c.Id == dto.Id),
+                _ => SelectedCustomer
+            };
 
+            if (customer == null)
+            {
+                _toastService?.ShowWarning("Lütfen teklif oluşturulacak müşteriyi seçin.");
+                return;
+            }
+
+            try
+            {
+                var window = new Views.QuotationWindow();
+                window.Owner = System.Windows.Application.Current?.MainWindow;
+                if (window.DataContext is QuotationViewModel quoteVm)
+                {
+                    quoteVm.SelectedCustomer = customer;
+                }
+                window.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Teklif penceresi açılamadı: {ex.Message}");
+            }
+        }
     }
 }

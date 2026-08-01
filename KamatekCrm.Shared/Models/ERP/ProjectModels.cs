@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using KamatekCrm.Shared.Enums;
@@ -89,8 +90,8 @@ namespace KamatekCrm.Shared.Models
 
         [System.Text.Json.Serialization.JsonIgnore]
         public ScopeNode? Parent { get; set; }
-        public virtual System.Collections.Generic.ICollection<ScopeNode> Children { get; set; } = new System.Collections.Generic.List<ScopeNode>();
-        public virtual System.Collections.Generic.ICollection<ScopeNodeItem> Items { get; set; } = new System.Collections.Generic.List<ScopeNodeItem>();
+        public virtual ObservableCollection<ScopeNode> Children { get; set; } = new ObservableCollection<ScopeNode>();
+        public virtual ObservableCollection<ScopeNodeItem> Items { get; set; } = new ObservableCollection<ScopeNodeItem>();
 
         private static int _idCounter = 1;
 
@@ -99,6 +100,12 @@ namespace KamatekCrm.Shared.Models
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public void ExpandParents()
+        {
+            IsExpanded = true;
+            Parent?.ExpandParents();
         }
 
         public void RestoreParentReferences()
@@ -141,12 +148,16 @@ namespace KamatekCrm.Shared.Models
             return child;
         }
 
+        public decimal SubTotalCost { get; set; }
+
         public void NotifyTotalsChanged()
         {
-            SubTotal = Items.Sum(i => i.TotalPrice);
-            RecursiveTotalCost = Items.Sum(i => i.TotalPrice) + Children.Sum(c => c.RecursiveTotalCost);
+            SubTotal = Items.Where(i => !i.IsOptional).Sum(i => i.TotalPrice);
+            SubTotalCost = Items.Where(i => !i.IsOptional).Sum(i => i.TotalItemCost);
+            RecursiveTotalCost = SubTotalCost + Children.Sum(c => c.RecursiveTotalCost);
             RecursiveTotal = SubTotal + Children.Sum(c => c.RecursiveTotal);
             OnPropertyChanged(nameof(SubTotal));
+            OnPropertyChanged(nameof(SubTotalCost));
             OnPropertyChanged(nameof(RecursiveTotal));
             OnPropertyChanged(nameof(RecursiveTotalCost));
             Parent?.NotifyTotalsChanged();
@@ -165,6 +176,9 @@ namespace KamatekCrm.Shared.Models
                     ImagePath = item.ImagePath,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,
+                    UnitCost = item.UnitCost,
+                    LaborCost = item.LaborCost,
+                    IsOptional = item.IsOptional,
                     TotalPrice = item.TotalPrice
                 };
                 other.Items.Add(newItem);
@@ -198,6 +212,9 @@ namespace KamatekCrm.Shared.Models
                     ImagePath = item.ImagePath,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice,
+                    UnitCost = item.UnitCost,
+                    LaborCost = item.LaborCost,
+                    IsOptional = item.IsOptional,
                     TotalPrice = item.TotalPrice
                 });
             }
@@ -227,8 +244,11 @@ namespace KamatekCrm.Shared.Models
     public class ScopeNodeItem : INotifyPropertyChanged
     {
         private static int _idCounter = 1;
-        private int _quantity;
+        private int _quantity = 1;
         private decimal _unitPrice;
+        private decimal _unitCost;
+        private decimal _laborCost;
+        private bool _isOptional;
 
         public int Id { get; set; }
         public string Name { get; set; } = "";
@@ -245,6 +265,8 @@ namespace KamatekCrm.Shared.Models
                 ProductId = p.Id,
                 ImagePath = p.ImagePath,
                 Quantity = 1,
+                UnitCost = p.PurchasePrice,
+                LaborCost = 0,
                 UnitPrice = p.SalePrice,
                 TotalPrice = p.SalePrice
             };
@@ -257,8 +279,30 @@ namespace KamatekCrm.Shared.Models
             get => _quantity;
             set
             {
-                _quantity = value;
+                _quantity = Math.Max(1, value);
                 OnPropertyChanged(nameof(Quantity));
+                NotifyChanged();
+            }
+        }
+
+        public decimal UnitCost
+        {
+            get => _unitCost;
+            set
+            {
+                _unitCost = Math.Max(0, value);
+                OnPropertyChanged(nameof(UnitCost));
+                NotifyChanged();
+            }
+        }
+
+        public decimal LaborCost
+        {
+            get => _laborCost;
+            set
+            {
+                _laborCost = Math.Max(0, value);
+                OnPropertyChanged(nameof(LaborCost));
                 NotifyChanged();
             }
         }
@@ -268,13 +312,27 @@ namespace KamatekCrm.Shared.Models
             get => _unitPrice;
             set
             {
-                _unitPrice = value;
+                _unitPrice = Math.Max(0, value);
                 OnPropertyChanged(nameof(UnitPrice));
                 NotifyChanged();
             }
         }
 
+        public bool IsOptional
+        {
+            get => _isOptional;
+            set
+            {
+                _isOptional = value;
+                OnPropertyChanged(nameof(IsOptional));
+                NotifyChanged();
+            }
+        }
+
         public decimal TotalPrice { get; set; }
+        public decimal TotalItemCost => (UnitCost + LaborCost) * Quantity;
+        public decimal ItemProfit => TotalPrice - TotalItemCost;
+        public string MarginDisplay => TotalPrice > 0 ? $"%{((TotalPrice - TotalItemCost) / TotalPrice * 100):N1}" : "%0";
 
         public Action OnItemChanged { get; set; } = delegate { };
 
@@ -289,6 +347,9 @@ namespace KamatekCrm.Shared.Models
         {
             TotalPrice = UnitPrice * Quantity;
             OnPropertyChanged(nameof(TotalPrice));
+            OnPropertyChanged(nameof(TotalItemCost));
+            OnPropertyChanged(nameof(ItemProfit));
+            OnPropertyChanged(nameof(MarginDisplay));
             OnItemChanged();
         }
     }

@@ -202,6 +202,19 @@ namespace KamatekCrm.Shared.Models
         };
 
         [NotMapped]
+        public string CustomerPhone => Customer?.PhoneNumber ?? string.Empty;
+
+        [NotMapped]
+        public string PriorityDisplay => Priority switch
+        {
+            JobPriority.Low => "🟢 Düşük",
+            JobPriority.Normal => "🔵 Normal",
+            JobPriority.Urgent => "🟠 Acil",
+            JobPriority.Critical => "🔴 Kritik",
+            _ => Priority.ToString()
+        };
+
+        [NotMapped]
         public bool BelongsToProject => ServiceProjectId.HasValue;
 
         [NotMapped]

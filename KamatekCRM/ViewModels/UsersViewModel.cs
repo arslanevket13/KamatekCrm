@@ -26,6 +26,8 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
         
+        private readonly IServiceProvider? _serviceProvider;
+        
         private User? _selectedUser;
         private string _searchText = string.Empty;
         private List<User> _allUsers = new List<User>();
@@ -41,8 +43,20 @@ namespace KamatekCrm.ViewModels
         public User? SelectedUser
         {
             get => _selectedUser;
-            set => SetProperty(ref _selectedUser, value);
+            set
+            {
+                if (SetProperty(ref _selectedUser, value))
+                {
+                    OnPropertyChanged(nameof(HasSelectedUser));
+                    EditUserCommand.NotifyCanExecuteChanged();
+                    SetPasswordCommand.NotifyCanExecuteChanged();
+                    ResetPasswordCommand.NotifyCanExecuteChanged();
+                    DeleteUserCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
+
+        public bool HasSelectedUser => SelectedUser != null;
 
         /// <summary>
         /// Arama metni
@@ -88,12 +102,14 @@ namespace KamatekCrm.ViewModels
             IAuthService authService,
             IUserAppService userAppService,
             IToastService toastService,
-            ILoadingService loadingService)
+            ILoadingService loadingService,
+            IServiceProvider? serviceProvider = null)
         {
             _authService = authService;
             _userAppService = userAppService;
             _toastService = toastService;
             _loadingService = loadingService;
+            _serviceProvider = serviceProvider;
 
             // Execute initial load
             _ = LoadUsersAsync();
@@ -213,13 +229,22 @@ namespace KamatekCrm.ViewModels
 
         private void OpenAddUserWindow()
         {
-            // Note: View constructors resolve required services via DI
-            var view = new AddUserView();
-            view.ShowDialog();
+            if (_serviceProvider != null)
+            {
+                var vm = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<AddUserViewModel>(_serviceProvider);
+                var view = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<AddUserView>(_serviceProvider);
+                view.DataContext = vm;
+                view.ShowDialog();
+            }
+            else
+            {
+                var view = new AddUserView();
+                view.ShowDialog();
+            }
             _ = LoadUsersAsync();
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasSelectedUser))]
         private void EditUser(User? user = null)
         {
             var target = user ?? SelectedUser;
@@ -237,7 +262,7 @@ namespace KamatekCrm.ViewModels
             _ = LoadUsersAsync();
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasSelectedUser))]
         private void SetPassword()
         {
             OpenSetPasswordWindow();
@@ -257,7 +282,7 @@ namespace KamatekCrm.ViewModels
             return true;
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanDeleteUser))]
         private async Task DeleteUserAsync()
         {
             if (SelectedUser == null) return;
@@ -296,7 +321,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(HasSelectedUser))]
         private async Task ResetPasswordAsync()
         {
             await ResetPasswordTo1234Async();

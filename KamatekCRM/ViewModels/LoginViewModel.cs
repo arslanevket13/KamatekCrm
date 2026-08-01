@@ -150,18 +150,8 @@ namespace KamatekCrm.ViewModels
                 }
             });
             
-            // Load saved settings, then apply dev defaults if empty
+            // Load saved settings
             LoadSavedCredentials();
-            
-            // Development: Inject default credentials so user doesn't have to type every time
-            if (string.IsNullOrWhiteSpace(Username))
-            {
-                Username = "admin";
-            }
-            if (string.IsNullOrWhiteSpace(Password))
-            {
-                Password = "123";
-            }
             
             _ = InitializeDiscoveryAsync();
         }
@@ -217,10 +207,10 @@ namespace KamatekCrm.ViewModels
             {
                 Title = "Ağ ve Bağlantı Ayarları",
                 Content = new KamatekCrm.Views.NetworkSettingsView { DataContext = networkViewModel },
-                Width = 600,
-                Height = 500,
+                Width = 1050,
+                Height = 720,
                 WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
-                ResizeMode = System.Windows.ResizeMode.NoResize
+                ResizeMode = System.Windows.ResizeMode.CanResize
             };
             settingsWindow.ShowDialog();
         }

@@ -10,189 +10,220 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-
-        <!-- Vector Icons -->
-        <Geometry x:Key="UserIcon">M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z</Geometry>
-        <Geometry x:Key="LockIcon">M12,17A2,2 0 0,0 14,15C14,13.89 13.11,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V7A5,5 0 0,1 12,2A5,5 0 0,1 17,7V8H18M12,4A3,3 0 0,0 9,7V8H15V7A3,3 0 0,0 12,4Z</Geometry>
-        <Geometry x:Key="EyeIcon">M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z</Geometry>
-        <Geometry x:Key="EyeOffIcon">M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z</Geometry>
-        <Geometry x:Key="GlobeIcon">M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M6.5,8.5C7.5,8.5 8.5,9 9,10C8.5,10.5 7.5,11 6.5,11C5.5,11 4.5,10.5 4,9.5C4.5,8.5 5.5,8 6.5,8M17.5,11C16.5,11 15.5,10.5 15,9.5C15.5,8.5 16.5,8 17.5,8C18.5,8 19.5,8.5 20,9.5C19.5,10.5 18.5,11 17.5,11M12,6C13.5,6 15,6.5 16.25,7.5C15.5,8.5 14.25,9 12,9C9.75,9 8.5,8.5 7.75,7.5C9,6.5 10.5,6 12,6Z</Geometry>
-
     </UserControl.Resources>
 
     <Grid x:Name="MainGrid" Background="{DynamicResource ApplicationBackgroundBrush}">
-        <!-- Language Selector & Settings Button -->
-        <StackPanel Orientation="Horizontal" 
-                    HorizontalAlignment="Right" 
-                    VerticalAlignment="Top" 
-                    Margin="24">
-            <ComboBox x:Name="LanguageCombo"
-                      Width="100"
-                      SelectedIndex="0"
-                      FontSize="12"
-                      Margin="0,0,12,0"
-                      Cursor="Hand">
-                <ComboBoxItem Content="🇹🇷 Türkçe" Tag="tr-TR"/>
-                <ComboBoxItem Content="🇬🇧 English" Tag="en-US"/>
-                <ComboBoxItem Content="🇩🇪 Deutsch" Tag="de-DE"/>
-            </ComboBox>
-            <ui:Button Appearance="Transparent" 
-                       Command="{Binding OpenConnectionSettingsCommand}"
-                       ToolTip="Ağ Ayarları"
-                       Cursor="Hand"
-                       Padding="8">
-                <ui:SymbolIcon Symbol="Settings24" FontSize="18" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-            </ui:Button>
-        </StackPanel>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MinWidth="480"/>
+            <ColumnDefinition Width="480"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- Login Card -->
-        <Border x:Name="LoginCard"
-                Width="420"
-                VerticalAlignment="Center" HorizontalAlignment="Center"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="12">
-            
-            <Grid Margin="40">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <!-- ═══════════════ LEFT COLUMN: BRANDING & FEATURE SHOWCASE HERO PANEL ═══════════════ -->
+        <Grid Grid.Column="0" Background="{DynamicResource SurfacePageBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                <!-- Header -->
-                <StackPanel Grid.Row="0" Margin="0,0,0,32">
-                    <Image Source="/Assets/Images/KamatekLogo.png" 
-                           Width="200" Height="Auto"
-                           Stretch="Uniform"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,16"/>
-                    <TextBlock Text="Hoş Geldiniz" 
-                               FontSize="22" 
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
-                               HorizontalAlignment="Center"
-                               Margin="0,0,0,4"/>
-                    <TextBlock Text="Teknik Servis Yönetimi" 
-                               FontSize="14" 
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
-                               HorizontalAlignment="Center"/>
+            <!-- Top Header Logo -->
+            <StackPanel Grid.Row="0" Margin="48,48,48,0">
+                <Image Source="/Assets/Images/KamatekLogo.png" 
+                       Width="220" Height="Auto"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Left"
+                       Margin="0,0,0,12"/>
+            </StackPanel>
+
+            <!-- Center Content & Feature Showcase -->
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="48,0">
+                <TextBlock Text="Kamatek CRM &amp; ERP" 
+                           FontSize="32" FontWeight="Bold" 
+                           Foreground="{DynamicResource TextHeadingBrush}" 
+                           Margin="0,0,0,8"/>
+                
+                <TextBlock Text="Teknik Servis, Saha İş Gücü, Stok &amp; Finans Yönetim Portalı" 
+                           FontSize="16" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
+                           Margin="0,0,0,36"/>
+
+                <!-- Feature Highlights List -->
+                <StackPanel Margin="0,0,0,16">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <Border Background="{DynamicResource AccentOverlayBrush}" CornerRadius="8" Width="40" Height="40" Margin="0,0,16,0">
+                            <ui:SymbolIcon Symbol="Wrench24" FontSize="20" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Saha Servis &amp; Arıza Takibi" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock Text="Müşteri taleplerini, arıza fişlerini ve teknisyen rotalarını canlı izleyin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <Border Background="{DynamicResource AccentOverlayBrush}" CornerRadius="8" Width="40" Height="40" Margin="0,0,16,0">
+                            <ui:SymbolIcon Symbol="DataPie24" FontSize="20" Foreground="{DynamicResource ThemeSuccess}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Canlı Stok &amp; Fiyat Teklifi" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock Text="Ürün envanterini, depo hareketlerini ve teklif yönetimini dijitalleştirin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
+                        <Border Background="{DynamicResource AccentOverlayBrush}" CornerRadius="8" Width="40" Height="40" Margin="0,0,16,0">
+                            <ui:SymbolIcon Symbol="Globe24" FontSize="20" Foreground="{DynamicResource ThemeWarning}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Zero-Config Otomatik Ağ Keşfi" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock Text="Yerel ağdaki veritabanı sunucularını sürücü kurmadan otomatik bulun" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Bottom Connection Status Indicator -->
+            <Border Grid.Row="2" Margin="48,0,48,48" Padding="14,10" CornerRadius="10"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ui:SymbolIcon Grid.Column="0" Symbol="Server24" FontSize="18" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ServerStatusMessage}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                        <TextBlock Text="Yerel Veritabanı Servis Durumu" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════ RIGHT COLUMN: LOGIN FORM ═══════════════ -->
+        <Grid Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Top Action Toolbar -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="24">
+                <ComboBox x:Name="LanguageCombo"
+                          Width="110" SelectedIndex="0" FontSize="12" Margin="0,0,8,0" Cursor="Hand">
+                    <ComboBoxItem Content="🇹🇷 Türkçe" Tag="tr-TR"/>
+                    <ComboBoxItem Content="🇬🇧 English" Tag="en-US"/>
+                    <ComboBoxItem Content="🇩🇪 Deutsch" Tag="de-DE"/>
+                </ComboBox>
+                
+                <ui:Button Appearance="Transparent" 
+                           Command="{Binding OpenConnectionSettingsCommand}"
+                           ToolTip="Ağ ve Sunucu Ayarları"
+                           Cursor="Hand" Padding="8">
+                    <ui:SymbolIcon Symbol="Settings24" FontSize="20" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </ui:Button>
+            </StackPanel>
+
+            <!-- Center Form -->
+            <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="48,0">
+                <!-- Welcome Title -->
+                <StackPanel Margin="0,0,0,32">
+                    <TextBlock Text="Hoş Geldiniz" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,4"/>
+                    <TextBlock Text="Devam etmek için kullanıcı hesabınızla giriş yapın" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                 </StackPanel>
 
-                <!-- Inputs -->
-                <StackPanel Grid.Row="1">
-                    <!-- Username -->
-                    <TextBlock Text="Kullanıcı Adı" 
-                               FontSize="12"
-                               FontWeight="SemiBold" 
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Margin="4,0,0,8"/>
+                <!-- Username Input -->
+                <StackPanel Margin="0,0,0,16">
+                    <Label Content="Kullanıcı Adı" FontWeight="SemiBold" Margin="0,0,0,6"/>
                     <ui:TextBox x:Name="UsernameTextBox"
                                 Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
                                 Icon="Person24"
-                                PlaceholderText="Kullanıcı Adı"
+                                PlaceholderText="Kullanıcı adınızı giriniz"
                                 ClearButtonEnabled="True"
-                                Height="40"
-                                Margin="0,0,0,16"/>
+                                Height="42"/>
+                </StackPanel>
 
-                    <!-- Password -->
-                    <TextBlock Text="Şifre" 
-                               FontSize="12"
-                               FontWeight="SemiBold" 
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Margin="4,0,0,8"/>
+                <!-- Password Input -->
+                <StackPanel Margin="0,0,0,16">
+                    <Label Content="Şifre" FontWeight="SemiBold" Margin="0,0,0,6"/>
                     <ui:PasswordBox x:Name="PasswordBox"
                                     Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    Icon="Lock24"
-                                    PlaceholderText="Şifre"
-                                    Height="40"/>
-
-                    <!-- Options Row -->
-                    <Grid Margin="4,16,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        
-                        <ui:ToggleSwitch Grid.Column="0"
-                                         Content="Beni Hatırla" 
-                                         IsChecked="{Binding RememberMe}"
-                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        
-                        <TextBlock Grid.Column="1"
-                                   Text="Şifremi Unuttum"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   FontSize="14"
-                                   Cursor="Hand"
-                                   TextDecorations="Underline"
-                                   MouseLeftButtonUp="ForgotPassword_Click"
-                                   VerticalAlignment="Center"/>
-                    </Grid>
+                                    Icon="LockClosed24"
+                                    PlaceholderText="Şifrenizi giriniz"
+                                    Height="42"/>
                 </StackPanel>
 
-                <!-- Actions -->
-                <StackPanel Grid.Row="2" VerticalAlignment="Bottom" Margin="0,32,0,0">
-                    <!-- Error Message -->
-                    <Border Background="{DynamicResource SystemFillColorCriticalBackgroundBrush}" CornerRadius="8" 
-                            Padding="16,8" Margin="0,0,0,16"
-                            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Warning24" Foreground="{DynamicResource SystemFillColorCriticalBrush}" Margin="0,0,16,0"/>
-                            <TextBlock Text="{Binding ErrorMessage}" 
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
-                                       FontSize="12"
-                                       FontWeight="Medium"
-                                       VerticalAlignment="Center"
-                                       TextWrapping="Wrap"
-                                       MaxWidth="300"/>
+                <!-- Options Row -->
+                <Grid Margin="0,4,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <ui:ToggleSwitch Grid.Column="0"
+                                     Content="Beni Hatırla" 
+                                     IsChecked="{Binding RememberMe}"
+                                     Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    
+                    <TextBlock Grid.Column="1"
+                               Text="Şifremi Unuttum"
+                               Foreground="{DynamicResource ThemePrimary}"
+                               FontSize="13"
+                               Cursor="Hand"
+                               TextDecorations="Underline"
+                               MouseLeftButtonUp="ForgotPassword_Click"
+                               VerticalAlignment="Center"/>
+                </Grid>
+
+                <!-- Error Message Banner -->
+                <Border Background="{DynamicResource SystemFillColorCriticalBackgroundBrush}" CornerRadius="8" 
+                        Padding="14,10" Margin="0,0,0,16"
+                        Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Warning24" Foreground="{DynamicResource SystemFillColorCriticalBrush}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ErrorMessage}" 
+                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
+                                   FontSize="12" FontWeight="Medium" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Server Not Found Fallback Banner -->
+                <Border Background="{DynamicResource SystemFillColorCautionBackgroundBrush}" CornerRadius="8" 
+                        Padding="14,10" Margin="0,0,0,16"
+                        Visibility="{Binding IsServerNotFound, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <ui:SymbolIcon Symbol="Warning24" Foreground="{DynamicResource SystemFillColorCautionBrush}" Margin="0,0,10,0"/>
+                            <TextBlock Text="Sunucu Bulunamadı" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
-                    </Border>
+                        <ui:Button Content="Bağlantıyı Manuel Yapılandır"
+                                   Command="{Binding OpenConnectionSettingsCommand}"
+                                   Appearance="Secondary"
+                                   HorizontalAlignment="Stretch"
+                                   Cursor="Hand"/>
+                    </StackPanel>
+                </Border>
 
-                    <!-- Server Not Found Fallback Banner -->
-                    <Border Background="{DynamicResource SystemFillColorCautionBackgroundBrush}" CornerRadius="8" 
-                            Padding="16,8" Margin="0,0,0,16"
-                            Visibility="{Binding IsServerNotFound, Converter={StaticResource BoolToVis}}">
-                        <StackPanel Orientation="Vertical">
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <ui:SymbolIcon Symbol="Warning24" Foreground="{DynamicResource SystemFillColorCautionBrush}" Margin="0,0,12,0"/>
-                                <TextBlock Text="Sunucu Bulunamadı" 
-                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" 
-                                           FontSize="13"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <ui:Button Content="Bağlantıyı Manuel Yapılandır"
-                                       Command="{Binding OpenConnectionSettingsCommand}"
-                                       Appearance="Secondary"
-                                       HorizontalAlignment="Stretch"
-                                       Cursor="Hand"/>
-                        </StackPanel>
-                    </Border>
+                <!-- Primary Login Button -->
+                <ui:Button x:Name="LoginBtn"
+                           Content="Sisteme Giriş Yap"
+                           Icon="{ui:SymbolIcon ArrowRight24}"
+                           Command="{Binding LoginCommand}"
+                           Appearance="Primary"
+                           HorizontalAlignment="Stretch"
+                           Height="44"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           Cursor="Hand"/>
+            </StackPanel>
 
-                    <!-- Modern Login Button -->
-                    <ui:Button x:Name="LoginBtn"
-                               Content="Giriş Yap"
-                               Command="{Binding LoginCommand}"
-                               Appearance="Primary"
-                               HorizontalAlignment="Stretch"
-                               Height="44"
-                               FontSize="16"
-                               FontWeight="SemiBold"
-                               Cursor="Hand"/>
-                </StackPanel>
-
-                <!-- Footer -->
-                <TextBlock Grid.Row="3" 
-                           Text="v1.0.1 © 2026 Kamatek"
-                           HorizontalAlignment="Center"
-                           Foreground="{DynamicResource TextFillColorDisabledBrush}"
-                           FontSize="11"
-                           Margin="0,24,0,0"/>
-            </Grid>
-        </Border>
+            <!-- Bottom Footer Copyright -->
+            <TextBlock Grid.Row="2" 
+                       Text="v1.0.1 © 2026 Kamatek Bilişim &amp; Güvenlik Teknolojileri"
+                       HorizontalAlignment="Center"
+                       Foreground="{DynamicResource TextFillColorDisabledBrush}"
+                       FontSize="11"
+                       Margin="0,0,0,32"/>
+        </Grid>
     </Grid>
 </UserControl>
-
-

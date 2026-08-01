@@ -12,7 +12,7 @@ namespace KamatekCrm.Shared.Enums
     public enum ProductCategoryType { Camera, Intercom, FireAlarm, Security, SmartHome, Network, Other, Cable, BurglarAlarm, AccessControl, Satellite, FiberOptic }
     
     public enum AttachmentEntityType { ServiceJob, Customer, Product, Quote, Invoice }
-    public enum PaymentMethod { Cash, CreditCard, BankTransfer, MobilePayment, Check }
+    public enum PaymentMethod { Cash, CreditCard, BankTransfer, MobilePayment, Check, OnAccount }
     public enum PipelineStage { New, Qualification, Proposal, Negotiation, Negotiating, Won, Lost, Lead, Quoted }
 
     public enum TransactionType { Income, Expense, Transfer, Debt, Payment }

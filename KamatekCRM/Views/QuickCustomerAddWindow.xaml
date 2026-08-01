@@ -3,12 +3,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
-        Title="➕ Hızlı Müşteri Ekle"
-        Height="420" Width="450"
-        ResizeMode="CanResizeWithGrip"
-        MinWidth="420" MinHeight="380"
+        Title="Hızlı Müşteri Ekle"
+        Height="540" Width="480"
+        MinWidth="440" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
         Style="{StaticResource PremiumWindowStyle}">
+
+    <Window.InputBindings>
+        <KeyBinding Key="Esc" Command="{Binding CancelCommand}"/>
+        <KeyBinding Key="Enter" Command="{Binding SaveCustomerCommand}"/>
+    </Window.InputBindings>
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolVis"/>
@@ -16,166 +22,184 @@
         <Style x:Key="FieldLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
-            <Setter Property="Margin" Value="0,12,0,4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeForeground}"/>
+            <Setter Property="Margin" Value="0,10,0,4"/>
         </Style>
 
-        <Style x:Key="FieldBox" TargetType="TextBox">
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Padding" Value="10,6"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
-        </Style>
-        <Style x:Key="FieldBox.Trigger" TargetType="TextBox" BasedOn="{StaticResource FieldBox}">
-            <Style.Triggers>
-                <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
-                    <Setter Property="BorderThickness" Value="1.5"/>
-                </Trigger>
-            </Style.Triggers>
+        <Style x:Key="TypePill" TargetType="RadioButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="{DynamicResource ApplicationBackgroundBrush}" 
+                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" 
+                                CornerRadius="8" Padding="14,8" Cursor="Hand">
+                            <ContentPresenter HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource StatusInfoBg}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource StatusInfoFg}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ThemeHover}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
 
-    <Border Margin="24" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.08"/>
-        </Border.Effect>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <Grid Margin="24">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <!-- Header -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,16">
-                <TextBlock Text="Yeni Müşteri" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
-                <TextBlock Text="Satış için hızlı müşteri kaydı oluşturun." 
-                           FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
-                <Separator Margin="0,16,0,0" Background="{DynamicResource BorderDefaultBrush}"/>
-            </StackPanel>
-
-            <!-- Form -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8">
-                <StackPanel Margin="0,0,8,0">
-                    <!-- Ad Soyad -->
-                    <TextBlock Text="Ad Soyad *" Style="{StaticResource FieldLabel}"/>
-                    <TextBox x:Name="FullNameBox"
-                             Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource FieldBox.Trigger}"
-                             Tag="Örn: Ahmet Yılmaz">
-                        <TextBox.Template>
-                            <ControlTemplate TargetType="TextBox">
-                                <Border Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="8">
-                                    <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
-                                </Border>
-                            </ControlTemplate>
-                        </TextBox.Template>
-                    </TextBox>
-
-                    <!-- Telefon -->
-                    <TextBlock Text="Telefon" Style="{StaticResource FieldLabel}"/>
-                    <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource FieldBox.Trigger}">
-                        <TextBox.Template>
-                            <ControlTemplate TargetType="TextBox">
-                                <Border Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="8">
-                                    <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
-                                </Border>
-                            </ControlTemplate>
-                        </TextBox.Template>
-                    </TextBox>
-
-                    <!-- E-posta -->
-                    <TextBlock Text="E-posta" Style="{StaticResource FieldLabel}"/>
-                    <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource FieldBox.Trigger}">
-                        <TextBox.Template>
-                            <ControlTemplate TargetType="TextBox">
-                                <Border Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="8">
-                                    <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
-                                </Border>
-                            </ControlTemplate>
-                        </TextBox.Template>
-                    </TextBox>
-
-                    <!-- Hata mesajı -->
-                    <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="8,8" Margin="0,16,0,0"
-                            Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
-                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"/>
-                    </Border>
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal">
+                <Border Width="40" Height="40" CornerRadius="8" Background="{DynamicResource ThemePrimaryLight}" Margin="0,0,12,0">
+                    <ui:SymbolIcon Symbol="PersonAdd24" FontSize="20" Foreground="{DynamicResource ThemePrimary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Yeni Müşteri Kaydı" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemeForeground}"/>
+                    <TextBlock Text="Hızlı müşteri kaydı oluşturun" FontSize="12" Foreground="{DynamicResource ThemeForegroundMuted}" Margin="0,2,0,0"/>
                 </StackPanel>
-            </ScrollViewer>
+            </StackPanel>
+            <Separator Margin="0,12,0,0" Background="{DynamicResource ThemeBorder}"/>
+        </StackPanel>
 
-            <!-- Footer Buttons -->
-            <Grid Grid.Row="2" Margin="0,16,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+        <!-- Form Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8">
+            <StackPanel Margin="0,0,4,0">
+                <!-- Müşteri Tipi -->
+                <TextBlock Text="Müşteri Tipi" Style="{StaticResource FieldLabel}"/>
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0"
-                        Content="İptal"
-                        Command="{Binding CancelCommand}"
-                        Height="40" FontSize="14"
-                        Background="{DynamicResource ApplicationBackgroundBrush}" Foreground="{DynamicResource TextBodyBrush}"
-                        BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}"
-                        Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="8">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
+                    <RadioButton Grid.Column="0" GroupName="Type" 
+                                 IsChecked="{Binding IsIndividual}"
+                                 Style="{StaticResource TypePill}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Person24" FontSize="15" Margin="0,0,6,0" Foreground="{DynamicResource ThemeForeground}"/>
+                            <TextBlock Text="Bireysel Müşteri" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
 
-                <Button Grid.Column="2"
-                        Content="💾 Kaydet &amp; Seç"
-                        Command="{Binding SaveCustomerCommand}"
-                        IsDefault="True"
-                        Height="40" FontSize="14" FontWeight="SemiBold"
-                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
-                        BorderThickness="0"
-                        Cursor="Hand">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}" CornerRadius="8">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </ControlTemplate>
-                    </Button.Template>
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Style.Triggers>
-                                <Trigger Property="IsEnabled" Value="False">
-                                    <Setter Property="Opacity" Value="0.45"/>
-                                </Trigger>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-            </Grid>
+                    <RadioButton Grid.Column="2" GroupName="Type" 
+                                 IsChecked="{Binding IsCorporate}"
+                                 Style="{StaticResource TypePill}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Building24" FontSize="15" Margin="0,0,6,0" Foreground="{DynamicResource ThemeForeground}"/>
+                            <TextBlock Text="Kurumsal Şirket" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+                </Grid>
+
+                <!-- Ad Soyad / Yetkili -->
+                <TextBlock Text="Ad Soyad / Müşteri Adı *" Style="{StaticResource FieldLabel}"/>
+                <TextBox x:Name="FullNameBox"
+                         Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource ModernTextBox}" Height="38"
+                         ToolTip="Örn: Ahmet Yılmaz"/>
+
+                <!-- Kurumsal Firma Adı (Opsiyonel) -->
+                <StackPanel Visibility="{Binding IsCorporate, Converter={StaticResource BoolVis}}">
+                    <TextBlock Text="Firma Unvanı / Şirket Adı *" Style="{StaticResource FieldLabel}"/>
+                    <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}" Height="38"
+                             ToolTip="Örn: Kamatek Teknoloji A.Ş."/>
+                </StackPanel>
+
+                <!-- Telefon -->
+                <TextBlock Text="Telefon Numarası" Style="{StaticResource FieldLabel}"/>
+                <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource ModernTextBox}" Height="38"
+                         ToolTip="Örn: 0555 123 4567"/>
+
+                <!-- Telefon Mükerrer Kayıt Uyarısı -->
+                <Border Background="{DynamicResource StatusWarningBg}" BorderBrush="{DynamicResource StatusWarningFg}"
+                        BorderThickness="1" CornerRadius="6" Padding="8,6" Margin="0,4,0,4"
+                        Visibility="{Binding HasDuplicatePhoneWarning, Converter={StaticResource BoolVis}}">
+                    <TextBlock Text="{Binding DuplicatePhoneWarning}" Foreground="{DynamicResource StatusWarningFg}" 
+                               FontSize="11" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                </Border>
+
+                <Grid Margin="0,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="TC Kimlik / Vergi No" Style="{StaticResource FieldLabel}"/>
+                        <TextBox Text="{Binding IdNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource ModernTextBox}" Height="38"
+                                 ToolTip="11 haneli TCKN veya 10 haneli VKN"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="E-posta Adresi" Style="{StaticResource FieldLabel}"/>
+                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource ModernTextBox}" Height="38"
+                                 ToolTip="Örn: bilgi@ornek.com"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Kurumsal Vergi Dairesi (Opsiyonel) -->
+                <StackPanel Visibility="{Binding IsCorporate, Converter={StaticResource BoolVis}}">
+                    <TextBlock Text="Vergi Dairesi" Style="{StaticResource FieldLabel}"/>
+                    <TextBox Text="{Binding TaxOffice, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}" Height="38"/>
+                </StackPanel>
+
+                <!-- Hata Mesajı -->
+                <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="6" Padding="8,6" Margin="0,12,0,0"
+                        Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"/>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer Buttons -->
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Content="İptal (Esc)"
+                    Command="{Binding CancelCommand}"
+                    Style="{StaticResource ModernButton}"
+                    Height="40" FontSize="13"
+                    Background="Transparent" Foreground="{DynamicResource ThemeForeground}"
+                    BorderThickness="1" BorderBrush="{DynamicResource ThemeBorder}"
+                    Cursor="Hand"/>
+
+            <Button Grid.Column="2"
+                    Command="{Binding SaveCustomerCommand}"
+                    IsDefault="True"
+                    Style="{StaticResource ModernButton}"
+                    Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
+                    Height="40" FontSize="14" FontWeight="SemiBold"
+                    BorderThickness="0"
+                    Cursor="Hand">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Save24" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Kaydet &amp; Seç (Enter)" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
         </Grid>
-    </Border>
+    </Grid>
 </Window>
-

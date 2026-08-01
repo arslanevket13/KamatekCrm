@@ -15,6 +15,8 @@ using KamatekCrm.Services;
 using KamatekCrm.Shared.Services;
 using KamatekCrm.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using KamatekCrm.Views;
 
 namespace KamatekCrm.ViewModels
 {
@@ -285,16 +287,24 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
+        private readonly IServiceProvider? _serviceProvider;
+
         /// <summary>
         /// Constructor
         /// </summary>
-        public DashboardViewModel(IAuthService authService, IDbContextFactory<AppDbContext> dbContextFactory, ILoadingService loadingService, IToastService toastService, IDatabaseConnectionProvider connectionProvider)
+        public DashboardViewModel(
+            IAuthService authService, 
+            IDbContextFactory<AppDbContext> dbContextFactory, 
+            ILoadingService loadingService, 
+            IToastService toastService, 
+            IDatabaseConnectionProvider connectionProvider,
+            IServiceProvider serviceProvider)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
             _loadingService = loadingService;
             _toastService = toastService;
-            
+            _serviceProvider = serviceProvider;
             
             // Eğer bağlantı zaten varsa direkt yükle
             if (connectionProvider.IsConnected)
@@ -329,6 +339,7 @@ namespace KamatekCrm.ViewModels
             _dbContextFactory = null!;
             _loadingService = null!;
             _toastService = null!;
+            _serviceProvider = null;
             LowStockProducts = new ObservableCollection<LowStockItemDto>();
             TodaysJobs = new ObservableCollection<TodayJobItemDto>();
             ReadyToDeliverRepairs = new ObservableCollection<ReadyRepairItemDto>();
@@ -350,6 +361,39 @@ namespace KamatekCrm.ViewModels
             public Task<bool> LoginAsync(string username, string password) => Task.FromResult(true);
             public void Logout() { }
         }
+
+        #region Quick Action Commands
+
+        [RelayCommand]
+        private void OpenFaultTicket()
+        {
+            if (_serviceProvider != null)
+            {
+                var faultVm = _serviceProvider.GetRequiredService<FaultTicketViewModel>();
+                var window = new Views.FaultTicketWindow(faultVm);
+                window.ShowDialog();
+            }
+        }
+
+        [RelayCommand]
+        private void OpenDirectSales()
+        {
+            if (_serviceProvider != null)
+            {
+                var directSalesVm = _serviceProvider.GetRequiredService<DirectSalesViewModel>();
+                var window = new DirectSalesWindow(directSalesVm);
+                window.Show();
+            }
+        }
+
+        [RelayCommand]
+        private void OpenQuotation()
+        {
+            var window = new Views.QuotationWindow();
+            window.Show();
+        }
+
+        #endregion
 
         /// <summary>
         /// Source Generator: Bu metottan otomatik olarak 'RefreshDashboardCommand' ICommand özelliği üretilir.
@@ -374,7 +418,14 @@ namespace KamatekCrm.ViewModels
                 LowStockProducts.Clear();
                 foreach(var item in lowStock)
                 {
-                    LowStockProducts.Add(new LowStockItemDto { ProductId = item.Id, ProductName = item.ProductName, CurrentStock = item.TotalStockQuantity, MinStockLevel = item.MinStockLevel });
+                    string urgency = item.TotalStockQuantity <= 0 ? "Critical" : (item.TotalStockQuantity <= item.MinStockLevel / 2 ? "Kritik" : "Uyarı");
+                    LowStockProducts.Add(new LowStockItemDto { 
+                        ProductId = item.Id, 
+                        ProductName = item.ProductName, 
+                        CurrentStock = item.TotalStockQuantity, 
+                        MinStockLevel = item.MinStockLevel,
+                        UrgencyLevel = urgency
+                    });
                 }
                 LowStockCount = lowStock.Count;
                 
@@ -442,8 +493,34 @@ namespace KamatekCrm.ViewModels
                 WeekSalesTotal = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
                     System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date >= startOfWeek && c.TransactionType == CashTransactionType.CashIncome), c => c.Amount);
                 AverageSaleAmount = MonthlySalesCount > 0 ? MonthlySalesTotal / MonthlySalesCount : 0;
-                    
+                
+                // 7. 7-Day Trend Chart Population
+                var weeklyTrendList = new List<WeeklyTrendItemDto>();
+                for (int i = 6; i >= 0; i--)
+                {
+                    var targetDate = today.AddDays(-i);
+                    var dayIncome = await context.CashTransactions
+                        .Where(c => c.Date.Date == targetDate && c.TransactionType == CashTransactionType.CashIncome)
+                        .SumAsync(c => (decimal?)c.Amount) ?? 0m;
+                    var dayJobs = await context.ServiceJobs
+                        .Where(j => j.CreatedDate.Date == targetDate && j.Status == JobStatus.Completed)
+                        .CountAsync();
 
+                    weeklyTrendList.Add(new WeeklyTrendItemDto
+                    {
+                        DayName = targetDate.ToString("ddd", new System.Globalization.CultureInfo("tr-TR")),
+                        Income = dayIncome,
+                        CompletedJobs = dayJobs
+                    });
+                }
+                LoadWeeklyTrendChart(weeklyTrendList);
+
+                // 8. Job Category Distribution
+                var categoryGroups = await context.ServiceJobs
+                    .GroupBy(j => j.JobCategory)
+                    .Select(g => new JobCategoryItemDto { Category = g.Key.ToString(), Count = g.Count() })
+                    .ToListAsync();
+                LoadJobCategoryPieChart(categoryGroups);
             }
             catch (Exception ex)
             {

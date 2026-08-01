@@ -40,13 +40,23 @@ namespace KamatekCrm.ViewModels
         private string _serviceArea = string.Empty;
         private string _expertiseAreas = string.Empty;
 
+        private string _phone = string.Empty;
+        private string _initialPassword = "1234";
+        private bool _isCustomPassword;
+
         /// <summary>
         /// Ad
         /// </summary>
         public string Ad
         {
             get => _ad;
-            set => SetProperty(ref _ad, value);
+            set
+            {
+                if (SetProperty(ref _ad, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         /// <summary>
@@ -55,7 +65,46 @@ namespace KamatekCrm.ViewModels
         public string Soyad
         {
             get => _soyad;
-            set => SetProperty(ref _soyad, value);
+            set
+            {
+                if (SetProperty(ref _soyad, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Telefon
+        /// </summary>
+        public string Phone
+        {
+            get => _phone;
+            set => SetProperty(ref _phone, value);
+        }
+
+        /// <summary>
+        /// Başlangıç Parolası
+        /// </summary>
+        public string InitialPassword
+        {
+            get => _initialPassword;
+            set => SetProperty(ref _initialPassword, value);
+        }
+
+        /// <summary>
+        /// Özel parola girilecek mi?
+        /// </summary>
+        public bool IsCustomPassword
+        {
+            get => _isCustomPassword;
+            set
+            {
+                if (SetProperty(ref _isCustomPassword, value) && !value)
+                {
+                    InitialPassword = "1234";
+                }
+            }
         }
 
         /// <summary>
@@ -68,8 +117,8 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _username, value))
                 {
-                    // Kullanıcı adı benzersizliğini kontrol et
                     CheckUsernameAvailability();
+                    SaveCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -96,7 +145,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(Username))
                     return string.Empty;
-                return IsUsernameAvailable ? "✅ Kullanıcı adı müsait" : "❌ Bu kullanıcı adı zaten kullanılıyor";
+                return IsUsernameAvailable ? "✓ Kullanıcı adı müsait" : "✗ Bu kullanıcı adı zaten kullanılıyor";
             }
         }
 
@@ -111,6 +160,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedRoleDisplay, value))
                 {
                     OnPropertyChanged(nameof(IsTechnicianRole));
+                    SaveCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -194,8 +244,6 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            // Client side format check only for now, since API handles it. Or you can do a fast /api/users validation.
-            // For true 0-coupling we ignore local EF contexts.
             IsUsernameAvailable = true; 
         }
 
@@ -230,13 +278,17 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
+                string rawPassword = string.IsNullOrWhiteSpace(InitialPassword) ? "1234" : InitialPassword.Trim();
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(rawPassword);
+
                 var newUser = new User
                 {
                     Username = Username.Trim().ToLower(),
-                    PasswordHash = "1234",
+                    PasswordHash = hashedPassword,
                     Role = dbRole,
                     Ad = Ad.Trim(),
                     Soyad = Soyad.Trim(),
+                    Phone = Phone?.Trim() ?? string.Empty,
                     IsActive = true,
                     CanViewFinance = CanViewFinance,
                     CanViewAnalytics = CanViewAnalytics,
@@ -249,7 +301,7 @@ namespace KamatekCrm.ViewModels
                 await context.SaveChangesAsync();
                 
                 IsSuccess = true;
-                StatusMessage = $"✅ {Ad} {Soyad} başarıyla eklendi!\nVarsayılan şifre: 1234";
+                StatusMessage = $"✓ {Ad} {Soyad} başarıyla eklendi!\nBaşlangıç Parolası: {rawPassword}";
                 _toastService.ShowSuccess("Kullanıcı oluşturuldu", "Başarılı");
 
                 ClearFormFields();
@@ -258,7 +310,7 @@ namespace KamatekCrm.ViewModels
             catch (Exception ex)
             {
                 IsSuccess = false;
-                StatusMessage = $"❌ Sistem Hatası: {ex.Message}";
+                StatusMessage = $"Sistem Hatası: {ex.Message}";
                 _toastService.ShowError("Kritik Hata", ex.Message ?? "Hata");
             }
             finally

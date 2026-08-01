@@ -78,6 +78,42 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<JobPriority> Priorities { get; } = new(
             Enum.GetValues(typeof(JobPriority)).Cast<JobPriority>());
         public ObservableCollection<string> DeviceTypeOptions { get; } = new();
+        public ObservableCollection<string> QuickSymptoms { get; } = new()
+        {
+            "Görüntü Yok / Sinyal Yok",
+            "Tetik Almıyor / Açılmıyor",
+            "Besleme / Adaptör Arızası",
+            "Su / Sıvı Teması Var",
+            "Kayıt Yapmıyor / HDD Hatası",
+            "Ses / Mikrofon Arızası"
+        };
+
+        private string _serialHistoryWarning = string.Empty;
+        public string SerialHistoryWarning
+        {
+            get => _serialHistoryWarning;
+            set
+            {
+                if (SetProperty(ref _serialHistoryWarning, value))
+                    OnPropertyChanged(nameof(HasSerialHistoryWarning));
+            }
+        }
+
+        public bool HasSerialHistoryWarning => !string.IsNullOrEmpty(SerialHistoryWarning);
+
+        private bool _autoPrintReceipt = true;
+        public bool AutoPrintReceipt
+        {
+            get => _autoPrintReceipt;
+            set => SetProperty(ref _autoPrintReceipt, value);
+        }
+
+        private bool _autoPrintPdf;
+        public bool AutoPrintPdf
+        {
+            get => _autoPrintPdf;
+            set => SetProperty(ref _autoPrintPdf, value);
+        }
 
         #endregion
 
@@ -92,6 +128,7 @@ namespace KamatekCrm.ViewModels
                 {
                     _ = LoadCustomerAssetsAsync();
                     OnPropertyChanged(nameof(CustomerAddress));
+                    SaveFaultTicketCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -101,8 +138,15 @@ namespace KamatekCrm.ViewModels
             get => _selectedAsset;
             set
             {
-                if (SetProperty(ref _selectedAsset, value) && value != null)
-                    SelectedCategory = value.Category;
+                if (SetProperty(ref _selectedAsset, value))
+                {
+                    if (value != null)
+                    {
+                        SelectedCategory = value.Category;
+                        _ = CheckSerialHistoryAsync(value.SerialNumber);
+                    }
+                    SaveFaultTicketCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -127,7 +171,13 @@ namespace KamatekCrm.ViewModels
         public string FaultSymptom
         {
             get => _faultSymptom;
-            set => SetProperty(ref _faultSymptom, value);
+            set
+            {
+                if (SetProperty(ref _faultSymptom, value))
+                {
+                    SaveFaultTicketCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         public string CustomerAddress => SelectedCustomer?.FullAddress ?? "Müşteri seçilmedi";
@@ -142,15 +192,45 @@ namespace KamatekCrm.ViewModels
             set
             {
                 if (SetProperty(ref _isNewAsset, value))
+                {
                     OnPropertyChanged(nameof(IsExistingAsset));
+                    SaveFaultTicketCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
         public bool IsExistingAsset => !IsNewAsset;
 
-        public string NewAssetBrand { get => _newAssetBrand; set => SetProperty(ref _newAssetBrand, value); }
-        public string NewAssetModel { get => _newAssetModel; set => SetProperty(ref _newAssetModel, value); }
-        public string NewAssetSerialNumber { get => _newAssetSerialNumber; set => SetProperty(ref _newAssetSerialNumber, value); }
+        public string NewAssetBrand
+        {
+            get => _newAssetBrand;
+            set
+            {
+                if (SetProperty(ref _newAssetBrand, value))
+                    SaveFaultTicketCommand.NotifyCanExecuteChanged();
+            }
+        }
+
+        public string NewAssetModel
+        {
+            get => _newAssetModel;
+            set
+            {
+                if (SetProperty(ref _newAssetModel, value))
+                    SaveFaultTicketCommand.NotifyCanExecuteChanged();
+            }
+        }
+
+        public string NewAssetSerialNumber
+        {
+            get => _newAssetSerialNumber;
+            set
+            {
+                if (SetProperty(ref _newAssetSerialNumber, value))
+                    _ = CheckSerialHistoryAsync(value);
+            }
+        }
+
         public string NewAssetLocation { get => _newAssetLocation; set => SetProperty(ref _newAssetLocation, value); }
 
         #endregion
@@ -223,7 +303,15 @@ namespace KamatekCrm.ViewModels
         public bool AccessoryRemote { get => _accessoryRemote; set => SetProperty(ref _accessoryRemote, value); }
         public bool AccessoryBox { get => _accessoryBox; set => SetProperty(ref _accessoryBox, value); }
 
-        public bool IsSaving { get => _isSaving; set => SetProperty(ref _isSaving, value); }
+        public bool IsSaving
+        {
+            get => _isSaving;
+            set
+            {
+                if (SetProperty(ref _isSaving, value))
+                    SaveFaultTicketCommand.NotifyCanExecuteChanged();
+            }
+        }
 
         #endregion
 
@@ -283,11 +371,49 @@ namespace KamatekCrm.ViewModels
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     foreach (var asset in assets) CustomerAssets.Add(asset);
+                    if (!CustomerAssets.Any())
+                    {
+                        IsNewAsset = true;
+                    }
                 });
             }
             catch (Exception ex)
             {
                 _toastService.ShowError($"Cihazlar yüklenemedi: {ex.Message}");
+            }
+        }
+
+        private async Task CheckSerialHistoryAsync(string? serial)
+        {
+            if (string.IsNullOrWhiteSpace(serial) || serial.Trim().Length < 3)
+            {
+                SerialHistoryWarning = string.Empty;
+                return;
+            }
+
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                string trimmed = serial.Trim().ToLower();
+                int count = await ctx.ServiceJobs
+                    .CountAsync(j => j.SerialNumber != null && j.SerialNumber.ToLower() == trimmed);
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (count > 0)
+                    {
+                        SerialHistoryWarning = $"⚠️ Bu seri numarası ({serial.Trim()}) ile daha önce {count} adet servis kaydı bulundu!";
+                    }
+                    else
+                    {
+                        SerialHistoryWarning = string.Empty;
+                    }
+                });
+            }
+            catch
+            {
+                SerialHistoryWarning = string.Empty;
             }
         }
 
@@ -324,9 +450,34 @@ namespace KamatekCrm.ViewModels
 
         private bool CanSave()
         {
-            return SelectedCustomer != null &&
-                   !string.IsNullOrWhiteSpace(Description) &&
-                   !IsSaving;
+            if (SelectedCustomer == null || IsSaving) return false;
+            if (string.IsNullOrWhiteSpace(FaultSymptom)) return false;
+
+            if (IsNewAsset)
+            {
+                if (string.IsNullOrWhiteSpace(NewAssetBrand) || string.IsNullOrWhiteSpace(NewAssetModel))
+                    return false;
+            }
+            else
+            {
+                if (SelectedAsset == null) return false;
+            }
+
+            return true;
+        }
+
+        [RelayCommand]
+        private void AddQuickSymptom(string? symptom)
+        {
+            if (string.IsNullOrWhiteSpace(symptom)) return;
+            if (string.IsNullOrWhiteSpace(FaultSymptom))
+            {
+                FaultSymptom = symptom;
+            }
+            else if (!FaultSymptom.Contains(symptom))
+            {
+                FaultSymptom = $"{FaultSymptom}, {symptom}";
+            }
         }
 
         [RelayCommand]
@@ -420,8 +571,9 @@ namespace KamatekCrm.ViewModels
                     // Arıza kaydı
                     var accessories = new System.Collections.Generic.List<string>();
                     if (AccessoryAdapter) accessories.Add("Adaptör");
-                    if (AccessoryCable) accessories.Add("Kablo");
+                    if (AccessoryCable) accessories.Add("Güç Kablosu");
                     if (AccessoryRemote) accessories.Add("Kumanda");
+                    if (AccessoryBox) accessories.Add("Kutu/Ambalaj");
 
                     var faultTicket = new ServiceJob
                     {
@@ -432,7 +584,9 @@ namespace KamatekCrm.ViewModels
                         WorkflowStatus = WorkflowStatus.Draft,
                         JobCategory = SelectedCategory,
                         Priority = SelectedPriority,
-                        Description = $"CİHAZ TİPİ: {SelectedDeviceTypeName}\nARIZA: {FaultSymptom}\n\n{Description}",
+                        Description = string.IsNullOrWhiteSpace(SelectedDeviceTypeName)
+                            ? $"ARIZA: {FaultSymptom}\n\n{Description}"
+                            : $"CİHAZ TİPİ: {SelectedDeviceTypeName}\nARIZA: {FaultSymptom}\n\n{Description}",
                         PhysicalCondition = PhysicalCondition,
                         Accessories = accessories.Count > 0 ? string.Join(", ", accessories) : null,
                         DeviceBrand = IsNewAsset ? NewAssetBrand.Trim() : SelectedAsset?.Brand,
@@ -455,10 +609,13 @@ namespace KamatekCrm.ViewModels
                         var finalPaths = new System.Collections.Generic.List<string>();
                         foreach (var src in TempPhotoPaths)
                         {
-                            string fileName = $"NewJob_{Guid.NewGuid()}{System.IO.Path.GetExtension(src)}";
-                            string destPath = System.IO.Path.Combine(photoDir, fileName);
-                            System.IO.File.Copy(src, destPath);
-                            finalPaths.Add(destPath);
+                            if (System.IO.File.Exists(src))
+                            {
+                                string fileName = $"NewJob_{Guid.NewGuid()}{System.IO.Path.GetExtension(src)}";
+                                string destPath = System.IO.Path.Combine(photoDir, fileName);
+                                System.IO.File.Copy(src, destPath);
+                                finalPaths.Add(destPath);
+                            }
                         }
                         faultTicket.PhotoPathsJson = System.Text.Json.JsonSerializer.Serialize(finalPaths);
                     }
@@ -472,8 +629,7 @@ namespace KamatekCrm.ViewModels
                     {
                         customerInDb.LastInteractionDate = DateTime.UtcNow;
                         customerInDb.TotalPurchaseCount += 1;
-                        // Not: Puan ve TotalSpent hesabı iş tamamlandığında (CompleteJob) yapılacak.
-                        // Kayıt aşamasında fiyat henüz kesin değil.
+                        faultTicket.Customer = customerInDb;
                     }
 
                     // ═══════ Müşteri Aktivite Kaydı ═══════
@@ -492,6 +648,38 @@ namespace KamatekCrm.ViewModels
                     await transaction.CommitAsync();
 
                     _toastService.ShowSuccess($"Arıza kaydı oluşturuldu: #{faultTicket.Id}");
+
+                    // Termal fiş yazdır
+                    if (AutoPrintReceipt)
+                    {
+                        try
+                        {
+                            var thermalPrinter = _serviceProvider.GetService<IThermalReceiptPrintService>();
+                            if (thermalPrinter != null)
+                            {
+                                _ = thermalPrinter.PrintServiceJobTicketAsync(faultTicket);
+                            }
+                        }
+                        catch { }
+                    }
+
+                    // PDF Formu Oluştur/Aç
+                    if (AutoPrintPdf)
+                    {
+                        try
+                        {
+                            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                            string pdfPath = System.IO.Path.Combine(desktopPath, $"CihazKabul_{faultTicket.Id:D6}.pdf");
+                            var pdfService = new PdfService();
+                            pdfService.GenerateServiceJobPdf(faultTicket, pdfPath);
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = pdfPath,
+                                UseShellExecute = true
+                            });
+                        }
+                        catch { }
+                    }
 
                     // Pencereyi kapat
                     RequestClose?.Invoke(true);

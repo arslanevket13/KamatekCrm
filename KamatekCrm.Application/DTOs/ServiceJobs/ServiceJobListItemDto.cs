@@ -12,9 +12,18 @@ namespace KamatekCrm.ApplicationCore.DTOs.ServiceJobs
         public string CustomerName { get; set; } = string.Empty;
         public string CustomerFullName => CustomerName;
         public int CustomerId { get; set; }
+        public string CustomerPhone { get; set; } = string.Empty;
         public JobStatus Status { get; set; }
         public string StatusDisplay { get; set; } = string.Empty;
         public JobPriority Priority { get; set; }
+        public string PriorityDisplay => Priority switch
+        {
+            JobPriority.Low => "🟢 Düşük",
+            JobPriority.Normal => "🔵 Normal",
+            JobPriority.Urgent => "🟠 Acil",
+            JobPriority.Critical => "🔴 Kritik",
+            _ => Priority.ToString()
+        };
         public WorkOrderType WorkOrderType { get; set; }
         public string WorkOrderTypeDisplay { get; set; } = string.Empty;
         public string? AssignedTechnician { get; set; }

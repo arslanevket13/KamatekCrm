@@ -3,12 +3,20 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
         mc:Ignorable="d"
-        Title="📋 Hızlı Kabul &amp; Arıza Kaydı" 
+        Title="Hızlı Kabul &amp; Arıza Kaydı" 
         Width="1200" Height="750"
+        MinWidth="1040" MinHeight="680"
         WindowStartupLocation="CenterOwner"
         Style="{StaticResource PremiumWindowStyle}">
+
+    <Window.InputBindings>
+        <KeyBinding Key="Esc" Command="{Binding CancelCommand}"/>
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveFaultTicketCommand}"/>
+        <KeyBinding Key="F2" Command="{Binding OpenQuickCustomerAddCommand}"/>
+    </Window.InputBindings>
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -46,7 +54,7 @@
                     <ControlTemplate TargetType="RadioButton">
                         <Border x:Name="border" Background="{DynamicResource ApplicationBackgroundBrush}" 
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" 
-                                CornerRadius="8" Padding="16,16" Cursor="Hand">
+                                CornerRadius="8" Padding="14,12" Cursor="Hand">
                             <ContentPresenter HorizontalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -70,7 +78,7 @@
                     <ControlTemplate TargetType="ToggleButton">
                         <Border x:Name="chipBorder" 
                                 Background="{DynamicResource ApplicationBackgroundBrush}" 
-                                CornerRadius="16" Padding="16,4" Margin="0,0,8,8"
+                                CornerRadius="16" Padding="16,6" Margin="0,0,8,8"
                                 BorderBrush="{DynamicResource ThemeBorder}" 
                                 BorderThickness="1" Cursor="Hand">
                             <TextBlock Text="{TemplateBinding Content}" 
@@ -107,18 +115,18 @@
                 Padding="24,16">
             <Grid>
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="48" Height="48" CornerRadius="8" Background="{DynamicResource ThemePrimaryLight}" Margin="0,0,16,0">
-                        <TextBlock Text="📋" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="48" Height="48" CornerRadius="10" Background="{DynamicResource ThemePrimaryLight}" Margin="0,0,16,0">
+                        <ui:SymbolIcon Symbol="ClipboardTask24" FontSize="22" Foreground="{DynamicResource ThemePrimary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="CİHAZ KABUL &amp; ARIZA KAYDI" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemeForeground}"/>
-                        <TextBlock Text="Müşteri cihazını teslim alın ve arıza sürecini başlatın" FontSize="12" Foreground="{DynamicResource ThemeForegroundMuted}" Margin="0,4,0,0"/>
+                        <TextBlock Text="Müşteri cihazını teslim alın ve arıza kaydını oluşturun" FontSize="12" Foreground="{DynamicResource ThemeForegroundMuted}" Margin="0,4,0,0"/>
                     </StackPanel>
                 </StackPanel>
                 
                 <!-- Öncelik Badge -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock Text="Öncelik Seviyesi:" Foreground="{DynamicResource ThemeForegroundMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                    <TextBlock Text="Öncelik Seviyesi:" Foreground="{DynamicResource ThemeForegroundMuted}" FontSize="12" VerticalAlignment="Center" Margin="0,0,12,0"/>
                     <ComboBox ItemsSource="{Binding Priorities}"
                               SelectedItem="{Binding SelectedPriority}"
                               Style="{StaticResource ModernComboBox}"
@@ -143,7 +151,7 @@
                             <TextBlock Style="{StaticResource SectionHeader}" Text="1. Müşteri Bilgisi"/>
                             
                             <!-- Müşteri Seçimi + Hızlı Ekleme Butonu -->
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="Müşteri Arayın Veya Seçin *"/>
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="Müşteri Arayın veya Seçin *"/>
                             <Grid Margin="0,0,0,16">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -159,7 +167,7 @@
                                           Style="{StaticResource ModernComboBox}"
                                           Height="44"/>
                                 
-                                <!-- ➕ Hızlı Yeni Müşteri Butonu -->
+                                <!-- Hızlı Yeni Müşteri Butonu (F2) -->
                                 <Button Grid.Column="2"
                                         Command="{Binding OpenQuickCustomerAddCommand}"
                                         Style="{StaticResource ModernButton}"
@@ -167,11 +175,11 @@
                                         BorderBrush="{DynamicResource StatusSuccessFg}"
                                         BorderThickness="1"
                                         Height="44" Padding="16,0"
-                                        ToolTip="Hızlı yeni müşteri ekle"
+                                        ToolTip="Hızlı Yeni Müşteri Ekle (F2)"
                                         Cursor="Hand">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="➕" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="Yeni Müşteri" FontSize="12" FontWeight="SemiBold" 
+                                        <ui:SymbolIcon Symbol="PersonAdd24" FontSize="16" Margin="0,0,6,0" Foreground="{DynamicResource StatusSuccessFg}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Yeni Müşteri (F2)" FontSize="12" FontWeight="SemiBold" 
                                                    VerticalAlignment="Center"
                                                    Foreground="{DynamicResource StatusSuccessFg}"/>
                                     </StackPanel>
@@ -179,7 +187,7 @@
                             </Grid>
                             
                             <!-- Müşteri Adres Box -->
-                            <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="16" MinHeight="60"
+                            <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="14" MinHeight="54"
                                     BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                 <TextBlock Text="{Binding CustomerAddress}" 
                                            TextWrapping="Wrap" FontSize="12" 
@@ -193,9 +201,9 @@
                         <StackPanel>
                             <TextBlock Style="{StaticResource SectionHeader}" Text="2. Cihaz Bilgileri"/>
                             
-                            <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" Padding="16" Margin="0,0,0,16"
+                            <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" Padding="14" Margin="0,0,0,16"
                                     BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
-                                <CheckBox Content="✨ Yeni Cihaz (Envanterde Yok)" 
+                                <CheckBox Content="Yeni Cihaz (Envanterde Yok)" 
                                           IsChecked="{Binding IsNewAsset}"
                                           FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}"/>
                             </Border>
@@ -212,8 +220,8 @@
                                             <TextBlock>
                                                 <Run Text="{Binding Brand}" FontWeight="SemiBold"/>
                                                 <Run Text="{Binding Model}"/>
-                                                <Run Text=" - SN:" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                                <Run Text="{Binding SerialNumber}" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                <Run Text=" - SN:" Foreground="{DynamicResource ThemeForegroundMuted}"/>
+                                                <Run Text="{Binding SerialNumber}" Foreground="{DynamicResource ThemeForegroundMuted}"/>
                                             </TextBlock>
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
@@ -235,27 +243,27 @@
                                     <RadioButton Grid.Column="0" GroupName="Category" 
                                                  IsChecked="{Binding IsCameraCategory}"
                                                  Style="{StaticResource CategoryPill}">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="📹" FontSize="16" Margin="0,0,8,0"/>
-                                            <TextBlock Text="Kamera Sys" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <ui:SymbolIcon Symbol="Camera24" FontSize="16" Margin="0,0,8,0" Foreground="{DynamicResource ThemeForeground}"/>
+                                            <TextBlock Text="Kamera Sys" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </RadioButton>
                                     
                                     <RadioButton Grid.Column="2" GroupName="Category"
                                                  IsChecked="{Binding IsDiafonCategory}"
                                                  Style="{StaticResource CategoryPill}">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="🔔" FontSize="16" Margin="0,0,8,0"/>
-                                            <TextBlock Text="Diafon Sys" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <ui:SymbolIcon Symbol="Call24" FontSize="16" Margin="0,0,8,0" Foreground="{DynamicResource ThemeForeground}"/>
+                                            <TextBlock Text="Diafon Sys" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </RadioButton>
                                     
                                     <RadioButton Grid.Column="4" GroupName="Category"
                                                  IsChecked="{Binding IsOtherCategory}"
                                                  Style="{StaticResource CategoryPill}">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="🛠️" FontSize="16" Margin="0,0,8,0"/>
-                                            <TextBlock Text="Diğer" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <ui:SymbolIcon Symbol="Wrench24" FontSize="16" Margin="0,0,8,0" Foreground="{DynamicResource ThemeForeground}"/>
+                                            <TextBlock Text="Diğer" FontWeight="SemiBold" Foreground="{DynamicResource ThemeForeground}" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </RadioButton>
                                 </Grid>
@@ -289,11 +297,19 @@
                                 
                                 <TextBlock Style="{StaticResource FieldLabel}" Text="Seri Numarası (Varsa)"/>
                                 <TextBox Text="{Binding NewAssetSerialNumber, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource ModernTextBox}" Height="40" Margin="0,0,0,8"/>
+                                         Style="{StaticResource ModernTextBox}" Height="40" Margin="0,0,0,4"/>
+
+                                <!-- Seri No Geçmiş Uyarı Paneli -->
+                                <Border Background="{DynamicResource StatusWarningBg}" BorderBrush="{DynamicResource StatusWarningFg}"
+                                        BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,4,0,8"
+                                        Visibility="{Binding HasSerialHistoryWarning, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="{Binding SerialHistoryWarning}" Foreground="{DynamicResource StatusWarningFg}" 
+                                               FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                </Border>
                             </StackPanel>
                             
                             <!-- Aksesuarlar - Chip Buttons -->
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="Cihazla Gelen Aksesuarlar" Margin="0,16,0,8"/>
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="Cihazla Gelen Aksesuarlar" Margin="0,12,0,8"/>
                             <WrapPanel>
                                 <ToggleButton Content="Adaptör" IsChecked="{Binding AccessoryAdapter}" Style="{StaticResource AccessoryChip}"/>
                                 <ToggleButton Content="Güç Kablosu" IsChecked="{Binding AccessoryCable}" Style="{StaticResource AccessoryChip}"/>
@@ -312,8 +328,29 @@
                             
                             <TextBlock Style="{StaticResource FieldLabel}" Text="Müşteri Şikayeti / Arıza Belirtisi *"/>
                             <TextBox Text="{Binding FaultSymptom, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource ModernTextBox}" Height="40" Margin="0,0,0,16"
+                                     Style="{StaticResource ModernTextBox}" Height="40" Margin="0,0,0,8"
                                      ToolTip="Örn: Görüntü gelmiyor, Tetik almıyor"/>
+
+                            <!-- Hazır Şablonlar (Quick Symptoms) -->
+                            <ItemsControl ItemsSource="{Binding QuickSymptoms}" Margin="0,0,0,16">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding}"
+                                                Command="{Binding DataContext.AddQuickSymptomCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource ModernButton}"
+                                                Background="{DynamicResource ApplicationBackgroundBrush}"
+                                                Foreground="{DynamicResource ThemeForegroundMuted}"
+                                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
+                                                Padding="10,4" Margin="0,0,6,6" FontSize="11" Cursor="Hand"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                             
                             <TextBlock Style="{StaticResource FieldLabel}" Text="Fiziksel Durum Tespitleri"/>
                             <TextBox Text="{Binding PhysicalCondition, UpdateSourceTrigger=PropertyChanged}"
@@ -325,7 +362,7 @@
                                      Style="{StaticResource ModernTextBox}"
                                      AcceptsReturn="True" TextWrapping="Wrap"
                                      VerticalScrollBarVisibility="Auto"
-                                     Height="100" Margin="0,0,0,16"/>
+                                     Height="90" Margin="0,0,0,16"/>
                                      
                             <Border Background="{DynamicResource ApplicationBackgroundBrush}" BorderBrush="{DynamicResource ThemeBorder}" 
                                     BorderThickness="1" CornerRadius="8" Padding="16" Cursor="Hand"
@@ -334,8 +371,8 @@
                                     <MouseBinding MouseAction="LeftClick" Command="{Binding AddPhotoCommand}"/>
                                 </Border.InputBindings>
                                 <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="📸" FontSize="24" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                    <TextBlock Text="Cihazın ve Teslimatın Fotoğrafını Çek/Ekle" 
+                                    <ui:SymbolIcon Symbol="CameraAdd24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                                    <TextBlock Text="Cihazın Fotoğrafını Çek / Dosyadan Ekle" 
                                                FontSize="12" Foreground="{DynamicResource ThemePrimary}" 
                                                FontWeight="Medium"/>
                                 </StackPanel>
@@ -377,7 +414,7 @@
                         <StackPanel>
                             <TextBlock Style="{StaticResource SectionHeader}" Text="4. Ön Maliyet (Opsiyonel)"/>
                             <TextBlock Style="{StaticResource FieldLabel}" Text="Tahmini İşçilik Ücreti (₺)"/>
-                            <TextBox Text="{Binding LaborCost, StringFormat='{}{0:N2}', UpdateSourceTrigger=PropertyChanged}"
+                            <TextBox Text="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged}"
                                      Style="{StaticResource ModernTextBox}" Height="40" Margin="0,0,0,16"/>
                             
                             <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8" Padding="16" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
@@ -398,37 +435,44 @@
         <Border Grid.Row="2" Background="{DynamicResource ThemeSurface}" 
                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,1,0,0" 
                 Padding="24,16">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="İptal Et" 
-                        Command="{Binding CancelCommand}"
-                        Style="{StaticResource ModernButton}" Background="Transparent" 
-                        Foreground="{DynamicResource ThemeForeground}" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorder}"
-                        Height="44" Padding="24,0" FontSize="14" Margin="0,0,16,0"/>
-                
-                <Button Command="{Binding SaveFaultTicketCommand}"
-                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
-                        Height="44" Padding="32,0" FontSize="15" FontWeight="SemiBold"
-                        BorderThickness="0">
-                    <Button.Content>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBlock Text="💾" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="KAYDI OLUŞTUR" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button.Content>
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsSaving}" Value="True">
-                                    <Setter Property="Content" Value="⏳ Kaydediliyor..."/>
-                                    <Setter Property="IsEnabled" Value="False"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-            </StackPanel>
+            <Grid>
+                <!-- Yazdırma Seçenekleri -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <CheckBox Content="🖨️ Kabul Fişi Yazdır (Termal)" IsChecked="{Binding AutoPrintReceipt}" Margin="0,0,16,0" FontSize="13" Foreground="{DynamicResource ThemeForeground}"/>
+                    <CheckBox Content="📄 PDF Kabul Formu Aç" IsChecked="{Binding AutoPrintPdf}" FontSize="13" Foreground="{DynamicResource ThemeForeground}"/>
+                </StackPanel>
+
+                <!-- Aksiyon Butonları -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="İptal Et (Esc)" 
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource ModernButton}" Background="Transparent" 
+                            Foreground="{DynamicResource ThemeForeground}" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorder}"
+                            Height="44" Padding="20,0" FontSize="14" Margin="0,0,16,0"/>
+                    
+                    <Button Command="{Binding SaveFaultTicketCommand}"
+                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
+                            Height="44" Padding="28,0" FontSize="15" FontWeight="SemiBold"
+                            BorderThickness="0">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <ui:SymbolIcon Symbol="Save24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="KAYDI OLUŞTUR (Ctrl+S)" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button.Content>
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ModernButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSaving}" Value="True">
+                                        <Setter Property="Content" Value="Kaydediliyor..."/>
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>
-
-

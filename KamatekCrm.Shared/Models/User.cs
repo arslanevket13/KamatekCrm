@@ -30,6 +30,9 @@ namespace KamatekCrm.Shared.Models
         [NotMapped]
         public string AdSoyad => $"{Ad} {Soyad}".Trim();
 
+        [NotMapped]
+        public string FullName => !string.IsNullOrWhiteSpace(AdSoyad) ? AdSoyad : Username;
+
         public bool IsActive { get; set; } = true;
         // CreatedDate is in BaseEntity (CreatedAt)
         public DateTime? LastLoginDate { get; set; }
@@ -42,7 +45,7 @@ namespace KamatekCrm.Shared.Models
         public bool CanAccessSettings { get; set; } = false;
         #endregion
 
-        #region Teknisyen Alanları
+        #region Teknisyen & Saha Alanları
 
         /// <summary>
         /// Teknisyen türü mü?
@@ -62,42 +65,68 @@ namespace KamatekCrm.Shared.Models
         public string? VehiclePlate { get; set; }
 
         /// <summary>
-        /// Çalışma bölgesi (il/ilçe)
+        /// Hizmet/Saha Bölgesi (Örn: "İstanbul Avrupa", "Kadıköy")
         /// </summary>
         [MaxLength(100)]
         public string? ServiceArea { get; set; }
 
         /// <summary>
-        ///Uzmanlık alanları (virgülle ayrılmış)
+        /// Uzmanlık alanları (Virgülle ayrılmış: "CCTV, Alarm, Yangın")
         /// </summary>
-        [MaxLength(500)]
+        [MaxLength(250)]
         public string? ExpertiseAreas { get; set; }
 
         /// <summary>
-        /// Bugünkü GPS konumu
+        /// Specialties alias (Geriye uyumluluk)
         /// </summary>
-        [MaxLength(50)]
-        public string? CurrentGpsLocation { get; set; }
+        [NotMapped]
+        public string? Specialties
+        {
+            get => ExpertiseAreas;
+            set => ExpertiseAreas = value;
+        }
 
         /// <summary>
-        /// Son konum güncelleme zamanı
+        /// Anlık GPS enlemi (Çalışma zamanı bilgisi)
         /// </summary>
-        public DateTime? LastLocationUpdate { get; set; }
+        [NotMapped]
+        public double? CurrentLatitude { get; set; }
 
         /// <summary>
-        /// Aktif mi? (çalışıyor mu)
+        /// Anlık GPS boylamı (Çalışma zamanı bilgisi)
         /// </summary>
-        public bool IsOnDuty { get; set; }
+        [NotMapped]
+        public double? CurrentLongitude { get; set; }
 
         /// <summary>
-        /// Toplam tamamlanan iş sayısı
+        /// Konum güncellenme zamanı
         /// </summary>
-        public int TotalJobsCompleted { get; set; }
+        [NotMapped]
+        public DateTime? LocationUpdatedAt { get; set; }
 
         /// <summary>
-        /// Toplam müşteri memnuniyeti (1-5)
+        /// Teknisyenin müsaitlik durumu
         /// </summary>
-        public double? AverageRating { get; set; }
+        [NotMapped]
+        public bool IsAvailable { get; set; } = true;
+
+        /// <summary>
+        /// Atanmış olan aktif servis işlerinin sayısı (Çalışma zamanı hesaplanır)
+        /// </summary>
+        [NotMapped]
+        public int ActiveJobCount { get; set; } = 0;
+
+        /// <summary>
+        /// Tamamlanan toplam iş sayısı (Çalışma zamanı hesaplanır)
+        /// </summary>
+        [NotMapped]
+        public int CompletedJobCount { get; set; } = 0;
+
+        /// <summary>
+        /// Teknisyen performans puanı (0.0 - 5.0)
+        /// </summary>
+        [NotMapped]
+        public double Rating { get; set; } = 5.0;
 
         #endregion
     }

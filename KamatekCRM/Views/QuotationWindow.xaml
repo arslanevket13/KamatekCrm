@@ -258,7 +258,7 @@
                 </StackPanel>
 
                 <!-- Product List -->
-                <Border Grid.Row="2" Background="{DynamicResource CardPanel}" CornerRadius="8" Padding="6" Margin="0,0,0,16">
+                <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="6" Margin="0,0,0,16">
                     <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedProduct}"
                              Background="Transparent" BorderThickness="0">
                         <ListBox.ItemTemplate>

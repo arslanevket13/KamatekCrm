@@ -109,6 +109,7 @@ namespace KamatekCrm.Services
         public string Message { get; set; } = string.Empty;
         public NotificationType Type { get; set; } = NotificationType.Info;
         public string ActionLabel { get; set; } = string.Empty;
+        public System.Windows.Input.ICommand? ActionCommand { get; set; }
     }
 
     public enum NotificationType

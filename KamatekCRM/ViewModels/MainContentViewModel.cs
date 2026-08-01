@@ -143,9 +143,19 @@ namespace KamatekCrm.ViewModels
                                 System.IO.Directory.CreateDirectory(kamatekFolder);
                                 string draftFile = System.IO.Path.Combine(kamatekFolder, "emergency_draft.json");
 
+                                string draftContent = $"{{\"View\":\"{CurrentView.GetType().Name}\",\"SavedAt\":\"{DateTime.Now:O}\"}}";
                                 var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
-                                string json = System.Text.Json.JsonSerializer.Serialize(CurrentView, CurrentView.GetType(), options);
-                                System.IO.File.WriteAllText(draftFile, json);
+                                try
+                                {
+                                    draftContent = System.Text.Json.JsonSerializer.Serialize(new
+                                    {
+                                        ViewName = CurrentView.GetType().Name,
+                                        SavedAt = DateTime.Now
+                                    }, options);
+                                }
+                                catch { }
+
+                                System.IO.File.WriteAllText(draftFile, draftContent);
 
                                 // Background thread warning via Dispatcher
                                 System.Windows.Application.Current.Dispatcher.Invoke(() => 
@@ -199,18 +209,27 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public bool IsAdmin => _authService.IsAdmin;
 
-        #region Navigation Commands
+        // Navigation History Stack
+        private readonly System.Collections.Generic.Stack<object> _backStack = new();
+        private readonly System.Collections.Generic.Stack<object> _forwardStack = new();
+        private bool _isNavigatingHistory;
 
-        // Methods
-        
-        // Yeni Komutlar
+        public bool CanGoBack => _backStack.Count > 0;
+        public bool CanGoForward => _forwardStack.Count > 0;
+
+        private bool _isUserProfileOpen;
+        public bool IsUserProfileOpen
+        {
+            get => _isUserProfileOpen;
+            set => SetProperty(ref _isUserProfileOpen, value);
+        }
+
+        #region Navigation Commands
 
         // RBAC Visibility
         public bool CanViewFinance => _authService.CanViewFinance;
         public bool CanViewAnalytics => _authService.CanViewAnalytics;
         public bool CanAccessSettings => _authService.CanAccessSettings;
-
-        // Finansal Sağlık Komutu
 
         #endregion
 
@@ -274,6 +293,7 @@ namespace KamatekCrm.ViewModels
 
         /// <summary>
         /// Sets the inner content view locally, without affecting the global window navigation.
+        /// Maintains navigation history stack.
         /// </summary>
         /// <typeparam name="TViewModel"></typeparam>
         private void NavigateTo<TViewModel>() where TViewModel : notnull
@@ -281,6 +301,13 @@ namespace KamatekCrm.ViewModels
             try
             {
                 var vm = _serviceProvider.GetRequiredService<TViewModel>();
+                if (!_isNavigatingHistory && CurrentView != null && CurrentView.GetType() != typeof(TViewModel))
+                {
+                    _backStack.Push(CurrentView);
+                    _forwardStack.Clear();
+                    OnPropertyChanged(nameof(CanGoBack));
+                    OnPropertyChanged(nameof(CanGoForward));
+                }
                 CurrentView = vm;
             }
             catch (Exception ex)
@@ -290,6 +317,35 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void GoBack()
+        {
+            if (_backStack.Count > 0)
+            {
+                _isNavigatingHistory = true;
+                _forwardStack.Push(CurrentView!);
+                CurrentView = _backStack.Pop();
+                _isNavigatingHistory = false;
+                OnPropertyChanged(nameof(CanGoBack));
+                OnPropertyChanged(nameof(CanGoForward));
+            }
+        }
+
+        [RelayCommand]
+        private void GoForward()
+        {
+            if (_forwardStack.Count > 0)
+            {
+                _isNavigatingHistory = true;
+                _backStack.Push(CurrentView!);
+                CurrentView = _forwardStack.Pop();
+                _isNavigatingHistory = false;
+                OnPropertyChanged(nameof(CanGoBack));
+                OnPropertyChanged(nameof(CanGoForward));
+            }
+        }
+
+        [RelayCommand] private void ToggleUserProfile() => IsUserProfileOpen = !IsUserProfileOpen;
         [RelayCommand] private void NavigateToDashboard() => NavigateTo<DashboardViewModel>();
         [RelayCommand] private void NavigateToCustomers() => NavigateTo<CustomersViewModel>();
         [RelayCommand] private void NavigateToProducts() => NavigateTo<ProductViewModel>();

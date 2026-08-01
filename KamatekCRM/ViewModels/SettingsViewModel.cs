@@ -9,12 +9,29 @@ using KamatekCrm.Services;
 
 namespace KamatekCrm.ViewModels
 {
+    public class CompanySettingsDto
+    {
+        public string CompanyName { get; set; } = "Kamatek Bilişim & Güvenlik Sistemleri";
+        public string TaxOffice { get; set; } = "";
+        public string TaxNumber { get; set; } = "";
+        public string Address { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Iban { get; set; } = "";
+        public string CustomBackupPath { get; set; } = "";
+        public string DefaultPrinter { get; set; } = "";
+        public bool AutoPrintReceipt { get; set; } = false;
+        public bool SoundAlertsEnabled { get; set; } = true;
+    }
+
     public partial class SettingsViewModel : ViewModelBase
     {
         private readonly BackupService _backupService;
+        private readonly IToastService? _toastService;
 
-        public SettingsViewModel()
+        public SettingsViewModel(IToastService? toastService = null)
         {
+            _toastService = toastService;
             _backupService = new BackupService();
             
             // Ayarları Properties.Settings.Default'tan yükle
@@ -28,10 +45,19 @@ namespace KamatekCrm.ViewModels
             _accentColor = Properties.Settings.Default.AccentColor;
             _isMainServer = Properties.Settings.Default.IsMainServer;
             
+            LoadCompanySettings();
+            LoadInstalledPrinters();
             LoadLastBackupInfo();
         }
 
-        #region Properties
+        #region Properties & Tab Navigation
+
+        private int _selectedTabIndex = 0;
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set => SetProperty(ref _selectedTabIndex, value);
+        }
 
         private bool _isBusy;
         public bool IsBusy
@@ -45,6 +71,87 @@ namespace KamatekCrm.ViewModels
         {
             get => _lastBackupText;
             set => SetProperty(ref _lastBackupText, value);
+        }
+
+        // Firma Bilgileri
+        private string _companyName = "Kamatek Bilişim & Güvenlik";
+        public string CompanyName
+        {
+            get => _companyName;
+            set => SetProperty(ref _companyName, value);
+        }
+
+        private string _taxOffice = "";
+        public string TaxOffice
+        {
+            get => _taxOffice;
+            set => SetProperty(ref _taxOffice, value);
+        }
+
+        private string _taxNumber = "";
+        public string TaxNumber
+        {
+            get => _taxNumber;
+            set => SetProperty(ref _taxNumber, value);
+        }
+
+        private string _companyAddress = "";
+        public string CompanyAddress
+        {
+            get => _companyAddress;
+            set => SetProperty(ref _companyAddress, value);
+        }
+
+        private string _companyPhone = "";
+        public string CompanyPhone
+        {
+            get => _companyPhone;
+            set => SetProperty(ref _companyPhone, value);
+        }
+
+        private string _companyEmail = "";
+        public string CompanyEmail
+        {
+            get => _companyEmail;
+            set => SetProperty(ref _companyEmail, value);
+        }
+
+        private string _companyIban = "";
+        public string CompanyIban
+        {
+            get => _companyIban;
+            set => SetProperty(ref _companyIban, value);
+        }
+
+        private string _customBackupPath = "";
+        public string CustomBackupPath
+        {
+            get => _customBackupPath;
+            set => SetProperty(ref _customBackupPath, value);
+        }
+
+        // Yazıcı & Bildirimler
+        public System.Collections.ObjectModel.ObservableCollection<string> AvailablePrinters { get; } = new();
+
+        private string _selectedPrinter = "Varsayılan Sistem Yazıcısı";
+        public string SelectedPrinter
+        {
+            get => _selectedPrinter;
+            set => SetProperty(ref _selectedPrinter, value);
+        }
+
+        private bool _autoPrintReceipt;
+        public bool AutoPrintReceipt
+        {
+            get => _autoPrintReceipt;
+            set => SetProperty(ref _autoPrintReceipt, value);
+        }
+
+        private bool _soundAlertsEnabled = true;
+        public bool SoundAlertsEnabled
+        {
+            get => _soundAlertsEnabled;
+            set => SetProperty(ref _soundAlertsEnabled, value);
         }
 
         private bool _isMainServer;
@@ -340,6 +447,126 @@ namespace KamatekCrm.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"Ayar kaydedilemedi: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+
+        #region Company & Printer Helper Methods
+
+        private void LoadCompanySettings()
+        {
+            try
+            {
+                string filePath = GetCompanySettingsFilePath();
+                if (File.Exists(filePath))
+                {
+                    string json = File.ReadAllText(filePath);
+                    var dto = System.Text.Json.JsonSerializer.Deserialize<CompanySettingsDto>(json);
+                    if (dto != null)
+                    {
+                        _companyName = dto.CompanyName ?? "Kamatek Bilişim & Güvenlik";
+                        _taxOffice = dto.TaxOffice ?? "";
+                        _taxNumber = dto.TaxNumber ?? "";
+                        _companyAddress = dto.Address ?? "";
+                        _companyPhone = dto.Phone ?? "";
+                        _companyEmail = dto.Email ?? "";
+                        _companyIban = dto.Iban ?? "";
+                        _customBackupPath = dto.CustomBackupPath ?? "";
+                        _selectedPrinter = dto.DefaultPrinter ?? "Varsayılan Sistem Yazıcısı";
+                        _autoPrintReceipt = dto.AutoPrintReceipt;
+                        _soundAlertsEnabled = dto.SoundAlertsEnabled;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Company settings load error: {ex.Message}");
+            }
+        }
+
+        private void SaveCompanySettings()
+        {
+            try
+            {
+                string filePath = GetCompanySettingsFilePath();
+                var dto = new CompanySettingsDto
+                {
+                    CompanyName = CompanyName,
+                    TaxOffice = TaxOffice,
+                    TaxNumber = TaxNumber,
+                    Address = CompanyAddress,
+                    Phone = CompanyPhone,
+                    Email = CompanyEmail,
+                    Iban = CompanyIban,
+                    CustomBackupPath = CustomBackupPath,
+                    DefaultPrinter = SelectedPrinter,
+                    AutoPrintReceipt = AutoPrintReceipt,
+                    SoundAlertsEnabled = SoundAlertsEnabled
+                };
+                string json = System.Text.Json.JsonSerializer.Serialize(dto, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(filePath, json);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Company settings save error: {ex.Message}");
+            }
+        }
+
+        private static string GetCompanySettingsFilePath()
+        {
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "KamatekCRM");
+            Directory.CreateDirectory(folder);
+            return Path.Combine(folder, "company_settings.json");
+        }
+
+        private void LoadInstalledPrinters()
+        {
+            try
+            {
+                AvailablePrinters.Clear();
+                AvailablePrinters.Add("Varsayılan Sistem Yazıcısı");
+                foreach (string printer in System.Drawing.Printing.PrinterSettings.InstalledPrinters)
+                {
+                    AvailablePrinters.Add(printer);
+                }
+            }
+            catch
+            {
+                if (!AvailablePrinters.Contains("Varsayılan Sistem Yazıcısı"))
+                    AvailablePrinters.Add("Varsayılan Sistem Yazıcısı");
+            }
+        }
+
+        [RelayCommand]
+        private void SelectTab(string tabIndexStr)
+        {
+            if (int.TryParse(tabIndexStr, out int index))
+            {
+                SelectedTabIndex = index;
+            }
+        }
+
+        [RelayCommand]
+        private void SaveCompanyInfo()
+        {
+            SaveCompanySettings();
+            _toastService?.ShowSuccess("Firma ve sistem ayarları başarıyla kaydedildi.");
+        }
+
+        [RelayCommand]
+        private void SelectBackupFolder()
+        {
+            var dialog = new Microsoft.Win32.OpenFolderDialog
+            {
+                Title = "Yedekleme Klasörü Seçin"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                CustomBackupPath = dialog.FolderName;
+                SaveCompanySettings();
+                _toastService?.ShowInfo($"Yedekleme konumu güncellendi: {CustomBackupPath}");
             }
         }
 

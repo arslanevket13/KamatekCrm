@@ -3,9 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:dd="urn:gong-wpf-dragdrop"
-        Title="🏗️ PROJE TEKLİF EDİTÖRÜ" 
-        Height="800" Width="1400"
-        MinHeight="600" MinWidth="1000"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=viewmodels:ProjectQuoteEditorViewModel, IsDesignTimeCreatable=False}"
+        Title="🏗️ PROJE TEKLİF EDİTÖRÜ WORKBENCH" 
+        Height="850" Width="1450"
+        MinHeight="650" MinWidth="1100"
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource PremiumWindowStyle}">
 
@@ -15,12 +20,15 @@
             <StackPanel Orientation="Horizontal" Margin="2,1">
                 <TextBlock Text="{Binding HeaderDisplay}" FontSize="13" FontWeight="Medium"
                            Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="4" Padding="5,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding RecursiveTotal, StringFormat='₺{0:N0}'}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                </Border>
             </StackPanel>
         </HierarchicalDataTemplate>
         
         <!-- Product List Template -->
         <DataTemplate x:Key="ProductTemplate">
-            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4" Padding="8,8" Margin="0"
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="4" Padding="8,6" Margin="0,0,0,4"
                     BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Cursor="Hand">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -28,12 +36,14 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="{Binding ProductName}" FontWeight="SemiBold" FontSize="12"
-                                   TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Text="{Binding SKU}" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Text="{Binding ProductName}" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding SKU}" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding ProductCategoryType}" FontSize="10" Foreground="{DynamicResource ThemePrimary}"/>
+                        </StackPanel>
                     </StackPanel>
                     <TextBlock Grid.Column="1" Text="{Binding SalePrice, StringFormat='₺{0:N0}'}" 
-                               FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}" VerticalAlignment="Center"/>
+                               FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}" VerticalAlignment="Center"/>
                 </Grid>
             </Border>
         </DataTemplate>
@@ -41,60 +51,80 @@
     
     <Grid Margin="16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="*"/>    <!-- 3 Panel -->
+            <RowDefinition Height="Auto"/> <!-- Footer -->
         </Grid.RowDefinitions>
 
-        <!-- Compact Sleek Header Bar -->
-        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,10" Margin="0,0,0,12"
+        <!-- Header Bar -->
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="14,8" Margin="0,0,0,10"
                 BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="220"/>
-                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Left: Compact Title & Code -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
+                <!-- Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
                     <ui:SymbolIcon Symbol="Building24" FontSize="20" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,8,0"/>
                     <StackPanel>
-                        <TextBlock Text="PROJE TEKLİF EDİTÖRÜ" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="PROJE TEKLİF WORKBENCH" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                         <TextBlock Text="{Binding CurrentProject.ProjectCode}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}"/>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- Customer Selection -->
-                <StackPanel Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <TextBlock Text="MÜŞTERİ" FontWeight="SemiBold" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
-                    <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="FullName" Height="30"/>
+                <StackPanel Grid.Column="1" Margin="0,0,10,0" VerticalAlignment="Center">
+                    <TextBlock Text="MÜŞTERİ" FontWeight="SemiBold" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="FullName" Height="28"/>
                 </StackPanel>
 
                 <!-- Project Title -->
-                <StackPanel Grid.Column="2" Margin="0,0,12,0" VerticalAlignment="Center">
-                    <TextBlock Text="PROJE ADI" FontWeight="SemiBold" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
-                    <TextBox Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged}" Height="30" Padding="6,2"/>
+                <StackPanel Grid.Column="2" Margin="0,0,10,0" VerticalAlignment="Center">
+                    <TextBlock Text="PROJE ADI" FontWeight="SemiBold" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBox Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged}" Height="28" Padding="4,2"/>
                 </StackPanel>
 
-                <!-- Compact Structure Generator -->
-                <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <StackPanel Margin="0,0,8,0" VerticalAlignment="Center">
-                        <TextBlock Text="Blok" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <TextBox Text="{Binding BlockCount}" Width="40" Height="28" TextAlignment="Center" Padding="0,2"/>
-                    </StackPanel>
-                    <StackPanel Margin="0,0,8,0" VerticalAlignment="Center">
-                        <TextBlock Text="Kat" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <TextBox Text="{Binding FloorCount}" Width="40" Height="28" TextAlignment="Center" Padding="0,2"/>
-                    </StackPanel>
-                    <StackPanel Margin="0,0,12,0" VerticalAlignment="Center">
-                        <TextBlock Text="Daire/Kat" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <TextBox Text="{Binding FlatsPerFloor}" Width="40" Height="28" TextAlignment="Center" Padding="0,2"/>
-                    </StackPanel>
-                    <Button Command="{Binding GenerateStructureCommand}" Style="{StaticResource ModernButton}" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" FontWeight="SemiBold" Padding="12,0" Height="30">
+                <!-- Toolbar Actions (Undo/Redo/Bulk Margin) -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <Button Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}"
+                            Style="{StaticResource SecondaryButton}" Height="28" Width="34" ToolTip="Geri Al (Ctrl+Z)" Margin="0,0,4,0">
+                        <ui:SymbolIcon Symbol="ArrowUndo24" FontSize="14"/>
+                    </Button>
+                    <Button Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}"
+                            Style="{StaticResource SecondaryButton}" Height="28" Width="34" ToolTip="İleri Al (Ctrl+Y)" Margin="0,0,8,0">
+                        <ui:SymbolIcon Symbol="ArrowRedo24" FontSize="14"/>
+                    </Button>
+                    <Button Command="{Binding ApplyBulkMarginCommand}"
+                            Style="{StaticResource SecondaryButton}" Height="28" Padding="8,0" ToolTip="Toplu Kar Marjı Ekle">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="AddSquare24" Margin="0,0,6,0"/>
+                            <ui:SymbolIcon Symbol="Money24" FontSize="14" Margin="0,0,4,0"/>
+                            <TextBlock Text="Toplu Marj" FontSize="11" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Structure Generator -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
+                        <TextBlock Text="Blok" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBox Text="{Binding BlockCount}" Width="32" Height="26" TextAlignment="Center" Padding="0,1"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
+                        <TextBlock Text="Kat" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBox Text="{Binding FloorCount}" Width="32" Height="26" TextAlignment="Center" Padding="0,1"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,8,0" VerticalAlignment="Center">
+                        <TextBlock Text="Daire/Kat" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBox Text="{Binding FlatsPerFloor}" Width="32" Height="26" TextAlignment="Center" Padding="0,1"/>
+                    </StackPanel>
+                    <Button Command="{Binding GenerateStructureCommand}" Style="{StaticResource ModernButton}" Height="28" Padding="10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="AddSquare24" Margin="0,0,4,0"/>
                             <TextBlock Text="Yapı Oluştur" FontSize="11" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -102,14 +132,14 @@
             </Grid>
         </Border>
         
-        <!-- Ana İçerik (3 Panel) -->
+        <!-- 3 Panel Main Content -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280" MinWidth="200"/>
+                <ColumnDefinition Width="290" MinWidth="220"/>
                 <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="*" MinWidth="300"/>
+                <ColumnDefinition Width="*" MinWidth="350"/>
                 <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="300" MinWidth="250"/>
+                <ColumnDefinition Width="320" MinWidth="250"/>
             </Grid.ColumnDefinitions>
             
             <!-- SOL PANEL: Yapı Ağacı -->
@@ -118,84 +148,73 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     
                     <!-- Başlık -->
-                    <Border Grid.Row="0" Background="{DynamicResource StatusInfoBg}" Padding="16,8">
-                        <TextBlock Text="📍 YAPI AĞACI" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemePrimary}"/>
+                    <Border Grid.Row="0" Background="{DynamicResource StatusInfoBg}" Padding="12,6">
+                        <TextBlock Text="📍 YAPI AĞACI" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource ThemePrimary}"/>
+                    </Border>
+
+                    <!-- Tree Search -->
+                    <Border Grid.Row="1" Padding="6,6,6,0">
+                        <TextBox Text="{Binding TreeSearchText, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource ModernTextBox}" Height="28" Padding="6,2"/>
                     </Border>
                     
                     <!-- TreeView -->
-                    <TreeView Grid.Row="1" ItemsSource="{Binding RootNodes}"
+                    <TreeView Grid.Row="2" ItemsSource="{Binding RootNodes}"
                                ItemTemplate="{StaticResource TreeNodeTemplate}"
-                               BorderThickness="0" Padding="8"
+                               BorderThickness="0" Padding="6"
                                SelectedItemChanged="TreeView_SelectedItemChanged">
                         <TreeView.ItemContainerStyle>
                             <Style TargetType="TreeViewItem">
                                 <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
                                 <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
                                 <Setter Property="Padding" Value="4,2"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                             </Style>
                         </TreeView.ItemContainerStyle>
                         
-                        <!-- Context Menu -->
+                        <!-- Context Menu (Fixed PlacementTarget DataContext bindings) -->
                         <TreeView.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="➕ Blok Ekle" Command="{Binding AddBlockCommand}"/>
-                                <MenuItem Header="📋 Kat Ekle" Command="{Binding AddFloorCommand}"/>
-                                <MenuItem Header="🏠 Daire Ekle" Command="{Binding AddFlatCommand}"/>
-                                <MenuItem Header="🏭 Bölge Ekle" Command="{Binding AddZoneCommand}"/>
+                                <MenuItem Header="➕ Blok Ekle" Command="{Binding PlacementTarget.DataContext.AddBlockCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <MenuItem Header="📋 Kat Ekle" Command="{Binding PlacementTarget.DataContext.AddFloorCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <MenuItem Header="🏠 Daire Ekle" Command="{Binding PlacementTarget.DataContext.AddFlatCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <MenuItem Header="🏭 Bölge Ekle" Command="{Binding PlacementTarget.DataContext.AddZoneCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 <Separator/>
-                                <MenuItem Header="📑 Kopyala (Duplicate)" Command="{Binding DuplicateNodeCommand}"/>
-                                <MenuItem Header="📝 Yeniden Adlandır / Etiketle" Command="{Binding RenameNodeCommand}"/>
-                                <MenuItem Header="📋 Kardeşlere Uygula" Command="{Binding ApplyToSiblingsCommand}"/>
+                                <MenuItem Header="📑 Kopyala (Duplicate)" Command="{Binding PlacementTarget.DataContext.DuplicateNodeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <MenuItem Header="📝 Yeniden Adlandır" Command="{Binding PlacementTarget.DataContext.RenameNodeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <MenuItem Header="📋 Kardeşlere Uygula" Command="{Binding PlacementTarget.DataContext.ApplyToSiblingsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 <Separator/>
-                                <MenuItem Header="🗑️ Sil" Command="{Binding RemoveNodeCommand}" Foreground="{DynamicResource ThemeError}"/>
+                                <MenuItem Header="🗑️ Sil" Command="{Binding PlacementTarget.DataContext.RemoveNodeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Foreground="{DynamicResource StatusErrorFg}"/>
                             </ContextMenu>
                         </TreeView.ContextMenu>
                     </TreeView>
                     
-                    <!-- Tree Action Buttons -->
-                    <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="8" 
+                    <!-- Action Buttons -->
+                    <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="6" 
                             BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,1,0,0">
                         <UniformGrid Columns="3">
-                            <Button Command="{Binding AddBlockCommand}"
-                                    Style="{StaticResource ModernButton}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                                    Height="32" Margin="2,0" Padding="4,0" ToolTip="Yeni Blok Ekle">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon Symbol="Add24" Margin="0,0,4,0"/>
-                                    <TextBlock Text="Blok" FontSize="11" FontWeight="SemiBold"/>
-                                </StackPanel>
+                            <Button Command="{Binding AddBlockCommand}" Style="{StaticResource SecondaryButton}" Height="30" Margin="2,0" Padding="2,0" ToolTip="Yeni Blok Ekle">
+                                <TextBlock Text="+ Blok" FontSize="11" FontWeight="SemiBold"/>
                             </Button>
-                            <Button Command="{Binding AddFloorCommand}"
-                                    Style="{StaticResource ModernButton}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                                    Height="32" Margin="2,0" Padding="4,0" ToolTip="Yeni Kat Ekle">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon Symbol="Add24" Margin="0,0,4,0"/>
-                                    <TextBlock Text="Kat" FontSize="11" FontWeight="SemiBold"/>
-                                </StackPanel>
+                            <Button Command="{Binding AddFloorCommand}" Style="{StaticResource SecondaryButton}" Height="30" Margin="2,0" Padding="2,0" ToolTip="Yeni Kat Ekle">
+                                <TextBlock Text="+ Kat" FontSize="11" FontWeight="SemiBold"/>
                             </Button>
-                            <Button Command="{Binding AddFlatCommand}"
-                                    Style="{StaticResource ModernButton}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
-                                    Height="32" Margin="2,0" Padding="4,0" ToolTip="Yeni Daire Ekle">
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon Symbol="Add24" Margin="0,0,4,0"/>
-                                    <TextBlock Text="Daire" FontSize="11" FontWeight="SemiBold"/>
-                                </StackPanel>
+                            <Button Command="{Binding AddFlatCommand}" Style="{StaticResource SecondaryButton}" Height="30" Margin="2,0" Padding="2,0" ToolTip="Yeni Daire Ekle">
+                                <TextBlock Text="+ Daire" FontSize="11" FontWeight="SemiBold"/>
                             </Button>
                         </UniformGrid>
                     </Border>
                 </Grid>
             </Border>
             
-            <!-- Splitter 1 -->
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" 
-                          Background="Transparent" Cursor="SizeWE"/>
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Transparent" Cursor="SizeWE"/>
             
-            <!-- ORTA PANEL: Mahal Listesi -->
+            <!-- ORTA PANEL: Mahal Kalem Listesi -->
             <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
                     BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1"
                     dd:DragDrop.IsDropTarget="True"
@@ -208,70 +227,100 @@
                     </Grid.RowDefinitions>
                     
                     <!-- Başlık -->
-                    <Border Grid.Row="0" Background="{DynamicResource StatusSuccessBg}" Padding="16,8">
+                    <Border Grid.Row="0" Background="{DynamicResource StatusSuccessBg}" Padding="14,6">
                         <Grid>
                             <TextBlock Text="{Binding SelectedNodeName, StringFormat='🛠️ {0} - Kalem Listesi'}" 
-                                       FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeSuccess}"/>
+                                       FontWeight="Bold" FontSize="13" Foreground="{DynamicResource StatusSuccessFgDark}"/>
                             <TextBlock Text="{Binding SelectedNodeSubTotal, StringFormat='₺{0:N0}'}" 
-                                       HorizontalAlignment="Right" FontWeight="Bold" 
-                                       FontSize="14" Foreground="{DynamicResource ThemeSuccess}"/>
+                                       HorizontalAlignment="Right" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource StatusSuccessFgDark}"/>
                         </Grid>
                     </Border>
                     
                     <!-- DataGrid -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding CurrentNodeItems}"
-                              SelectedItem="{Binding SelectedItem}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              BorderThickness="0"
-                              GridLinesVisibility="Horizontal"
-                              HeadersVisibility="Column"
-                              RowHeaderWidth="0"
-                              SelectionMode="Single">
+                               SelectedItem="{Binding SelectedItem}"
+                               AutoGenerateColumns="False"
+                               CanUserAddRows="False"
+                               CanUserDeleteRows="False"
+                               BorderThickness="0"
+                               GridLinesVisibility="Horizontal"
+                               HeadersVisibility="Column"
+                               RowHeight="36"
+                               SelectionMode="Single">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Ürün" Binding="{Binding ProductName}" Width="*" IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Adet" Binding="{Binding Quantity}" Width="60"/>
-                            <DataGridTextColumn Header="Alış ₺" Binding="{Binding UnitCost, StringFormat='{}{0:N0}'}" Width="80">
-                                <DataGridTextColumn.CellStyle>
-                                    <Style TargetType="DataGridCell">
-                                        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <!-- Product Name -->
+                            <DataGridTextColumn Header="Ürün / Hizmet" Binding="{Binding ProductName}" Width="*" IsReadOnly="True"/>
+
+                            <!-- Step Quantity Column (Fixed AncestorType={x:Type Window}) -->
+                            <DataGridTemplateColumn Header="Adet" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Button Content="-" Command="{Binding DataContext.DecrementItemQuantityCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" CommandParameter="{Binding}" Width="20" Height="22" Padding="0" Margin="0,0,2,0"/>
+                                            <TextBlock Text="{Binding Quantity}" Width="28" TextAlignment="Center" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <Button Content="+" Command="{Binding DataContext.IncrementItemQuantityCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" CommandParameter="{Binding}" Width="20" Height="22" Padding="0" Margin="2,0,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Unit Cost -->
+                            <DataGridTextColumn Header="Alış ₺" Binding="{Binding UnitCost, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N0}'}" Width="75"/>
+
+                            <!-- Labor Cost -->
+                            <DataGridTextColumn Header="İşçilik ₺" Binding="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N0}'}" Width="75"/>
+
+                            <!-- Unit Price -->
+                            <DataGridTextColumn Header="Satış ₺" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N0}'}" Width="80"/>
+
+                            <!-- Total Price -->
+                            <DataGridTextColumn Header="Toplam ₺" Binding="{Binding TotalPrice, StringFormat='{}{0:N0}'}" Width="85" IsReadOnly="True">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
                                     </Style>
-                                </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="Satış ₺" Binding="{Binding UnitPrice, StringFormat='{}{0:N0}'}" Width="80"/>
-                            <DataGridTextColumn Header="İşçilik ₺" Binding="{Binding LaborCost, StringFormat='{}{0:N0}'}" Width="80"/>
-                            <DataGridTextColumn Header="Toplam ₺" Binding="{Binding TotalPrice, StringFormat='{}{0:N0}'}" Width="90" IsReadOnly="True">
-                                <DataGridTextColumn.CellStyle>
-                                    <Style TargetType="DataGridCell">
+
+                            <!-- Total Cost -->
+                            <DataGridTextColumn Header="Maliyet ₺" Binding="{Binding TotalItemCost, StringFormat='{}{0:N0}'}" Width="80" IsReadOnly="True"/>
+
+                            <!-- Margin -->
+                            <DataGridTextColumn Header="Marj" Binding="{Binding MarginDisplay}" Width="60" IsReadOnly="True">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
                                         <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
                                     </Style>
-                                </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="Marj" Binding="{Binding MarginDisplay}" Width="60" IsReadOnly="True"/>
-                            <DataGridCheckBoxColumn Header="Ops." Binding="{Binding IsOptional}" Width="40"/>
+
+                            <!-- Optional -->
+                            <DataGridCheckBoxColumn Header="Ops." Binding="{Binding IsOptional, UpdateSourceTrigger=PropertyChanged}" Width="40"/>
                         </DataGrid.Columns>
                     </DataGrid>
                     
-                    <!-- Alt Bar -->
-                    <Border Grid.Row="2" Background="{DynamicResource ThemeSurface}" Padding="16" 
+                    <!-- Footer Bar -->
+                    <Border Grid.Row="2" Background="{DynamicResource SurfacePageBrush}" Padding="10,6" 
                             BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,1,0,0">
                         <Grid>
                             <Button Content="🗑️ Kalemi Sil" Command="{Binding RemoveItemCommand}"
-                                    Background="{DynamicResource StatusErrorBg}" Foreground="{DynamicResource StatusErrorFg}" 
-                                    Padding="16,6" Height="32" BorderThickness="0" HorizontalAlignment="Left"/>
+                                    Style="{StaticResource SecondaryButton}" 
+                                    Foreground="{DynamicResource StatusErrorFg}" 
+                                    Height="28" Padding="12,0" HorizontalAlignment="Left"/>
                             
-                            <TextBlock Text="💡 Sağ panelden ürün sürükleyip bırakın" 
-                                       FontSize="11" Foreground="{DynamicResource ThemeMuted}" 
+                            <TextBlock Text="💡 Sağ panelden ürün sürükleyip bırakabilirsiniz" 
+                                       FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
                 </Grid>
             </Border>
             
-            <!-- Splitter 2 -->
-            <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch" 
-                          Background="Transparent" Cursor="SizeWE"/>
+            <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch" Background="Transparent" Cursor="SizeWE"/>
             
             <!-- SAĞ PANEL: Ürün Kataloğu -->
             <Border Grid.Column="4" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" 
@@ -285,22 +334,26 @@
                     </Grid.RowDefinitions>
                     
                     <!-- Başlık -->
-                    <Border Grid.Row="0" Background="{DynamicResource ThemeWarningBg}" Padding="16,8">
-                        <TextBlock Text="📦 ÜRÜN &amp; HİZMET KATALOĞU" FontWeight="Bold" 
-                                   FontSize="14" Foreground="{DynamicResource ThemeWarning}"/>
+                    <Border Grid.Row="0" Background="{DynamicResource StatusWarningBg}" Padding="12,6">
+                        <TextBlock Text="📦 ÜRÜN &amp; HİZMET KATALOĞU" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource StatusWarningFgDark}"/>
                     </Border>
                     
-                    <!-- Arama -->
-                    <Border Grid.Row="1" Padding="8,8">
-                        <TextBox Text="{Binding ProductSearchText, UpdateSourceTrigger=PropertyChanged}"
-                                 Height="32" Padding="8,4"/>
-                    </Border>
+                    <!-- Kategori & Arama -->
+                    <Grid Grid.Row="1" Margin="6,6,6,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="110"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Height="28"/>
+                        <TextBox Grid.Column="2" Text="{Binding ProductSearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="28" Padding="4,2"/>
+                    </Grid>
                     
                     <!-- Ürün Listesi -->
                     <ListBox Grid.Row="2" ItemsSource="{Binding FilteredProducts}"
                              SelectedItem="{Binding SelectedProduct}"
                              ItemTemplate="{StaticResource ProductTemplate}"
-                             BorderThickness="0" Padding="8"
+                             BorderThickness="0" Padding="6"
                              dd:DragDrop.IsDragSource="True"
                              dd:DragDrop.DragAdornerTemplate="{StaticResource ProductTemplate}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -314,19 +367,17 @@
                     </ListBox>
                     
                     <!-- Ekle Butonu -->
-                    <Border Grid.Row="3" Background="{DynamicResource ThemeSurface}" Padding="16" 
+                    <Border Grid.Row="3" Background="{DynamicResource SurfacePageBrush}" Padding="10,6" 
                             BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,1,0,0">
                         <Button Content="➕ SEÇİLİ NODE'A EKLE" Command="{Binding AddItemCommand}"
-                                Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}" FontWeight="SemiBold"
-                                Padding="8,8" Height="36" BorderThickness="0" Cursor="Hand"
-                                HorizontalAlignment="Stretch"/>
+                                Style="{StaticResource ModernButton}" Height="32" HorizontalAlignment="Stretch"/>
                     </Border>
                 </Grid>
             </Border>
         </Grid>
         
-        <!-- Footer: Finansal Özet ve Butonlar (Duyarlı Wrap Panel) -->
-        <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16" Margin="0,16,0,0"
+        <!-- Footer: Finansal Özet ve Butonlar -->
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="14,10" Margin="0,10,0,0"
                 BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
             <Grid>
                 <Grid.RowDefinitions>
@@ -334,90 +385,82 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 
-                <!-- Üst Satır: Finansal Özet Kartları (WrapPanel ile Esnek Sığdırma) -->
-                <WrapPanel Grid.Row="0" Margin="0,0,0,12">
+                <!-- Finansal Özet Kartları -->
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
                     <!-- Maliyet -->
-                    <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="14,8" Margin="0,0,8,8"
-                            BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                    <Border Grid.Column="0" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                         <StackPanel>
                             <TextBlock Text="MALİYET" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding TotalCostDisplay}" FontSize="15" 
-                                       FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock Text="{Binding TotalCostDisplay}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- Satış -->
-                    <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="14,8" Margin="0,0,8,8"
-                            BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                    <Border Grid.Column="1" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                         <StackPanel>
                             <TextBlock Text="SATIŞ" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding TotalRevenueDisplay}" FontSize="15" 
-                                       FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock Text="{Binding TotalRevenueDisplay}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- İskonto -->
-                    <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="14,8" Margin="0,0,8,8"
-                            BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                    <Border Grid.Column="2" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="İSKONTO %" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,4,0"/>
-                                <TextBox Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" 
-                                         Width="40" Height="18" FontSize="10" TextAlignment="Center" 
-                                         Padding="0,0" VerticalContentAlignment="Center"/>
+                                <TextBox Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" Width="30" Height="16" FontSize="9" TextAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding DiscountAmountDisplay}" FontSize="14" 
-                                       FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                            <TextBlock Text="{Binding DiscountAmountDisplay}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- KDV -->
-                    <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="14,8" Margin="0,0,8,8"
-                            BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                    <Border Grid.Column="3" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="KDV %" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,4,0"/>
-                                <TextBox Text="{Binding KdvRate, UpdateSourceTrigger=PropertyChanged}" 
-                                         Width="40" Height="18" FontSize="10" TextAlignment="Center" 
-                                         Padding="0,0" VerticalContentAlignment="Center"/>
+                                <TextBox Text="{Binding KdvRate, UpdateSourceTrigger=PropertyChanged}" Width="30" Height="16" FontSize="9" TextAlignment="Center"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding KdvAmountDisplay}" FontSize="14" 
-                                       FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock Text="{Binding KdvAmountDisplay}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- Genel Toplam -->
-                    <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="8" Padding="16,8" Margin="0,0,8,8"
-                            BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1.5">
+                    <Border Grid.Column="4" Background="{DynamicResource StatusInfoBgLight}" CornerRadius="6" Padding="12,6" Margin="0,0,6,0" BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1.5">
                         <StackPanel>
-                            <TextBlock Text="GENEL TOPLAM" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource ThemePrimaryDark}"/>
-                            <TextBlock Text="{Binding GrandTotalDisplay}" FontSize="18" 
-                                       FontWeight="Bold" Foreground="{DynamicResource ThemePrimaryDark}"/>
+                            <TextBlock Text="GENEL TOPLAM" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                            <TextBlock Text="{Binding GrandTotalDisplay}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- Kar -->
-                    <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="14,8" Margin="0,0,8,8"
-                            BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                    <Border Grid.Column="5" Background="{DynamicResource StatusSuccessBg}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0">
                         <StackPanel>
-                            <TextBlock Text="KAR" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding TotalProfitDisplay}" FontSize="15" 
-                                       FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
+                            <TextBlock Text="KAR" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFgDark}"/>
+                            <TextBlock Text="{Binding TotalProfitDisplay}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- Marj -->
-                    <Border Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="14,8" Margin="0,0,8,8"
-                            BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                    <Border Grid.Column="6" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" Padding="10,6">
                         <StackPanel>
                             <TextBlock Text="MARJ" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding OverallMarginDisplay}" FontSize="15" 
-                                       FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
+                            <TextBlock Text="{Binding OverallMarginDisplay}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
                         </StackPanel>
                     </Border>
-                </WrapPanel>
+                </Grid>
 
-                <!-- Alt Satır: Durum ve Butonlar -->
+                <!-- Durum ve Butonlar -->
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -425,57 +468,36 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     
-                    <!-- Durum Bilgisi -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource StatusInfoBg}" CornerRadius="4" Padding="8,4" Margin="0,0,8,0">
-                            <TextBlock Text="{Binding QuoteStatusDisplay, StringFormat='Durum: {0}'}" 
-                                       FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}"/>
+                        <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="4" Padding="8,3" Margin="0,0,6,0">
+                            <TextBlock Text="{Binding QuoteStatusDisplay, StringFormat='Durum: {0}'}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}"/>
                         </Border>
-                        <Border Background="{DynamicResource StatusInfoBg}" CornerRadius="4" Padding="8,4">
-                            <TextBlock Text="{Binding RevisionDisplay}" 
-                                       FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}"/>
+                        <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="4" Padding="8,3">
+                            <TextBlock Text="{Binding RevisionDisplay}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}"/>
                         </Border>
                     </StackPanel>
                     
-                    <!-- Butonlar -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Command="{Binding CancelCommand}"
-                                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                FontWeight="SemiBold" Padding="16,0" Height="38" Margin="0,0,8,0" 
-                                BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}" Cursor="Hand">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Dismiss24" Margin="0,0,6,0"/>
-                                <TextBlock Text="İptal" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                        
-                        <Button Command="{Binding ExportPdfCommand}"
-                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                FontWeight="SemiBold" Padding="16,0" Height="38" Margin="0,0,8,0" 
-                                BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}" Cursor="Hand">
+                        <Button Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
+                                Style="{StaticResource SecondaryButton}" Height="34" Padding="14,0" Margin="0,0,6,0" Content="İptal"/>
+
+                        <Button Command="{Binding ExportPdfCommand}" Style="{StaticResource SecondaryButton}" Height="34" Padding="14,0" Margin="0,0,6,0">
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="DocumentPdf24" Margin="0,0,6,0"/>
                                 <TextBlock Text="PDF Dışa Aktar" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding SendEmailCommand}"
-                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                FontWeight="SemiBold" Padding="16,0" Height="38" Margin="0,0,8,0" 
-                                BorderThickness="1" BorderBrush="{DynamicResource BorderDefaultBrush}" Cursor="Hand">
+                        <Button Command="{Binding SendEmailCommand}" Style="{StaticResource SecondaryButton}" Height="34" Padding="14,0" Margin="0,0,6,0">
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="Mail24" Margin="0,0,6,0"/>
                                 <TextBlock Text="E-Posta Gönder" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding SaveCommand}"
-                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
-                                FontWeight="Bold" FontSize="14" Padding="24,0" Height="38"
-                                BorderThickness="0" Cursor="Hand">
+                        <Button Command="{Binding SaveCommand}" Style="{StaticResource ModernButton}" Height="34" Padding="20,0">
                             <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Save24" Margin="0,0,8,0"/>
+                                <ui:SymbolIcon Symbol="Save24" Margin="0,0,6,0"/>
                                 <TextBlock Text="KAYDET VE ONAYLA" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -485,4 +507,3 @@
         </Border>
     </Grid>
 </Window>
-

@@ -132,6 +132,7 @@ namespace KamatekCrm.Components
         public NotificationType Type { get; set; }
         public DateTime Timestamp { get; set; }
         public bool IsRead { get; set; }
+        public System.Windows.Input.ICommand? ActionCommand { get; set; }
 
         public string TimeAgo
         {

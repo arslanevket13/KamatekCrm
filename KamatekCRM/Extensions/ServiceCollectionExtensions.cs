@@ -43,6 +43,8 @@ namespace KamatekCrm.Extensions
 
             services.AddTransient<AddressService>();
             services.AddTransient<ISearchService, SearchService>();
+            services.AddScoped<IDirectSalesService, DirectSalesService>();
+            services.AddTransient<IThermalReceiptPrintService, ThermalReceiptPrintService>();
 
             // Domain Services
             services.AddScoped<IInventoryDomainService, InventoryDomainService>();
@@ -106,6 +108,9 @@ namespace KamatekCrm.Extensions
             services.AddTransient<Views.DirectSalesWindow>();
             services.AddTransient<Views.ProjectQuoteEditorWindow>();
             services.AddTransient<Views.NetworkSettingsView>();
+            services.AddTransient<Views.AddUserView>();
+            services.AddTransient<Views.EditUserView>();
+            services.AddTransient<Views.PasswordResetView>();
 
             return services;
         }

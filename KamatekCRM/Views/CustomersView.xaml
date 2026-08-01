@@ -1,274 +1,314 @@
 <UserControl x:Class="KamatekCrm.Views.CustomersView"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:KamatekCrm.Views"
-             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf" 
-             xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
-             xmlns:helpers="clr-namespace:KamatekCrm.Helpers"
-             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             xmlns:enums="clr-namespace:KamatekCrm.Shared.Enums;assembly=KamatekCrm.Shared"
-             d:DataContext="{d:DesignInstance Type=viewmodels:CustomersViewModel}"
-             mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="1200"
-             helpers:AnimationHelper.EntranceAnimation="FadeIn"
-             Background="{DynamicResource SurfacePageBrush}">
+              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+              xmlns:local="clr-namespace:KamatekCrm.Views"
+              xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
+              xmlns:components="clr-namespace:KamatekCrm.Components"
+              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+              xmlns:enums="clr-namespace:KamatekCrm.Shared.Enums;assembly=KamatekCrm.Shared"
+              d:DataContext="{d:DesignInstance Type=viewmodels:CustomersViewModel}"
+              mc:Ignorable="d" 
+              d:DesignHeight="700" d:DesignWidth="1200"
+              Background="{DynamicResource SurfacePageBrush}">
 
     <UserControl.Resources>
-        <helpers:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </UserControl.Resources>
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ════════ HEADER & MAIN ACTION ════════ -->
-        <Grid Grid.Row="0" Margin="0,0,0,16">
+        <!-- ═══════════════ ROW 0: HEADER ═══════════════ -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             
-            <TextBlock Grid.Column="0" 
-                       Text="Müşteri Yönetimi" 
-                       FontSize="28" 
-                       FontWeight="Bold"
-                       Foreground="{DynamicResource ThemeTextPrimary}"
-                       VerticalAlignment="Center"/>
-                       
-            <!-- Yeni Müşteri Butonu -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <ui:SymbolIcon Symbol="People24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Müşteri Yönetim Merkezi" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                    <TextBlock Text="Bireysel, kurumsal ve perakende müşteri kayıtlarını yönetin ve takibini yapın" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+            </StackPanel>
+
             <ui:Button Grid.Column="1" 
                        Content="Yeni Müşteri Ekle" 
                        Icon="{ui:SymbolIcon PersonAdd24}"
                        Command="{Binding OpenAddCustomerWindowCommand}" 
                        Appearance="Primary"
-                       Height="40"
-                       Padding="16,0"
-                       Cursor="Hand"
-                       VerticalAlignment="Center"/>
+                       Height="40" Padding="16,0" Cursor="Hand" VerticalAlignment="Center"/>
         </Grid>
 
-        <!-- ════════ KOMPAKT İSTATİSTİK KARTLARI ════════ -->
-        <Grid Grid.Row="1" Margin="0,0,0,16">
+        <!-- ═══════════════ ROW 1: KPI CARDS ═══════════════ -->
+        <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,16">
+            <components:KmKpiCard Title="Toplam Müşteri"
+                                   Value="{Binding TotalCustomers}"
+                                   Icon="👥"
+                                   AccentBrush="{DynamicResource ThemePrimary}"
+                                   Margin="0,0,10,0"/>
+            <components:KmKpiCard Title="Bireysel Müşteri"
+                                   Value="{Binding IndividualCount}"
+                                   Icon="👤"
+                                   AccentBrush="{DynamicResource ThemeSuccess}"
+                                   Margin="0,0,10,0"/>
+            <components:KmKpiCard Title="Kurumsal Şirketler"
+                                   Value="{Binding CorporateCount}"
+                                   Icon="🏢"
+                                   AccentBrush="{DynamicResource ThemeWarning}"
+                                   Margin="0,0,10,0"/>
+            <components:KmKpiCard Title="Perakende Müşteri"
+                                   Value="{Binding WalkInCount}"
+                                   Icon="🛒"
+                                   AccentBrush="{DynamicResource ThemeInfo}"
+                                   Margin="0,0,0,0"/>
+        </UniformGrid>
+
+        <!-- ═══════════════ ROW 2: SEARCH & FILTER TOOLBAR ═══════════════ -->
+        <Border Grid.Row="2" CornerRadius="12" Padding="16" Margin="0,0,0,16"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MaxWidth="360"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Search Input -->
+                <ui:TextBox Grid.Column="0"
+                            PlaceholderText="Müşteri adı, telefon veya şehir ara..."
+                            Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                            Icon="{ui:SymbolIcon Search24}"
+                            Height="38"/>
+
+                <!-- Type Filters Toolbar Pills -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ui:Button Content="Tümü" Command="{Binding ClearTypeFilterCommand}"
+                               Appearance="Secondary" Height="36" Padding="14,0" Margin="0,0,8,0" Cursor="Hand"/>
+
+                    <ui:Button Content="Bireysel" Command="{Binding SetTypeFilterCommand}"
+                               CommandParameter="{x:Static enums:CustomerType.Individual}"
+                               Appearance="Secondary" Height="36" Padding="14,0" Margin="0,0,8,0" Cursor="Hand"/>
+
+                    <ui:Button Content="Kurumsal" Command="{Binding SetTypeFilterCommand}"
+                               CommandParameter="{x:Static enums:CustomerType.Corporate}"
+                               Appearance="Secondary" Height="36" Padding="14,0" Margin="0,0,8,0" Cursor="Hand"/>
+
+                    <ui:Button Content="Perakende" Command="{Binding SetTypeFilterCommand}"
+                               CommandParameter="{x:Static enums:CustomerType.WalkIn}"
+                               Appearance="Secondary" Height="36" Padding="14,0" Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ═══════════════ ROW 3: MAIN GRID (LEFT: DATAGRID, RIGHT: SELECTED CUSTOMER PREVIEW CARD) ═══════════════ -->
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            
-            <!-- Toplam Müşteri -->
-            <Border Grid.Column="0" Background="{DynamicResource ThemePrimaryDark}" CornerRadius="8" Margin="0,0,6,0" Padding="14,10" Cursor="Hand">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.15" Color="{DynamicResource ThemePrimaryDarkColor}"/>
-                </Border.Effect>
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding ClearTypeFilterCommand}"/>
-                </Border.InputBindings>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <ui:SymbolIcon Symbol="People24" FontSize="14" Foreground="{DynamicResource ThemePrimaryLight}" Margin="0,0,10,0"/>
-                    <StackPanel>
-                        <TextBlock Text="Toplam" FontSize="11" Foreground="{DynamicResource ThemePrimaryLight}"/>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding TotalCustomers}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,6,0"/>
-                            <TextBlock Text="Müşteri" FontSize="11" Foreground="{DynamicResource ThemePrimaryLight}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
-                        </StackPanel>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-            
-            <!-- Bireysel -->
-            <Border Grid.Column="1" Background="{DynamicResource ThemeSuccess}" CornerRadius="8" Margin="6,0,6,0" Padding="14,10" Cursor="Hand">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.15" Color="{DynamicResource ThemeSuccessColor}"/>
-                </Border.Effect>
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding SetTypeFilterCommand}" CommandParameter="{x:Static enums:CustomerType.Individual}"/>
-                </Border.InputBindings>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <ui:SymbolIcon Symbol="Person24" FontSize="14" Foreground="{DynamicResource ThemeSuccessLight}" Margin="0,0,10,0"/>
-                    <StackPanel>
-                        <TextBlock Text="Bireysel" FontSize="11" Foreground="{DynamicResource ThemeSuccessLight}"/>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding IndividualCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,6,0"/>
-                            <TextBlock Text="Müşteri" FontSize="11" Foreground="{DynamicResource ThemeSuccessLight}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
-                        </StackPanel>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-            
-            <!-- Kurumsal -->
-            <Border Grid.Column="2" Background="{DynamicResource ThemeWarning}" CornerRadius="8" Margin="6,0,6,0" Padding="14,10" Cursor="Hand">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.15" Color="{DynamicResource ThemeWarningColor}"/>
-                </Border.Effect>
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding SetTypeFilterCommand}" CommandParameter="{x:Static enums:CustomerType.Corporate}"/>
-                </Border.InputBindings>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <ui:SymbolIcon Symbol="Building24" FontSize="14" Foreground="{DynamicResource ThemeWarningLight}" Margin="0,0,10,0"/>
-                    <StackPanel>
-                        <TextBlock Text="Kurumsal" FontSize="11" Foreground="{DynamicResource ThemeWarningLight}"/>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding CorporateCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,6,0"/>
-                            <TextBlock Text="Müşteri" FontSize="11" Foreground="{DynamicResource ThemeWarningLight}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
-                        </StackPanel>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-            
-            <!-- WalkIn -->
-            <Border Grid.Column="3" Background="{DynamicResource ThemeInfoDark}" CornerRadius="8" Margin="6,0,0,0" Padding="14,10" Cursor="Hand">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.15" Color="{DynamicResource ThemeInfoColor}"/>
-                </Border.Effect>
-                <Border.InputBindings>
-                    <MouseBinding MouseAction="LeftClick" Command="{Binding SetTypeFilterCommand}" CommandParameter="{x:Static enums:CustomerType.WalkIn}"/>
-                </Border.InputBindings>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <ui:SymbolIcon Symbol="Cart24" FontSize="14" Foreground="{DynamicResource ThemeInfoLight}" Margin="0,0,10,0"/>
-                    <StackPanel>
-                        <TextBlock Text="Perakende" FontSize="11" Foreground="{DynamicResource ThemeInfoLight}"/>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding WalkInCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,0,6,0"/>
-                            <TextBlock Text="Müşteri" FontSize="11" Foreground="{DynamicResource ThemeInfoLight}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
-                        </StackPanel>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-        </Grid>
-
-        <!-- ════════ ANA İÇERİK: MÜŞTERİ LİSTESİ + KATEGORİ FİLTRESİ ════════ -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="310"/>
             </Grid.ColumnDefinitions>
 
-            <!-- SOL BÖLGE - Kayıtlı Müşteriler (genişletilmiş, arama dahil) -->
-            <Border Grid.Column="0" Style="{StaticResource CardPanel}">
+            <!-- LEFT: CUSTOMERS DATAGRID -->
+            <Border Grid.Column="0" Margin="0,0,16,0" CornerRadius="12" Padding="0"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Kayıtlı Müşteriler" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,12" Foreground="{DynamicResource ThemeTextPrimary}"/>
-
-                    <!-- Arama çubuğu - panel içinde -->
-                    <ui:TextBox Grid.Row="1"
-                                PlaceholderText="İsim, telefon veya şehir ara..."
-                                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                Icon="{ui:SymbolIcon Search24}"
-                                Height="38"
-                                Margin="0,0,0,12"
-                                VerticalAlignment="Center"/>
-
-                    <DataGrid Grid.Row="2"
+                    <DataGrid Grid.Row="0"
                               AutoGenerateColumns="False"
                               ItemsSource="{Binding CustomersView}"
                               SelectedItem="{Binding SelectedCustomer}"
-                              Style="{StaticResource ModernDataGrid}"
-                              ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Auto"
-                              ScrollViewer.CanContentScroll="False"
-                              VirtualizingPanel.ScrollUnit="Pixel"
-                              CanUserAddRows="False"
+                              SelectionMode="Single"
+                              RowHeight="54"
+                              Background="Transparent" BorderThickness="0"
+                              GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                              AlternatingRowBackground="{DynamicResource HoverOverlayBrush}"
                               IsReadOnly="True">
                         <DataGrid.InputBindings>
                             <MouseBinding Gesture="LeftDoubleClick" Command="{Binding OpenCustomerProfileCommand}"/>
                         </DataGrid.InputBindings>
+
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="Padding" Value="12,8"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Padding" Value="12,0"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.CellStyle>
+
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="Tip" Width="80">
+                            <DataGridTemplateColumn Header="Müşteri Tip" Width="100">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Type}" FontWeight="Bold">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
+                                        <Border CornerRadius="10" Padding="8,4" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Type}" Value="Individual">
-                                                            <Setter Property="Foreground" Value="{DynamicResource ThemeSuccess}"/>
+                                                            <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Type}" Value="Corporate">
-                                                            <Setter Property="Foreground" Value="{DynamicResource ThemeWarning}"/>
+                                                            <Setter Property="Background" Value="{DynamicResource StatusWarningBg}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Type}" Value="WalkIn">
-                                                            <Setter Property="Foreground" Value="{DynamicResource ThemeInfo}"/>
+                                                            <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
+                                            </Border.Style>
+                                            <TextBlock FontSize="11" FontWeight="Bold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Type}" Value="Individual">
+                                                                <Setter Property="Text" Value="👤 Bireysel"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Type}" Value="Corporate">
+                                                                <Setter Property="Text" Value="🏢 Kurumsal"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Type}" Value="WalkIn">
+                                                                <Setter Property="Text" Value="🛒 Perakende"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource StatusInfoFg}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Ad Soyad" Binding="{Binding FullName}" Width="*"/>
-                            <DataGridTextColumn Header="Telefon" Binding="{Binding PhoneNumber}" Width="120"/>
-                            <DataGridTextColumn Header="E-posta" Binding="{Binding Email}" Width="*"/>
-                            <DataGridTextColumn Header="Şehir" Binding="{Binding City}" Width="100"/>
-                            <DataGridTextColumn Header="Harcama" Binding="{Binding TotalSpent, StringFormat='{}{0:C2}'}" Width="120"/>
-                            <DataGridTemplateColumn Header="İşlemler" Width="Auto">
+
+                            <DataGridTemplateColumn Header="Müşteri Adı" Width="*" MinWidth="180">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Content="Görüntüle" 
-                                                Command="{Binding DataContext.ViewProfileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                Style="{StaticResource ModernButton}"
-                                                Padding="16,8"
-                                                Height="32"
-                                                Margin="8,0"/>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <components:KmAvatar FullName="{Binding FullName}" Size="Medium" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FullName}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                                <TextBlock Text="{Binding CustomerCode}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"/>
+                                            </StackPanel>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Telefon" Binding="{Binding PhoneNumber}" Width="120"/>
+                            <DataGridTextColumn Header="E-posta" Binding="{Binding Email, TargetNullValue='-'}" Width="160"/>
+                            <DataGridTextColumn Header="Şehir" Binding="{Binding City, TargetNullValue='-'}" Width="110"/>
+                            <DataGridTextColumn Header="Toplam Harcama" Binding="{Binding TotalSpent, StringFormat='{}{0:C2}'}" Width="120"/>
                         </DataGrid.Columns>
                     </DataGrid>
 
                     <!-- Pagination -->
-                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
-                        <Button Content="&lt;" Command="{Binding PreviousPageCommand}" Style="{StaticResource ModernButton}" Width="40" Margin="0,0,16,0"/>
-                        <TextBlock Text="Sayfa" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding CurrentPage}" VerticalAlignment="Center" FontWeight="Bold"/>
-                        <TextBlock Text="/" VerticalAlignment="Center" Margin="8,0,8,0"/>
-                        <TextBlock Text="{Binding TotalPages}" VerticalAlignment="Center" FontWeight="Bold"/>
-                        <Button Content="&gt;" Command="{Binding NextPageCommand}" Style="{StaticResource ModernButton}" Width="40" Margin="16,0,0,0"/>
-                        
-                        <TextBlock Text="{Binding TotalCount, StringFormat='Toplam: {0}'}" VerticalAlignment="Center" Margin="32,0,0,0" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                    </StackPanel>
+                    <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}" Padding="12,10" Background="{DynamicResource SurfacePageBrush}">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding TotalCount, StringFormat='Toplam {0} Müşteri'}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <ui:Button Content="&lt;" Command="{Binding PreviousPageCommand}" Appearance="Secondary" Height="32" Width="36" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding CurrentPage}" VerticalAlignment="Center" FontWeight="Bold" FontSize="12"/>
+                                <TextBlock Text="/" VerticalAlignment="Center" Margin="6,0,6,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding TotalPages}" VerticalAlignment="Center" FontWeight="Bold" FontSize="12"/>
+                                <ui:Button Content="&gt;" Command="{Binding NextPageCommand}" Appearance="Secondary" Height="32" Width="36" Margin="8,0,0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </Grid>
             </Border>
 
-            <!-- SAĞ BÖLGE - Kategori Filtresi (dar, ekran içinde) -->
-            <Border Grid.Column="2" Style="{StaticResource CardPanel}">
-                <StackPanel>
-                    <TextBlock Text="Kategori Filtresi" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,12"/>
-                    
-                    <Button Content="Tümü" Command="{Binding ClearTypeFilterCommand}" 
-                            Style="{StaticResource ModernButton}" Margin="0,0,0,6" Height="36" HorizontalAlignment="Stretch"/>
-                            
-                    <Button Content="Bireysel" 
-                            Command="{Binding SetTypeFilterCommand}"
-                            CommandParameter="{x:Static enums:CustomerType.Individual}"
-                            Style="{StaticResource ModernButton}" Margin="0,0,0,6" Height="36" HorizontalAlignment="Stretch" Background="{DynamicResource ThemeSuccess}"/>
-                            
-                    <Button Content="Kurumsal" 
-                            Command="{Binding SetTypeFilterCommand}"
-                            CommandParameter="{x:Static enums:CustomerType.Corporate}"
-                            Style="{StaticResource ModernButton}" Margin="0,0,0,6" Height="36" HorizontalAlignment="Stretch" Background="{DynamicResource ThemeWarning}"/>
-                            
-                    <Button Content="Perakende" 
-                            Command="{Binding SetTypeFilterCommand}"
-                            CommandParameter="{x:Static enums:CustomerType.WalkIn}"
-                            Style="{StaticResource ModernButton}" Height="36" HorizontalAlignment="Stretch" Background="{DynamicResource ThemeInfoDark}"/>
-                </StackPanel>
+            <!-- RIGHT: SELECTED CUSTOMER PROFILE PREVIEW CARD -->
+            <Border Grid.Column="1" CornerRadius="12" Padding="20"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <Grid>
+                    <!-- Empty State when no customer is selected -->
+                    <components:KmEmptyState Icon="👤" Title="Müşteri Seçilmedi"
+                                             Message="Detaylarını görüntülemek ve hızlı işlem yapmak için listeden bir müşteri seçin."
+                                             Visibility="{Binding HasSelectedCustomer, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
+
+                    <!-- Customer Detail Content -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  Visibility="{Binding HasSelectedCustomer, Converter={StaticResource BoolToVis}}">
+                        <StackPanel DataContext="{Binding SelectedCustomer}">
+                            <!-- Header Avatar & Name -->
+                            <StackPanel HorizontalAlignment="Center" Margin="0,0,0,16">
+                                <components:KmAvatar FullName="{Binding FullName}" Size="Large" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                                <TextBlock Text="{Binding FullName}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" HorizontalAlignment="Center" TextAlignment="Center"/>
+                                <TextBlock Text="{Binding CustomerCode}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <Separator Margin="0,0,0,16" Background="{DynamicResource BorderSubtleBrush}"/>
+
+                            <!-- Contact Info List -->
+                            <StackPanel Margin="0,0,0,16">
+                                <TextBlock Text="TELEFON" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding PhoneNumber}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,12"/>
+
+                                <TextBlock Text="E-POSTA" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding Email, TargetNullValue='Belirtilmemiş'}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,12"/>
+
+                                <TextBlock Text="ŞEHİR / ADRES" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding FullAddress, TargetNullValue='Adres girilmedi'}" FontSize="12" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,2,0,12"/>
+
+                                <TextBlock Text="TOPLAM HARCAMA" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding TotalSpent, StringFormat='{}{0:C2}'}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <Separator Margin="0,0,0,16" Background="{DynamicResource BorderSubtleBrush}"/>
+
+                            <!-- Actions for Selected Customer -->
+                            <StackPanel>
+                                <ui:Button Content="Detaylı Müşteri Profilini Aç" Icon="{ui:SymbolIcon Open24}"
+                                           Command="{Binding DataContext.OpenCustomerProfileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           Appearance="Primary" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
+                                <ui:Button Content="Yeni Fiyat Teklifi Hazırla" Icon="{ui:SymbolIcon DocumentAdd24}"
+                                           Command="{Binding DataContext.CreateQuoteForCustomerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           Appearance="Secondary" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
             </Border>
         </Grid>
-
     </Grid>
 </UserControl>

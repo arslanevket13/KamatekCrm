@@ -1,32 +1,33 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
-    /// Professional POS (Perakende Satış) ViewModel
-    /// Barkod tarama, satır bazlı indirim, KDV hesaplama, split ödeme desteği
-    /// F8=Nakit, F9=Kart kısayolları
+    /// Professional Enterprise POS (Perakende Satış) ViewModel
+    /// Barkod tarama, Termal Fiş Yazdırma, Para Üstü Hesabı, Sepet Park Etme, Cari Satış ve Parçalı Ödeme
     /// </summary>
     public partial class DirectSalesViewModel : ViewModelBase
     {
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
+        private readonly IDirectSalesService _directSalesService;
+        private readonly IThermalReceiptPrintService _thermalPrintService;
 
         private string _searchText = string.Empty;
         private string _barcodeText = string.Empty;
@@ -42,16 +43,19 @@ namespace KamatekCrm.ViewModels
         // Global discount
         private decimal _globalDiscountPercent;
 
-
-        // Split payment
+        // Split payment & Cash calculator
         private PaymentMethod _selectedPaymentMethod = PaymentMethod.Cash;
         private decimal _paymentAmount;
         private string _paymentReference = string.Empty;
+        private decimal _tenderedAmount;
+        private bool _autoPrintReceipt = true;
+        private SalesOrder? _lastCompletedOrder;
 
         public ObservableCollection<PosProductItem> AllProducts { get; set; }
         public ObservableCollection<PosCartItem> CartItems { get; set; }
         public ObservableCollection<Warehouse> Warehouses { get; set; }
         public ObservableCollection<PosPaymentEntry> Payments { get; set; }
+        public ObservableCollection<PosParkedCart> ParkedCarts { get; set; }
 
         public ICollectionView FilteredProducts { get; private set; }
 
@@ -160,6 +164,38 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _paymentReference, value);
         }
 
+        // Cash Change Calculator Properties
+        public decimal TenderedAmount
+        {
+            get => _tenderedAmount;
+            set
+            {
+                if (SetProperty(ref _tenderedAmount, value))
+                    OnPropertyChanged(nameof(ChangeAmount));
+            }
+        }
+
+        public decimal ChangeAmount => TenderedAmount > GrandTotal ? TenderedAmount - GrandTotal : 0m;
+
+        public bool AutoPrintReceipt
+        {
+            get => _autoPrintReceipt;
+            set => SetProperty(ref _autoPrintReceipt, value);
+        }
+
+        public SalesOrder? LastCompletedOrder
+        {
+            get => _lastCompletedOrder;
+            set
+            {
+                if (SetProperty(ref _lastCompletedOrder, value))
+                    OnPropertyChanged(nameof(HasLastOrder));
+            }
+        }
+
+        public bool HasLastOrder => LastCompletedOrder != null;
+        public bool HasParkedCarts => ParkedCarts.Count > 0;
+
         // --- Computed Totals ---
         public decimal SubTotal => CartItems?.Sum(i => i.SubTotal) ?? 0;
         public decimal DiscountTotal => CartItems?.Sum(i => i.DiscountAmount) ?? 0;
@@ -191,36 +227,37 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        #region Commands
-
-        #endregion
-
         public DirectSalesViewModel(
             IAuthService authService,
-            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory,
+            IDbContextFactory<AppDbContext> dbContextFactory,
             IToastService toastService,
-            ILoadingService loadingService)
+            ILoadingService loadingService,
+            IDirectSalesService directSalesService,
+            IThermalReceiptPrintService thermalPrintService)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
             _toastService = toastService;
             _loadingService = loadingService;
+            _directSalesService = directSalesService;
+            _thermalPrintService = thermalPrintService;
 
             AllProducts = new ObservableCollection<PosProductItem>();
             CartItems = new ObservableCollection<PosCartItem>();
             Warehouses = new ObservableCollection<Warehouse>();
             Payments = new ObservableCollection<PosPaymentEntry>();
+            ParkedCarts = new ObservableCollection<PosParkedCart>();
 
             FilteredProducts = CollectionViewSource.GetDefaultView(AllProducts);
             FilteredProducts.Filter = FilterProducts;
 
-            // Commands
+            CartItems.CollectionChanged += (s, e) =>
+            {
+                UpdateAllTotals();
+                if (TenderedAmount > 0) OnPropertyChanged(nameof(ChangeAmount));
+            };
 
-            // Quick full-payment shortcuts (F8/F9)
-
-            // Legacy commands for backward compat
-
-            CartItems.CollectionChanged += (s, e) => UpdateAllTotals();
+            ParkedCarts.CollectionChanged += (s, e) => OnPropertyChanged(nameof(HasParkedCarts));
 
             _ = InitializeAsync();
         }
@@ -231,7 +268,7 @@ namespace KamatekCrm.ViewModels
             try
             {
                 using var context = await _dbContextFactory.CreateDbContextAsync();
-                var warehouses = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(context.Warehouses);
+                var warehouses = await context.Warehouses.ToListAsync();
                 Warehouses.Clear();
                 foreach (var w in warehouses) Warehouses.Add(w);
                 SelectedWarehouse = Warehouses.FirstOrDefault();
@@ -319,10 +356,11 @@ namespace KamatekCrm.ViewModels
                     .Take(25)
                     .ToListAsync();
                 
+                RecentCustomers.Clear();
                 foreach (var c in customers) RecentCustomers.Add(c);
                 FilterCustomers();
             }
-            catch { /* не критично */ }
+            catch { /* non-critical */ }
         }
 
         private void FilterCustomers()
@@ -339,7 +377,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void QuickAddCustomer()
         {
-            var win = new Views.QuickCustomerAddWindow { Owner = System.Windows.Application.Current.MainWindow };
+            var win = new Views.QuickCustomerAddWindow { Owner = System.Windows.Application.Current?.MainWindow };
             if (win.ShowDialog() == true)
             {
                 var vm = (QuickCustomerAddViewModel)win.DataContext;
@@ -383,8 +421,6 @@ namespace KamatekCrm.ViewModels
 
         #region Cart Operations
 
-        private bool CanAddToCart(object? parameter) => parameter is PosProductItem;
-
         [RelayCommand]
         private void AddToCart(object? parameter)
         {
@@ -419,11 +455,11 @@ namespace KamatekCrm.ViewModels
         private void OnCartItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             UpdateAllTotals();
+            if (TenderedAmount > 0) OnPropertyChanged(nameof(ChangeAmount));
         }
 
         private void AddProductToCart(int productId, string productName, decimal salePrice, int vatRate, int maxQty)
         {
-            // Düşük stok kontrolü (5 ve altı)
             if (maxQty <= 5 && maxQty > 0)
             {
                 StockWarningMessage = $"⚠️ '{productName}' ürünü düşük stokta! (Kalan: {maxQty})";
@@ -531,31 +567,125 @@ namespace KamatekCrm.ViewModels
                 MessageBoxButton.YesNo, MessageBoxImage.Warning);
             if (result == MessageBoxResult.Yes)
             {
-                foreach (var item in CartItems)
-                {
-                    item.PropertyChanged -= OnCartItemPropertyChanged;
-                }
-                CartItems.Clear();
-                Payments.Clear();
-                UpdateAllTotals();
+                ResetCartState();
                 StatusMessage = "Sepet temizlendi.";
                 IsActionSuccessful = true;
             }
         }
 
+        private void ResetCartState()
+        {
+            foreach (var item in CartItems)
+            {
+                item.PropertyChanged -= OnCartItemPropertyChanged;
+            }
+            CartItems.Clear();
+            Payments.Clear();
+            TenderedAmount = 0m;
+            UpdateAllTotals();
+        }
+
         #endregion
 
-        #region Payment Operations
+        #region Hold / Park Cart
 
-        /// <summary>
-        /// Add a partial payment entry (for split payments)
-        /// </summary>
+        [RelayCommand]
+        private void ParkCurrentCart()
+        {
+            if (CartItems.Count == 0)
+            {
+                StatusMessage = "⚠️ Park edilecek ürün yok.";
+                return;
+            }
+
+            var label = SelectedCustomer != null
+                ? $"{SelectedCustomer.FullName} ({DateTime.Now:HH:mm})"
+                : $"Müşteri #{ParkedCarts.Count + 1} ({DateTime.Now:HH:mm})";
+
+            var parkedCart = new PosParkedCart
+            {
+                Label = label,
+                Customer = SelectedCustomer,
+                GlobalDiscountPercent = GlobalDiscountPercent,
+                CartItems = CartItems.Select(i => new PosCartItem
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    MaxQuantity = i.MaxQuantity,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice,
+                    TaxRate = i.TaxRate,
+                    DiscountPercent = i.DiscountPercent,
+                    DiscountType = i.DiscountType
+                }).ToList()
+            };
+
+            ParkedCarts.Add(parkedCart);
+            ResetCartState();
+            SelectedCustomer = null;
+
+            StatusMessage = $"📌 Sepet park edildi: {label}";
+            IsActionSuccessful = true;
+        }
+
+        [RelayCommand]
+        private void RestoreParkedCart(PosParkedCart? parkedCart)
+        {
+            if (parkedCart == null) return;
+
+            if (CartItems.Count > 0)
+            {
+                var confirm = MessageBox.Show("Mevcut sepet temizlenip parktaki sepet yüklenecek. Devam edilsin mi?",
+                    "Sepet Değiştir", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (confirm != MessageBoxResult.Yes) return;
+            }
+
+            ResetCartState();
+            SelectedCustomer = parkedCart.Customer;
+            GlobalDiscountPercent = parkedCart.GlobalDiscountPercent;
+
+            foreach (var item in parkedCart.CartItems)
+            {
+                item.PropertyChanged += OnCartItemPropertyChanged;
+                CartItems.Add(item);
+            }
+
+            ParkedCarts.Remove(parkedCart);
+            UpdateAllTotals();
+
+            StatusMessage = $"▶️ Park edilen sepet geri yüklendi: {parkedCart.Label}";
+            IsActionSuccessful = true;
+        }
+
+        #endregion
+
+        #region Cash Change Calculator Presets
+
+        [RelayCommand]
+        private void SetTenderedPreset(object? param)
+        {
+            if (param == null) return;
+            if (decimal.TryParse(param.ToString(), out var val))
+            {
+                TenderedAmount = val;
+            }
+        }
+
+        [RelayCommand]
+        private void SetTenderedExact()
+        {
+            TenderedAmount = GrandTotal;
+        }
+
+        #endregion
+
+        #region Payment Operations & Sale Completion
+
         [RelayCommand]
         private void AddPayment()
         {
             if (PaymentAmount <= 0) return;
 
-            // Cap payment at remaining amount
             var amount = Math.Min(PaymentAmount, RemainingAmount);
             if (amount <= 0)
             {
@@ -577,7 +707,6 @@ namespace KamatekCrm.ViewModels
             StatusMessage = $"Ödeme eklendi. Kalan: {RemainingAmount:C}";
             IsActionSuccessful = true;
 
-            // Auto-complete sale if fully paid
             if (CanCompleteSale)
             {
                 _ = CompleteSale();
@@ -594,27 +723,29 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// F8 shortcut: pay full amount with Cash
-        /// </summary>
         [RelayCommand]
         private async Task PayFullCash() => await PayFull(PaymentMethod.Cash);
 
-        /// <summary>
-        /// F9 shortcut: pay full amount with Credit Card
-        /// </summary>
         [RelayCommand]
         private async Task PayFullCard() => await PayFull(PaymentMethod.CreditCard);
 
-        /// <summary>
-        /// Pay full amount with a single method
-        /// </summary>
+        [RelayCommand]
+        private async Task PayFullOnAccount()
+        {
+            if (SelectedCustomer == null)
+            {
+                MessageBox.Show("Veresiye / Cari Satış yapabilmek için önce kayıtlı bir Müşteri seçmelisiniz! (F7)",
+                    "Müşteri Gerekli", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            await PayFull(PaymentMethod.OnAccount);
+        }
+
         [RelayCommand]
         private async Task PayFull(PaymentMethod method)
         {
             if (CartItems.Count == 0 || GrandTotal <= 0) return;
 
-            // Clear existing payments and add single full payment
             Payments.Clear();
             Payments.Add(new PosPaymentEntry
             {
@@ -635,9 +766,11 @@ namespace KamatekCrm.ViewModels
             var paymentDesc = string.Join(", ", Payments.Select(p =>
                 $"{GetPaymentMethodName(p.PaymentMethod)}: {p.Amount:C}"));
 
+            var changeNotice = ChangeAmount > 0 ? $"\nPara Üstü: {ChangeAmount:C}" : string.Empty;
+
             var result = MessageBox.Show(
                 $"Toplam: {GrandTotal:C}\n" +
-                $"Ödeme: {paymentDesc}\n\n" +
+                $"Ödeme: {paymentDesc}{changeNotice}\n\n" +
                 "Satışı tamamlamak istiyor musunuz?",
                 "Satış Onayı",
                 MessageBoxButton.YesNo,
@@ -648,107 +781,58 @@ namespace KamatekCrm.ViewModels
             try
             {
                 _loadingService?.Show();
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                using var transaction = await context.Database.BeginTransactionAsync();
 
-                var orderNo = "ORD" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+                var currentUserName = _authService?.CurrentUser?.Username ?? "Kasiyer";
 
-                // 1. Create SalesOrder entity
-                var salesOrder = new SalesOrder
-                {
-                    OrderNumber = orderNo,
-                    CustomerId = SelectedCustomer?.Id,
-                    CustomerName = CustomerDisplayName,
-                    Date = DateTime.UtcNow,
-                    PaymentMethod = string.Join(", ", Payments.Select(p => GetPaymentMethodName(p.PaymentMethod))),
-                    SubTotal = SubTotal,
-                    DiscountTotal = DiscountTotal,
-                    TaxTotal = TaxTotal,
-                    TotalAmount = GrandTotal,
-                    Status = SalesOrderStatus.Completed,
-                    Notes = $"POS Hızlı Satış ({SelectedWarehouse.Name})"
-                };
+                var salesOrder = await _directSalesService.ProcessSaleAsync(
+                    SelectedCustomer?.Id,
+                    CustomerDisplayName,
+                    SelectedWarehouse.Id,
+                    CartItems,
+                    Payments,
+                    $"POS Perakende Satış ({SelectedWarehouse.Name})",
+                    currentUserName);
 
-                // 2. Add SalesOrderItems
-                foreach (var item in CartItems)
-                {
-                    salesOrder.Items.Add(new SalesOrderItem
-                    {
-                        ProductId = item.ProductId,
-                        ProductName = item.ProductName,
-                        Quantity = item.Quantity,
-                        UnitPrice = item.UnitPrice,
-                        DiscountPercent = item.DiscountPercent,
-                        DiscountAmount = item.DiscountAmount,
-                        TaxRate = item.TaxRate,
-                        LineTotal = item.LineTotal
-                    });
-
-                    // Update Inventory Quantity
-                    var inventory = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
-                        context.Inventories, i => i.ProductId == item.ProductId && i.WarehouseId == SelectedWarehouse.Id);
-                    if (inventory != null)
-                    {
-                        inventory.Quantity -= item.Quantity;
-                    }
-                }
-
-                // 3. Add SalesOrderPayments
-                foreach (var p in Payments)
-                {
-                    salesOrder.Payments.Add(new SalesOrderPayment
-                    {
-                        PaymentMethod = p.PaymentMethod,
-                        Amount = p.Amount,
-                        Reference = p.Reference ?? string.Empty
-                    });
-                }
-
-                context.SalesOrders.Add(salesOrder);
-                await context.SaveChangesAsync();
-
-                // 4. Insert Cash Transactions for each payment linked with SalesOrderId & CustomerId
-                foreach (var payment in Payments)
-                {
-                    context.CashTransactions.Add(new CashTransaction
-                    {
-                        TransactionType = CashTransactionType.CashIncome,
-                        Amount = payment.Amount,
-                        Date = DateTime.UtcNow,
-                        Description = $"Sipariş #{orderNo} ödemesi ({GetPaymentMethodName(payment.PaymentMethod)})",
-                        PaymentMethod = payment.PaymentMethod,
-                        ReferenceNumber = payment.Reference,
-                        SalesOrderId = salesOrder.Id,
-                        CustomerId = SelectedCustomer?.Id
-                    });
-                }
-
-                await context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {orderNo}";
+                LastCompletedOrder = salesOrder;
+                StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {salesOrder.OrderNumber}";
                 IsActionSuccessful = true;
 
-                foreach (var item in CartItems)
+                // Auto-print thermal receipt if enabled
+                if (AutoPrintReceipt && _thermalPrintService != null)
                 {
-                    item.PropertyChanged -= OnCartItemPropertyChanged;
+                    _ = _thermalPrintService.PrintReceiptAsync(salesOrder);
                 }
-                CartItems.Clear();
-                Payments.Clear();
-                UpdateAllTotals();
+
+                ResetCartState();
                 await LoadProducts(); // Reload stock quantities
 
-                _toastService?.ShowSuccess($"Satış başarıyla tamamlandı: Sipariş #{orderNo}");
+                _toastService?.ShowSuccess($"Satış tamamlandı: Sipariş #{salesOrder.OrderNumber}");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                StatusMessage = $"Beklenmeyen hata: {ex.Message}";
+                StatusMessage = $"Hata: {ex.Message}";
                 IsActionSuccessful = false;
-                _toastService?.ShowError($"Satış sırasında beklenmeyen hata:\n{ex.Message}");
+                _toastService?.ShowError($"Satış tamamlanamadı:\n{ex.Message}");
             }
             finally
             {
                 _loadingService?.Hide();
+            }
+        }
+
+        [RelayCommand]
+        private async Task PrintLastReceipt()
+        {
+            if (LastCompletedOrder == null)
+            {
+                _toastService?.ShowError("Yazdırılacak son satış bulunamadı.");
+                return;
+            }
+
+            if (_thermalPrintService != null)
+            {
+                await _thermalPrintService.PrintReceiptAsync(LastCompletedOrder);
+                _toastService?.ShowSuccess("Fiş yazıcıya gönderildi.");
             }
         }
 
@@ -758,6 +842,7 @@ namespace KamatekCrm.ViewModels
             PaymentMethod.CreditCard => "Kredi Kartı",
             PaymentMethod.BankTransfer => "Banka Transferi",
             PaymentMethod.MobilePayment => "Mobil Ödeme",
+            PaymentMethod.OnAccount => "Cari / Veresiye",
             _ => method.ToString()
         };
 
@@ -775,22 +860,29 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(PaidAmount));
             OnPropertyChanged(nameof(RemainingAmount));
             OnPropertyChanged(nameof(CanCompleteSale));
+            OnPropertyChanged(nameof(ChangeAmount));
         }
 
-        // Legacy compat
         public decimal CartTotal => GrandTotal;
         public decimal CartGrandTotal => GrandTotal;
 
         #endregion
     }
 
-    // =====================================================================
-    // POS Display Models
-    // =====================================================================
+    #region POS Models
 
-    /// <summary>
-    /// Product display item for POS grid
-    /// </summary>
+    public class PosParkedCart
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Label { get; set; } = string.Empty;
+        public DateTime ParkedAt { get; set; } = DateTime.Now;
+        public Customer? Customer { get; set; }
+        public decimal GlobalDiscountPercent { get; set; }
+        public List<PosCartItem> CartItems { get; set; } = new();
+        public decimal GrandTotal => CartItems.Sum(i => i.LineTotal);
+        public int ItemCount => CartItems.Sum(i => i.Quantity);
+    }
+
     public class PosProductItem
     {
         public int ProductId { get; set; }
@@ -805,9 +897,6 @@ namespace KamatekCrm.ViewModels
         public string? ImagePath { get; set; }
     }
 
-    /// <summary>
-    /// Cart item with discount, tax, and line-total calculation
-    /// </summary>
     public class PosCartItem : INotifyPropertyChanged
     {
         private int _quantity;
@@ -865,27 +954,17 @@ namespace KamatekCrm.ViewModels
             set { if (_taxRate != value) { _taxRate = value; Notify(); NotifyTotals(); } }
         }
 
-        // --- Computed ---
-
-        /// <summary>Quantity × UnitPrice</summary>
         public decimal SubTotal => Quantity * UnitPrice;
 
-        /// <summary>Actual discount amount applied</summary>
         public decimal DiscountAmount => DiscountType == DiscountType.Percentage
             ? SubTotal * DiscountPercent / 100m
             : DiscountFlatAmount;
 
-        /// <summary>SubTotal after discount, before tax</summary>
         public decimal AfterDiscount => SubTotal - DiscountAmount;
 
-        /// <summary>Tax calculated on after-discount amount</summary>
         public decimal TaxAmount => AfterDiscount * TaxRate / 100m;
 
-        /// <summary>Final line total: AfterDiscount + Tax</summary>
         public decimal LineTotal => AfterDiscount + TaxAmount;
-
-        // Legacy compat
-        public decimal TotalPrice => LineTotal;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -899,13 +978,9 @@ namespace KamatekCrm.ViewModels
             Notify(nameof(AfterDiscount));
             Notify(nameof(TaxAmount));
             Notify(nameof(LineTotal));
-            Notify(nameof(TotalPrice));
         }
     }
 
-    /// <summary>
-    /// A split-payment entry in the POS
-    /// </summary>
     public class PosPaymentEntry
     {
         public PaymentMethod PaymentMethod { get; set; }
@@ -918,14 +993,13 @@ namespace KamatekCrm.ViewModels
             PaymentMethod.CreditCard => "Kredi Kartı",
             PaymentMethod.BankTransfer => "Banka Transferi",
             PaymentMethod.MobilePayment => "Mobil Ödeme",
+            PaymentMethod.OnAccount => "Cari / Veresiye",
             _ => PaymentMethod.ToString()
         };
     }
 
-    // Keep backward compat aliases
     public class ProductDisplayItem : PosProductItem { }
     public class CartItem : PosCartItem { }
+
+    #endregion
 }
-
-
-

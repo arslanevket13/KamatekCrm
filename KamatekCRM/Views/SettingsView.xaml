@@ -6,8 +6,41 @@
              xmlns:local="clr-namespace:KamatekCrm.Views"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:converters="clr-namespace:KamatekCrm.Converters"
              mc:Ignorable="d" 
-             d:DesignHeight="600" d:DesignWidth="1000">
+             d:DesignHeight="700" d:DesignWidth="1100"
+             Background="{DynamicResource SurfacePageBrush}">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        
+        <!-- Tab Button Style -->
+        <Style x:Key="SettingsTabButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
 
     <Grid Margin="24">
         <Grid.RowDefinitions>
@@ -16,260 +49,405 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Margin="0,0,0,24">
-            <StackPanel>
-                <TextBlock Text="⚙️ AYARLAR" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                <TextBlock Text="Uygulama yapılandırması ve veritabanı yönetimi" FontSize="14" Foreground="{DynamicResource ThemeTextSecondary}"/>
+        <Border Grid.Row="0" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal">
+                <ui:SymbolIcon Symbol="Settings24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="SİSTEM VE YAPILANDIRMA AYARLARI" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                    <TextBlock Text="Firma bilgileri, görünüm, veritabanı yedekleme ve ağ yönetimi" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
             </StackPanel>
         </Border>
 
-        <!-- Content -->
-        <ScrollViewer Grid.Row="1">
-            <WrapPanel>
-                <!-- Backup Card -->
-                <Border Width="300" Margin="0,0,24,24" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="16">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="20" Direction="270" ShadowDepth="4" Opacity="0.08" Color="Black"/>
-                    </Border.Effect>
-                    <StackPanel>
-                        <!-- Card Header -->
-                        <Grid Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Background="{DynamicResource StatusSuccessBg}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
-                                <TextBlock Text="💾" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="Veritabanı &amp; Yedekleme" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                <TextBlock Text="Veri güvenliği" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
+        <!-- Main Content (Left Tabs, Right Content) -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="230"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT TAB NAVIGATION SIDEBAR -->
+            <Border Grid.Column="0" Margin="0,0,20,0" Padding="8" CornerRadius="12"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <StackPanel>
+                    <Button Command="{Binding SelectTabCommand}" CommandParameter="0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SettingsTabButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
+                                        <Setter Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Building24" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Firma Bilgileri" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding SelectTabCommand}" CommandParameter="1">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SettingsTabButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
+                                        <Setter Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Color24" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Görünüm &amp; Tema" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding SelectTabCommand}" CommandParameter="2">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SettingsTabButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
+                                        <Setter Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Database24" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Yedekleme &amp; Veri" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding SelectTabCommand}" CommandParameter="3">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SettingsTabButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
+                                        <Setter Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Print24" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Yazıcı &amp; Uyarılardır" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding SelectTabCommand}" CommandParameter="4">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SettingsTabButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="4">
+                                        <Setter Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Globe24" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Ağ &amp; Sunucu" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- RIGHT TAB CONTENT PANELS -->
+            <Border Grid.Column="1" Padding="24" CornerRadius="12"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                        <!-- TAB 0: FIRMA BILGILERI -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="🏢 Firma ve Şirket Bilgileri" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="PDF Fiyat Teklifleri ve Fatura çıktılarında görünecek resmi şirket bilgileri" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20"/>
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <Label Content="Firma Unvanı / Adı" FontWeight="SemiBold"/>
+                                    <ui:TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                    <Label Content="E-Posta Adresi" FontWeight="SemiBold"/>
+                                    <ui:TextBox Text="{Binding CompanyEmail, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <Label Content="Vergi Dairesi" FontWeight="SemiBold"/>
+                                    <ui:TextBox Text="{Binding TaxOffice, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                    <Label Content="Vergi Numarası" FontWeight="SemiBold"/>
+                                    <ui:TextBox Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                    <Label Content="Telefon Numarası" FontWeight="SemiBold"/>
+                                    <ui:TextBox Text="{Binding CompanyPhone, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                    <Label Content="Banka IBAN Numarası" FontWeight="SemiBold"/>
+                                    <ui:TextBox Text="{Binding CompanyIban, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Margin="0,0,0,24">
+                                <Label Content="Firma Adresi" FontWeight="SemiBold"/>
+                                <ui:TextBox Text="{Binding CompanyAddress, UpdateSourceTrigger=PropertyChanged}" Height="60" AcceptsReturn="True" TextWrapping="Wrap"/>
                             </StackPanel>
-                        </Grid>
 
-                        <Separator Margin="0,0,0,16" Background="{DynamicResource ThemeDivider}"/>
-
-                        <!-- Info -->
-                        <StackPanel Margin="0,0,0,16">
-                            <TextBlock Text="SON YEDEKLEME" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemeTextTertiary}"/>
-                            <TextBlock Text="{Binding LastBackupText}" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,0"/>
+                            <ui:Button Content="Firma Bilgilerini Kaydet" Icon="{ui:SymbolIcon Save24}"
+                                       Command="{Binding SaveCompanyInfoCommand}"
+                                       Appearance="Primary" Height="40" Padding="20,0" HorizontalAlignment="Left" Cursor="Hand"/>
                         </StackPanel>
 
-                        <!-- Backup Action -->
-                        <Button Content="💾 ŞİMDİ YEDEK AL" 
-                                Command="{Binding TakeBackupCommand}"
-                                Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                FontWeight="Bold" Padding="16,8"
-                                BorderThickness="0" Cursor="Hand" Margin="0,0,0,16">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Opacity" Value="1"/>
+                        <!-- TAB 1: GORUNUM & TEMA -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
                                     <Style.Triggers>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                            <Setter Property="Opacity" Value="0.6"/>
-                                        </Trigger>
+                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </Button.Style>
-                        </Button>
+                            </StackPanel.Style>
 
-                        <!-- Restore Action -->
-                        <Button Content="📂 YEDEKTEN YÜKLE" 
-                                Command="{Binding RestoreBackupCommand}"
-                                Background="{DynamicResource ThemeWarning}" Foreground="{DynamicResource TextInverseBrush}"
-                                FontWeight="Bold" Padding="16,8"
-                                BorderThickness="0" Cursor="Hand">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Opacity" Value="1"/>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                            <Setter Property="Opacity" Value="0.6"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
+                            <TextBlock Text="🎨 Görünüm &amp; Tema Ayarları" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Kullanıcı arayüzü temalarını ve görsel renk modlarını özelleştirin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20"/>
 
-                        <TextBlock Text="* Uygulama kapanırken otomatik yedek alınır." 
-                                   FontSize="10" Foreground="{DynamicResource ThemeTextTertiary}" Margin="0,16,0,0" 
-                                   TextWrapping="Wrap" HorizontalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
-                
-                <!-- THEME SELECTOR CARD -->
-                <Border Width="620" Margin="0,0,24,24" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="24">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="20" Direction="270" ShadowDepth="4" Opacity="0.08" Color="Black"/>
-                    </Border.Effect>
-                    <StackPanel>
-                        <!-- Header -->
-                        <Grid Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Background="{DynamicResource ThemePrimary}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
-                                <TextBlock Text="🎨" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="Görünüm &amp; Tema" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                <TextBlock Text="Sistemin arayüz tasarımını anında değiştirin" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                            </StackPanel>
-                        </Grid>
-
-                        <Separator Margin="0,0,0,16" Background="{DynamicResource ThemeDivider}"/>
-
-                        <!-- Radio Cards ListBox -->
-                        <ListBox ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}" 
-                                 Background="Transparent" BorderThickness="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                            
-                            <!-- Hide default selection highlight style -->
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="Padding" Value="0"/>
-                                    <Setter Property="Margin" Value="0,0,10,0"/>
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="ListBoxItem">
-                                                <ContentPresenter/>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </ListBox.ItemContainerStyle>
-                            
-                            <ListBox.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ListBox.ItemsPanel>
-                            
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <!-- Radio Card -->
-                                    <Border x:Name="ThemeCardBorder" Width="180" Height="100" Margin="0,0,16,16" 
-                                            CornerRadius="8" BorderThickness="2" BorderBrush="{DynamicResource ThemeBorder}"
-                                            Background="{DynamicResource ThemeSurface}" Cursor="Hand">
-                                        
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
-                                                        <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
-                                                    </DataTrigger>
-                                                    <MultiDataTrigger>
-                                                        <MultiDataTrigger.Conditions>
-                                                            <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsMouseOver}" Value="True"/>
-                                                            <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="False"/>
-                                                        </MultiDataTrigger.Conditions>
-                                                        <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
-                                                        <Setter Property="Opacity" Value="0.8"/>
-                                                    </MultiDataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        
-                                        <Grid Margin="16">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="*"/>
-                                            </Grid.RowDefinitions>
-                                            
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                                <TextBlock Text="{Binding Icon}" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="14" 
-                                                           Foreground="{DynamicResource ThemeTextPrimary}" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            
-                                            <TextBlock Grid.Row="1" Text="{Binding Description}" FontSize="11" TextWrapping="Wrap"
-                                                       Foreground="{DynamicResource ThemeTextSecondary}"/>
-                                            
-                                            <!-- Color Hint Badge -->
-                                            <Border Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
-                                                    Width="16" Height="16" CornerRadius="8" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorder}">
-                                                <Border.Background>
-                                                    <SolidColorBrush Color="{Binding ColorHex}"/>
-                                                </Border.Background>
-                                            </Border>
-                                            
-                                            <!-- Selected Indicator Badge -->
-                                            <Border Grid.Row="0" HorizontalAlignment="Right" Width="16" Height="16" CornerRadius="8" 
-                                                    Background="{DynamicResource ThemePrimary}">
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
-                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                            </Border>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </StackPanel>
-                </Border>
-                
-                <!-- NETWORK SETTINGS CARD (Navigates to full NetworkSettingsView) -->
-                <Border Width="300" Margin="0,0,24,24" Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="16" Cursor="Hand">
-                    <Border.InputBindings>
-                        <MouseBinding Gesture="LeftClick" Command="{Binding OpenNetworkSettingsCommand}"/>
-                    </Border.InputBindings>
-                    <StackPanel>
-                        <!-- Header -->
-                        <Grid Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Background="{DynamicResource ThemePrimary}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
-                                <TextBlock Text="🌐" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="Ağ &amp; Bağlantı" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                <TextBlock Text="Sunucu rolü ve ağ keşfi" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                            </StackPanel>
-                            <TextBlock Grid.Column="2" Text="→" FontSize="20" FontWeight="Bold" 
-                                       Foreground="{DynamicResource ThemeTextTertiary}" VerticalAlignment="Center"/>
-                        </Grid>
-
-                        <Separator Margin="0,0,0,16" Background="{DynamicResource ThemeDivider}"/>
-
-                        <!-- Info -->
-                        <StackPanel Margin="0,0,0,8">
-                            <TextBlock Text="MEVCUT ROL" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemeTextTertiary}"/>
-                            <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,4,0,0">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Text" Value="💻 İstemci"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsMainServer}" Value="True">
-                                                <Setter Property="Text" Value="🖥️ Ana Sunucu"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
+                            <ListBox ItemsSource="{Binding AvailableThemes}" SelectedItem="{Binding SelectedTheme}" 
+                                     Background="Transparent" BorderThickness="0">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Margin" Value="0,0,12,12"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <ContentPresenter/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
                                     </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
+                                </ListBox.ItemContainerStyle>
+
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="200" Height="110" CornerRadius="10" Padding="14"
+                                                BorderThickness="2" BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                                Background="{DynamicResource SurfacePageBrush}" Cursor="Hand">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+
+                                                <DockPanel Grid.Row="0">
+                                                    <TextBlock Text="{Binding Icon}" FontSize="18" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
+                                                </DockPanel>
+
+                                                <TextBlock Grid.Row="1" Text="{Binding Description}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
                         </StackPanel>
 
-                        <TextBlock Text="Detaylı ağ yönetimi, bağlantı izleme ve sunucu dashboard'u için tıklayın." 
-                                   TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                    </StackPanel>
-                </Border>
-            </WrapPanel>
-        </ScrollViewer>
+                        <!-- TAB 2: YEDEKLEME & VERITABANI -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="💾 Veritabanı &amp; Yedekleme Yönetimi" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Veri güvenliğini sağlamak için sistem veritabanını yedekleyin veya geri yükleyin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20"/>
+
+                            <!-- Backup Folder Setting -->
+                            <Border Padding="16" CornerRadius="10" Margin="0,0,0,16" Background="{DynamicResource SurfacePageBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="Yedekleme Klasör Konumu" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ui:TextBox Grid.Column="0" Text="{Binding CustomBackupPath, TargetNullValue='Varsayılan Belgelerim/KamatekBackups Klasörü'}" IsReadOnly="True" Height="36"/>
+                                        <ui:Button Grid.Column="1" Content="Klasör Seç" Command="{Binding SelectBackupFolderCommand}" Margin="8,0,0,0" Height="36" Cursor="Hand"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Padding="16" CornerRadius="10" Margin="0,0,0,20" Background="{DynamicResource SurfacePageBrush}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Son Manuel / Otomatik Yedekleme" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding LastBackupText}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <ui:Button Content="Şimdi Yedek Al" Icon="{ui:SymbolIcon Save24}"
+                                                   Command="{Binding TakeBackupCommand}"
+                                                   Appearance="Primary" Height="38" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"/>
+
+                                        <ui:Button Content="Yedeği Geri Yükle" Icon="{ui:SymbolIcon FolderOpen24}"
+                                                   Command="{Binding RestoreBackupCommand}"
+                                                   Appearance="Secondary" Height="38" Padding="16,0" Cursor="Hand"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- TAB 3: YAZICI & BILDIRIMLER -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="3">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="🖨️ Yazıcı &amp; Bildirim Ayarları" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Varsayılan fatura yazıcısı ve sesli sistem bildirim yapılandırmaları" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20"/>
+
+                            <StackPanel Margin="0,0,0,20">
+                                <Label Content="Varsayılan Fatura / Teklif Yazıcısı" FontWeight="SemiBold"/>
+                                <ComboBox ItemsSource="{Binding AvailablePrinters}" SelectedItem="{Binding SelectedPrinter}" Height="38"/>
+                            </StackPanel>
+
+                            <CheckBox Content="Fiyat teklifleri kaydedildiğinde otomatik yazdır" IsChecked="{Binding AutoPrintReceipt}" Margin="0,0,0,12" FontSize="13"/>
+                            <CheckBox Content="Kritik stok ve yeni arıza kaydı bildirimi seslerini aktif et" IsChecked="{Binding SoundAlertsEnabled}" Margin="0,0,0,24" FontSize="13"/>
+
+                            <ui:Button Content="Ayarları Kaydet" Icon="{ui:SymbolIcon Save24}" Command="{Binding SaveCompanyInfoCommand}" Appearance="Primary" Height="38" Padding="16,0" HorizontalAlignment="Left" Cursor="Hand"/>
+                        </StackPanel>
+
+                        <!-- TAB 4: AG & SUNUCU -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="4">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="🌐 Ağ &amp; Sunucu Yönetimi" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Sunucu-istemci mimarisi ve yerel ağ bağlantı ayarları" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20"/>
+
+                            <Border Padding="16" CornerRadius="10" Margin="0,0,0,20" Background="{DynamicResource SurfacePageBrush}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="MEVCUT SUNUCU ROLÜ" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" Margin="0,4,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="💻 İstemci (Client Modu)"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMainServer}" Value="True">
+                                                            <Setter Property="Text" Value="🖥️ Ana Sunucu (Main Server)"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+
+                                    <ui:Button Grid.Column="1" Content="Detaylı Ağ Yönetimini Aç" Icon="{ui:SymbolIcon Globe24}"
+                                               Command="{Binding OpenNetworkSettingsCommand}" Appearance="Primary" Height="38" Padding="16,0" VerticalAlignment="Center" Cursor="Hand"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>
-

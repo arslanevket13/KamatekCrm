@@ -32,6 +32,7 @@ namespace KamatekCrm.ViewModels
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IToastService _toastService;
         private readonly ILogger<NetworkSettingsViewModel> _logger;
+        private readonly System.Windows.Threading.DispatcherTimer _refreshTimer;
 
         #endregion
 
@@ -54,16 +55,32 @@ namespace KamatekCrm.ViewModels
 
             ConnectedClients = new ObservableCollection<ConnectedClientModel>();
 
+            _refreshTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(5)
+            };
+            _refreshTimer.Tick += async (s, e) =>
+            {
+                if (_isMainServer && _connectionProvider.IsConnected && _isAutoRefreshEnabled && !IsBusy)
+                {
+                    await LoadConnectedClientsAsync();
+                }
+            };
+
             // appsettings.json'dan mevcut değerleri yükle
             LoadSettingsFromConfig();
 
             // Çalışma anındaki durumu yansıt
             RefreshLiveStatus();
 
-            // Sunucu modundaysa istemci listesini yükle
-            if (_isMainServer && _connectionProvider.IsConnected)
+            // Sunucu modundaysa istemci listesini yükle ve timer'ı başlat
+            if (_isMainServer)
             {
-                Task.Run(async () => await LoadConnectedClientsAsync());
+                _refreshTimer.Start();
+                if (_connectionProvider.IsConnected)
+                {
+                    Task.Run(async () => await LoadConnectedClientsAsync());
+                }
             }
         }
 
@@ -87,6 +104,23 @@ namespace KamatekCrm.ViewModels
                     OnPropertyChanged(nameof(HasUnsavedChanges));
                     OnPropertyChanged(nameof(RoleDisplayText));
                     OnPropertyChanged(nameof(IsClientMode));
+
+                    if (value && !_refreshTimer.IsEnabled) _refreshTimer.Start();
+                    else if (!value && _refreshTimer.IsEnabled) _refreshTimer.Stop();
+                }
+            }
+        }
+
+        private bool _isAutoRefreshEnabled = true;
+        public bool IsAutoRefreshEnabled
+        {
+            get => _isAutoRefreshEnabled;
+            set
+            {
+                if (SetProperty(ref _isAutoRefreshEnabled, value))
+                {
+                    if (value && _isMainServer) _refreshTimer.Start();
+                    else _refreshTimer.Stop();
                 }
             }
         }

@@ -6,16 +6,12 @@
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              mc:Ignorable="d" 
-             d:DesignHeight="800" d:DesignWidth="960">
+             d:DesignHeight="800" d:DesignWidth="1100"
+             Background="{DynamicResource SurfacePageBrush}">
 
     <UserControl.Resources>
-        <!-- Bool to Visibility Converter -->
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-
-        <!-- Inverse Boolean Converter -->
         <vm:InverseBooleanConverter x:Key="InverseBool"/>
-
-        <!-- Connection Status Color Converter -->
         <vm:ConnectionStatusColorConverter x:Key="StatusColorConverter"/>
     </UserControl.Resources>
 
@@ -26,21 +22,20 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ═══════════════════════════════════════════════════ -->
-        <!-- HEADER -->
-        <!-- ═══════════════════════════════════════════════════ -->
-        <Border Grid.Row="0" Margin="0,0,0,24">
+        <!-- ═══════════════ HEADER ═══════════════ -->
+        <Border Grid.Row="0" Margin="0,0,0,20">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel>
-                    <TextBlock Text="🌐 AĞ &amp; BAĞLANTI YÖNETİMİ" FontSize="26" FontWeight="Bold" 
-                               Foreground="{DynamicResource ThemeTextPrimary}"/>
-                    <TextBlock Text="Sunucu rolü, ağ keşfi ve bağlantı izleme" FontSize="14" 
-                               Foreground="{DynamicResource ThemeTextSecondary}"/>
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="Globe24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="AĞ VE BAĞLANTI YÖNETİMİ" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                        <TextBlock Text="Sunucu rolü, otomatik UDP ağ keşfi ve canlı veritabanı istemci izleme paneli" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- Live Status Badge -->
@@ -66,381 +61,282 @@
             </Grid>
         </Border>
 
-        <!-- ═══════════════════════════════════════════════════ -->
-        <!-- CONTENT -->
-        <!-- ═══════════════════════════════════════════════════ -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
+        <!-- ═══════════════ MAIN CONTENT: 2-COLUMN LAYOUT ═══════════════ -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.1*"/>
+                <ColumnDefinition Width="1.3*"/>
+            </Grid.ColumnDefinitions>
 
-                <!-- ───────────────────────────────────────────── -->
-                <!-- CARD 1: ROL YAPILANDIRMASI -->
-                <!-- ───────────────────────────────────────────── -->
-                <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" 
-                        Padding="24" Margin="0,0,0,16">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="20" Direction="270" ShadowDepth="4" Opacity="0.08" Color="Black"/>
-                    </Border.Effect>
-                    <StackPanel>
-                        <!-- Card Header -->
-                        <Grid Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Background="{DynamicResource ThemePrimary}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
-                                <TextBlock Text="🖥️" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="Rol Yapılandırması" FontWeight="Bold" FontSize="14" 
-                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                <TextBlock Text="Bu bilgisayarın ağdaki görevini belirleyin" FontSize="11" 
-                                           Foreground="{DynamicResource ThemeTextSecondary}"/>
-                            </StackPanel>
-                            <!-- Role Badge -->
-                            <Border Grid.Column="2" CornerRadius="12" Padding="12,6" VerticalAlignment="Center">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="#DBEAFE"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsMainServer}" Value="True">
-                                                <Setter Property="Background" Value="#DCFCE7"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock Text="{Binding RoleDisplayText}" FontWeight="Bold" FontSize="12">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#1D4ED8"/>
+            <!-- LEFT COLUMN: CONFIGURATION CARDS -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,16,0">
+                <StackPanel>
+                    <!-- CARD 1: ROL YAPILANDIRMASI -->
+                    <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" 
+                            Padding="20" Margin="0,0,0,16">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="{DynamicResource ThemePrimary}" CornerRadius="10" Width="36" Height="36" Margin="0,0,12,0">
+                                    <ui:SymbolIcon Symbol="Server24" FontSize="18" Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Rol Yapılandırması" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                    <TextBlock Text="Bu bilgisayarın ağdaki görevini belirleyin" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </StackPanel>
+
+                                <!-- Role Badge -->
+                                <Border Grid.Column="2" CornerRadius="10" Padding="12,6" VerticalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsMainServer}" Value="True">
-                                                    <Setter Property="Foreground" Value="#15803D"/>
+                                                    <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Border>
-                        </Grid>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding RoleDisplayText}" FontWeight="Bold" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMainServer}" Value="True">
+                                                        <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </Grid>
 
-                        <Separator Margin="0,0,0,16" Background="{DynamicResource ThemeDivider}"/>
+                            <Separator Margin="0,0,0,16" Background="{DynamicResource BorderSubtleBrush}"/>
 
-                        <!-- Main Server Toggle -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel>
-                                <TextBlock Text="Bu bilgisayar Ana Sunucu mu?" FontWeight="SemiBold" FontSize="13"
-                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,4,0,0"
-                                           Text="Ana sunucu veritabanını barındırır ve ağdaki diğer bilgisayarlara UDP yayını yapar. İstemciler bu sunucuyu otomatik olarak bulup bağlanır."/>
-                            </StackPanel>
-                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding IsMainServer}" VerticalAlignment="Top"/>
-                        </Grid>
-
-                        <!-- Unsaved Changes Warning -->
-                        <Border CornerRadius="6" Padding="12,8" Background="{DynamicResource StatusWarningBgLight}" 
-                                Visibility="{Binding HasUnsavedChanges, Converter={StaticResource BoolToVis}}"
-                                Margin="0,8,0,0">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚠️" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Kaydedilmemiş değişiklikler var. Etkili olması için 'Kaydet ve Yeniden Başlat' butonuna basın." 
-                                           FontSize="11" Foreground="{DynamicResource StatusWarningFgLight}" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <!-- ───────────────────────────────────────────── -->
-                <!-- CARD 2: BAĞLANTI MODU (Otomatik / Manuel) -->
-                <!-- ───────────────────────────────────────────── -->
-                <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" 
-                        Padding="24" Margin="0,0,0,16"
-                        Visibility="{Binding IsClientMode, Converter={StaticResource BoolToVis}}">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="20" Direction="270" ShadowDepth="4" Opacity="0.08" Color="Black"/>
-                    </Border.Effect>
-                    <StackPanel>
-                        <!-- Card Header -->
-                        <Grid Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
-                                <TextBlock Text="📡" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="Bağlantı Modu" FontWeight="Bold" FontSize="14" 
-                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                <TextBlock Text="Sunucuya bağlanma yöntemini seçin" FontSize="11" 
-                                           Foreground="{DynamicResource ThemeTextSecondary}"/>
-                            </StackPanel>
-                        </Grid>
-
-                        <Separator Margin="0,0,0,16" Background="{DynamicResource ThemeDivider}"/>
-
-                        <!-- Auto Discovery Toggle -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel>
-                                <TextBlock Text="Otomatik Keşif (UDP)" FontWeight="SemiBold" FontSize="13"
-                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                <TextBlock Text="Sunucuyu ağda otomatik olarak bul (Zero-Configuration)" FontSize="11" 
-                                           Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,4,0,0"/>
-                            </StackPanel>
-                            <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding IsAutoDiscoveryEnabled}" VerticalAlignment="Top"/>
-                        </Grid>
-
-                        <!-- Scan Network Button -->
-                        <Button Command="{Binding ScanNetworkCommand}" Margin="0,0,0,16"
-                                Visibility="{Binding IsAutoDiscoveryEnabled, Converter={StaticResource BoolToVis}}"
-                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" FontWeight="Bold" 
-                                Padding="16,10" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📡" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="AĞI TARA" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
-                        <!-- Manual IP Section -->
-                        <Border CornerRadius="6" Padding="16" Margin="0,4,0,0"
-                                Background="{DynamicResource ThemeBackground}"
-                                Visibility="{Binding IsAutoDiscoveryEnabled, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
-                            <StackPanel>
-                                <TextBlock Text="MANUEL SUNUCU ADRESİ" FontSize="10" FontWeight="Bold" 
-                                           Foreground="{DynamicResource ThemeTextTertiary}" Margin="0,0,0,8"/>
-
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <TextBox Text="{Binding ManualServerIp, UpdateSourceTrigger=PropertyChanged}" 
-                                             Padding="12,10" FontSize="14" VerticalContentAlignment="Center"
-                                             Background="{DynamicResource ThemeSurface}"
-                                             Foreground="{DynamicResource ThemeTextPrimary}"
-                                             BorderBrush="{DynamicResource ThemeBorder}"/>
-
-                                    <Button Grid.Column="1" Command="{Binding TestConnectionCommand}" 
-                                            Margin="8,0,0,0" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" 
-                                            FontWeight="Bold" Padding="16,10" BorderThickness="0" Cursor="Hand">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="🔌" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="TEST ET" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
-                                </Grid>
-
-                                <TextBlock Text="Örnek: 192.168.1.100 veya sunucu-pc" FontSize="10" 
-                                           Foreground="{DynamicResource ThemeTextTertiary}" Margin="0,8,0,0"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <!-- ───────────────────────────────────────────── -->
-                <!-- CARD 3: SUNUCU DASHBOARD (Bağlı İstemciler) -->
-                <!-- ───────────────────────────────────────────── -->
-                <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" 
-                        Padding="24" Margin="0,0,0,16"
-                        Visibility="{Binding IsMainServer, Converter={StaticResource BoolToVis}}">
-                    <Border.Effect>
-                        <DropShadowEffect BlurRadius="20" Direction="270" ShadowDepth="4" Opacity="0.08" Color="Black"/>
-                    </Border.Effect>
-                    <StackPanel>
-                        <!-- Card Header -->
-                        <Grid Margin="0,0,0,16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Background="{DynamicResource StatusSuccessBg}" CornerRadius="20" Width="40" Height="40" Margin="0,0,16,0">
-                                <TextBlock Text="👥" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="Sunucu Dashboard — Bağlı İstemciler" FontWeight="Bold" FontSize="14" 
-                                           Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                <TextBlock FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}">
-                                    <Run Text="PostgreSQL pg_stat_activity üzerinden canlı izleme —"/>
-                                    <Run Text="{Binding ConnectedClients.Count, Mode=OneWay, StringFormat='{}{0} bağlantı'}"/>
-                                </TextBlock>
-                            </StackPanel>
-
-                            <!-- Refresh Button -->
-                            <Button Grid.Column="2" Command="{Binding RefreshClientsCommand}" 
-                                    Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}" FontWeight="Bold" 
-                                    Padding="12,8" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="🔄" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="YENİLE" FontSize="11" VerticalAlignment="Center"/>
+                            <!-- Main Server Toggle -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Ana Sunucu Modu (Main Server)" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"
+                                               Text="Ana sunucu veritabanını barındırır ve UDP yayını yapar. İstemciler otomatik bağlanır."/>
                                 </StackPanel>
-                            </Button>
+                                <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding IsMainServer}" VerticalAlignment="Top"/>
+                            </Grid>
+
+                            <!-- Unsaved Warning -->
+                            <Border CornerRadius="8" Padding="12,8" Background="{DynamicResource StatusWarningBg}" 
+                                    Visibility="{Binding HasUnsavedChanges, Converter={StaticResource BoolToVis}}" Margin="0,8,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Warning24" FontSize="16" Foreground="{DynamicResource StatusWarningFg}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Değişikliklerin etkili olması için 'Kaydet ve Yeniden Başlat' butonuna basın." 
+                                               FontSize="11" Foreground="{DynamicResource StatusWarningFg}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CARD 2: BAĞLANTI MODU & UDP KEŞFİ -->
+                    <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" 
+                            Padding="20" Margin="0,0,0,16"
+                            Visibility="{Binding IsClientMode, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="{DynamicResource ThemePrimary}" CornerRadius="10" Width="36" Height="36" Margin="0,0,12,0">
+                                    <ui:SymbolIcon Symbol="Wifi124" FontSize="18" Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Bağlantı ve Keşif Modu" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                    <TextBlock Text="Sunucuya bağlanma yöntemini yapılandırın" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Separator Margin="0,0,0,16" Background="{DynamicResource BorderSubtleBrush}"/>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Otomatik UDP Keşfi (Zero-Config)" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                    <TextBlock Text="Sunucuyu yerel ağda otomatik bul ve bağlan" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding IsAutoDiscoveryEnabled}" VerticalAlignment="Top"/>
+                            </Grid>
+
+                            <ui:Button Content="Ağ'ı Tara" Icon="{ui:SymbolIcon Search24}"
+                                       Command="{Binding ScanNetworkCommand}" Margin="0,4,0,12"
+                                       Visibility="{Binding IsAutoDiscoveryEnabled, Converter={StaticResource BoolToVis}}"
+                                       Appearance="Primary" Height="36" Padding="16,0" Cursor="Hand" HorizontalAlignment="Left"/>
+
+                            <!-- Manual IP Input -->
+                            <Border CornerRadius="8" Padding="14" Margin="0,4,0,0"
+                                    Background="{DynamicResource SurfacePageBrush}"
+                                    Visibility="{Binding IsAutoDiscoveryEnabled, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
+                                <StackPanel>
+                                    <TextBlock Text="MANUEL SUNUCU IP ADRESİ" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ui:TextBox Grid.Column="0" Text="{Binding ManualServerIp, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Örn: 192.168.1.100" Height="38"/>
+                                        <ui:Button Grid.Column="1" Content="Test Et" Icon="{ui:SymbolIcon PlugConnected24}"
+                                                   Command="{Binding TestConnectionCommand}" Margin="8,0,0,0"
+                                                   Appearance="Primary" Height="38" Padding="14,0" Cursor="Hand"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CARD 3: PORT VE TIMEOUT KONFİGÜRASYONU -->
+                    <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" 
+                            Padding="20">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                <Label Content="UDP Yayın Portu" FontWeight="SemiBold" FontSize="12"/>
+                                <ui:TextBox Text="{Binding ConfiguredPort, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                <Label Content="Zaman Aşımı (sn)" FontWeight="SemiBold" FontSize="12"/>
+                                <ui:TextBox Text="{Binding ConfiguredTimeout, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                            </StackPanel>
                         </Grid>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
 
-                        <Separator Margin="0,0,0,16" Background="{DynamicResource ThemeDivider}"/>
+            <!-- RIGHT COLUMN: LIVE SERVER DASHBOARD (CONNECTED CLIENTS) -->
+            <Border Grid.Column="1" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" 
+                    Padding="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                        <!-- Connected Clients DataGrid -->
-                        <DataGrid ItemsSource="{Binding ConnectedClients}" AutoGenerateColumns="False"
-                                  IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
-                                  HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                                  Background="Transparent" BorderThickness="0"
-                                  RowBackground="Transparent" AlternatingRowBackground="{DynamicResource ThemeBackground}"
-                                  Foreground="{DynamicResource ThemeTextPrimary}"
-                                  MinHeight="120" MaxHeight="300">
-
-                            <DataGrid.ColumnHeaderStyle>
-                                <Style TargetType="DataGridColumnHeader">
-                                    <Setter Property="Background" Value="{DynamicResource ThemeBackground}"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource ThemeTextSecondary}"/>
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                    <Setter Property="FontSize" Value="11"/>
-                                    <Setter Property="Padding" Value="12,8"/>
-                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeDivider}"/>
-                                </Style>
-                            </DataGrid.ColumnHeaderStyle>
-
-                            <DataGrid.CellStyle>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="Padding" Value="12,8"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="DataGridCell">
-                                                <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
-                                                    <ContentPresenter VerticalAlignment="Center"/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </DataGrid.CellStyle>
-
-                            <DataGrid.Columns>
-                                <!-- Status Indicator -->
-                                <DataGridTemplateColumn Header="" Width="32">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Ellipse Width="8" Height="8" HorizontalAlignment="Center">
-                                                <Ellipse.Style>
-                                                    <Style TargetType="Ellipse">
-                                                        <Setter Property="Fill" Value="#9CA3AF"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                                <Setter Property="Fill" Value="#22C55E"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Ellipse.Style>
-                                            </Ellipse>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-
-                                <!-- Client IP -->
-                                <DataGridTextColumn Header="İstemci Adresi" Binding="{Binding ClientAddress}" Width="200"/>
-
-                                <!-- State -->
-                                <DataGridTextColumn Header="Durum" Binding="{Binding State}" Width="*"/>
-
-                                <!-- Last Query -->
-                                <DataGridTextColumn Header="Son Sorgu" Binding="{Binding QueryStartDisplay}" Width="120"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-
-                        <!-- Empty State -->
-                        <Border Margin="0,8,0,0" Padding="16" CornerRadius="6" 
-                                Background="{DynamicResource ThemeBackground}" HorizontalAlignment="Center">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ConnectedClients.Count}" Value="0">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <TextBlock Text="🔇 Henüz bağlı istemci yok. 'Yenile' butonuna basarak kontrol edin." 
-                                       FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}" HorizontalAlignment="Center"/>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <!-- ───────────────────────────────────────────── -->
-                <!-- BOTTOM ACTION BAR -->
-                <!-- ───────────────────────────────────────────── -->
-                <Border Background="{DynamicResource ThemeSurface}" CornerRadius="8"
-                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" 
-                        Padding="24,16" Margin="0,0,0,16">
-                    <Grid>
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Port & Timeout Info -->
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Port:" FontWeight="SemiBold" FontSize="11" 
-                                       Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding ConfiguredPort}" FontWeight="Bold" FontSize="11" 
-                                       Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                        <Border Background="{DynamicResource StatusSuccessBg}" CornerRadius="10" Width="36" Height="36" Margin="0,0,12,0">
+                            <ui:SymbolIcon Symbol="People24" FontSize="18" Foreground="{DynamicResource StatusSuccessFg}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
 
-                            <TextBlock Text="Timeout:" FontWeight="SemiBold" FontSize="11" 
-                                       Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                            <TextBlock FontWeight="Bold" FontSize="11" Foreground="{DynamicResource ThemeTextPrimary}" VerticalAlignment="Center">
-                                <Run Text="{Binding ConfiguredTimeout, Mode=OneWay}"/><Run Text="s"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Canlı Bağlı İstemci Paneli" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                                <Run Text="PostgreSQL pg_stat_activity izleme • "/>
+                                <Run Text="{Binding ConnectedClients.Count, Mode=OneWay, StringFormat='{}{0} aktif istemci'}"/>
                             </TextBlock>
                         </StackPanel>
 
-                        <!-- Save & Restart Button -->
-                        <Button Grid.Column="1" Command="{Binding SaveAndRestartCommand}" 
-                                Padding="20,12" BorderThickness="0" Cursor="Hand" FontWeight="Bold">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Background" Value="#2563EB"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                    <Setter Property="Opacity" Value="1"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding HasUnsavedChanges}" Value="True">
-                                            <Setter Property="Background" Value="#DC2626"/>
-                                        </DataTrigger>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                            <Setter Property="Opacity" Value="0.6"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="💾" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="KAYDET VE YENİDEN BAŞLAT" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <ui:Button Icon="{ui:SymbolIcon ArrowSync24}" Content="Yenile" Command="{Binding RefreshClientsCommand}" Appearance="Secondary" Height="34" Padding="12,0" Cursor="Hand"/>
+                        </StackPanel>
                     </Grid>
-                </Border>
 
-            </StackPanel>
-        </ScrollViewer>
+                    <!-- Connected Clients DataGrid -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding ConnectedClients}" AutoGenerateColumns="False"
+                              IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              Background="Transparent" BorderThickness="0"
+                              RowBackground="Transparent" AlternatingRowBackground="{DynamicResource HoverOverlayBrush}"
+                              Foreground="{DynamicResource TextHeadingBrush}">
 
-        <!-- Kapat Butonu -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="KAPAT" Width="120" Height="35" Click="CloseButton_Click" 
-                    Background="Transparent" Foreground="{DynamicResource ThemeTextSecondary}"
-                    BorderThickness="1" BorderBrush="{DynamicResource ThemeBorder}"
-                    Cursor="Hand" FontWeight="SemiBold"/>
-        </StackPanel>
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="Padding" Value="12,8"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Padding" Value="12,8"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.CellStyle>
+
+                        <DataGrid.Columns>
+                            <!-- Status Indicator -->
+                            <DataGridTemplateColumn Header="" Width="32">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Ellipse Width="8" Height="8" HorizontalAlignment="Center">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="#9CA3AF"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                                            <Setter Property="Fill" Value="#22C55E"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="İstemci IP Adresi" Binding="{Binding ClientAddress}" Width="160"/>
+                            <DataGridTextColumn Header="Bağlantı Durumu" Binding="{Binding State}" Width="*"/>
+                            <DataGridTextColumn Header="Son Sorgu" Binding="{Binding QueryStartDisplay}" Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════ BOTTOM ACTION BAR ═══════════════ -->
+        <DockPanel Grid.Row="2" Margin="0,20,0,0">
+            <ui:Button DockPanel.Dock="Right" Content="Kapat" Width="100" Height="36" Click="CloseButton_Click" Appearance="Secondary" Cursor="Hand"/>
+
+            <ui:Button Content="Kaydet ve Yeniden Başlat" Icon="{ui:SymbolIcon Save24}"
+                       Command="{Binding SaveAndRestartCommand}"
+                       Appearance="Primary" Height="38" Padding="20,0" Cursor="Hand"/>
+        </DockPanel>
     </Grid>
 </UserControl>

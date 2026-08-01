@@ -15,28 +15,29 @@
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <Grid Margin="32">
+        <Grid Margin="24">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- ═══════════════ ROW 0: HEADER ═══════════════ -->
-            <DockPanel Grid.Row="0" Margin="0,0,0,32">
-                <!-- Right: Refresh -->
+            <DockPanel Grid.Row="0" Margin="0,0,0,24">
+                <!-- Right: Refresh Button -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                     <ui:Button Content="Yenile" 
-                            Icon="{ui:SymbolIcon ArrowSync24}"
-                            Command="{Binding RefreshDashboardCommand}"
-                            Appearance="Secondary"
-                            Height="40" Padding="20,0"/>
+                               Icon="{ui:SymbolIcon ArrowSync24}"
+                               Command="{Binding RefreshDashboardCommand}"
+                               Appearance="Secondary"
+                               Height="38" Padding="16,0" Cursor="Hand"/>
                 </StackPanel>
 
-                <!-- Left: Welcome -->
+                <!-- Left: Welcome & Date -->
                 <StackPanel>
                     <TextBlock Text="{Binding WelcomeMessage}" 
-                               FontSize="30" FontWeight="Bold" 
+                               FontSize="26" FontWeight="Bold" 
                                Foreground="{DynamicResource TextHeadingBrush}"/>
                     <TextBlock FontSize="13" Margin="0,4,0,0"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}">
@@ -46,241 +47,319 @@
                 </StackPanel>
             </DockPanel>
 
-            <!-- ═══════════════ ROW 1: PRIMARY KPI'LAR (MAX 4) ═══════════════ -->
-            <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,32">
+            <!-- ═══════════════ ROW 1: QUICK ACTION RIBBON ═══════════════ -->
+            <Border Grid.Row="1" CornerRadius="12" Padding="16,12" Margin="0,0,0,24"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Flash24" FontSize="18" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,8,0"/>
+                        <TextBlock Text="Hızlı İşlemler" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" Foreground="{DynamicResource TextHeadingBrush}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <ui:Button Content="Yeni Arıza / Cihaz Kaydı" Icon="{ui:SymbolIcon Wrench24}"
+                                   Command="{Binding OpenFaultTicketCommand}"
+                                   Appearance="Primary" Margin="0,0,8,0" Height="36" Padding="14,0" Cursor="Hand"/>
+
+                        <ui:Button Content="Hızlı Satış (POS)" Icon="{ui:SymbolIcon Cart24}"
+                                   Command="{Binding OpenDirectSalesCommand}"
+                                   Appearance="Secondary" Margin="0,0,8,0" Height="36" Padding="14,0" Cursor="Hand"/>
+
+                        <ui:Button Content="Fiyat Teklifi Hazırla" Icon="{ui:SymbolIcon DocumentAdd24}"
+                                   Command="{Binding OpenQuotationCommand}"
+                                   Appearance="Secondary" Height="36" Padding="14,0" Cursor="Hand"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ═══════════════ ROW 2: PRIMARY KPI'LAR (MAX 4) ═══════════════ -->
+            <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,24">
                 <km:KmKpiCard Title="Bugünkü Satış"
-                              Value="{Binding TodaySalesTotal}"
-                              Prefix="₺" Format="N0"
-                              Icon="💰"
-                              Subtitle="{Binding TodaySalesCountText}"
-                              AccentBrush="{DynamicResource KpiGradientPurple}"
-                              Margin="0,0,24,0"/>
+                               Value="{Binding TodaySalesTotal}"
+                               Prefix="₺" Format="N0"
+                               Icon="💰"
+                               Subtitle="{Binding TodaySalesCountText}"
+                               AccentBrush="{DynamicResource KpiGradientPurple}"
+                               Margin="0,0,16,0"/>
 
                 <km:KmKpiCard Title="Aylık Satış"
-                              Value="{Binding MonthlySalesTotal}"
-                              Prefix="₺" Format="N0"
-                              Icon="📈"
-                              Subtitle="{Binding CurrentMonthName}"
-                              AccentBrush="{DynamicResource KpiGradientGreen}"
-                              Margin="0,0,24,0"/>
+                               Value="{Binding MonthlySalesTotal}"
+                               Prefix="₺" Format="N0"
+                               Icon="📈"
+                               Subtitle="{Binding CurrentMonthName}"
+                               AccentBrush="{DynamicResource KpiGradientGreen}"
+                               Margin="0,0,16,0"/>
 
                 <km:KmKpiCard Title="Aktif İşler" 
-                              Value="{Binding ActiveJobsCount}" 
-                              Icon="🔧"
-                              Subtitle="devam ediyor"
-                              AccentBrush="{DynamicResource KpiGradientOrange}"
-                              Margin="0,0,24,0"/>
+                               Value="{Binding ActiveJobsCount}" 
+                               Icon="🔧"
+                               Subtitle="devam ediyor"
+                               AccentBrush="{DynamicResource KpiGradientOrange}"
+                               Margin="0,0,16,0"/>
 
                 <km:KmKpiCard Title="Teslime Hazır" 
-                              Value="{Binding ReadyRepairsCount}" 
-                              Icon="✅"
-                              Subtitle="cihaz bekliyor"
-                              AccentBrush="{DynamicResource KpiGradientCyan}"
-                              Margin="0,0,0,0"/>
+                               Value="{Binding ReadyRepairsCount}" 
+                               Icon="✅"
+                               Subtitle="cihaz bekliyor"
+                               AccentBrush="{DynamicResource KpiGradientCyan}"
+                               Margin="0,0,0,0"/>
             </UniformGrid>
 
-            <!-- ═══════════════ ROW 2: ALT GÖVDE (GRAFİKLER VE WIDGETS) ═══════════════ -->
-            <Grid Grid.Row="2">
+            <!-- ═══════════════ ROW 3: MAIN GRID (LEFT: CHARTS & ALERTS, RIGHT: JOBS & READY REPAIRS) ═══════════════ -->
+            <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1.2*"/>
                 </Grid.ColumnDefinitions>
 
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                <!-- LEFT COLUMN -->
+                <Grid Grid.Column="0" Margin="0,0,20,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                <!-- ═══ GRAFİK BÖLÜMÜ ═══ -->
-                <Border Grid.Row="0" Grid.Column="0" CornerRadius="12" Margin="0,0,24,24" Padding="32"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource BorderSubtleBrush}"
-                        BorderThickness="1"
-                        Effect="{DynamicResource Elevation2}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
+                    <!-- ═══ 1. GRAFİK BÖLÜMÜ ═══ -->
+                    <Border Grid.Row="0" CornerRadius="12" Margin="0,0,0,20" Padding="24"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Row="0" Margin="0,0,0,24">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="ChartMultiple24" FontSize="20" 
-                                               Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,12,0"/>
-                                <TextBlock Text="Haftalık Performans" FontSize="18" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextHeadingBrush}"/>
-                            </StackPanel>
-                            <TextBlock Text="Son 7 günlük gelir ve tamamlanan iş trendi" FontSize="13" 
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="32,4,0,0"/>
-                        </StackPanel>
-
-                        <lvc:CartesianChart Grid.Row="1" 
-                                            Series="{Binding WeeklyTrendSeries}"
-                                            XAxes="{Binding WeeklyTrendXAxes}"
-                                            YAxes="{Binding WeeklyTrendYAxes}"
-                                            Height="280"
-                                            TooltipPosition="Top"
-                                            ZoomMode="X"/>
-                    </Grid>
-                </Border>
-
-                <!-- ═══ BUGÜNÜN İŞLERİ BÖLÜMÜ ═══ -->
-                <Border Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" CornerRadius="12" Padding="32" Margin="0,0,0,0"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource BorderSubtleBrush}"
-                        BorderThickness="1"
-                        Effect="{DynamicResource Elevation2}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <!-- Header -->
-                        <Border Grid.Row="0" CornerRadius="10" Padding="20" Margin="0,0,0,24"
-                                Background="{DynamicResource StatusInfoBg}"
-                                BorderBrush="{DynamicResource StatusInfoFg}"
-                                BorderThickness="0,0,0,2">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Wrench24" FontSize="24" 
-                                               Foreground="{DynamicResource StatusInfoFg}" VerticalAlignment="Center"/>
-                                <StackPanel Margin="16,0,0,0">
-                                    <TextBlock Text="Bugünün İşleri" FontSize="16" FontWeight="Bold" 
-                                               Foreground="{DynamicResource StatusInfoFg}"/>
-                                    <TextBlock Text="Arıza &amp; Saha Operasyonları" FontSize="12" 
-                                               Foreground="{DynamicResource StatusInfoFg}" Opacity="0.8"/>
+                            <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="ChartMultiple24" FontSize="20" 
+                                                   Foreground="{DynamicResource ThemePrimary}" Margin="0,0,10,0"/>
+                                    <TextBlock Text="Haftalık Performans Trendi" FontSize="16" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextHeadingBrush}"/>
                                 </StackPanel>
+                                <TextBlock Text="Son 7 günlük gelir ve tamamlanan iş dağılımı" FontSize="12" 
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="30,2,0,0"/>
                             </StackPanel>
-                        </Border>
 
-                        <!-- Today's Jobs List -->
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                            <StackPanel>
-                                <ItemsControl ItemsSource="{Binding TodaysJobs}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Padding="16" Margin="0,0,0,8" CornerRadius="8"
-                                                    Background="{DynamicResource HoverOverlayBrush}">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <Border Grid.Column="0" Background="{DynamicResource StatusInfoFg}" 
-                                                            CornerRadius="6" Padding="12,6" Margin="0,0,16,0"
-                                                            VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding ScheduledTime}" 
-                                                                   FontWeight="Bold" FontSize="13"
-                                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                                                    </Border>
-                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding CustomerName}" 
-                                                                   FontWeight="Medium" FontSize="14"
-                                                                   Foreground="{DynamicResource TextHeadingBrush}"/>
-                                                        <TextBlock Text="{Binding Category}" FontSize="12" 
-                                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                                    </StackPanel>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                            <lvc:CartesianChart Grid.Row="1" 
+                                                Series="{Binding WeeklyTrendSeries}"
+                                                XAxes="{Binding WeeklyTrendXAxes}"
+                                                YAxes="{Binding WeeklyTrendYAxes}"
+                                                Height="240"
+                                                TooltipPosition="Top"
+                                                ZoomMode="X"/>
+                        </Grid>
+                    </Border>
 
-                                <!-- Empty State -->
-                                <km:KmEmptyState Icon="📅" Title="İş Yok"
-                                                 Message="Bugün planlanmış iş bulunmuyor."
-                                                 Visibility="{Binding IsTodaysJobsEmpty, Converter={StaticResource BoolToVis}}"/>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Grid>
-                </Border>
-                
-                <!-- ═══ KRİTİK UYARILAR BÖLÜMÜ ═══ -->
-                <Border Grid.Row="1" Grid.Column="0" CornerRadius="12" Margin="0,0,24,0" Padding="32"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource BorderSubtleBrush}"
-                        BorderThickness="1"
-                        Effect="{DynamicResource Elevation2}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
+                    <!-- ═══ 2. KRİTİK UYARILAR BÖLÜMÜ ═══ -->
+                    <Border Grid.Row="1" CornerRadius="12" Padding="24"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
 
-                        <!-- Header -->
-                        <Border Grid.Row="0" CornerRadius="10" Padding="20" Margin="0,0,0,24"
-                                Background="{DynamicResource StatusErrorBg}"
-                                BorderBrush="{DynamicResource StatusErrorFg}"
-                                BorderThickness="0,0,0,2">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Warning24" FontSize="24" 
-                                               Foreground="{DynamicResource StatusErrorFg}" VerticalAlignment="Center"/>
-                                <StackPanel Margin="16,0,0,0">
-                                    <TextBlock Text="Kritik Uyarılar" FontSize="16" FontWeight="Bold" 
-                                               Foreground="{DynamicResource StatusErrorFg}"/>
-                                    <TextBlock Text="Stok seviyeleri ve önemli hatırlatmalar" FontSize="12" 
-                                               Foreground="{DynamicResource StatusErrorFg}" Opacity="0.8"/>
+                            <!-- Header -->
+                            <Border Grid.Row="0" CornerRadius="10" Padding="14,10" Margin="0,0,0,16"
+                                    Background="{DynamicResource StatusErrorBg}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Warning24" FontSize="20" 
+                                                   Foreground="{DynamicResource StatusErrorFg}" VerticalAlignment="Center"/>
+                                    <StackPanel Margin="12,0,0,0">
+                                        <TextBlock Text="Kritik Stok Uyarısı" FontSize="14" FontWeight="Bold" 
+                                                   Foreground="{DynamicResource StatusErrorFg}"/>
+                                        <TextBlock Text="Minimum seviyenin altındaki ürünler" FontSize="11" 
+                                                   Foreground="{DynamicResource StatusErrorFg}" Opacity="0.8"/>
+                                    </StackPanel>
                                 </StackPanel>
-                            </StackPanel>
-                        </Border>
+                            </Border>
 
-                        <!-- Content -->
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="300">
-                            <StackPanel>
-                                <ItemsControl ItemsSource="{Binding LowStockProducts}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Padding="16" Margin="0,0,0,8" CornerRadius="8"
-                                                    Background="{DynamicResource HoverOverlayBrush}">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <StackPanel Grid.Column="0">
-                                                        <TextBlock Text="{Binding ProductName}" 
-                                                                   FontWeight="Medium" FontSize="14"
-                                                                   Foreground="{DynamicResource TextHeadingBrush}"
-                                                                   TextTrimming="CharacterEllipsis"/>
-                                                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                                            <km:KmStatusBadge Status="{Binding UrgencyBadgeStatus}" 
-                                                                              Text="{Binding UrgencyLevel}"/>
+                            <!-- Stock List -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="220">
+                                <StackPanel>
+                                    <ItemsControl ItemsSource="{Binding LowStockProducts}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="8"
+                                                        Background="{DynamicResource HoverOverlayBrush}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel Grid.Column="0">
+                                                            <TextBlock Text="{Binding ProductName}" 
+                                                                       FontWeight="SemiBold" FontSize="13"
+                                                                       Foreground="{DynamicResource TextHeadingBrush}"
+                                                                       TextTrimming="CharacterEllipsis"/>
+                                                            <TextBlock Text="{Binding UrgencyLevel}" FontSize="11" Foreground="{DynamicResource StatusErrorFg}" Margin="0,2,0,0"/>
                                                         </StackPanel>
-                                                    </StackPanel>
-                                                    <Border Grid.Column="1" CornerRadius="8" Padding="16,8"
-                                                            VerticalAlignment="Center">
-                                                        <Border.Style>
-                                                            <Style TargetType="Border">
-                                                                <Setter Property="Background" Value="{DynamicResource StatusErrorFg}"/>
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding CurrentStock}" Value="0">
-                                                                        <Setter Property="Background" Value="{DynamicResource StatusErrorBgDark}"/>
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Border.Style>
-                                                        <TextBlock Text="{Binding CurrentStock}" 
-                                                                   FontWeight="Bold" FontSize="20"
-                                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
-                                                    </Border>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                                        <Border Grid.Column="1" CornerRadius="6" Padding="12,4" Background="{DynamicResource StatusErrorFg}" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding CurrentStock}" 
+                                                                       FontWeight="Bold" FontSize="16"
+                                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
 
-                                <!-- Empty State -->
-                                <km:KmEmptyState Icon="✅" Title="Stoklar Yeterli"
-                                                 Message="Tüm ürünlerin stok seviyeleri normal."
-                                                 Visibility="{Binding IsLowStockEmpty, Converter={StaticResource BoolToVis}}"/>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Grid>
-                </Border>
+                                    <!-- Empty State -->
+                                    <km:KmEmptyState Icon="✅" Title="Stoklar Yeterli"
+                                                     Message="Tüm ürünlerin stok seviyeleri normal."
+                                                     Visibility="{Binding IsLowStockEmpty, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
 
+                <!-- RIGHT COLUMN -->
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1.2*"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- ═══ 1. BUGÜNÜN İŞLERİ BÖLÜMÜ ═══ -->
+                    <Border Grid.Row="0" CornerRadius="12" Padding="24" Margin="0,0,0,20"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Header -->
+                            <Border Grid.Row="0" CornerRadius="10" Padding="14,10" Margin="0,0,0,16"
+                                    Background="{DynamicResource StatusInfoBg}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Wrench24" FontSize="20" 
+                                                   Foreground="{DynamicResource StatusInfoFg}" VerticalAlignment="Center"/>
+                                    <StackPanel Margin="12,0,0,0">
+                                        <TextBlock Text="Bugünün İşleri" FontSize="14" FontWeight="Bold" 
+                                                   Foreground="{DynamicResource StatusInfoFg}"/>
+                                        <TextBlock Text="Planlanan saha &amp; servis randevuları" FontSize="11" 
+                                                   Foreground="{DynamicResource StatusInfoFg}" Opacity="0.8"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Today's Jobs List -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="240">
+                                <StackPanel>
+                                    <ItemsControl ItemsSource="{Binding TodaysJobs}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="8"
+                                                        Background="{DynamicResource HoverOverlayBrush}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border Grid.Column="0" Background="{DynamicResource StatusInfoFg}" 
+                                                                CornerRadius="6" Padding="10,4" Margin="0,0,12,0"
+                                                                VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding ScheduledTime, TargetNullValue='Bugün'}" 
+                                                                       FontWeight="Bold" FontSize="12"
+                                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                        </Border>
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding CustomerName}" 
+                                                                       FontWeight="SemiBold" FontSize="13"
+                                                                       Foreground="{DynamicResource TextHeadingBrush}"/>
+                                                            <TextBlock Text="{Binding Category}" FontSize="11" 
+                                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- Empty State -->
+                                    <km:KmEmptyState Icon="📅" Title="İş Yok"
+                                                     Message="Bugün planlanmış iş bulunmuyor."
+                                                     Visibility="{Binding IsTodaysJobsEmpty, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- ═══ 2. TESLİME HAZIR CİHAZLAR WIDGET ═══ -->
+                    <Border Grid.Row="1" CornerRadius="12" Padding="24"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Header -->
+                            <Border Grid.Row="0" CornerRadius="10" Padding="14,10" Margin="0,0,0,16"
+                                    Background="{DynamicResource KpiPurpleStartColor}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="20" 
+                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                                    <StackPanel Margin="12,0,0,0">
+                                        <TextBlock Text="Teslime Hazır Cihazlar" FontSize="14" FontWeight="Bold" 
+                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                        <TextBlock Text="Müşteri teslimatı bekleyen tamirler" FontSize="11" 
+                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" Opacity="0.8"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Ready Repairs List -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="220">
+                                <StackPanel>
+                                    <ItemsControl ItemsSource="{Binding ReadyToDeliverRepairs}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="8"
+                                                        Background="{DynamicResource HoverOverlayBrush}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel Grid.Column="0">
+                                                            <TextBlock Text="{Binding CustomerName}" 
+                                                                       FontWeight="SemiBold" FontSize="13"
+                                                                       Foreground="{DynamicResource TextHeadingBrush}"/>
+                                                            <TextBlock Text="{Binding DeviceInfo}" FontSize="11" 
+                                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                                        </StackPanel>
+                                                        <Border Grid.Column="1" Background="{DynamicResource ThemeSuccess}" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
+                                                            <TextBlock Text="Hazır" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- Empty State -->
+                                    <km:KmEmptyState Icon="📦" Title="Bekleyen Cihaz Yok"
+                                                     Message="Teslim edilmeyi bekleyen tamir cihazı yok."
+                                                     Visibility="{Binding IsReadyRepairsEmpty, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
             </Grid>
         </Grid>
     </ScrollViewer>
 </UserControl>
-
-

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using GongSolutions.Wpf.DragDrop;
@@ -16,13 +17,18 @@ using Microsoft.EntityFrameworkCore;
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
-    /// Proje Teklif Editörü ViewModel - Üç Panelli Workbench
-    /// Drag & Drop, Tree Yönetimi, Finansal Hesaplamalar
+    /// Proje Teklif Editörü ViewModel - Yenilenmiş 3 Panelli Workbench
+    /// Drag & Drop, Tree Yönetimi, Finansal Hesaplamalar, Undo/Redo, Toplu Marj
     /// </summary>
     public partial class ProjectQuoteEditorViewModel : ViewModelBase, IDropTarget
     {
-        private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly ProjectScopeService _scopeService;
+
+        // Undo / Redo Yığınları
+        private readonly Stack<string> _undoStack = new();
+        private readonly Stack<string> _redoStack = new();
+        private bool _isApplyingUndoRedo;
 
         #region Properties - Proje Bilgileri
 
@@ -88,9 +94,22 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        #region Properties - Tree (Sol Panel)
+        #region Properties - Tree (Sol Panel) & Undo/Redo
 
         public ObservableCollection<ScopeNode> RootNodes { get; } = new();
+
+        private string _treeSearchText = string.Empty;
+        public string TreeSearchText
+        {
+            get => _treeSearchText;
+            set
+            {
+                if (SetProperty(ref _treeSearchText, value))
+                {
+                    FilterTreeNodes();
+                }
+            }
+        }
 
         private ScopeNode? _selectedNode;
         public ScopeNode? SelectedNode
@@ -98,15 +117,28 @@ namespace KamatekCrm.ViewModels
             get => _selectedNode;
             set
             {
-                if (SetProperty(ref _selectedNode, value))
+                if (_selectedNode != value)
                 {
-                    // Seçili node değiştiğinde orta paneli güncelle
-                    RefreshCurrentNodeItems();
-                    OnPropertyChanged(nameof(SelectedNodeName));
-                    OnPropertyChanged(nameof(SelectedNodeSubTotal));
-                    OnPropertyChanged(nameof(HasSelectedNode));
-                    OnPropertyChanged(nameof(CanAddFloor));
-                    OnPropertyChanged(nameof(CanAddFlat));
+                    if (_selectedNode != null)
+                    {
+                        _selectedNode.IsSelected = false;
+                    }
+
+                    if (SetProperty(ref _selectedNode, value))
+                    {
+                        if (_selectedNode != null)
+                        {
+                            _selectedNode.ExpandParents();
+                            _selectedNode.IsSelected = true;
+                        }
+
+                        RefreshCurrentNodeItems();
+                        OnPropertyChanged(nameof(SelectedNodeName));
+                        OnPropertyChanged(nameof(SelectedNodeSubTotal));
+                        OnPropertyChanged(nameof(HasSelectedNode));
+                        OnPropertyChanged(nameof(CanAddFloor));
+                        OnPropertyChanged(nameof(CanAddFlat));
+                    }
                 }
             }
         }
@@ -116,6 +148,9 @@ namespace KamatekCrm.ViewModels
         public bool HasSelectedNode => SelectedNode != null;
         public bool CanAddFloor => SelectedNode?.Type == NodeType.Block;
         public bool CanAddFlat => SelectedNode?.Type == NodeType.Floor || SelectedNode?.Type == NodeType.Flat;
+
+        public bool CanUndo => _undoStack.Count > 0;
+        public bool CanRedo => _redoStack.Count > 0;
 
         #endregion
 
@@ -132,10 +167,24 @@ namespace KamatekCrm.ViewModels
 
         #endregion
 
-        #region Properties - Ürün Kataloğu (Sağ Panel)
+        #region Properties - Ürün Kataloğu & Kategori (Sağ Panel)
 
         public ObservableCollection<Product> ProductCatalog { get; } = new();
         public ObservableCollection<Product> FilteredProducts { get; } = new();
+        public ObservableCollection<string> Categories { get; } = new();
+
+        private string _selectedCategory = "Tümü";
+        public string SelectedCategory
+        {
+            get => _selectedCategory;
+            set
+            {
+                if (SetProperty(ref _selectedCategory, value))
+                {
+                    FilterProducts();
+                }
+            }
+        }
 
         private string _productSearchText = string.Empty;
         public string ProductSearchText
@@ -164,7 +213,6 @@ namespace KamatekCrm.ViewModels
         public decimal TotalRevenue => RootNodes.Sum(n => n.RecursiveTotal);
         public decimal TotalCost => RootNodes.Sum(n => n.RecursiveTotalCost);
 
-        // İskonto hesaplaması
         private decimal _discountPercent;
         public decimal DiscountPercent
         {
@@ -182,7 +230,6 @@ namespace KamatekCrm.ViewModels
         public decimal DiscountAmount => TotalRevenue * (DiscountPercent / 100);
         public decimal SubTotalAfterDiscount => TotalRevenue - DiscountAmount;
 
-        // KDV hesaplaması
         private decimal _kdvRate = 20;
         public decimal KdvRate
         {
@@ -199,7 +246,6 @@ namespace KamatekCrm.ViewModels
 
         public decimal KdvAmount => SubTotalAfterDiscount * (KdvRate / 100);
         public decimal GrandTotal => SubTotalAfterDiscount + KdvAmount;
-
         public decimal TotalProfit => SubTotalAfterDiscount - TotalCost;
         public decimal OverallMargin => SubTotalAfterDiscount > 0 ? (TotalProfit / SubTotalAfterDiscount) * 100 : 0;
 
@@ -213,93 +259,105 @@ namespace KamatekCrm.ViewModels
         public string OverallMarginDisplay => $"%{OverallMargin:N1}";
         public string ProfitColor => TotalProfit >= 0 ? "#4CAF50" : "#F44336";
 
-        // Durum
         public string QuoteStatusDisplay => QuoteListViewModel.GetStatusText(CurrentProject.QuoteStatus);
         public string RevisionDisplay => $"R{CurrentProject.RevisionNumber}";
 
         #endregion
 
-        #region Commands
-
-        // Yapı Oluşturma
-
-        // Tree Yönetimi
-
-        // Kalem Yönetimi
-
-        // Proje İşlemleri
-
-        #endregion
-
         #region Constructor
 
-        public ProjectQuoteEditorViewModel(AppDbContext context, ProjectScopeService scopeService)
+        public ProjectQuoteEditorViewModel(IDbContextFactory<AppDbContext> dbContextFactory, ProjectScopeService scopeService)
         {
-            _context = context;
+            _dbContextFactory = dbContextFactory;
             _scopeService = scopeService;
 
-            // Commands
-
-
-            Refresh();
+            _ = RefreshAsync();
         }
 
-        /// <summary>
-        /// Mevcut projeyi yüklemek için - LoadProject metodu DI sonrası çağrılabilir
-        /// </summary>
         public void LoadExistingProject(int projectId)
         {
-            LoadProject(projectId);
+            _ = LoadProjectAsync(projectId);
         }
 
         #endregion
 
-        #region Data Loading
+        #region Data Loading (Async Short-Lived DbContext)
 
-        private void Refresh()
+        private async Task RefreshAsync()
         {
-            // Müşterileri yükle
-            var customers = _context.Customers.OrderBy(c => c.FullName).ToList();
-            Customers.Clear();
-            foreach (var c in customers)
-                Customers.Add(c);
-
-            // Ürün kataloğunu yükle
-            var products = _context.Products
-                .OrderBy(p => p.ProductCategoryType)
-                .ThenBy(p => p.ProductName)
-                .ToList();
-            ProductCatalog.Clear();
-            FilteredProducts.Clear();
-            foreach (var p in products)
+            try
             {
-                ProductCatalog.Add(p);
-                FilteredProducts.Add(p);
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                
+                var customers = await context.Customers.OrderBy(c => c.FullName).ToListAsync();
+                Customers.Clear();
+                foreach (var c in customers)
+                    Customers.Add(c);
+
+                var products = await context.Products
+                    .OrderBy(p => p.ProductCategoryType)
+                    .ThenBy(p => p.ProductName)
+                    .ToListAsync();
+
+                ProductCatalog.Clear();
+                FilteredProducts.Clear();
+                Categories.Clear();
+
+                Categories.Add("Tümü");
+                var categoryNames = products
+                    .Select(p => p.ProductCategoryType.ToString())
+                    .Distinct()
+                    .OrderBy(c => c);
+
+                foreach (var cat in categoryNames)
+                {
+                    Categories.Add(cat);
+                }
+
+                foreach (var p in products)
+                {
+                    ProductCatalog.Add(p);
+                    FilteredProducts.Add(p);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Veri yüklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void LoadProject(int projectId)
+        private async Task LoadProjectAsync(int projectId)
         {
-            var (project, nodes) = _scopeService.LoadProject(projectId);
-            if (project != null)
+            try
             {
-                CurrentProject = project;
-                ProjectName = project.Title;
-                SelectedCustomer = Customers.FirstOrDefault(c => c.Id == project.CustomerId);
-
-                // İskonto ve KDV değerlerini yükle
-                _discountPercent = project.DiscountPercent;
-                OnPropertyChanged(nameof(DiscountPercent));
-                _kdvRate = project.KdvRate > 0 ? project.KdvRate : 20;
-                OnPropertyChanged(nameof(KdvRate));
-
-                RootNodes.Clear();
-                foreach (var node in nodes)
+                var (project, nodes) = await Task.Run(() => _scopeService.LoadProject(projectId));
+                if (project != null)
                 {
-                    RootNodes.Add(node);
-                }
+                    CurrentProject = project;
+                    ProjectName = project.Title;
+                    SelectedCustomer = Customers.FirstOrDefault(c => c.Id == project.CustomerId);
 
-                NotifyFinancialsChanged();
+                    _discountPercent = project.DiscountPercent;
+                    OnPropertyChanged(nameof(DiscountPercent));
+                    _kdvRate = project.KdvRate > 0 ? project.KdvRate : 20;
+                    OnPropertyChanged(nameof(KdvRate));
+
+                    RootNodes.Clear();
+                    foreach (var node in nodes)
+                    {
+                        RootNodes.Add(node);
+                    }
+
+                    _undoStack.Clear();
+                    _redoStack.Clear();
+                    SaveSnapshot();
+
+                    NotifyFinancialsChanged();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Proje yükleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -310,18 +368,123 @@ namespace KamatekCrm.ViewModels
 
             foreach (var p in ProductCatalog)
             {
-                if (string.IsNullOrEmpty(ProductSearchText) ||
-                    p.ProductName.ToLowerInvariant().Contains(searchLower) ||
-                    (p.SKU?.ToLowerInvariant().Contains(searchLower) ?? false))
+                bool matchesCategory = SelectedCategory == "Tümü" || p.ProductCategoryType.ToString().Equals(SelectedCategory, StringComparison.OrdinalIgnoreCase);
+                bool matchesSearch = string.IsNullOrEmpty(ProductSearchText) ||
+                                     p.ProductName.ToLowerInvariant().Contains(searchLower) ||
+                                     (p.SKU?.ToLowerInvariant().Contains(searchLower) ?? false);
+
+                if (matchesCategory && matchesSearch)
                 {
                     FilteredProducts.Add(p);
                 }
             }
         }
 
+        private void FilterTreeNodes()
+        {
+            if (string.IsNullOrWhiteSpace(TreeSearchText)) return;
+
+            foreach (var node in RootNodes)
+            {
+                ApplyTreeFilterRecursive(node, TreeSearchText.Trim().ToLowerInvariant());
+            }
+        }
+
+        private bool ApplyTreeFilterRecursive(ScopeNode node, string text)
+        {
+            bool selfMatches = node.Name.ToLowerInvariant().Contains(text);
+            bool childMatches = false;
+
+            foreach (var child in node.Children)
+            {
+                if (ApplyTreeFilterRecursive(child, text))
+                {
+                    childMatches = true;
+                }
+            }
+
+            node.IsExpanded = selfMatches || childMatches;
+            return selfMatches || childMatches;
+        }
+
         #endregion
 
-        #region Yapı Oluşturma
+        #region Undo / Redo Mechanism
+
+        private void SaveSnapshot()
+        {
+            if (_isApplyingUndoRedo) return;
+
+            try
+            {
+                var snapshot = ProjectScopeService.Serialize(RootNodes.ToList());
+                _undoStack.Push(snapshot);
+                _redoStack.Clear();
+
+                OnPropertyChanged(nameof(CanUndo));
+                OnPropertyChanged(nameof(CanRedo));
+            }
+            catch { }
+        }
+
+        [RelayCommand]
+        private void Undo()
+        {
+            if (_undoStack.Count <= 1) return;
+
+            _isApplyingUndoRedo = true;
+            try
+            {
+                var currentSnapshot = _undoStack.Pop();
+                _redoStack.Push(currentSnapshot);
+
+                var previousSnapshot = _undoStack.Peek();
+                RestoreFromSnapshot(previousSnapshot);
+            }
+            finally
+            {
+                _isApplyingUndoRedo = false;
+                OnPropertyChanged(nameof(CanUndo));
+                OnPropertyChanged(nameof(CanRedo));
+            }
+        }
+
+        [RelayCommand]
+        private void Redo()
+        {
+            if (_redoStack.Count == 0) return;
+
+            _isApplyingUndoRedo = true;
+            try
+            {
+                var nextSnapshot = _redoStack.Pop();
+                _undoStack.Push(nextSnapshot);
+                RestoreFromSnapshot(nextSnapshot);
+            }
+            finally
+            {
+                _isApplyingUndoRedo = false;
+                OnPropertyChanged(nameof(CanUndo));
+                OnPropertyChanged(nameof(CanRedo));
+            }
+        }
+
+        private void RestoreFromSnapshot(string json)
+        {
+            var nodes = ProjectScopeService.Deserialize(json);
+            RootNodes.Clear();
+            foreach (var node in nodes)
+            {
+                RootNodes.Add(node);
+            }
+
+            SelectedNode = RootNodes.FirstOrDefault();
+            NotifyFinancialsChanged();
+        }
+
+        #endregion
+
+        #region Yapı Oluşturma & Toplu Marj
 
         [RelayCommand]
         private void GenerateStructure()
@@ -338,14 +501,15 @@ namespace KamatekCrm.ViewModels
                 $"Kat: {FloorCount}\n" +
                 $"Daire/Kat: {FlatsPerFloor}\n\n" +
                 $"Toplam: {BlockCount * FloorCount * FlatsPerFloor} daire\n\n" +
-                "Mevcut yapı silinecek. Devam edilsin mi?",
+                "Mevcut yapı yeniden oluşturulacak. Devam edilsin mi?",
                 "Yapı Oluştur",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
             if (result != MessageBoxResult.Yes) return;
 
-            // Yeni yapı oluştur
+            SaveSnapshot();
+
             var projectNode = ProjectScopeService.CreateSampleApartmentStructure(
                 ProjectName, BlockCount, FloorCount, FlatsPerFloor);
 
@@ -354,6 +518,43 @@ namespace KamatekCrm.ViewModels
 
             SelectedNode = projectNode;
             NotifyFinancialsChanged();
+            SaveSnapshot();
+        }
+
+        [RelayCommand]
+        private void ApplyBulkMargin()
+        {
+            var targetNode = SelectedNode ?? RootNodes.FirstOrDefault();
+            if (targetNode == null) return;
+
+            var input = Microsoft.VisualBasic.Interaction.InputBox(
+                $"'{targetNode.Name}' ve altındaki tüm ürünlere eklenmek istenen KAR MARJI (%) oranını girin:",
+                "Toplu Kar Marjı Uygula",
+                "20");
+
+            if (decimal.TryParse(input, out decimal marginPercent))
+            {
+                SaveSnapshot();
+                ApplyMarginRecursive(targetNode, marginPercent);
+                NotifyFinancialsChanged();
+                SaveSnapshot();
+                MessageBox.Show($"%{marginPercent:N0} kar marjı başarıyla uygulandı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void ApplyMarginRecursive(ScopeNode node, decimal marginPercent)
+        {
+            foreach (var item in node.Items)
+            {
+                var cost = item.TotalItemCost / Math.Max(1, item.Quantity);
+                item.UnitPrice = cost * (1 + (marginPercent / 100m));
+            }
+
+            foreach (var child in node.Children)
+            {
+                ApplyMarginRecursive(child, marginPercent);
+            }
+            node.NotifyTotalsChanged();
         }
 
         #endregion
@@ -363,10 +564,10 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void AddBlock()
         {
+            SaveSnapshot();
             var projectNode = RootNodes.FirstOrDefault();
             if (projectNode == null)
             {
-                // Proje node'u yoksa oluştur
                 projectNode = ProjectScopeService.CreateEmptyProjectTree(ProjectName ?? "Yeni Proje");
                 RootNodes.Add(projectNode);
             }
@@ -376,11 +577,13 @@ namespace KamatekCrm.ViewModels
 
             SelectedNode = block;
             NotifyFinancialsChanged();
+            SaveSnapshot();
         }
 
         [RelayCommand]
         private void AddFloor()
         {
+            SaveSnapshot();
             var projectNode = RootNodes.FirstOrDefault();
             if (projectNode == null)
             {
@@ -388,40 +591,21 @@ namespace KamatekCrm.ViewModels
                 RootNodes.Add(projectNode);
             }
 
-            ScopeNode? targetBlock = null;
-
-            if (SelectedNode?.Type == NodeType.Block)
-            {
-                targetBlock = SelectedNode;
-            }
-            else if (SelectedNode != null && SelectedNode.Parent != null)
-            {
-                var parent = SelectedNode.Parent;
-                while (parent != null && parent.Type != NodeType.Block)
-                {
-                    parent = parent.Parent;
-                }
-                targetBlock = parent;
-            }
-
-            // Fallback: If no block found in hierarchy, target the first block under project
-            targetBlock ??= projectNode.Children.FirstOrDefault(c => c.Type == NodeType.Block);
-
-            if (targetBlock == null)
-            {
-                targetBlock = projectNode.AddChild("A Blok", NodeType.Block);
-            }
+            ScopeNode? targetBlock = SelectedNode?.Type == NodeType.Block ? SelectedNode : projectNode.Children.FirstOrDefault(c => c.Type == NodeType.Block);
+            targetBlock ??= projectNode.AddChild("A Blok", NodeType.Block);
 
             var floorCount = targetBlock.Children.Count(c => c.Type == NodeType.Floor);
             var floor = targetBlock.AddChild($"{floorCount + 1}. Kat", NodeType.Floor);
 
             SelectedNode = floor;
             NotifyFinancialsChanged();
+            SaveSnapshot();
         }
 
         [RelayCommand]
         private void AddFlat()
         {
+            SaveSnapshot();
             var projectNode = RootNodes.FirstOrDefault();
             if (projectNode == null)
             {
@@ -429,51 +613,33 @@ namespace KamatekCrm.ViewModels
                 RootNodes.Add(projectNode);
             }
 
-            ScopeNode? targetFloor = null;
-
-            if (SelectedNode?.Type == NodeType.Floor)
+            ScopeNode? targetFloor = SelectedNode?.Type == NodeType.Floor ? SelectedNode : null;
+            if (targetFloor == null)
             {
-                targetFloor = SelectedNode;
-            }
-            else if (SelectedNode?.Type == NodeType.Flat && SelectedNode.Parent != null)
-            {
-                targetFloor = SelectedNode.Parent;
-            }
-            else if (SelectedNode?.Type == NodeType.Block)
-            {
-                targetFloor = SelectedNode.Children.FirstOrDefault(c => c.Type == NodeType.Floor);
-                if (targetFloor == null)
-                {
-                    targetFloor = SelectedNode.AddChild("1. Kat", NodeType.Floor);
-                }
-            }
-            else
-            {
-                // Find first available floor in any block
                 var firstBlock = projectNode.Children.FirstOrDefault(c => c.Type == NodeType.Block) ?? projectNode.AddChild("A Blok", NodeType.Block);
                 targetFloor = firstBlock.Children.FirstOrDefault(c => c.Type == NodeType.Floor) ?? firstBlock.AddChild("1. Kat", NodeType.Floor);
             }
 
-            if (targetFloor != null)
-            {
-                var flatCount = targetFloor.Children.Count(c => c.Type == NodeType.Flat);
-                var flat = targetFloor.AddChild($"Daire {flatCount + 1}", NodeType.Flat);
+            var flatCount = targetFloor.Children.Count(c => c.Type == NodeType.Flat);
+            var flat = targetFloor.AddChild($"Daire {flatCount + 1}", NodeType.Flat);
 
-                SelectedNode = flat;
-                NotifyFinancialsChanged();
-            }
+            SelectedNode = flat;
+            NotifyFinancialsChanged();
+            SaveSnapshot();
         }
 
         [RelayCommand]
         private void AddZone()
         {
             if (SelectedNode == null) return;
+            SaveSnapshot();
 
             var zoneCount = SelectedNode.Children.Count(c => c.Type == NodeType.Zone);
             var zone = SelectedNode.AddChild($"Bölge {zoneCount + 1}", NodeType.Zone);
 
             SelectedNode = zone;
             NotifyFinancialsChanged();
+            SaveSnapshot();
         }
 
         [RelayCommand]
@@ -481,12 +647,14 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedNode == null || SelectedNode.Parent == null) return;
 
+            SaveSnapshot();
             var clone = SelectedNode.Clone($"{SelectedNode.Name} (Kopya)");
             clone.Parent = SelectedNode.Parent;
             SelectedNode.Parent.Children.Add(clone);
 
             SelectedNode = clone;
             NotifyFinancialsChanged();
+            SaveSnapshot();
         }
 
         [RelayCommand]
@@ -497,8 +665,10 @@ namespace KamatekCrm.ViewModels
             var newName = parameter as string;
             if (!string.IsNullOrWhiteSpace(newName))
             {
+                SaveSnapshot();
                 SelectedNode.Name = newName;
                 OnPropertyChanged(nameof(SelectedNodeName));
+                SaveSnapshot();
             }
         }
 
@@ -515,11 +685,12 @@ namespace KamatekCrm.ViewModels
 
             if (result != MessageBoxResult.Yes) return;
 
+            SaveSnapshot();
             var parent = SelectedNode.Parent;
             if (parent != null)
             {
                 parent.Children.Remove(SelectedNode);
-                parent.NotifyTotalsChanged(); // Update parent's badge/totals
+                parent.NotifyTotalsChanged();
                 SelectedNode = parent;
             }
             else
@@ -529,6 +700,7 @@ namespace KamatekCrm.ViewModels
             }
 
             NotifyFinancialsChanged();
+            SaveSnapshot();
         }
 
         [RelayCommand]
@@ -554,6 +726,7 @@ namespace KamatekCrm.ViewModels
 
             if (result != MessageBoxResult.Yes) return;
 
+            SaveSnapshot();
             foreach (var sibling in siblings)
             {
                 sibling.Items.Clear();
@@ -561,12 +734,13 @@ namespace KamatekCrm.ViewModels
             }
 
             NotifyFinancialsChanged();
+            SaveSnapshot();
             MessageBox.Show($"{siblings.Count} node güncellendi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         #endregion
 
-        #region Kalem Yönetimi
+        #region Kalem Yönetimi & Miktar Step
 
         private void RefreshCurrentNodeItems()
         {
@@ -575,7 +749,7 @@ namespace KamatekCrm.ViewModels
 
             foreach (var item in SelectedNode.Items)
             {
-                item.OnItemChanged += () =>
+                item.OnItemChanged = () =>
                 {
                     SelectedNode.NotifyTotalsChanged();
                     NotifyFinancialsChanged();
@@ -589,8 +763,9 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedNode == null || SelectedProduct == null) return;
 
+            SaveSnapshot();
             var item = ScopeNodeItem.FromProduct(SelectedProduct);
-            item.OnItemChanged += () =>
+            item.OnItemChanged = () =>
             {
                 SelectedNode.NotifyTotalsChanged();
                 NotifyFinancialsChanged();
@@ -600,6 +775,7 @@ namespace KamatekCrm.ViewModels
             CurrentNodeItems.Add(item);
             SelectedNode.NotifyTotalsChanged();
             NotifyFinancialsChanged();
+            SaveSnapshot();
         }
 
         [RelayCommand]
@@ -607,10 +783,30 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedNode == null || SelectedItem == null) return;
 
+            SaveSnapshot();
             SelectedNode.Items.Remove(SelectedItem);
             CurrentNodeItems.Remove(SelectedItem);
             SelectedNode.NotifyTotalsChanged();
             NotifyFinancialsChanged();
+            SaveSnapshot();
+        }
+
+        [RelayCommand]
+        private void IncrementItemQuantity(ScopeNodeItem? item)
+        {
+            if (item != null)
+            {
+                item.Quantity += 1;
+            }
+        }
+
+        [RelayCommand]
+        private void DecrementItemQuantity(ScopeNodeItem? item)
+        {
+            if (item != null && item.Quantity > 1)
+            {
+                item.Quantity -= 1;
+            }
         }
 
         #endregion
@@ -619,7 +815,6 @@ namespace KamatekCrm.ViewModels
 
         void IDropTarget.DragOver(IDropInfo dropInfo)
         {
-            // Ürün katalogdan sürükleme
             if (dropInfo.Data is Product && SelectedNode != null)
             {
                 dropInfo.DropTargetAdorner = DropTargetAdorners.Highlight;
@@ -631,8 +826,9 @@ namespace KamatekCrm.ViewModels
         {
             if (dropInfo.Data is Product product && SelectedNode != null)
             {
+                SaveSnapshot();
                 var item = ScopeNodeItem.FromProduct(product);
-                item.OnItemChanged += () =>
+                item.OnItemChanged = () =>
                 {
                     SelectedNode.NotifyTotalsChanged();
                     NotifyFinancialsChanged();
@@ -642,6 +838,7 @@ namespace KamatekCrm.ViewModels
                 CurrentNodeItems.Add(item);
                 SelectedNode.NotifyTotalsChanged();
                 NotifyFinancialsChanged();
+                SaveSnapshot();
             }
         }
 
@@ -671,39 +868,26 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(SelectedNodeSubTotal));
             OnPropertyChanged(nameof(QuoteStatusDisplay));
             OnPropertyChanged(nameof(RevisionDisplay));
+            OnPropertyChanged(nameof(CanUndo));
+            OnPropertyChanged(nameof(CanRedo));
         }
 
         #endregion
 
-        #region Kaydetme
-
-        private bool CanSave()
-        {
-            return SelectedCustomer != null
-                && !string.IsNullOrWhiteSpace(ProjectName)
-                && RootNodes.Any();
-        }
+        #region Kaydetme, PDF & E-Posta
 
         [RelayCommand]
-        private void Save()
+        private async Task Save()
         {
             if (SelectedCustomer == null)
             {
-                MessageBox.Show(
-                    "Lütfen projeyi kaydetmeden önce bir MÜŞTERİ seçiniz.",
-                    "Müşteri Seçilmedi",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                MessageBox.Show("Lütfen projeyi kaydetmeden önce bir MÜŞTERİ seçiniz.", "Müşteri Seçilmedi", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(ProjectName))
             {
-                MessageBox.Show(
-                    "Lütfen projeyi kaydetmeden önce bir PROJE ADI giriniz.",
-                    "Proje Adı Eksik",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                MessageBox.Show("Lütfen projeyi kaydetmeden önce bir PROJE ADI giriniz.", "Proje Adı Eksik", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -712,15 +896,15 @@ namespace KamatekCrm.ViewModels
                 CurrentProject.Title = ProjectName;
                 CurrentProject.CustomerId = SelectedCustomer.Id;
 
-                // QuoteNumber ataması (ilk kayıtta)
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+
                 if (string.IsNullOrEmpty(CurrentProject.QuoteNumber))
                 {
                     var year = DateTime.UtcNow.Year;
-                    var count = _context.ServiceProjects.Count(p => p.QuoteNumber != null && p.CreatedDate.Year == year) + 1;
+                    var count = await context.ServiceProjects.CountAsync(p => p.QuoteNumber != null && p.CreatedDate.Year == year) + 1;
                     CurrentProject.QuoteNumber = $"TEK-{year}-{count:D3}";
                 }
 
-                // Revizyon kaydı (güncelleme durumunda)
                 if (CurrentProject.Id > 0)
                 {
                     var revisions = new List<QuoteRevision>();
@@ -743,7 +927,7 @@ namespace KamatekCrm.ViewModels
                     CurrentProject.RevisionNumber++;
                 }
 
-                _scopeService.SaveProject(CurrentProject, RootNodes.ToList());
+                await Task.Run(() => _scopeService.SaveProject(CurrentProject, RootNodes.ToList()));
 
                 MessageBox.Show(
                     $"Proje başarıyla kaydedildi!\n\n" +
@@ -758,18 +942,14 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Kayıt sırasında hata oluştu: {ex.Message}",
-                    "Hata",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                MessageBox.Show($"Kayıt sırasında hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         [RelayCommand]
         private void ExportPdf()
         {
-            if (RootNodes == null || !RootNodes.Any())
+            if (!RootNodes.Any())
             {
                 MessageBox.Show("Dışa aktarılacak veri yok.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -793,32 +973,19 @@ namespace KamatekCrm.ViewModels
             try
             {
                 var pdfService = new PdfService();
-                    
-                // Geçici proje nesnesi oluştur (Eğer henüz kaydedilmediyse UI'dan verileri al)
                 var exportProject = CurrentProject;
                 exportProject.Title = ProjectName;
-                if(SelectedCustomer != null) exportProject.Customer = SelectedCustomer;
+                if (SelectedCustomer != null) exportProject.Customer = SelectedCustomer;
 
                 pdfService.GenerateProjectQuote(exportProject, RootNodes.ToList(), filePath);
 
                 if (openAfter)
                 {
-                    var result = MessageBox.Show(
-                        "PDF başarıyla oluşturuldu. Dosyayı açmak ister misiniz?", 
-                        "Başarılı", 
-                        MessageBoxButton.YesNo, 
-                        MessageBoxImage.Question);
-
-                     if (result == MessageBoxResult.Yes)
-                     {
-                         new System.Diagnostics.Process
-                         {
-                             StartInfo = new System.Diagnostics.ProcessStartInfo(filePath)
-                             {
-                                 UseShellExecute = true
-                             }
-                         }.Start();
-                     }
+                    var result = MessageBox.Show("PDF oluşturuldu. Açmak ister misiniz?", "Başarılı", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
+                    }
                 }
             }
             catch (Exception ex)
@@ -830,65 +997,35 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task SendEmail()
         {
-             if (SelectedCustomer == null || string.IsNullOrWhiteSpace(SelectedCustomer.Email))
-             {
-                 MessageBox.Show("Müşterinin e-posta adresi kayıtlı değil.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
-                 return;
-             }
+            if (SelectedCustomer == null || string.IsNullOrWhiteSpace(SelectedCustomer.Email))
+            {
+                MessageBox.Show("Müşterinin e-posta adresi kayıtlı değil.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-             if (RootNodes == null || !RootNodes.Any())
-             {
-                 MessageBox.Show("Gönderilecek veri yok.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
-                 return;
-             }
+            var result = MessageBox.Show($"{SelectedCustomer.Email} adresine teklif gönderilecek. Onaylıyor musunuz?", "E-Posta Gönder", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result != MessageBoxResult.Yes) return;
 
-             var result = MessageBox.Show(
-                 $"{SelectedCustomer.Email} adresine teklif gönderilecek. Onaylıyor musunuz?",
-                 "E-Posta Gönder",
-                 MessageBoxButton.YesNo,
-                 MessageBoxImage.Question);
+            string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Teklif_{ProjectName}_{DateTime.UtcNow:yyyyMMddHHmmss}.pdf");
 
-             if (result != MessageBoxResult.Yes) return;
+            try
+            {
+                GeneratePdf(tempPath, false);
+                var emailService = new EmailService();
+                string subject = $"Teklif: {ProjectName}";
+                string body = $"Sayın {SelectedCustomer.FullName},<br><br>Projenize ait teknik ve ticari teklifimiz ektedir.<br><br>Saygılarımızla,<br>Kamatek Teknik Servis";
 
-             // Geçici dosya yolu
-             string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Teklif_{ProjectName}_{DateTime.UtcNow:yyyyMMddHHmmss}.pdf");
-
-             try
-             {
-                 // PDF Oluştur
-                 GeneratePdf(tempPath, false);
-
-                 // Gönder
-                 var emailService = new EmailService();
-                 string subject = $"Teklif: {ProjectName}";
-                 string body = $"Sayın {SelectedCustomer.FullName},<br><br>Projenize ait teknik ve ticari teklifimiz ektedir.<br><br>Saygılarımızla,<br>Kamatek Teknik Servis";
-
-                 await emailService.SendQuoteEmailAsync(SelectedCustomer.Email, subject, body, tempPath);
-
-                 MessageBox.Show("E-posta başarıyla gönderildi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
-             }
-             catch (Exception ex)
-             {
-                 MessageBox.Show($"E-posta hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-             }
-             finally
-             {
-                 // ═══════════════════════════════════════════════════════════════════
-                 // TEMP DOSYA TEMİZLİĞİ - Memory/Disk leak önleme
-                 // ═══════════════════════════════════════════════════════════════════
-                 try
-                 {
-                     if (System.IO.File.Exists(tempPath))
-                     {
-                         System.IO.File.Delete(tempPath);
-                     }
-                 }
-                 catch
-                 {
-                     // Silme başarısız olursa sessizce devam et (dosya kullanımda olabilir)
-                     System.Diagnostics.Debug.WriteLine($"[CLEANUP] Temp dosya silinemedi: {tempPath}");
-                 }
-             }
+                await emailService.SendQuoteEmailAsync(SelectedCustomer.Email, subject, body, tempPath);
+                MessageBox.Show("E-posta başarıyla gönderildi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"E-posta hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); } catch { }
+            }
         }
 
         [RelayCommand]
@@ -901,5 +1038,3 @@ namespace KamatekCrm.ViewModels
         #endregion
     }
 }
-
-

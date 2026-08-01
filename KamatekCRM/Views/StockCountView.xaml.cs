@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace KamatekCrm.Views
 {
@@ -14,46 +15,19 @@ namespace KamatekCrm.Views
         {
             InitializeComponent();
         }
-    }
 
-
-    /// <summary>
-    /// Sayının pozitif olup olmadığını kontrol eden converter
-    /// </summary>
-    public class IsPositiveConverter : IValueConverter
-    {
-        public static readonly IsPositiveConverter Instance = new();
-
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        private void BarcodeTextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (value is int intValue)
-                return intValue > 0;
-            return false;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
+            if (e.Key == Key.Enter && sender is TextBox textBox)
+            {
+                // KeyBinding handles the command execution, select all text for rapid next scan
+                textBox.SelectAll();
+            }
         }
     }
 
-    /// <summary>
-    /// Sayının negatif olup olmadığını kontrol eden converter
-    /// </summary>
-    public class IsNegativeConverter : IValueConverter
-    {
-        public static readonly IsNegativeConverter Instance = new();
-
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is int intValue)
-                return intValue < 0;
-            return false;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
+    // Retain namespace aliases for XAML compatibility
+    public class IsPositiveConverter : KamatekCrm.Converters.IsPositiveConverter { }
+    public class IsNegativeConverter : KamatekCrm.Converters.IsNegativeConverter { }
+    public class IsZeroConverter : KamatekCrm.Converters.IsZeroConverter { }
 }

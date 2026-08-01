@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
+using System.Media;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -18,13 +20,22 @@ using Microsoft.Win32;
 
 namespace KamatekCrm.ViewModels
 {
+    public enum StockCountFilter
+    {
+        All,
+        DifferencesOnly,
+        SurplusesOnly,
+        ShortagesOnly,
+        UncountedOnly
+    }
+
     /// <summary>
-    /// Fiziksel Stok Sayım işlemleri için ViewModel
+    /// Fiziksel Stok Sayım işlemleri için yenilenmiş, yüksek performanslı ViewModel
     /// </summary>
     public partial class StockCountViewModel : ViewModelBase
     {
-        private AppDbContext _context;
-        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        
         private Warehouse? _selectedWarehouse;
         private DateTime _countDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
         private string _statusMessage = string.Empty;
@@ -32,8 +43,14 @@ namespace KamatekCrm.ViewModels
         private bool _isLoading;
         private string _searchText = string.Empty;
         private bool _isHistoryVisible;
+        private bool _isHistoryDetailVisible;
 
-        // Manuel Sayım için yeni alanlar
+        // Barkod & Filtreleme Özellikleri
+        private bool _isBarcodeScanMode;
+        private string _barcodeScanInput = string.Empty;
+        private StockCountFilter _selectedFilterMode = StockCountFilter.All;
+
+        // Manuel Sayım alanları
         private string _manualSearchText = string.Empty;
         private Product? _selectedSearchResult;
         private Warehouse? _manualSelectedWarehouse;
@@ -41,8 +58,9 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<Warehouse> Warehouses { get; set; }
         public ObservableCollection<StockCountItem> CountItems { get; set; }
         public ObservableCollection<CountHistoryItem> CountHistory { get; set; }
+        public ObservableCollection<CountHistoryDetailItem> CountHistoryDetails { get; set; }
 
-        // Manuel Sayım için koleksiyonlar
+        // Manuel Sayım koleksiyonları
         public ObservableCollection<Product> ManualSearchResults { get; set; }
         public ObservableCollection<StockCountItem> ManualCountItems { get; set; }
         
@@ -56,9 +74,27 @@ namespace KamatekCrm.ViewModels
             get => _selectedWarehouse;
             set
             {
-                if (SetProperty(ref _selectedWarehouse, value))
+                if (_selectedWarehouse != value)
                 {
-                    Refresh();
+                    if (CountItems.Any(i => i.Difference != 0))
+                    {
+                        var res = MessageBox.Show(
+                            "Girilen sayım verileri var. Depo değiştirdiğinizde bu veriler sıfırlanacaktır. Devam etmek istiyor musunuz?",
+                            "Uyarı",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning);
+
+                        if (res != MessageBoxResult.Yes)
+                        {
+                            OnPropertyChanged(nameof(SelectedWarehouse));
+                            return;
+                        }
+                    }
+
+                    if (SetProperty(ref _selectedWarehouse, value))
+                    {
+                        _ = RefreshAsync();
+                    }
                 }
             }
         }
@@ -87,9 +123,6 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _isLoading, value);
         }
 
-        /// <summary>
-        /// Arama filtresi metni
-        /// </summary>
         public string SearchText
         {
             get => _searchText;
@@ -102,40 +135,50 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// Sayım geçmişi popup görünürlüğü
-        /// </summary>
+        public bool IsBarcodeScanMode
+        {
+            get => _isBarcodeScanMode;
+            set => SetProperty(ref _isBarcodeScanMode, value);
+        }
+
+        public string BarcodeScanInput
+        {
+            get => _barcodeScanInput;
+            set => SetProperty(ref _barcodeScanInput, value);
+        }
+
+        public StockCountFilter SelectedFilterMode
+        {
+            get => _selectedFilterMode;
+            set
+            {
+                if (SetProperty(ref _selectedFilterMode, value))
+                {
+                    CountItemsView?.Refresh();
+                }
+            }
+        }
+
         public bool IsHistoryVisible
         {
             get => _isHistoryVisible;
             set => SetProperty(ref _isHistoryVisible, value);
         }
 
-        /// <summary>
-        /// Fark olan toplam öğe sayısı
-        /// </summary>
+        public bool IsHistoryDetailVisible
+        {
+            get => _isHistoryDetailVisible;
+            set => SetProperty(ref _isHistoryDetailVisible, value);
+        }
+
+        // Metrik & Finansal Özetler
         public int TotalDifferenceCount => CountItems?.Count(i => i.Difference != 0) ?? 0;
-
-        /// <summary>
-        /// Toplam pozitif fark (Sayım Fazlası)
-        /// </summary>
         public int TotalPositiveDifference => CountItems?.Where(i => i.Difference > 0).Sum(i => i.Difference) ?? 0;
-
-        /// <summary>
-        /// Toplam negatif fark (Sayım Eksiği)
-        /// </summary>
         public int TotalNegativeDifference => CountItems?.Where(i => i.Difference < 0).Sum(i => i.Difference) ?? 0;
-
-        /// <summary>
-        /// Toplam ürün sayısı (görüntülenen)
-        /// </summary>
         public int TotalItemCount => CountItems?.Count ?? 0;
+        public decimal TotalFinancialDifference => CountItems?.Sum(i => i.FinancialDifference) ?? 0m;
 
-        // === MANUEL SAYIM PROPERTYLERİ ===
-
-        /// <summary>
-        /// Manuel sayım için arama metni
-        /// </summary>
+        // Manuel Sayım Özellikleri
         public string ManualSearchText
         {
             get => _manualSearchText;
@@ -143,103 +186,135 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _manualSearchText, value))
                 {
-                    ExecuteSearchProduct();
+                    _ = ExecuteSearchProductAsync();
                 }
             }
         }
 
-        /// <summary>
-        /// Arama sonucundan seçilen ürün
-        /// </summary>
         public Product? SelectedSearchResult
         {
             get => _selectedSearchResult;
             set => SetProperty(ref _selectedSearchResult, value);
         }
 
-        /// <summary>
-        /// Manuel sayım için seçilen depo
-        /// </summary>
         public Warehouse? ManualSelectedWarehouse
         {
             get => _manualSelectedWarehouse;
             set
             {
-                if (SetProperty(ref _manualSelectedWarehouse, value))
+                if (_manualSelectedWarehouse != value)
                 {
-                    // Depo değişince listeyi temizle
-                    ManualCountItems.Clear();
-                    UpdateManualTotals();
+                    if (ManualCountItems.Any(i => i.Difference != 0))
+                    {
+                        var res = MessageBox.Show(
+                            "Manuel sayım listesinde değişiklikler var. Depo değiştirdiğinizde temizlenecektir. Devam etmek istiyor musunuz?",
+                            "Uyarı",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning);
+
+                        if (res != MessageBoxResult.Yes)
+                        {
+                            OnPropertyChanged(nameof(ManualSelectedWarehouse));
+                            return;
+                        }
+                    }
+
+                    if (SetProperty(ref _manualSelectedWarehouse, value))
+                    {
+                        ManualCountItems.Clear();
+                        UpdateManualTotals();
+                    }
                 }
             }
         }
 
-        /// <summary>
-        /// Manuel sayım fark toplamı
-        /// </summary>
         public int ManualTotalDifferenceCount => ManualCountItems?.Count(i => i.Difference != 0) ?? 0;
-
-        /// <summary>
-        /// Manuel sayım - pozitif fark
-        /// </summary>
         public int ManualTotalPositiveDifference => ManualCountItems?.Where(i => i.Difference > 0).Sum(i => i.Difference) ?? 0;
-
-        /// <summary>
-        /// Manuel sayım - negatif fark
-        /// </summary>
         public int ManualTotalNegativeDifference => ManualCountItems?.Where(i => i.Difference < 0).Sum(i => i.Difference) ?? 0;
-
-        /// <summary>
-        /// Manuel sayım - toplam ürün
-        /// </summary>
         public int ManualTotalItemCount => ManualCountItems?.Count ?? 0;
+        public decimal ManualTotalFinancialDifference => ManualCountItems?.Sum(i => i.FinancialDifference) ?? 0m;
 
-        // === EXCEL SAYIM KOMUTLARI ===
-
-        // === MANUEL SAYIM KOMUTLARI ===
-
-        public StockCountViewModel(Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> dbContextFactory)
+        public StockCountViewModel(IDbContextFactory<AppDbContext> dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
-            _context = _dbContextFactory.CreateDbContext();
-            Warehouses = new ObservableCollection<Warehouse>(_context.Warehouses.Where(w => w.IsActive).ToList());
+            
+            Warehouses = new ObservableCollection<Warehouse>();
             CountItems = new ObservableCollection<StockCountItem>();
             CountHistory = new ObservableCollection<CountHistoryItem>();
+            CountHistoryDetails = new ObservableCollection<CountHistoryDetailItem>();
 
-            // Manuel Sayım koleksiyonları
             ManualSearchResults = new ObservableCollection<Product>();
             ManualCountItems = new ObservableCollection<StockCountItem>();
 
-            // CollectionView ve filtre ayarla
             CountItemsView = CollectionViewSource.GetDefaultView(CountItems);
             CountItemsView.Filter = FilterItems;
 
-            // Excel Sayım Komutları
-
-            // Manuel Sayım Komutları
+            _ = LoadWarehousesAsync();
         }
 
-        /// <summary>
-        /// Ürün filtresi
-        /// </summary>
+        private async Task LoadWarehousesAsync()
+        {
+            try
+            {
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var activeWarehouses = await context.Warehouses
+                    .Where(w => w.IsActive)
+                    .OrderBy(w => w.Name)
+                    .ToListAsync();
+
+                Warehouses.Clear();
+                foreach (var w in activeWarehouses)
+                {
+                    Warehouses.Add(w);
+                }
+
+                if (Warehouses.Count > 0 && SelectedWarehouse == null)
+                {
+                    SelectedWarehouse = Warehouses[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Depolar yüklenirken hata: {ex.Message}";
+                IsActionSuccessful = false;
+            }
+        }
+
         private bool FilterItems(object obj)
         {
-            if (string.IsNullOrWhiteSpace(SearchText))
-                return true;
+            if (obj is not StockCountItem item) return false;
 
-            if (obj is StockCountItem item)
+            // 1. Text Filter
+            if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                return item.ProductCode.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
-                    || item.ProductName.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+                bool textMatches = item.ProductCode.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                                   item.ProductName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                                   item.ModelName.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+                if (!textMatches) return false;
             }
-            return false;
+
+            // 2. Mode Filter
+            return SelectedFilterMode switch
+            {
+                StockCountFilter.DifferencesOnly => item.Difference != 0,
+                StockCountFilter.SurplusesOnly => item.Difference > 0,
+                StockCountFilter.ShortagesOnly => item.Difference < 0,
+                StockCountFilter.UncountedOnly => item.CountedQuantity == item.SystemQuantity,
+                _ => true
+            };
         }
 
-        /// <summary>
-        /// Seçilen depo için envanter verilerini yükler
-        /// </summary>
         [RelayCommand]
-        private void Refresh()
+        private void SetFilterMode(string modeStr)
+        {
+            if (Enum.TryParse<StockCountFilter>(modeStr, true, out var mode))
+            {
+                SelectedFilterMode = mode;
+            }
+        }
+
+        [RelayCommand]
+        private async Task RefreshAsync()
         {
             CountItems.Clear();
             StatusMessage = string.Empty;
@@ -251,51 +326,46 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                // Seçilen depodaki tüm inventory kayıtlarını al (ürün bilgisi ile birlikte)
-                var inventories = _context.Inventories
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var inventories = await context.Inventories
                     .Include(i => i.Product)
                     .Where(i => i.WarehouseId == SelectedWarehouse.Id)
-                    .ToList();
+                    .ToListAsync();
 
                 foreach (var inv in inventories)
                 {
+                    if (inv.Product == null) continue;
+
                     var item = new StockCountItem
                     {
                         ProductId = inv.ProductId ?? 0,
                         ProductCode = inv.Product.SKU ?? $"P-{inv.ProductId:D4}",
                         ProductName = inv.Product.ProductName,
                         ModelName = inv.Product.ModelName ?? string.Empty,
-                        Unit = inv.Product.Unit,
+                        Unit = inv.Product.Unit ?? "Adet",
                         SystemQuantity = inv.Quantity,
-                        CountedQuantity = inv.Quantity // Başlangıçta sistem değeri ile aynı
+                        CountedQuantity = inv.Quantity,
+                        PurchasePrice = inv.Product.PurchasePrice
                     };
 
-                    // Fark değiştiğinde özet güncelle
                     item.PropertyChanged += (s, e) =>
                     {
-                        if (e.PropertyName == nameof(StockCountItem.Difference))
+                        if (e.PropertyName is nameof(StockCountItem.Difference) or nameof(StockCountItem.FinancialDifference))
                         {
-                            OnPropertyChanged(nameof(TotalDifferenceCount));
-                            OnPropertyChanged(nameof(TotalPositiveDifference));
-                            OnPropertyChanged(nameof(TotalNegativeDifference));
+                            UpdateTotals();
                         }
                     };
 
                     CountItems.Add(item);
                 }
 
-                // Özet bilgileri güncelle
-                OnPropertyChanged(nameof(TotalDifferenceCount));
-                OnPropertyChanged(nameof(TotalPositiveDifference));
-                OnPropertyChanged(nameof(TotalNegativeDifference));
-                OnPropertyChanged(nameof(TotalItemCount));
-
-                StatusMessage = $"{CountItems.Count} ürün yüklendi.";
+                UpdateTotals();
+                StatusMessage = $"{CountItems.Count} ürün başarıyla yüklendi.";
                 IsActionSuccessful = true;
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Hata: {ex.Message}";
+                StatusMessage = $"Yükleme hatası: {ex.Message}";
                 IsActionSuccessful = false;
             }
             finally
@@ -304,18 +374,46 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private bool CanExecuteSaveCount()
+        private void UpdateTotals()
         {
-            return SelectedWarehouse != null && 
-                   CountItems.Count > 0 && 
-                   CountItems.Any(i => i.Difference != 0);
+            OnPropertyChanged(nameof(TotalDifferenceCount));
+            OnPropertyChanged(nameof(TotalPositiveDifference));
+            OnPropertyChanged(nameof(TotalNegativeDifference));
+            OnPropertyChanged(nameof(TotalItemCount));
+            OnPropertyChanged(nameof(TotalFinancialDifference));
         }
 
-        /// <summary>
-        /// Sayım sonuçlarını kaydeder ve stok düzeltmesi yapar
-        /// </summary>
         [RelayCommand]
-        private void SaveCount()
+        private void ProcessBarcodeScan()
+        {
+            if (string.IsNullOrWhiteSpace(BarcodeScanInput)) return;
+
+            var code = BarcodeScanInput.Trim();
+
+            var item = CountItems.FirstOrDefault(i =>
+                i.ProductCode.Equals(code, StringComparison.OrdinalIgnoreCase) ||
+                i.ProductName.Equals(code, StringComparison.OrdinalIgnoreCase));
+
+            if (item != null)
+            {
+                item.CountedQuantity += 1;
+                StatusMessage = $"✓ [{item.ProductCode}] {item.ProductName} sayımı arttırıldı: {item.CountedQuantity}";
+                IsActionSuccessful = true;
+
+                try { SystemSounds.Beep.Play(); } catch { }
+            }
+            else
+            {
+                StatusMessage = $"⚠️ Barkod / Stok Kodu bulunamadı: {code}";
+                IsActionSuccessful = false;
+                try { SystemSounds.Asterisk.Play(); } catch { }
+            }
+
+            BarcodeScanInput = string.Empty;
+        }
+
+        [RelayCommand]
+        private async Task SaveCountAsync()
         {
             if (SelectedWarehouse == null) return;
 
@@ -327,11 +425,11 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            // Kullanıcı onayı iste
             var result = MessageBox.Show(
                 $"{itemsWithDifference.Count} üründe fark tespit edildi.\n\n" +
-                $"Sayım Fazlası: {TotalPositiveDifference} adet\n" +
-                $"Sayım Eksiği: {TotalNegativeDifference} adet\n\n" +
+                $"Sayım Fazlası: +{TotalPositiveDifference} adet\n" +
+                $"Sayım Eksiği: {TotalNegativeDifference} adet\n" +
+                $"Net Finansal Sapma: {TotalFinancialDifference:C2}\n\n" +
                 "Sayım kayıtları oluşturulacak ve stok güncellenecek.\nDevam etmek istiyor musunuz?",
                 "Stok Sayım Onayı",
                 MessageBoxButton.YesNo,
@@ -339,25 +437,28 @@ namespace KamatekCrm.ViewModels
 
             if (result != MessageBoxResult.Yes) return;
 
-            using var transaction = _context.Database.BeginTransaction();
+            IsLoading = true;
             try
             {
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                using var transaction = await context.Database.BeginTransactionAsync();
+
+                var batchRef = $"COUNT-{CountDate:yyyyMMdd-HHmmss}-{SelectedWarehouse.Id}";
+
                 foreach (var item in itemsWithDifference)
                 {
-                    // 1. Inventory güncelle
-                    var inventory = _context.Inventories
-                        .FirstOrDefault(i => i.ProductId == item.ProductId && i.WarehouseId == SelectedWarehouse.Id);
+                    var inventory = await context.Inventories
+                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.WarehouseId == SelectedWarehouse.Id);
 
                     if (inventory == null) continue;
 
-                    // 2. StockTransaction oluştur
                     var transactionType = item.Difference > 0 
                         ? StockTransactionType.AdjustmentPlus 
                         : StockTransactionType.AdjustmentMinus;
 
                     var stockTransaction = new StockTransaction
                     {
-                        Date = CountDate,
+                        Date = DateTime.SpecifyKind(CountDate, DateTimeKind.Utc),
                         ProductId = item.ProductId,
                         SourceWarehouseId = item.Difference < 0 ? SelectedWarehouse.Id : null,
                         TargetWarehouseId = item.Difference > 0 ? SelectedWarehouse.Id : null,
@@ -365,35 +466,32 @@ namespace KamatekCrm.ViewModels
                         TransactionType = transactionType,
                         Description = $"Stok sayımı - {SelectedWarehouse.Name}. " +
                                       $"Sistem: {item.SystemQuantity}, Sayılan: {item.CountedQuantity}, Fark: {item.Difference}",
-                        ReferenceId = $"COUNT-{CountDate:yyyyMMdd}-{SelectedWarehouse.Id}"
+                        ReferenceId = batchRef
                     };
 
-                    _context.StockTransactions.Add(stockTransaction);
-
-                    // 3. Envanter miktarını güncelle
+                    context.StockTransactions.Add(stockTransaction);
                     inventory.Quantity = item.CountedQuantity;
                 }
 
-                _context.SaveChanges();
-                transaction.Commit();
+                await context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 StatusMessage = $"Sayım başarıyla kaydedildi. {itemsWithDifference.Count} ürün güncellendi.";
                 IsActionSuccessful = true;
 
-                // Listeyi yenile
-                Refresh();
+                await RefreshAsync();
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
-                StatusMessage = $"Hata oluştu: {ex.Message}";
+                StatusMessage = $"Kayıt hatası: {ex.Message}";
                 IsActionSuccessful = false;
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
-        /// <summary>
-        /// Excel'e dışa aktarım
-        /// </summary>
         [RelayCommand]
         private void ExportToExcel()
         {
@@ -418,28 +516,23 @@ namespace KamatekCrm.ViewModels
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("Stok Sayım");
 
-                // Başlık bilgileri
                 worksheet.Cell(1, 1).Value = "STOK SAYIM RAPORU";
                 worksheet.Cell(1, 1).Style.Font.Bold = true;
                 worksheet.Cell(1, 1).Style.Font.FontSize = 16;
-                worksheet.Range(1, 1, 1, 6).Merge();
+                worksheet.Range(1, 1, 1, 7).Merge();
 
                 worksheet.Cell(2, 1).Value = $"Depo: {SelectedWarehouse?.Name ?? "Belirtilmemiş"}";
                 worksheet.Cell(3, 1).Value = $"Tarih: {CountDate:dd.MM.yyyy}";
-                worksheet.Cell(4, 1).Value = $"Rapor Oluşturma: {DateTime.UtcNow:dd.MM.yyyy HH:mm}";
 
-                // Header satırı
-                int headerRow = 6;
-                var headers = new[] { "Ürün Kodu", "Ürün Adı", "Birim", "Sistem Miktar", "Sayılan Miktar", "Fark" };
+                int headerRow = 5;
+                var headers = new[] { "Ürün Kodu", "Ürün Adı", "Birim", "Sistem Miktar", "Sayılan Miktar", "Fark", "Finansal Fark (TL)" };
                 for (int i = 0; i < headers.Length; i++)
                 {
                     worksheet.Cell(headerRow, i + 1).Value = headers[i];
                     worksheet.Cell(headerRow, i + 1).Style.Font.Bold = true;
                     worksheet.Cell(headerRow, i + 1).Style.Fill.BackgroundColor = XLColor.LightGray;
-                    worksheet.Cell(headerRow, i + 1).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
                 }
 
-                // Veri satırları
                 int dataRow = headerRow + 1;
                 foreach (var item in CountItems)
                 {
@@ -449,70 +542,29 @@ namespace KamatekCrm.ViewModels
                     worksheet.Cell(dataRow, 4).Value = item.SystemQuantity;
                     worksheet.Cell(dataRow, 5).Value = item.CountedQuantity;
                     worksheet.Cell(dataRow, 6).Value = item.Difference;
+                    worksheet.Cell(dataRow, 7).Value = item.FinancialDifference;
 
-                    // Fark renklendirme
                     if (item.Difference > 0)
                         worksheet.Cell(dataRow, 6).Style.Font.FontColor = XLColor.Green;
                     else if (item.Difference < 0)
                         worksheet.Cell(dataRow, 6).Style.Font.FontColor = XLColor.Red;
 
-                    // Border
-                    for (int col = 1; col <= 6; col++)
-                        worksheet.Cell(dataRow, col).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-
                     dataRow++;
                 }
 
-                // Özet satırları
-                dataRow += 2;
-                worksheet.Cell(dataRow, 1).Value = "ÖZET";
-                worksheet.Cell(dataRow, 1).Style.Font.Bold = true;
-                worksheet.Cell(dataRow + 1, 1).Value = "Toplam Ürün:";
-                worksheet.Cell(dataRow + 1, 2).Value = TotalItemCount;
-                worksheet.Cell(dataRow + 2, 1).Value = "Farklı Ürün Sayısı:";
-                worksheet.Cell(dataRow + 2, 2).Value = TotalDifferenceCount;
-                worksheet.Cell(dataRow + 3, 1).Value = "Sayım Fazlası:";
-                worksheet.Cell(dataRow + 3, 2).Value = TotalPositiveDifference;
-                worksheet.Cell(dataRow + 3, 2).Style.Font.FontColor = XLColor.Green;
-                worksheet.Cell(dataRow + 4, 1).Value = "Sayım Eksiği:";
-                worksheet.Cell(dataRow + 4, 2).Value = TotalNegativeDifference;
-                worksheet.Cell(dataRow + 4, 2).Style.Font.FontColor = XLColor.Red;
-
-                // Sütun genişliklerini ayarla
                 worksheet.Columns().AdjustToContents();
-
                 workbook.SaveAs(saveDialog.FileName);
 
-                StatusMessage = "Excel dosyası başarıyla oluşturuldu.";
+                StatusMessage = "Excel dosyası oluşturuldu.";
                 IsActionSuccessful = true;
-
-                // Dosyayı aç
-                var openResult = MessageBox.Show(
-                    "Excel dosyası kaydedildi. Dosyayı açmak ister misiniz?",
-                    "Başarılı",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Information);
-
-                if (openResult == MessageBoxResult.Yes)
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = saveDialog.FileName,
-                        UseShellExecute = true
-                    });
-                }
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Excel hatası: {ex.Message}";
+                StatusMessage = $"Excel aktarım hatası: {ex.Message}";
                 IsActionSuccessful = false;
             }
         }
 
-        /// <summary>
-        /// Excel'den sayım verilerini içe aktar
-        /// SKU veya ModelName ile eşleştirme yapar
-        /// </summary>
         [RelayCommand]
         private void ImportFromExcel()
         {
@@ -535,7 +587,7 @@ namespace KamatekCrm.ViewModels
             {
                 using var workbook = new XLWorkbook(openDialog.FileName);
                 var worksheet = workbook.Worksheet(1);
-                var rows = worksheet.RangeUsed()?.RowsUsed().Skip(1); // İlk satırı atla (header)
+                var rows = worksheet.RangeUsed()?.RowsUsed().Skip(1);
 
                 if (rows == null)
                 {
@@ -544,47 +596,40 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
+                // O(1) arama için Hızlı İndeks Sözlüğü
+                var skuLookup = CountItems
+                    .Where(i => !string.IsNullOrWhiteSpace(i.ProductCode))
+                    .ToDictionary(i => i.ProductCode.Trim(), i => i, StringComparer.OrdinalIgnoreCase);
+
+                var modelLookup = CountItems
+                    .Where(i => !string.IsNullOrWhiteSpace(i.ModelName))
+                    .GroupBy(i => i.ModelName.Trim(), StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+                var nameLookup = CountItems
+                    .Where(i => !string.IsNullOrWhiteSpace(i.ProductName))
+                    .GroupBy(i => i.ProductName.Trim(), StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
                 int updatedCount = 0;
                 var notFoundList = new List<string>();
 
                 foreach (var row in rows)
                 {
-                    // Sütun 1: SKU veya Model (arama anahtarı)
                     var searchKey = row.Cell(1).GetValue<string>()?.Trim();
-                    
-                    // Sütun 2: Sayılan Miktar
                     var countedQtyStr = row.Cell(2).GetValue<string>();
 
-                    if (string.IsNullOrWhiteSpace(searchKey))
+                    if (string.IsNullOrWhiteSpace(searchKey) || !int.TryParse(countedQtyStr, out int countedQty))
                         continue;
 
-                    if (!int.TryParse(countedQtyStr, out int countedQuantity))
-                        continue;
-
-                    // Önce SKU ile ara
-                    var item = CountItems.FirstOrDefault(i => 
-                        !string.IsNullOrEmpty(i.ProductCode) &&
-                        i.ProductCode.Trim().Equals(searchKey, StringComparison.OrdinalIgnoreCase));
-
-                    // SKU bulunamadıysa ModelName ile ara
-                    if (item == null)
-                    {
-                        item = CountItems.FirstOrDefault(i =>
-                            !string.IsNullOrEmpty(i.ModelName) &&
-                            i.ModelName.Trim().Equals(searchKey, StringComparison.OrdinalIgnoreCase));
-                    }
-
-                    // Ürün Adı ile de ara
-                    if (item == null)
-                    {
-                        item = CountItems.FirstOrDefault(i =>
-                            !string.IsNullOrEmpty(i.ProductName) &&
-                            i.ProductName.Trim().Equals(searchKey, StringComparison.OrdinalIgnoreCase));
-                    }
+                    StockCountItem? item = null;
+                    if (skuLookup.TryGetValue(searchKey, out var matchedSku)) item = matchedSku;
+                    else if (modelLookup.TryGetValue(searchKey, out var matchedModel)) item = matchedModel;
+                    else if (nameLookup.TryGetValue(searchKey, out var matchedName)) item = matchedName;
 
                     if (item != null)
                     {
-                        item.CountedQuantity = countedQuantity;
+                        item.CountedQuantity = countedQty;
                         updatedCount++;
                     }
                     else
@@ -593,39 +638,11 @@ namespace KamatekCrm.ViewModels
                     }
                 }
 
-                // Özet bilgileri güncelle
-                OnPropertyChanged(nameof(TotalDifferenceCount));
-                OnPropertyChanged(nameof(TotalPositiveDifference));
-                OnPropertyChanged(nameof(TotalNegativeDifference));
+                UpdateTotals();
                 CountItemsView?.Refresh();
 
-                // Sonuç mesajı
-                var message = $"{updatedCount} ürün güncellendi.";
-                if (notFoundList.Count > 0)
-                {
-                    var notFoundSample = string.Join(", ", notFoundList.Take(5));
-                    if (notFoundList.Count > 5)
-                        notFoundSample += $" ve {notFoundList.Count - 5} adet daha";
-                    
-                    message += $"\n{notFoundList.Count} ürün bulunamadı: {notFoundSample}";
-                }
-
-                StatusMessage = message;
+                StatusMessage = $"{updatedCount} ürün Excel'den yüklendi. ({notFoundList.Count} tanınmayan ürün)";
                 IsActionSuccessful = updatedCount > 0;
-
-                if (notFoundList.Count > 0)
-                {
-                    MessageBox.Show(
-                        $"Excel'den içe aktarım tamamlandı.\n\n" +
-                        $"✅ Güncellenen: {updatedCount} ürün\n" +
-                        $"❌ Bulunamayan: {notFoundList.Count} ürün\n\n" +
-                        (notFoundList.Count <= 10 
-                            ? $"Bulunamayan kodlar:\n{string.Join("\n", notFoundList)}"
-                            : $"Bulunamayan kodlar (ilk 10):\n{string.Join("\n", notFoundList.Take(10))}\n...ve {notFoundList.Count - 10} adet daha"),
-                        "İçe Aktarım Sonucu",
-                        MessageBoxButton.OK,
-                        notFoundList.Count > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
-                }
             }
             catch (Exception ex)
             {
@@ -634,34 +651,25 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// Sayım geçmişini yükle ve göster
-        /// </summary>
         [RelayCommand]
-        private void ShowHistory()
+        private async Task ShowHistoryAsync()
         {
             try
             {
                 CountHistory.Clear();
 
-                // StockTransactions tablosundan sayım kayıtlarını çek
-                // ReferenceId formatı: COUNT-yyyyMMdd-WarehouseId
-                var adjustmentTypes = new[] 
-                { 
-                    StockTransactionType.AdjustmentPlus, 
-                    StockTransactionType.AdjustmentMinus 
-                };
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var adjustmentTypes = new[] { StockTransactionType.AdjustmentPlus, StockTransactionType.AdjustmentMinus };
 
-                var transactions = _context.StockTransactions
+                var transactions = await context.StockTransactions
                     .Include(t => t.SourceWarehouse)
                     .Include(t => t.TargetWarehouse)
                     .Where(t => adjustmentTypes.Contains(t.TransactionType) 
                              && t.ReferenceId != null 
                              && t.ReferenceId.StartsWith("COUNT-"))
                     .OrderByDescending(t => t.Date)
-                    .ToList();
+                    .ToListAsync();
 
-                // ReferenceId'ye göre grupla
                 var grouped = transactions
                     .GroupBy(t => t.ReferenceId)
                     .Select(g =>
@@ -680,7 +688,7 @@ namespace KamatekCrm.ViewModels
                             ReferenceId = first.ReferenceId ?? ""
                         };
                     })
-                    .Take(20)  // Son 20 sayım
+                    .Take(30)
                     .ToList();
 
                 foreach (var item in grouped)
@@ -689,12 +697,7 @@ namespace KamatekCrm.ViewModels
                 }
 
                 IsHistoryVisible = true;
-
-                if (CountHistory.Count == 0)
-                {
-                    StatusMessage = "Kayıtlı sayım geçmişi bulunamadı.";
-                    IsActionSuccessful = false;
-                }
+                IsHistoryDetailVisible = false;
             }
             catch (Exception ex)
             {
@@ -703,14 +706,52 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
+        private async Task ViewHistoryDetailAsync(CountHistoryItem? item)
+        {
+            if (item == null || string.IsNullOrEmpty(item.ReferenceId)) return;
+
+            try
+            {
+                CountHistoryDetails.Clear();
+
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var details = await context.StockTransactions
+                    .Include(t => t.Product)
+                    .Where(t => t.ReferenceId == item.ReferenceId)
+                    .ToListAsync();
+
+                foreach (var d in details)
+                {
+                    CountHistoryDetails.Add(new CountHistoryDetailItem
+                    {
+                        ProductCode = d.Product?.SKU ?? $"P-{d.ProductId}",
+                        ProductName = d.Product?.ProductName ?? "Ürün",
+                        Quantity = d.TransactionType == StockTransactionType.AdjustmentPlus ? d.Quantity : -d.Quantity,
+                        Description = d.Description ?? ""
+                    });
+                }
+
+                IsHistoryDetailVisible = true;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Detay yükleme hatası: {ex.Message}";
+                IsActionSuccessful = false;
+            }
+        }
+
+        [RelayCommand]
+        private void CloseHistoryDetail()
+        {
+            IsHistoryDetailVisible = false;
+        }
+
         // =============================================
         // === MANUEL SAYIM METODLARI ===
         // =============================================
 
-        /// <summary>
-        /// Ürün arama (SKU, Barkod, Ürün Adı ile)
-        /// </summary>
-        private void ExecuteSearchProduct()
+        private async Task ExecuteSearchProductAsync()
         {
             ManualSearchResults.Clear();
 
@@ -719,21 +760,21 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                var results = _context.Products
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var results = await context.Products
                     .Where(p =>
                         (p.SKU != null && p.SKU.Contains(ManualSearchText)) ||
                         (p.Barcode != null && p.Barcode.Contains(ManualSearchText)) ||
                         p.ProductName.Contains(ManualSearchText) ||
                         (p.ModelName != null && p.ModelName.Contains(ManualSearchText)))
-                    .Take(10)
-                    .ToList();
+                    .Take(15)
+                    .ToListAsync();
 
                 foreach (var product in results)
                 {
                     ManualSearchResults.Add(product);
                 }
 
-                // Tek sonuç varsa otomatik seç
                 if (ManualSearchResults.Count == 1)
                 {
                     SelectedSearchResult = ManualSearchResults[0];
@@ -746,20 +787,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// Listeye ekleme yapılabilir mi?
-        /// </summary>
-        private bool CanAddToManualCount()
-        {
-            return ManualSelectedWarehouse != null &&
-                   (SelectedSearchResult != null || ManualSearchResults.Count == 1);
-        }
-
-        /// <summary>
-        /// Seçilen ürünü manuel sayım listesine ekle
-        /// </summary>
         [RelayCommand]
-        private void AddToManualCount()
+        private async Task AddToManualCountAsync()
         {
             if (ManualSelectedWarehouse == null)
             {
@@ -768,9 +797,7 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            // Seçili ürün yoksa tek sonucu kullan
             var product = SelectedSearchResult ?? ManualSearchResults.FirstOrDefault();
-
             if (product == null)
             {
                 StatusMessage = "Eklenecek ürün bulunamadı.";
@@ -778,7 +805,6 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            // Zaten listede mi kontrol et
             if (ManualCountItems.Any(i => i.ProductId == product.Id))
             {
                 StatusMessage = $"'{product.ProductName}' zaten listede.";
@@ -786,11 +812,15 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            // Envanterdeki miktarı çek
-            var inventory = _context.Inventories
-                .FirstOrDefault(i => i.ProductId == product.Id && i.WarehouseId == ManualSelectedWarehouse.Id);
-
-            int systemQty = inventory?.Quantity ?? 0;
+            int systemQty = 0;
+            try
+            {
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var inventory = await context.Inventories
+                    .FirstOrDefaultAsync(i => i.ProductId == product.Id && i.WarehouseId == ManualSelectedWarehouse.Id);
+                systemQty = inventory?.Quantity ?? 0;
+            }
+            catch { }
 
             var item = new StockCountItem
             {
@@ -798,15 +828,15 @@ namespace KamatekCrm.ViewModels
                 ProductCode = product.SKU ?? $"P-{product.Id:D4}",
                 ProductName = product.ProductName,
                 ModelName = product.ModelName ?? string.Empty,
-                Unit = product.Unit,
+                Unit = product.Unit ?? "Adet",
                 SystemQuantity = systemQty,
-                CountedQuantity = 0 // Kullanıcı girecek
+                CountedQuantity = 0,
+                PurchasePrice = product.PurchasePrice
             };
 
-            // Fark değişimlerini dinle
             item.PropertyChanged += (s, e) =>
             {
-                if (e.PropertyName == nameof(StockCountItem.Difference))
+                if (e.PropertyName is nameof(StockCountItem.Difference) or nameof(StockCountItem.FinancialDifference))
                 {
                     UpdateManualTotals();
                 }
@@ -815,18 +845,14 @@ namespace KamatekCrm.ViewModels
             ManualCountItems.Add(item);
             UpdateManualTotals();
 
-            // Arama alanını temizle
             ManualSearchText = string.Empty;
             SelectedSearchResult = null;
             ManualSearchResults.Clear();
 
-            StatusMessage = $"'{product.ProductName}' listeye eklendi.";
+            StatusMessage = $"'{product.ProductName}' manuel listeye eklendi.";
             IsActionSuccessful = true;
         }
 
-        /// <summary>
-        /// Ürünü manuel sayım listesinden çıkar
-        /// </summary>
         [RelayCommand]
         private void RemoveFromManualCount(object? parameter)
         {
@@ -839,21 +865,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// Sayım onaylanabilir mi?
-        /// </summary>
-        private bool CanConfirmManualCount()
-        {
-            return ManualSelectedWarehouse != null &&
-                   ManualCountItems.Count > 0 &&
-                   ManualCountItems.Any(i => i.CountedQuantity >= 0);
-        }
-
-        /// <summary>
-        /// Manuel sayımı onayla ve stokları güncelle
-        /// </summary>
         [RelayCommand]
-        private void ConfirmManualCount()
+        private async Task ConfirmManualCountAsync()
         {
             if (ManualSelectedWarehouse == null) return;
 
@@ -865,14 +878,10 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            // Kullanıcı onayı
-            var positiveDiff = ManualCountItems.Where(i => i.Difference > 0).Sum(i => i.Difference);
-            var negativeDiff = ManualCountItems.Where(i => i.Difference < 0).Sum(i => i.Difference);
-
             var result = MessageBox.Show(
                 $"{itemsWithDifference.Count} üründe fark tespit edildi.\n\n" +
-                $"Sayım Fazlası: +{positiveDiff} adet\n" +
-                $"Sayım Eksiği: {negativeDiff} adet\n\n" +
+                $"Sayım Fazlası: +{ManualTotalPositiveDifference} adet\n" +
+                $"Sayım Eksiği: {ManualTotalNegativeDifference} adet\n\n" +
                 "Sayım kayıtları oluşturulacak ve stok güncellenecek.\nDevam etmek istiyor musunuz?",
                 "Manuel Sayım Onayı",
                 MessageBoxButton.YesNo,
@@ -880,30 +889,30 @@ namespace KamatekCrm.ViewModels
 
             if (result != MessageBoxResult.Yes) return;
 
-            using var transaction = _context.Database.BeginTransaction();
+            IsLoading = true;
             try
             {
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                using var transaction = await context.Database.BeginTransactionAsync();
+
                 var referenceId = $"MANUAL-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{ManualSelectedWarehouse.Id}";
 
                 foreach (var item in itemsWithDifference)
                 {
-                    // Inventory bul veya oluştur
-                    var inventory = _context.Inventories
-                        .FirstOrDefault(i => i.ProductId == item.ProductId && i.WarehouseId == ManualSelectedWarehouse.Id);
+                    var inventory = await context.Inventories
+                        .FirstOrDefaultAsync(i => i.ProductId == item.ProductId && i.WarehouseId == ManualSelectedWarehouse.Id);
 
                     if (inventory == null)
                     {
-                        // Envanter yoksa oluştur
                         inventory = new Inventory
                         {
                             ProductId = item.ProductId,
                             WarehouseId = ManualSelectedWarehouse.Id,
                             Quantity = 0
                         };
-                        _context.Inventories.Add(inventory);
+                        context.Inventories.Add(inventory);
                     }
 
-                    // StockTransaction oluştur
                     var transactionType = item.Difference > 0
                         ? StockTransactionType.AdjustmentPlus
                         : StockTransactionType.AdjustmentMinus;
@@ -921,33 +930,30 @@ namespace KamatekCrm.ViewModels
                         ReferenceId = referenceId
                     };
 
-                    _context.StockTransactions.Add(stockTransaction);
-
-                    // Envanter miktarını güncelle
+                    context.StockTransactions.Add(stockTransaction);
                     inventory.Quantity = item.CountedQuantity;
                 }
 
-                _context.SaveChanges();
-                transaction.Commit();
+                await context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
-                StatusMessage = $"Manuel sayım başarıyla kaydedildi. {itemsWithDifference.Count} ürün güncellendi.";
+                StatusMessage = $"Manuel sayım kaydedildi. {itemsWithDifference.Count} ürün güncellendi.";
                 IsActionSuccessful = true;
 
-                // Listeyi temizle
                 ManualCountItems.Clear();
                 UpdateManualTotals();
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
-                StatusMessage = $"Hata oluştu: {ex.Message}";
+                StatusMessage = $"Manuel sayım kayıt hatası: {ex.Message}";
                 IsActionSuccessful = false;
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
-        /// <summary>
-        /// Manuel sayım listesini temizle
-        /// </summary>
         [RelayCommand]
         private void ClearManualList()
         {
@@ -968,27 +974,23 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        /// <summary>
-        /// Manuel sayım özet bilgilerini güncelle
-        /// </summary>
         private void UpdateManualTotals()
         {
             OnPropertyChanged(nameof(ManualTotalDifferenceCount));
             OnPropertyChanged(nameof(ManualTotalPositiveDifference));
             OnPropertyChanged(nameof(ManualTotalNegativeDifference));
             OnPropertyChanged(nameof(ManualTotalItemCount));
+            OnPropertyChanged(nameof(ManualTotalFinancialDifference));
         }
 
         [RelayCommand]
         private void CloseHistory()
         {
             IsHistoryVisible = false;
+            IsHistoryDetailVisible = false;
         }
     }
 
-    /// <summary>
-    /// Sayım sırasında kullanılan ürün wrapper sınıfı
-    /// </summary>
     public class StockCountItem : INotifyPropertyChanged
     {
         private int _countedQuantity;
@@ -999,6 +1001,7 @@ namespace KamatekCrm.ViewModels
         public string ModelName { get; set; } = string.Empty;
         public string Unit { get; set; } = "Adet";
         public int SystemQuantity { get; set; }
+        public decimal PurchasePrice { get; set; }
 
         public int CountedQuantity
         {
@@ -1010,15 +1013,13 @@ namespace KamatekCrm.ViewModels
                     _countedQuantity = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(Difference));
+                    OnPropertyChanged(nameof(FinancialDifference));
                 }
             }
         }
 
-        /// <summary>
-        /// Sayılan - Sistem = Fark
-        /// Pozitif: Sayım Fazlası, Negatif: Sayım Eksiği
-        /// </summary>
         public int Difference => CountedQuantity - SystemQuantity;
+        public decimal FinancialDifference => Difference * PurchasePrice;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -1028,9 +1029,6 @@ namespace KamatekCrm.ViewModels
         }
     }
 
-    /// <summary>
-    /// Sayım geçmişi öğesi
-    /// </summary>
     public class CountHistoryItem
     {
         public DateTime Date { get; set; }
@@ -1039,8 +1037,12 @@ namespace KamatekCrm.ViewModels
         public int TotalDifference { get; set; }
         public string ReferenceId { get; set; } = string.Empty;
     }
+
+    public class CountHistoryDetailItem
+    {
+        public string ProductCode { get; set; } = string.Empty;
+        public string ProductName { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public string Description { get; set; } = string.Empty;
+    }
 }
-
-
-
-
