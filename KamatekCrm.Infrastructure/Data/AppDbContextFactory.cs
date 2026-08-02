@@ -20,7 +20,7 @@ namespace KamatekCrm.Infrastructure.Data
                 .Build();
 
             var connectionString = configuration.GetConnectionString("PostgreSQL")
-                ?? "Host=127.0.0.1;Database=kamatekcrm;Username=postgres;Password=1313;Port=5432;";
+                ?? "Host=127.0.0.1;Database=kamatekcrm_design;Username=postgres;Port=5432;";
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseNpgsql(connectionString);

@@ -230,7 +230,10 @@
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                 <ui:Button Command="{Binding ExportToPdfCommand}" Icon="{ui:SymbolIcon DocumentPdf24}" Content="PDF İndir" Height="40" Padding="16,0" Margin="0,0,8,0" Appearance="Secondary"/>
                 <ui:Button Content="İptal" Click="CloseWindow_Click" Height="40" Padding="20,0" Margin="0,0,8,0" Appearance="Secondary"/>
-                <ui:Button Command="{Binding SaveAndSendCommand}" Icon="{ui:SymbolIcon Checkmark24}" Content="Kaydet ve Gönder" IsDefault="True" Height="40" Padding="24,0" Appearance="Primary"/>
+                <ui:Button Command="{Binding SaveAndSendCommand}" Icon="{ui:SymbolIcon Checkmark24}"
+                           Content="Kaydet ve Gönderildi İşaretle"
+                           ToolTip="Gerçek e-posta göndermez; uygulama dışında müşteriye iletilen teklifi kaydeder."
+                           IsDefault="True" Height="40" Padding="24,0" Appearance="Primary"/>
             </StackPanel>
         </DockPanel>
 

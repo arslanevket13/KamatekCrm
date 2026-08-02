@@ -26,7 +26,7 @@ public sealed class DesktopCurrentUserContext : ICurrentUserContext
 
         return permission switch
         {
-            ApplicationPermission.ManageServiceJobs => HasRole("Technician"),
+            ApplicationPermission.ManageServiceJobs => HasRole("Technician") || HasRole("Personel"),
             ApplicationPermission.ExecuteSales => HasRole("Technician"),
             ApplicationPermission.AdjustInventory => _authService.CanDeleteRecords,
             ApplicationPermission.ApprovePurchase => _authService.CanApprovePurchase,
@@ -34,8 +34,10 @@ public sealed class DesktopCurrentUserContext : ICurrentUserContext
             ApplicationPermission.DeleteRecords => _authService.CanDeleteRecords,
             ApplicationPermission.AccessSettings => _authService.CanAccessSettings,
             ApplicationPermission.ManageUsers => false,
-            ApplicationPermission.ViewCustomerContactData => HasRole("Technician"),
+            ApplicationPermission.ViewCustomerContactData => HasRole("Technician") || HasRole("Personel"),
             ApplicationPermission.ViewCustomerIdentityData => _authService.CanViewFinance,
+            ApplicationPermission.ProcessReturns => _authService.CanDeleteRecords,
+            ApplicationPermission.ManageQuotes => HasRole("Technician") || HasRole("Personel"),
             _ => false
         };
     }

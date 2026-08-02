@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Services;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
+using KamatekCrm.ApplicationCore.DTOs.Transactions;
 
 namespace KamatekCrm.ViewModels
 {
@@ -31,15 +32,19 @@ namespace KamatekCrm.ViewModels
         private readonly IBackupService _backupService;
         private readonly IToastService? _toastService;
         private readonly IApplicationAuthorizationService _authorizationService;
+        private readonly IRetailTransactionService _retailTransactions;
+        private LegacyLedgerPreviewDto? _legacyLedgerPreview;
 
         public SettingsViewModel(
             IToastService toastService,
             IApplicationAuthorizationService authorizationService,
-            IBackupService backupService)
+            IBackupService backupService,
+            IRetailTransactionService retailTransactions)
         {
             _toastService = toastService;
             _authorizationService = authorizationService;
             _backupService = backupService;
+            _retailTransactions = retailTransactions;
             
             // Ayarları Properties.Settings.Default'tan yükle
             string savedThemeId = Properties.Settings.Default.ThemePreference;
@@ -83,6 +88,15 @@ namespace KamatekCrm.ViewModels
         {
             get => _lastBackupText;
             set => SetProperty(ref _lastBackupText, value);
+        }
+
+        public System.Collections.ObjectModel.ObservableCollection<LegacyLedgerIssueDto> LegacyLedgerIssues { get; } = new();
+
+        private string _legacyLedgerSummary = "Önizleme henüz çalıştırılmadı.";
+        public string LegacyLedgerSummary
+        {
+            get => _legacyLedgerSummary;
+            set => SetProperty(ref _legacyLedgerSummary, value);
         }
 
         // Firma Bilgileri
@@ -263,6 +277,71 @@ namespace KamatekCrm.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"Network Settings modal error: {ex.Message}");
             }
+        }
+
+        [RelayCommand]
+        private async Task PreviewLegacyLedger()
+        {
+            if (IsBusy) return;
+            IsBusy = true;
+            try
+            {
+                var result = await _retailTransactions.PreviewLegacyLedgerAsync();
+                if (result.IsFailure || result.Value is null)
+                {
+                    _toastService?.ShowError(result.Error);
+                    return;
+                }
+
+                _legacyLedgerPreview = result.Value;
+                LegacyLedgerIssues.Clear();
+                foreach (var issue in result.Value.Issues) LegacyLedgerIssues.Add(issue);
+                LegacyLedgerSummary = result.Value.Issues.Count == 0
+                    ? "Düzeltme gerektiren eski cari satış bulunamadı. Veri yazılmadı."
+                    : $"{result.Value.Issues.Count} satış / {result.Value.TotalCorrection:N2} ₺ bakiye farkı bulundu. Önizleme veri yazmadı.";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ApplyLegacyLedgerCorrections()
+        {
+            if (IsBusy || _legacyLedgerPreview is null || _legacyLedgerPreview.Issues.Count == 0)
+            {
+                _toastService?.ShowWarning("Önce düzeltme önizlemesini çalıştırın.");
+                return;
+            }
+
+            var confirm = MessageBox.Show(
+                $"{_legacyLedgerPreview.Issues.Count} eski satış için {_legacyLedgerPreview.TotalCorrection:N2} ₺ telafi hareketi eklenecek.\n\nMevcut kayıtlar değiştirilmeyecek veya silinmeyecek. Devam edilsin mi?",
+                "Cari Düzeltme Onayı",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+            if (confirm != MessageBoxResult.Yes) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _retailTransactions.ApplyLegacyLedgerCorrectionsAsync(
+                    _legacyLedgerPreview.Issues.Select(item => item.ReconciliationKey).ToArray(),
+                    App.CurrentUser?.Username ?? "Sistem");
+                if (result.IsFailure)
+                {
+                    _toastService?.ShowError(result.Error);
+                    return;
+                }
+
+                _toastService?.ShowSuccess($"{result.Value} idempotent telafi hareketi eklendi.");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+
+            await PreviewLegacyLedger();
         }
 
         #endregion

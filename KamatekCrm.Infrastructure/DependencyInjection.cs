@@ -18,6 +18,17 @@ namespace KamatekCrm.Infrastructure
             services.AddSingleton<IDatabaseConnectionProvider, DatabaseConnectionProvider>();
             services.AddSingleton<IDatabaseInitializationService, DatabaseInitializationService>();
             services.AddTransient<IServiceJobCommandService, ServiceJobCommandService>();
+            services.AddTransient<IServiceJobReadService, ServiceJobReadService>();
+            services.AddTransient<IRetailTransactionService, RetailTransactionService>();
+            services.AddTransient<IPurchasingCommandService, PurchasingCommandService>();
+            services.AddTransient<IAuditTrailService, AuditTrailService>();
+            services.AddTransient<ITransactionReadService, TransactionReadService>();
+            services.AddTransient<IStockCountCommandService, StockCountCommandService>();
+            services.AddTransient<IStockCountReadService, StockCountReadService>();
+            services.AddTransient<IProjectQuoteCommandService, ProjectQuoteCommandService>();
+            services.AddTransient<IProjectQuoteReadService, ProjectQuoteReadService>();
+            services.AddTransient<IStandardQuoteCommandService, StandardQuoteCommandService>();
+            services.AddTransient<IStandardQuoteReadService, StandardQuoteReadService>();
 
             services.AddDbContextFactory<AppDbContext>((sp, options) =>
             {

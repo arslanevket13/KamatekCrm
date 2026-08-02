@@ -11,27 +11,26 @@ using QuestPDF.Infrastructure;
 using KamatekCrm.Shared.Services;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
-using Microsoft.Extensions.DependencyInjection;
+using KamatekCrm.ApplicationCore.DTOs.ServiceJobs;
 
 namespace KamatekCrm.Services
 {
     public class PdfService : IQuotePdfService, IServiceReportPdfService, IInvoicePdfService, IPurchaseOrderPdfService
     {
         private readonly IPersonalDataProtectionService? _personalDataProtection;
+        private readonly IAuditTrailService _auditTrail;
 
         static PdfService()
         {
             QuestPDF.Settings.License = LicenseType.Community;
         }
 
-        public PdfService()
-        {
-            _personalDataProtection = App.ServiceProvider?.GetService<IPersonalDataProtectionService>();
-        }
-
-        public PdfService(IPersonalDataProtectionService personalDataProtection)
+        public PdfService(
+            IPersonalDataProtectionService personalDataProtection,
+            IAuditTrailService auditTrail)
         {
             _personalDataProtection = personalDataProtection;
+            _auditTrail = auditTrail;
         }
 
         private string Protect(string? value, PersonalDataKind kind)
@@ -42,13 +41,15 @@ namespace KamatekCrm.Services
             return kind == PersonalDataKind.Address ? "Adres bilgisi kısıtlı" : "••••";
         }
 
-        private static void AuditSensitiveDocumentAccess(string documentType, int? customerId)
+        private void AuditSensitiveDocumentAccess(string documentType, int? customerId)
         {
-            _ = AuditService.LogAsync(
+            var result = _auditTrail.WriteAsync(
                 AuditActionType.View,
                 "CustomerDocument",
                 customerId?.ToString(),
-                $"{documentType} oluşturma sırasında müşteri iletişim verilerine erişildi.");
+                $"{documentType} oluşturma sırasında müşteri iletişim verilerine erişildi.").GetAwaiter().GetResult();
+            if (result.IsFailure)
+                System.Diagnostics.Debug.WriteLine(result.Error);
         }
 
         private static class BrandColors
@@ -910,6 +911,31 @@ namespace KamatekCrm.Services
             }
 
             GenerateDiscoveryReportPdf(job, filePath);
+        }
+
+        public void GenerateServiceJobPdf(ServiceJobDocumentDto document, string filePath)
+        {
+            var job = new ServiceJob
+            {
+                Id = document.Id,
+                WorkOrderType = document.WorkOrderType,
+                Description = document.Description,
+                DiscoveryTechnicalNotes = document.DiscoveryTechnicalNotes,
+                TechnicianNotes = document.TechnicianNotes,
+                AssignedTechnician = document.AssignedTechnician,
+                Priority = document.Priority,
+                ScheduledDate = document.ScheduledDate,
+                CustomerId = document.CustomerId,
+                Customer = new Customer
+                {
+                    Id = document.CustomerId,
+                    FullName = document.CustomerName,
+                    CompanyName = document.CustomerCompanyName,
+                    PhoneNumber = document.CustomerPhone,
+                    City = document.CustomerAddress
+                }
+            };
+            GenerateServiceJobPdf(job, filePath);
         }
 
         public void GenerateDiscoveryReportPdf(ServiceJob job, string filePath)

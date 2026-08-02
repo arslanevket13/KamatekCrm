@@ -334,6 +334,7 @@ namespace KamatekCrm.Shared.Models
         public decimal ItemProfit => TotalPrice - TotalItemCost;
         public string MarginDisplay => TotalPrice > 0 ? $"%{((TotalPrice - TotalItemCost) / TotalPrice * 100):N1}" : "%0";
 
+        [System.Text.Json.Serialization.JsonIgnore]
         public Action OnItemChanged { get; set; } = delegate { };
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -42,9 +42,14 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
             return Result.Failure<ServiceJobSaveResult>(authorization.Error);
         }
 
-        if (request.Job.CustomerId <= 0)
+        if (request.Job.CustomerId <= 0 && request.QuickCustomer is null)
         {
             return Result.Failure<ServiceJobSaveResult>("İş emri için geçerli bir müşteri seçilmelidir.");
+        }
+
+        if (request.IsEditing && request.QuickCustomer is not null)
+        {
+            return Result.Failure<ServiceJobSaveResult>("Mevcut iş emri düzenlenirken hızlı müşteri oluşturulamaz.");
         }
 
         var validItems = request.Items
@@ -64,6 +69,66 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
             if (stockValidation.IsFailure)
             {
                 return Result.Failure<ServiceJobSaveResult>(stockValidation.Error);
+            }
+
+            int customerId = request.Job.CustomerId;
+            if (request.QuickCustomer is not null)
+            {
+                string fullName = request.QuickCustomer.FullName.Trim();
+                string phoneNumber = request.QuickCustomer.PhoneNumber.Trim();
+                if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(phoneNumber))
+                {
+                    return Result.Failure<ServiceJobSaveResult>("Hızlı müşteri için ad soyad ve telefon zorunludur.");
+                }
+
+                var customer = new Customer
+                {
+                    CustomerCode = $"SJ{Guid.NewGuid():N}"[..18],
+                    FullName = fullName,
+                    PhoneNumber = phoneNumber,
+                    Type = CustomerType.Individual,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = NormalizeUser(request.ChangedBy)
+                };
+                context.Customers.Add(customer);
+                await context.SaveChangesAsync(cancellationToken);
+                customerId = customer.Id;
+            }
+            else if (!await context.Customers.AnyAsync(item => item.Id == customerId, cancellationToken))
+            {
+                return Result.Failure<ServiceJobSaveResult>("Seçilen müşteri bulunamadı.");
+            }
+
+            int? customerAssetId = request.Job.CustomerAssetId;
+            if (request.NewAsset is not null)
+            {
+                string brand = request.NewAsset.Brand.Trim();
+                string model = request.NewAsset.Model.Trim();
+                if (string.IsNullOrWhiteSpace(brand) || string.IsNullOrWhiteSpace(model))
+                {
+                    return Result.Failure<ServiceJobSaveResult>("Yeni cihaz için marka ve model zorunludur.");
+                }
+
+                var asset = new CustomerAsset
+                {
+                    CustomerId = customerId,
+                    Category = request.NewAsset.Category,
+                    Brand = brand,
+                    Model = model,
+                    SerialNumber = NormalizeOptional(request.NewAsset.SerialNumber),
+                    Location = NormalizeOptional(request.NewAsset.Location),
+                    Status = AssetStatus.NeedsRepair,
+                    CreatedDate = DateTime.UtcNow
+                };
+                context.CustomerAssets.Add(asset);
+                await context.SaveChangesAsync(cancellationToken);
+                customerAssetId = asset.Id;
+            }
+            else if (customerAssetId.HasValue && !await context.CustomerAssets.AnyAsync(
+                         item => item.Id == customerAssetId.Value && item.CustomerId == customerId,
+                         cancellationToken))
+            {
+                return Result.Failure<ServiceJobSaveResult>("Seçilen cihaz bu müşteriye ait değil veya bulunamadı.");
             }
 
             ServiceJob trackedJob;
@@ -88,8 +153,22 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
                 context.ServiceJobs.Add(trackedJob);
             }
 
+            trackedJob.CustomerId = customerId;
+            trackedJob.CustomerAssetId = customerAssetId;
+
             trackedJob.ModifiedDate = DateTime.UtcNow;
             await context.SaveChangesAsync(cancellationToken);
+
+            context.ServiceJobHistories.Add(new ServiceJobHistory
+            {
+                ServiceJobId = trackedJob.Id,
+                Date = DateTime.UtcNow,
+                JobStatusChange = trackedJob.Status,
+                TechnicianNote = request.IsEditing ? "İş emri güncellendi." : "İş emri oluşturuldu.",
+                Action = request.IsEditing ? "Updated" : "Created",
+                UserId = NormalizeUser(request.ChangedBy),
+                PerformedAt = DateTime.UtcNow
+            });
 
             foreach (var item in validItems)
             {
@@ -122,7 +201,9 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
             return Result.Success(new ServiceJobSaveResult(
                 trackedJob.Id,
                 trackedJob.IsStockReserved,
-                reservationResult.Value));
+                reservationResult.Value,
+                customerId,
+                customerAssetId));
         }
         catch (Exception ex)
         {
@@ -214,6 +295,62 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
         {
             await RollbackIfPresentAsync(transaction, cancellationToken);
             return Result.Failure<ServiceJobQuoteConversionResult>($"İş emri teklife dönüştürülemedi: {ex.Message}");
+        }
+    }
+
+    public async Task<Result<ServiceJobDeleteResult>> DeleteAsync(
+        int jobId,
+        string changedBy,
+        CancellationToken cancellationToken = default)
+    {
+        var manageAuthorization = _authorizationService.Authorize(ApplicationPermission.ManageServiceJobs);
+        if (manageAuthorization.IsFailure) return Result.Failure<ServiceJobDeleteResult>(manageAuthorization.Error);
+        var deleteAuthorization = _authorizationService.Authorize(ApplicationPermission.DeleteRecords);
+        if (deleteAuthorization.IsFailure) return Result.Failure<ServiceJobDeleteResult>(deleteAuthorization.Error);
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await BeginTransactionIfSupportedAsync(context, cancellationToken);
+        try
+        {
+            var job = await context.ServiceJobs.FirstOrDefaultAsync(item => item.Id == jobId, cancellationToken);
+            if (job is null) return Result.Failure<ServiceJobDeleteResult>($"İş emri bulunamadı (ID: {jobId}).");
+            if (job.Status == JobStatus.Completed || job.IsStockDeducted)
+            {
+                return Result.Failure<ServiceJobDeleteResult>(
+                    "Tamamlanmış veya stok tüketimi yapılmış iş emri silinemez; yeni bir telafi kaydı oluşturulmalıdır.");
+            }
+
+            string referenceId = job.Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var reservations = await context.StockReservations
+                .Where(item => item.ReferenceType == ReservationReferenceType &&
+                               item.ReferenceId == referenceId && item.IsActive)
+                .ToListAsync(cancellationToken);
+            foreach (var reservation in reservations) reservation.IsActive = false;
+
+            context.ServiceJobHistories.Add(new ServiceJobHistory
+            {
+                ServiceJobId = job.Id,
+                Date = DateTime.UtcNow,
+                JobStatusChange = job.Status,
+                TechnicianNote = "İş emri kullanıcı talebiyle silindi.",
+                Action = "Deleted",
+                Notes = $"Silinmeden önceki durum: {job.Status}",
+                UserId = NormalizeUser(changedBy),
+                PerformedAt = DateTime.UtcNow
+            });
+            job.IsDeleted = true;
+            job.DeletedAt = DateTime.UtcNow;
+            job.DeletedBy = NormalizeUser(changedBy);
+            job.ModifiedDate = DateTime.UtcNow;
+            job.ModifiedBy = NormalizeUser(changedBy);
+            await context.SaveChangesAsync(cancellationToken);
+            await CommitIfPresentAsync(transaction, cancellationToken);
+            return Result.Success(new ServiceJobDeleteResult(jobId));
+        }
+        catch (Exception ex)
+        {
+            await RollbackIfPresentAsync(transaction, cancellationToken);
+            return Result.Failure<ServiceJobDeleteResult>($"İş emri silinemedi: {ex.Message}");
         }
     }
 
@@ -575,6 +712,9 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
 
     private static string NormalizeUser(string? changedBy) =>
         string.IsNullOrWhiteSpace(changedBy) ? "Sistem" : changedBy.Trim()[..Math.Min(changedBy.Trim().Length, 100)];
+
+    private static string? NormalizeOptional(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static async Task<IDbContextTransaction?> BeginTransactionIfSupportedAsync(
         AppDbContext context,

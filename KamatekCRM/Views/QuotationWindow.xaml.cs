@@ -11,16 +11,6 @@ namespace KamatekCrm.Views
             DataContext = viewModel;
         }
 
-        public QuotationWindow()
-        {
-            InitializeComponent();
-            if (App.ServiceProvider != null)
-            {
-                var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>>(App.ServiceProvider);
-                DataContext = new KamatekCrm.ViewModels.QuotationViewModel(dbContextFactory);
-            }
-        }
-
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();

@@ -23,6 +23,7 @@ namespace KamatekCrm.ViewModels
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IToastService _toastService;
+        private readonly PdfService _pdfService;
 
         #region Private Fields
 
@@ -321,10 +322,11 @@ namespace KamatekCrm.ViewModels
 
         #region Constructor
 
-        public FaultTicketViewModel(IServiceProvider serviceProvider, IToastService toastService)
+        public FaultTicketViewModel(IServiceProvider serviceProvider, IToastService toastService, PdfService pdfService)
         {
             _serviceProvider = serviceProvider;
             _toastService = toastService;
+            _pdfService = pdfService;
             _ = LoadCustomersAsync();
             UpdateDeviceTypeOptions();
         }
@@ -670,8 +672,7 @@ namespace KamatekCrm.ViewModels
                         {
                             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                             string pdfPath = System.IO.Path.Combine(desktopPath, $"CihazKabul_{faultTicket.Id:D6}.pdf");
-                            var pdfService = new PdfService();
-                            pdfService.GenerateServiceJobPdf(faultTicket, pdfPath);
+                            _pdfService.GenerateServiceJobPdf(faultTicket, pdfPath);
                             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                             {
                                 FileName = pdfPath,

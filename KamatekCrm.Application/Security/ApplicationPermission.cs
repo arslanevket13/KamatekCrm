@@ -14,5 +14,7 @@ public enum ApplicationPermission
     AccessSettings,
     ManageUsers,
     ViewCustomerContactData,
-    ViewCustomerIdentityData
+    ViewCustomerIdentityData,
+    ProcessReturns,
+    ManageQuotes
 }

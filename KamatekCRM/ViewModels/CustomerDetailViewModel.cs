@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
+using KamatekCrm.ApplicationCore.Services;
 
 namespace KamatekCrm.ViewModels
 {
@@ -65,6 +66,7 @@ namespace KamatekCrm.ViewModels
         private readonly ILoadingService _loadingService;
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IPersonalDataProtectionService _personalDataProtection;
+        private readonly IAuditTrailService _auditTrail;
 
         private int _customerId;
 
@@ -73,13 +75,15 @@ namespace KamatekCrm.ViewModels
             IToastService toastService, 
             ILoadingService loadingService,
             IDbContextFactory<AppDbContext> dbContextFactory,
-            IPersonalDataProtectionService personalDataProtection)
+            IPersonalDataProtectionService personalDataProtection,
+            IAuditTrailService auditTrail)
         {
             _navigationService = navigationService;
             _toastService = toastService;
             _loadingService = loadingService;
             _dbContextFactory = dbContextFactory;
             _personalDataProtection = personalDataProtection;
+            _auditTrail = auditTrail;
             
             ServiceJobs = new ObservableCollection<ServiceJob>();
             ActiveJobs = new ObservableCollection<ServiceJob>();
@@ -326,11 +330,13 @@ namespace KamatekCrm.ViewModels
 
                 if (CanViewContactData || CanViewIdentityData)
                 {
-                    _ = AuditService.LogAsync(
+                    var auditResult = _auditTrail.WriteAsync(
                         AuditActionType.View,
                         "CustomerPersonalData",
                         _customerId.ToString(),
-                        "Müşteri kişisel veri detayları görüntülendi.");
+                        "Müşteri kişisel veri detayları görüntülendi.").GetAwaiter().GetResult();
+                    if (auditResult.IsFailure)
+                        System.Diagnostics.Debug.WriteLine(auditResult.Error);
                 }
 
                 // Customer modelinde SalesOrders koleksiyonu yoksa manuel yükle
@@ -429,18 +435,12 @@ namespace KamatekCrm.ViewModels
 
         private void CalculateTotals()
         {
-            // Toplam harcama (Servis + Satış)
-            var serviceTotal = ServiceJobs.Sum(j => j.Price);
-            var salesTotal = SalesOrders.Sum(s => (decimal)s.TotalAmount); // SalesOrder TotalAmount double olabilir
-            TotalSpent = serviceTotal + salesTotal;
+            // İşlem servisleri satış ve iadelerde bu alanı atomik olarak günceller.
+            TotalSpent = _customer?.TotalSpent ?? 0m;
 
-            // Toplam bakiye (Borçlar - Ödemeler)
-            var totalDebts = Transactions.Where(t => t.Type == TransactionType.Debt).Sum(t => t.Amount);
-            var totalPayments = Transactions.Where(t => t.Type == TransactionType.Payment).Sum(t => t.Amount);
-            
             // Pozitif bakiye = Müşteri Borçlu (Kırmızı)
             // Negatif bakiye = Müşteri Alacaklı (Yeşil)
-            TotalBalance = totalDebts - totalPayments;
+            TotalBalance = FinancialTransactionPolicy.CalculateCustomerBalance(Transactions);
         }
 
         [RelayCommand]
@@ -579,7 +579,7 @@ namespace KamatekCrm.ViewModels
             var serviceJobVm = App.ServiceProvider.GetService<ServiceJobViewModel>();
             if (serviceJobVm == null) return;
 
-            serviceJobVm.SelectedCustomer = _customer;
+            serviceJobVm.SetInitialCustomer(_customer);
 
             var window = new NewServiceJobWindow(serviceJobVm)
             {

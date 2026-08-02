@@ -233,11 +233,17 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<int>("PaymentMethod")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("PurchaseReturnId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ReferenceNumber")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int?>("SalesOrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SalesReturnId")
                         .HasColumnType("integer");
 
                     b.Property<int>("TransactionType")
@@ -1141,6 +1147,10 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<string>("DeletedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1161,6 +1171,10 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("ReceiptIdempotencyKey")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
                     b.Property<int?>("ServiceJobId")
                         .HasColumnType("integer");
 
@@ -1173,6 +1187,9 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric");
 
+                    b.Property<int?>("WarehouseId")
+                        .HasColumnType("integer");
+
                     b.Property<uint>("xmin")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -1181,9 +1198,19 @@ namespace KamatekCrm.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+
+                    b.HasIndex("ReceiptIdempotencyKey")
+                        .IsUnique()
+                        .HasFilter("\"ReceiptIdempotencyKey\" IS NOT NULL");
+
                     b.HasIndex("ServiceJobId");
 
                     b.HasIndex("SupplierId");
+
+                    b.HasIndex("WarehouseId");
 
                     b.ToTable("PurchaseOrders");
                 });
@@ -1238,6 +1265,154 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.HasIndex("PurchaseOrderId");
 
                     b.ToTable("PurchaseOrderItems");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseOrderPayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.ToTable("PurchaseOrderPayments");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseReturn", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<bool>("LegacySettlementOverride")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReturnNumber")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("character varying(48)");
+
+                    b.Property<int>("SettlementMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SettlementReference")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.HasIndex("ReturnNumber")
+                        .IsUnique();
+
+                    b.ToTable("PurchaseReturns");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseReturnItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PurchaseOrderItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PurchaseReturnId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SourceWarehouseId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseOrderItemId");
+
+                    b.HasIndex("PurchaseReturnId");
+
+                    b.ToTable("PurchaseReturnItems");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Quote", b =>
@@ -1472,6 +1647,9 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric");
 
+                    b.Property<int?>("WarehouseId")
+                        .HasColumnType("integer");
+
                     b.Property<uint>("xmin")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -1485,6 +1663,8 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.HasIndex("IdempotencyKey")
                         .IsUnique()
                         .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+
+                    b.HasIndex("WarehouseId");
 
                     b.ToTable("SalesOrders");
                 });
@@ -1570,6 +1750,165 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.HasIndex("SalesOrderId");
 
                     b.ToTable("SalesOrderPayments");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.SalesReturn", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DiscountTotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PrintCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReturnNumber")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("character varying(48)");
+
+                    b.Property<int>("SalesOrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("SubTotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("TaxTotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("ReturnNumber")
+                        .IsUnique();
+
+                    b.HasIndex("SalesOrderId");
+
+                    b.ToTable("SalesReturns");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.SalesReturnItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DestinationWarehouseId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Disposition")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SalesOrderItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SalesReturnId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("SubTotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SalesOrderItemId");
+
+                    b.HasIndex("SalesReturnId");
+
+                    b.ToTable("SalesReturnItems");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.SalesReturnPayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SalesReturnId")
+                        .HasColumnType("integer");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SalesReturnId");
+
+                    b.ToTable("SalesReturnPayments");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.ServiceJob", b =>
@@ -2006,6 +2345,151 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.ToTable("ServiceProjects");
                 });
 
+            modelBuilder.Entity("KamatekCrm.Shared.Models.StockCountSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CountedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CountedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("FinancialDifference")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Mode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ProductCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReferenceNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("TotalNegativeDifference")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalPositiveDifference")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("integer");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("ReferenceNumber")
+                        .IsUnique();
+
+                    b.HasIndex("WarehouseId", "CountedAt");
+
+                    b.ToTable("StockCountSessions");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.StockCountSessionItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CountedQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Difference")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("FinancialDifference")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ProductCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("StockCountSessionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("StockTransactionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SystemQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("StockTransactionId");
+
+                    b.HasIndex("StockCountSessionId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("StockCountSessionItems");
+                });
+
             modelBuilder.Entity("KamatekCrm.Shared.Models.StockReservation", b =>
                 {
                     b.Property<int>("Id")
@@ -2079,6 +2563,9 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<int?>("PurchaseOrderId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("PurchaseReturnId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
@@ -2087,6 +2574,9 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<int?>("SalesOrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SalesReturnId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("SourceWarehouseId")
@@ -2346,6 +2836,15 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("ReconciliationKey")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("SalesOrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SalesReturnId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
@@ -2358,6 +2857,10 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("ReconciliationKey")
+                        .IsUnique()
+                        .HasFilter("\"ReconciliationKey\" IS NOT NULL");
 
                     b.ToTable("Transactions");
                 });
@@ -2498,6 +3001,9 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsQuarantine")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("ModifiedBy")
                         .HasColumnType("text");
 
@@ -2519,6 +3025,10 @@ namespace KamatekCrm.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("IsQuarantine")
+                        .IsUnique()
+                        .HasFilter("\"IsQuarantine\" = TRUE");
+
                     b.ToTable("Warehouses");
 
                     b.HasData(
@@ -2529,6 +3039,7 @@ namespace KamatekCrm.Infrastructure.Migrations
                             CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             IsDeleted = false,
+                            IsQuarantine = false,
                             Name = "Merkez Depo",
                             Type = 0
                         },
@@ -2539,6 +3050,7 @@ namespace KamatekCrm.Infrastructure.Migrations
                             CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             IsDeleted = false,
+                            IsQuarantine = false,
                             Name = "Servis Aracı 1",
                             Type = 3
                         });
@@ -2718,9 +3230,16 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("KamatekCrm.Shared.Models.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("ServiceJob");
 
                     b.Navigation("Supplier");
+
+                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseOrderItem", b =>
@@ -2730,6 +3249,47 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .HasForeignKey("PurchaseOrderId");
 
                     b.Navigation("PurchaseOrder");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseOrderPayment", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("Payments")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseOrder");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseReturn", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.PurchaseOrder", "PurchaseOrder")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseOrder");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseReturnItem", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.PurchaseOrderItem", "PurchaseOrderItem")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("KamatekCrm.Shared.Models.PurchaseReturn", "PurchaseReturn")
+                        .WithMany("Items")
+                        .HasForeignKey("PurchaseReturnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseOrderItem");
+
+                    b.Navigation("PurchaseReturn");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Quote", b =>
@@ -2781,7 +3341,14 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("CustomerId");
 
+                    b.HasOne("KamatekCrm.Shared.Models.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Customer");
+
+                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.SalesOrderItem", b =>
@@ -2804,6 +3371,47 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("SalesOrder");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.SalesReturn", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.SalesOrder", "SalesOrder")
+                        .WithMany()
+                        .HasForeignKey("SalesOrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SalesOrder");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.SalesReturnItem", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.SalesOrderItem", "SalesOrderItem")
+                        .WithMany()
+                        .HasForeignKey("SalesOrderItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("KamatekCrm.Shared.Models.SalesReturn", "SalesReturn")
+                        .WithMany("Items")
+                        .HasForeignKey("SalesReturnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SalesOrderItem");
+
+                    b.Navigation("SalesReturn");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.SalesReturnPayment", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.SalesReturn", "SalesReturn")
+                        .WithMany("Payments")
+                        .HasForeignKey("SalesReturnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SalesReturn");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.ServiceJob", b =>
@@ -2866,6 +3474,43 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .HasForeignKey("CustomerId");
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.StockCountSession", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.StockCountSessionItem", b =>
+                {
+                    b.HasOne("KamatekCrm.Shared.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("KamatekCrm.Shared.Models.StockCountSession", "StockCountSession")
+                        .WithMany("Items")
+                        .HasForeignKey("StockCountSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamatekCrm.Shared.Models.StockTransaction", "StockTransaction")
+                        .WithMany()
+                        .HasForeignKey("StockTransactionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Product");
+
+                    b.Navigation("StockCountSession");
+
+                    b.Navigation("StockTransaction");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.StockTransaction", b =>
@@ -2959,6 +3604,13 @@ namespace KamatekCrm.Infrastructure.Migrations
             modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseOrder", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("Payments");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.PurchaseReturn", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Quote", b =>
@@ -2973,11 +3625,23 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Navigation("Payments");
                 });
 
+            modelBuilder.Entity("KamatekCrm.Shared.Models.SalesReturn", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("Payments");
+                });
+
             modelBuilder.Entity("KamatekCrm.Shared.Models.ServiceJob", b =>
                 {
                     b.Navigation("PurchaseOrders");
 
                     b.Navigation("ServiceJobItems");
+                });
+
+            modelBuilder.Entity("KamatekCrm.Shared.Models.StockCountSession", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.Supplier", b =>

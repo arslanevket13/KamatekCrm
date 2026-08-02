@@ -4,9 +4,20 @@ namespace KamatekCrm.Shared.Enums
 {
     public enum ServiceJobType { Fault, Project }
     public enum WorkflowStatus { Draft, Approved }
-    public enum PurchaseStatus { Pending, Ordered, Shipped, Received, Cancelled, Completed }
+    public enum PurchaseStatus
+    {
+        Pending = 0,
+        Ordered = 1,
+        Shipped = 2,
+        Received = 3,
+        Cancelled = 4,
+        Completed = 5,
+        PartiallyReturned = 6,
+        Returned = 7
+    }
     public enum WarehouseType { MainWarehouse, Mobile, Other, Vehicle }
     public enum StockTransactionType { In, Out, Sale, Purchase, AdjustmentPlus, AdjustmentMinus, OpeningStock, Transfer, Adjustment, ReturnToSupplier, ReturnFromCustomer, ServiceUsage }
+    public enum StockCountMode { FullWarehouse, Manual }
     public enum AuditActionType { Create, Update, Delete, Login, Logout, View, PasswordChange, PasswordReset }
     public enum ProductCategory { Camera, Intercom, FireAlarm, Security, SmartHome, Network, Other, Cable, BurglarAlarm, AccessControl, Satellite, FiberOptic }
     public enum ProductCategoryType { Camera, Intercom, FireAlarm, Security, SmartHome, Network, Other, Cable, BurglarAlarm, AccessControl, Satellite, FiberOptic }
@@ -15,7 +26,7 @@ namespace KamatekCrm.Shared.Enums
     public enum PaymentMethod { Cash, CreditCard, BankTransfer, MobilePayment, Check, OnAccount }
     public enum PipelineStage { New, Qualification, Proposal, Negotiation, Negotiating, Won, Lost, Lead, Quoted }
 
-    public enum TransactionType { Income, Expense, Transfer, Debt, Payment }
+    public enum TransactionType { Income, Expense, Transfer, Debt, Payment, CreditNote, Refund }
     public enum CashTransactionType { Income, Expense, Transfer, CashIncome, CardIncome, TransferIncome, CashExpense, CardExpense, TransferExpense }
     
     // JobPriority removed (defined in JobPriority.cs)
@@ -34,7 +45,16 @@ namespace KamatekCrm.Shared.Enums
 
     // RepairStatus removed (defined in RepairStatus.cs)
 
-    public enum SalesOrderStatus { Draft, Completed, Cancelled, Refunded }
+    public enum SalesOrderStatus
+    {
+        Draft = 0,
+        Completed = 1,
+        Cancelled = 2,
+        Refunded = 3,
+        PartiallyRefunded = 4
+    }
+    public enum ReturnDisposition { Restock, Quarantine }
+    public enum ReturnStatus { Completed }
     public enum DiscountType { Percentage, FlatAmount }
 
     // --- ERP Module Enums ---

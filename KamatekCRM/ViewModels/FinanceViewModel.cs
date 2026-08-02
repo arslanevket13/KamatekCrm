@@ -11,6 +11,7 @@ using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
 using Microsoft.EntityFrameworkCore;
+using KamatekCrm.ApplicationCore.Services;
 
 namespace KamatekCrm.ViewModels
 {
@@ -213,13 +214,9 @@ namespace KamatekCrm.ViewModels
                     .Where(t => t.Date < startDate)
                     .ToListAsync();
 
-                var pastIncome = pastTransactions
-                    .Where(t => t.TransactionType == CashTransactionType.CashIncome || t.TransactionType == CashTransactionType.CardIncome || t.TransactionType == CashTransactionType.TransferIncome)
-                    .Sum(t => t.Amount);
+                var pastIncome = pastTransactions.Where(t => FinancialTransactionPolicy.IsCashIncome(t.TransactionType)).Sum(t => t.Amount);
 
-                var pastExpense = pastTransactions
-                    .Where(t => t.TransactionType == CashTransactionType.Expense || t.TransactionType == CashTransactionType.TransferExpense)
-                    .Sum(t => t.Amount);
+                var pastExpense = pastTransactions.Where(t => FinancialTransactionPolicy.IsCashExpense(t.TransactionType)).Sum(t => t.Amount);
 
                 CarriedOverBalance = pastIncome - pastExpense;
 
@@ -236,17 +233,14 @@ namespace KamatekCrm.ViewModels
 
                 // Özet hesapla
                 CashIncome = transactions
-                    .Where(t => t.TransactionType == CashTransactionType.CashIncome)
+                    .Where(t => FinancialTransactionPolicy.IsCashIncome(t.TransactionType) && t.TransactionType != CashTransactionType.CardIncome)
                     .Sum(t => t.Amount);
 
                 CardIncome = transactions
                     .Where(t => t.TransactionType == CashTransactionType.CardIncome)
                     .Sum(t => t.Amount);
 
-                TotalExpense = transactions
-                    .Where(t => t.TransactionType == CashTransactionType.Expense || 
-                                t.TransactionType == CashTransactionType.TransferExpense)
-                    .Sum(t => t.Amount);
+                TotalExpense = transactions.Where(t => FinancialTransactionPolicy.IsCashExpense(t.TransactionType)).Sum(t => t.Amount);
 
                 OnPropertyChanged(nameof(DailyNetBalance));
                 OnPropertyChanged(nameof(TotalVaultBalance));

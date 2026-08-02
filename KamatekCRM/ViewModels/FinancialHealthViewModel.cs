@@ -10,6 +10,7 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using KamatekCrm.ApplicationCore.Services;
 
 namespace KamatekCrm.ViewModels
 {
@@ -68,14 +69,15 @@ namespace KamatekCrm.ViewModels
 
                 // Load Cash Transactions for expenses & income consolidation
                 var cashTransactions = await context.CashTransactions
-                    .Where(t => t.TransactionType == CashTransactionType.Expense || t.TransactionType == CashTransactionType.TransferExpense)
+                    .Where(t => FinancialTransactionPolicy.CashExpenseTypes.Contains(t.TransactionType))
                     .ToListAsync();
 
                 var salesOrders = await context.SalesOrders.ToListAsync();
+                var salesReturns = await context.SalesReturns.AsNoTracking().ToListAsync();
 
                 // --- KPI Consolidation ---
                 var projectRevenue = projects.Sum(p => p.TotalCost + p.TotalProfit);
-                var posRevenue = salesOrders.Sum(s => s.TotalAmount);
+                var posRevenue = salesOrders.Sum(s => s.TotalAmount) - salesReturns.Sum(item => item.TotalAmount);
                 TotalRevenue = projectRevenue + posRevenue;
 
                 var projectCost = projects.Sum(p => p.TotalCost);
@@ -97,9 +99,10 @@ namespace KamatekCrm.ViewModels
                 {
                     var monthlyProjects = projects.Where(p => p.CreatedDate.Month == date.Month && p.CreatedDate.Year == date.Year).ToList();
                     var monthlySales = salesOrders.Where(s => s.Date.Month == date.Month && s.Date.Year == date.Year).ToList();
+                    var monthlyReturns = salesReturns.Where(s => s.Date.Month == date.Month && s.Date.Year == date.Year).ToList();
                     var monthlyExp = cashTransactions.Where(t => t.Date.Month == date.Month && t.Date.Year == date.Year).ToList();
 
-                    var mRev = monthlyProjects.Sum(p => p.TotalCost + p.TotalProfit) + monthlySales.Sum(s => s.TotalAmount);
+                    var mRev = monthlyProjects.Sum(p => p.TotalCost + p.TotalProfit) + monthlySales.Sum(s => s.TotalAmount) - monthlyReturns.Sum(s => s.TotalAmount);
                     var mCost = monthlyProjects.Sum(p => p.TotalCost) + monthlyExp.Sum(t => t.Amount);
 
                     revenueValues.Add(mRev);

@@ -25,6 +25,7 @@ namespace KamatekCrm.ViewModels
         private readonly ILoadingService _loadingService;
         private readonly SmsService _smsService;
         private readonly IServiceJobCommandService _serviceJobCommandService;
+        private readonly PdfService _pdfService;
 
         public RepairViewModel(
             IAuthService authService,
@@ -32,7 +33,8 @@ namespace KamatekCrm.ViewModels
             IToastService toastService,
             ILoadingService loadingService,
             SmsService smsService,
-            IServiceJobCommandService serviceJobCommandService)
+            IServiceJobCommandService serviceJobCommandService,
+            PdfService pdfService)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
@@ -40,6 +42,7 @@ namespace KamatekCrm.ViewModels
             _loadingService = loadingService;
             _smsService = smsService;
             _serviceJobCommandService = serviceJobCommandService;
+            _pdfService = pdfService;
             
             // Komutlar
             
@@ -725,8 +728,7 @@ namespace KamatekCrm.ViewModels
                 if (saveDialog.ShowDialog() == true)
                 {
                     // Tam data (Items yüklü olmalı)
-                    var pdfService = new PdfService();
-                    pdfService.GenerateServiceForm(SelectedJob, saveDialog.FileName);
+                    _pdfService.GenerateServiceForm(SelectedJob, saveDialog.FileName);
 
                      var processInfo = new System.Diagnostics.ProcessStartInfo
                     {

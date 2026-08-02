@@ -8,6 +8,7 @@ namespace KamatekCrm.Shared.Models
     {
         public int Id { get; set; }
         public int? CustomerId { get; set; }
+        public int? WarehouseId { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
         /// <summary>
         /// İstemcinin bir satış denemesi için ürettiği benzersiz anahtar.
@@ -35,6 +36,7 @@ namespace KamatekCrm.Shared.Models
         public int PrintCount { get; set; }
         
         public virtual Customer? Customer { get; set; }
+        public virtual Warehouse? Warehouse { get; set; }
         public virtual System.Collections.Generic.ICollection<SalesOrderItem> Items { get; set; } = new System.Collections.Generic.List<SalesOrderItem>();
         public virtual System.Collections.Generic.ICollection<SalesOrderPayment> Payments { get; set; } = new System.Collections.Generic.List<SalesOrderPayment>();
     }
@@ -76,6 +78,9 @@ namespace KamatekCrm.Shared.Models
         public DateTime Date { get; set; }
         public TransactionType Type { get; set; }
         public string Description { get; set; } = string.Empty;
+        public int? SalesOrderId { get; set; }
+        public int? SalesReturnId { get; set; }
+        public string? ReconciliationKey { get; set; }
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer? Customer { get; set; }
     }
@@ -94,13 +99,15 @@ namespace KamatekCrm.Shared.Models
         public string CreatedBy { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public int? CustomerId { get; set; }
+        public int? SalesReturnId { get; set; }
+        public int? PurchaseReturnId { get; set; }
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer? Customer { get; set; }
 
         [NotMapped]
-        public bool IsIncome => TransactionType == CashTransactionType.Income;
+        public bool IsIncome => TransactionType is CashTransactionType.Income or CashTransactionType.CashIncome or CashTransactionType.CardIncome or CashTransactionType.TransferIncome;
 
         [NotMapped]
-        public bool IsExpense => TransactionType == CashTransactionType.Expense;
+        public bool IsExpense => TransactionType is CashTransactionType.Expense or CashTransactionType.CashExpense or CashTransactionType.CardExpense or CashTransactionType.TransferExpense;
     }
 }

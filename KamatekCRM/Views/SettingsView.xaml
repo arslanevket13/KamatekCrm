@@ -372,6 +372,25 @@
                                     </StackPanel>
                                 </Grid>
                             </Border>
+
+                            <Border Padding="16" CornerRadius="10" Margin="0,0,0,20" Background="{DynamicResource SurfacePageBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="Eski Cari Satış Uzlaştırması" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                    <TextBlock Text="Eski veresiye satışlarda tahsilat gibi kaydedilmiş hareketleri bulur. Önizleme yazmaz; uygulama eski kaydı değiştirmeden benzersiz telafi hareketi ekler." TextWrapping="Wrap" Margin="0,5,0,10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding LegacyLedgerSummary}" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,8"/>
+                                    <DataGrid ItemsSource="{Binding LegacyLedgerIssues}" AutoGenerateColumns="False" IsReadOnly="True" MaxHeight="180" Style="{StaticResource ModernDataGrid}" Margin="0,0,0,10">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Fiş" Binding="{Binding OrderNumber}" Width="130"/>
+                                            <DataGridTextColumn Header="Müşteri" Binding="{Binding CustomerName}" Width="*"/>
+                                            <DataGridTextColumn Header="Bakiye Farkı" Binding="{Binding OnAccountAmount, StringFormat=C}" Width="110"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <ui:Button Content="Salt Okunur Önizleme" Command="{Binding PreviewLegacyLedgerCommand}" Appearance="Secondary" Margin="0,0,8,0"/>
+                                        <ui:Button Content="Düzeltmeleri Uygula" Command="{Binding ApplyLegacyLedgerCorrectionsCommand}" Appearance="Primary"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <!-- TAB 3: YAZICI & BILDIRIMLER -->

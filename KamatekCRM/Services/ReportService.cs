@@ -7,6 +7,7 @@ using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
+using KamatekCrm.ApplicationCore.Services;
 
 namespace KamatekCrm.Services
 {
@@ -17,13 +18,16 @@ namespace KamatekCrm.Services
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IPersonalDataProtectionService _personalDataProtection;
+        private readonly IAuditTrailService _auditTrail;
 
         public ReportService(
             IDbContextFactory<AppDbContext> dbContextFactory,
-            IPersonalDataProtectionService personalDataProtection)
+            IPersonalDataProtectionService personalDataProtection,
+            IAuditTrailService auditTrail)
         {
             _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
             _personalDataProtection = personalDataProtection;
+            _auditTrail = auditTrail;
         }
 
         /// <summary>
@@ -48,21 +52,31 @@ namespace KamatekCrm.Services
                 query = query.Where(s => s.Date <= endDate.Value);
 
             var sales = query.ToList();
-            var grouped = sales.GroupBy(s => s.Date.Date).OrderBy(g => g.Key);
+            var returnsQuery = context.SalesReturns.AsQueryable();
+            if (startDate.HasValue)
+                returnsQuery = returnsQuery.Where(item => item.Date >= startDate.Value);
+            if (endDate.HasValue)
+                returnsQuery = returnsQuery.Where(item => item.Date <= endDate.Value);
+            var returns = returnsQuery.ToList();
+            var grouped = sales.Select(item => new { Date = item.Date.Date, Amount = item.TotalAmount, Count = 1 })
+                .Concat(returns.Select(item => new { Date = item.Date.Date, Amount = -item.TotalAmount, Count = 0 }))
+                .GroupBy(item => item.Date)
+                .OrderBy(group => group.Key);
 
             foreach (var group in grouped)
             {
-                var total = group.Sum(s => (decimal)s.TotalAmount);
+                var total = group.Sum(item => item.Amount);
+                var saleCount = group.Sum(item => item.Count);
                 result.Rows.Add(new Dictionary<string, object>
                 {
                     { "Tarih", group.Key.ToString("dd.MM.yyyy") },
-                    { "Satış Sayısı", group.Count() },
+                    { "Satış Sayısı", saleCount },
                     { "Toplam Tutar", total },
-                    { "Ortalama", group.Count() > 0 ? total / group.Count() : 0 }
+                    { "Ortalama", saleCount > 0 ? total / saleCount : 0 }
                 });
             }
 
-            result.TotalAmount = sales.Sum(s => (decimal)s.TotalAmount);
+            result.TotalAmount = sales.Sum(s => s.TotalAmount) - returns.Sum(item => item.TotalAmount);
             result.TotalCount = sales.Count;
             result.Summary = new Dictionary<string, decimal>
             {
@@ -78,7 +92,7 @@ namespace KamatekCrm.Services
         /// </summary>
         public ReportResult GetCustomerListReport()
         {
-            _ = AuditService.LogAsync(
+            WriteAudit(
                 AuditActionType.View,
                 "CustomerReport",
                 description: "Müşteri listesi raporu oluşturuldu; kişisel veri alanları rol politikasına göre işlendi.");
@@ -208,7 +222,7 @@ namespace KamatekCrm.Services
         /// </summary>
         public ReportResult GetTopCustomersReport(int topN = 10)
         {
-            _ = AuditService.LogAsync(
+            WriteAudit(
                 AuditActionType.View,
                 "CustomerReport",
                 description: "En değerli müşteriler raporu oluşturuldu; kişisel veri alanları rol politikasına göre işlendi.");
@@ -271,14 +285,11 @@ namespace KamatekCrm.Services
             var transactions = query.ToList();
 
             var income = transactions
-                .Where(t => t.TransactionType == CashTransactionType.CashIncome || 
-                           t.TransactionType == CashTransactionType.CardIncome ||
-                           t.TransactionType == CashTransactionType.TransferIncome)
+                .Where(t => FinancialTransactionPolicy.IsCashIncome(t.TransactionType))
                 .Sum(t => t.Amount);
 
             var expense = transactions
-                .Where(t => t.TransactionType == CashTransactionType.CashExpense ||
-                           t.TransactionType == CashTransactionType.CardExpense)
+                .Where(t => FinancialTransactionPolicy.IsCashExpense(t.TransactionType))
                 .Sum(t => t.Amount);
 
             result.Rows.Add(new Dictionary<string, object> { { "Kalem", "Gelirler" }, { "Tutar", income } });
@@ -310,6 +321,17 @@ namespace KamatekCrm.Services
             }
 
             return System.Text.Encoding.UTF8.GetBytes(csv);
+        }
+
+        private void WriteAudit(
+            AuditActionType action,
+            string entity,
+            string? recordId = null,
+            string? description = null)
+        {
+            var result = _auditTrail.WriteAsync(action, entity, recordId, description).GetAwaiter().GetResult();
+            if (result.IsFailure)
+                System.Diagnostics.Debug.WriteLine(result.Error);
         }
     }
 }

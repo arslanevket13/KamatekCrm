@@ -17,6 +17,7 @@ using KamatekCrm.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using KamatekCrm.Views;
+using KamatekCrm.ApplicationCore.Services;
 
 namespace KamatekCrm.ViewModels
 {
@@ -288,6 +289,7 @@ namespace KamatekCrm.ViewModels
         #endregion
 
         private readonly IServiceProvider? _serviceProvider;
+        private readonly IQuotationLauncher? _quotationLauncher;
 
         /// <summary>
         /// Constructor
@@ -298,13 +300,15 @@ namespace KamatekCrm.ViewModels
             ILoadingService loadingService, 
             IToastService toastService, 
             IDatabaseConnectionProvider connectionProvider,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            IQuotationLauncher quotationLauncher)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
             _loadingService = loadingService;
             _toastService = toastService;
             _serviceProvider = serviceProvider;
+            _quotationLauncher = quotationLauncher;
             
             // Eğer bağlantı zaten varsa direkt yükle
             if (connectionProvider.IsConnected)
@@ -340,6 +344,7 @@ namespace KamatekCrm.ViewModels
             _loadingService = null!;
             _toastService = null!;
             _serviceProvider = null;
+            _quotationLauncher = null;
             LowStockProducts = new ObservableCollection<LowStockItemDto>();
             TodaysJobs = new ObservableCollection<TodayJobItemDto>();
             ReadyToDeliverRepairs = new ObservableCollection<ReadyRepairItemDto>();
@@ -387,10 +392,10 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void OpenQuotation()
+        private async Task OpenQuotation()
         {
-            var window = new Views.QuotationWindow();
-            window.Show();
+            if (_quotationLauncher is not null)
+                await _quotationLauncher.ShowAsync(modal: false);
         }
 
         #endregion
@@ -467,11 +472,11 @@ namespace KamatekCrm.ViewModels
                 
                 // 4. Financials
                 DailyIncome = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date == today && c.TransactionType == CashTransactionType.CashIncome), c => c.Amount);
+                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date == today && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
                 DailyExpense = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date == today && c.TransactionType == CashTransactionType.CashExpense), c => c.Amount);
+                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date == today && FinancialTransactionPolicy.CashExpenseTypes.Contains(c.TransactionType)), c => c.Amount);
                 MonthlySalesTotal = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date >= startOfMonth && c.TransactionType == CashTransactionType.CashIncome), c => c.Amount);
+                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date >= startOfMonth && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
                 MonthlySalesCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
                     System.Linq.Queryable.Where(context.ServiceJobs, j => j.CreatedDate >= startOfMonth));
                 MonthlyJobsCompleted = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
@@ -491,7 +496,7 @@ namespace KamatekCrm.ViewModels
                 TodaySalesTotal = DailyIncome;
                 TodaySalesCount = TodaysJobsCount;
                 WeekSalesTotal = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date >= startOfWeek && c.TransactionType == CashTransactionType.CashIncome), c => c.Amount);
+                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date >= startOfWeek && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
                 AverageSaleAmount = MonthlySalesCount > 0 ? MonthlySalesTotal / MonthlySalesCount : 0;
                 
                 // 7. 7-Day Trend Chart Population
@@ -502,7 +507,7 @@ namespace KamatekCrm.ViewModels
                 var incomeByDate = await context.CashTransactions
                     .Where(c => c.Date >= trendStartDate &&
                                 c.Date < trendEndDate &&
-                                c.TransactionType == CashTransactionType.CashIncome)
+                                FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType))
                     .GroupBy(c => c.Date.Date)
                     .Select(group => new { Date = group.Key, Total = group.Sum(item => item.Amount) })
                     .ToDictionaryAsync(item => item.Date, item => item.Total);

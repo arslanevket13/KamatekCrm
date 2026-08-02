@@ -44,6 +44,20 @@ namespace KamatekCrm.Services
             return Task.FromResult(result);
         }
 
+        public Task<string?> ShowInputAsync(string message, string title = "Bilgi Girişi", string? defaultValue = null)
+        {
+            string? result = null;
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                var value = Microsoft.VisualBasic.Interaction.InputBox(
+                    message,
+                    title,
+                    defaultValue ?? string.Empty);
+                result = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            });
+            return Task.FromResult(result);
+        }
+
         public Task<string?> ShowOpenFileDialogAsync(string title = "Dosya Seç", string filter = "Tüm Dosyalar (*.*)|*.*")
         {
             string? filePath = null;
@@ -60,6 +74,25 @@ namespace KamatekCrm.Services
                 }
             });
             return Task.FromResult(filePath);
+        }
+
+        public Task<IReadOnlyList<string>> ShowOpenFilesDialogAsync(string title = "Dosya Seç", string filter = "Tüm Dosyalar (*.*)|*.*")
+        {
+            IReadOnlyList<string> filePaths = Array.Empty<string>();
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                var dialog = new OpenFileDialog
+                {
+                    Title = title,
+                    Filter = filter,
+                    Multiselect = true
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    filePaths = dialog.FileNames;
+                }
+            });
+            return Task.FromResult(filePaths);
         }
 
         public Task<string?> ShowSaveFileDialogAsync(string title = "Dosya Kaydet", string filter = "Tüm Dosyalar (*.*)|*.*", string? defaultFileName = null)

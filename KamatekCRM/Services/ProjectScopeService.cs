@@ -3,20 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.Services
 {
     /// <summary>
     /// Proje kapsam ağacı serileştirme/deserileştirme servisi
     /// </summary>
-    public class ProjectScopeService
+    public static class ProjectScopeService
     {
-        private readonly AppDbContext _context;
-
         private static readonly JsonSerializerOptions _jsonOptions = new()
         {
             WriteIndented = false,
@@ -24,11 +20,6 @@ namespace KamatekCrm.Services
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             ReferenceHandler = ReferenceHandler.IgnoreCycles
         };
-
-        public ProjectScopeService(AppDbContext context)
-        {
-            _context = context;
-        }
 
         /// <summary>
         /// ScopeNode ağacını JSON string'e dönüştür
@@ -65,71 +56,6 @@ namespace KamatekCrm.Services
             }
 
             return new List<ScopeNode>();
-        }
-
-        /// <summary>
-        /// Projeyi veritabanına kaydet
-        /// </summary>
-        public void SaveProject(ServiceProject project, List<ScopeNode> rootNodes)
-        {
-            // JSON serialize
-            project.ProjectScopeJson = Serialize(rootNodes);
-
-            // Finansal toplamları hesapla
-            decimal totalRevenue = 0;
-            decimal totalCost = 0;
-
-            foreach (var node in rootNodes)
-            {
-                totalRevenue += node.RecursiveTotal;
-                totalCost += node.RecursiveTotalCost;
-            }
-
-            project.TotalBudget = totalRevenue;
-            project.TotalCost = totalCost;
-            project.TotalProfit = totalRevenue - totalCost;
-
-            // İskonto uygula
-            if (project.DiscountPercent > 0)
-            {
-                var discountAmount = totalRevenue * (project.DiscountPercent / 100);
-                project.TotalBudget -= discountAmount;
-                project.TotalProfit -= discountAmount;
-            }
-
-            if (project.Id == 0)
-            {
-                // Yeni proje - kod oluştur
-                var year = DateTime.Now.Year;
-                var count = _context.ServiceProjects.Count(p => p.CreatedDate.Year == year) + 1;
-                project.ProjectCode = $"PRJ-{year}-{count:D3}";
-                project.CreatedDate = DateTime.Now;
-
-                _context.ServiceProjects.Add(project);
-            }
-            else
-            {
-                // Mevcut projeyi güncelle
-                _context.ServiceProjects.Update(project);
-            }
-
-            _context.SaveChanges();
-        }
-
-        /// <summary>
-        /// Projeyi veritabanından yükle
-        /// </summary>
-        public (ServiceProject? project, List<ScopeNode> nodes) LoadProject(int projectId)
-        {
-            var project = _context.ServiceProjects
-                .Include(p => p.Customer)
-                .FirstOrDefault(p => p.Id == projectId);
-
-            if (project == null)
-                return (null, new List<ScopeNode>());
-
-            var nodes = Deserialize(project.ProjectScopeJson);
-            return (project, nodes);
         }
 
         /// <summary>

@@ -159,14 +159,10 @@
                             Height="38" VerticalAlignment="Center"/>
 
                 <ComboBox Grid.Column="2" 
-                          SelectedValuePath="Content" SelectedValue="{Binding SelectedStatusFilter}"
-                          Style="{StaticResource ModernComboBox}" Height="38">
-                    <ComboBoxItem Content="Tümü"/>
-                    <ComboBoxItem Content="Bekliyor"/>
-                    <ComboBoxItem Content="Devam Ediyor"/>
-                    <ComboBoxItem Content="Tamamlandı"/>
-                    <ComboBoxItem Content="İptal Edildi"/>
-                </ComboBox>
+                          ItemsSource="{Binding StatusFilters}"
+                          DisplayMemberPath="Label"
+                          SelectedValuePath="Value" SelectedValue="{Binding SelectedStatusFilter}"
+                          Style="{StaticResource ModernComboBox}" Height="38"/>
             </Grid>
         </Border>
 
@@ -183,7 +179,7 @@
                       GridLinesVisibility="Horizontal">
                 
                 <DataGrid.ContextMenu>
-                    <ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                         <MenuItem Header="📋 Detay Göster" Command="{Binding ViewJobDetailCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
                         <MenuItem Header="✏️ İşi Düzenle" Command="{Binding EditJobCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
                         <Separator/>
@@ -243,13 +239,13 @@
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="#26FF9800"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="Devam Ediyor">
+                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="🔵 Devam Ediyor">
                                                     <Setter Property="Background" Value="#262196F3"/>
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="Tamamlandı">
+                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="✅ Tamamlandı">
                                                     <Setter Property="Background" Value="#264CAF50"/>
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="İptal">
+                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="❌ İptal">
                                                     <Setter Property="Background" Value="#26F44336"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -270,11 +266,14 @@
                                         <Style TargetType="Border">
                                             <Setter Property="Background" Value="#264CAF50"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding PriorityDisplay}" Value="🔥 Acil">
-                                                    <Setter Property="Background" Value="#26F44336"/>
+                                                <DataTrigger Binding="{Binding PriorityDisplay}" Value="🔵 Normal">
+                                                    <Setter Property="Background" Value="#262196F3"/>
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding PriorityDisplay}" Value="⚡ Yüksek">
+                                                <DataTrigger Binding="{Binding PriorityDisplay}" Value="🟠 Acil">
                                                     <Setter Property="Background" Value="#26FF9800"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding PriorityDisplay}" Value="🔴 Kritik">
+                                                    <Setter Property="Background" Value="#26F44336"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>

@@ -1,487 +1,476 @@
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Windows;
 using System.Windows.Data;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
-using KamatekCrm.Infrastructure.Data;
+using KamatekCrm.ApplicationCore.DTOs.ProjectQuotes;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Services;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Models;
-using KamatekCrm.Views;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using KamatekCrm.Shared.Services;
 
-namespace KamatekCrm.ViewModels
+namespace KamatekCrm.ViewModels;
+
+/// <summary>
+/// Proje teklifleri için liste, yaşam döngüsü ve belge orkestrasyonu.
+/// Veri erişimi ve iş kuralları Application servislerindedir.
+/// </summary>
+public partial class QuoteListViewModel : ViewModelBase
 {
-    /// <summary>
-    /// Teklif Listesi ViewModel — Tüm tekliflerin listelenmesi, filtrelenmesi, yönetilmesi
-    /// </summary>
-    public partial class QuoteListViewModel : ViewModelBase
+    private readonly IProjectQuoteReadService _readService;
+    private readonly IProjectQuoteCommandService _commandService;
+    private readonly IProjectQuoteEditorLauncher _editorLauncher;
+    private readonly IDialogService _dialogService;
+    private readonly IToastService _toastService;
+    private readonly PdfService _pdfService;
+    private readonly Dictionary<string, Guid> _operationKeys = new(StringComparer.Ordinal);
+
+    public ObservableCollection<ProjectQuoteListItemDto> Quotes { get; } = [];
+
+    private ICollectionView? _quotesView;
+    public ICollectionView? QuotesView
     {
-        private readonly AppDbContext _context;
-        private readonly IServiceProvider _serviceProvider;
-
-        #region Properties
-
-        public ObservableCollection<ServiceProject> Quotes { get; } = new();
-
-        private ICollectionView? _quotesView;
-        public ICollectionView? QuotesView
-        {
-            get => _quotesView;
-            private set => SetProperty(ref _quotesView, value);
-        }
-
-        private ServiceProject? _selectedQuote;
-        public ServiceProject? SelectedQuote
-        {
-            get => _selectedQuote;
-            set
-            {
-                if (SetProperty(ref _selectedQuote, value))
-                {
-                    OnPropertyChanged(nameof(HasSelectedQuote));
-                }
-            }
-        }
-
-        public bool HasSelectedQuote => SelectedQuote != null;
-
-        private string _searchText = string.Empty;
-        public string SearchText
-        {
-            get => _searchText;
-            set
-            {
-                if (SetProperty(ref _searchText, value))
-                {
-                    QuotesView?.Refresh();
-                }
-            }
-        }
-
-        private QuoteStatus? _statusFilter;
-        public QuoteStatus? StatusFilter
-        {
-            get => _statusFilter;
-            set
-            {
-                if (SetProperty(ref _statusFilter, value))
-                {
-                    QuotesView?.Refresh();
-                    OnPropertyChanged(nameof(StatusFilterDisplay));
-                }
-            }
-        }
-
-        public string StatusFilterDisplay => StatusFilter switch
-        {
-            QuoteStatus.Draft => "📝 Taslak",
-            QuoteStatus.Sent => "📨 Gönderildi",
-            QuoteStatus.Approved => "✅ Onaylandı",
-            QuoteStatus.Rejected => "❌ Reddedildi",
-            QuoteStatus.Expired => "⏰ Süresi Doldu",
-            QuoteStatus.Revised => "🔄 Revize",
-            _ => "Tümü"
-        };
-
-        // KPI properties
-        public int TotalQuoteCount => Quotes.Count;
-        public int DraftCount => Quotes.Count(q => q.QuoteStatus == QuoteStatus.Draft);
-        public int SentCount => Quotes.Count(q => q.QuoteStatus == QuoteStatus.Sent);
-        public int ApprovedCount => Quotes.Count(q => q.QuoteStatus == QuoteStatus.Approved);
-        public int RejectedCount => Quotes.Count(q => q.QuoteStatus == QuoteStatus.Rejected);
-        public decimal TotalApprovedAmount => Quotes.Where(q => q.QuoteStatus == QuoteStatus.Approved).Sum(q => q.TotalBudget);
-        public decimal TotalPendingAmount => Quotes.Where(q => q.QuoteStatus == QuoteStatus.Sent).Sum(q => q.TotalBudget);
-
-        public string TotalApprovedAmountDisplay => $"₺{TotalApprovedAmount:N0}";
-        public string TotalPendingAmountDisplay => $"₺{TotalPendingAmount:N0}";
-
-        private string _statusMessage = string.Empty;
-        public string StatusMessage
-        {
-            get => _statusMessage;
-            set => SetProperty(ref _statusMessage, value);
-        }
-
-        private bool _isActionSuccessful;
-        public bool IsActionSuccessful
-        {
-            get => _isActionSuccessful;
-            set => SetProperty(ref _isActionSuccessful, value);
-        }
-
-        #endregion
-
-        #region Commands
-
-        [RelayCommand]
-        private void FilterAll() => StatusFilter = null;
-
-        [RelayCommand]
-        private void FilterDraft() => StatusFilter = QuoteStatus.Draft;
-
-        [RelayCommand]
-        private void FilterSent() => StatusFilter = QuoteStatus.Sent;
-
-        [RelayCommand]
-        private void FilterApproved() => StatusFilter = QuoteStatus.Approved;
-
-        [RelayCommand]
-        private void FilterRejected() => StatusFilter = QuoteStatus.Rejected;
-
-        #endregion
-
-        #region Constructor
-
-        public QuoteListViewModel(AppDbContext context, IServiceProvider serviceProvider)
-        {
-            _context = context;
-            _serviceProvider = serviceProvider;
-
-            Refresh();
-        }
-
-        #endregion
-
-        #region Data Loading
-
-        [RelayCommand]
-        private void Refresh()
-        {
-            try
-            {
-                var quotes = _context.ServiceProjects
-                    .Include(p => p.Customer)
-                    .OrderByDescending(p => p.CreatedDate)
-                    .ToList();
-
-                Quotes.Clear();
-                foreach (var q in quotes)
-                    Quotes.Add(q);
-
-                // Setup CollectionView with filter
-                QuotesView = CollectionViewSource.GetDefaultView(Quotes);
-                QuotesView.Filter = FilterQuotes;
-
-                NotifyKpiChanged();
-
-                StatusMessage = $"{Quotes.Count} teklif yüklendi.";
-                IsActionSuccessful = true;
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Teklifler yüklenirken hata: {ex.Message}";
-                IsActionSuccessful = false;
-            }
-        }
-
-        private bool FilterQuotes(object obj)
-        {
-            if (obj is not ServiceProject quote) return false;
-
-            // Status filter
-            if (StatusFilter.HasValue && quote.QuoteStatus != StatusFilter.Value)
-                return false;
-
-            // Text search
-            if (!string.IsNullOrWhiteSpace(SearchText))
-            {
-                var search = SearchText.ToLowerInvariant();
-                return (quote.Title?.ToLowerInvariant().Contains(search) ?? false)
-                    || (quote.ProjectCode?.ToLowerInvariant().Contains(search) ?? false)
-                    || (quote.Customer?.FullName?.ToLowerInvariant().Contains(search) ?? false)
-                    || (quote.QuoteNumber?.ToLowerInvariant().Contains(search) ?? false);
-            }
-
-            return true;
-        }
-
-        #endregion
-
-        #region Quote Operations
-
-        [RelayCommand]
-        private void NewQuote()
-        {
-            try
-            {
-                var window = _serviceProvider.GetRequiredService<ProjectQuoteEditorWindow>();
-                window.ShowDialog();
-                Refresh(); // Refresh after close
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Yeni teklif açılamadı: {ex.Message}";
-                IsActionSuccessful = false;
-            }
-        }
-
-        [RelayCommand]
-        private void EditQuote()
-        {
-            if (SelectedQuote == null) return;
-
-            try
-            {
-                var window = _serviceProvider.GetRequiredService<ProjectQuoteEditorWindow>();
-                if (window.DataContext is ProjectQuoteEditorViewModel vm)
-                {
-                    vm.LoadExistingProject(SelectedQuote.Id);
-                }
-                window.ShowDialog();
-                Refresh(); // Refresh after close
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Teklif düzenlenemedi: {ex.Message}";
-                IsActionSuccessful = false;
-            }
-        }
-
-        [RelayCommand]
-        private void DuplicateQuote()
-        {
-            if (SelectedQuote == null) return;
-
-            var result = MessageBox.Show(
-                $"'{SelectedQuote.Title}' teklifinin bir kopyası oluşturulacak. Devam edilsin mi?",
-                "Teklifi Kopyala",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (result != MessageBoxResult.Yes) return;
-
-            try
-            {
-                var year = DateTime.UtcNow.Year;
-                var count = _context.ServiceProjects.Count(p => p.CreatedDate.Year == year) + 1;
-
-                var copy = new ServiceProject
-                {
-                    Title = $"{SelectedQuote.Title} (Kopya)",
-                    Name = SelectedQuote.Name,
-                    CustomerId = SelectedQuote.CustomerId,
-                    ProjectCode = $"PRJ-{year}-{count:D3}",
-                    ProjectScopeJson = SelectedQuote.ProjectScopeJson,
-                    TotalBudget = SelectedQuote.TotalBudget,
-                    TotalCost = SelectedQuote.TotalCost,
-                    TotalProfit = SelectedQuote.TotalProfit,
-                    DiscountPercent = SelectedQuote.DiscountPercent,
-                    CreatedDate = DateTime.UtcNow,
-                    QuoteStatus = QuoteStatus.Draft,
-                    RevisionNumber = 1,
-                    KdvRate = SelectedQuote.KdvRate,
-                    TotalUnitCount = SelectedQuote.TotalUnitCount,
-                    SurveyNotes = SelectedQuote.SurveyNotes,
-                    Notes = SelectedQuote.Notes,
-                    PaymentTerms = SelectedQuote.PaymentTerms
-                };
-
-                // Generate quote number
-                var quoteCount = _context.ServiceProjects.Count(p => p.QuoteNumber != null) + 1;
-                copy.QuoteNumber = $"TEK-{year}-{quoteCount:D3}";
-
-                _context.ServiceProjects.Add(copy);
-                _context.SaveChanges();
-
-                Refresh();
-                StatusMessage = $"Teklif kopyalandı: {copy.ProjectCode}";
-                IsActionSuccessful = true;
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Kopyalama hatası: {ex.Message}";
-                IsActionSuccessful = false;
-            }
-        }
-
-        [RelayCommand]
-        private void DeleteQuote()
-        {
-            if (SelectedQuote == null) return;
-
-            var result = MessageBox.Show(
-                $"'{SelectedQuote.Title}' teklifi kalıcı olarak silinecek.\n\nBu işlem geri alınamaz. Devam edilsin mi?",
-                "Teklifi Sil",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (result != MessageBoxResult.Yes) return;
-
-            try
-            {
-                _context.ServiceProjects.Remove(SelectedQuote);
-                _context.SaveChanges();
-
-                Refresh();
-                StatusMessage = "Teklif silindi.";
-                IsActionSuccessful = true;
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Silme hatası: {ex.Message}";
-                IsActionSuccessful = false;
-            }
-        }
-
-        [RelayCommand]
-        private void ExportPdf()
-        {
-            if (SelectedQuote == null) return;
-
-            try
-            {
-                var scopeNodes = ProjectScopeService.Deserialize(SelectedQuote.ProjectScopeJson);
-
-                var dialog = new Microsoft.Win32.SaveFileDialog
-                {
-                    FileName = $"Teklif_{SelectedQuote.Title}_{DateTime.UtcNow:yyyyMMdd}",
-                    DefaultExt = ".pdf",
-                    Filter = "PDF Belgeleri (.pdf)|*.pdf"
-                };
-
-                if (dialog.ShowDialog() != true) return;
-
-                // Ensure customer is loaded
-                if (SelectedQuote.Customer == null)
-                {
-                    SelectedQuote.Customer = _context.Customers.Find(SelectedQuote.CustomerId);
-                }
-
-                var pdfService = new PdfService();
-                pdfService.GenerateProjectQuote(SelectedQuote, scopeNodes, dialog.FileName);
-
-                var openResult = MessageBox.Show(
-                    "PDF başarıyla oluşturuldu. Dosyayı açmak ister misiniz?",
-                    "Başarılı",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (openResult == MessageBoxResult.Yes)
-                {
-                    new System.Diagnostics.Process
-                    {
-                        StartInfo = new System.Diagnostics.ProcessStartInfo(dialog.FileName) { UseShellExecute = true }
-                    }.Start();
-                }
-
-                StatusMessage = "PDF oluşturuldu.";
-                IsActionSuccessful = true;
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"PDF hatası: {ex.Message}";
-                IsActionSuccessful = false;
-            }
-        }
-
-        [RelayCommand]
-        private void MarkAsSent(QuoteStatus newStatus)
-        {
-            if (SelectedQuote == null) return;
-
-            var statusName = newStatus switch
-            {
-                QuoteStatus.Sent => "Gönderildi",
-                QuoteStatus.Approved => "Onaylandı",
-                QuoteStatus.Rejected => "Reddedildi",
-                _ => newStatus.ToString()
-            };
-
-            string? rejectionReason = null;
-            if (newStatus == QuoteStatus.Rejected)
-            {
-                rejectionReason = "Müşteri Tarafından Reddedildi";
-            }
-
-            try
-            {
-                var dbProject = _context.ServiceProjects.Find(SelectedQuote.Id);
-                if (dbProject == null) return;
-
-                dbProject.QuoteStatus = newStatus;
-
-                switch (newStatus)
-                {
-                    case QuoteStatus.Sent:
-                        dbProject.SentDate = DateTime.UtcNow;
-                        // Geçerlilik süresi: 30 gün
-                        if (dbProject.ValidUntil == null)
-                            dbProject.ValidUntil = DateTime.UtcNow.AddDays(30);
-                        break;
-                    case QuoteStatus.Approved:
-                        dbProject.ApprovedDate = DateTime.UtcNow;
-                        dbProject.PipelineStage = Shared.Enums.PipelineStage.Won;
-                        break;
-                    case QuoteStatus.Rejected:
-                        dbProject.RejectedDate = DateTime.UtcNow;
-                        dbProject.RejectionReason = rejectionReason;
-                        dbProject.PipelineStage = Shared.Enums.PipelineStage.Lost;
-                        break;
-                }
-
-                _context.SaveChanges();
-                Refresh();
-
-                StatusMessage = $"Teklif durumu güncellendi: {statusName}";
-                IsActionSuccessful = true;
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Durum güncelleme hatası: {ex.Message}";
-                IsActionSuccessful = false;
-            }
-        }
-
-        #endregion
-
-        #region Helpers
-
-        private void NotifyKpiChanged()
-        {
-            OnPropertyChanged(nameof(TotalQuoteCount));
-            OnPropertyChanged(nameof(DraftCount));
-            OnPropertyChanged(nameof(SentCount));
-            OnPropertyChanged(nameof(ApprovedCount));
-            OnPropertyChanged(nameof(RejectedCount));
-            OnPropertyChanged(nameof(TotalApprovedAmount));
-            OnPropertyChanged(nameof(TotalPendingAmount));
-            OnPropertyChanged(nameof(TotalApprovedAmountDisplay));
-            OnPropertyChanged(nameof(TotalPendingAmountDisplay));
-        }
-
-        /// <summary>
-        /// Teklif durumuna göre renk döndürür
-        /// </summary>
-        public static string GetStatusColor(QuoteStatus status) => status switch
-        {
-            QuoteStatus.Draft => "#9E9E9E",
-            QuoteStatus.Sent => "#2196F3",
-            QuoteStatus.Approved => "#4CAF50",
-            QuoteStatus.Rejected => "#F44336",
-            QuoteStatus.Expired => "#FF9800",
-            QuoteStatus.Revised => "#9C27B0",
-            _ => "#757575"
-        };
-
-        /// <summary>
-        /// Teklif durumunun Türkçe karşılığını döndürür
-        /// </summary>
-        public static string GetStatusText(QuoteStatus status) => status switch
-        {
-            QuoteStatus.Draft => "Taslak",
-            QuoteStatus.Sent => "Gönderildi",
-            QuoteStatus.Approved => "Onaylandı",
-            QuoteStatus.Rejected => "Reddedildi",
-            QuoteStatus.Expired => "Süresi Doldu",
-            QuoteStatus.Revised => "Revize",
-            _ => "Bilinmiyor"
-        };
-
-        #endregion
+        get => _quotesView;
+        private set => SetProperty(ref _quotesView, value);
     }
-}
 
+    private ProjectQuoteListItemDto? _selectedQuote;
+    public ProjectQuoteListItemDto? SelectedQuote
+    {
+        get => _selectedQuote;
+        set
+        {
+            if (SetProperty(ref _selectedQuote, value))
+                OnPropertyChanged(nameof(HasSelectedQuote));
+        }
+    }
+
+    public bool HasSelectedQuote => SelectedQuote is not null;
+
+    private string _searchText = string.Empty;
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (SetProperty(ref _searchText, value)) QuotesView?.Refresh();
+        }
+    }
+
+    private QuoteStatus? _statusFilter;
+    public QuoteStatus? StatusFilter
+    {
+        get => _statusFilter;
+        set
+        {
+            if (!SetProperty(ref _statusFilter, value)) return;
+            QuotesView?.Refresh();
+            OnPropertyChanged(nameof(StatusFilterDisplay));
+        }
+    }
+
+    public string StatusFilterDisplay => StatusFilter.HasValue
+        ? ProjectQuoteLifecyclePolicy.Display(StatusFilter.Value)
+        : "Tümü";
+
+    public int TotalQuoteCount => Quotes.Count;
+    public int DraftCount => Quotes.Count(quote => quote.QuoteStatus == QuoteStatus.Draft);
+    public int SentCount => Quotes.Count(quote => quote.QuoteStatus == QuoteStatus.Sent);
+    public int ApprovedCount => Quotes.Count(quote => quote.QuoteStatus == QuoteStatus.Approved);
+    public int RejectedCount => Quotes.Count(quote => quote.QuoteStatus == QuoteStatus.Rejected);
+    public decimal TotalApprovedAmount => Quotes
+        .Where(quote => quote.QuoteStatus == QuoteStatus.Approved)
+        .Sum(quote => quote.TotalBudget);
+    public decimal TotalPendingAmount => Quotes
+        .Where(quote => quote.QuoteStatus == QuoteStatus.Sent)
+        .Sum(quote => quote.TotalBudget);
+    public string TotalApprovedAmountDisplay => $"₺{TotalApprovedAmount:N2}";
+    public string TotalPendingAmountDisplay => $"₺{TotalPendingAmount:N2}";
+
+    private string _statusMessage = string.Empty;
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set => SetProperty(ref _statusMessage, value);
+    }
+
+    private bool _isActionSuccessful;
+    public bool IsActionSuccessful
+    {
+        get => _isActionSuccessful;
+        set => SetProperty(ref _isActionSuccessful, value);
+    }
+
+    public QuoteListViewModel(
+        IProjectQuoteReadService readService,
+        IProjectQuoteCommandService commandService,
+        IProjectQuoteEditorLauncher editorLauncher,
+        IDialogService dialogService,
+        IToastService toastService,
+        PdfService pdfService)
+    {
+        _readService = readService;
+        _commandService = commandService;
+        _editorLauncher = editorLauncher;
+        _dialogService = dialogService;
+        _toastService = toastService;
+        _pdfService = pdfService;
+        _ = RefreshAsync();
+    }
+
+    [RelayCommand]
+    private void FilterAll() => StatusFilter = null;
+
+    [RelayCommand]
+    private void FilterDraft() => StatusFilter = QuoteStatus.Draft;
+
+    [RelayCommand]
+    private void FilterSent() => StatusFilter = QuoteStatus.Sent;
+
+    [RelayCommand]
+    private void FilterApproved() => StatusFilter = QuoteStatus.Approved;
+
+    [RelayCommand]
+    private void FilterRejected() => StatusFilter = QuoteStatus.Rejected;
+
+    [RelayCommand]
+    private async Task RefreshAsync()
+    {
+        try
+        {
+            var expiry = await _commandService.ExpireOverdueAsync();
+            if (expiry.IsFailure)
+            {
+                SetFailure(expiry.Error);
+                return;
+            }
+
+            var result = await _readService.GetListAsync();
+            if (result.IsFailure || result.Value is null)
+            {
+                SetFailure(result.Error);
+                return;
+            }
+
+            var selectedId = SelectedQuote?.Id;
+            Quotes.Clear();
+            foreach (var quote in result.Value) Quotes.Add(quote);
+            QuotesView = CollectionViewSource.GetDefaultView(Quotes);
+            QuotesView.Filter = FilterQuotes;
+            SelectedQuote = selectedId.HasValue
+                ? Quotes.FirstOrDefault(quote => quote.Id == selectedId.Value)
+                : null;
+            NotifyKpiChanged();
+            StatusMessage = expiry.Value!.ExpiredCount > 0
+                ? $"{Quotes.Count} teklif yüklendi; {expiry.Value.ExpiredCount} teklifin süresi doldu."
+                : $"{Quotes.Count} teklif yüklendi.";
+            IsActionSuccessful = true;
+        }
+        catch (Exception exception)
+        {
+            SetFailure($"Teklifler yüklenemedi: {exception.Message}");
+        }
+    }
+
+    private bool FilterQuotes(object value)
+    {
+        if (value is not ProjectQuoteListItemDto quote) return false;
+        if (StatusFilter.HasValue && quote.QuoteStatus != StatusFilter.Value) return false;
+        if (string.IsNullOrWhiteSpace(SearchText)) return true;
+
+        var search = SearchText.Trim();
+        return quote.Title.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
+               quote.ProjectCode.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+               quote.CustomerName.Contains(search, StringComparison.CurrentCultureIgnoreCase) ||
+               (quote.QuoteNumber?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    [RelayCommand]
+    private async Task NewQuote()
+    {
+        try
+        {
+            _editorLauncher.ShowNew();
+            await RefreshAsync();
+        }
+        catch (Exception exception)
+        {
+            SetFailure($"Yeni teklif açılamadı: {exception.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task EditQuote()
+    {
+        if (SelectedQuote is null) return;
+        try
+        {
+            _editorLauncher.ShowEdit(SelectedQuote.Id);
+            await RefreshAsync();
+        }
+        catch (Exception exception)
+        {
+            SetFailure($"Teklif düzenlenemedi: {exception.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task DuplicateQuote()
+    {
+        if (SelectedQuote is null) return;
+        if (!await _dialogService.ShowConfirmationAsync(
+                $"'{SelectedQuote.Title}' teklifinden yeni bir taslak oluşturulsun mu?",
+                "Teklifi Kopyala")) return;
+
+        var operationName = $"{SelectedQuote.Id}:duplicate";
+        var result = await _commandService.DuplicateAsync(new DuplicateProjectQuoteCommand(
+            OperationKey(operationName), SelectedQuote.Id, SelectedQuote.RevisionNumber));
+        if (result.IsFailure || result.Value is null)
+        {
+            SetFailure(result.Error);
+            return;
+        }
+
+        CompleteOperation(operationName);
+        _toastService.ShowSuccess($"Taslak oluşturuldu: {result.Value.QuoteNumber}");
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task DeleteQuote()
+    {
+        if (SelectedQuote is null) return;
+        if (!await _dialogService.ShowConfirmationAsync(
+                $"'{SelectedQuote.Title}' taslağı silinsin mi? Gönderilmiş teklifler korunur.",
+                "Taslak Teklifi Sil")) return;
+
+        var operationName = $"{SelectedQuote.Id}:delete";
+        var result = await _commandService.DeleteDraftAsync(new DeleteProjectQuoteCommand(
+            OperationKey(operationName), SelectedQuote.Id, SelectedQuote.RevisionNumber,
+            SelectedQuote.QuoteStatus));
+        if (result.IsFailure)
+        {
+            SetFailure(result.Error);
+            return;
+        }
+
+        CompleteOperation(operationName);
+        _toastService.ShowSuccess("Taslak teklif silindi.");
+        SelectedQuote = null;
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task ExportPdf()
+    {
+        if (SelectedQuote is null) return;
+        var export = await _readService.GetExportAsync(SelectedQuote.Id);
+        if (export.IsFailure || export.Value is null)
+        {
+            SetFailure(export.Error);
+            return;
+        }
+
+        var filePath = await _dialogService.ShowSaveFileDialogAsync(
+            "Proje Teklifini Kaydet",
+            "PDF Belgeleri (.pdf)|*.pdf",
+            $"Teklif_{SanitizeFileName(SelectedQuote.Title)}_{DateTime.UtcNow:yyyyMMdd}.pdf");
+        if (string.IsNullOrWhiteSpace(filePath)) return;
+
+        try
+        {
+            var project = ToProject(export.Value);
+            _pdfService.GenerateProjectQuote(
+                project,
+                ProjectScopeService.Deserialize(project.ProjectScopeJson),
+                filePath);
+            if (await _dialogService.ShowConfirmationAsync(
+                    "PDF oluşturuldu. Şimdi açmak ister misiniz?", "Teklif PDF'i Hazır"))
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath)
+                {
+                    UseShellExecute = true
+                });
+            SetSuccess("PDF oluşturuldu.");
+        }
+        catch (Exception exception)
+        {
+            SetFailure($"PDF oluşturulamadı: {exception.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task MarkAsSent() => await ChangeStatusAsync(
+        QuoteStatus.Sent,
+        null,
+        "Teklif müşteriye gönderildi olarak işaretlenecek ve 30 gün geçerli olacak. Devam edilsin mi?");
+
+    [RelayCommand]
+    private async Task MarkAsApproved() => await ChangeStatusAsync(
+        QuoteStatus.Approved,
+        null,
+        "Müşteri onayı kaydedilecek. Bu işlem teklifi iş emrine dönüştürülebilir hâle getirir. Devam edilsin mi?");
+
+    [RelayCommand]
+    private async Task MarkAsRejected()
+    {
+        if (SelectedQuote is null) return;
+        var reason = await _dialogService.ShowInputAsync(
+            "Müşterinin ret nedenini girin:", "Teklif Reddedildi", "Müşteri tarafından reddedildi");
+        if (string.IsNullOrWhiteSpace(reason)) return;
+        await ChangeStatusAsync(QuoteStatus.Rejected, reason, null);
+    }
+
+    private async Task ChangeStatusAsync(QuoteStatus targetStatus, string? reason, string? confirmation)
+    {
+        if (SelectedQuote is null) return;
+        if (confirmation is not null &&
+            !await _dialogService.ShowConfirmationAsync(confirmation, "Teklif Durumu")) return;
+
+        var operationName = $"{SelectedQuote.Id}:status-{targetStatus}";
+        var result = await _commandService.ChangeStatusAsync(new ChangeProjectQuoteStatusCommand(
+            OperationKey(operationName), SelectedQuote.Id, SelectedQuote.RevisionNumber,
+            SelectedQuote.QuoteStatus, targetStatus, reason));
+        if (result.IsFailure)
+        {
+            SetFailure(result.Error);
+            return;
+        }
+
+        CompleteOperation(operationName);
+        _toastService.ShowSuccess(
+            $"Teklif durumu: {ProjectQuoteLifecyclePolicy.Display(targetStatus)}");
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    private async Task ConvertToWorkOrder()
+    {
+        if (SelectedQuote is null) return;
+        if (!await _dialogService.ShowConfirmationAsync(
+                "Onaylı tekliften kurulum iş emri oluşturulsun mu? Aynı teklif için ikinci iş emri oluşturulmaz.",
+                "İş Emri Oluştur")) return;
+
+        var operationName = $"{SelectedQuote.Id}:work-order";
+        var result = await _commandService.ConvertApprovedToWorkOrderAsync(
+            new ConvertApprovedQuoteToWorkOrderCommand(
+                OperationKey(operationName), SelectedQuote.Id, SelectedQuote.RevisionNumber,
+                SelectedQuote.QuoteStatus));
+        if (result.IsFailure || result.Value is null)
+        {
+            SetFailure(result.Error);
+            return;
+        }
+
+        CompleteOperation(operationName);
+        _toastService.ShowSuccess(result.Value.WasAlreadyApplied
+            ? $"Bu teklifin iş emri zaten mevcut: #{result.Value.WorkOrderId}"
+            : $"Kurulum iş emri oluşturuldu: #{result.Value.WorkOrderId}");
+        await RefreshAsync();
+    }
+
+    private Guid OperationKey(string operation)
+    {
+        if (_operationKeys.TryGetValue(operation, out var key)) return key;
+        key = Guid.NewGuid();
+        _operationKeys[operation] = key;
+        return key;
+    }
+
+    private void CompleteOperation(string operation) => _operationKeys.Remove(operation);
+
+    private void SetSuccess(string message)
+    {
+        StatusMessage = message;
+        IsActionSuccessful = true;
+    }
+
+    private void SetFailure(string message)
+    {
+        StatusMessage = message;
+        IsActionSuccessful = false;
+        _toastService.ShowError(message);
+    }
+
+    private void NotifyKpiChanged()
+    {
+        OnPropertyChanged(nameof(TotalQuoteCount));
+        OnPropertyChanged(nameof(DraftCount));
+        OnPropertyChanged(nameof(SentCount));
+        OnPropertyChanged(nameof(ApprovedCount));
+        OnPropertyChanged(nameof(RejectedCount));
+        OnPropertyChanged(nameof(TotalApprovedAmount));
+        OnPropertyChanged(nameof(TotalPendingAmount));
+        OnPropertyChanged(nameof(TotalApprovedAmountDisplay));
+        OnPropertyChanged(nameof(TotalPendingAmountDisplay));
+    }
+
+    private static ServiceProject ToProject(ProjectQuoteExportDto export)
+    {
+        var source = export.Quote;
+        return new ServiceProject
+        {
+            Id = source.Id,
+            Title = source.Title,
+            Name = source.Title,
+            CustomerId = source.CustomerId,
+            ProjectCode = source.ProjectCode,
+            ProjectScopeJson = source.ProjectScopeJson,
+            TotalBudget = source.TotalBudget,
+            TotalCost = source.TotalCost,
+            TotalProfit = source.TotalProfit,
+            DiscountPercent = source.DiscountPercent,
+            CreatedDate = source.CreatedDate,
+            PipelineStage = source.PipelineStage,
+            Status = source.Status,
+            TotalUnitCount = source.TotalUnitCount,
+            SurveyNotes = source.SurveyNotes,
+            QuoteItemsJson = source.QuoteItemsJson,
+            QuoteNumber = source.QuoteNumber,
+            QuoteStatus = source.QuoteStatus,
+            RevisionNumber = source.RevisionNumber,
+            SentDate = source.SentDate,
+            ValidUntil = source.ValidUntil,
+            ApprovedDate = source.ApprovedDate,
+            RejectedDate = source.RejectedDate,
+            RejectionReason = source.RejectionReason,
+            KdvRate = source.KdvRate,
+            Notes = source.Notes,
+            PaymentTerms = source.PaymentTerms,
+            RevisionsJson = source.RevisionsJson,
+            Customer = export.Customer is null ? null : new Customer
+            {
+                Id = export.Customer.Id,
+                CustomerCode = export.Customer.CustomerCode,
+                FullName = export.Customer.FullName,
+                PhoneNumber = export.Customer.PhoneNumber,
+                Email = export.Customer.Email,
+                City = export.Customer.City,
+                District = export.Customer.District,
+                Neighborhood = export.Customer.Neighborhood,
+                Street = export.Customer.Street,
+                BuildingNo = export.Customer.BuildingNo,
+                ApartmentNo = export.Customer.ApartmentNo
+            }
+        };
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        var invalid = System.IO.Path.GetInvalidFileNameChars();
+        return string.Concat(value.Trim().Select(character => invalid.Contains(character) ? '_' : character));
+    }
+
+    public static string GetStatusColor(QuoteStatus status) => status switch
+    {
+        QuoteStatus.Draft => "#9E9E9E",
+        QuoteStatus.Sent => "#2196F3",
+        QuoteStatus.Approved => "#4CAF50",
+        QuoteStatus.Rejected => "#F44336",
+        QuoteStatus.Expired => "#FF9800",
+        QuoteStatus.Revised => "#9C27B0",
+        _ => "#757575"
+    };
+
+    public static string GetStatusText(QuoteStatus status) =>
+        ProjectQuoteLifecyclePolicy.Display(status);
+}

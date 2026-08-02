@@ -1,0 +1,93 @@
+<Window x:Class="KamatekCrm.Views.SalesReturnWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Satış İşlem Geçmişi ve İade" Width="1180" Height="760"
+        MinWidth="980" MinHeight="650" WindowStartupLocation="CenterOwner"
+        Style="{StaticResource PremiumWindowStyle}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="İşlem Geçmişi / İade" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                <TextBlock Text="Satışı bulun, kalan miktarları ve para iadesi dağılımını doğrulayın." Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBox Width="260" Height="36" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                <Button Content="Ara" Command="{Binding SearchCommand}" Style="{StaticResource ModernButton}" Height="36" Margin="8,0,0,0"/>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="0.9*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="1.35*"/></Grid.ColumnDefinitions>
+            <Border Style="{StaticResource CardPanel}" Padding="10">
+                <DataGrid ItemsSource="{Binding Sales}" SelectedItem="{Binding SelectedSale}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource ModernDataGrid}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Fiş" Binding="{Binding OrderNumber}" Width="140"/>
+                        <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="125"/>
+                        <DataGridTextColumn Header="Müşteri" Binding="{Binding CustomerName}" Width="*"/>
+                        <DataGridTextColumn Header="Toplam" Binding="{Binding TotalAmount, StringFormat=C}" Width="90"/>
+                        <DataGridTextColumn Header="Durum" Binding="{Binding Status}" Width="105"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource CardPanel}" Padding="14">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="2*"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <DataGrid ItemsSource="{Binding Lines}" AutoGenerateColumns="False" Style="{StaticResource ModernDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Ürün" Binding="{Binding Source.ProductName}" IsReadOnly="True" Width="*"/>
+                            <DataGridTextColumn Header="Kalan" Binding="{Binding Source.RemainingQuantity}" IsReadOnly="True" Width="55"/>
+                            <DataGridTextColumn Header="İade" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="55"/>
+                            <DataGridTemplateColumn Header="Durum" Width="105">
+                                <DataGridTemplateColumn.CellTemplate><DataTemplate><ComboBox ItemsSource="{Binding DataContext.Dispositions, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding Disposition, UpdateSourceTrigger=PropertyChanged}"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Depo" Width="135">
+                                <DataGridTemplateColumn.CellTemplate><DataTemplate><ComboBox ItemsSource="{Binding Warehouses}" SelectedItem="{Binding Warehouse, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Tutar" Binding="{Binding EstimatedAmount, StringFormat=C}" IsReadOnly="True" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Grid Grid.Row="1" Margin="0,12,0,6">
+                        <TextBlock Text="Para İadesi Dağılımı" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Toplamı Doldur" Command="{Binding FillRefundTotalCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                            <Button Content="+ Yöntem" Command="{Binding AddRefundCommand}" Style="{StaticResource SecondaryButton}"/>
+                        </StackPanel>
+                    </Grid>
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding Refunds}" AutoGenerateColumns="False" Style="{StaticResource ModernDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Yöntem" Width="150">
+                                <DataGridTemplateColumn.CellTemplate><DataTemplate><ComboBox ItemsSource="{Binding DataContext.PaymentMethods, RelativeSource={RelativeSource AncestorType=Window}}" SelectedItem="{Binding PaymentMethod, UpdateSourceTrigger=PropertyChanged}"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Tutar" Binding="{Binding Amount, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                            <DataGridTextColumn Header="Referans" Binding="{Binding Reference, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
+                            <DataGridTemplateColumn Width="55"><DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="Sil" Command="{Binding DataContext.RemoveRefundCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Grid Grid.Row="3" Margin="0,12,0,10">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <StackPanel><TextBlock Text="İade Nedeni *" FontWeight="SemiBold"/><TextBox Text="{Binding Reason}" Style="{StaticResource ModernTextBox}"/></StackPanel>
+                        <StackPanel Grid.Column="2"><TextBlock Text="Not" FontWeight="SemiBold"/><TextBox Text="{Binding Notes}" Style="{StaticResource ModernTextBox}"/></StackPanel>
+                    </Grid>
+                    <TextBlock Grid.Row="4" Text="{Binding Summary}" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2" Margin="0,14,0,0">
+            <Button Content="Kapat" HorizontalAlignment="Left" Width="100" Click="Close_Click" Style="{StaticResource SecondaryButton}"/>
+            <Button Content="İadeyi Tamamla ve Fiş Yazdır" HorizontalAlignment="Right" Width="245" Command="{Binding CompleteReturnCommand}" Style="{StaticResource ModernButton}"/>
+        </Grid>
+    </Grid>
+</Window>

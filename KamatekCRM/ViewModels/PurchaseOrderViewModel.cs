@@ -7,30 +7,32 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
-using KamatekCrm.Shared.Repositories;
-using KamatekCrm.Infrastructure.Repositories;
-using KamatekCrm.Services.Domain;
-using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Views;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
+using KamatekCrm.ApplicationCore.DTOs.Transactions;
+using KamatekCrm.Shared.Services;
 
 namespace KamatekCrm.ViewModels
 {
     public partial class PurchaseOrderViewModel : ViewModelBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IPurchasingDomainService _purchasingService;
+        private readonly IPurchasingCommandService _purchasingCommands;
+        private readonly ITransactionReadService _transactionReads;
         private readonly IApplicationAuthorizationService _authorizationService;
+        private readonly IDialogService _dialogs;
+        private Guid _purchaseAttemptId = Guid.NewGuid();
 
         public PurchaseOrderViewModel(
-            IUnitOfWork unitOfWork,
-            IPurchasingDomainService purchasingService,
-            IApplicationAuthorizationService authorizationService)
+            IPurchasingCommandService purchasingCommands,
+            ITransactionReadService transactionReads,
+            IApplicationAuthorizationService authorizationService,
+            IDialogService dialogs)
         {
-            _unitOfWork = unitOfWork;
-            _purchasingService = purchasingService;
+            _purchasingCommands = purchasingCommands;
+            _transactionReads = transactionReads;
             _authorizationService = authorizationService;
+            _dialogs = dialogs;
 
             // Init
             _ = Refresh();
@@ -38,44 +40,44 @@ namespace KamatekCrm.ViewModels
 
         #region Properties
 
-        private ObservableCollection<PurchaseOrder> _orders = new ObservableCollection<PurchaseOrder>();
-        public ObservableCollection<PurchaseOrder> Orders
+        private ObservableCollection<PurchaseHistoryDto> _orders = new();
+        public ObservableCollection<PurchaseHistoryDto> Orders
         {
             get => _orders;
             set => SetProperty(ref _orders, value);
         }
 
-        private ObservableCollection<Product> _productList = new ObservableCollection<Product>();
-        public ObservableCollection<Product> ProductList
+        private ObservableCollection<PurchaseProductLookupDto> _productList = new();
+        public ObservableCollection<PurchaseProductLookupDto> ProductList
         {
             get => _productList;
             set => SetProperty(ref _productList, value);
         }
 
-        private ObservableCollection<Supplier> _suppliers = new ObservableCollection<Supplier>();
-        public ObservableCollection<Supplier> Suppliers
+        private ObservableCollection<SupplierLookupDto> _suppliers = new();
+        public ObservableCollection<SupplierLookupDto> Suppliers
         {
             get => _suppliers;
             set => SetProperty(ref _suppliers, value);
         }
 
         // Selection for New Order
-        private Supplier? _selectedSupplier;
-        public Supplier? SelectedSupplier
+        private SupplierLookupDto? _selectedSupplier;
+        public SupplierLookupDto? SelectedSupplier
         {
             get => _selectedSupplier;
             set => SetProperty(ref _selectedSupplier, value);
         }
 
-        private ObservableCollection<Warehouse> _warehouses = new ObservableCollection<Warehouse>();
-        public ObservableCollection<Warehouse> Warehouses
+        private ObservableCollection<WarehouseLookupDto> _warehouses = new();
+        public ObservableCollection<WarehouseLookupDto> Warehouses
         {
             get => _warehouses;
             set => SetProperty(ref _warehouses, value);
         }
 
-        private Warehouse? _selectedWarehouse;
-        public Warehouse? SelectedWarehouse
+        private WarehouseLookupDto? _selectedWarehouse;
+        public WarehouseLookupDto? SelectedWarehouse
         {
             get => _selectedWarehouse;
             set => SetProperty(ref _selectedWarehouse, value);
@@ -105,8 +107,8 @@ namespace KamatekCrm.ViewModels
         }
 
         // Manual Entry Inputs
-        private Product? _selectedProduct;
-        public Product? SelectedProduct
+        private PurchaseProductLookupDto? _selectedProduct;
+        public PurchaseProductLookupDto? SelectedProduct
         {
             get => _selectedProduct;
             set
@@ -157,30 +159,18 @@ namespace KamatekCrm.ViewModels
             IsBusy = true;
             try
             {
-                // Load Products
-                var products = await ((UnitOfWork)_unitOfWork).Context.Products.OrderBy(p => p.ProductName).ToListAsync();
-                ProductList = new ObservableCollection<Product>(products);
-
-                // Load Suppliers
-                var suppliers = await ((UnitOfWork)_unitOfWork).Context.Suppliers.OrderBy(s => s.CompanyName).ToListAsync();
-                Suppliers = new ObservableCollection<Supplier>(suppliers);
-
-                // Load Warehouses
-                var warehouses = await ((UnitOfWork)_unitOfWork).Context.Warehouses.Where(w => w.IsActive).OrderBy(w => w.Name).ToListAsync();
-                Warehouses = new ObservableCollection<Warehouse>(warehouses);
+                var result = await _transactionReads.GetPurchasingWorkspaceAsync(historyTake: 50);
+                if (result.IsFailure || result.Value is null)
+                    throw new InvalidOperationException(result.Error);
+                ProductList = new ObservableCollection<PurchaseProductLookupDto>(result.Value.Products);
+                Suppliers = new ObservableCollection<SupplierLookupDto>(result.Value.Suppliers);
+                Warehouses = new ObservableCollection<WarehouseLookupDto>(result.Value.Warehouses);
                 SelectedWarehouse = Warehouses.FirstOrDefault();
-
-                // Load Orders (Recent 50?)
-                var orders = await ((UnitOfWork)_unitOfWork).Context.PurchaseOrders
-                    .Include(o => o.Supplier)
-                    .OrderByDescending(o => o.OrderDate)
-                    .Take(50)
-                    .ToListAsync();
-                Orders = new ObservableCollection<PurchaseOrder>(orders);
+                Orders = new ObservableCollection<PurchaseHistoryDto>(result.Value.RecentOrders);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Veri yükleme hatası: {ex.Message}");
+                await _dialogs.ShowErrorAsync($"Veri yükleme hatası: {ex.Message}");
             }
             finally
             {
@@ -189,28 +179,33 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void CreateOrder()
+        private async Task CreateOrder()
         {
-            // Reset form
+            ResetOrderForm();
+            await _dialogs.ShowMessageAsync("Yeni sipariş formu hazırlandı.", "Bilgi");
+        }
+
+        private void ResetOrderForm()
+        {
+            _purchaseAttemptId = Guid.NewGuid();
             CurrentOrderItems.Clear();
             SelectedSupplier = null;
             SelectedProduct = null;
             Quantity = 1;
             UnitPrice = 0;
-            MessageBox.Show("Yeni sipariş formu hazırlandı.", "Bilgi");
         }
 
         [RelayCommand]
-        private void AddManualItem()
+        private async Task AddManualItem()
         {
             if (SelectedProduct == null)
             {
-                MessageBox.Show("Lütfen bir ürün seçin.", "Hata");
+                await _dialogs.ShowWarningAsync("Lütfen bir ürün seçin.");
                 return;
             }
             if (Quantity <= 0)
             {
-                MessageBox.Show("Miktar 0'dan büyük olmalı.", "Hata");
+                await _dialogs.ShowWarningAsync("Miktar 0'dan büyük olmalı.");
                 return;
             }
 
@@ -232,25 +227,21 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void UploadPdf()
+        private async Task UploadPdf()
         {
-            var dialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "PDF Dosyaları (*.pdf)|*.pdf",
-                Title = "Fatura Yükle (PDF)"
-            };
+            var filePath = await _dialogs.ShowOpenFileDialogAsync("Fatura Yükle (PDF)", "PDF Dosyaları (*.pdf)|*.pdf");
 
-            if (dialog.ShowDialog() == true)
+            if (!string.IsNullOrWhiteSpace(filePath))
             {
                 IsBusy = true;
                 try
                 {
                     var parser = new Services.PdfInvoiceParserService();
-                    var items = parser.Parse(dialog.FileName);
+                    var items = parser.Parse(filePath);
 
                     if (items.Count == 0)
                     {
-                        MessageBox.Show("PDF'ten okunabilen uygun kalem bulunamadı.", "Uyarı");
+                        await _dialogs.ShowWarningAsync("PDF'ten okunabilen uygun kalem bulunamadı.");
                         return;
                     }
 
@@ -272,12 +263,12 @@ namespace KamatekCrm.ViewModels
                             // For now, we just add them.
                             CurrentOrderItems.Add(item);
                         }
-                        MessageBox.Show($"{vm.ParsedItems.Count} kalem başarıyla eklendi.", "Aktarım Tamamlandı");
+                        await _dialogs.ShowMessageAsync($"{vm.ParsedItems.Count} kalem başarıyla eklendi.", "Aktarım Tamamlandı");
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Hata: {ex.Message}", "PDF Okuma Hatası");
+                    await _dialogs.ShowErrorAsync($"Hata: {ex.Message}", "PDF Okuma Hatası");
                 }
                 finally
                 {
@@ -299,7 +290,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void CreateAndAddProduct()
+        private async Task CreateAndAddProduct()
         {
             var win = new QuickNewProductForPurchaseWindow
             {
@@ -314,7 +305,14 @@ namespace KamatekCrm.ViewModels
                     var product = vm.SavedProduct;
 
                     // Add to product list for future manual selections
-                    ProductList.Insert(0, product);
+                    ProductList.Insert(0, new PurchaseProductLookupDto(
+                        product.Id,
+                        product.ProductName,
+                        product.SKU,
+                        product.Barcode,
+                        product.Unit,
+                        product.PurchasePrice,
+                        product.VatRate));
 
                     // Immediately add as order line
                     var item = new PurchaseOrderItem
@@ -328,11 +326,9 @@ namespace KamatekCrm.ViewModels
 
                     CurrentOrderItems.Add(item);
 
-                    MessageBox.Show(
+                    await _dialogs.ShowMessageAsync(
                         $"✅ '{product.ProductName}' ürünü oluşturuldu ve siparişe eklendi.",
-                        "Ürün Oluşturuldu",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                        "Ürün Oluşturuldu");
                 }
             }
 }
@@ -344,105 +340,77 @@ namespace KamatekCrm.ViewModels
                 var authorization = _authorizationService.Authorize(ApplicationPermission.ApprovePurchase);
                 if (authorization.IsFailure)
                 {
-                    MessageBox.Show(authorization.Error, "Yetkisiz işlem", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    await _dialogs.ShowWarningAsync(authorization.Error, "Yetkisiz işlem");
                     return;
                 }
             }
 
             if (SelectedSupplier == null)
             {
-                MessageBox.Show("Tedarikçi seçmelisiniz.", "Hata");
+                await _dialogs.ShowWarningAsync("Tedarikçi seçmelisiniz.");
                 return;
             }
             if (!CurrentOrderItems.Any())
             {
-                MessageBox.Show("Sepette ürün yok.", "Hata");
+                await _dialogs.ShowWarningAsync("Sepette ürün yok.");
                 return;
             }
 
             IsBusy = true;
             try
             {
-                // 1. Siparişi kaydet
-                var order = new PurchaseOrder
+                var total = CurrentOrderItems.Sum(item => item.LineTotal > 0 ? item.LineTotal : item.Quantity * item.UnitPrice);
+                var paymentMethod = ParsePaymentMethod(SelectedPaymentMethod);
+                var command = new CreatePurchaseCommand(
+                    SelectedSupplier.Id,
+                    $"INV-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}",
+                    DateTime.UtcNow,
+                    CurrentOrderItems.Select(item => new PurchaseLineInput(
+                        item.ProductId,
+                        item.ProductName,
+                        item.Quantity,
+                        item.UnitPrice,
+                        item.DiscountAmount,
+                        item.TaxRate,
+                        item.LineTotal > 0 ? item.LineTotal : item.Quantity * item.UnitPrice)).ToList(),
+                    null,
+                    App.CurrentUser?.AdSoyad ?? "Sistem",
+                    _purchaseAttemptId.ToString(),
+                    autoReceive,
+                    autoReceive ? SelectedWarehouse?.Id : null,
+                    autoReceive ? new[] { new PaymentAllocationInput(paymentMethod, total) } : null);
+                var result = await _purchasingCommands.CreatePurchaseAsync(command);
+                if (result.IsFailure || result.Value is null)
                 {
-                    SupplierId = SelectedSupplier.Id,
-                    OrderDate = DateTime.UtcNow,
-                    Date = DateTime.UtcNow,
-                    Status = autoReceive ? PurchaseStatus.Pending : PurchaseStatus.Pending,
-                    InvoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}",
-                    Notes = string.Empty,
-                    Items = new ObservableCollection<PurchaseOrderItem>(CurrentOrderItems)
-                };
-
-                ((UnitOfWork)_unitOfWork).Context.PurchaseOrders.Add(order);
-                await _unitOfWork.SaveChangesAsync();
-
-                // 2. Otomatik teslim al (stok artır + WAC hesapla + cari borç)
-                if (autoReceive)
-                {
-                    var warehouseId = SelectedWarehouse?.Id ?? (await ((UnitOfWork)_unitOfWork).Context.Warehouses.FirstOrDefaultAsync(w => w.IsActive))?.Id ?? 1;
-
-                    var result = await _purchasingService.CompletePurchaseOrderAsync(new PurchaseCompletionRequest
-                    {
-                        PurchaseOrderId = order.Id,
-                        WarehouseId = warehouseId,
-                        CreatedBy = App.CurrentUser?.AdSoyad ?? "Sistem"
-                    });
-
-                    if (!result.Success)
-                    {
-                        MessageBox.Show($"Stok işleme hatası: {result.ErrorMessage}", "Uyarı");
-                    }
-                    else
-                    {
-                        // Tedarikçi Cari Borç & Kasa Entegrasyonu
-                        var context = ((UnitOfWork)_unitOfWork).Context;
-                        var dbSupplier = await context.Suppliers.FindAsync(SelectedSupplier.Id);
-                        if (dbSupplier != null)
-                        {
-                            if (SelectedPaymentMethod.Contains("Cari Borç"))
-                            {
-                                dbSupplier.Balance += result.TotalAmount;
-                            }
-                            else
-                            {
-                                var cashExp = new CashTransaction
-                                {
-                                    Date = DateTime.UtcNow,
-                                    Amount = result.TotalAmount,
-                                    TransactionType = CashTransactionType.Expense,
-                                    Description = $"Satın Alma Faturası Peşin Ödeme: {order.InvoiceNumber} ({SelectedSupplier.CompanyName})",
-                                    Category = "Malzeme / Demirbaş",
-                                    CreatedBy = App.CurrentUser?.AdSoyad ?? "Sistem",
-                                    CreatedAt = DateTime.UtcNow
-                                };
-                                context.CashTransactions.Add(cashExp);
-                            }
-                            await _unitOfWork.SaveChangesAsync();
-                        }
-
-                        MessageBox.Show($"Sipariş kaydedildi, stoklar ve cari hesap güncellendi.\nToplam: {result.TotalAmount:C}", "Başarılı");
-                    }
+                    await _dialogs.ShowErrorAsync(result.Error, "Satın alma başarısız");
+                    return;
                 }
-                else
-                {
-                    MessageBox.Show("Sipariş başarıyla oluşturuldu (Beklemede).", "Bilgi");
-                }
+
+                await _dialogs.ShowMessageAsync(
+                    autoReceive
+                        ? $"Sipariş, stok ve finans kayıtları tek işlemde tamamlandı.\nToplam: {result.Value.TotalAmount:C}"
+                        : "Sipariş başarıyla oluşturuldu (Beklemede).",
+                    "Başarılı");
 
                 // Refresh list and clear form
-                CreateOrder();
+                ResetOrderForm();
                 await Refresh();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Sipariş kaydetme hatası: {ex.Message}");
+                await _dialogs.ShowErrorAsync($"Sipariş kaydetme hatası: {ex.Message}");
             }
             finally
             {
                 IsBusy = false;
             }
         }
+
+        private static PaymentMethod ParsePaymentMethod(string value) =>
+            value.Contains("Cari", StringComparison.OrdinalIgnoreCase) ? PaymentMethod.OnAccount :
+            value.Contains("Kart", StringComparison.OrdinalIgnoreCase) ? PaymentMethod.CreditCard :
+            value.Contains("Havale", StringComparison.OrdinalIgnoreCase) ? PaymentMethod.BankTransfer :
+            PaymentMethod.Cash;
 
         #endregion
     }

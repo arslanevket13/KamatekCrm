@@ -530,7 +530,7 @@
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding SKU}" FontWeight="Bold" Width="100"/>
+                                                <TextBlock Text="{Binding ProductCode}" FontWeight="Bold" Width="100"/>
                                                 <TextBlock Text=" - "/>
                                                 <TextBlock Text="{Binding ProductName}"/>
                                             </StackPanel>
@@ -676,11 +676,11 @@
                     <!-- History Table -->
                     <DataGrid Grid.Row="1" ItemsSource="{Binding CountHistory}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Tarih" Binding="{Binding Date, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}" Width="140"/>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding CountedAt, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}" Width="140"/>
                             <DataGridTextColumn Header="Depo" Binding="{Binding WarehouseName}" Width="*"/>
                             <DataGridTextColumn Header="Ürün Sayısı" Binding="{Binding ProductCount}" Width="90"/>
                             <DataGridTextColumn Header="Net Fark" Binding="{Binding TotalDifference, StringFormat='{}{0:+#;-#;0}'}" Width="90"/>
-                            <DataGridTextColumn Header="Referans No" Binding="{Binding ReferenceId}" Width="180"/>
+                            <DataGridTextColumn Header="Referans No" Binding="{Binding ReferenceNumber}" Width="180"/>
                             
                             <DataGridTemplateColumn Width="80">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -714,8 +714,10 @@
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Ürün Kodu" Binding="{Binding ProductCode}" Width="120"/>
                                     <DataGridTextColumn Header="Ürün Adı" Binding="{Binding ProductName}" Width="*"/>
-                                    <DataGridTextColumn Header="Miktar Değişimi" Binding="{Binding Quantity, StringFormat='{}{0:+#;-#;0}'}" Width="120"/>
-                                    <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="200"/>
+                                    <DataGridTextColumn Header="Sistem" Binding="{Binding SystemQuantity}" Width="80"/>
+                                    <DataGridTextColumn Header="Sayılan" Binding="{Binding CountedQuantity}" Width="80"/>
+                                    <DataGridTextColumn Header="Fark" Binding="{Binding Difference, StringFormat='{}{0:+#;-#;0}'}" Width="80"/>
+                                    <DataGridTextColumn Header="Finansal Fark" Binding="{Binding FinancialDifference, StringFormat='{}{0:N2} ₺'}" Width="120"/>
                                 </DataGrid.Columns>
                             </DataGrid>
 

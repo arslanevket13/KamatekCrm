@@ -31,6 +31,7 @@ namespace KamatekCrm.ViewModels
         private readonly IDirectSalesService _directSalesService;
         private readonly IThermalReceiptPrintService _thermalPrintService;
         private readonly IPersonalDataProtectionService _personalDataProtection;
+        private readonly SalesReturnViewModel _salesReturnViewModel;
         private Guid _saleAttemptId = Guid.NewGuid();
 
         private string _searchText = string.Empty;
@@ -238,7 +239,8 @@ namespace KamatekCrm.ViewModels
             ILoadingService loadingService,
             IDirectSalesService directSalesService,
             IThermalReceiptPrintService thermalPrintService,
-            IPersonalDataProtectionService personalDataProtection)
+            IPersonalDataProtectionService personalDataProtection,
+            SalesReturnViewModel salesReturnViewModel)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
@@ -247,6 +249,7 @@ namespace KamatekCrm.ViewModels
             _directSalesService = directSalesService;
             _thermalPrintService = thermalPrintService;
             _personalDataProtection = personalDataProtection;
+            _salesReturnViewModel = salesReturnViewModel;
 
             AllProducts = new ObservableCollection<PosProductItem>();
             CartItems = new ObservableCollection<PosCartItem>();
@@ -351,6 +354,17 @@ namespace KamatekCrm.ViewModels
         #endregion
 
         #region Customer
+
+        [RelayCommand]
+        private void OpenReturns()
+        {
+            var window = new Views.SalesReturnWindow
+            {
+                Owner = System.Windows.Application.Current?.MainWindow,
+                DataContext = _salesReturnViewModel
+            };
+            window.ShowDialog();
+        }
 
         private async Task LoadRecentCustomers()
         {

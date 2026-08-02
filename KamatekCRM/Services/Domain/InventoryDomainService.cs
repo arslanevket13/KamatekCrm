@@ -26,15 +26,18 @@ namespace KamatekCrm.Services.Domain
         private readonly IAuthService _authService;
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IApplicationAuthorizationService _authorizationService;
+        private readonly IAuditTrailService _auditTrail;
 
         public InventoryDomainService(
             IAuthService authService,
             IDbContextFactory<AppDbContext> dbContextFactory,
-            IApplicationAuthorizationService authorizationService)
+            IApplicationAuthorizationService authorizationService,
+            IAuditTrailService auditTrail)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
             _authorizationService = authorizationService;
+            _auditTrail = auditTrail;
         }
 
         public TransferResult TransferStock(TransferRequest request)
@@ -126,7 +129,7 @@ namespace KamatekCrm.Services.Domain
                     ));
 
                     // Log
-                    _ = AuditService.LogAsync(AuditActionType.Create, "StockTransfer", stockTransaction.Id.ToString(),
+                    WriteAudit(AuditActionType.Create, "StockTransfer", stockTransaction.Id.ToString(),
                         $"Transfer: Ürün #{request.ProductId}, {request.Quantity} adet, Depo {request.SourceWarehouseId} → {request.TargetWarehouseId}");
 
                     return TransferResult.Ok(stockTransaction.Id);
@@ -134,7 +137,7 @@ namespace KamatekCrm.Services.Domain
                 catch (Exception ex)
                 {
                     unitOfWork.Rollback();
-                    _ = AuditService.LogAsync(AuditActionType.Create, "StockTransfer", null, $"Transfer hatası: {ex.Message}");
+                    WriteAudit(AuditActionType.Create, "StockTransfer", null, $"Transfer hatası: {ex.Message}");
                     return TransferResult.Fail($"Transfer işlemi başarısız: {ex.Message}");
                 }
             }
@@ -312,7 +315,7 @@ namespace KamatekCrm.Services.Domain
                     ));
                     
                     // Log
-                    _ = AuditService.LogAsync(AuditActionType.Update, "Inventory", referenceId, 
+                    WriteAudit(AuditActionType.Update, "Inventory", referenceId,
                         $"Stok Girdi: Ürün #{productId}, {quantity} adet @ {unitCost:C2}. Yeni WAC: {inventory.AverageCost:C2}");
                 }
                 catch (Exception ex)
@@ -836,6 +839,13 @@ namespace KamatekCrm.Services.Domain
             }
 
             return result;
+        }
+
+        private void WriteAudit(AuditActionType action, string entity, string? recordId, string description)
+        {
+            var result = _auditTrail.WriteAsync(action, entity, recordId, description).GetAwaiter().GetResult();
+            if (result.IsFailure)
+                System.Diagnostics.Debug.WriteLine(result.Error);
         }
 
         private void EnsureInventoryMutationAuthorized()

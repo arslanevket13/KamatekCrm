@@ -107,6 +107,8 @@
                     
                     <!-- Warehouse Selection -->
                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="↩ İşlem Geçmişi / İade" Command="{Binding OpenReturnsCommand}"
+                                Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,12,0" Padding="10,0"/>
                         <TextBlock Text="Depo:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" FontWeight="SemiBold"/>
                         <ComboBox ItemsSource="{Binding Warehouses}"
                                   SelectedItem="{Binding SelectedWarehouse}"

@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.ApplicationCore.DTOs.Transactions;
 
 namespace KamatekCrm.Services
 {
@@ -9,6 +10,7 @@ namespace KamatekCrm.Services
         /// Prints a thermal receipt (80mm/58mm) for the specified SalesOrder
         /// </summary>
         Task PrintReceiptAsync(SalesOrder salesOrder, string? printerName = null);
+        Task PrintSalesReturnReceiptAsync(SalesReturnReceiptDto salesReturn, string? printerName = null);
 
         /// <summary>
         /// Generates a formatted text receipt representation

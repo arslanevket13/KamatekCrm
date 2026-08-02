@@ -6,18 +6,24 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Enums;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
+using KamatekCrm.ApplicationCore.DTOs.Transactions;
 
 namespace KamatekCrm.Services
 {
     public class ThermalReceiptPrintService : IThermalReceiptPrintService
     {
         private readonly IPersonalDataProtectionService _personalDataProtection;
+        private readonly IAuditTrailService _auditTrail;
 
-        public ThermalReceiptPrintService(IPersonalDataProtectionService personalDataProtection)
+        public ThermalReceiptPrintService(
+            IPersonalDataProtectionService personalDataProtection,
+            IAuditTrailService auditTrail)
         {
             _personalDataProtection = personalDataProtection;
+            _auditTrail = auditTrail;
         }
 
         public Task PrintReceiptAsync(SalesOrder salesOrder, string? printerName = null)
@@ -84,6 +90,49 @@ namespace KamatekCrm.Services
             sb.AppendLine("===========================================");
 
             return sb.ToString();
+        }
+
+        public Task PrintSalesReturnReceiptAsync(SalesReturnReceiptDto salesReturn, string? printerName = null)
+        {
+            ArgumentNullException.ThrowIfNull(salesReturn);
+            return Task.Run(() =>
+            {
+                using var document = new PrintDocument();
+                if (!string.IsNullOrWhiteSpace(printerName) && printerName != "Varsayılan Sistem Yazıcısı")
+                    document.PrinterSettings.PrinterName = printerName;
+                document.PrintPage += (_, args) =>
+                {
+                    using var title = new Font("Courier New", 11, System.Drawing.FontStyle.Bold);
+                    using var body = new Font("Courier New", 8);
+                    var graphics = args.Graphics;
+                    if (graphics is null) return;
+                    float y = 10;
+                    void Line(string text, Font? font = null)
+                    {
+                        graphics.DrawString(text, font ?? body, Brushes.Black, 5, y);
+                        y += 14;
+                    }
+                    Line("KAMATEK SATIŞ İADE FİŞİ", title);
+                    Line("------------------------------------------");
+                    Line($"İade No : {salesReturn.ReturnNumber}");
+                    Line($"Satış No: {salesReturn.SalesOrderNumber}");
+                    Line($"Tarih   : {salesReturn.Date.ToLocalTime():dd.MM.yyyy HH:mm}");
+                    Line($"Neden   : {salesReturn.Reason}");
+                    Line("------------------------------------------");
+                    foreach (var item in salesReturn.Lines)
+                        Line($"{item.ProductName}  {item.Quantity} ad.  {item.LineTotal:N2} TL");
+                    Line("------------------------------------------");
+                    Line($"İADE TOPLAMI: {salesReturn.TotalAmount:N2} TL", title);
+                    foreach (var payment in salesReturn.Payments)
+                        Line($"{payment.PaymentMethod}: {payment.Amount:N2} TL");
+                    Line("------------------------------------------");
+                    Line("Bu belge finansal iade kaydıdır.");
+                };
+                document.Print();
+                var audit = _auditTrail.WriteAsync(AuditActionType.View, "SalesReturnReceipt", salesReturn.SalesReturnId.ToString(), $"İade fişi yazdırıldı: {salesReturn.ReturnNumber}").GetAwaiter().GetResult();
+                if (audit.IsFailure)
+                    System.Diagnostics.Debug.WriteLine(audit.Error);
+            });
         }
 
         private void DrawReceiptContent(PrintPageEventArgs ev, SalesOrder salesOrder)

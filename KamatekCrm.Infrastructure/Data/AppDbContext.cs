@@ -43,6 +43,8 @@ namespace KamatekCrm.Infrastructure.Data
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Inventory> Inventories { get; set; }
         public DbSet<StockTransaction> StockTransactions { get; set; }
+        public DbSet<StockCountSession> StockCountSessions { get; set; }
+        public DbSet<StockCountSessionItem> StockCountSessionItems { get; set; }
         public DbSet<ProductSerial> ProductSerials { get; set; }
 
         // --- Kullanıcı Yönetimi ---
@@ -62,6 +64,9 @@ namespace KamatekCrm.Infrastructure.Data
         public DbSet<SalesOrder> SalesOrders { get; set; }
         public DbSet<SalesOrderItem> SalesOrderItems { get; set; }
         public DbSet<SalesOrderPayment> SalesOrderPayments { get; set; }
+        public DbSet<SalesReturn> SalesReturns { get; set; }
+        public DbSet<SalesReturnItem> SalesReturnItems { get; set; }
+        public DbSet<SalesReturnPayment> SalesReturnPayments { get; set; }
 
         // --- Fiyat Teklifleri (Quotation) ---
         public DbSet<Quote> Quotes { get; set; }
@@ -69,6 +74,9 @@ namespace KamatekCrm.Infrastructure.Data
 
         // --- Kasa / Finans ---
         public DbSet<CashTransaction> CashTransactions { get; set; }
+        public DbSet<PurchaseOrderPayment> PurchaseOrderPayments { get; set; }
+        public DbSet<PurchaseReturn> PurchaseReturns { get; set; }
+        public DbSet<PurchaseReturnItem> PurchaseReturnItems { get; set; }
 
         // --- Dijital Arşiv ---
         public DbSet<Attachment> Attachments { get; set; }
@@ -130,14 +138,23 @@ namespace KamatekCrm.Infrastructure.Data
                 entity.HasIndex(log => log.IntegrityHash);
             });
 
-            // PostgreSQL xmin Concurrency Global Configuration
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            modelBuilder.Entity<Warehouse>()
+                .HasIndex(warehouse => warehouse.IsQuarantine)
+                .IsUnique()
+                .HasFilter("\"IsQuarantine\" = TRUE");
+
+            // xmin yalnız PostgreSQL sistem sütunudur; SQLite transaction testlerinde
+            // fiziksel NOT NULL sütununa dönüşmesine izin verilmez.
+            if (Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true)
             {
-                modelBuilder.Entity(entityType.ClrType)
-                            .Property<uint>("xmin")
-                            .HasColumnType("xid")
-                            .ValueGeneratedOnAddOrUpdate()
-                            .IsConcurrencyToken();
+                foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+                {
+                    modelBuilder.Entity(entityType.ClrType)
+                                .Property<uint>("xmin")
+                                .HasColumnType("xid")
+                                .ValueGeneratedOnAddOrUpdate()
+                                .IsConcurrencyToken();
+                }
             }
 
             // Inventory - Composite Key (ProductId + WarehouseId)
@@ -212,6 +229,41 @@ namespace KamatekCrm.Infrastructure.Data
                       );
             });
 
+            modelBuilder.Entity<StockCountSession>(entity =>
+            {
+                entity.Property(item => item.IdempotencyKey).HasMaxLength(36);
+                entity.Property(item => item.ReferenceNumber).HasMaxLength(50);
+                entity.Property(item => item.FinancialDifference).HasColumnType("decimal(18,2)");
+                entity.HasIndex(item => item.IdempotencyKey).IsUnique();
+                entity.HasIndex(item => item.ReferenceNumber).IsUnique();
+                entity.HasIndex(item => new { item.WarehouseId, item.CountedAt });
+                entity.HasOne(item => item.Warehouse)
+                    .WithMany()
+                    .HasForeignKey(item => item.WarehouseId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(item => item.Items)
+                    .WithOne(item => item.StockCountSession)
+                    .HasForeignKey(item => item.StockCountSessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<StockCountSessionItem>(entity =>
+            {
+                entity.Property(item => item.ProductCode).HasMaxLength(100);
+                entity.Property(item => item.ProductName).HasMaxLength(200);
+                entity.Property(item => item.UnitCost).HasColumnType("decimal(18,2)");
+                entity.Property(item => item.FinancialDifference).HasColumnType("decimal(18,2)");
+                entity.HasIndex(item => new { item.StockCountSessionId, item.ProductId }).IsUnique();
+                entity.HasOne(item => item.Product)
+                    .WithMany()
+                    .HasForeignKey(item => item.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(item => item.StockTransaction)
+                    .WithMany()
+                    .HasForeignKey(item => item.StockTransactionId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
             modelBuilder.Entity<ServiceJob>(entity =>
             {
                 entity.Property(e => e.JobDetails)
@@ -270,13 +322,73 @@ namespace KamatekCrm.Infrastructure.Data
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
+            modelBuilder.Entity<PurchaseOrderPayment>(entity =>
+            {
+                entity.HasOne(payment => payment.PurchaseOrder)
+                    .WithMany(order => order.Payments)
+                    .HasForeignKey(payment => payment.PurchaseOrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             modelBuilder.Entity<SalesOrder>(entity =>
             {
                 entity.Property(e => e.IdempotencyKey).HasMaxLength(36);
                 entity.HasIndex(e => e.IdempotencyKey)
                     .IsUnique()
                     .HasFilter("\"IdempotencyKey\" IS NOT NULL");
+                entity.HasOne(order => order.Warehouse)
+                    .WithMany()
+                    .HasForeignKey(order => order.WarehouseId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
+
+            modelBuilder.Entity<PurchaseOrder>(entity =>
+            {
+                entity.Property(order => order.IdempotencyKey).HasMaxLength(36);
+                entity.Property(order => order.ReceiptIdempotencyKey).HasMaxLength(36);
+                entity.HasIndex(order => order.IdempotencyKey).IsUnique().HasFilter("\"IdempotencyKey\" IS NOT NULL");
+                entity.HasIndex(order => order.ReceiptIdempotencyKey).IsUnique().HasFilter("\"ReceiptIdempotencyKey\" IS NOT NULL");
+                entity.HasOne(order => order.Warehouse)
+                    .WithMany()
+                    .HasForeignKey(order => order.WarehouseId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<SalesReturn>(entity =>
+            {
+                entity.Property(item => item.IdempotencyKey).HasMaxLength(36);
+                entity.Property(item => item.ReturnNumber).HasMaxLength(48);
+                entity.HasIndex(item => item.IdempotencyKey).IsUnique();
+                entity.HasIndex(item => item.ReturnNumber).IsUnique();
+                entity.HasOne(item => item.SalesOrder).WithMany().HasForeignKey(item => item.SalesOrderId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<SalesReturnItem>(entity =>
+            {
+                entity.HasOne(item => item.SalesReturn).WithMany(item => item.Items).HasForeignKey(item => item.SalesReturnId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(item => item.SalesOrderItem).WithMany().HasForeignKey(item => item.SalesOrderItemId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<SalesReturnPayment>(entity =>
+            {
+                entity.HasOne(item => item.SalesReturn).WithMany(item => item.Payments).HasForeignKey(item => item.SalesReturnId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<PurchaseReturn>(entity =>
+            {
+                entity.Property(item => item.IdempotencyKey).HasMaxLength(36);
+                entity.Property(item => item.ReturnNumber).HasMaxLength(48);
+                entity.HasIndex(item => item.IdempotencyKey).IsUnique();
+                entity.HasIndex(item => item.ReturnNumber).IsUnique();
+                entity.HasOne(item => item.PurchaseOrder).WithMany().HasForeignKey(item => item.PurchaseOrderId).OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<PurchaseReturnItem>(entity =>
+            {
+                entity.HasOne(item => item.PurchaseReturn).WithMany(item => item.Items).HasForeignKey(item => item.PurchaseReturnId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(item => item.PurchaseOrderItem).WithMany().HasForeignKey(item => item.PurchaseOrderItemId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Transaction>()
+                .HasIndex(item => item.ReconciliationKey)
+                .IsUnique()
+                .HasFilter("\"ReconciliationKey\" IS NOT NULL");
 
             modelBuilder.Entity<Product>()
                 .HasIndex(p => p.Barcode);
@@ -401,8 +513,28 @@ namespace KamatekCrm.Infrastructure.Data
 
         private void PrepareChanges()
         {
+            ProtectCompletedReturns();
             ProtectAndSealActivityLogs();
             ApplyAuditInformation();
+        }
+
+        private void ProtectCompletedReturns()
+        {
+            var protectedTypes = new[]
+            {
+                typeof(SalesReturn), typeof(SalesReturnItem), typeof(SalesReturnPayment),
+                typeof(PurchaseReturn), typeof(PurchaseReturnItem)
+            };
+
+            foreach (var entry in ChangeTracker.Entries())
+            {
+                if (protectedTypes.Contains(entry.Metadata.ClrType) &&
+                    entry.State is EntityState.Modified or EntityState.Deleted)
+                {
+                    throw new InvalidOperationException(
+                        "Tamamlanmış iade kayıtları değiştirilemez veya silinemez; düzeltme için telafi işlemi oluşturulmalıdır.");
+                }
+            }
         }
 
         private void ProtectAndSealActivityLogs()

@@ -349,11 +349,11 @@
                             <DataGrid ItemsSource="{Binding CurrentJobItems}"
                                       Style="{StaticResource AccessibleDataGrid}"
                                       ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
-                                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="False"
+                                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
                                       MinHeight="180" MaxHeight="260"
                                       GridLinesVisibility="Horizontal" HeadersVisibility="Column">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Ürün / Malzeme" Binding="{Binding Product.ProductName}" Width="*" IsReadOnly="True" FontWeight="Bold"/>
+                                    <DataGridTextColumn Header="Ürün / Malzeme" Binding="{Binding ProductName}" Width="*" IsReadOnly="True" FontWeight="Bold"/>
                                     <DataGridTextColumn Header="Adet" Binding="{Binding QuantityUsed}" Width="70"/>
                                     <DataGridTextColumn Header="Fiyat" Binding="{Binding UnitPrice, StringFormat='{}₺{0:N2}'}" Width="100"/>
                                     <DataGridTemplateColumn Header="Sil" Width="50">

@@ -1,0 +1,33 @@
+<Window x:Class="KamatekCrm.Views.PurchaseReturnWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Satın Alma Geçmişi ve İade" Width="1100" Height="720" MinWidth="900" MinHeight="620"
+        WindowStartupLocation="CenterOwner" Style="{StaticResource PremiumWindowStyle}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <StackPanel Margin="0,0,0,14"><TextBlock Text="Satın Alma Geçmişi / Tedarikçiye İade" FontSize="24" FontWeight="Bold"/><TextBlock Text="Bekleyen siparişi iptal edin veya teslim alınmış kalemleri stok ve finans ters kayıtlarıyla iade edin." Foreground="{DynamicResource TextFillColorSecondaryBrush}"/></StackPanel>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="0.9*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="1.2*"/></Grid.ColumnDefinitions>
+            <DataGrid ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource ModernDataGrid}">
+                <DataGrid.Columns><DataGridTextColumn Header="Fatura" Binding="{Binding InvoiceNumber}" Width="120"/><DataGridTextColumn Header="Tarih" Binding="{Binding OrderDate, StringFormat=dd.MM.yyyy}" Width="90"/><DataGridTextColumn Header="Tedarikçi" Binding="{Binding SupplierName}" Width="*"/><DataGridTextColumn Header="Tutar" Binding="{Binding TotalAmount, StringFormat=C}" Width="90"/><DataGridTextColumn Header="Durum" Binding="{Binding Status}" Width="100"/></DataGrid.Columns>
+            </DataGrid>
+            <Border Grid.Column="2" Style="{StaticResource CardPanel}" Padding="14">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                    <DataGrid ItemsSource="{Binding Lines}" AutoGenerateColumns="False" Style="{StaticResource ModernDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Ürün" Binding="{Binding Source.ProductName}" IsReadOnly="True" Width="*"/>
+                            <DataGridTextColumn Header="Kalan" Binding="{Binding Source.RemainingQuantity}" IsReadOnly="True" Width="55"/>
+                            <DataGridTextColumn Header="İade" Binding="{Binding Quantity}" Width="55"/>
+                            <DataGridTemplateColumn Header="Kaynak Depo" Width="150"><DataGridTemplateColumn.CellTemplate><DataTemplate><ComboBox ItemsSource="{Binding Warehouses}" SelectedItem="{Binding Warehouse, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Tutar" Binding="{Binding EstimatedAmount, StringFormat=C}" IsReadOnly="True" Width="85"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="1" Margin="0,12,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="Mahsup / Geri Ödeme"/><ComboBox ItemsSource="{Binding SettlementMethods}" SelectedItem="{Binding SettlementMethod}"/></StackPanel><StackPanel Grid.Column="2"><TextBlock Text="Referans"/><TextBox Text="{Binding SettlementReference}" Style="{StaticResource ModernTextBox}"/></StackPanel></Grid>
+                    <Grid Grid.Row="2" Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="Neden *"/><TextBox Text="{Binding Reason}" Style="{StaticResource ModernTextBox}"/></StackPanel><StackPanel Grid.Column="2"><TextBlock Text="Not"/><TextBox Text="{Binding Notes}" Style="{StaticResource ModernTextBox}"/></StackPanel></Grid>
+                    <StackPanel Grid.Row="3"><CheckBox Content="Eski kayıt ödeme yöntemini yönetici onayıyla kabul et" IsChecked="{Binding LegacySettlementOverride}"/><TextBlock Text="{Binding Summary}" FontWeight="SemiBold" Foreground="{DynamicResource ThemePrimary}" Margin="0,6,0,0"/></StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+        <Grid Grid.Row="2" Margin="0,14,0,0"><Button Content="Kapat" Width="100" HorizontalAlignment="Left" Click="Close_Click" Style="{StaticResource SecondaryButton}"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="Bekleyen Siparişi İptal Et" Command="{Binding CancelOrderCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/><Button Content="Tedarikçiye İadeyi Tamamla" Command="{Binding CompleteReturnCommand}" Style="{StaticResource ModernButton}" Width="220"/></StackPanel></Grid>
+    </Grid>
+</Window>

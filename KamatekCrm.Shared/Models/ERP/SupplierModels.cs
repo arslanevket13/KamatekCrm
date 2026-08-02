@@ -26,12 +26,28 @@ namespace KamatekCrm.Shared.Models
         public DateTime OrderDate { get; set; } = DateTime.UtcNow;
         public string InvoiceNumber { get; set; } = string.Empty;
         public decimal TotalAmount { get; set; }
+        public int? WarehouseId { get; set; }
+        public string? IdempotencyKey { get; set; }
+        public string? ReceiptIdempotencyKey { get; set; }
         public string Notes { get; set; } = string.Empty;
         [ForeignKey(nameof(SupplierId))]
         public virtual Supplier Supplier { get; set; } = null!;
         public int? ServiceJobId { get; set; }
         public virtual ServiceJob? ServiceJob { get; set; }
+        public virtual Warehouse? Warehouse { get; set; }
         public virtual System.Collections.Generic.ICollection<PurchaseOrderItem> Items { get; set; } = new System.Collections.Generic.List<PurchaseOrderItem>();
+        public virtual System.Collections.Generic.ICollection<PurchaseOrderPayment> Payments { get; set; } = new System.Collections.Generic.List<PurchaseOrderPayment>();
+    }
+
+    public class PurchaseOrderPayment
+    {
+        public int Id { get; set; }
+        public int PurchaseOrderId { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
+        public decimal Amount { get; set; }
+        public string Reference { get; set; } = string.Empty;
+        [ForeignKey(nameof(PurchaseOrderId))]
+        public virtual PurchaseOrder PurchaseOrder { get; set; } = null!;
     }
 
     public class PurchaseOrderItem
@@ -89,4 +105,3 @@ namespace KamatekCrm.Shared.Models
         public virtual Product? Product { get; set; }
     }
 }
-

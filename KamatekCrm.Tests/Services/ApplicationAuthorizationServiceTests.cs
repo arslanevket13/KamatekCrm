@@ -49,6 +49,7 @@ public class ApplicationAuthorizationServiceTests
         var context = new DesktopCurrentUserContext(auth.Object);
 
         context.HasPermission(ApplicationPermission.ManageServiceJobs).Should().BeTrue();
+        context.HasPermission(ApplicationPermission.ManageQuotes).Should().BeTrue();
         context.HasPermission(ApplicationPermission.ExecuteSales).Should().BeTrue();
         context.HasPermission(ApplicationPermission.AdjustInventory).Should().BeFalse();
         context.HasPermission(ApplicationPermission.ManageUsers).Should().BeFalse();

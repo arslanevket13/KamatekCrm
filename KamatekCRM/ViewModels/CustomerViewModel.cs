@@ -305,19 +305,22 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
         private readonly ICustomerAppService _customerAppService;
+        private readonly IQuotationLauncher _quotationLauncher;
 
         public CustomersViewModel(
             NavigationService navigationService,
             ILogger<CustomersViewModel> logger,
             IToastService toastService,
             ILoadingService loadingService,
-            ICustomerAppService customerAppService)
+            ICustomerAppService customerAppService,
+            IQuotationLauncher quotationLauncher)
         {
             _navigationService = navigationService;
             _logger = logger;
             _toastService = toastService;
             _loadingService = loadingService;
             _customerAppService = customerAppService;
+            _quotationLauncher = quotationLauncher;
             Customers = new ObservableCollection<Customer>();
             Cities = new ObservableCollection<City>();
             Districts = new ObservableCollection<District>();
@@ -627,7 +630,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void CreateQuoteForCustomer(object? parameter)
+        private async Task CreateQuoteForCustomer(object? parameter)
         {
             var customer = parameter switch
             {
@@ -644,13 +647,7 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                var window = new Views.QuotationWindow();
-                window.Owner = System.Windows.Application.Current?.MainWindow;
-                if (window.DataContext is QuotationViewModel quoteVm)
-                {
-                    quoteVm.SelectedCustomer = customer;
-                }
-                window.ShowDialog();
+                await _quotationLauncher.ShowAsync(customer.Id, modal: true);
             }
             catch (Exception ex)
             {

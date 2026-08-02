@@ -22,6 +22,7 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
         private readonly IServiceProvider _serviceProvider; // Added for resolving child VMs
+        private readonly IQuotationLauncher _quotationLauncher;
 
         private object? _currentView;
 
@@ -272,7 +273,8 @@ namespace KamatekCrm.ViewModels
             NavigationService navigationService, 
             IToastService toastService, 
             ILoadingService loadingService,
-            IServiceProvider serviceProvider) // Inject IServiceProvider
+            IServiceProvider serviceProvider,
+            IQuotationLauncher quotationLauncher) // Inject IServiceProvider
         {
             _unitOfWork = unitOfWork;
             _authService = authService;
@@ -280,6 +282,7 @@ namespace KamatekCrm.ViewModels
             _toastService = toastService;
             _loadingService = loadingService;
             _serviceProvider = serviceProvider;
+            _quotationLauncher = quotationLauncher;
 
             // Global arama başlat
             SearchViewModel = _serviceProvider.GetRequiredService<GlobalSearchViewModel>();
@@ -522,10 +525,9 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void OpenQuotation()
+        private async Task OpenQuotation()
         {
-            var window = new Views.QuotationWindow();
-            window.Show();
+            await _quotationLauncher.ShowAsync(modal: false);
         }
 
         [RelayCommand]

@@ -28,6 +28,7 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly IServiceJobCommandService _serviceJobCommandService;
         private readonly IPersonalDataProtectionService _personalDataProtection;
+        private readonly PdfService _pdfService;
 
         private string _searchText = string.Empty;
         private RepairStatus? _selectedStatus;
@@ -193,12 +194,14 @@ namespace KamatekCrm.ViewModels
             IServiceProvider serviceProvider,
             IToastService toastService,
             IServiceJobCommandService serviceJobCommandService,
-            IPersonalDataProtectionService personalDataProtection)
+            IPersonalDataProtectionService personalDataProtection,
+            PdfService pdfService)
         {
             _serviceProvider = serviceProvider;
             _toastService = toastService;
             _serviceJobCommandService = serviceJobCommandService;
             _personalDataProtection = personalDataProtection;
+            _pdfService = pdfService;
 
             AllRepairJobs = new ObservableCollection<RepairJobDisplayItem>();
             StatusOptions = new ObservableCollection<RepairStatusOption>();
@@ -742,8 +745,7 @@ namespace KamatekCrm.ViewModels
 
                 if (saveDialog.ShowDialog() == true)
                 {
-                    var pdfService = new Services.PdfService();
-                    pdfService.GenerateServiceForm(SelectedJob, saveDialog.FileName);
+                    _pdfService.GenerateServiceForm(SelectedJob, saveDialog.FileName);
 
                     new System.Diagnostics.Process
                     {

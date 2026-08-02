@@ -208,7 +208,7 @@
                       RowHeight="44">
 
                 <DataGrid.ContextMenu>
-                    <ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
                         <MenuItem Header="✏️ Düzenle" Command="{Binding EditQuoteCommand}"/>
                         <MenuItem Header="📑 Kopyala" Command="{Binding DuplicateQuoteCommand}"/>
                         <MenuItem Header="📝 PDF Dışa Aktar" Command="{Binding ExportPdfCommand}"/>
@@ -216,6 +216,7 @@
                         <MenuItem Header="📨 Gönderildi Olarak İşaretle" Command="{Binding MarkAsSentCommand}"/>
                         <MenuItem Header="✅ Onaylandı Olarak İşaretle" Command="{Binding MarkAsApprovedCommand}"/>
                         <MenuItem Header="❌ Reddedildi Olarak İşaretle" Command="{Binding MarkAsRejectedCommand}"/>
+                        <MenuItem Header="🛠️ Kurulum İş Emri Oluştur" Command="{Binding ConvertToWorkOrderCommand}"/>
                         <Separator/>
                         <MenuItem Header="🗑️ Sil" Command="{Binding DeleteQuoteCommand}" Foreground="{DynamicResource ThemeError}"/>
                     </ContextMenu>
@@ -239,10 +240,10 @@
                     <DataGridTextColumn Header="Proje Adı" Binding="{Binding Title}" Width="*"/>
 
                     <!-- Müşteri -->
-                    <DataGridTextColumn Header="Müşteri" Binding="{Binding Customer.FullName}" Width="160"/>
+                    <DataGridTextColumn Header="Müşteri" Binding="{Binding CustomerName}" Width="160"/>
 
                     <!-- Tutar -->
-                    <DataGridTextColumn Header="Tutar" Binding="{Binding TotalBudget, StringFormat='₺{0:N0}'}" Width="110">
+                    <DataGridTextColumn Header="Tutar" Binding="{Binding TotalBudget, StringFormat='₺{0:N2}'}" Width="125">
                         <DataGridTextColumn.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="FontWeight" Value="Bold"/>
@@ -251,7 +252,7 @@
                     </DataGridTextColumn>
 
                     <!-- Kar -->
-                    <DataGridTextColumn Header="Kar" Binding="{Binding TotalProfit, StringFormat='₺{0:N0}'}" Width="100">
+                    <DataGridTextColumn Header="Kar" Binding="{Binding TotalProfit, StringFormat='₺{0:N2}'}" Width="115">
                         <DataGridTextColumn.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="Foreground" Value="{DynamicResource ThemeSuccess}"/>
@@ -328,6 +329,10 @@
 
                     <Button Content="📑 Kopyala" Command="{Binding DuplicateQuoteCommand}"
                             Margin="0,0,8,0" Padding="16,8" FontSize="12" 
+                            BorderThickness="1" Cursor="Hand"/>
+
+                    <Button Content="🛠️ İş Emri" Command="{Binding ConvertToWorkOrderCommand}"
+                            Margin="0,0,8,0" Padding="16,8" FontSize="12"
                             BorderThickness="1" Cursor="Hand"/>
 
                     <Button Content="🗑️ Sil" Command="{Binding DeleteQuoteCommand}"

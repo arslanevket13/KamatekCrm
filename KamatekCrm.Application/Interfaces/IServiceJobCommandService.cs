@@ -28,4 +28,9 @@ public interface IServiceJobCommandService
         int jobId,
         string changedBy,
         CancellationToken cancellationToken = default);
+
+    Task<Result<ServiceJobDeleteResult>> DeleteAsync(
+        int jobId,
+        string changedBy,
+        CancellationToken cancellationToken = default);
 }

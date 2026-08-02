@@ -35,9 +35,9 @@ namespace KamatekCrm.Extensions
             services.AddSingleton<KamatekCrm.ApplicationCore.Interfaces.ICurrentUserContext, DesktopCurrentUserContext>();
             services.AddTransient<IForcedPasswordChangeService, ForcedPasswordChangeService>();
             services.AddTransient<AttachmentService>();
-            services.AddScoped<ProjectScopeService>();
-            
             services.AddTransient<EmailService>();
+            services.AddSingleton<IProjectQuoteEditorLauncher, ProjectQuoteEditorLauncher>();
+            services.AddSingleton<IQuotationLauncher, QuotationLauncher>();
             services.AddSingleton<EventAggregator>();
             services.AddTransient<InvoiceScannerService>();
             services.AddTransient<NotificationService>();
@@ -62,7 +62,6 @@ namespace KamatekCrm.Extensions
             // Domain Services
             services.AddScoped<IInventoryDomainService, InventoryDomainService>();
             services.AddSingleton<IProductImageService, ProductImageService>();
-            services.AddScoped<IPurchasingDomainService, PurchasingDomainService>();
 
             // Background Services
             services.AddScoped<ISlaService, SlaService>();
@@ -87,6 +86,7 @@ namespace KamatekCrm.Extensions
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<SystemLogsViewModel>();
             services.AddTransient<DirectSalesViewModel>();
+            services.AddTransient<SalesReturnViewModel>();
             services.AddTransient<FinanceViewModel>();
             services.AddTransient<RepairViewModel>();
             services.AddTransient<MainContentViewModel>();
@@ -96,11 +96,11 @@ namespace KamatekCrm.Extensions
             services.AddTransient<RoutePlanningViewModel>();
             services.AddTransient<FinancialHealthViewModel>();
             services.AddTransient<PurchasingViewModel>();
+            services.AddTransient<PurchaseReturnViewModel>();
             services.AddTransient<StockTransferViewModel>();
             services.AddTransient<AddUserViewModel>();
 
             services.AddTransient<ProjectQuoteEditorViewModel>();
-            services.AddTransient<ProjectQuoteViewModel>();
             services.AddTransient<QuoteListViewModel>();
             services.AddTransient<EditUserViewModel>();
             services.AddTransient<PasswordResetViewModel>();
@@ -121,6 +121,7 @@ namespace KamatekCrm.Extensions
             services.AddTransient<Views.FaultTicketWindow>();
             services.AddTransient<Views.DirectSalesWindow>();
             services.AddTransient<Views.ProjectQuoteEditorWindow>();
+            services.AddTransient<Views.QuotationWindow>();
             services.AddTransient<Views.NetworkSettingsView>();
             services.AddTransient<Views.AddUserView>();
             services.AddTransient<Views.EditUserView>();

@@ -71,6 +71,7 @@ namespace KamatekCrm.Shared.Models
         public string Name { get; set; } = string.Empty;
         public WarehouseType Type { get; set; }
         public bool IsActive { get; set; }
+        public bool IsQuarantine { get; set; }
         public virtual System.Collections.Generic.ICollection<Inventory> Inventories { get; set; } = new System.Collections.Generic.List<Inventory>();
     }
 
@@ -90,6 +91,8 @@ namespace KamatekCrm.Shared.Models
         public int? InventoryId { get; set; }
         public int? PurchaseOrderId { get; set; }
         public int? SalesOrderId { get; set; }
+        public int? SalesReturnId { get; set; }
+        public int? PurchaseReturnId { get; set; }
         [ForeignKey(nameof(SourceWarehouseId))]
         public virtual Warehouse? SourceWarehouse { get; set; }
         [ForeignKey(nameof(TargetWarehouseId))]
@@ -153,4 +156,3 @@ namespace KamatekCrm.Shared.Models
         public string ReservedBy { get; set; } = string.Empty;
     }
 }
-

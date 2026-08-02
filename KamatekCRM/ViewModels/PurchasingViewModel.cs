@@ -7,15 +7,11 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using KamatekCrm.Shared.Repositories;
-using KamatekCrm.Infrastructure.Repositories;
 using KamatekCrm.Services;
-using KamatekCrm.Services.Domain;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
-using Microsoft.EntityFrameworkCore;
 using KamatekCrm.ApplicationCore.Interfaces;
-using KamatekCrm.ApplicationCore.Security;
+using KamatekCrm.ApplicationCore.DTOs.Transactions;
 
 namespace KamatekCrm.ViewModels
 {
@@ -101,28 +97,28 @@ namespace KamatekCrm.ViewModels
 
     public partial class PurchasingViewModel : ViewModelBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IPurchasingDomainService _purchasingService;
+        private readonly IPurchasingCommandService _purchasingCommands;
+        private readonly ITransactionReadService _transactionReads;
+        private readonly PurchaseReturnViewModel _purchaseReturnViewModel;
         private readonly IToastService _toastService;
-
-        private readonly IApplicationAuthorizationService _authorizationService;
+        private Guid _purchaseAttemptId = Guid.NewGuid();
 
         public PurchasingViewModel(
-            IUnitOfWork unitOfWork,
-            IPurchasingDomainService purchasingService,
-            IToastService toastService,
-            IApplicationAuthorizationService authorizationService)
+            IPurchasingCommandService purchasingCommands,
+            ITransactionReadService transactionReads,
+            PurchaseReturnViewModel purchaseReturnViewModel,
+            IToastService toastService)
         {
-            _unitOfWork = unitOfWork;
-            _purchasingService = purchasingService;
+            _purchasingCommands = purchasingCommands;
+            _transactionReads = transactionReads;
+            _purchaseReturnViewModel = purchaseReturnViewModel;
             _toastService = toastService;
-            _authorizationService = authorizationService;
 
             OrderItems = new ObservableCollection<PurchasingLineItem>();
             OrderItems.CollectionChanged += (s, e) => OnPropertyChanged(nameof(GrandTotal));
 
             SidebarItem = new PurchasingLineItem();
-            SidebarSearchResults = new ObservableCollection<Product>();
+            SidebarSearchResults = new ObservableCollection<PurchaseProductLookupDto>();
 
             // Commands
 
@@ -149,29 +145,29 @@ namespace KamatekCrm.ViewModels
         public bool IsNotBusy => !IsBusy;
 
         // Header Properties
-        private ObservableCollection<Supplier> _suppliers = new();
-        public ObservableCollection<Supplier> Suppliers
+        private ObservableCollection<SupplierLookupDto> _suppliers = new();
+        public ObservableCollection<SupplierLookupDto> Suppliers
         {
             get => _suppliers;
             set => SetProperty(ref _suppliers, value);
         }
 
-        private Supplier? _selectedSupplier;
-        public Supplier? SelectedSupplier
+        private SupplierLookupDto? _selectedSupplier;
+        public SupplierLookupDto? SelectedSupplier
         {
             get => _selectedSupplier;
             set => SetProperty(ref _selectedSupplier, value);
         }
 
-        private ObservableCollection<Warehouse> _warehouses = new();
-        public ObservableCollection<Warehouse> Warehouses
+        private ObservableCollection<WarehouseLookupDto> _warehouses = new();
+        public ObservableCollection<WarehouseLookupDto> Warehouses
         {
             get => _warehouses;
             set => SetProperty(ref _warehouses, value);
         }
 
-        private Warehouse? _selectedWarehouse;
-        public Warehouse? SelectedWarehouse
+        private WarehouseLookupDto? _selectedWarehouse;
+        public WarehouseLookupDto? SelectedWarehouse
         {
             get => _selectedWarehouse;
             set => SetProperty(ref _selectedWarehouse, value);
@@ -240,8 +236,8 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _isShowingSearchResults, value);
         }
 
-        private ObservableCollection<Product>? _sidebarSearchResults;
-        public ObservableCollection<Product>? SidebarSearchResults
+        private ObservableCollection<PurchaseProductLookupDto>? _sidebarSearchResults;
+        public ObservableCollection<PurchaseProductLookupDto>? SidebarSearchResults
         {
             get => _sidebarSearchResults;
             set => SetProperty(ref _sidebarSearchResults, value);
@@ -268,8 +264,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private ObservableCollection<PurchaseOrder> _historyOrders = new();
-        public ObservableCollection<PurchaseOrder> HistoryOrders
+        private ObservableCollection<PurchaseHistoryDto> _historyOrders = new();
+        public ObservableCollection<PurchaseHistoryDto> HistoryOrders
         {
             get => _historyOrders;
             set => SetProperty(ref _historyOrders, value);
@@ -299,18 +295,10 @@ namespace KamatekCrm.ViewModels
             IsBusy = true;
             try
             {
-                var context = ((UnitOfWork)_unitOfWork).Context;
-                var suppliers = await context.Suppliers
-                    .Where(s => s.IsActive)
-                    .OrderBy(s => s.CompanyName)
-                    .ToListAsync();
-                Suppliers = new ObservableCollection<Supplier>(suppliers);
-
-                var warehouses = await context.Warehouses
-                    .Where(w => w.IsActive)
-                    .OrderBy(w => w.Name)
-                    .ToListAsync();
-                Warehouses = new ObservableCollection<Warehouse>(warehouses);
+                var result = await _transactionReads.GetPurchasingWorkspaceAsync(historyTake: 0);
+                if (result.IsFailure || result.Value is null) throw new InvalidOperationException(result.Error);
+                Suppliers = new ObservableCollection<SupplierLookupDto>(result.Value.Suppliers);
+                Warehouses = new ObservableCollection<WarehouseLookupDto>(result.Value.Warehouses);
                 SelectedWarehouse = Warehouses.FirstOrDefault();
             }
             catch (Exception ex)
@@ -355,7 +343,12 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void OpenHistory()
         {
-            IsHistoryOpen = !IsHistoryOpen;
+            var window = new Views.PurchaseReturnWindow
+            {
+                Owner = System.Windows.Application.Current?.MainWindow,
+                DataContext = _purchaseReturnViewModel
+            };
+            window.ShowDialog();
         }
 
         [RelayCommand]
@@ -436,15 +429,10 @@ namespace KamatekCrm.ViewModels
 
                 await Task.Delay(300, token); // Debounce
 
-                var results = await ((UnitOfWork)_unitOfWork).Context.Products
-                    .Where(p => EF.Functions.ILike(p.ProductName, $"%{query}%") || 
-                                EF.Functions.ILike(p.SKU, $"%{query}%") || 
-                                EF.Functions.ILike(p.Barcode, $"%{query}%"))
-                    .Take(10)
-                    .ToListAsync(token);
-
-                SidebarSearchResults = new ObservableCollection<Product>(results);
-                IsShowingSearchResults = results.Any();
+                var result = await _transactionReads.SearchPurchaseProductsAsync(query, 10, token);
+                if (result.IsFailure || result.Value is null) throw new InvalidOperationException(result.Error);
+                SidebarSearchResults = new ObservableCollection<PurchaseProductLookupDto>(result.Value);
+                IsShowingSearchResults = result.Value.Any();
             }
             catch (TaskCanceledException)
             {
@@ -457,14 +445,14 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void SelectSearchResult(Product? product)
+        private void SelectSearchResult(PurchaseProductLookupDto? product)
         {
             if (product == null) return;
             
             SidebarItem!.ProductId = product.Id;
             SidebarItem.IsNewProduct = false;
             SidebarItem.ProductName = product.ProductName;
-            SidebarItem.Sku = product.SKU;
+            SidebarItem.Sku = product.Sku;
             SidebarItem.Barcode = product.Barcode;
             SidebarItem.Unit = product.Unit;
             SidebarItem.UnitPrice = product.PurchasePrice;
@@ -518,147 +506,57 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task SaveAndReceive()
         {
-            var authorization = _authorizationService.Authorize(ApplicationPermission.ApprovePurchase);
-            if (authorization.IsFailure)
+            if (SelectedSupplier is null || SelectedWarehouse is null)
             {
-                _toastService.ShowError(authorization.Error);
+                _toastService.ShowWarning("Tedarikçi ve teslim deposu seçilmelidir.");
                 return;
             }
-
-            if (SelectedSupplier == null)
+            if (OrderItems.Count == 0)
             {
-                _toastService.ShowWarning("Lütfen bir tedarikçi seçin.");
+                _toastService.ShowWarning("En az bir satın alma kalemi ekleyin.");
                 return;
-            }
-            if (!OrderItems.Any())
-            {
-                _toastService.ShowWarning("Lütfen listeye en az bir ürün ekleyin.");
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(InvoiceNumber))
-            {
-                InvoiceNumber = $"INV-{DateTime.Now:yyyyMMddHHmmss}";
             }
 
             IsBusy = true;
-            await _unitOfWork.BeginTransactionAsync();
             try
             {
-                var order = new PurchaseOrder
+                var paymentMethod = ParsePaymentMethod(SelectedPaymentMethod);
+                var command = new CreatePurchaseCommand(
+                    SelectedSupplier.Id,
+                    string.IsNullOrWhiteSpace(InvoiceNumber) ? $"INV-{DateTime.UtcNow:yyyyMMddHHmmss}" : InvoiceNumber,
+                    InvoiceDate,
+                    OrderItems.Select(item => new PurchaseLineInput(
+                        item.ProductId,
+                        item.ProductName,
+                        item.Quantity,
+                        item.UnitPrice,
+                        0,
+                        item.VatRate,
+                        item.LineTotal,
+                        item.Sku,
+                        item.Barcode,
+                        item.Unit)).ToList(),
+                    null,
+                    App.CurrentUser?.AdSoyad ?? "Sistem",
+                    _purchaseAttemptId.ToString(),
+                    true,
+                    SelectedWarehouse.Id,
+                    new[] { new PaymentAllocationInput(paymentMethod, GrandTotal) });
+                var result = await _purchasingCommands.CreatePurchaseAsync(command);
+                if (result.IsFailure)
                 {
-                    SupplierId = SelectedSupplier.Id,
-                    InvoiceNumber = InvoiceNumber,
-                    OrderDate = InvoiceDate,
-                    Date = DateTime.UtcNow,
-                    Status = PurchaseStatus.Pending,
-                    Items = new List<PurchaseOrderItem>()
-                };
-
-                foreach (var line in OrderItems)
-                {
-                    int productId;
-                    if (line.IsNewProduct)
-                    {
-                        var newProd = new Product
-                        {
-                            ProductName = line.ProductName,
-                            SKU = string.IsNullOrWhiteSpace(line.Sku) ? $"SKU-{DateTime.Now.Ticks.ToString()[^6..]}" : line.Sku,
-                            Barcode = line.Barcode,
-                            Unit = string.IsNullOrWhiteSpace(line.Unit) ? "Adet" : line.Unit,
-                            VatRate = line.VatRate,
-                            PurchasePrice = line.UnitPrice,
-                            TotalStockQuantity = 0, // Will be updated by DomainService
-                            AverageCost = 0,
-                            ProductCategoryType = ProductCategoryType.Other // Default
-                        };
-                        ((UnitOfWork)_unitOfWork).Context.Products.Add(newProd);
-                        await _unitOfWork.SaveChangesAsync(); // To get the new ID
-                        productId = newProd.Id;
-                    }
-                    else
-                    {
-                        productId = line.ProductId!.Value;
-                        // Opsiyonel: Ürünün mevcut KDV oranını da güncelleyebiliriz
-                        // var existingProduct = await ((UnitOfWork)_unitOfWork).Context.Products.FindAsync(productId);
-                        // if(existingProduct != null) { existingProduct.VatRate = line.VatRate; }
-                    }
-
-                    var poItem = new PurchaseOrderItem
-                    {
-                        ProductId = productId,
-                        ProductName = line.ProductName,
-                        Quantity = line.Quantity,
-                        UnitPrice = line.UnitPrice,
-                        TaxRate = line.VatRate,
-                        TaxAmount = (line.Quantity * line.UnitPrice) * line.VatRate / 100m,
-                        LineTotal = line.LineTotal,
-                        SubTotal = line.Quantity * line.UnitPrice
-                    };
-                    order.Items.Add(poItem);
-                    order.TotalAmount += poItem.LineTotal;
+                    _toastService.ShowError(result.Error);
+                    return;
                 }
 
-                var context = ((UnitOfWork)_unitOfWork).Context;
-                context.PurchaseOrders.Add(order);
-                await _unitOfWork.SaveChangesAsync(); // Save PO to get PO Id
-
-                // Stok İşlemi İçin Domain Service Çağrısı
-                var warehouseId = SelectedWarehouse?.Id ?? (await context.Warehouses.FirstOrDefaultAsync(w => w.IsActive))?.Id ?? 1;
-
-                var result = await _purchasingService.CompletePurchaseOrderAsync(new PurchaseCompletionRequest
-                {
-                    PurchaseOrderId = order.Id,
-                    WarehouseId = warehouseId,
-                    CreatedBy = App.CurrentUser?.AdSoyad
-                });
-
-                if (result.Success)
-                {
-                    // Tedarikçi Cari Borç & Kasa Entegrasyonu
-                    var dbSupplier = await context.Suppliers.FindAsync(SelectedSupplier.Id);
-                    if (dbSupplier != null)
-                    {
-                        if (SelectedPaymentMethod.Contains("Cari Borç"))
-                        {
-                            dbSupplier.Balance += order.TotalAmount;
-                        }
-                        else
-                        {
-                            var cashExp = new CashTransaction
-                            {
-                                Date = DateTime.UtcNow,
-                                Amount = order.TotalAmount,
-                                TransactionType = SelectedPaymentMethod.Contains("Kart") ? CashTransactionType.Expense : CashTransactionType.Expense,
-                                Description = $"Satın Alma Faturası Peşin Ödeme: {InvoiceNumber} ({SelectedSupplier.CompanyName})",
-                                Category = "Malzeme / Demirbaş",
-                                CreatedBy = App.CurrentUser?.AdSoyad ?? "Sistem",
-                                CreatedAt = DateTime.UtcNow
-                            };
-                            context.CashTransactions.Add(cashExp);
-                        }
-                    }
-
-                    await _unitOfWork.SaveChangesAsync();
-                    await _unitOfWork.CommitAsync();
-                    _toastService.ShowSuccess("İşlem başarıyla tamamlandı, stoklar ve cari hesap güncellendi.");
-                    
-                    // Reset Form
-                    OrderItems.Clear();
-                    SelectedSupplier = null;
-                    InvoiceNumber = "";
-                    InvoiceDate = DateTime.Today;
-                    OnPropertyChanged(nameof(GrandTotal));
-                }
-                else
-                {
-                    await _unitOfWork.RollbackAsync();
-                    _toastService.ShowError($"Stoklara işlenirken hata oluştu: {result.ErrorMessage}");
-                }
-            }
-            catch (Exception ex)
-            {
-                await _unitOfWork.RollbackAsync();
-                _toastService.ShowError($"Kritik hata: {ex.Message}");
+                _toastService.ShowSuccess("Sipariş, stok, cari ve kasa kayıtları tek işlemde tamamlandı.");
+                OrderItems.Clear();
+                _purchaseAttemptId = Guid.NewGuid();
+                SelectedSupplier = null;
+                InvoiceNumber = string.Empty;
+                InvoiceDate = DateTime.Today;
+                OnPropertyChanged(nameof(GrandTotal));
+                await LoadHistoryAsync();
             }
             finally
             {
@@ -666,16 +564,19 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        private static PaymentMethod ParsePaymentMethod(string value) =>
+            value.Contains("Cari", StringComparison.OrdinalIgnoreCase) ? PaymentMethod.OnAccount :
+            value.Contains("Kart", StringComparison.OrdinalIgnoreCase) ? PaymentMethod.CreditCard :
+            value.Contains("Havale", StringComparison.OrdinalIgnoreCase) ? PaymentMethod.BankTransfer :
+            PaymentMethod.Cash;
+
         private async Task LoadHistoryAsync()
         {
             try
             {
-                var orders = await ((UnitOfWork)_unitOfWork).Context.PurchaseOrders
-                    .Include(o => o.Supplier)
-                    .OrderByDescending(o => o.OrderDate)
-                    .Take(20)
-                    .ToListAsync();
-                HistoryOrders = new ObservableCollection<PurchaseOrder>(orders);
+                var result = await _transactionReads.GetPurchaseHistoryAsync(20);
+                if (result.IsFailure || result.Value is null) throw new InvalidOperationException(result.Error);
+                HistoryOrders = new ObservableCollection<PurchaseHistoryDto>(result.Value);
             }
             catch (Exception ex)
             {

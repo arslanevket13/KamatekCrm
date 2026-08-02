@@ -6,6 +6,7 @@ using KamatekCrm.Infrastructure.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using Moq;
 
 namespace KamatekCrm.Tests.Services;
@@ -89,7 +90,7 @@ public class ServiceJobCommandServiceTests
         storedJob.IsStockReserved.Should().BeFalse();
         (await verify.Inventories.SingleAsync()).Quantity.Should().Be(3);
         (await verify.StockReservations.SingleAsync()).IsActive.Should().BeFalse();
-        (await verify.ServiceJobHistories.CountAsync()).Should().Be(1);
+        (await verify.ServiceJobHistories.CountAsync()).Should().Be(2);
         (await verify.CustomerActivities.CountAsync()).Should().Be(1);
         (await verify.Customers.SingleAsync()).TotalSpent.Should().Be(240m);
     }
@@ -117,7 +118,7 @@ public class ServiceJobCommandServiceTests
         job.LaborCost.Should().Be(850m);
         job.DiscountAmount.Should().Be(50m);
         job.RepairStatus.Should().Be(RepairStatus.Delivered);
-        (await verify.ServiceJobHistories.SingleAsync()).TechnicianNote
+        (await verify.ServiceJobHistories.SingleAsync(item => item.Action == "StatusChanged")).TechnicianNote
             .Should().Be("Cihaz test edilerek teslim edildi.");
     }
 
@@ -142,7 +143,7 @@ public class ServiceJobCommandServiceTests
         var job = await verify.ServiceJobs.SingleAsync();
         job.Status.Should().Be(JobStatus.Quoting);
         job.IsConvertedToQuote.Should().BeTrue();
-        (await verify.ServiceJobHistories.CountAsync()).Should().Be(1);
+        (await verify.ServiceJobHistories.CountAsync()).Should().Be(2);
     }
 
     [Fact]
@@ -160,6 +161,127 @@ public class ServiceJobCommandServiceTests
         await using var verify = await factory.CreateDbContextAsync();
         (await verify.ServiceJobs.CountAsync()).Should().Be(0);
         (await verify.StockReservations.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task SaveAsync_WithQuickCustomerAndNewAsset_CreatesWholeAggregateAtomically()
+    {
+        var (service, factory, _) = CreateService(stockQuantity: 5);
+        var job = NewJob(0, JobStatus.Pending);
+
+        var result = await service.SaveAsync(new ServiceJobSaveRequest(
+            job,
+            [],
+            false,
+            "test-user",
+            new ServiceJobQuickCustomerInput("Yeni Müşteri", "0532 999 88 77"),
+            new ServiceJobNewAssetInput(JobCategory.CCTV, "Kamera", "X1", "SER-1", "Giriş")));
+
+        result.IsSuccess.Should().BeTrue(result.Error);
+        var saveResult = result.Value!;
+        await using var verify = await factory.CreateDbContextAsync();
+        var storedJob = await verify.ServiceJobs.SingleAsync();
+        var customer = await verify.Customers.SingleAsync(item => item.Id == saveResult.CustomerId);
+        var asset = await verify.CustomerAssets.SingleAsync();
+        customer.FullName.Should().Be("Yeni Müşteri");
+        asset.CustomerId.Should().Be(customer.Id);
+        storedJob.CustomerId.Should().Be(customer.Id);
+        storedJob.CustomerAssetId.Should().Be(asset.Id);
+        saveResult.CustomerAssetId.Should().Be(asset.Id);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ReleasesReservationAndSoftDeletesPendingJob()
+    {
+        var (service, factory, customerId) = CreateService(stockQuantity: 5);
+        var save = await service.SaveAsync(new ServiceJobSaveRequest(
+            NewJob(customerId, JobStatus.Pending),
+            [NewItem(quantity: 2)],
+            false,
+            "test-user"));
+
+        var result = await service.DeleteAsync(save.Value!.JobId, "test-user");
+
+        result.IsSuccess.Should().BeTrue(result.Error);
+        await using var verify = await factory.CreateDbContextAsync();
+        (await verify.ServiceJobs.CountAsync()).Should().Be(0);
+        var deleted = await verify.ServiceJobs.IgnoreQueryFilters().SingleAsync();
+        deleted.IsDeleted.Should().BeTrue();
+        deleted.DeletedBy.Should().Be("test-user");
+        (await verify.StockReservations.SingleAsync()).IsActive.Should().BeFalse();
+        (await verify.ServiceJobHistories.CountAsync()).Should().Be(2);
+        (await verify.ServiceJobHistories.SingleAsync(item => item.Action == "Deleted")).Action.Should().Be("Deleted");
+    }
+
+    [Fact]
+    public async Task DeleteAsync_RejectsCompletedJobWithoutChangingData()
+    {
+        var (service, factory, customerId) = CreateService(stockQuantity: 5);
+        var save = await service.SaveAsync(new ServiceJobSaveRequest(
+            NewJob(customerId, JobStatus.InProgress),
+            [NewItem(quantity: 1)],
+            false,
+            "test-user"));
+        (await service.ChangeStatusAsync(save.Value!.JobId, JobStatus.Completed, "test-user")).IsSuccess.Should().BeTrue();
+
+        var result = await service.DeleteAsync(save.Value.JobId, "test-user");
+
+        result.IsFailure.Should().BeTrue();
+        await using var verify = await factory.CreateDbContextAsync();
+        (await verify.ServiceJobs.SingleAsync()).Status.Should().Be(JobStatus.Completed);
+        (await verify.Inventories.SingleAsync()).Quantity.Should().Be(4);
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenAggregateValidationFails_RollsBackQuickCustomerOnRelationalProvider()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<AppDbContext>().UseSqlite(connection).Options;
+        int foreignAssetId;
+        await using (var seed = new AppDbContext(options))
+        {
+            await seed.Database.EnsureCreatedAsync();
+            var existingCustomer = new Customer
+            {
+                FullName = "Mevcut Müşteri",
+                CustomerCode = "EXISTING",
+                PhoneNumber = "0532 000 00 00"
+            };
+            seed.Customers.Add(existingCustomer);
+            await seed.SaveChangesAsync();
+            var foreignAsset = new CustomerAsset
+            {
+                CustomerId = existingCustomer.Id,
+                Brand = "Eski",
+                Model = "Cihaz"
+            };
+            seed.CustomerAssets.Add(foreignAsset);
+            await seed.SaveChangesAsync();
+            foreignAssetId = foreignAsset.Id;
+        }
+
+        var factory = new Mock<IDbContextFactory<AppDbContext>>();
+        factory.Setup(item => item.CreateDbContextAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new AppDbContext(options));
+        var service = new ServiceJobCommandService(
+            factory.Object,
+            new ServiceJobStatusPolicy(),
+            new TestAuthorizationService());
+        var job = NewJob(0, JobStatus.Pending);
+        job.CustomerAssetId = foreignAssetId;
+
+        var result = await service.SaveAsync(new ServiceJobSaveRequest(
+            job,
+            [],
+            false,
+            "test-user",
+            new ServiceJobQuickCustomerInput("Geri Alınacak", "0532 999 99 99")));
+
+        result.IsFailure.Should().BeTrue();
+        await using var verify = new AppDbContext(options);
+        (await verify.Customers.CountAsync()).Should().Be(1, "hızlı müşteri aynı transaction ile geri alınmalıdır");
+        (await verify.ServiceJobs.CountAsync()).Should().Be(0);
     }
 
     private static (ServiceJobCommandService Service, IDbContextFactory<AppDbContext> Factory, int CustomerId)

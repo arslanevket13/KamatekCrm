@@ -2,17 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using GongSolutions.Wpf.DragDrop;
 using CommunityToolkit.Mvvm.Input;
-using KamatekCrm.Infrastructure.Data;
+using KamatekCrm.ApplicationCore.DTOs.ProjectQuotes;
+using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.ApplicationCore.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Services;
 using KamatekCrm.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
@@ -22,8 +23,15 @@ namespace KamatekCrm.ViewModels
     /// </summary>
     public partial class ProjectQuoteEditorViewModel : ViewModelBase, IDropTarget
     {
-        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
-        private readonly ProjectScopeService _scopeService;
+        private readonly IProjectQuoteReadService _readService;
+        private readonly IProjectQuoteCommandService _commandService;
+        private readonly IDialogService _dialogService;
+        private readonly IToastService _toastService;
+        private readonly PdfService _pdfService;
+        private readonly EmailService _emailService;
+        private readonly Task _workspaceLoadTask;
+        private Guid _saveOperationId = Guid.NewGuid();
+        private ProjectQuotePricingResult _pricing = EmptyPricing();
 
         // Undo / Redo Yığınları
         private readonly Stack<string> _undoStack = new();
@@ -210,8 +218,8 @@ namespace KamatekCrm.ViewModels
 
         #region Properties - Finansal Özet
 
-        public decimal TotalRevenue => RootNodes.Sum(n => n.RecursiveTotal);
-        public decimal TotalCost => RootNodes.Sum(n => n.RecursiveTotalCost);
+        public decimal TotalRevenue => _pricing.GrossRevenue;
+        public decimal TotalCost => _pricing.TotalCost;
 
         private decimal _discountPercent;
         public decimal DiscountPercent
@@ -227,8 +235,8 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        public decimal DiscountAmount => TotalRevenue * (DiscountPercent / 100);
-        public decimal SubTotalAfterDiscount => TotalRevenue - DiscountAmount;
+        public decimal DiscountAmount => _pricing.DiscountAmount;
+        public decimal SubTotalAfterDiscount => _pricing.NetRevenue;
 
         private decimal _kdvRate = 20;
         public decimal KdvRate
@@ -244,18 +252,18 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        public decimal KdvAmount => SubTotalAfterDiscount * (KdvRate / 100);
-        public decimal GrandTotal => SubTotalAfterDiscount + KdvAmount;
-        public decimal TotalProfit => SubTotalAfterDiscount - TotalCost;
-        public decimal OverallMargin => SubTotalAfterDiscount > 0 ? (TotalProfit / SubTotalAfterDiscount) * 100 : 0;
+        public decimal KdvAmount => _pricing.VatAmount;
+        public decimal GrandTotal => _pricing.GrandTotal;
+        public decimal TotalProfit => _pricing.TotalProfit;
+        public decimal OverallMargin => _pricing.MarginPercent;
 
-        public string TotalRevenueDisplay => $"₺{TotalRevenue:N0}";
-        public string TotalCostDisplay => $"₺{TotalCost:N0}";
-        public string DiscountAmountDisplay => $"-₺{DiscountAmount:N0}";
-        public string SubTotalDisplay => $"₺{SubTotalAfterDiscount:N0}";
-        public string KdvAmountDisplay => $"+₺{KdvAmount:N0}";
-        public string GrandTotalDisplay => $"₺{GrandTotal:N0}";
-        public string TotalProfitDisplay => $"₺{TotalProfit:N0}";
+        public string TotalRevenueDisplay => $"₺{TotalRevenue:N2}";
+        public string TotalCostDisplay => $"₺{TotalCost:N2}";
+        public string DiscountAmountDisplay => $"-₺{DiscountAmount:N2}";
+        public string SubTotalDisplay => $"₺{SubTotalAfterDiscount:N2}";
+        public string KdvAmountDisplay => $"+₺{KdvAmount:N2}";
+        public string GrandTotalDisplay => $"₺{GrandTotal:N2}";
+        public string TotalProfitDisplay => $"₺{TotalProfit:N2}";
         public string OverallMarginDisplay => $"%{OverallMargin:N1}";
         public string ProfitColor => TotalProfit >= 0 ? "#4CAF50" : "#F44336";
 
@@ -266,12 +274,22 @@ namespace KamatekCrm.ViewModels
 
         #region Constructor
 
-        public ProjectQuoteEditorViewModel(IDbContextFactory<AppDbContext> dbContextFactory, ProjectScopeService scopeService)
+        public ProjectQuoteEditorViewModel(
+            IProjectQuoteReadService readService,
+            IProjectQuoteCommandService commandService,
+            IDialogService dialogService,
+            IToastService toastService,
+            PdfService pdfService,
+            EmailService emailService)
         {
-            _dbContextFactory = dbContextFactory;
-            _scopeService = scopeService;
+            _readService = readService;
+            _commandService = commandService;
+            _dialogService = dialogService;
+            _toastService = toastService;
+            _pdfService = pdfService;
+            _emailService = emailService;
 
-            _ = RefreshAsync();
+            _workspaceLoadTask = RefreshAsync();
         }
 
         public void LoadExistingProject(int projectId)
@@ -287,25 +305,24 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                
-                var customers = await context.Customers.OrderBy(c => c.FullName).ToListAsync();
-                Customers.Clear();
-                foreach (var c in customers)
-                    Customers.Add(c);
+                var result = await _readService.GetWorkspaceAsync();
+                if (result.IsFailure || result.Value is null)
+                {
+                    _toastService.ShowError(result.Error);
+                    return;
+                }
 
-                var products = await context.Products
-                    .OrderBy(p => p.ProductCategoryType)
-                    .ThenBy(p => p.ProductName)
-                    .ToListAsync();
+                Customers.Clear();
+                foreach (var customer in result.Value.Customers)
+                    Customers.Add(ToCustomer(customer));
 
                 ProductCatalog.Clear();
                 FilteredProducts.Clear();
                 Categories.Clear();
 
                 Categories.Add("Tümü");
-                var categoryNames = products
-                    .Select(p => p.ProductCategoryType.ToString())
+                var categoryNames = result.Value.Products
+                    .Select(product => product.Category.ToString())
                     .Distinct()
                     .OrderBy(c => c);
 
@@ -314,15 +331,16 @@ namespace KamatekCrm.ViewModels
                     Categories.Add(cat);
                 }
 
-                foreach (var p in products)
+                foreach (var product in result.Value.Products)
                 {
+                    var p = ToProduct(product);
                     ProductCatalog.Add(p);
                     FilteredProducts.Add(p);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Veri yüklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"Teklif çalışma alanı yüklenemedi: {ex.Message}");
             }
         }
 
@@ -330,34 +348,42 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                var (project, nodes) = await Task.Run(() => _scopeService.LoadProject(projectId));
-                if (project != null)
+                await _workspaceLoadTask;
+                var result = await _readService.GetAsync(projectId);
+                if (result.IsFailure || result.Value is null)
                 {
-                    CurrentProject = project;
-                    ProjectName = project.Title;
-                    SelectedCustomer = Customers.FirstOrDefault(c => c.Id == project.CustomerId);
-
-                    _discountPercent = project.DiscountPercent;
-                    OnPropertyChanged(nameof(DiscountPercent));
-                    _kdvRate = project.KdvRate > 0 ? project.KdvRate : 20;
-                    OnPropertyChanged(nameof(KdvRate));
-
-                    RootNodes.Clear();
-                    foreach (var node in nodes)
-                    {
-                        RootNodes.Add(node);
-                    }
-
-                    _undoStack.Clear();
-                    _redoStack.Clear();
-                    SaveSnapshot();
-
-                    NotifyFinancialsChanged();
+                    _toastService.ShowError(result.Error);
+                    return;
                 }
+
+                var detail = result.Value;
+                var project = ToProject(detail);
+                var nodes = ProjectScopeService.Deserialize(detail.ProjectScopeJson);
+                CurrentProject = project;
+                ProjectName = project.Title;
+                SelectedCustomer = Customers.FirstOrDefault(c => c.Id == project.CustomerId);
+
+                _discountPercent = project.DiscountPercent;
+                OnPropertyChanged(nameof(DiscountPercent));
+                _kdvRate = project.KdvRate;
+                OnPropertyChanged(nameof(KdvRate));
+
+                RootNodes.Clear();
+                foreach (var node in nodes)
+                {
+                    RootNodes.Add(node);
+                }
+
+                _undoStack.Clear();
+                _redoStack.Clear();
+                SaveSnapshot();
+                _saveOperationId = Guid.NewGuid();
+
+                NotifyFinancialsChanged();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Proje yükleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"Proje teklifi yüklenemedi: {ex.Message}");
             }
         }
 
@@ -487,26 +513,24 @@ namespace KamatekCrm.ViewModels
         #region Yapı Oluşturma & Toplu Marj
 
         [RelayCommand]
-        private void GenerateStructure()
+        private async Task GenerateStructure()
         {
             if (string.IsNullOrWhiteSpace(ProjectName))
             {
-                MessageBox.Show("Lütfen proje adı girin.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService.ShowWarning("Lütfen proje adı girin.");
                 return;
             }
 
-            var result = MessageBox.Show(
+            var confirmed = await _dialogService.ShowConfirmationAsync(
                 $"Yapı oluşturulacak:\n\n" +
                 $"Blok: {BlockCount}\n" +
                 $"Kat: {FloorCount}\n" +
                 $"Daire/Kat: {FlatsPerFloor}\n\n" +
                 $"Toplam: {BlockCount * FloorCount * FlatsPerFloor} daire\n\n" +
                 "Mevcut yapı yeniden oluşturulacak. Devam edilsin mi?",
-                "Yapı Oluştur",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                "Yapı Oluştur");
 
-            if (result != MessageBoxResult.Yes) return;
+            if (!confirmed) return;
 
             SaveSnapshot();
 
@@ -522,23 +546,28 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void ApplyBulkMargin()
+        private async Task ApplyBulkMargin()
         {
             var targetNode = SelectedNode ?? RootNodes.FirstOrDefault();
             if (targetNode == null) return;
 
-            var input = Microsoft.VisualBasic.Interaction.InputBox(
+            var input = await _dialogService.ShowInputAsync(
                 $"'{targetNode.Name}' ve altındaki tüm ürünlere eklenmek istenen KAR MARJI (%) oranını girin:",
                 "Toplu Kar Marjı Uygula",
                 "20");
 
             if (decimal.TryParse(input, out decimal marginPercent))
             {
+                if (marginPercent is < -100 or > 10_000)
+                {
+                    _toastService.ShowWarning("Kar marjı -100 ile 10.000 arasında olmalıdır.");
+                    return;
+                }
                 SaveSnapshot();
                 ApplyMarginRecursive(targetNode, marginPercent);
                 NotifyFinancialsChanged();
                 SaveSnapshot();
-                MessageBox.Show($"%{marginPercent:N0} kar marjı başarıyla uygulandı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                _toastService.ShowSuccess($"%{marginPercent:N0} kar marjı uygulandı.");
             }
         }
 
@@ -673,17 +702,15 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void RemoveNode()
+        private async Task RemoveNode()
         {
             if (SelectedNode == null || SelectedNode.Type == NodeType.Project) return;
 
-            var result = MessageBox.Show(
+            var confirmed = await _dialogService.ShowConfirmationAsync(
                 $"'{SelectedNode.Name}' ve tüm alt öğeleri silinecek. Devam edilsin mi?",
-                "Node Sil",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                "Kapsam Düğümünü Sil");
 
-            if (result != MessageBoxResult.Yes) return;
+            if (!confirmed) return;
 
             SaveSnapshot();
             var parent = SelectedNode.Parent;
@@ -704,7 +731,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void ApplyToSiblings()
+        private async Task ApplyToSiblings()
         {
             if (SelectedNode?.Parent == null) return;
 
@@ -714,17 +741,15 @@ namespace KamatekCrm.ViewModels
 
             if (!siblings.Any())
             {
-                MessageBox.Show("Aynı tipte başka node bulunamadı.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                _toastService.ShowInfo("Aynı tipte başka kapsam düğümü bulunamadı.");
                 return;
             }
 
-            var result = MessageBox.Show(
+            var confirmed = await _dialogService.ShowConfirmationAsync(
                 $"Bu node'un kalemleri {siblings.Count} kardeş node'a kopyalanacak. Devam edilsin mi?",
-                "Kardeşlere Uygula",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                "Kardeşlere Uygula");
 
-            if (result != MessageBoxResult.Yes) return;
+            if (!confirmed) return;
 
             SaveSnapshot();
             foreach (var sibling in siblings)
@@ -735,7 +760,7 @@ namespace KamatekCrm.ViewModels
 
             NotifyFinancialsChanged();
             SaveSnapshot();
-            MessageBox.Show($"{siblings.Count} node güncellendi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+            _toastService.ShowSuccess($"{siblings.Count} kapsam düğümü güncellendi.");
         }
 
         #endregion
@@ -848,6 +873,8 @@ namespace KamatekCrm.ViewModels
 
         public void NotifyFinancialsChanged()
         {
+            var pricing = ProjectQuotePricingPolicy.Calculate(RootNodes, DiscountPercent, KdvRate);
+            _pricing = pricing.Value ?? EmptyPricing();
             OnPropertyChanged(nameof(TotalRevenue));
             OnPropertyChanged(nameof(TotalCost));
             OnPropertyChanged(nameof(DiscountAmount));
@@ -872,6 +899,9 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(CanRedo));
         }
 
+        private static ProjectQuotePricingResult EmptyPricing() =>
+            new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
         #endregion
 
         #region Kaydetme, PDF & E-Posta
@@ -881,116 +911,108 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedCustomer == null)
             {
-                MessageBox.Show("Lütfen projeyi kaydetmeden önce bir MÜŞTERİ seçiniz.", "Müşteri Seçilmedi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService.ShowWarning("Projeyi kaydetmeden önce bir müşteri seçin.");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(ProjectName))
             {
-                MessageBox.Show("Lütfen projeyi kaydetmeden önce bir PROJE ADI giriniz.", "Proje Adı Eksik", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService.ShowWarning("Projeyi kaydetmeden önce proje adı girin.");
                 return;
             }
 
             try
             {
-                CurrentProject.Title = ProjectName;
+                var result = await _commandService.SaveAsync(new SaveProjectQuoteCommand(
+                    _saveOperationId,
+                    CurrentProject.Id > 0 ? CurrentProject.Id : null,
+                    CurrentProject.RevisionNumber,
+                    SelectedCustomer.Id,
+                    ProjectName,
+                    ProjectScopeService.Serialize(RootNodes.ToList()),
+                    DiscountPercent,
+                    KdvRate));
+                if (result.IsFailure || result.Value is null)
+                {
+                    _toastService.ShowError(result.Error);
+                    return;
+                }
+
+                var saved = result.Value;
+                CurrentProject.Id = saved.ProjectId;
+                CurrentProject.Title = ProjectName.Trim();
                 CurrentProject.CustomerId = SelectedCustomer.Id;
+                CurrentProject.ProjectCode = saved.ProjectCode;
+                CurrentProject.QuoteNumber = saved.QuoteNumber;
+                CurrentProject.RevisionNumber = saved.RevisionNumber;
+                CurrentProject.QuoteStatus = saved.Status;
+                CurrentProject.ProjectScopeJson = ProjectScopeService.Serialize(RootNodes.ToList());
+                CurrentProject.DiscountPercent = DiscountPercent;
+                CurrentProject.KdvRate = KdvRate;
+                CurrentProject.TotalBudget = saved.Pricing.NetRevenue;
+                CurrentProject.TotalCost = saved.Pricing.TotalCost;
+                CurrentProject.TotalProfit = saved.Pricing.TotalProfit;
+                _pricing = saved.Pricing;
+                _saveOperationId = Guid.NewGuid();
+                NotifyFinancialsChanged();
 
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-
-                if (string.IsNullOrEmpty(CurrentProject.QuoteNumber))
-                {
-                    var year = DateTime.UtcNow.Year;
-                    var count = await context.ServiceProjects.CountAsync(p => p.QuoteNumber != null && p.CreatedDate.Year == year) + 1;
-                    CurrentProject.QuoteNumber = $"TEK-{year}-{count:D3}";
-                }
-
-                if (CurrentProject.Id > 0)
-                {
-                    var revisions = new List<QuoteRevision>();
-                    if (!string.IsNullOrEmpty(CurrentProject.RevisionsJson))
-                    {
-                        revisions = JsonSerializer.Deserialize<List<QuoteRevision>>(CurrentProject.RevisionsJson) ?? new();
-                    }
-
-                    revisions.Add(new QuoteRevision
-                    {
-                        RevisionNumber = CurrentProject.RevisionNumber,
-                        CreatedDate = DateTime.UtcNow,
-                        ChangeDescription = $"R{CurrentProject.RevisionNumber} kaydedildi",
-                        TotalBudget = SubTotalAfterDiscount,
-                        DiscountPercent = DiscountPercent,
-                        ScopeSnapshotJson = ProjectScopeService.Serialize(RootNodes.ToList())
-                    });
-
-                    CurrentProject.RevisionsJson = JsonSerializer.Serialize(revisions);
-                    CurrentProject.RevisionNumber++;
-                }
-
-                await Task.Run(() => _scopeService.SaveProject(CurrentProject, RootNodes.ToList()));
-
-                MessageBox.Show(
-                    $"Proje başarıyla kaydedildi!\n\n" +
-                    $"Proje Kodu: {CurrentProject.ProjectCode}\n" +
-                    $"Teklif No: {CurrentProject.QuoteNumber}\n" +
-                    $"Revizyon: R{CurrentProject.RevisionNumber}\n" +
-                    $"Toplam: {GrandTotalDisplay}\n" +
-                    $"Kar: {TotalProfitDisplay} ({OverallMarginDisplay})",
-                    "Başarılı",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                var message = saved.WasAlreadyApplied
+                    ? $"Teklif daha önce kaydedilmişti: {saved.QuoteNumber} / R{saved.RevisionNumber}"
+                    : saved.WasNoOp
+                        ? $"Değişiklik bulunmadı: {saved.QuoteNumber} / R{saved.RevisionNumber}"
+                        : $"Teklif kaydedildi: {saved.QuoteNumber} / R{saved.RevisionNumber} — {GrandTotalDisplay}";
+                _toastService.ShowSuccess(message);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Kayıt sırasında hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"Teklif kaydı tamamlanamadı: {ex.Message}");
             }
         }
 
         [RelayCommand]
-        private void ExportPdf()
+        private async Task ExportPdf()
         {
             if (!RootNodes.Any())
             {
-                MessageBox.Show("Dışa aktarılacak veri yok.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService.ShowWarning("Dışa aktarılacak teklif kapsamı yok.");
                 return;
             }
 
-            var dialog = new Microsoft.Win32.SaveFileDialog
-            {
-                FileName = $"Teklif_{ProjectName}_{DateTime.UtcNow:yyyyMMdd}",
-                DefaultExt = ".pdf",
-                Filter = "PDF Belgeleri (.pdf)|*.pdf"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                GeneratePdf(dialog.FileName, true);
-            }
+            var filePath = await _dialogService.ShowSaveFileDialogAsync(
+                "Proje Teklifini Kaydet",
+                "PDF Belgeleri (.pdf)|*.pdf",
+                $"Teklif_{SanitizeFileName(ProjectName)}_{DateTime.UtcNow:yyyyMMdd}.pdf");
+            if (!string.IsNullOrWhiteSpace(filePath)) await GeneratePdfAsync(filePath, true);
         }
 
-        private void GeneratePdf(string filePath, bool openAfter)
+        private async Task<bool> GeneratePdfAsync(string filePath, bool openAfter)
         {
             try
             {
-                var pdfService = new PdfService();
-                var exportProject = CurrentProject;
-                exportProject.Title = ProjectName;
-                if (SelectedCustomer != null) exportProject.Customer = SelectedCustomer;
+                var exportProject = CloneForExport();
 
-                pdfService.GenerateProjectQuote(exportProject, RootNodes.ToList(), filePath);
+                _pdfService.GenerateProjectQuote(exportProject, RootNodes.ToList(), filePath);
 
                 if (openAfter)
                 {
-                    var result = MessageBox.Show("PDF oluşturuldu. Açmak ister misiniz?", "Başarılı", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                    if (result == MessageBoxResult.Yes)
+                    var shouldOpen = await _dialogService.ShowConfirmationAsync(
+                        "PDF oluşturuldu. Şimdi açmak ister misiniz?",
+                        "Teklif PDF'i Hazır");
+                    if (shouldOpen)
                     {
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
                     }
                 }
+                else
+                {
+                    _toastService.ShowSuccess("Teklif PDF'i oluşturuldu.");
+                }
+                return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"PDF oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"PDF oluşturulamadı: {ex.Message}");
+                return false;
             }
         }
 
@@ -999,33 +1021,131 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedCustomer == null || string.IsNullOrWhiteSpace(SelectedCustomer.Email))
             {
-                MessageBox.Show("Müşterinin e-posta adresi kayıtlı değil.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService.ShowWarning("Müşterinin e-posta adresi kayıtlı değil.");
                 return;
             }
 
-            var result = MessageBox.Show($"{SelectedCustomer.Email} adresine teklif gönderilecek. Onaylıyor musunuz?", "E-Posta Gönder", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result != MessageBoxResult.Yes) return;
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                $"Teklif {SelectedCustomer.Email} adresine gönderilecek. Onaylıyor musunuz?",
+                "E-Posta Gönder");
+            if (!confirmed) return;
 
             string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Teklif_{ProjectName}_{DateTime.UtcNow:yyyyMMddHHmmss}.pdf");
 
             try
             {
-                GeneratePdf(tempPath, false);
-                var emailService = new EmailService();
+                if (!await GeneratePdfAsync(tempPath, false)) return;
                 string subject = $"Teklif: {ProjectName}";
                 string body = $"Sayın {SelectedCustomer.FullName},<br><br>Projenize ait teknik ve ticari teklifimiz ektedir.<br><br>Saygılarımızla,<br>Kamatek Teknik Servis";
 
-                await emailService.SendQuoteEmailAsync(SelectedCustomer.Email, subject, body, tempPath);
-                MessageBox.Show("E-posta başarıyla gönderildi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                await _emailService.SendQuoteEmailAsync(SelectedCustomer.Email, subject, body, tempPath);
+                _toastService.ShowSuccess("Teklif e-postası gönderildi.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"E-posta hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService.ShowError($"E-posta gönderilemedi: {ex.Message}");
             }
             finally
             {
                 try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); } catch { }
             }
+        }
+
+        private ServiceProject CloneForExport() => new()
+        {
+            Id = CurrentProject.Id,
+            Title = ProjectName.Trim(),
+            Name = CurrentProject.Name,
+            CustomerId = SelectedCustomer?.Id,
+            Customer = SelectedCustomer,
+            ProjectCode = CurrentProject.ProjectCode,
+            ProjectScopeJson = ProjectScopeService.Serialize(RootNodes.ToList()),
+            TotalBudget = SubTotalAfterDiscount,
+            TotalCost = TotalCost,
+            TotalProfit = TotalProfit,
+            DiscountPercent = DiscountPercent,
+            CreatedDate = CurrentProject.CreatedDate,
+            PipelineStage = CurrentProject.PipelineStage,
+            Status = CurrentProject.Status,
+            TotalUnitCount = CurrentProject.TotalUnitCount,
+            SurveyNotes = CurrentProject.SurveyNotes,
+            QuoteItemsJson = CurrentProject.QuoteItemsJson,
+            QuoteNumber = CurrentProject.QuoteNumber,
+            QuoteStatus = CurrentProject.QuoteStatus,
+            RevisionNumber = CurrentProject.RevisionNumber,
+            SentDate = CurrentProject.SentDate,
+            ValidUntil = CurrentProject.ValidUntil,
+            ApprovedDate = CurrentProject.ApprovedDate,
+            RejectedDate = CurrentProject.RejectedDate,
+            RejectionReason = CurrentProject.RejectionReason,
+            KdvRate = KdvRate,
+            Notes = CurrentProject.Notes,
+            PaymentTerms = CurrentProject.PaymentTerms,
+            RevisionsJson = CurrentProject.RevisionsJson
+        };
+
+        private static Customer ToCustomer(ProjectQuoteCustomerDto source) => new()
+        {
+            Id = source.Id,
+            CustomerCode = source.CustomerCode,
+            FullName = source.FullName,
+            PhoneNumber = source.PhoneNumber,
+            Email = source.Email,
+            City = source.City,
+            District = source.District,
+            Neighborhood = source.Neighborhood,
+            Street = source.Street,
+            BuildingNo = source.BuildingNo,
+            ApartmentNo = source.ApartmentNo
+        };
+
+        private static Product ToProduct(ProjectQuoteProductDto source) => new()
+        {
+            Id = source.Id,
+            ProductName = source.ProductName,
+            SKU = source.Sku ?? string.Empty,
+            ProductCategoryType = source.Category,
+            PurchasePrice = source.PurchasePrice,
+            SalePrice = source.SalePrice,
+            ImagePath = source.ImagePath
+        };
+
+        private static ServiceProject ToProject(ProjectQuoteDetailDto source) => new()
+        {
+            Id = source.Id,
+            Title = source.Title,
+            Name = source.Title,
+            CustomerId = source.CustomerId,
+            ProjectCode = source.ProjectCode,
+            ProjectScopeJson = source.ProjectScopeJson,
+            TotalBudget = source.TotalBudget,
+            TotalCost = source.TotalCost,
+            TotalProfit = source.TotalProfit,
+            DiscountPercent = source.DiscountPercent,
+            CreatedDate = source.CreatedDate,
+            PipelineStage = source.PipelineStage,
+            Status = source.Status,
+            TotalUnitCount = source.TotalUnitCount,
+            SurveyNotes = source.SurveyNotes,
+            QuoteItemsJson = source.QuoteItemsJson,
+            QuoteNumber = source.QuoteNumber,
+            QuoteStatus = source.QuoteStatus,
+            RevisionNumber = source.RevisionNumber,
+            SentDate = source.SentDate,
+            ValidUntil = source.ValidUntil,
+            ApprovedDate = source.ApprovedDate,
+            RejectedDate = source.RejectedDate,
+            RejectionReason = source.RejectionReason,
+            KdvRate = source.KdvRate,
+            Notes = source.Notes,
+            PaymentTerms = source.PaymentTerms,
+            RevisionsJson = source.RevisionsJson
+        };
+
+        private static string SanitizeFileName(string value)
+        {
+            var invalid = System.IO.Path.GetInvalidFileNameChars();
+            return string.Concat(value.Trim().Select(character => invalid.Contains(character) ? '_' : character));
         }
 
         [RelayCommand]
