@@ -70,6 +70,14 @@
                 <views:UsersView/>
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:CustomerInteractionsViewModel}">
+                <views:CustomerInteractionsView/>
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:ManagerAgendaViewModel}">
+                <views:ManagerAgendaView/>
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type vm:SystemLogsViewModel}">
                 <views:SystemLogsView/>
             </DataTemplate>

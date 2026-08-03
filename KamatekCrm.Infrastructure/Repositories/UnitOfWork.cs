@@ -34,12 +34,14 @@ namespace KamatekCrm.Infrastructure.Repositories
 
         public void BeginTransaction()
         {
-            _transaction = _context.Database.BeginTransaction();
+            var strategy = _context.Database.CreateExecutionStrategy();
+            _transaction = strategy.Execute(() => _context.Database.BeginTransaction());
         }
 
         public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
         {
-            _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            var strategy = _context.Database.CreateExecutionStrategy();
+            _transaction = await strategy.ExecuteAsync(async () => await _context.Database.BeginTransactionAsync(cancellationToken));
         }
 
         public int SaveChanges()

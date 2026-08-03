@@ -42,17 +42,17 @@
                     
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center">
                         <!-- Dynamic Profit Margin Badge -->
-                        <Border Background="{Binding ProfitColor}" CornerRadius="12" Padding="12,6" Margin="0,0,16,0" VerticalAlignment="Center">
+                        <Border Background="{Binding ProfitColor}" CornerRadius="12" Padding="14,6" Margin="0,0,16,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding ProfitDisplay}" Foreground="White" FontWeight="Bold" FontSize="12"/>
                         </Border>
 
                         <ui:Button Command="{Binding SaveQuoteCommand}" 
                                    Icon="{ui:SymbolIcon Save24}" Content="Teklifi Kaydet"
-                                   Appearance="Primary" Height="40" Padding="16,0" Margin="0,0,8,0"/>
+                                   Appearance="Primary" Height="40" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"/>
 
                         <ui:Button Command="{Binding ExportPdfCommand}" 
                                    Icon="{ui:SymbolIcon DocumentPdf24}" Content="PDF Oluştur"
-                                   Appearance="Secondary" Height="40" Padding="16,0"/>
+                                   Appearance="Secondary" Height="40" Padding="16,0" Cursor="Hand"/>
                     </StackPanel>
                 </DockPanel>
             </Border>
@@ -126,7 +126,7 @@
                             <TextBlock Text="Teklif Kalemleri" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}" VerticalAlignment="Center"/>
                             <ui:Button Command="{Binding ToggleSidebarCommand}" 
                                        Icon="{ui:SymbolIcon Add24}" Content="Malzeme Ekle"
-                                       Appearance="Primary" HorizontalAlignment="Right" Height="36" Padding="14,0"/>
+                                       Appearance="Primary" HorizontalAlignment="Right" Height="36" Padding="14,0" Cursor="Hand"/>
                         </DockPanel>
 
                         <!-- Quote Lines DataGrid -->
@@ -156,20 +156,45 @@
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                 <ui:Button Icon="{ui:SymbolIcon Subtract12}"
                                                            Command="{Binding DataContext.DecreaseLineQuantityCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                           CommandParameter="{Binding}" Height="24" Width="24" Padding="0" Appearance="Secondary"/>
+                                                           CommandParameter="{Binding}" Height="26" Width="26" Padding="0" Appearance="Secondary" Cursor="Hand"/>
                                                 <TextBlock Text="{Binding Quantity}" FontWeight="Bold" Margin="8,0" VerticalAlignment="Center"/>
                                                 <ui:Button Icon="{ui:SymbolIcon Add12}"
                                                            Command="{Binding DataContext.IncreaseLineQuantityCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                           CommandParameter="{Binding}" Height="24" Width="24" Padding="0" Appearance="Secondary"/>
+                                                           CommandParameter="{Binding}" Height="26" Width="26" Padding="0" Appearance="Secondary" Cursor="Hand"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
 
                                 <DataGridTextColumn Header="Birim" Binding="{Binding Unit}" Width="70" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, StringFormat='{}₺{0:N2}'}" Width="110"/>
-                                <DataGridTextColumn Header="İskonto %" Binding="{Binding DiscountPercent, StringFormat='{}%{0:N0}'}" Width="80"/>
-                                <DataGridTextColumn Header="Satır Toplamı" Binding="{Binding LineTotal, StringFormat='{}₺{0:N2}'}" Width="120" IsReadOnly="True" FontWeight="Bold"/>
+
+                                <!-- Birim Fiyat (Sağa Hizalı) -->
+                                <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, StringFormat='{}₺{0:N2}'}" Width="110">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- İskonto % (Sağa Hizalı) -->
+                                <DataGridTextColumn Header="İskonto %" Binding="{Binding DiscountPercent, StringFormat='{}%{0:N0}'}" Width="80">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Satır Toplamı (Sağa Hizalı) -->
+                                <DataGridTextColumn Header="Satır Toplamı" Binding="{Binding LineTotal, StringFormat='{}₺{0:N2}'}" Width="120" IsReadOnly="True" FontWeight="Bold">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
 
                                 <!-- İŞLEMLER KOLONU (Sil) -->
                                 <DataGridTemplateColumn Header="İşlemler" Width="70">
@@ -178,7 +203,7 @@
                                             <ui:Button Icon="{ui:SymbolIcon Delete24}"
                                                        Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                        CommandParameter="{Binding}"
-                                                       Appearance="Secondary" Height="28" Width="28" Padding="0" Foreground="#F44336" ToolTip="Listeden Çıkar"/>
+                                                       Appearance="Secondary" Height="28" Width="28" Padding="0" Foreground="#F44336" ToolTip="Listeden Çıkar" Cursor="Hand"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -188,11 +213,11 @@
                         <!-- Totals Summary -->
                         <Border Grid.Row="2" Background="{DynamicResource SurfacePageBrush}" CornerRadius="10" Padding="16" Margin="0,16,0,0">
                             <StackPanel HorizontalAlignment="Right" Width="300">
-                                <DockPanel Margin="0,0,0,4">
+                                <DockPanel Margin="0,0,0,6">
                                     <TextBlock Text="Ara Toplam:" Foreground="{DynamicResource ThemeTextSecondary}"/>
                                     <TextBlock Text="{Binding SubTotal, StringFormat='{}₺{0:N2}'}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
                                 </DockPanel>
-                                <DockPanel Margin="0,0,0,4">
+                                <DockPanel Margin="0,0,0,6">
                                     <TextBlock Text="İskonto Toplamı:" Foreground="{DynamicResource ThemeTextSecondary}"/>
                                     <TextBlock Text="{Binding TotalDiscount, StringFormat='{}-₺{0:N2}'}" HorizontalAlignment="Right" Foreground="#F44336"/>
                                 </DockPanel>
@@ -203,7 +228,7 @@
                                 <Separator Margin="0,0,0,8" Background="{DynamicResource ThemeDivider}"/>
                                 <DockPanel>
                                     <TextBlock Text="GENEL TOPLAM:" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                    <TextBlock Text="{Binding GrandTotal, StringFormat='{}₺{0:N2}'}" HorizontalAlignment="Right" FontWeight="Bold" FontSize="18" Foreground="{DynamicResource ThemePrimary}"/>
+                                    <TextBlock Text="{Binding GrandTotal, StringFormat='{}₺{0:N2}'}" HorizontalAlignment="Right" FontWeight="Bold" FontSize="20" Foreground="{DynamicResource ThemePrimary}"/>
                                 </DockPanel>
                             </StackPanel>
                         </Border>
@@ -222,7 +247,7 @@
             </Border>
 
             <!-- Right Drawer Container -->
-            <Border HorizontalAlignment="Right" Width="400" 
+            <Border HorizontalAlignment="Right" Width="420" 
                     Background="{DynamicResource SurfacePageBrush}" 
                     BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1,0,0,0"
                     Padding="24">
@@ -236,7 +261,7 @@
 
                     <DockPanel Grid.Row="0" Margin="0,0,0,20">
                         <TextBlock Text="📦 Malzeme &amp; Hizmet Ekle" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}" VerticalAlignment="Center"/>
-                        <ui:Button Icon="{ui:SymbolIcon Dismiss24}" Command="{Binding ToggleSidebarCommand}" Appearance="Secondary" HorizontalAlignment="Right" Width="32" Height="32" Padding="0"/>
+                        <ui:Button Icon="{ui:SymbolIcon Dismiss24}" Command="{Binding ToggleSidebarCommand}" Appearance="Secondary" HorizontalAlignment="Right" Width="32" Height="32" Padding="0" Cursor="Hand"/>
                     </DockPanel>
 
                     <!-- Search Input -->
@@ -245,13 +270,30 @@
                         <ui:TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}" Icon="{ui:SymbolIcon Search24}" Height="38"/>
                     </StackPanel>
 
-                    <!-- Search Results List with Rich Product Cards -->
+                    <!-- Search Results List with Rich Product Cards (Dinamik Yükseklik) -->
                     <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="6" Margin="0,0,0,16">
-                        <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedProduct}" Height="300" Background="Transparent" BorderThickness="0"
-                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedProduct}" 
+                                 MinHeight="220" Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0,0,0,6"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <ContentPresenter/>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="10" Margin="0,0,0,6"
+                                    <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="10"
                                             BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -265,7 +307,7 @@
                                                     Background="{DynamicResource ThemeSidebarHover}" Margin="0,0,10,0" VerticalAlignment="Center" ClipToBounds="True">
                                                 <Grid>
                                                     <ui:SymbolIcon Symbol="Box24" FontSize="18" Opacity="0.3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    <Image Stretch="UniformToFill" Source="{Binding ImagePath, Converter={StaticResource ImagePathConverter}}"/>
+                                                    <Image Stretch="Uniform" MaxWidth="34" MaxHeight="34" HorizontalAlignment="Center" VerticalAlignment="Center" ClipToBounds="True" Source="{Binding ImagePath, Converter={StaticResource ImagePathConverter}}"/>
                                                 </Grid>
                                             </Border>
 
@@ -282,7 +324,7 @@
                                                 <ui:Button Command="{Binding DataContext.AddProductDirectCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
                                                            CommandParameter="{Binding}"
                                                            Icon="{ui:SymbolIcon Add12}" Content="Ekle"
-                                                           Appearance="Primary" Height="26" Padding="8,0" Margin="0,4,0,0" HorizontalAlignment="Right"/>
+                                                           Appearance="Primary" Height="26" Padding="8,0" Margin="0,4,0,0" HorizontalAlignment="Right" Cursor="Hand"/>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
@@ -301,17 +343,17 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <Label Content="Miktar" Style="{StaticResource ModernLabel}"/>
-                                <TextBox Text="{Binding NewQuantity, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                <ui:TextBox Text="{Binding NewQuantity, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <Label Content="İskonto %" Style="{StaticResource ModernLabel}"/>
-                                <TextBox Text="{Binding NewDiscount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                <ui:TextBox Text="{Binding NewDiscount, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
                             </StackPanel>
                         </Grid>
 
                         <ui:Button Command="{Binding AddProductCommand}" 
                                    Icon="{ui:SymbolIcon Add24}" Content="Seçili Ürünü Ekle"
-                                   Appearance="Primary" Height="40" FontWeight="Bold" HorizontalAlignment="Stretch"/>
+                                   Appearance="Primary" Height="40" FontWeight="Bold" HorizontalAlignment="Stretch" Cursor="Hand"/>
                     </StackPanel>
                 </Grid>
             </Border>

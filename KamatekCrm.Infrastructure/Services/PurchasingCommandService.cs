@@ -431,7 +431,10 @@ public sealed class PurchasingCommandService : IPurchasingCommandService
     private static string CreateNumber(string prefix) => $"{prefix}-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}"[..48];
     private static void AddAudit(AppDbContext context, string action, string entity, string recordId, string description, string username) =>
         context.ActivityLogs.Add(new ActivityLog { Action = action, ActionType = action, EntityName = entity, RecordId = recordId, ReferenceId = recordId, Description = description, Username = username, Timestamp = DateTime.UtcNow, UserAgent = "WPF Client" });
-    private static async Task<IDbContextTransaction?> BeginTransactionAsync(AppDbContext context, CancellationToken cancellationToken) => context.Database.IsRelational() ? await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken) : null;
+    private static async Task<IDbContextTransaction?> BeginTransactionAsync(AppDbContext context, CancellationToken cancellationToken) =>
+        context.Database.IsRelational()
+            ? await context.Database.CreateExecutionStrategy().ExecuteAsync(async () => await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken))
+            : null;
     private static Task CommitAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken) => transaction?.CommitAsync(cancellationToken) ?? Task.CompletedTask;
     private static Task RollbackAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken) => transaction?.RollbackAsync(cancellationToken) ?? Task.CompletedTask;
     private static async Task<Result<T>> FailAsync<T>(IDbContextTransaction? transaction, string error, CancellationToken cancellationToken)

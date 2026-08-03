@@ -59,11 +59,10 @@ public sealed class StandardQuoteCommandService : IStandardQuoteCommandService
             return Result.Failure<StandardQuoteSaveResult>("Teklif şartları 4.000 karakteri aşamaz.");
 
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        await using var transaction = context.Database.IsRelational()
-            ? await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
-            : null;
-        try
+        return await context.ExecuteInTransactionAsync(async transaction =>
         {
+            try
+            {
             var reference = $"STANDARD-QUOTE-SAVE:{command.IdempotencyKey:N}";
             var previous = await context.ActivityLogs.AsNoTracking()
                 .SingleOrDefaultAsync(log => log.EntityName == AuditEntity && log.ReferenceId == reference,
@@ -203,7 +202,8 @@ public sealed class StandardQuoteCommandService : IStandardQuoteCommandService
             return await FailAsync<StandardQuoteSaveResult>(transaction,
                 $"Standart teklif kaydedilemedi: {exception.GetBaseException().Message}", cancellationToken);
         }
-    }
+    }, IsolationLevel.Serializable, cancellationToken);
+}
 
     private static async Task<Result<StandardQuoteSaveResult>> BuildReplayAsync(
         AppDbContext context,

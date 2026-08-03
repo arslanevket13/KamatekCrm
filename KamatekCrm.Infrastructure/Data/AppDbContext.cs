@@ -92,8 +92,10 @@ namespace KamatekCrm.Infrastructure.Data
         public DbSet<InventoryImage> InventoryImages { get; set; }
         public DbSet<StockReservation> StockReservations { get; set; }
 
-        // --- Müşteri Aktiviteleri (Timeline) ---
+        // --- Müşteri Aktiviteleri ve Görüşmeler ---
         public DbSet<CustomerActivity> CustomerActivities { get; set; }
+        public DbSet<CustomerInteraction> CustomerInteractions { get; set; }
+        public DbSet<CustomerInteractionHistory> CustomerInteractionHistories { get; set; }
 
         // --- Rota Planlama & Teknisyen Konum ---
         public DbSet<RoutePoint> RoutePoints { get; set; }
@@ -213,6 +215,37 @@ namespace KamatekCrm.Infrastructure.Data
                 entity.Property(e => e.FullName).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Notes).HasMaxLength(2000);
                 entity.Ignore(e => e.FullAddress);
+            });
+
+            modelBuilder.Entity<CustomerInteraction>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.NormalizedPhone);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.AssignedToUserId);
+                entity.HasIndex(e => e.FollowUpDate);
+                entity.HasIndex(e => e.InteractionNumber).IsUnique();
+
+                entity.HasOne(e => e.Customer)
+                    .WithMany()
+                    .HasForeignKey(e => e.CustomerId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.AssignedToUser)
+                    .WithMany()
+                    .HasForeignKey(e => e.AssignedToUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasMany(e => e.Histories)
+                    .WithOne(h => h.CustomerInteraction)
+                    .HasForeignKey(h => h.CustomerInteractionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<CustomerInteractionHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.CustomerInteractionId);
             });
 
             modelBuilder.Entity<Product>(entity =>

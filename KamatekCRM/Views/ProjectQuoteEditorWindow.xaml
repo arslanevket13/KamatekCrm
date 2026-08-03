@@ -49,7 +49,7 @@
         </DataTemplate>
     </Window.Resources>
     
-    <Grid Margin="16">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Header -->
             <RowDefinition Height="*"/>    <!-- 3 Panel -->
@@ -79,28 +79,28 @@
 
                 <!-- Customer Selection -->
                 <StackPanel Grid.Column="1" Margin="0,0,10,0" VerticalAlignment="Center">
-                    <TextBlock Text="MÜŞTERİ" FontWeight="SemiBold" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                    <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="FullName" Height="28"/>
+                    <TextBlock Text="MÜŞTERİ" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="FullName" Height="34"/>
                 </StackPanel>
 
                 <!-- Project Title -->
                 <StackPanel Grid.Column="2" Margin="0,0,10,0" VerticalAlignment="Center">
-                    <TextBlock Text="PROJE ADI" FontWeight="SemiBold" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                    <TextBox Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged}" Height="28" Padding="4,2"/>
+                    <TextBlock Text="PROJE ADI" FontWeight="SemiBold" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBox Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged}" Height="34" Padding="6,4"/>
                 </StackPanel>
 
                 <!-- Toolbar Actions (Undo/Redo/Bulk Margin) -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
                     <Button Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}"
-                            Style="{StaticResource SecondaryButton}" Height="28" Width="34" ToolTip="Geri Al (Ctrl+Z)" Margin="0,0,4,0">
+                            Style="{StaticResource SecondaryButton}" Height="34" Width="38" ToolTip="Geri Al (Ctrl+Z)" Margin="0,0,4,0">
                         <ui:SymbolIcon Symbol="ArrowUndo24" FontSize="14"/>
                     </Button>
                     <Button Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}"
-                            Style="{StaticResource SecondaryButton}" Height="28" Width="34" ToolTip="İleri Al (Ctrl+Y)" Margin="0,0,8,0">
+                            Style="{StaticResource SecondaryButton}" Height="34" Width="38" ToolTip="İleri Al (Ctrl+Y)" Margin="0,0,8,0">
                         <ui:SymbolIcon Symbol="ArrowRedo24" FontSize="14"/>
                     </Button>
                     <Button Command="{Binding ApplyBulkMarginCommand}"
-                            Style="{StaticResource SecondaryButton}" Height="28" Padding="8,0" ToolTip="Toplu Kar Marjı Ekle">
+                            Style="{StaticResource SecondaryButton}" Height="34" Padding="10,0" ToolTip="Toplu Kar Marjı Ekle">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Money24" FontSize="14" Margin="0,0,4,0"/>
                             <TextBlock Text="Toplu Marj" FontSize="11" VerticalAlignment="Center"/>
@@ -110,19 +110,19 @@
 
                 <!-- Structure Generator -->
                 <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
-                        <TextBlock Text="Blok" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <TextBox Text="{Binding BlockCount}" Width="32" Height="26" TextAlignment="Center" Padding="0,1"/>
+                    <StackPanel Margin="0,0,6,0" VerticalAlignment="Center">
+                        <TextBlock Text="Blok" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBox Text="{Binding BlockCount}" Width="48" Height="30" TextAlignment="Center" Padding="2,3"/>
                     </StackPanel>
-                    <StackPanel Margin="0,0,4,0" VerticalAlignment="Center">
-                        <TextBlock Text="Kat" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <TextBox Text="{Binding FloorCount}" Width="32" Height="26" TextAlignment="Center" Padding="0,1"/>
+                    <StackPanel Margin="0,0,6,0" VerticalAlignment="Center">
+                        <TextBlock Text="Kat" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBox Text="{Binding FloorCount}" Width="48" Height="30" TextAlignment="Center" Padding="2,3"/>
                     </StackPanel>
                     <StackPanel Margin="0,0,8,0" VerticalAlignment="Center">
-                        <TextBlock Text="Daire/Kat" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <TextBox Text="{Binding FlatsPerFloor}" Width="32" Height="26" TextAlignment="Center" Padding="0,1"/>
+                        <TextBlock Text="Daire/Kat" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBox Text="{Binding FlatsPerFloor}" Width="48" Height="30" TextAlignment="Center" Padding="2,3"/>
                     </StackPanel>
-                    <Button Command="{Binding GenerateStructureCommand}" Style="{StaticResource ModernButton}" Height="28" Padding="10,0">
+                    <Button Command="{Binding GenerateStructureCommand}" Style="{StaticResource ModernButton}" Height="34" Padding="12,0">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="AddSquare24" Margin="0,0,4,0"/>
                             <TextBlock Text="Yapı Oluştur" FontSize="11" VerticalAlignment="Center"/>
@@ -159,9 +159,9 @@
                     </Border>
 
                     <!-- Tree Search -->
-                    <Border Grid.Row="1" Padding="6,6,6,0">
+                    <Border Grid.Row="1" Padding="8,8,8,0">
                         <TextBox Text="{Binding TreeSearchText, UpdateSourceTrigger=PropertyChanged}" 
-                                 Style="{StaticResource ModernTextBox}" Height="28" Padding="6,2"/>
+                                 Style="{StaticResource ModernTextBox}" Height="32" Padding="8,4"/>
                     </Border>
                     
                     <!-- TreeView -->
@@ -198,13 +198,13 @@
                     <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="6" 
                             BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,1,0,0">
                         <UniformGrid Columns="3">
-                            <Button Command="{Binding AddBlockCommand}" Style="{StaticResource SecondaryButton}" Height="30" Margin="2,0" Padding="2,0" ToolTip="Yeni Blok Ekle">
+                            <Button Command="{Binding AddBlockCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="2,0" Padding="4,0" ToolTip="Yeni Blok Ekle">
                                 <TextBlock Text="+ Blok" FontSize="11" FontWeight="SemiBold"/>
                             </Button>
-                            <Button Command="{Binding AddFloorCommand}" Style="{StaticResource SecondaryButton}" Height="30" Margin="2,0" Padding="2,0" ToolTip="Yeni Kat Ekle">
+                            <Button Command="{Binding AddFloorCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="2,0" Padding="4,0" ToolTip="Yeni Kat Ekle">
                                 <TextBlock Text="+ Kat" FontSize="11" FontWeight="SemiBold"/>
                             </Button>
-                            <Button Command="{Binding AddFlatCommand}" Style="{StaticResource SecondaryButton}" Height="30" Margin="2,0" Padding="2,0" ToolTip="Yeni Daire Ekle">
+                            <Button Command="{Binding AddFlatCommand}" Style="{StaticResource SecondaryButton}" Height="32" Margin="2,0" Padding="4,0" ToolTip="Yeni Daire Ekle">
                                 <TextBlock Text="+ Daire" FontSize="11" FontWeight="SemiBold"/>
                             </Button>
                         </UniformGrid>
@@ -310,7 +310,7 @@
                             <Button Content="🗑️ Kalemi Sil" Command="{Binding RemoveItemCommand}"
                                     Style="{StaticResource SecondaryButton}" 
                                     Foreground="{DynamicResource StatusErrorFg}" 
-                                    Height="28" Padding="12,0" HorizontalAlignment="Left"/>
+                                    Height="32" Padding="14,0" HorizontalAlignment="Left"/>
                             
                             <TextBlock Text="💡 Sağ panelden ürün sürükleyip bırakabilirsiniz" 
                                        FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
@@ -345,8 +345,8 @@
                             <ColumnDefinition Width="6"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <ComboBox Grid.Column="0" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Height="28"/>
-                        <TextBox Grid.Column="2" Text="{Binding ProductSearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="28" Padding="4,2"/>
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Height="32"/>
+                        <TextBox Grid.Column="2" Text="{Binding ProductSearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}" Height="32" Padding="6,4"/>
                     </Grid>
                     
                     <!-- Ürün Listesi -->
@@ -369,15 +369,15 @@
                     <!-- Ekle Butonu -->
                     <Border Grid.Row="3" Background="{DynamicResource SurfacePageBrush}" Padding="10,6" 
                             BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,1,0,0">
-                        <Button Content="➕ SEÇİLİ NODE'A EKLE" Command="{Binding AddItemCommand}"
-                                Style="{StaticResource ModernButton}" Height="32" HorizontalAlignment="Stretch"/>
+                        <Button Content="Seçili Düğüme Ekle" Command="{Binding AddItemCommand}"
+                                Style="{StaticResource ModernButton}" Height="34" HorizontalAlignment="Stretch"/>
                     </Border>
                 </Grid>
             </Border>
         </Grid>
         
         <!-- Footer: Finansal Özet ve Butonlar -->
-        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="14,10" Margin="0,10,0,0"
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,12" Margin="0,12,0,0"
                 BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
             <Grid>
                 <Grid.RowDefinitions>
@@ -400,16 +400,16 @@
                     <!-- Maliyet -->
                     <Border Grid.Column="0" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="MALİYET" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding TotalCostDisplay}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock Text="MALİYET" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TotalCostDisplay}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- Satış -->
                     <Border Grid.Column="1" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                         <StackPanel>
-                            <TextBlock Text="SATIŞ" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding TotalRevenueDisplay}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock Text="SATIŞ" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TotalRevenueDisplay}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                         </StackPanel>
                     </Border>
                     
@@ -417,10 +417,10 @@
                     <Border Grid.Column="2" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="İSKONTO %" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,4,0"/>
-                                <TextBox Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" Width="30" Height="16" FontSize="9" TextAlignment="Center"/>
+                                <TextBlock Text="İSKONTO %" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" Width="48" Height="22" FontSize="11" TextAlignment="Center" Padding="2,1"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding DiscountAmountDisplay}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                            <TextBlock Text="{Binding DiscountAmountDisplay}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
                         </StackPanel>
                     </Border>
                     
@@ -428,34 +428,34 @@
                     <Border Grid.Column="3" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="KDV %" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,4,0"/>
-                                <TextBox Text="{Binding KdvRate, UpdateSourceTrigger=PropertyChanged}" Width="30" Height="16" FontSize="9" TextAlignment="Center"/>
+                                <TextBlock Text="KDV %" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBox Text="{Binding KdvRate, UpdateSourceTrigger=PropertyChanged}" Width="48" Height="22" FontSize="11" TextAlignment="Center" Padding="2,1"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding KdvAmountDisplay}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock Text="{Binding KdvAmountDisplay}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- Genel Toplam -->
                     <Border Grid.Column="4" Background="{DynamicResource StatusInfoBgLight}" CornerRadius="6" Padding="12,6" Margin="0,0,6,0" BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1.5">
                         <StackPanel>
-                            <TextBlock Text="GENEL TOPLAM" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
-                            <TextBlock Text="{Binding GrandTotalDisplay}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                            <TextBlock Text="GENEL TOPLAM" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                            <TextBlock Text="{Binding GrandTotalDisplay}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- Kar -->
                     <Border Grid.Column="5" Background="{DynamicResource StatusSuccessBg}" CornerRadius="6" Padding="10,6" Margin="0,0,6,0">
                         <StackPanel>
-                            <TextBlock Text="KAR" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFgDark}"/>
-                            <TextBlock Text="{Binding TotalProfitDisplay}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
+                            <TextBlock Text="KAR" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource StatusSuccessFgDark}"/>
+                            <TextBlock Text="{Binding TotalProfitDisplay}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- Marj -->
                     <Border Grid.Column="6" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="6" Padding="10,6">
                         <StackPanel>
-                            <TextBlock Text="MARJ" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding OverallMarginDisplay}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
+                            <TextBlock Text="MARJ" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding OverallMarginDisplay}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -479,23 +479,23 @@
                     
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
-                                Style="{StaticResource SecondaryButton}" Height="34" Padding="14,0" Margin="0,0,6,0" Content="İptal"/>
+                                Style="{StaticResource SecondaryButton}" Height="38" Padding="16,0" Margin="0,0,8,0" Content="İptal"/>
 
-                        <Button Command="{Binding ExportPdfCommand}" Style="{StaticResource SecondaryButton}" Height="34" Padding="14,0" Margin="0,0,6,0">
+                        <Button Command="{Binding ExportPdfCommand}" Style="{StaticResource SecondaryButton}" Height="38" Padding="16,0" Margin="0,0,8,0">
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="DocumentPdf24" Margin="0,0,6,0"/>
                                 <TextBlock Text="PDF Dışa Aktar" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding SendEmailCommand}" Style="{StaticResource SecondaryButton}" Height="34" Padding="14,0" Margin="0,0,6,0">
+                        <Button Command="{Binding SendEmailCommand}" Style="{StaticResource SecondaryButton}" Height="38" Padding="16,0" Margin="0,0,8,0">
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="Mail24" Margin="0,0,6,0"/>
                                 <TextBlock Text="E-Posta Gönder" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding SaveCommand}" Style="{StaticResource ModernButton}" Height="34" Padding="20,0">
+                        <Button Command="{Binding SaveCommand}" Style="{StaticResource ModernButton}" Height="38" Padding="24,0">
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="Save24" Margin="0,0,6,0"/>
                                 <TextBlock Text="KAYDET VE ONAYLA" VerticalAlignment="Center"/>

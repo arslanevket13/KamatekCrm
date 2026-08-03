@@ -238,97 +238,123 @@
         </DockPanel>
 
         <!-- YAN PANEL (SIDEBAR) - ÜRÜN EKLEME -->
-        <Border Background="{DynamicResource SurfacePageBrush}" Width="380" HorizontalAlignment="Right" Panel.ZIndex="20"
-                Visibility="{Binding IsSidebarOpen, Converter={StaticResource BooleanToVisibilityConverter}}"
-                BorderThickness="1,0,0,0" BorderBrush="{DynamicResource ThemeBorder}">
-            <Grid Margin="24">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <Grid Visibility="{Binding IsSidebarOpen, Converter={StaticResource BooleanToVisibilityConverter}}" Panel.ZIndex="100">
+            <!-- Dim Backdrop Overlay -->
+            <Border Background="#60000000">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick" Command="{Binding ToggleSidebarCommand}"/>
+                </Border.InputBindings>
+            </Border>
 
-                <DockPanel Grid.Row="0" Margin="0,0,0,20">
-                    <TextBlock Text="📦 Ürün Seçimi" FontWeight="Bold" FontSize="18" VerticalAlignment="Center" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                    <ui:Button Icon="{ui:SymbolIcon Dismiss24}" Command="{Binding ToggleSidebarCommand}" Appearance="Secondary" HorizontalAlignment="Right" Width="32" Height="32" Padding="0"/>
-                </DockPanel>
+            <!-- Right Drawer Container -->
+            <Border Background="{DynamicResource SurfacePageBrush}" Width="420" HorizontalAlignment="Right"
+                    BorderThickness="1,0,0,0" BorderBrush="{DynamicResource ThemeBorder}" Padding="24">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                <!-- Search -->
-                <StackPanel Grid.Row="1" Margin="0,0,0,16">
-                    <Label Content="Ürün Adı veya SKU Ara" Style="{StaticResource ModernLabel}"/>
-                    <ui:TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}" Icon="{ui:SymbolIcon Search24}" Height="38"/>
-                </StackPanel>
+                    <DockPanel Grid.Row="0" Margin="0,0,0,20">
+                        <TextBlock Text="📦 Ürün &amp; Malzeme Seçimi" FontWeight="Bold" FontSize="18" VerticalAlignment="Center" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                        <ui:Button Icon="{ui:SymbolIcon Dismiss24}" Command="{Binding ToggleSidebarCommand}" Appearance="Secondary" HorizontalAlignment="Right" Width="32" Height="32" Padding="0" Cursor="Hand"/>
+                    </DockPanel>
 
-                <!-- Product List -->
-                <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="6" Margin="0,0,0,16">
-                    <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedProduct}"
-                             Background="Transparent" BorderThickness="0">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="10" Margin="0,0,0,6"
-                                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
+                    <!-- Search -->
+                    <StackPanel Grid.Row="1" Margin="0,0,0,16">
+                        <Label Content="Ürün Adı veya SKU Ara" Style="{StaticResource ModernLabel}"/>
+                        <ui:TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}" Icon="{ui:SymbolIcon Search24}" Height="38"/>
+                    </StackPanel>
 
-                                        <!-- Image Thumbnail -->
-                                        <Border Grid.Column="0" Width="36" Height="36" CornerRadius="6"
-                                                Background="{DynamicResource ThemeSidebarHover}" Margin="0,0,10,0" VerticalAlignment="Center" ClipToBounds="True">
-                                            <Grid>
-                                                <ui:SymbolIcon Symbol="Box24" FontSize="18" Opacity="0.3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <Image Stretch="UniformToFill" Source="{Binding ImagePath, Converter={StaticResource ImagePathConverter}}"/>
-                                            </Grid>
-                                        </Border>
+                    <!-- Product List (Dinamik Yükseklik) -->
+                    <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="6" Margin="0,0,0,16">
+                        <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedProduct}"
+                                 MinHeight="220" Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0,0,0,6"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <ContentPresenter/>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="10"
+                                            BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
 
-                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding ProductName}" FontWeight="Bold" FontSize="13" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                <TextBlock Text="{Binding SKU, StringFormat='SKU: {0}'}" FontSize="10" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,12,0"/>
-                                                <TextBlock Text="{Binding TotalStockQuantity, StringFormat='Stok: {0}'}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource ThemeSuccess}"/>
+                                            <!-- Image Thumbnail -->
+                                            <Border Grid.Column="0" Width="36" Height="36" CornerRadius="6"
+                                                    Background="{DynamicResource ThemeSidebarHover}" Margin="0,0,10,0" VerticalAlignment="Center" ClipToBounds="True">
+                                                <Grid>
+                                                    <ui:SymbolIcon Symbol="Box24" FontSize="18" Opacity="0.3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <Image Stretch="Uniform" MaxWidth="34" MaxHeight="34" HorizontalAlignment="Center" VerticalAlignment="Center" ClipToBounds="True" Source="{Binding ImagePath, Converter={StaticResource ImagePathConverter}}"/>
+                                                </Grid>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding ProductName}" FontWeight="Bold" FontSize="13" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                    <TextBlock Text="{Binding SKU, StringFormat='SKU: {0}'}" FontSize="10" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,12,0"/>
+                                                    <TextBlock Text="{Binding TotalStockQuantity, StringFormat='Stok: {0}'}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource ThemeSuccess}"/>
+                                                </StackPanel>
                                             </StackPanel>
-                                        </StackPanel>
-                                        
-                                        <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8,0,0,0">
-                                            <TextBlock Text="{Binding SalePrice, StringFormat='₺{0:N2}'}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource ThemePrimary}"/>
-                                            <ui:Button Command="{Binding DataContext.AddProductDirectCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                                       CommandParameter="{Binding}"
-                                                       Icon="{ui:SymbolIcon Add12}" Content="Ekle"
-                                                       Appearance="Primary" Height="26" Padding="8,0" Margin="0,4,0,0" HorizontalAlignment="Right"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Border>
+                                            
+                                            <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="8,0,0,0">
+                                                <TextBlock Text="{Binding SalePrice, StringFormat='₺{0:N2}'}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource ThemePrimary}"/>
+                                                <ui:Button Command="{Binding DataContext.AddProductDirectCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                           CommandParameter="{Binding}"
+                                                           Icon="{ui:SymbolIcon Add12}" Content="Ekle"
+                                                           Appearance="Primary" Height="26" Padding="8,0" Margin="0,4,0,0" HorizontalAlignment="Right" Cursor="Hand"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
 
-                <!-- Quantity & Add Action -->
-                <StackPanel Grid.Row="3">
-                    <Grid Margin="0,0,0,16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="16"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <Label Content="Miktar" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding NewQuantity, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <Label Content="İskonto %" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding NewDiscount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
-                        </StackPanel>
-                    </Grid>
+                    <!-- Quantity & Add Action -->
+                    <StackPanel Grid.Row="3">
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <Label Content="Miktar" Style="{StaticResource ModernLabel}"/>
+                                <ui:TextBox Text="{Binding NewQuantity, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <Label Content="İskonto %" Style="{StaticResource ModernLabel}"/>
+                                <ui:TextBox Text="{Binding NewDiscount, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                            </StackPanel>
+                        </Grid>
 
-                    <ui:Button Command="{Binding AddProductCommand}" 
-                               Icon="{ui:SymbolIcon Add24}" Content="Seçili Ürünü Ekle"
-                               Appearance="Primary" Height="40" FontWeight="Bold" HorizontalAlignment="Stretch"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+                        <ui:Button Command="{Binding AddProductCommand}" 
+                                   Icon="{ui:SymbolIcon Add24}" Content="Seçili Ürünü Ekle"
+                                   Appearance="Primary" Height="40" FontWeight="Bold" HorizontalAlignment="Stretch" Cursor="Hand"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

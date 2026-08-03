@@ -1,0 +1,150 @@
+<Window x:Class="KamatekCrm.Views.QuickInteractionAddWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Hızlı Müşteri Görüşmesi &amp; Talep Kaydı"
+        Width="580" Height="720"
+        MinWidth="520" MinHeight="620"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        Background="{DynamicResource SurfacePageBrush}">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- HEADER -->
+        <Border Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal">
+                <ui:SymbolIcon Symbol="CallAdd24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Hızlı Görüşme &amp; Talep Kaydı" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                    <TextBlock Text="Arayan müşterinin talebini hızlıca kaydedin, takip tarihi belirleyin veya yöneticiye yönlendirin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- FORM CONTENT -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- HIZLI TALEP BUTONLARI -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="14"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="HIZLI ŞABLON SEÇİN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+                        <WrapPanel>
+                            <ui:Button Content="💰 Fiyat İstedi" Command="{Binding SelectQuickTypeCommand}" CommandParameter="PriceQuote" Margin="0,0,6,6" Appearance="Secondary" Height="32"/>
+                            <ui:Button Content="📐 Keşif İstedi" Command="{Binding SelectQuickTypeCommand}" CommandParameter="Discovery" Margin="0,0,6,6" Appearance="Secondary" Height="32"/>
+                            <ui:Button Content="🔧 Servis Durumu" Command="{Binding SelectQuickTypeCommand}" CommandParameter="ServiceStatus" Margin="0,0,6,6" Appearance="Secondary" Height="32"/>
+                            <ui:Button Content="👑 Patronla Görüşecek" Command="{Binding SelectQuickTypeCommand}" CommandParameter="ManagerAgenda" Margin="0,0,6,6" Appearance="Secondary" Height="32"/>
+                            <ui:Button Content="⚠️ Şikâyet Var" Command="{Binding SelectQuickTypeCommand}" CommandParameter="Complaint" Margin="0,0,6,6" Appearance="Secondary" Height="32"/>
+                            <ui:Button Content="📞 Geri Aranacak" Command="{Binding SelectQuickTypeCommand}" CommandParameter="CallBack" Margin="0,0,0,6" Appearance="Secondary" Height="32"/>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- İLETİŞİM BİLGİLERİ -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="16"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="İletişim &amp; Müşteri Bilgisi" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,12"/>
+                        
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <Label Content="Arayan Telefon *" FontWeight="SemiBold"/>
+                                <ui:TextBox Text="{Binding CallerPhone, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="05XX XXX XX XX" Height="38"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <Label Content="Arayan Adı / Firma *" FontWeight="SemiBold"/>
+                                <ui:TextBox Text="{Binding CallerName, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Ad Soyad veya Firma Adı" Height="38"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- EŞLEŞEN MÜŞTERİ SEÇİCİ -->
+                        <StackPanel Visibility="{Binding PhoneMatches.Count, Converter={StaticResource IntToVis}}" Margin="0,4,0,0">
+                            <Label Content="Eşleşen Müşteri Kaydı:" FontSize="11" Foreground="{DynamicResource ThemePrimary}" FontWeight="Bold"/>
+                            <ComboBox ItemsSource="{Binding PhoneMatches}"
+                                      SelectedItem="{Binding SelectedCustomerMatch}"
+                                      DisplayMemberPath="FullName" Height="36"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- TALEP İÇERİĞİ -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="16"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="Talep &amp; Görüşme Notu" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,12"/>
+
+                        <StackPanel Margin="0,0,0,10">
+                            <Label Content="Görüşme Konusu *" FontWeight="SemiBold"/>
+                            <ui:TextBox Text="{Binding Subject, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Örn: Yangın Algılama Fiyatı İstendi" Height="38"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,10">
+                            <Label Content="Kısa Özet *" FontWeight="SemiBold"/>
+                            <ui:TextBox Text="{Binding Summary, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Müşterinin söyledikleri ve talep ettiği işlem..." Height="60" TextWrapping="Wrap" AcceptsReturn="True"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,4">
+                            <Label Content="Detaylı Görüşme Notu (İsteğe Bağlı)" FontWeight="SemiBold"/>
+                            <ui:TextBox Text="{Binding DetailedNotes, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Görüşmenin tüm detayları, cihaz modelleri vb..." Height="70" TextWrapping="Wrap" AcceptsReturn="True"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ATAMA & YÖNETİCİ BİLGİSİ -->
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" Padding="16"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Takip &amp; Yönlendirme" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,12"/>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <Label Content="Sorumlu Personel" FontWeight="SemiBold"/>
+                                <ComboBox ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}" DisplayMemberPath="AdSoyad" Height="38"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <CheckBox Content="Takip Gerekli (Son Tarih Koy)" IsChecked="{Binding RequiresFollowUp}" Margin="0,10,0,6" FontWeight="SemiBold"/>
+                                <DatePicker SelectedDate="{Binding FollowUpDate}" IsEnabled="{Binding RequiresFollowUp}" Height="34"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <CheckBox Content="👑 Yönetici İlgisi Gerekli (Yönetici Gündemine Düşür)" IsChecked="{Binding RequiresManagerAttention}" Margin="0,6,0,6" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
+                        <ui:TextBox Text="{Binding ManagerNotes, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding RequiresManagerAttention, Converter={StaticResource BoolToVis}}" PlaceholderText="Yöneticiye iletilecek özel not..." Height="50" Margin="0,0,0,4"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- FOOTER ACTIONS -->
+        <Border Grid.Row="2" Margin="0,16,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <ui:Button Content="İptal" Appearance="Secondary" Click="OnCancelClick" Height="38" Padding="16,0" Margin="0,0,8,0"/>
+                    <ui:Button Content="Kaydet &amp; Oluştur" Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Appearance="Primary" Height="38" Padding="20,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

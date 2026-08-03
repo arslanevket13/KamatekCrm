@@ -136,6 +136,8 @@ namespace KamatekCrm.ViewModels
             "StockCount" => "Stok Sayımı",
             "StockReports" => "Standart Raporlar",
             "Users" => "Kullanıcılar",
+            "CustomerInteractions" => "Müşteri İletişim ve Talep Merkezi",
+            "ManagerAgenda" => "Yönetici Gündemi",
             "SystemLogs" => "Sistem Kayıtları",
             "Settings" => "Ayarlar",
             "NetworkSettings" => "Ağ Ayarları",
@@ -345,7 +347,6 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                // System.Diagnostics.Debug.WriteLine($"Navigation Error to {typeof(TViewModel).Name}: {ex.Message}");
                 _toastService.ShowError($"Sayfa yüklenemedi: {ex.Message}");
             }
         }
@@ -381,6 +382,8 @@ namespace KamatekCrm.ViewModels
         [RelayCommand] private void ToggleUserProfile() => IsUserProfileOpen = !IsUserProfileOpen;
         [RelayCommand] private void NavigateToDashboard() => NavigateTo<DashboardViewModel>();
         [RelayCommand] private void NavigateToCustomers() => NavigateTo<CustomersViewModel>();
+        [RelayCommand] private void NavigateToCustomerInteractions() => NavigateTo<CustomerInteractionsViewModel>();
+        [RelayCommand] private void NavigateToManagerAgenda() => NavigateTo<ManagerAgendaViewModel>();
         [RelayCommand] private void NavigateToProducts() => NavigateTo<ProductViewModel>();
         [RelayCommand] private void NavigateToServiceJobs() => NavigateTo<ServiceJobViewModel>();
         [RelayCommand] private void NavigateToRepairList() => NavigateTo<RepairListViewModel>();
@@ -392,10 +395,12 @@ namespace KamatekCrm.ViewModels
         [RelayCommand] private void GoToSettings() => NavigateToSettings();
 
         [RelayCommand]
-        private void NavigateToPipeline()
+        private void OpenQuickInteractionAdd()
         {
-            NavigateTo<ServiceJobViewModel>();
-            _toastService?.ShowInfo("Pipeline görünümü Servis İşleri sayfasına yönlendirildi.");
+            var vm = _serviceProvider.GetRequiredService<QuickInteractionAddViewModel>();
+            var window = new Views.QuickInteractionAddWindow(vm);
+            window.Owner = System.Windows.Application.Current.MainWindow;
+            window.ShowDialog();
         }
 
         [RelayCommand]

@@ -27,7 +27,8 @@ public class MigrationOwnershipTests
             "20260801210000_EnforceTemporaryPasswordChange",
             "20260801220000_SealAuditLogEntries",
             "20260802010000_ReturnAndFinancialIntegrity",
-            "20260802030000_StockCountIntegrity");
+            "20260802030000_StockCountIntegrity",
+            "20260803160000_AddCustomerInteractions");
 
         context.Database.HasPendingModelChanges().Should().BeFalse(
             "çalışma modeli ile Infrastructure model snapshot'ı aynı olmalıdır");

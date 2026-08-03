@@ -205,6 +205,47 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- CARD: VERİTABANI AYARLARI -->
+                    <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" 
+                            Padding="20" Margin="0,0,0,16">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="{DynamicResource ThemePrimary}" CornerRadius="10" Width="36" Height="36" Margin="0,0,12,0">
+                                    <ui:SymbolIcon Symbol="Database24" FontSize="18" Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Veritabanı Ayarları" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                    <TextBlock Text="PostgreSQL veritabanı bağlantı kimlik bilgileri ve veritabanı adı" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Separator Margin="0,0,0,16" Background="{DynamicResource BorderSubtleBrush}"/>
+
+                            <!-- Veritabanı Kullanıcı Adı -->
+                            <StackPanel Margin="0,0,0,12">
+                                <Label Content="Veritabanı Kullanıcı Adı" FontWeight="SemiBold" FontSize="12"/>
+                                <ui:TextBox Text="{Binding DbUsername, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="postgres" Height="36" Icon="Person24"/>
+                            </StackPanel>
+
+                            <!-- Veritabanı Şifresi -->
+                            <StackPanel Margin="0,0,0,12">
+                                <Label Content="Veritabanı Şifresi" FontWeight="SemiBold" FontSize="12"/>
+                                <ui:PasswordBox Password="{Binding DbPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="••••••••" Height="36" Icon="LockClosed24"/>
+                            </StackPanel>
+
+                            <!-- Veritabanı Adı -->
+                            <StackPanel Margin="0,0,0,4">
+                                <Label Content="Veritabanı Adı" FontWeight="SemiBold" FontSize="12"/>
+                                <ui:TextBox Text="{Binding DbName, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="KamatekCrm" Height="36" Icon="Storage24"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
                     <!-- CARD 3: PORT VE TIMEOUT KONFİGÜRASYONU -->
                     <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
                             BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" 

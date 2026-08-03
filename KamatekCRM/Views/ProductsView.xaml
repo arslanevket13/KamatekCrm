@@ -86,8 +86,18 @@
                         <ui:SymbolIcon Symbol="GroupList24" FontSize="20" Foreground="{DynamicResource ThemePrimary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="Toplam Stok Adedi" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                        <TextBlock Text="{Binding TotalStockQuantityCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                        <TextBlock Text="Toplam Stok (Adet)" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding TotalStockQuantityCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                            <TextBlock Text=" Adet" FontSize="12" VerticalAlignment="Bottom" Margin="4,0,0,2" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                        </StackPanel>
+                        <TextBlock FontSize="10" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,2,0,0">
+                            <Run Text="Metre: "/>
+                            <Run Text="{Binding TotalMetersInStock, Mode=OneWay}" FontWeight="SemiBold"/>
+                            <Run Text="m  •  Kg: "/>
+                            <Run Text="{Binding TotalKgInStock, Mode=OneWay}" FontWeight="SemiBold"/>
+                            <Run Text="kg"/>
+                        </TextBlock>
                     </StackPanel>
                 </DockPanel>
             </Border>
@@ -197,7 +207,7 @@
                                             ClipToBounds="True">
                                         <Grid>
                                             <ui:SymbolIcon Symbol="Box24" FontSize="20" Opacity="0.3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            <Image Stretch="UniformToFill" Source="{Binding ImagePath, Converter={StaticResource ImagePathConverter}}"/>
+                                            <Image Stretch="Uniform" MaxWidth="38" MaxHeight="38" HorizontalAlignment="Center" VerticalAlignment="Center" ClipToBounds="True" Source="{Binding ImagePath, Converter={StaticResource ImagePathConverter}}"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

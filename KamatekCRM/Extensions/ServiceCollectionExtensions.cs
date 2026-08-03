@@ -115,6 +115,9 @@ namespace KamatekCrm.Extensions
             services.AddTransient<PurchaseOrderViewModel>();
             services.AddTransient<QuotationViewModel>();
             services.AddTransient<NetworkSettingsViewModel>();
+            services.AddTransient<QuickInteractionAddViewModel>();
+            services.AddTransient<CustomerInteractionsViewModel>();
+            services.AddTransient<ManagerAgendaViewModel>();
 
             // Windows
             services.AddTransient<Views.RepairTrackingWindow>();
@@ -126,6 +129,9 @@ namespace KamatekCrm.Extensions
             services.AddTransient<Views.AddUserView>();
             services.AddTransient<Views.EditUserView>();
             services.AddTransient<Views.PasswordResetView>();
+            services.AddTransient<Views.QuickInteractionAddWindow>();
+            services.AddTransient<Views.CustomerInteractionsView>();
+            services.AddTransient<Views.ManagerAgendaView>();
 
             return services;
         }

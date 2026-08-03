@@ -241,10 +241,9 @@ namespace KamatekCrm.API.Controllers
         [HttpGet("{id}/notes")]
         public async Task<IActionResult> GetNotes(int id)
         {
-            var notes = await _context.CustomerNotes
+            var notes = await _context.CustomerInteractions
                 .Where(n => n.CustomerId == id)
-                .OrderByDescending(n => n.IsPinned)
-                .ThenByDescending(n => n.CreatedAt)
+                .OrderByDescending(n => n.InteractionDate)
                 .ToListAsync();
 
             return Ok(ApiResponse<object>.Ok(notes));
@@ -252,14 +251,14 @@ namespace KamatekCrm.API.Controllers
 
         /// <summary>Müşteri notu ekle</summary>
         [HttpPost("{id}/notes")]
-        public async Task<IActionResult> AddNote(int id, [FromBody] CustomerNote note)
+        public async Task<IActionResult> AddNote(int id, [FromBody] CustomerInteraction note)
         {
             note.CustomerId = id;
-            note.CreatedAt = DateTime.UtcNow;
-            _context.CustomerNotes.Add(note);
+            note.InteractionDate = DateTime.UtcNow;
+            _context.CustomerInteractions.Add(note);
             await _context.SaveChangesAsync();
-            _logger.LogInformation("Note added to Customer #{Id}: {Type}", id, note.ActivityType);
-            return Ok(ApiResponse<CustomerNote>.Ok(note));
+            _logger.LogInformation("Note added to Customer #{Id}: {Type}", id, note.RequestType);
+            return Ok(ApiResponse<CustomerInteraction>.Ok(note));
         }
 
         /// <summary>Müşteri segmentasyon analizi — RFM scoring</summary>

@@ -139,6 +139,10 @@ namespace KamatekCrm.ViewModels
         private void NavigateToReports() => _navigationService.NavigateTo<StockReportsViewModel>();
         [RelayCommand]
         private void NavigateToUsers() => _navigationService.NavigateTo<UsersViewModel>();
+        [RelayCommand]
+        private void NavigateToCustomerInteractions() => _navigationService.NavigateTo<CustomerInteractionsViewModel>();
+        [RelayCommand]
+        private void NavigateToManagerAgenda() => _navigationService.NavigateTo<ManagerAgendaViewModel>();
 
         /// <summary>
         /// Müşteri detay sayfasına geçiş

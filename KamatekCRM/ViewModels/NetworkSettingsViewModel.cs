@@ -214,6 +214,64 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _configuredTimeout, value);
         }
 
+        private string _dbUsername = "postgres";
+        /// <summary>
+        /// PostgreSQL veritabanı kullanıcı adı.
+        /// </summary>
+        public string DbUsername
+        {
+            get => _dbUsername;
+            set
+            {
+                if (SetProperty(ref _dbUsername, value))
+                {
+                    _hasUnsavedChanges = true;
+                    OnPropertyChanged(nameof(HasUnsavedChanges));
+                }
+            }
+        }
+
+        private string _dbPassword = string.Empty;
+        /// <summary>
+        /// PostgreSQL veritabanı şifresi.
+        /// </summary>
+        public string DbPassword
+        {
+            get => _dbPassword;
+            set
+            {
+                if (SetProperty(ref _dbPassword, value))
+                {
+                    _hasUnsavedChanges = true;
+                    OnPropertyChanged(nameof(HasUnsavedChanges));
+                }
+            }
+        }
+
+        private string _dbName = "KamatekCrm";
+        /// <summary>
+        /// PostgreSQL veritabanı adı.
+        /// </summary>
+        public string DbName
+        {
+            get => _dbName;
+            set
+            {
+                if (SetProperty(ref _dbName, value))
+                {
+                    _hasUnsavedChanges = true;
+                    OnPropertyChanged(nameof(HasUnsavedChanges));
+                }
+            }
+        }
+
+        private int _configuredDbPort = 5432;
+        public int ConfiguredDbPort
+        {
+            get => _configuredDbPort;
+            set => SetProperty(ref _configuredDbPort, value);
+        }
+
         #endregion
 
         #region Computed Properties
@@ -466,7 +524,7 @@ namespace KamatekCrm.ViewModels
         #region Private Methods
 
         /// <summary>
-        /// appsettings.json'dan NetworkDiscovery bölümündeki değerleri okur.
+        /// appsettings.json'dan NetworkDiscovery ve DatabaseSettings bölümündeki değerleri okur.
         /// </summary>
         private void LoadSettingsFromConfig()
         {
@@ -480,12 +538,40 @@ namespace KamatekCrm.ViewModels
                 // Manuel IP: Eğer FallbackToConfig açıksa ve önceden kaydedilmiş bir IP varsa yükle
                 _manualServerIp = Properties.Settings.Default.SavedServerAddress ?? string.Empty;
 
+                // PostgreSQL Veritabanı ayarlarını yükle
+                string connStr = _configuration.GetConnectionString("PostgreSQL")
+                    ?? _configuration["DatabaseSettings:ConnectionStrings:PostgreSQL"]
+                    ?? string.Empty;
+
+                if (!string.IsNullOrWhiteSpace(connStr))
+                {
+                    try
+                    {
+                        var builder = new Npgsql.NpgsqlConnectionStringBuilder(connStr);
+                        if (!string.IsNullOrWhiteSpace(builder.Username))
+                            _dbUsername = builder.Username;
+                        _dbPassword = builder.Password ?? string.Empty;
+                        if (!string.IsNullOrWhiteSpace(builder.Database))
+                            _dbName = builder.Database;
+                        if (builder.Port > 0)
+                            _configuredDbPort = builder.Port;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "PostgreSQL bağlantı dizesi ayrıştırılamadı.");
+                    }
+                }
+
                 // Properties bildir
                 OnPropertyChanged(nameof(IsMainServer));
                 OnPropertyChanged(nameof(IsAutoDiscoveryEnabled));
                 OnPropertyChanged(nameof(ManualServerIp));
                 OnPropertyChanged(nameof(ConfiguredPort));
                 OnPropertyChanged(nameof(ConfiguredTimeout));
+                OnPropertyChanged(nameof(DbUsername));
+                OnPropertyChanged(nameof(DbPassword));
+                OnPropertyChanged(nameof(DbName));
+                OnPropertyChanged(nameof(ConfiguredDbPort));
                 OnPropertyChanged(nameof(RoleDisplayText));
                 OnPropertyChanged(nameof(IsClientMode));
                 OnPropertyChanged(nameof(IsManualIpEnabled));
@@ -540,7 +626,7 @@ namespace KamatekCrm.ViewModels
             if (jsonObject == null)
                 throw new InvalidOperationException("appsettings.json parse edilemedi.");
 
-            // NetworkDiscovery bölümünü güncelle
+            // 1. NetworkDiscovery bölümünü güncelle
             var networkSection = jsonObject["NetworkDiscovery"];
             if (networkSection == null)
             {
@@ -554,8 +640,60 @@ namespace KamatekCrm.ViewModels
             networkSection!["TimeoutSeconds"] = _configuredTimeout;
             networkSection!["FallbackToConfig"] = true;
 
+            // 2. PostgreSQL Connection String oluştur ve kaydet
+            string targetHost = !string.IsNullOrWhiteSpace(_manualServerIp)
+                ? _manualServerIp.SanitizeServerAddress()
+                : "127.0.0.1";
+            if (string.IsNullOrWhiteSpace(targetHost)) targetHost = "127.0.0.1";
+
+            int targetPort = _configuredDbPort > 0 ? _configuredDbPort : 5432;
+
+            var connBuilder = new Npgsql.NpgsqlConnectionStringBuilder
+            {
+                Host = targetHost,
+                Port = targetPort,
+                Database = string.IsNullOrWhiteSpace(_dbName) ? "kamatekcrm" : _dbName.Trim(),
+                Username = string.IsNullOrWhiteSpace(_dbUsername) ? "postgres" : _dbUsername.Trim(),
+                Password = _dbPassword ?? string.Empty
+            };
+            string newConnectionString = connBuilder.ConnectionString;
+
+            var dbSection = jsonObject["DatabaseSettings"];
+            if (dbSection == null)
+            {
+                jsonObject["DatabaseSettings"] = new JsonObject();
+                dbSection = jsonObject["DatabaseSettings"];
+            }
+
+            var connStringsSection = dbSection["ConnectionStrings"];
+            if (connStringsSection == null)
+            {
+                dbSection["ConnectionStrings"] = new JsonObject();
+                connStringsSection = dbSection["ConnectionStrings"];
+            }
+
+            connStringsSection["PostgreSQL"] = newConnectionString;
+
+            if (jsonObject["ConnectionStrings"] != null)
+            {
+                jsonObject["ConnectionStrings"]!["PostgreSQL"] = newConnectionString;
+            }
+
             var options = new JsonSerializerOptions { WriteIndented = true };
-            File.WriteAllText(appSettingsPath, jsonObject.ToJsonString(options));
+            string updatedJson = jsonObject.ToJsonString(options);
+
+            File.WriteAllText(appSettingsPath, updatedJson);
+
+            // Dev ortamı için proje dizinindeki appsettings.json dosyasına da yaz
+            string? projectRoot = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.Parent?.Parent?.FullName;
+            if (!string.IsNullOrEmpty(projectRoot))
+            {
+                string devPath = Path.Combine(projectRoot, "appsettings.json");
+                if (File.Exists(devPath) && !string.Equals(devPath, appSettingsPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    File.WriteAllText(devPath, updatedJson);
+                }
+            }
         }
 
         /// <summary>

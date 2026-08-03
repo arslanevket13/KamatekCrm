@@ -235,6 +235,40 @@
                                 <TextBlock Text=" Müşteriler" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
+
+                        <Button Command="{Binding NavigateToCustomerInteractionsCommand}" ToolTip="İletişim &amp; Talepler">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CurrentViewName}" Value="CustomerInteractions">
+                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Call24" FontSize="18" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center"/>
+                                <TextBlock Text=" İletişim &amp; Talepler" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding NavigateToManagerAgendaCommand}" ToolTip="Yönetici Gündemi">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CurrentViewName}" Value="ManagerAgenda">
+                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="PersonStar24" FontSize="18" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center"/>
+                                <TextBlock Text=" Yönetici Gündemi" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                        </Button>
                         
                         <Button Command="{Binding NavigateToProductsCommand}" ToolTip="Stoklar">
                             <Button.Style>
@@ -631,6 +665,9 @@
                                 </TextBlock>
                             </StackPanel>
                         </Border>
+
+                        <!-- Quick Interaction Add Button -->
+                        <ui:Button Command="{Binding OpenQuickInteractionAddCommand}" Content="Görüşme Kaydet" Icon="{ui:SymbolIcon CallAdd24}" ToolTip="Hızlı Görüşme / Talep Kaydı" Margin="0,0,8,0" Appearance="Primary" Height="34" Padding="12,0"/>
 
                         <!-- Quick Add Button -->
                         <Button Command="{Binding OpenQuickAddCommand}" Style="{StaticResource GlassIconButton}" ToolTip="Hızlı Ekle (Ctrl+K)" Margin="0,0,12,0">

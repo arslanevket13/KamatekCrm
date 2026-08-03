@@ -227,7 +227,7 @@ public sealed class StockCountCommandService : IStockCountCommandService
         AppDbContext context,
         CancellationToken cancellationToken) =>
         context.Database.IsRelational()
-            ? await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
+            ? await context.Database.CreateExecutionStrategy().ExecuteAsync(async () => await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken))
             : null;
 
     private static Task CommitIfPresentAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken) =>

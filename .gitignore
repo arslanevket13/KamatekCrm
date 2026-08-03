@@ -35,3 +35,10 @@ PostgresData/
 
 # Graphify Output Directory
 graphify-out/
+# Added by code-review-graph
+.code-review-graph/
+
+# Agent Internal
+.gemini/
+TencentDB-Agent-Memory/
+

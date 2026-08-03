@@ -1,7 +1,7 @@
 using MediatR;
 using KamatekCrm.API.Application.DTOs;
 using KamatekCrm.Shared.Enums;
-using KamatekCrm.Data;
+using KamatekCrm.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;

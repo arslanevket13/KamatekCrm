@@ -29,6 +29,9 @@ namespace KamatekCrm.Infrastructure
             services.AddTransient<IProjectQuoteReadService, ProjectQuoteReadService>();
             services.AddTransient<IStandardQuoteCommandService, StandardQuoteCommandService>();
             services.AddTransient<IStandardQuoteReadService, StandardQuoteReadService>();
+            services.AddTransient<ICustomerInteractionCommandService, CustomerInteractionCommandService>();
+            services.AddTransient<ICustomerInteractionReadService, CustomerInteractionReadService>();
+            services.AddSingleton<KamatekCrm.ApplicationCore.ErrorHandling.IExceptionClassifier, ErrorHandling.ExceptionMapper>();
 
             services.AddDbContextFactory<AppDbContext>((sp, options) =>
             {

@@ -54,9 +54,10 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
             return Result.Failure<ProjectQuoteSaveResult>("Teklifte en az bir zorunlu kalem bulunmalıdır.");
 
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        await using var transaction = await BeginTransactionAsync(context, cancellationToken);
-        try
+        return await context.ExecuteInTransactionAsync(async transaction =>
         {
+            try
+            {
             var operationReference = OperationReference(command.IdempotencyKey);
             var previousOperation = await context.ActivityLogs
                 .AsNoTracking()
@@ -197,7 +198,8 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
             return await FailAsync<ProjectQuoteSaveResult>(transaction,
                 $"Teklif kaydı tamamlanamadı: {exception.Message}", cancellationToken);
         }
-    }
+    }, IsolationLevel.Serializable, cancellationToken);
+}
 
     public async Task<Result<ProjectQuoteOperationResult>> ChangeStatusAsync(
         ChangeProjectQuoteStatusCommand command,
@@ -211,84 +213,86 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
             return Result.Failure<ProjectQuoteOperationResult>("Teklif geçerlilik süresi 1 ile 365 gün arasında olmalıdır.");
 
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        await using var transaction = await BeginTransactionAsync(context, cancellationToken);
-        try
+        return await context.ExecuteInTransactionAsync(async transaction =>
         {
-            var reference = OperationReference("STATUS", command.IdempotencyKey);
-            var previous = await context.ActivityLogs.AsNoTracking()
-                .SingleOrDefaultAsync(log => log.EntityName == AuditEntity && log.ReferenceId == reference,
-                    cancellationToken);
-            if (previous is not null && int.TryParse(previous.RecordId, out var replayId))
+            try
             {
-                var replayProject = await context.ServiceProjects.AsNoTracking()
-                    .SingleOrDefaultAsync(project => project.Id == replayId, cancellationToken);
-                if (replayProject is null)
-                    return await FailAsync<ProjectQuoteOperationResult>(transaction,
-                        "Önceki durum işlemi bulundu ancak teklif kaydı bulunamadı.", cancellationToken);
+                var reference = OperationReference("STATUS", command.IdempotencyKey);
+                var previous = await context.ActivityLogs.AsNoTracking()
+                    .SingleOrDefaultAsync(log => log.EntityName == AuditEntity && log.ReferenceId == reference,
+                        cancellationToken);
+                if (previous is not null && int.TryParse(previous.RecordId, out var replayId))
+                {
+                    var replayProject = await context.ServiceProjects.AsNoTracking()
+                        .SingleOrDefaultAsync(project => project.Id == replayId, cancellationToken);
+                    if (replayProject is null)
+                        return await FailAsync<ProjectQuoteOperationResult>(transaction,
+                            "Önceki durum işlemi bulundu ancak teklif kaydı bulunamadı.", cancellationToken);
+                    if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+                    return Result.Success(new ProjectQuoteOperationResult(
+                        replayProject.Id, replayProject.QuoteStatus, replayProject.RevisionNumber, true));
+                }
+
+                var project = await context.ServiceProjects.SingleOrDefaultAsync(
+                    item => item.Id == command.ProjectId, cancellationToken)
+                    ?? throw new ProjectQuoteValidationException("Proje teklifi bulunamadı.");
+                EnsureExpectedState(project, command.ExpectedRevisionNumber, command.ExpectedStatus);
+
+                var now = DateTime.UtcNow;
+                var validation = ProjectQuoteLifecyclePolicy.ValidateTransition(
+                    project.QuoteStatus, command.TargetStatus, project.ValidUntil, now, command.Reason);
+                if (validation.IsFailure) throw new ProjectQuoteValidationException(validation.Error);
+
+                if (project.QuoteStatus != command.TargetStatus)
+                {
+                    project.QuoteStatus = command.TargetStatus;
+                    switch (command.TargetStatus)
+                    {
+                        case QuoteStatus.Sent:
+                            project.SentDate = now;
+                            project.ValidUntil = now.AddDays(command.ValidityDays);
+                            project.ApprovedDate = null;
+                            project.RejectedDate = null;
+                            project.RejectionReason = null;
+                            project.PipelineStage = PipelineStage.Proposal;
+                            project.Status = ProjectStatus.PendingApproval;
+                            break;
+                        case QuoteStatus.Approved:
+                            project.ApprovedDate = now;
+                            project.PipelineStage = PipelineStage.Won;
+                            project.Status = ProjectStatus.Active;
+                            break;
+                        case QuoteStatus.Rejected:
+                            project.RejectedDate = now;
+                            project.RejectionReason = command.Reason!.Trim();
+                            project.PipelineStage = PipelineStage.Lost;
+                            project.Status = ProjectStatus.Cancelled;
+                            break;
+                        case QuoteStatus.Expired:
+                            project.PipelineStage = PipelineStage.Lost;
+                            project.Status = ProjectStatus.Cancelled;
+                            break;
+                    }
+                }
+
+                AddAudit(context, "ProjectQuoteStatusChanged", "Update", project.Id,
+                    $"{project.QuoteNumber} teklifi {ProjectQuoteLifecyclePolicy.Display(project.QuoteStatus)} durumuna geçirildi.",
+                    reference, new { command.ExpectedStatus, command.TargetStatus, command.Reason });
+                await context.SaveChangesAsync(cancellationToken);
                 if (transaction is not null) await transaction.CommitAsync(cancellationToken);
                 return Result.Success(new ProjectQuoteOperationResult(
-                    replayProject.Id, replayProject.QuoteStatus, replayProject.RevisionNumber, true));
+                    project.Id, project.QuoteStatus, project.RevisionNumber, false));
             }
-
-            var project = await context.ServiceProjects.SingleOrDefaultAsync(
-                item => item.Id == command.ProjectId, cancellationToken)
-                ?? throw new ProjectQuoteValidationException("Proje teklifi bulunamadı.");
-            EnsureExpectedState(project, command.ExpectedRevisionNumber, command.ExpectedStatus);
-
-            var now = DateTime.UtcNow;
-            var validation = ProjectQuoteLifecyclePolicy.ValidateTransition(
-                project.QuoteStatus, command.TargetStatus, project.ValidUntil, now, command.Reason);
-            if (validation.IsFailure) throw new ProjectQuoteValidationException(validation.Error);
-
-            if (project.QuoteStatus != command.TargetStatus)
+            catch (ProjectQuoteValidationException exception)
             {
-                project.QuoteStatus = command.TargetStatus;
-                switch (command.TargetStatus)
-                {
-                    case QuoteStatus.Sent:
-                        project.SentDate = now;
-                        project.ValidUntil = now.AddDays(command.ValidityDays);
-                        project.ApprovedDate = null;
-                        project.RejectedDate = null;
-                        project.RejectionReason = null;
-                        project.PipelineStage = PipelineStage.Proposal;
-                        project.Status = ProjectStatus.PendingApproval;
-                        break;
-                    case QuoteStatus.Approved:
-                        project.ApprovedDate = now;
-                        project.PipelineStage = PipelineStage.Won;
-                        project.Status = ProjectStatus.Active;
-                        break;
-                    case QuoteStatus.Rejected:
-                        project.RejectedDate = now;
-                        project.RejectionReason = command.Reason!.Trim();
-                        project.PipelineStage = PipelineStage.Lost;
-                        project.Status = ProjectStatus.Cancelled;
-                        break;
-                    case QuoteStatus.Expired:
-                        project.PipelineStage = PipelineStage.Lost;
-                        project.Status = ProjectStatus.Cancelled;
-                        break;
-                }
+                return await FailAsync<ProjectQuoteOperationResult>(transaction, exception.Message, cancellationToken);
             }
-
-            AddAudit(context, "ProjectQuoteStatusChanged", "Update", project.Id,
-                $"{project.QuoteNumber} teklifi {ProjectQuoteLifecyclePolicy.Display(project.QuoteStatus)} durumuna geçirildi.",
-                reference, new { command.ExpectedStatus, command.TargetStatus, command.Reason });
-            await context.SaveChangesAsync(cancellationToken);
-            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
-            return Result.Success(new ProjectQuoteOperationResult(
-                project.Id, project.QuoteStatus, project.RevisionNumber, false));
-        }
-        catch (ProjectQuoteValidationException exception)
-        {
-            return await FailAsync<ProjectQuoteOperationResult>(transaction, exception.Message, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            return await FailAsync<ProjectQuoteOperationResult>(transaction,
-                $"Teklif durumu güncellenemedi: {exception.Message}", cancellationToken);
-        }
+            catch (Exception exception)
+            {
+                return await FailAsync<ProjectQuoteOperationResult>(transaction,
+                    $"Teklif durumu güncellenemedi: {exception.Message}", cancellationToken);
+            }
+        }, IsolationLevel.Serializable, cancellationToken);
     }
 
     public async Task<Result<ProjectQuoteDuplicateResult>> DuplicateAsync(
@@ -301,85 +305,87 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
             return Result.Failure<ProjectQuoteDuplicateResult>("İşlem anahtarı oluşturulamadı.");
 
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        await using var transaction = await BeginTransactionAsync(context, cancellationToken);
-        try
+        return await context.ExecuteInTransactionAsync(async transaction =>
         {
-            var reference = OperationReference("DUPLICATE", command.IdempotencyKey);
-            var previous = await context.ActivityLogs.AsNoTracking()
-                .SingleOrDefaultAsync(log => log.EntityName == AuditEntity && log.ReferenceId == reference,
-                    cancellationToken);
-            if (previous is not null && int.TryParse(previous.RecordId, out var replayId))
+            try
             {
-                var replay = await context.ServiceProjects.AsNoTracking()
-                    .SingleOrDefaultAsync(project => project.Id == replayId, cancellationToken)
-                    ?? throw new ProjectQuoteValidationException("Önceki kopyalama işleminin teklif kaydı bulunamadı.");
+                var reference = OperationReference("DUPLICATE", command.IdempotencyKey);
+                var previous = await context.ActivityLogs.AsNoTracking()
+                    .SingleOrDefaultAsync(log => log.EntityName == AuditEntity && log.ReferenceId == reference,
+                        cancellationToken);
+                if (previous is not null && int.TryParse(previous.RecordId, out var replayId))
+                {
+                    var replay = await context.ServiceProjects.AsNoTracking()
+                        .SingleOrDefaultAsync(project => project.Id == replayId, cancellationToken)
+                        ?? throw new ProjectQuoteValidationException("Önceki kopyalama işleminin teklif kaydı bulunamadı.");
+                    if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+                    return Result.Success(new ProjectQuoteDuplicateResult(
+                        replay.Id, replay.ProjectCode, replay.QuoteNumber ?? string.Empty, true));
+                }
+
+                var source = await context.ServiceProjects.AsNoTracking()
+                    .SingleOrDefaultAsync(project => project.Id == command.SourceProjectId, cancellationToken)
+                    ?? throw new ProjectQuoteValidationException("Kopyalanacak teklif bulunamadı.");
+                if (source.RevisionNumber != command.ExpectedRevisionNumber)
+                    throw new ProjectQuoteValidationException(
+                        $"Teklif R{source.RevisionNumber} olarak güncellendi. Listeyi yenileyip tekrar deneyin.");
+                if (!source.CustomerId.HasValue ||
+                    !await context.Customers.AnyAsync(customer => customer.Id == source.CustomerId.Value, cancellationToken))
+                    throw new ProjectQuoteValidationException("Teklifin bağlı müşterisi bulunamadı.");
+
+                var pricingResult = ProjectQuotePricingPolicy.Calculate(
+                    source.ProjectScopeJson, source.DiscountPercent, source.KdvRate);
+                if (pricingResult.IsFailure || pricingResult.Value is null || pricingResult.Value.IncludedLineCount == 0)
+                    throw new ProjectQuoteValidationException(
+                        "Eski teklif kapsamı doğrulanamadı. Teklifi editörde açıp kaydettikten sonra kopyalayın.");
+
+                var now = DateTime.UtcNow;
+                var copy = new ServiceProject
+                {
+                    Title = $"{source.Title} (Kopya)",
+                    Name = $"{source.Title} (Kopya)",
+                    CustomerId = source.CustomerId,
+                    ProjectCode = await NextNumberAsync(context, "PRJ", now.Year, cancellationToken),
+                    QuoteNumber = await NextNumberAsync(context, "TEK", now.Year, cancellationToken),
+                    ProjectScopeJson = source.ProjectScopeJson,
+                    TotalBudget = pricingResult.Value.NetRevenue,
+                    TotalCost = pricingResult.Value.TotalCost,
+                    TotalProfit = pricingResult.Value.TotalProfit,
+                    DiscountPercent = source.DiscountPercent,
+                    KdvRate = source.KdvRate,
+                    CreatedDate = now,
+                    QuoteStatus = QuoteStatus.Draft,
+                    RevisionNumber = 1,
+                    Status = ProjectStatus.Draft,
+                    PipelineStage = PipelineStage.New,
+                    TotalUnitCount = source.TotalUnitCount,
+                    SurveyNotes = source.SurveyNotes,
+                    QuoteItemsJson = source.QuoteItemsJson,
+                    Notes = source.Notes,
+                    PaymentTerms = source.PaymentTerms,
+                    ValidUntil = null,
+                    RevisionsJson = null
+                };
+                context.ServiceProjects.Add(copy);
+                await context.SaveChangesAsync(cancellationToken);
+                AddAudit(context, "ProjectQuoteDuplicated", "Create", copy.Id,
+                    $"{source.QuoteNumber} teklifinden {copy.QuoteNumber} taslağı oluşturuldu.",
+                    reference, new { SourceProjectId = source.Id, SourceRevision = source.RevisionNumber });
+                await context.SaveChangesAsync(cancellationToken);
                 if (transaction is not null) await transaction.CommitAsync(cancellationToken);
                 return Result.Success(new ProjectQuoteDuplicateResult(
-                    replay.Id, replay.ProjectCode, replay.QuoteNumber ?? string.Empty, true));
+                    copy.Id, copy.ProjectCode, copy.QuoteNumber ?? string.Empty, false));
             }
-
-            var source = await context.ServiceProjects.AsNoTracking()
-                .SingleOrDefaultAsync(project => project.Id == command.SourceProjectId, cancellationToken)
-                ?? throw new ProjectQuoteValidationException("Kopyalanacak teklif bulunamadı.");
-            if (source.RevisionNumber != command.ExpectedRevisionNumber)
-                throw new ProjectQuoteValidationException(
-                    $"Teklif R{source.RevisionNumber} olarak güncellendi. Listeyi yenileyip tekrar deneyin.");
-            if (!source.CustomerId.HasValue ||
-                !await context.Customers.AnyAsync(customer => customer.Id == source.CustomerId.Value, cancellationToken))
-                throw new ProjectQuoteValidationException("Teklifin bağlı müşterisi bulunamadı.");
-
-            var pricingResult = ProjectQuotePricingPolicy.Calculate(
-                source.ProjectScopeJson, source.DiscountPercent, source.KdvRate);
-            if (pricingResult.IsFailure || pricingResult.Value is null || pricingResult.Value.IncludedLineCount == 0)
-                throw new ProjectQuoteValidationException(
-                    "Eski teklif kapsamı doğrulanamadı. Teklifi editörde açıp kaydettikten sonra kopyalayın.");
-
-            var now = DateTime.UtcNow;
-            var copy = new ServiceProject
+            catch (ProjectQuoteValidationException exception)
             {
-                Title = $"{source.Title} (Kopya)",
-                Name = $"{source.Title} (Kopya)",
-                CustomerId = source.CustomerId,
-                ProjectCode = await NextNumberAsync(context, "PRJ", now.Year, cancellationToken),
-                QuoteNumber = await NextNumberAsync(context, "TEK", now.Year, cancellationToken),
-                ProjectScopeJson = source.ProjectScopeJson,
-                TotalBudget = pricingResult.Value.NetRevenue,
-                TotalCost = pricingResult.Value.TotalCost,
-                TotalProfit = pricingResult.Value.TotalProfit,
-                DiscountPercent = source.DiscountPercent,
-                KdvRate = source.KdvRate,
-                CreatedDate = now,
-                QuoteStatus = QuoteStatus.Draft,
-                RevisionNumber = 1,
-                Status = ProjectStatus.Draft,
-                PipelineStage = PipelineStage.New,
-                TotalUnitCount = source.TotalUnitCount,
-                SurveyNotes = source.SurveyNotes,
-                QuoteItemsJson = source.QuoteItemsJson,
-                Notes = source.Notes,
-                PaymentTerms = source.PaymentTerms,
-                ValidUntil = null,
-                RevisionsJson = null
-            };
-            context.ServiceProjects.Add(copy);
-            await context.SaveChangesAsync(cancellationToken);
-            AddAudit(context, "ProjectQuoteDuplicated", "Create", copy.Id,
-                $"{source.QuoteNumber} teklifinden {copy.QuoteNumber} taslağı oluşturuldu.",
-                reference, new { SourceProjectId = source.Id, SourceRevision = source.RevisionNumber });
-            await context.SaveChangesAsync(cancellationToken);
-            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
-            return Result.Success(new ProjectQuoteDuplicateResult(
-                copy.Id, copy.ProjectCode, copy.QuoteNumber ?? string.Empty, false));
-        }
-        catch (ProjectQuoteValidationException exception)
-        {
-            return await FailAsync<ProjectQuoteDuplicateResult>(transaction, exception.Message, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            return await FailAsync<ProjectQuoteDuplicateResult>(transaction,
-                $"Teklif kopyalanamadı: {exception.Message}", cancellationToken);
-        }
+                return await FailAsync<ProjectQuoteDuplicateResult>(transaction, exception.Message, cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                return await FailAsync<ProjectQuoteDuplicateResult>(transaction,
+                    $"Teklif kopyalanamadı: {exception.Message}", cancellationToken);
+            }
+        }, IsolationLevel.Serializable, cancellationToken);
     }
 
     public async Task<Result<ProjectQuoteOperationResult>> DeleteDraftAsync(
@@ -394,48 +400,50 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
             return Result.Failure<ProjectQuoteOperationResult>("İşlem anahtarı oluşturulamadı.");
 
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        await using var transaction = await BeginTransactionAsync(context, cancellationToken);
-        try
+        return await context.ExecuteInTransactionAsync(async transaction =>
         {
-            var reference = OperationReference("DELETE", command.IdempotencyKey);
-            var previous = await context.ActivityLogs.AsNoTracking()
-                .SingleOrDefaultAsync(log => log.EntityName == AuditEntity && log.ReferenceId == reference,
-                    cancellationToken);
-            if (previous is not null && int.TryParse(previous.RecordId, out var replayId))
+            try
             {
+                var reference = OperationReference("DELETE", command.IdempotencyKey);
+                var previous = await context.ActivityLogs.AsNoTracking()
+                    .SingleOrDefaultAsync(log => log.EntityName == AuditEntity && log.ReferenceId == reference,
+                        cancellationToken);
+                if (previous is not null && int.TryParse(previous.RecordId, out var replayId))
+                {
+                    if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+                    return Result.Success(new ProjectQuoteOperationResult(
+                        replayId, QuoteStatus.Draft, command.ExpectedRevisionNumber, true));
+                }
+
+                var project = await context.ServiceProjects.SingleOrDefaultAsync(
+                    item => item.Id == command.ProjectId, cancellationToken)
+                    ?? throw new ProjectQuoteValidationException("Silinecek teklif bulunamadı.");
+                EnsureExpectedState(project, command.ExpectedRevisionNumber, command.ExpectedStatus);
+                if (project.QuoteStatus != QuoteStatus.Draft)
+                    throw new ProjectQuoteValidationException(
+                        "Yalnızca hiç gönderilmemiş taslak teklifler silinebilir. Diğer teklifler denetim geçmişi için korunur.");
+                if (await context.ServiceJobs.AnyAsync(job => job.ServiceProjectId == project.Id, cancellationToken))
+                    throw new ProjectQuoteValidationException("İş emrine bağlı teklif silinemez.");
+
+                AddAudit(context, "ProjectQuoteDeleted", "Delete", project.Id,
+                    $"{project.QuoteNumber} numaralı taslak teklif silindi.", reference,
+                    new { project.ProjectCode, project.RevisionNumber });
+                context.ServiceProjects.Remove(project);
+                await context.SaveChangesAsync(cancellationToken);
                 if (transaction is not null) await transaction.CommitAsync(cancellationToken);
                 return Result.Success(new ProjectQuoteOperationResult(
-                    replayId, QuoteStatus.Draft, command.ExpectedRevisionNumber, true));
+                    project.Id, QuoteStatus.Draft, project.RevisionNumber, false));
             }
-
-            var project = await context.ServiceProjects.SingleOrDefaultAsync(
-                item => item.Id == command.ProjectId, cancellationToken)
-                ?? throw new ProjectQuoteValidationException("Silinecek teklif bulunamadı.");
-            EnsureExpectedState(project, command.ExpectedRevisionNumber, command.ExpectedStatus);
-            if (project.QuoteStatus != QuoteStatus.Draft)
-                throw new ProjectQuoteValidationException(
-                    "Yalnızca hiç gönderilmemiş taslak teklifler silinebilir. Diğer teklifler denetim geçmişi için korunur.");
-            if (await context.ServiceJobs.AnyAsync(job => job.ServiceProjectId == project.Id, cancellationToken))
-                throw new ProjectQuoteValidationException("İş emrine bağlı teklif silinemez.");
-
-            AddAudit(context, "ProjectQuoteDeleted", "Delete", project.Id,
-                $"{project.QuoteNumber} numaralı taslak teklif silindi.", reference,
-                new { project.ProjectCode, project.RevisionNumber });
-            context.ServiceProjects.Remove(project);
-            await context.SaveChangesAsync(cancellationToken);
-            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
-            return Result.Success(new ProjectQuoteOperationResult(
-                project.Id, QuoteStatus.Draft, project.RevisionNumber, false));
-        }
-        catch (ProjectQuoteValidationException exception)
-        {
-            return await FailAsync<ProjectQuoteOperationResult>(transaction, exception.Message, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            return await FailAsync<ProjectQuoteOperationResult>(transaction,
-                $"Teklif silinemedi: {exception.Message}", cancellationToken);
-        }
+            catch (ProjectQuoteValidationException exception)
+            {
+                return await FailAsync<ProjectQuoteOperationResult>(transaction, exception.Message, cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                return await FailAsync<ProjectQuoteOperationResult>(transaction,
+                    $"Teklif silinemedi: {exception.Message}", cancellationToken);
+            }
+        }, IsolationLevel.Serializable, cancellationToken);
     }
 
     public async Task<Result<ProjectQuoteWorkOrderResult>> ConvertApprovedToWorkOrderAsync(
@@ -450,82 +458,84 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
             return Result.Failure<ProjectQuoteWorkOrderResult>("İşlem anahtarı oluşturulamadı.");
 
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        await using var transaction = await BeginTransactionAsync(context, cancellationToken);
-        try
+        return await context.ExecuteInTransactionAsync(async transaction =>
         {
-            var existingJob = await context.ServiceJobs.AsNoTracking()
-                .FirstOrDefaultAsync(job => job.ServiceProjectId == command.ProjectId &&
-                                            job.Source == "ApprovedProjectQuote" && !job.IsDeleted,
-                    cancellationToken);
-            if (existingJob is not null)
+            try
             {
+                var existingJob = await context.ServiceJobs.AsNoTracking()
+                    .FirstOrDefaultAsync(job => job.ServiceProjectId == command.ProjectId &&
+                                                job.Source == "ApprovedProjectQuote" && !job.IsDeleted,
+                        cancellationToken);
+                if (existingJob is not null)
+                {
+                    if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+                    return Result.Success(new ProjectQuoteWorkOrderResult(
+                        command.ProjectId, existingJob.Id, true));
+                }
+
+                var project = await context.ServiceProjects.SingleOrDefaultAsync(
+                    item => item.Id == command.ProjectId, cancellationToken)
+                    ?? throw new ProjectQuoteValidationException("İş emrine dönüştürülecek teklif bulunamadı.");
+                EnsureExpectedState(project, command.ExpectedRevisionNumber, command.ExpectedStatus);
+                if (project.QuoteStatus != QuoteStatus.Approved)
+                    throw new ProjectQuoteValidationException("Yalnızca onaylanmış teklif iş emrine dönüştürülebilir.");
+                if (!project.CustomerId.HasValue)
+                    throw new ProjectQuoteValidationException("Teklifin bağlı müşterisi bulunmuyor.");
+
+                var pricingResult = ProjectQuotePricingPolicy.Calculate(
+                    project.ProjectScopeJson, project.DiscountPercent, project.KdvRate);
+                if (pricingResult.IsFailure || pricingResult.Value is null)
+                    throw new ProjectQuoteValidationException(pricingResult.Error);
+                var now = DateTime.UtcNow;
+                var job = new ServiceJob
+                {
+                    CustomerId = project.CustomerId.Value,
+                    ServiceProjectId = project.Id,
+                    Title = $"Kurulum - {project.Title}",
+                    Description = $"{project.QuoteNumber} numaralı onaylı tekliften oluşturuldu.",
+                    WorkOrderType = WorkOrderType.Installation,
+                    ServiceJobType = ServiceJobType.Project,
+                    WorkflowStatus = WorkflowStatus.Approved,
+                    Status = JobStatus.Pending,
+                    Priority = JobPriority.Normal,
+                    Source = "ApprovedProjectQuote",
+                    Price = pricingResult.Value.NetRevenue,
+                    TaxAmount = pricingResult.Value.VatAmount,
+                    TotalAmount = pricingResult.Value.GrandTotal,
+                    CreatedDate = now,
+                    CreatedBy = _currentUser.Username
+                };
+                context.ServiceJobs.Add(job);
+                project.Status = ProjectStatus.Active;
+                await context.SaveChangesAsync(cancellationToken);
+                context.ServiceJobHistories.Add(new ServiceJobHistory
+                {
+                    ServiceJobId = job.Id,
+                    Date = now,
+                    JobStatusChange = JobStatus.Pending,
+                    TechnicianNote = "Onaylı proje teklifinden kurulum iş emri oluşturuldu.",
+                    Action = "CreatedFromApprovedQuote",
+                    Notes = project.QuoteNumber,
+                    UserId = _currentUser.Username,
+                    PerformedAt = now
+                });
+                AddAudit(context, "ProjectQuoteConvertedToWorkOrder", "Create", project.Id,
+                    $"{project.QuoteNumber} teklifinden #{job.Id} kurulum iş emri oluşturuldu.",
+                    OperationReference("WORKORDER", command.IdempotencyKey), new { WorkOrderId = job.Id });
+                await context.SaveChangesAsync(cancellationToken);
                 if (transaction is not null) await transaction.CommitAsync(cancellationToken);
-                return Result.Success(new ProjectQuoteWorkOrderResult(
-                    command.ProjectId, existingJob.Id, true));
+                return Result.Success(new ProjectQuoteWorkOrderResult(project.Id, job.Id, false));
             }
-
-            var project = await context.ServiceProjects.SingleOrDefaultAsync(
-                item => item.Id == command.ProjectId, cancellationToken)
-                ?? throw new ProjectQuoteValidationException("İş emrine dönüştürülecek teklif bulunamadı.");
-            EnsureExpectedState(project, command.ExpectedRevisionNumber, command.ExpectedStatus);
-            if (project.QuoteStatus != QuoteStatus.Approved)
-                throw new ProjectQuoteValidationException("Yalnızca onaylanmış teklif iş emrine dönüştürülebilir.");
-            if (!project.CustomerId.HasValue)
-                throw new ProjectQuoteValidationException("Teklifin bağlı müşterisi bulunmuyor.");
-
-            var pricingResult = ProjectQuotePricingPolicy.Calculate(
-                project.ProjectScopeJson, project.DiscountPercent, project.KdvRate);
-            if (pricingResult.IsFailure || pricingResult.Value is null)
-                throw new ProjectQuoteValidationException(pricingResult.Error);
-            var now = DateTime.UtcNow;
-            var job = new ServiceJob
+            catch (ProjectQuoteValidationException exception)
             {
-                CustomerId = project.CustomerId.Value,
-                ServiceProjectId = project.Id,
-                Title = $"Kurulum - {project.Title}",
-                Description = $"{project.QuoteNumber} numaralı onaylı tekliften oluşturuldu.",
-                WorkOrderType = WorkOrderType.Installation,
-                ServiceJobType = ServiceJobType.Project,
-                WorkflowStatus = WorkflowStatus.Approved,
-                Status = JobStatus.Pending,
-                Priority = JobPriority.Normal,
-                Source = "ApprovedProjectQuote",
-                Price = pricingResult.Value.NetRevenue,
-                TaxAmount = pricingResult.Value.VatAmount,
-                TotalAmount = pricingResult.Value.GrandTotal,
-                CreatedDate = now,
-                CreatedBy = _currentUser.Username
-            };
-            context.ServiceJobs.Add(job);
-            project.Status = ProjectStatus.Active;
-            await context.SaveChangesAsync(cancellationToken);
-            context.ServiceJobHistories.Add(new ServiceJobHistory
+                return await FailAsync<ProjectQuoteWorkOrderResult>(transaction, exception.Message, cancellationToken);
+            }
+            catch (Exception exception)
             {
-                ServiceJobId = job.Id,
-                Date = now,
-                JobStatusChange = JobStatus.Pending,
-                TechnicianNote = "Onaylı proje teklifinden kurulum iş emri oluşturuldu.",
-                Action = "CreatedFromApprovedQuote",
-                Notes = project.QuoteNumber,
-                UserId = _currentUser.Username,
-                PerformedAt = now
-            });
-            AddAudit(context, "ProjectQuoteConvertedToWorkOrder", "Create", project.Id,
-                $"{project.QuoteNumber} teklifinden #{job.Id} kurulum iş emri oluşturuldu.",
-                OperationReference("WORKORDER", command.IdempotencyKey), new { WorkOrderId = job.Id });
-            await context.SaveChangesAsync(cancellationToken);
-            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
-            return Result.Success(new ProjectQuoteWorkOrderResult(project.Id, job.Id, false));
-        }
-        catch (ProjectQuoteValidationException exception)
-        {
-            return await FailAsync<ProjectQuoteWorkOrderResult>(transaction, exception.Message, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            return await FailAsync<ProjectQuoteWorkOrderResult>(transaction,
-                $"İş emri oluşturulamadı: {exception.Message}", cancellationToken);
-        }
+                return await FailAsync<ProjectQuoteWorkOrderResult>(transaction,
+                    $"İş emri oluşturulamadı: {exception.Message}", cancellationToken);
+            }
+        }, IsolationLevel.Serializable, cancellationToken);
     }
 
     public async Task<Result<ExpireProjectQuotesResult>> ExpireOverdueAsync(
@@ -535,32 +545,34 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
         if (authorization.IsFailure) return Result.Failure<ExpireProjectQuotesResult>(authorization.Error);
 
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        await using var transaction = await BeginTransactionAsync(context, cancellationToken);
-        try
+        return await context.ExecuteInTransactionAsync(async transaction =>
         {
-            var now = DateTime.UtcNow;
-            var overdue = await context.ServiceProjects
-                .Where(project => project.QuoteStatus == QuoteStatus.Sent &&
-                                  project.ValidUntil.HasValue && project.ValidUntil.Value < now)
-                .ToListAsync(cancellationToken);
-            foreach (var project in overdue)
+            try
             {
-                project.QuoteStatus = QuoteStatus.Expired;
-                project.PipelineStage = PipelineStage.Lost;
-                project.Status = ProjectStatus.Cancelled;
-                AddAudit(context, "ProjectQuoteExpired", "Update", project.Id,
-                    $"{project.QuoteNumber} teklifinin geçerlilik süresi doldu.",
-                    $"QUOTE-EXPIRED:{project.Id}:{project.ValidUntil:O}", new { project.ValidUntil });
+                var now = DateTime.UtcNow;
+                var overdue = await context.ServiceProjects
+                    .Where(project => project.QuoteStatus == QuoteStatus.Sent &&
+                                      project.ValidUntil.HasValue && project.ValidUntil.Value < now)
+                    .ToListAsync(cancellationToken);
+                foreach (var project in overdue)
+                {
+                    project.QuoteStatus = QuoteStatus.Expired;
+                    project.PipelineStage = PipelineStage.Lost;
+                    project.Status = ProjectStatus.Cancelled;
+                    AddAudit(context, "ProjectQuoteExpired", "Update", project.Id,
+                        $"{project.QuoteNumber} teklifinin geçerlilik süresi doldu.",
+                        $"QUOTE-EXPIRED:{project.Id}:{project.ValidUntil:O}", new { project.ValidUntil });
+                }
+                await context.SaveChangesAsync(cancellationToken);
+                if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+                return Result.Success(new ExpireProjectQuotesResult(overdue.Count));
             }
-            await context.SaveChangesAsync(cancellationToken);
-            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
-            return Result.Success(new ExpireProjectQuotesResult(overdue.Count));
-        }
-        catch (Exception exception)
-        {
-            return await FailAsync<ExpireProjectQuotesResult>(transaction,
-                $"Süresi dolan teklifler güncellenemedi: {exception.Message}", cancellationToken);
-        }
+            catch (Exception exception)
+            {
+                return await FailAsync<ExpireProjectQuotesResult>(transaction,
+                    $"Süresi dolan teklifler güncellenemedi: {exception.Message}", cancellationToken);
+            }
+        }, IsolationLevel.Serializable, cancellationToken);
     }
 
     private static async Task<Result<ProjectQuoteSaveResult>> BuildReplayResultAsync(

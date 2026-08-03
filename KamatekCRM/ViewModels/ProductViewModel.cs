@@ -103,7 +103,33 @@ namespace KamatekCrm.ViewModels
 
         // ===== KPI METRİK PROPERTİES =====
         public int TotalProductCount => Products.Count;
-        public int TotalStockQuantityCount => Products.Sum(p => p.TotalStockQuantity);
+
+        /// <summary>
+        /// Sadece 'Adet' veya sayılabilir birimlerdeki ürünlerin stok miktarını toplar.
+        /// </summary>
+        public int TotalStockQuantityCount => Products
+            .Where(p => string.IsNullOrWhiteSpace(p.Unit) || 
+                        p.Unit.Equals("Adet", StringComparison.OrdinalIgnoreCase) || 
+                        p.Unit.Equals("Paket", StringComparison.OrdinalIgnoreCase) || 
+                        p.Unit.Equals("Kutu", StringComparison.OrdinalIgnoreCase) || 
+                        p.Unit.Equals("Set", StringComparison.OrdinalIgnoreCase) || 
+                        p.Unit.Equals("pcs", StringComparison.OrdinalIgnoreCase))
+            .Sum(p => p.TotalStockQuantity);
+
+        /// <summary>
+        /// Ölçü birimi 'Metre' olan ürünlerin toplam stok miktarını toplar.
+        /// </summary>
+        public int TotalMetersInStock => Products
+            .Where(p => p.Unit != null && (p.Unit.Equals("Metre", StringComparison.OrdinalIgnoreCase) || p.Unit.Equals("m", StringComparison.OrdinalIgnoreCase)))
+            .Sum(p => p.TotalStockQuantity);
+
+        /// <summary>
+        /// Ölçü birimi 'Kg' veya 'Litre' olan ürünlerin toplam stok miktarını toplar.
+        /// </summary>
+        public int TotalKgInStock => Products
+            .Where(p => p.Unit != null && (p.Unit.Equals("Kg", StringComparison.OrdinalIgnoreCase) || p.Unit.Equals("Kilogram", StringComparison.OrdinalIgnoreCase) || p.Unit.Equals("Litre", StringComparison.OrdinalIgnoreCase)))
+            .Sum(p => p.TotalStockQuantity);
+
         public int LowStockCount => Products.Count(p => p.TotalStockQuantity <= 5);
         public decimal TotalInventoryValue => Products.Sum(p => p.TotalStockQuantity * p.PurchasePrice);
         public string TotalInventoryValueDisplay => $"₺{TotalInventoryValue:N0}";
@@ -144,6 +170,8 @@ namespace KamatekCrm.ViewModels
         {
             OnPropertyChanged(nameof(TotalProductCount));
             OnPropertyChanged(nameof(TotalStockQuantityCount));
+            OnPropertyChanged(nameof(TotalMetersInStock));
+            OnPropertyChanged(nameof(TotalKgInStock));
             OnPropertyChanged(nameof(LowStockCount));
             OnPropertyChanged(nameof(TotalInventoryValue));
             OnPropertyChanged(nameof(TotalInventoryValueDisplay));
