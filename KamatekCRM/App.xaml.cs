@@ -33,6 +33,16 @@ namespace KamatekCrm
 
         protected override async void OnStartup(StartupEventArgs e)
         {
+            // Velopack Bootstrap — Uygulama başlangıcının en ilk adımı (Installer/Hook yönetimi)
+            try
+            {
+                Velopack.VelopackApp.Build().Run();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Velopack bootstrap: {ex.Message}");
+            }
+
             // WPF binding formatları işletim sistemi dilinden bağımsız olarak Türkçe CRM
             // bağlamında para, sayı ve tarih üretmelidir.
             var applicationCulture = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
@@ -130,6 +140,33 @@ namespace KamatekCrm
                 mainWindow.Show();
                 
                 Log.Information("Desktop application started successfully.");
+
+                // Arka planda güncelleme kontrolü (5 saniye sonra, açılışı bloklamadan)
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(5000);
+                    try
+                    {
+                        var updateService = _host?.Services.GetService<Services.Update.IUpdateService>();
+                        if (updateService != null && updateService.GetSettings().CheckForUpdatesOnStartup)
+                        {
+                            var update = await updateService.CheckForUpdatesAsync(isAutoCheck: true);
+                            if (update != null)
+                            {
+                                Dispatcher.BeginInvoke(() =>
+                                {
+                                    var updateDialog = new Views.UpdateNotificationWindow(updateService);
+                                    updateDialog.Owner = MainWindow;
+                                    updateDialog.ShowDialog();
+                                });
+                            }
+                        }
+                    }
+                    catch (Exception updateEx)
+                    {
+                        Log.Warning(updateEx, "Background startup update check failed silently.");
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -307,6 +344,20 @@ namespace KamatekCrm
                 // Uygulama kapanırken otomatik yedek al (DI üzerinden)
                 if (_host != null)
                 {
+                    try
+                    {
+                        var updateService = _host.Services.GetService<Services.Update.IUpdateService>();
+                        if (updateService != null && updateService.IsUpdateDownloaded && updateService.GetSettings().InstallOnClose)
+                        {
+                            Log.Information("Applying downloaded update on application exit...");
+                            updateService.ApplyUpdateAndRestart();
+                        }
+                    }
+                    catch (Exception updateEx)
+                    {
+                        Log.Warning(updateEx, "Failed to apply update on application exit");
+                    }
+
                     try
                     {
                         using var backupScope = _host.Services.CreateScope();

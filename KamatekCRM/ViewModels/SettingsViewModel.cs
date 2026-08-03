@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -33,18 +34,21 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService? _toastService;
         private readonly IApplicationAuthorizationService _authorizationService;
         private readonly IRetailTransactionService _retailTransactions;
+        private readonly Services.Update.IUpdateService? _updateService;
         private LegacyLedgerPreviewDto? _legacyLedgerPreview;
 
         public SettingsViewModel(
             IToastService toastService,
             IApplicationAuthorizationService authorizationService,
             IBackupService backupService,
-            IRetailTransactionService retailTransactions)
+            IRetailTransactionService retailTransactions,
+            Services.Update.IUpdateService? updateService = null)
         {
             _toastService = toastService;
             _authorizationService = authorizationService;
             _backupService = backupService;
             _retailTransactions = retailTransactions;
+            _updateService = updateService;
             
             // Ayarları Properties.Settings.Default'tan yükle
             string savedThemeId = Properties.Settings.Default.ThemePreference;
@@ -60,6 +64,7 @@ namespace KamatekCrm.ViewModels
             LoadCompanySettings();
             LoadInstalledPrinters();
             LoadLastBackupInfo();
+            LoadUpdateSettings();
         }
 
         #region Properties & Tab Navigation
@@ -690,6 +695,162 @@ namespace KamatekCrm.ViewModels
 
             _toastService?.ShowError("Yetkisiz işlem", authorization.Error);
             return false;
+        }
+
+        #endregion
+
+        #region Auto-Update System Properties & Commands
+
+        private bool _checkForUpdatesOnStartup = true;
+        public bool CheckForUpdatesOnStartup
+        {
+            get => _checkForUpdatesOnStartup;
+            set
+            {
+                if (SetProperty(ref _checkForUpdatesOnStartup, value))
+                    SaveUpdateSettings();
+            }
+        }
+
+        private bool _autoDownloadUpdates;
+        public bool AutoDownloadUpdates
+        {
+            get => _autoDownloadUpdates;
+            set
+            {
+                if (SetProperty(ref _autoDownloadUpdates, value))
+                    SaveUpdateSettings();
+            }
+        }
+
+        private string _updateChannel = "Stable";
+        public string UpdateChannel
+        {
+            get => _updateChannel;
+            set
+            {
+                if (value != _updateChannel)
+                {
+                    if (!EnsureSettingsAuthorized()) return;
+                    if (SetProperty(ref _updateChannel, value))
+                        SaveUpdateSettings();
+                }
+            }
+        }
+
+        public ObservableCollection<string> AvailableUpdateChannels { get; } = new() { "Stable", "Beta" };
+
+        private bool _installOnClose;
+        public bool InstallOnClose
+        {
+            get => _installOnClose;
+            set
+            {
+                if (SetProperty(ref _installOnClose, value))
+                    SaveUpdateSettings();
+            }
+        }
+
+        public string CurrentAppVersionText => _updateService?.CurrentVersion ?? "v1.0.0";
+
+        private string _lastCheckTimeText = "Henüz kontrol edilmedi";
+        public string LastCheckTimeText
+        {
+            get => _lastCheckTimeText;
+            set => SetProperty(ref _lastCheckTimeText, value);
+        }
+
+        private string _lastDownloadedVersionText = "İndirilmiş sürüm yok";
+        public string LastDownloadedVersionText
+        {
+            get => _lastDownloadedVersionText;
+            set => SetProperty(ref _lastDownloadedVersionText, value);
+        }
+
+        private bool _isUpdateCheckBusy;
+        public bool IsUpdateCheckBusy
+        {
+            get => _isUpdateCheckBusy;
+            set => SetProperty(ref _isUpdateCheckBusy, value);
+        }
+
+        public bool IsUpdateDownloaded => _updateService?.IsUpdateDownloaded ?? false;
+
+        private void LoadUpdateSettings()
+        {
+            if (_updateService == null) return;
+            var settings = _updateService.GetSettings();
+            _checkForUpdatesOnStartup = settings.CheckForUpdatesOnStartup;
+            _autoDownloadUpdates = settings.AutoDownloadUpdates;
+            _updateChannel = settings.UpdateChannel;
+            _installOnClose = settings.InstallOnClose;
+
+            LastCheckTimeText = settings.LastCheckTime.HasValue
+                ? settings.LastCheckTime.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                : "Henüz kontrol edilmedi";
+
+            LastDownloadedVersionText = !string.IsNullOrWhiteSpace(settings.LastDownloadedVersion)
+                ? settings.LastDownloadedVersion
+                : "İndirilmiş sürüm yok";
+
+            OnPropertyChanged(nameof(CheckForUpdatesOnStartup));
+            OnPropertyChanged(nameof(AutoDownloadUpdates));
+            OnPropertyChanged(nameof(UpdateChannel));
+            OnPropertyChanged(nameof(InstallOnClose));
+            OnPropertyChanged(nameof(IsUpdateDownloaded));
+        }
+
+        private void SaveUpdateSettings()
+        {
+            if (_updateService == null) return;
+            var settings = _updateService.GetSettings();
+            settings.CheckForUpdatesOnStartup = CheckForUpdatesOnStartup;
+            settings.AutoDownloadUpdates = AutoDownloadUpdates;
+            settings.UpdateChannel = UpdateChannel;
+            settings.InstallOnClose = InstallOnClose;
+            _updateService.SaveSettings(settings);
+        }
+
+        [RelayCommand]
+        private async Task CheckForUpdatesNowAsync()
+        {
+            if (_updateService == null)
+            {
+                _toastService?.ShowWarning("Güncelleme servisi aktif değil.");
+                return;
+            }
+
+            IsUpdateCheckBusy = true;
+            try
+            {
+                var update = await _updateService.CheckForUpdatesAsync(isAutoCheck: false);
+                LoadUpdateSettings();
+
+                if (update != null)
+                {
+                    var updateWindow = new Views.UpdateNotificationWindow(_updateService)
+                    {
+                        Owner = System.Windows.Application.Current.MainWindow
+                    };
+                    updateWindow.ShowDialog();
+                    OnPropertyChanged(nameof(IsUpdateDownloaded));
+                }
+                else
+                {
+                    _toastService?.ShowInfo("Uygulamanız güncel. Yeni bir sürüm bulunamadı.");
+                }
+            }
+            finally
+            {
+                IsUpdateCheckBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private void ApplyUpdateNow()
+        {
+            if (_updateService == null || !_updateService.IsUpdateDownloaded) return;
+            _updateService.ApplyUpdateAndRestart();
         }
 
         #endregion

@@ -1,0 +1,80 @@
+name: Release KamatekCRM Desktop App
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'v*.*.*-*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build, Test & Package Desktop Release (Velopack)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore NuGet Dependencies
+        run: dotnet restore KamatekCRM.sln
+
+      - name: Build Solution (Release)
+        run: dotnet build KamatekCRM.sln --configuration Release --no-restore
+
+      - name: Run Automated Unit Tests
+        run: dotnet test KamatekCrm.Tests/KamatekCrm.Tests.csproj --configuration Release --no-build --verbosity normal
+
+      - name: Extract Clean SemVer from Tag
+        id: extract_version
+        shell: pwsh
+        run: |
+          $rawTag = "${{ github.ref_name }}"
+          $cleanVersion = $rawTag -replace '^v', ''
+          Write-Host "Tag: $rawTag -> SemVer Version: $cleanVersion"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "VERSION=$cleanVersion"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "IS_PRERELEASE=$($rawTag.Contains('-'))"
+
+      - name: Publish WPF Desktop App (win-x64 Self-Contained)
+        run: |
+          dotnet publish KamatekCRM/KamatekCrm.csproj -c Release -r win-x64 --self-contained true -o ./publish /p:InformationalVersion="${{ github.ref_name }}"
+
+      - name: Install Velopack CLI (vpk)
+        run: dotnet tool install -g vpk
+
+      - name: Create Velopack Release Package
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.extract_version.outputs.VERSION }}"
+          Write-Host "Packaging version $ver with Velopack..."
+          vpk pack -u KamatekCrm -v $ver -p ./publish -e KamatekCrm.exe --mainExename KamatekCrm.exe -o ./Releases
+
+      - name: Generate SHA-256 Checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path ./Releases | ForEach-Object {
+            $hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash
+            "$hash  $($_.Name)" | Out-File -FilePath "$($_.FullName).sha256" -Encoding ascii
+          }
+
+      - name: Create GitHub Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: KamatekCRM Masaüstü Sürümü ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ steps.extract_version.outputs.IS_PRERELEASE == 'true' }}
+          generate_release_notes: true
+          files: |
+            Releases/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

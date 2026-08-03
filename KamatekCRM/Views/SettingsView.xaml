@@ -160,6 +160,24 @@
                             <TextBlock Text="Ağ &amp; Sunucu" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+
+                    <Button Command="{Binding SelectTabCommand}" CommandParameter="5">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SettingsTabButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="5">
+                                        <Setter Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="ArrowDownload24" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Uygulama Güncellemeleri" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Border>
 
@@ -462,6 +480,88 @@
                                     <ui:Button Grid.Column="1" Content="Detaylı Ağ Yönetimini Aç" Icon="{ui:SymbolIcon Globe24}"
                                                Command="{Binding OpenNetworkSettingsCommand}" Appearance="Primary" Height="38" Padding="16,0" VerticalAlignment="Center" Cursor="Hand"/>
                                 </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- TAB 5: UYGULAMA GUNCELLEMELERI -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedTabIndex}" Value="5">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="🚀 Otomatik Uygulama Güncellemeleri" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Velopack altyapısı ile GitHub Releases üzerinden güvenli ve otomatik masaüstü güncellemeleri" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20"/>
+
+                            <!-- Sürüm & Durum Özeti Kartı -->
+                            <Border Padding="16" CornerRadius="10" Margin="0,0,0,20" Background="{DynamicResource SurfacePageBrush}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="MEVCUT MASAÜSTÜ SÜRÜMÜ" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding CurrentAppVersionText}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="SON KONTROL ZAMAN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding LastCheckTimeText}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,4,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <ui:Button Content="Güncellemeleri Kontrol Et" Icon="{ui:SymbolIcon ArrowDownload24}"
+                                                   Command="{Binding CheckForUpdatesNowCommand}"
+                                                   Appearance="Primary" Height="38" Padding="16,0" Cursor="Hand"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Hazır İndirilmiş Güncelleme Uyarısı (Varsa) -->
+                            <Border Padding="16" CornerRadius="10" Margin="0,0,0,20" Background="{DynamicResource StatusSuccessBg}"
+                                    Visibility="{Binding IsUpdateDownloaded, Converter={StaticResource BoolToVis}}">
+                                <DockPanel>
+                                    <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="24" Foreground="{DynamicResource StatusSuccessFg}" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <ui:Button Content="Şimdi Yeniden Başlat ve Yükle" Command="{Binding ApplyUpdateNowCommand}"
+                                               Appearance="Success" Height="36" Padding="16,0" DockPanel.Dock="Right" Cursor="Hand"/>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="YENİ GÜNCELLEME İNDİRİLDİ VE YÜKLEMEYE HAZIR" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
+                                        <TextBlock Text="Uygulama yeniden başlatıldığında yeni sürüm otomatik aktifleşecektir." FontSize="12" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+
+                            <!-- Yapılandırma Seçenekleri -->
+                            <Border Padding="18" CornerRadius="10" Margin="0,0,0,20" Background="{DynamicResource SurfacePageBrush}">
+                                <StackPanel>
+                                    <TextBlock Text="GÜNCELLEME DAVRANIŞI &amp; KANAL SEÇİMİ" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,14"/>
+
+                                    <CheckBox Content="Uygulama açılışında güncellemeleri otomatik kontrol et" IsChecked="{Binding CheckForUpdatesOnStartup}" Margin="0,0,0,12" FontSize="13"/>
+                                    <CheckBox Content="Yeni sürüm bulunduğunda arka planda otomatik indir" IsChecked="{Binding AutoDownloadUpdates}" Margin="0,0,0,12" FontSize="13"/>
+                                    <CheckBox Content="Program kapatılırken indirilen güncellemeyi yükle" IsChecked="{Binding InstallOnClose}" Margin="0,0,0,16" FontSize="13"/>
+
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <Label Content="Güncelleme Kanalı" FontWeight="SemiBold"/>
+                                            <ComboBox ItemsSource="{Binding AvailableUpdateChannels}" SelectedItem="{Binding UpdateChannel}" Height="36"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Margin="16,16,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
+                                                   Text="Stable: Kararlı genel yayın sürümleri. Beta: Test ve ön izleme (prerelease) sürümleri. Kanal değişimi yetkili yönetici izni gerektirir."/>
+                                    </Grid>
+                                </StackPanel>
                             </Border>
                         </StackPanel>
                     </Grid>

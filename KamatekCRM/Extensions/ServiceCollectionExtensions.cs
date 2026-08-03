@@ -63,10 +63,11 @@ namespace KamatekCrm.Extensions
             services.AddScoped<IInventoryDomainService, InventoryDomainService>();
             services.AddSingleton<IProductImageService, ProductImageService>();
 
-            // Background Services
+            // Background & System Services
             services.AddScoped<ISlaService, SlaService>();
             services.AddScoped<IBackupService, BackupService>();
             services.AddSingleton<IBackupIntegrityService, BackupIntegrityService>();
+            services.AddSingleton<Services.Update.IUpdateService, Services.Update.VelopackUpdateService>();
 
             // ViewModels
             services.AddTransient<MainViewModel>();
