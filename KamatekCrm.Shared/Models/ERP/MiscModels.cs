@@ -80,7 +80,18 @@ namespace KamatekCrm.Shared.Models
         public string Name { get; set; } = "";
         public bool IsSelected { get; set; }
         public JobCategory Category { get; set; }
-        public string DisplayName => Category.ToString();
+        public string DisplayName => Category switch
+        {
+            JobCategory.CCTV => "Kamera Sistemi",
+            JobCategory.VideoIntercom => "Görüntülü Diafon",
+            JobCategory.FireAlarm => "Yangın Alarmı",
+            JobCategory.BurglarAlarm => "Hırsız Alarmı",
+            JobCategory.SmartHome => "Akıllı Ev",
+            JobCategory.AccessControl => "Geçiş Kontrol",
+            JobCategory.SatelliteSystem => "Uydu Sistemi",
+            JobCategory.FiberOptic => "Fiber Optik",
+            _ => Category.ToString()
+        };
     }
 
 

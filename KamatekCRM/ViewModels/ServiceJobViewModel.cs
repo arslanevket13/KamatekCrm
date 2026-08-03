@@ -924,6 +924,60 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void SelectStatusFilter(string filterName)
+        {
+            SelectedStatusFilter = filterName switch
+            {
+                "Pending" => StatusFilter.Pending,
+                "InProgress" => StatusFilter.InProgress,
+                "Completed" => StatusFilter.Completed,
+                "Cancelled" => StatusFilter.Cancelled,
+                _ => StatusFilter.All
+            };
+        }
+
+        [RelayCommand]
+        private void ClearFilters()
+        {
+            SearchText = string.Empty;
+            SelectedStatusFilter = StatusFilter.All;
+            FilterStartDate = null;
+            FilterEndDate = null;
+        }
+
+        private WorkOrderType _selectedWorkOrderType = WorkOrderType.Repair;
+        public WorkOrderType SelectedWorkOrderType
+        {
+            get => _selectedWorkOrderType;
+            set
+            {
+                if (SetProperty(ref _selectedWorkOrderType, value))
+                {
+                    IsDiscoveryOnly = (value == WorkOrderType.Discovery);
+                    OnPropertyChanged(nameof(IsDiscoveryWorkOrder));
+                    OnPropertyChanged(nameof(IsRepairWorkOrder));
+                    OnPropertyChanged(nameof(IsInstallationWorkOrder));
+                    OnPropertyChanged(nameof(IsMaintenanceWorkOrder));
+                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        public bool IsDiscoveryWorkOrder => SelectedWorkOrderType == WorkOrderType.Discovery;
+        public bool IsRepairWorkOrder => SelectedWorkOrderType == WorkOrderType.Repair;
+        public bool IsInstallationWorkOrder => SelectedWorkOrderType == WorkOrderType.Installation;
+        public bool IsMaintenanceWorkOrder => SelectedWorkOrderType == WorkOrderType.Maintenance;
+
+        [RelayCommand]
+        private void SelectWorkOrderType(string typeName)
+        {
+            if (Enum.TryParse<WorkOrderType>(typeName, out var type))
+            {
+                SelectedWorkOrderType = type;
+            }
+        }
+
         /// <summary>
         /// Durum filtresi
         /// </summary>
@@ -950,7 +1004,6 @@ namespace KamatekCrm.ViewModels
             new(StatusFilter.Completed, "Tamamlandı"),
             new(StatusFilter.Cancelled, "İptal Edildi")
         };
-
         /// <summary>
         /// Başlangıç tarihi filtresi
         /// </summary>
@@ -1728,7 +1781,7 @@ namespace KamatekCrm.ViewModels
                     Id = _isEditing ? SelectedServiceJob?.Id ?? 0 : 0,
                     CustomerId = SelectedCustomer?.Id ?? 0,
                     CustomerAssetId = IsNewAsset ? null : SelectedAsset?.Id,
-                    WorkOrderType = IsDiscoveryOnly ? WorkOrderType.Discovery : WorkOrderType.Repair,
+                    WorkOrderType = IsDiscoveryOnly ? WorkOrderType.Discovery : SelectedWorkOrderType,
                     JobCategory = selectedCategories.Any() ? (JobCategory)selectedCategories.First() : JobCategory.CCTV,
                     CategoriesJson = categoriesJson,
                     Description = Description,

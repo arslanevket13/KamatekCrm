@@ -397,10 +397,8 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void OpenQuickInteractionAdd()
         {
-            var vm = _serviceProvider.GetRequiredService<QuickInteractionAddViewModel>();
-            var window = new Views.QuickInteractionAddWindow(vm);
-            window.Owner = System.Windows.Application.Current.MainWindow;
-            window.ShowDialog();
+            // Sol panel artık ana ekranda gömülü olduğu için modal yerine doğrudan ekrana yönlendir
+            NavigateTo<CustomerInteractionsViewModel>();
         }
 
         [RelayCommand]

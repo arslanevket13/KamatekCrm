@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:KamatekCrm.Views"
              xmlns:helpers="clr-namespace:KamatekCrm.Helpers"
+             xmlns:components="clr-namespace:KamatekCrm.Components"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:enums="clr-namespace:KamatekCrm.Shared.Enums;assembly=KamatekCrm.Shared"
              mc:Ignorable="d" 
@@ -14,313 +15,458 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-
-        <!-- Sadece Keşif tipindeki kayıtlarda görünmesi gereken menü öğeleri için -->
-        <Style x:Key="DiscoveryMenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-            <Setter Property="Visibility" Value="Collapsed" />
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding WorkOrderTypeDisplay}" Value="🔍 Keşif">
-                    <Setter Property="Visibility" Value="Visible" />
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="16,12,16,12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Row 0: Header -->
-            <RowDefinition Height="Auto"/> <!-- Row 1: KPI Cards -->
-            <RowDefinition Height="Auto"/> <!-- Row 2: Search Toolbar -->
-            <RowDefinition Height="*"/>    <!-- Row 3: DataGrid -->
+            <RowDefinition Height="Auto"/> <!-- Row 0: Header & Compact KPI Counters -->
+            <RowDefinition Height="Auto"/> <!-- Row 1: Search & Filter Toolbar -->
+            <RowDefinition Height="*"/>    <!-- Row 2: 2-Column Split Workspace -->
         </Grid.RowDefinitions>
 
-        <!-- ════════ ROW 0: HEADER ════════ -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,20">
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock Text="İş Emri Yönetim Merkezi" 
-                           FontSize="26" FontWeight="Bold" 
-                           Foreground="{DynamicResource ThemeTextPrimary}"/>
-                <TextBlock FontSize="13" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,4,0,0">
-                    <Run Text="Sistemde toplam "/>
-                    <Run Text="{Binding TotalJobCount, Mode=OneWay}" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
-                    <Run Text=" iş kaydı bulunuyor (Bugün eklenen: "/>
-                    <Run Text="{Binding TodayCreatedCount, Mode=OneWay}" FontWeight="Bold"/>
-                    <Run Text=")"/>
-                </TextBlock>
-            </StackPanel>
+        <!-- ════════ ROW 0: HEADER & COMPACT KPI COUNTERS ════════ -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
-                <ui:Button Content="Yeni İş Emri Ekle"
-                           Icon="{ui:SymbolIcon Add24}"
-                           Command="{Binding OpenNewJobFormCommand}"
-                           Appearance="Primary"
-                           Height="40" Padding="20,0" Margin="0,0,8,0"/>
-
-                <ui:Button Command="{Binding RefreshListCommand}"
-                           Icon="{ui:SymbolIcon ArrowClockwise24}" Content="Yenile"
-                           Appearance="Secondary"
-                           Height="40" Padding="14,0"/>
-            </StackPanel>
-        </DockPanel>
-
-        <!-- ════════ ROW 1: KPI CARDS ════════ -->
-        <Grid Grid.Row="1" Margin="0,0,0,20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="12"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Card 1: Toplam -->
-            <Border Grid.Column="0" Style="{StaticResource CardPanel}" Padding="16">
-                <DockPanel>
-                    <Border Width="40" Height="40" CornerRadius="10" Background="#262196F3" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="GroupList24" FontSize="20" Foreground="#2196F3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="Toplam İş" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                        <TextBlock Text="{Binding TotalJobCount}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-
-            <!-- Card 2: Bekleyen -->
-            <Border Grid.Column="2" Style="{StaticResource CardPanel}" Padding="16">
-                <DockPanel>
-                    <Border Width="40" Height="40" CornerRadius="10" Background="#26FF9800" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="Clock24" FontSize="20" Foreground="#FF9800" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="Bekleyen" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                        <TextBlock Text="{Binding PendingCount}" FontSize="20" FontWeight="Bold" Foreground="#FF9800"/>
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-
-            <!-- Card 3: Devam Eden -->
-            <Border Grid.Column="4" Style="{StaticResource CardPanel}" Padding="16">
-                <DockPanel>
-                    <Border Width="40" Height="40" CornerRadius="10" Background="#262196F3" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="Wrench24" FontSize="20" Foreground="#2196F3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="Devam Eden" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                        <TextBlock Text="{Binding InProgressCount}" FontSize="20" FontWeight="Bold" Foreground="#2196F3"/>
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-
-            <!-- Card 4: Tamamlanan -->
-            <Border Grid.Column="6" Style="{StaticResource CardPanel}" Padding="16">
-                <DockPanel>
-                    <Border Width="40" Height="40" CornerRadius="10" Background="#264CAF50" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="20" Foreground="#4CAF50" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="Tamamlanan" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                        <TextBlock Text="{Binding CompletedCount}" FontSize="20" FontWeight="Bold" Foreground="#4CAF50"/>
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-
-            <!-- Card 5: SLA Aşan -->
-            <Border Grid.Column="8" Style="{StaticResource CardPanel}" Padding="16">
-                <DockPanel>
-                    <Border Width="40" Height="40" CornerRadius="10" Background="#26F44336" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="Warning24" FontSize="20" Foreground="#F44336" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="SLA Aşan" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                        <TextBlock Text="{Binding SlaBreachedCount}" FontSize="20" FontWeight="Bold" Foreground="#F44336"/>
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-        </Grid>
-
-        <!-- ════════ ROW 2: SEARCH TOOLBAR ════════ -->
-        <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
-            <Grid>
+            <!-- Title & Primary Actions -->
+            <Grid Grid.Row="0" Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="16"/>
-                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:SymbolIcon Symbol="Wrench24" FontSize="22" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,10,0"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="İş Emirleri" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                        <TextBlock Text="Sistemde kayıtlı iş emirleri ve keşif taleplerini takip edin ve yönetin" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:Button Content="Yeni İş Emri" Icon="{ui:SymbolIcon Add24}"
+                               Command="{Binding OpenNewJobFormCommand}"
+                               Appearance="Primary" Height="36" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"/>
+
+                    <ui:Button Content="Yenile" Icon="{ui:SymbolIcon ArrowClockwise24}"
+                               Command="{Binding RefreshListCommand}"
+                               Appearance="Secondary" Height="36" Padding="12,0" Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Compact KPI Counters Bar (Single Row, Clickable Filters) -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Counter 1: Toplam -->
+                <Border Grid.Column="0" CornerRadius="8" Padding="12,8" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectStatusFilterCommand}" CommandParameter="All"/>
+                    </Border.InputBindings>
+                    <DockPanel VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="GroupList24" FontSize="18" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Toplam İş" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TotalJobCount}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Counter 2: Bekleyen -->
+                <Border Grid.Column="2" CornerRadius="8" Padding="12,8" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectStatusFilterCommand}" CommandParameter="Pending"/>
+                    </Border.InputBindings>
+                    <DockPanel VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Clock24" FontSize="18" Foreground="{DynamicResource StatusWarningFg}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Bekleyen" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding PendingCount}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Counter 3: Devam Eden -->
+                <Border Grid.Column="4" CornerRadius="8" Padding="12,8" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectStatusFilterCommand}" CommandParameter="InProgress"/>
+                    </Border.InputBindings>
+                    <DockPanel VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Wrench24" FontSize="18" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Devam Eden" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding InProgressCount}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Counter 4: Tamamlanan -->
+                <Border Grid.Column="6" CornerRadius="8" Padding="12,8" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectStatusFilterCommand}" CommandParameter="Completed"/>
+                    </Border.InputBindings>
+                    <DockPanel VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="18" Foreground="{DynamicResource ThemeSuccess}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Tamamlanan" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding CompletedCount}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Counter 5: SLA Aşan -->
+                <Border Grid.Column="8" CornerRadius="8" Padding="12,8" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectStatusFilterCommand}" CommandParameter="Cancelled"/>
+                    </Border.InputBindings>
+                    <DockPanel VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Warning24" FontSize="18" Foreground="{DynamicResource ThemeError}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="SLA Aşan" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding SlaBreachedCount}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource ThemeError}"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ════════ ROW 1: SEARCH & FILTER TOOLBAR ════════ -->
+        <Border Grid.Row="1" CornerRadius="8" Padding="10,8" Margin="0,0,0,12"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="240"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Serbest Arama -->
                 <ui:TextBox Grid.Column="0"
                             PlaceholderText="İş Emri No, Müşteri Adı veya Açıklama Arayın..." 
                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
                             Icon="{ui:SymbolIcon Search24}" 
-                            Height="38" VerticalAlignment="Center"/>
+                            Height="32" VerticalAlignment="Center"/>
 
+                <!-- Durum Filtresi -->
                 <ComboBox Grid.Column="2" 
                           ItemsSource="{Binding StatusFilters}"
                           DisplayMemberPath="Label"
                           SelectedValuePath="Value" SelectedValue="{Binding SelectedStatusFilter}"
-                          Style="{StaticResource ModernComboBox}" Height="38"/>
+                          Height="32" VerticalAlignment="Center"/>
+
+                <!-- Başlangıç Tarihi -->
+                <DatePicker Grid.Column="4" SelectedDate="{Binding FilterStartDate}"
+                            Height="32" VerticalAlignment="Center" ToolTip="Başlangıç Tarihi"/>
+
+                <!-- Bitiş Tarihi -->
+                <DatePicker Grid.Column="6" SelectedDate="{Binding FilterEndDate}"
+                            Height="32" VerticalAlignment="Center" ToolTip="Bitiş Tarihi"/>
+
+                <!-- Filtreleri Temizle -->
+                <ui:Button Grid.Column="8" Content="Temizle" Icon="{ui:SymbolIcon Dismiss24}"
+                           Command="{Binding ClearFiltersCommand}"
+                           Appearance="Secondary" Height="32" Padding="10,0" VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
-        <!-- ════════ ROW 3: DATAGRID ════════ -->
-        <Border Grid.Row="3" Style="{StaticResource CardPanel}" Padding="16">
-            <DataGrid ItemsSource="{Binding ServiceJobsView}"
-                      SelectedItem="{Binding SelectedServiceJob}"
-                      Style="{StaticResource ModernDataGrid}"
-                      ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
-                      AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      IsReadOnly="True"
-                      SelectionMode="Single"
-                      GridLinesVisibility="Horizontal">
-                
-                <DataGrid.ContextMenu>
-                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                        <MenuItem Header="📋 Detay Göster" Command="{Binding ViewJobDetailCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
-                        <MenuItem Header="✏️ İşi Düzenle" Command="{Binding EditJobCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
-                        <Separator/>
-                        <MenuItem Header="Teklife Dönüştür" Command="{Binding ConvertToQuoteCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
-                        <Separator/>
-                        <MenuItem Header="Bekliyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Pending"/>
-                        <MenuItem Header="Devam Ediyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="InProgress"/>
-                        <MenuItem Header="Tamamla" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Completed"/>
-                        <MenuItem Header="İptal Et" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Cancelled"/>
-                        <Separator/>
-                        <MenuItem Header="PDF Yazdır" Command="{Binding PrintServiceFormCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
-                        <Separator/>
-                        <MenuItem Header="🗑️ Sil" Command="{Binding DeleteJobCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
-                    </ContextMenu>
-                </DataGrid.ContextMenu>
+        <!-- ════════ ROW 2: 2-COLUMN SPLIT WORKSPACE ════════ -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.5*" MinWidth="480"/> <!-- Sol: DataGrid (%72) -->
+                <ColumnDefinition Width="Auto"/>               <!-- Splitter -->
+                <ColumnDefinition Width="*" MinWidth="300" MaxWidth="420"/> <!-- Sağ: Bağlam Paneli (%28) -->
+            </Grid.ColumnDefinitions>
 
-                <DataGrid.Columns>
-                    <!-- ID -->
-                    <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="60">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Foreground" Value="{DynamicResource ThemeTextSecondary}"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+            <!-- ════════ SOL PANEL: İŞ EMİRİ LİSTESİ ════════ -->
+            <Border Grid.Column="0" CornerRadius="8" Padding="0"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <DataGrid ItemsSource="{Binding ServiceJobsView}"
+                          SelectedItem="{Binding SelectedServiceJob}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          RowHeight="46"
+                          Background="Transparent" BorderThickness="0"
+                          GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                          AlternatingRowBackground="{DynamicResource HoverOverlayBrush}"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling">
 
-                    <!-- Müşteri -->
-                    <DataGridTemplateColumn Header="Müşteri" Width="1.5*">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding CustomerFullName}" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                    <TextBlock Text="{Binding CustomerPhone, Converter={StaticResource SensitiveData}, ConverterParameter=Phone}" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="FontSize" Value="11"/>
+                            <Setter Property="Padding" Value="8,6"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
 
-                    <!-- Açıklama -->
-                    <DataGridTextColumn Header="Açıklama / Konu" Binding="{Binding Description}" Width="2*">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Padding" Value="8,0"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
+                            <Setter Property="FontSize" Value="12"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="DataGridCell">
+                                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                            <ContentPresenter VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.CellStyle>
 
-                    <!-- Durum Rozeti -->
-                    <DataGridTemplateColumn Header="Durum" Width="120">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Border CornerRadius="10" Padding="10,4" HorizontalAlignment="Center">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#26FF9800"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="🔵 Devam Ediyor">
-                                                    <Setter Property="Background" Value="#262196F3"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="✅ Tamamlandı">
-                                                    <Setter Property="Background" Value="#264CAF50"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding StatusDisplay}" Value="❌ İptal">
-                                                    <Setter Property="Background" Value="#26F44336"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="{Binding StatusDisplay}" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                    <DataGrid.ContextMenu>
+                        <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                            <MenuItem Header="📋 Detay Göster" Command="{Binding ViewJobDetailCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
+                            <MenuItem Header="✏️ İşi Düzenle" Command="{Binding EditJobCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
+                            <Separator/>
+                            <MenuItem Header="Teklife Dönüştür" Command="{Binding ConvertToQuoteCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
+                            <Separator/>
+                            <MenuItem Header="Bekliyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Pending"/>
+                            <MenuItem Header="Devam Ediyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="InProgress"/>
+                            <MenuItem Header="Tamamla" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Completed"/>
+                            <MenuItem Header="İptal Et" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Cancelled"/>
+                            <Separator/>
+                            <MenuItem Header="PDF Yazdır" Command="{Binding PrintServiceFormCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
+                            <Separator/>
+                            <MenuItem Header="🗑️ Sil" Command="{Binding DeleteJobCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
 
-                    <!-- Öncelik Rozeti -->
-                    <DataGridTemplateColumn Header="Öncelik" Width="100">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Border CornerRadius="10" Padding="10,4" HorizontalAlignment="Center">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#264CAF50"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding PriorityDisplay}" Value="🔵 Normal">
-                                                    <Setter Property="Background" Value="#262196F3"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding PriorityDisplay}" Value="🟠 Acil">
-                                                    <Setter Property="Background" Value="#26FF9800"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding PriorityDisplay}" Value="🔴 Kritik">
-                                                    <Setter Property="Background" Value="#26F44336"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="{Binding PriorityDisplay}" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                    <DataGrid.Columns>
+                        <!-- No -->
+                        <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="50">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
 
-                    <!-- Tarih -->
-                    <DataGridTextColumn Header="Oluşturulma" Binding="{Binding CreatedDate, StringFormat='{}dd.MM.yyyy HH:mm'}" Width="130"/>
+                        <!-- Müşteri -->
+                        <DataGridTemplateColumn Header="Müşteri" Width="*" MinWidth="130">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding CustomerFullName}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextHeadingBrush}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding CustomerPhone}" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-                    <!-- İşlemler Kolonu -->
-                    <DataGridTemplateColumn Header="İşlemler" Width="150">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <!-- Detay -->
-                                    <ui:Button Icon="{ui:SymbolIcon Eye24}"
+                        <!-- Açıklama / Konu -->
+                        <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="1.5*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Tür -->
+                        <DataGridTextColumn Header="Tür" Binding="{Binding WorkOrderTypeDisplay}" Width="80"/>
+
+                        <!-- Durum -->
+                        <DataGridTextColumn Header="Durum" Binding="{Binding StatusDisplay}" Width="95">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Öncelik -->
+                        <DataGridTextColumn Header="Öncelik" Binding="{Binding PriorityDisplay}" Width="80"/>
+
+                        <!-- Teknisyen -->
+                        <DataGridTextColumn Header="Teknisyen" Binding="{Binding AssignedTechnician, TargetNullValue='—'}" Width="90"/>
+
+                        <!-- Planlanan Tarih -->
+                        <DataGridTextColumn Header="Planlanan" Binding="{Binding ScheduledDate, StringFormat={}{0:dd.MM HH:mm}, TargetNullValue='—'}" Width="85"/>
+
+                        <!-- SLA -->
+                        <DataGridTextColumn Header="SLA" Binding="{Binding SlaStatusDisplay}" Width="85"/>
+
+                        <!-- İşlemler -->
+                        <DataGridTemplateColumn Header="Aksiyon" Width="65">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ui:Button Content="Aç"
                                                Command="{Binding DataContext.ViewJobDetailCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                CommandParameter="{Binding}"
-                                               Appearance="Secondary" Height="28" Width="28" Padding="0" Margin="0,0,4,0" ToolTip="Detay Göster"/>
-                                    
-                                    <!-- Düzenle -->
-                                    <ui:Button Icon="{ui:SymbolIcon Edit24}"
-                                               Command="{Binding DataContext.EditJobCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                               CommandParameter="{Binding}"
-                                               Appearance="Secondary" Height="28" Width="28" Padding="0" Margin="0,0,4,0" ToolTip="Düzenle"/>
+                                               Appearance="Secondary" Height="26" Padding="8,0" FontSize="11" ToolTip="Detay ve Hızlı İşlemler"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
 
-                                    <!-- PDF -->
-                                    <ui:Button Icon="{ui:SymbolIcon Print24}"
-                                               Command="{Binding DataContext.PrintServiceFormCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                               CommandParameter="{Binding}"
-                                               Appearance="Secondary" Height="28" Width="28" Padding="0" Margin="0,0,4,0" ToolTip="PDF Yazdır"/>
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                          Background="Transparent" Cursor="SizeWE"/>
 
-                                    <!-- Sil -->
-                                    <ui:Button Icon="{ui:SymbolIcon Delete24}"
-                                               Command="{Binding DataContext.DeleteJobCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                               CommandParameter="{Binding}"
-                                               Appearance="Secondary" Height="28" Width="28" Padding="0" Foreground="#F44336" ToolTip="Sil"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Border>
+            <!-- ════════ SAĞ PANEL: BAĞLAM VE DETAY PANENİ ════════ -->
+            <Border Grid.Column="2" CornerRadius="8" Padding="14,12"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <Grid>
+                    <!-- Seçili İş Yoksa -->
+                    <components:KmEmptyState Icon="📋" Title="İş Emri Seçilmedi"
+                                             Message="Detaylarını incelemek ve işlem yapmak için sol listeden bir iş seçin."
+                                             Visibility="{Binding SelectedServiceJob, Converter={StaticResource NullToVis}, ConverterParameter=Inverse}"/>
+
+                    <!-- Seçili İş Varsa -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  Visibility="{Binding SelectedServiceJob, Converter={StaticResource NullToVis}}">
+                        <StackPanel DataContext="{Binding SelectedServiceJob}">
+
+                            <!-- İş Emri Numarası & Durum Başlığı -->
+                            <DockPanel Margin="0,0,0,6">
+                                <TextBlock Text="{Binding Id, StringFormat='İŞ İD: #{0}'}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                                <TextBlock Text="{Binding WorkOrderTypeDisplay}" HorizontalAlignment="Right" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            </DockPanel>
+
+                            <TextBlock Text="{Binding Description}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <Border CornerRadius="4" Padding="6,2" Background="{DynamicResource ThemePrimaryLight}" Margin="0,0,6,0">
+                                    <TextBlock Text="{Binding StatusDisplay}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                                </Border>
+                                <Border CornerRadius="4" Padding="6,2" Background="{DynamicResource HoverOverlayBrush}">
+                                    <TextBlock Text="{Binding PriorityDisplay}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                </Border>
+                            </StackPanel>
+
+                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,10"/>
+
+                            <!-- MÜŞTERİ BİLGİLERİ -->
+                            <TextBlock Text="MÜŞTERİ BİLGİSİ" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="{Binding CustomerFullName}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,2"/>
+                            <TextBlock Text="{Binding CustomerPhone, StringFormat='📞 {0}'}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+
+                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,10"/>
+
+                            <!-- PLANLAMA BİLGİLERİ -->
+                            <TextBlock Text="ATAMA VE ATANAN SÜREÇ" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+
+                            <Grid Margin="0,0,0,4">
+                                <TextBlock Text="Sorumlu Teknisyen:" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding AssignedTechnician, TargetNullValue='Atanmadı'}" HorizontalAlignment="Right" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,4">
+                                <TextBlock Text="Planlanan Tarih:" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding ScheduledDate, StringFormat='{}{0:dd.MM.yyyy HH:mm}', TargetNullValue='Planlanmadı'}" HorizontalAlignment="Right" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,4">
+                                <TextBlock Text="SLA Durumu:" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding SlaStatusDisplay}" HorizontalAlignment="Right" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,8">
+                                <TextBlock Text="Oluşturulma:" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <TextBlock Text="{Binding CreatedDate, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}" HorizontalAlignment="Right" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            </Grid>
+
+                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,10"/>
+
+                            <!-- MALZEME ÖZETİ -->
+                            <TextBlock Text="KULLANILAN MALZEMELER" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+                            <ItemsControl ItemsSource="{Binding DataContext.CurrentJobItems, RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="0,0,0,8">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="6,4" Margin="0,0,0,3" CornerRadius="4" Background="{DynamicResource SurfacePageBrush}">
+                                            <DockPanel>
+                                                <TextBlock Text="{Binding ProductName}" FontSize="11" Foreground="{DynamicResource TextHeadingBrush}" TextTrimming="CharacterEllipsis"/>
+                                                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                                                    <TextBlock Text="{Binding QuantityUsed, StringFormat='{}{0} adet'}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding UnitPrice, StringFormat='{}₺{0:N2}'}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,10"/>
+
+                            <!-- HIZLI AKSİYONLAR -->
+                            <TextBlock Text="İŞLEMLER" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+
+                            <ui:Button Content="Detay / Tamamla" Icon="{ui:SymbolIcon Checkmark24}"
+                                       Command="{Binding DataContext.CompleteJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                       Appearance="Success" Height="30" HorizontalAlignment="Stretch" Margin="0,0,0,4" FontSize="12" Cursor="Hand"/>
+
+                            <ui:Button Content="İşi Düzenle" Icon="{ui:SymbolIcon Edit24}"
+                                       Command="{Binding DataContext.EditJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                       CommandParameter="{Binding}"
+                                       Appearance="Primary" Height="30" HorizontalAlignment="Stretch" Margin="0,0,0,4" FontSize="12" Cursor="Hand"/>
+
+                            <ui:Button Content="Teklife Dönüştür" Icon="{ui:SymbolIcon DocumentAdd24}"
+                                       Command="{Binding DataContext.ConvertToQuoteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                       CommandParameter="{Binding}"
+                                       Appearance="Secondary" Height="30" HorizontalAlignment="Stretch" Margin="0,0,0,4" FontSize="12" Cursor="Hand"/>
+
+                            <ui:Button Content="PDF Yazdır" Icon="{ui:SymbolIcon Print24}"
+                                       Command="{Binding DataContext.PrintServiceFormCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                       CommandParameter="{Binding}"
+                                       Appearance="Secondary" Height="30" HorizontalAlignment="Stretch" Margin="0,0,0,4" FontSize="12" Cursor="Hand"/>
+
+                            <ui:Button Content="Sil" Icon="{ui:SymbolIcon Delete24}"
+                                       Command="{Binding DataContext.DeleteJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                       CommandParameter="{Binding}"
+                                       Appearance="Secondary" Height="30" HorizontalAlignment="Stretch" Foreground="{DynamicResource ThemeError}" FontSize="12" Cursor="Hand"/>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

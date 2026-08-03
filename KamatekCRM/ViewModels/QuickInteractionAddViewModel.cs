@@ -15,6 +15,11 @@ namespace KamatekCrm.ViewModels
 {
     public partial class QuickInteractionAddViewModel : ViewModelBase
     {
+        /// <summary>
+        /// Inline kullanımda kayıt başarılı olduğunda tetiklenir.
+        /// Parent ViewModel listeyi yenilemek için dinler.
+        /// </summary>
+        public event Action? OnSaved;
         private readonly ICustomerInteractionCommandService _commandService;
         private readonly ICustomerInteractionReadService _readService;
         private readonly IToastService _toastService;
@@ -293,7 +298,17 @@ namespace KamatekCrm.ViewModels
                 {
                     _toastService.ShowSuccess("Başarılı", $"{res.Value?.InteractionNumber} numaralı görüşme kaydı oluşturuldu.");
                     await _commandService.ClearDraftAsync();
-                    window?.Close();
+
+                    if (window != null)
+                    {
+                        window.Close();
+                    }
+                    else
+                    {
+                        // Inline kullanım: formu sıfırla ve parent'ı bilgilendir
+                        ResetForm();
+                        OnSaved?.Invoke();
+                    }
                 }
                 else
                 {
@@ -329,6 +344,32 @@ namespace KamatekCrm.ViewModels
                 }
             }
             catch { }
+        }
+
+        /// <summary>
+        /// Tüm form alanlarını varsayılan değerlerine sıfırlar.
+        /// Inline kullanımda kayıt sonrası çağrılır.
+        /// </summary>
+        public void ResetForm()
+        {
+            CallerPhone = string.Empty;
+            CallerName = string.Empty;
+            Subject = string.Empty;
+            Summary = string.Empty;
+            DetailedNotes = string.Empty;
+            SelectedChannel = InteractionChannel.Phone;
+            SelectedRequestType = InteractionRequestType.PriceQuote;
+            SelectedPriority = InteractionPriority.Normal;
+            RequiresFollowUp = false;
+            FollowUpDate = DateTime.Now.AddDays(1);
+            RequiresManagerAttention = false;
+            ManagerNotes = string.Empty;
+            SelectedUser = null;
+            SelectedCustomerMatch = null;
+            _selectedCustomerId = null;
+            _selectedCustomerName = string.Empty;
+            PhoneMatches.Clear();
+            SaveCommand.NotifyCanExecuteChanged();
         }
     }
 }

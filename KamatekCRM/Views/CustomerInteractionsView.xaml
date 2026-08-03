@@ -3,201 +3,489 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:components="clr-namespace:KamatekCrm.Components"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
+             xmlns:enums="clr-namespace:KamatekCrm.Shared.Enums;assembly=KamatekCrm.Shared"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              Background="{DynamicResource SurfacePageBrush}">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <ObjectDataProvider x:Key="PriorityValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enums:InteractionPriority"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="16,12,16,12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>   <!-- Header + Kompakt KPI -->
+            <RowDefinition Height="*"/>      <!-- 3 sütunlu ana alan -->
         </Grid.RowDefinitions>
 
-        <!-- ROW 0: HEADER -->
-        <Grid Grid.Row="0" Margin="0,0,0,20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <!-- ============================================================ -->
+        <!-- ROW 0: HEADER — Başlık + Kompakt KPI sayaçları + Arama       -->
+        <!-- ============================================================ -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-            <StackPanel Grid.Column="0" Orientation="Horizontal">
-                <ui:SymbolIcon Symbol="Call24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Müşteri İletişim ve Talep Merkezi" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
-                    <TextBlock Text="Telefon görüşmelerini, müşteri taleplerini, takip tarihlerini ve yönlendirmeleri yönetin" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                </StackPanel>
-            </StackPanel>
-
-            <ui:Button Grid.Column="2" Content="Yeni Görüşme Kaydı" Icon="{ui:SymbolIcon CallAdd24}"
-                       Command="{Binding OpenAddWindowCommand}" Appearance="Primary" Height="40" Padding="18,0" Cursor="Hand"/>
-        </Grid>
-
-        <!-- ROW 1: KPI CARDS -->
-        <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,16">
-            <components:KmKpiCard Title="Bugünün Aramaları"
-                                   Value="{Binding Summary.TotalInteractionsCount}"
-                                   Icon="&#xE717;"
-                                   AccentBrush="{DynamicResource ThemePrimary}"
-                                   Margin="0,0,12,0"/>
-            <components:KmKpiCard Title="Takip Gerekenler"
-                                   Value="{Binding Summary.FollowUpRequiredCount}"
-                                   Icon="&#xE823;"
-                                   AccentBrush="{DynamicResource ThemeSuccess}"
-                                   Margin="0,0,12,0"/>
-            <components:KmKpiCard Title="Geciken Takipler"
-                                   Value="{Binding Summary.OverdueCount}"
-                                   Icon="&#xE783;"
-                                   AccentBrush="{DynamicResource ThemeError}"
-                                   Margin="0,0,12,0"/>
-            <components:KmKpiCard Title="Yönetici Gündemi"
-                                   Value="{Binding Summary.ManagerAgendaCount}"
-                                   Icon="&#xE7EF;"
-                                   AccentBrush="{DynamicResource ThemeWarning}"
-                                   Margin="0,0,0,0"/>
-        </UniformGrid>
-
-        <!-- ROW 2: SEARCH & REFRESH TOOLBAR -->
-        <Border Grid.Row="2" CornerRadius="12" Padding="14" Margin="0,0,0,16"
-                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-            <Grid>
+            <!-- Başlık satırı -->
+            <Grid Grid.Row="0" Margin="0,0,0,8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MaxWidth="360"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <ui:TextBox Grid.Column="0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                            PlaceholderText="Arayan, müşteri adı, konu veya telefon ile ara..."
-                            Icon="{ui:SymbolIcon Search24}" Height="38"/>
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <ui:Button Content="Yenile" Icon="{ui:SymbolIcon ArrowSync24}"
-                               Command="{Binding LoadInteractionsCommand}" Appearance="Secondary"
-                               Height="38" Padding="14,0" Cursor="Hand"/>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:SymbolIcon Symbol="Call24" FontSize="20" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,8,0"/>
+                    <TextBlock Text="İletişim ve Talep Merkezi" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
                 </StackPanel>
-            </Grid>
-        </Border>
 
-        <!-- ROW 3: MAIN DATAGRID (LEFT) AND DETAIL CARD (RIGHT) -->
-        <Grid Grid.Row="3">
+                <!-- Arama -->
+                <ui:TextBox Grid.Column="2" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                            PlaceholderText="Ara..." Icon="{ui:SymbolIcon Search24}"
+                            Width="240" Height="32" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+                <ui:Button Grid.Column="3" Icon="{ui:SymbolIcon ArrowSync24}" ToolTip="Yenile"
+                           Command="{Binding LoadInteractionsCommand}" Appearance="Secondary"
+                           Height="32" Width="32" Padding="0" Cursor="Hand" VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- Kompakt KPI sayaçları — Tek satır, tıklanabilir filtre -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,0">
+                <!-- Bugün -->
+                <Border CornerRadius="6" Padding="10,4" Margin="0,0,6,0" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="Today"/>
+                    </Border.InputBindings>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Summary.TotalInteractionsCount}" FontSize="14" FontWeight="Bold"
+                                   Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <TextBlock Text="Bugün" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Takip -->
+                <Border CornerRadius="6" Padding="10,4" Margin="0,0,6,0" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="FollowUpRequired"/>
+                    </Border.InputBindings>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Summary.FollowUpRequiredCount}" FontSize="14" FontWeight="Bold"
+                                   Foreground="{DynamicResource ThemeSuccess}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <TextBlock Text="Takip" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Geciken -->
+                <Border CornerRadius="6" Padding="10,4" Margin="0,0,6,0" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="Overdue"/>
+                    </Border.InputBindings>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Summary.OverdueCount}" FontSize="14" FontWeight="Bold"
+                                   Foreground="{DynamicResource ThemeError}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <TextBlock Text="Geciken" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Yönetici -->
+                <Border CornerRadius="6" Padding="10,4" Margin="0,0,6,0" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="All"/>
+                    </Border.InputBindings>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Summary.ManagerAgendaCount}" FontSize="14" FontWeight="Bold"
+                                   Foreground="{DynamicResource StatusWarningFg}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <TextBlock Text="Yönetici" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Tümü -->
+                <Border CornerRadius="6" Padding="10,4" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="All"/>
+                    </Border.InputBindings>
+                    <TextBlock Text="Tümü" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- ============================================================ -->
+        <!-- ROW 1: ÜÇ SÜTUNLU ANA ÇALIŞMA ALANI                        -->
+        <!-- ============================================================ -->
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="340"/>
+                <ColumnDefinition Width="*" MinWidth="310" MaxWidth="420"/>    <!-- Sol: Form -->
+                <ColumnDefinition Width="Auto"/>                               <!-- Splitter -->
+                <ColumnDefinition Width="2*" MinWidth="380"/>                  <!-- Orta: Liste -->
+                <ColumnDefinition Width="Auto"/>                               <!-- Splitter -->
+                <ColumnDefinition Width="*" MinWidth="250" MaxWidth="380"/>    <!-- Sağ: Bağlam -->
             </Grid.ColumnDefinitions>
 
-            <!-- LEFT: DATAGRID -->
-            <Border Grid.Column="0" Margin="0,0,16,0" CornerRadius="12" Padding="0"
+            <!-- ======================================================== -->
+            <!-- SOL PANEL — HIZLI GÖRÜŞME KAYDI                          -->
+            <!-- ======================================================== -->
+            <Border Grid.Column="0" CornerRadius="10" Padding="12,10"
                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-                <DataGrid ItemsSource="{Binding Interactions}"
-                          SelectedItem="{Binding SelectedInteraction}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          SelectionMode="Single"
-                          RowHeight="54"
-                          Background="Transparent" BorderThickness="0"
-                          GridLinesVisibility="Horizontal" HeadersVisibility="Column"
-                          AlternatingRowBackground="{DynamicResource HoverOverlayBrush}">
+                <DockPanel DataContext="{Binding InlineFormViewModel}">
 
-                    <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="FontSize" Value="11"/>
-                            <Setter Property="Padding" Value="12,8"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
-                        </Style>
-                    </DataGrid.ColumnHeaderStyle>
+                    <!-- Alt Sabit: Kaydet Butonları -->
+                    <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                        <ui:Button Content="Kaydet" Icon="{ui:SymbolIcon Save24}"
+                                   Command="{Binding SaveCommand}" CommandParameter="{x:Null}"
+                                   Appearance="Primary" Height="34" HorizontalAlignment="Stretch"
+                                   Cursor="Hand" Margin="0,0,0,4"/>
+                        <ui:Button Content="Kaydet ve Görev Oluştur" Icon="{ui:SymbolIcon TaskListAdd24}"
+                                   Command="{Binding SaveCommand}" CommandParameter="{x:Null}"
+                                   Appearance="Secondary" Height="30" HorizontalAlignment="Stretch"
+                                   Cursor="Hand"/>
+                    </StackPanel>
 
-                    <DataGrid.CellStyle>
-                        <Style TargetType="DataGridCell">
-                            <Setter Property="Padding" Value="12,0"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="DataGridCell">
-                                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
-                                            <ContentPresenter VerticalAlignment="Center"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </DataGrid.CellStyle>
+                    <!-- Form İçeriği -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
 
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="No" Binding="{Binding InteractionNumber}" Width="120"/>
+                            <!-- Başlık -->
+                            <TextBlock Text="YENİ GÖRÜŞME" FontSize="11" FontWeight="Bold"
+                                       Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,8"/>
 
-                        <DataGridTemplateColumn Header="Arayan &amp; Müşteri" Width="*" MinWidth="180">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding CallerName}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}"/>
-                                        <TextBlock Text="{Binding CallerPhone}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                            <!-- Hızlı Talep Türleri — Kompakt Chip -->
+                            <WrapPanel Margin="0,0,0,8">
+                                <ui:Button Content="💰 Fiyat" Command="{Binding SelectQuickTypeCommand}" CommandParameter="PriceQuote"
+                                           Height="26" Padding="8,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                                <ui:Button Content="📐 Keşif" Command="{Binding SelectQuickTypeCommand}" CommandParameter="Discovery"
+                                           Height="26" Padding="8,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                                <ui:Button Content="🔧 Servis" Command="{Binding SelectQuickTypeCommand}" CommandParameter="ServiceStatus"
+                                           Height="26" Padding="8,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                                <ui:Button Content="👑 Patron" Command="{Binding SelectQuickTypeCommand}" CommandParameter="ManagerAgenda"
+                                           Height="26" Padding="8,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                                <ui:Button Content="⚠️ Şikâyet" Command="{Binding SelectQuickTypeCommand}" CommandParameter="Complaint"
+                                           Height="26" Padding="8,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                                <ui:Button Content="📞 Geri Ara" Command="{Binding SelectQuickTypeCommand}" CommandParameter="CallBack"
+                                           Height="26" Padding="8,0" Margin="0,0,0,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                            </WrapPanel>
 
-                        <DataGridTextColumn Header="Konu" Binding="{Binding Subject}" Width="160"/>
-                        <DataGridTextColumn Header="Talep Türü" Binding="{Binding RequestType}" Width="110"/>
-                        <DataGridTextColumn Header="Sorumlu" Binding="{Binding AssignedToUsername, TargetNullValue='Atanmadı'}" Width="110"/>
-                        <DataGridTextColumn Header="Tarih" Binding="{Binding InteractionDate, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Width="120"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                            <!-- Telefon -->
+                            <TextBlock Text="Telefon *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                            <ui:TextBox Text="{Binding CallerPhone, UpdateSourceTrigger=PropertyChanged}"
+                                        PlaceholderText="05XX XXX XX XX" Height="32" Margin="0,0,0,6"/>
+
+                            <!-- Eşleşen Müşteri -->
+                            <ComboBox ItemsSource="{Binding PhoneMatches}" SelectedItem="{Binding SelectedCustomerMatch}"
+                                      DisplayMemberPath="FullName" Height="30" Margin="0,0,0,6"
+                                      Visibility="{Binding PhoneMatches.Count, Converter={StaticResource IntToVis}}"/>
+
+                            <!-- Müşteri / Arayan -->
+                            <TextBlock Text="Müşteri / Arayan *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                            <ui:TextBox Text="{Binding CallerName, UpdateSourceTrigger=PropertyChanged}"
+                                        PlaceholderText="Ad Soyad veya Firma" Height="32" Margin="0,0,0,6"/>
+
+                            <!-- Konu -->
+                            <TextBlock Text="Konu *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                            <ui:TextBox Text="{Binding Subject, UpdateSourceTrigger=PropertyChanged}"
+                                        PlaceholderText="Görüşme konusu" Height="32" Margin="0,0,0,6"/>
+
+                            <!-- Kısa Not -->
+                            <TextBlock Text="Kısa Not *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                            <ui:TextBox Text="{Binding Summary, UpdateSourceTrigger=PropertyChanged}"
+                                        PlaceholderText="Müşterinin talebi..." Height="50" TextWrapping="Wrap"
+                                        AcceptsReturn="True" Margin="0,0,0,6"/>
+
+                            <!-- Sorumlu ve Öncelik — Yan yana -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                    <TextBlock Text="Sorumlu" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ComboBox ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}"
+                                              DisplayMemberPath="AdSoyad" Height="30"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                    <TextBlock Text="Öncelik" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ComboBox ItemsSource="{Binding Source={StaticResource PriorityValues}}"
+                                              SelectedItem="{Binding SelectedPriority}" Height="30"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Takip -->
+                            <CheckBox Content="Takip Gerekli" IsChecked="{Binding RequiresFollowUp}"
+                                      FontSize="11" FontWeight="SemiBold" Margin="0,0,0,2"/>
+                            <DatePicker SelectedDate="{Binding FollowUpDate}" IsEnabled="{Binding RequiresFollowUp}"
+                                        Height="30" Margin="0,0,0,6"/>
+
+                            <!-- Yönetici İlgisi -->
+                            <CheckBox Content="👑 Yönetici İlgisi" IsChecked="{Binding RequiresManagerAttention}"
+                                      FontSize="11" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}" Margin="0,0,0,6"/>
+
+                            <!-- Detaylı Not — Genişletilebilir -->
+                            <Expander Header="Daha fazla ayrıntı" IsExpanded="{Binding DataContext.IsDetailExpanded, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                      Margin="0,0,0,4">
+                                <StackPanel Margin="0,4,0,0">
+                                    <TextBlock Text="Detaylı Not" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ui:TextBox Text="{Binding DetailedNotes, UpdateSourceTrigger=PropertyChanged}"
+                                                PlaceholderText="Görüşmenin tüm detayları..." Height="60"
+                                                TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,4"/>
+
+                                    <ui:TextBox Text="{Binding ManagerNotes, UpdateSourceTrigger=PropertyChanged}"
+                                                Visibility="{Binding RequiresManagerAttention, Converter={StaticResource BoolToVis}}"
+                                                PlaceholderText="Yöneticiye not..." Height="40" TextWrapping="Wrap"
+                                                AcceptsReturn="True"/>
+                                </StackPanel>
+                            </Expander>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
             </Border>
 
-            <!-- RIGHT: PREVIEW PANEL -->
-            <Border Grid.Column="1" CornerRadius="12" Padding="20"
+            <!-- Sol-Orta Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                          Background="Transparent" Cursor="SizeWE"/>
+
+            <!-- ======================================================== -->
+            <!-- ORTA PANEL — GÖRÜŞME VE TAKİP LİSTESİ                    -->
+            <!-- ======================================================== -->
+            <Border Grid.Column="2" CornerRadius="10" Padding="0"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <DockPanel>
+
+                    <!-- Filtre Sekmeleri -->
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10,8,10,6">
+                        <ui:Button Content="Tümü" Appearance="Secondary" Height="26" Padding="10,0" Margin="0,0,4,0"
+                                   Command="{Binding SelectFilterCommand}" CommandParameter="All" FontSize="11" Cursor="Hand"/>
+                        <ui:Button Content="Bugün" Appearance="Secondary" Height="26" Padding="10,0" Margin="0,0,4,0"
+                                   Command="{Binding SelectFilterCommand}" CommandParameter="Today" FontSize="11" Cursor="Hand"/>
+                        <ui:Button Content="Takip" Appearance="Secondary" Height="26" Padding="10,0" Margin="0,0,4,0"
+                                   Command="{Binding SelectFilterCommand}" CommandParameter="FollowUpRequired" FontSize="11" Cursor="Hand"/>
+                        <ui:Button Content="Geciken" Appearance="Secondary" Height="26" Padding="10,0" Margin="0,0,4,0"
+                                   Command="{Binding SelectFilterCommand}" CommandParameter="Overdue" FontSize="11" Cursor="Hand"/>
+                        <ui:Button Content="Bana Atanan" Appearance="Secondary" Height="26" Padding="10,0" Margin="0,0,4,0"
+                                   Command="{Binding SelectFilterCommand}" CommandParameter="AssignedToMe" FontSize="11" Cursor="Hand"/>
+                        <ui:Button Content="Tamamlanan" Appearance="Secondary" Height="26" Padding="10,0"
+                                   Command="{Binding SelectFilterCommand}" CommandParameter="Completed" FontSize="11" Cursor="Hand"/>
+                    </StackPanel>
+
+                    <!-- Ana DataGrid -->
+                    <DataGrid ItemsSource="{Binding Interactions}"
+                              SelectedItem="{Binding SelectedInteraction}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              RowHeight="44"
+                              Background="Transparent" BorderThickness="0"
+                              GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                              AlternatingRowBackground="{DynamicResource HoverOverlayBrush}"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling">
+
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="FontSize" Value="10"/>
+                                <Setter Property="Padding" Value="8,6"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="Padding" Value="8,0"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
+                                <Setter Property="FontSize" Value="12"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridCell">
+                                            <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                                <ContentPresenter VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGrid.CellStyle>
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Saat" Binding="{Binding InteractionDate, StringFormat={}{0:HH:mm}}" Width="50"/>
+
+                            <DataGridTemplateColumn Header="Müşteri" Width="*" MinWidth="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding CallerName}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextHeadingBrush}" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding CallerPhone}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="10"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Konu" Binding="{Binding Subject}" Width="120">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn Header="Tür" Binding="{Binding RequestType}" Width="80"/>
+                            <DataGridTextColumn Header="Sorumlu" Binding="{Binding AssignedToUsername, TargetNullValue='—'}" Width="80"/>
+                            <DataGridTextColumn Header="Takip" Binding="{Binding FollowUpDate, StringFormat={}{0:dd.MM HH:mm}, TargetNullValue='—'}" Width="85"/>
+                            <DataGridTextColumn Header="Durum" Binding="{Binding Status}" Width="70"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                </DockPanel>
+            </Border>
+
+            <!-- Orta-Sağ Splitter -->
+            <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                          Background="Transparent" Cursor="SizeWE"/>
+
+            <!-- ======================================================== -->
+            <!-- SAĞ PANEL — MÜŞTERİ BAĞLAMI VE GÖRÜŞME DETAYI           -->
+            <!-- ======================================================== -->
+            <Border Grid.Column="4" CornerRadius="10" Padding="12,10"
                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                 <Grid>
+                    <!-- Boş durum -->
                     <components:KmEmptyState Icon="&#xE717;" Title="Görüşme Seçilmedi"
-                                             Message="Detaylarını incelemek ve işlem yapmak için sol listeden bir görüşme seçin."
-                                             Visibility="{Binding HasSelectedInteraction, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
+                                             Message="Detayları görmek için listeden bir görüşme seçin."
+                                             Visibility="{Binding HasSelectedInteraction, Converter={StaticResource InvertedBoolToVis}}"/>
 
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding HasSelectedInteraction, Converter={StaticResource BoolToVis}}">
-                        <StackPanel DataContext="{Binding SelectedInteraction}">
-                            <TextBlock Text="{Binding InteractionNumber}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
-                            <TextBlock Text="{Binding Subject}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,4"/>
-                            <TextBlock Text="{Binding CallerName, StringFormat='Arayan: {0}'}" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,14"/>
+                    <!-- İçerik -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  Visibility="{Binding HasSelectedInteraction, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
 
-                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,14"/>
+                            <!-- Görüşme Detayı -->
+                            <StackPanel DataContext="{Binding SelectedInteraction}" Margin="0,0,0,12">
+                                <TextBlock Text="{Binding InteractionNumber}" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,2"/>
+                                <TextBlock Text="{Binding Subject}" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,2"/>
+                                <TextBlock Text="{Binding CallerName, StringFormat='Arayan: {0}'}" FontSize="12"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="{Binding CallerPhone}" FontSize="11"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
 
-                            <TextBlock Text="GÖRÜŞME ÖZETİ" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding Summary}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,4,0,14"/>
+                                <TextBlock Text="ÖZET" FontSize="9" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,2"/>
+                                <TextBlock Text="{Binding Summary}" FontSize="12"
+                                           Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
 
-                            <TextBlock Text="DETAYLI NOTLAR" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding DetailedNotes, TargetNullValue='Ek not yok'}" FontSize="12" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,4,0,14"/>
-
-                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,14"/>
-
-                            <StackPanel>
-                                <ui:Button Content="Görüşmeyi Tamamla" Icon="{ui:SymbolIcon Checkmark24}"
-                                           Command="{Binding DataContext.CompleteInteractionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                           Appearance="Success" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
-
-                                <ui:Button Content="Teklife Dönüştür" Icon="{ui:SymbolIcon DocumentAdd24}"
-                                           Command="{Binding DataContext.ConvertToQuoteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                           Appearance="Primary" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
-
-                                <ui:Button Content="Servis İşe Dönüştür" Icon="{ui:SymbolIcon Wrench24}"
-                                           Command="{Binding DataContext.ConvertToServiceJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                           Appearance="Secondary" Height="36" HorizontalAlignment="Stretch" Cursor="Hand"/>
+                                <TextBlock Text="{Binding DetailedNotes, TargetNullValue=''}" FontSize="11"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"
+                                           Visibility="{Binding DetailedNotes, Converter={StaticResource NullToVis}}"/>
                             </StackPanel>
+
+                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,10"/>
+
+                            <!-- Müşteri Bağlam Bilgisi -->
+                            <StackPanel Visibility="{Binding HasCustomerContext, Converter={StaticResource BoolToVis}}" Margin="0,0,0,10">
+                                <TextBlock Text="MÜŞTERİ BİLGİSİ" FontSize="9" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+
+                                <TextBlock Text="{Binding SelectedCustomerContext.FullName}" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,2"/>
+                                <TextBlock Text="{Binding SelectedCustomerContext.PhoneNumber, StringFormat='📞 {0}'}" FontSize="11"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,1"/>
+                                <TextBlock Text="{Binding SelectedCustomerContext.Email, StringFormat='✉ {0}'}" FontSize="11"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"
+                                           Visibility="{Binding SelectedCustomerContext.Email, Converter={StaticResource NullToVis}}"/>
+
+                                <!-- Sayaçlar -->
+                                <UniformGrid Columns="3" Margin="0,0,0,6">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding SelectedCustomerContext.ActiveQuotesCount}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource ThemePrimary}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Teklif" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding SelectedCustomerContext.ActiveServiceJobsCount}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource ThemeSuccess}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Servis" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding SelectedCustomerContext.PendingInteractionsCount}" FontSize="16" FontWeight="Bold"
+                                                   Foreground="{DynamicResource StatusWarningFg}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Bekleyen" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </UniformGrid>
+                            </StackPanel>
+
+                            <!-- Son Görüşmeler -->
+                            <StackPanel Visibility="{Binding RecentCustomerInteractions.Count, Converter={StaticResource IntToVis}}" Margin="0,0,0,10">
+                                <TextBlock Text="SON GÖRÜŞMELER" FontSize="9" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+
+                                <ItemsControl ItemsSource="{Binding RecentCustomerInteractions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="4,3" Margin="0,0,0,2" CornerRadius="4"
+                                                    Background="{DynamicResource SurfacePageBrush}">
+                                                <StackPanel>
+                                                    <TextBlock FontSize="10" Foreground="{DynamicResource TextHeadingBrush}" TextTrimming="CharacterEllipsis">
+                                                        <Run Text="{Binding InteractionDate, StringFormat={}{0:dd.MM}, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                        <Run Text=" — "/>
+                                                        <Run Text="{Binding Subject, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,10"/>
+
+                            <!-- Hızlı İşlemler -->
+                            <TextBlock Text="İŞLEMLER" FontSize="9" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+
+                            <ui:Button Content="Tamamla" Icon="{ui:SymbolIcon Checkmark24}"
+                                       Command="{Binding CompleteInteractionCommand}"
+                                       Appearance="Success" Height="30" HorizontalAlignment="Stretch"
+                                       Cursor="Hand" Margin="0,0,0,4" FontSize="12"/>
+
+                            <ui:Button Content="Teklife Dönüştür" Icon="{ui:SymbolIcon DocumentAdd24}"
+                                       Command="{Binding ConvertToQuoteCommand}"
+                                       Appearance="Primary" Height="30" HorizontalAlignment="Stretch"
+                                       Cursor="Hand" Margin="0,0,0,4" FontSize="12"/>
+
+                            <ui:Button Content="Servis İşe Dönüştür" Icon="{ui:SymbolIcon Wrench24}"
+                                       Command="{Binding ConvertToServiceJobCommand}"
+                                       Appearance="Secondary" Height="30" HorizontalAlignment="Stretch"
+                                       Cursor="Hand" FontSize="12"/>
+
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
             </Border>
+
         </Grid>
     </Grid>
 </UserControl>

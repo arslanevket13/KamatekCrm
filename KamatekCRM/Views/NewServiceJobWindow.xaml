@@ -8,7 +8,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
         Title="İş Emri &amp; Keşif Formu" 
-        Width="1220" Height="800"
+        Width="1240" Height="820"
         MinWidth="1040" MinHeight="680"
         WindowStartupLocation="CenterOwner"
         AutomationProperties.Name="İş emri ve keşif formu"
@@ -22,131 +22,139 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        
-        <!-- Section Header Style -->
+        <Style x:Key="SectionCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="18"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
         <Style x:Key="SectionHeader" TargetType="TextBlock">
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="{DynamicResource ThemeTextPrimary}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Row 0: Top Header & Total Summary Badge -->
-            <RowDefinition Height="*"/>    <!-- Row 1: 2-Column Split Dashboard -->
-            <RowDefinition Height="Auto"/> <!-- Row 2: Footer Actions -->
+            <RowDefinition Height="Auto"/> <!-- Row 0: Header & Work Order Type Bar -->
+            <RowDefinition Height="*"/>    <!-- Row 1: Form ScrollViewer (2 Columns) -->
+            <RowDefinition Height="Auto"/> <!-- Row 2: Sticky Footer Bar -->
         </Grid.RowDefinitions>
 
-        <!-- ════════ ROW 0: TOP HEADER ════════ -->
-        <Border Grid.Row="0" Background="{DynamicResource CardPanelBackgroundBrush}" 
-                Padding="24,16" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
+        <!-- ════════ ROW 0: TOP HEADER & TYPE SELECTOR ════════ -->
+        <Border Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                Padding="20,14" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Border Width="46" Height="46" CornerRadius="10" Background="{DynamicResource ThemePrimaryLight}" Margin="0,0,14,0">
-                        <ui:SymbolIcon Symbol="Wrench24" FontSize="22" Foreground="{DynamicResource ThemePrimary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="İş Emri ve Keşif Formu" Style="{StaticResource PageTitle}" FontSize="20"/>
-                        <TextBlock Text="Müşteri talebini, altyapıyı, malzemeleri ve maliyeti tek ekranda yönetin" Style="{StaticResource PageSubtitle}"/>
-                    </StackPanel>
-                </StackPanel>
+                <!-- Title & Grand Total -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <!-- Canlı Genel Toplam Rozeti (Header Right) -->
-                <Border Grid.Column="2" Background="{DynamicResource ThemePrimary}" CornerRadius="10" Padding="18,8" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="Money24" FontSize="20" Foreground="White" Margin="0,0,10,0"/>
-                        <StackPanel>
-                            <TextBlock Text="GENEL TOPLAM" FontSize="10" FontWeight="SemiBold" Foreground="White" Opacity="0.85"/>
-                            <TextBlock Text="{Binding GrandTotalWithKdv, StringFormat='{}₺{0:N2}'}" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Border Width="42" Height="42" CornerRadius="8" Background="{DynamicResource ThemePrimaryLight}" Margin="0,0,12,0">
+                            <ui:SymbolIcon Symbol="Wrench24" FontSize="20" Foreground="{DynamicResource ThemePrimary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="İş Emri ve Keşif Formu" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            <TextBlock Text="İşlem türüne göre müşteri talebini, ekibinizi ve malzemeleri yönetin" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         </StackPanel>
                     </StackPanel>
-                </Border>
+
+                    <!-- Canlı Genel Toplam (Keşif modunda gizlenir) -->
+                    <Border Grid.Column="2" Background="{DynamicResource ThemePrimary}" CornerRadius="8" Padding="14,6" VerticalAlignment="Center"
+                            Visibility="{Binding IsDiscoveryOnly, Converter={StaticResource InvertedBoolToVis}}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <ui:SymbolIcon Symbol="Money24" FontSize="18" Foreground="White" Margin="0,0,8,0"/>
+                            <StackPanel>
+                                <TextBlock Text="GENEL TOPLAM" FontSize="9" FontWeight="SemiBold" Foreground="White" Opacity="0.85"/>
+                                <TextBlock Text="{Binding GrandTotalWithKdv, StringFormat='{}₺{0:N2}'}" FontSize="16" FontWeight="Bold" Foreground="White"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Hızlı İşlem Türü Seçim Çubuğu (Keşif vs Servis vs Kurulum vs Bakım) -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
+                    <TextBlock Text="İşlem Türü:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+
+                    <RadioButton Content="🔍 Keşif Talebi" IsChecked="{Binding IsDiscoveryOnly, Mode=TwoWay}"
+                                 Style="{StaticResource ToggleButtonPillStyle}" Height="30" Padding="12,0" Margin="0,0,8,0" Cursor="Hand"/>
+
+                    <RadioButton Content="🔧 Servis İş Emri" IsChecked="{Binding IsDiscoveryOnly, Converter={StaticResource InverseBoolConverter}, Mode=OneWay}"
+                                 Style="{StaticResource ToggleButtonPillStyle}" Height="30" Padding="12,0" Margin="0,0,8,0" Cursor="Hand"/>
+                </StackPanel>
             </Grid>
         </Border>
 
-        <!-- ════════ ROW 1: 2-COLUMN SPLIT DASHBOARD ════════ -->
+        <!-- ════════ ROW 1: FORM CONTENT (2-COLUMN DASHBOARD) ════════ -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <Grid Margin="24,16">
+            <Grid Margin="20,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1.15*"/>
-                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="16"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- ════ SOL KOLON: MÜŞTERİ, İŞ DETAYLARI & SLA ════ -->
+                <!-- ════ SOL KOLON: MÜŞTERİ, İŞ TANIMI & PLANLAMA ════ -->
                 <StackPanel Grid.Column="0">
-                    
-                    <!-- BÖLÜM 1: MÜŞTERİ & YAPI BİLGİLERİ -->
-                    <Border Style="{StaticResource CardPanel}" Padding="20" Margin="0,0,0,16">
-                        <StackPanel>
-                            <TextBlock Text="1. Müşteri ve Yapı Türü" Style="{StaticResource SectionHeader}" AutomationProperties.HeadingLevel="Level2"/>
 
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <RadioButton x:Name="RbExisting" Content="Mevcut Müşteri" IsChecked="True" Margin="0,0,20,0" Foreground="{DynamicResource ThemeTextPrimary}" GroupName="CstT"/>
-                                <RadioButton x:Name="RbNew" Content="Hızlı Yeni Müşteri" IsChecked="{Binding IsQuickAddCustomer, Mode=TwoWay}" Foreground="{DynamicResource ThemeTextPrimary}" GroupName="CstT"/>
+                    <!-- BÖLÜM 1: MÜŞTERİ & YAPI BİLGİLERİ -->
+                    <Border Style="{StaticResource SectionCard}">
+                        <StackPanel>
+                            <TextBlock Text="1. Müşteri ve Yapı Türü" Style="{StaticResource SectionHeader}"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <RadioButton x:Name="RbExisting" Content="Mevcut Müşteri" IsChecked="True" Margin="0,0,16,0" Foreground="{DynamicResource TextHeadingBrush}" GroupName="CstT"/>
+                                <RadioButton x:Name="RbNew" Content="Hızlı Yeni Müşteri" IsChecked="{Binding IsQuickAddCustomer, Mode=TwoWay}" Foreground="{DynamicResource TextHeadingBrush}" GroupName="CstT"/>
                             </StackPanel>
 
                             <!-- Mevcut Müşteri Seçimi -->
-                            <StackPanel>
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsChecked, ElementName=RbNew}" Value="True">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-
-                                <Label Content="Müşteri Arayın veya Seçin *" Style="{StaticResource ModernLabel}"/>
+                            <StackPanel Visibility="{Binding IsChecked, ElementName=RbNew, Converter={StaticResource InvertedBoolToVis}}">
+                                <TextBlock Text="Müşteri Arayın veya Seçin *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding Customers}"
                                           SelectedItem="{Binding SelectedCustomer}"
                                           DisplayMemberPath="FullName"
                                           IsEditable="True" IsTextSearchEnabled="True"
-                                          Style="{StaticResource ModernComboBox}"
-                                          Height="40" Margin="0,0,0,12"
-                                          AutomationProperties.Name="Mevcut müşteri seçimi"
-                                          AutomationProperties.HelpText="Müşteri adını yazarak arayın veya listeden seçin."/>
+                                          Height="36" Margin="0,0,0,8"/>
 
-                                <!-- Müşteri Adres Kartı -->
-                                <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,12" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
+                                <!-- Müşteri Adres Özeti -->
+                                <Border Background="{DynamicResource SurfacePageBrush}" CornerRadius="6" Padding="10,8" Margin="0,0,0,8"
+                                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
+                                        Visibility="{Binding SelectedCustomer, Converter={StaticResource NullToVis}}">
                                     <StackPanel>
-                                        <TextBlock Text="{Binding SummaryCustomerName, FallbackValue='Müşteri Seçilmedi'}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                                        <TextBlock Text="{Binding SummaryCustomerAddress, Converter={StaticResource SensitiveData}, ConverterParameter=Address, FallbackValue='Adres bilgisi yok'}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,4,0,0"/>
+                                        <TextBlock Text="{Binding SummaryCustomerName}" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                        <TextBlock Text="{Binding SummaryCustomerAddress}" TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>
 
-                            <!-- Yeni Müşteri Hızlı Ekleme Paneli -->
-                            <StackPanel Visibility="{Binding IsChecked, ElementName=RbNew, Converter={StaticResource BoolToVis}}" Margin="0,0,0,12">
+                            <!-- Yeni Müşteri Ekleme Paneli -->
+                            <StackPanel Visibility="{Binding IsChecked, ElementName=RbNew, Converter={StaticResource BoolToVis}}" Margin="0,0,0,8">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="8"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <Label Content="Ad Soyad *" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding QuickCustomerName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                                 Style="{StaticResource ModernTextBox}" Height="40"
-                                                 AutomationProperties.Name="Yeni müşteri adı"
-                                                 AutomationProperties.HelpText="Hızlı yeni müşteri için zorunludur."/>
+                                        <TextBlock Text="Ad Soyad *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <ui:TextBox Text="{Binding QuickCustomerName, UpdateSourceTrigger=PropertyChanged}" Height="34"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
-                                        <Label Content="Telefon *" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding QuickCustomerPhone, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                                 Style="{StaticResource ModernTextBox}" Height="40"
-                                                 AutomationProperties.Name="Yeni müşteri telefonu"
-                                                 AutomationProperties.HelpText="En az 10 rakam içeren geçerli bir telefon numarası girin."/>
+                                        <TextBlock Text="Telefon *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                        <ui:TextBox Text="{Binding QuickCustomerPhone, UpdateSourceTrigger=PropertyChanged}" Height="34"/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
@@ -155,58 +163,39 @@
                             <Grid Margin="0,4,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1.5*"/>
-                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="8"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="8"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Grid.Column="0">
-                                    <Label Content="Yapı / Bina Türü" Style="{StaticResource ModernLabel}"/>
+                                    <TextBlock Text="Yapı / Bina Türü" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                                     <ComboBox ItemsSource="{Binding StructureTypes}"
                                               SelectedItem="{Binding SelectedStructureType}"
-                                              Style="{StaticResource ModernComboBox}"
-                                              Height="36">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock Text="{Binding}"/>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
+                                              Height="32"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2" Visibility="{Binding ShowBlockCount, Converter={StaticResource BoolToVis}}">
-                                    <Label Content="Blok Sayısı" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding BlockCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
-                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="Blok sayısı"/>
+                                    <TextBlock Text="Blok Sayısı" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ui:TextBox Text="{Binding BlockCount, UpdateSourceTrigger=PropertyChanged}" Height="32"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="4" Visibility="{Binding ShowFlatCount, Converter={StaticResource BoolToVis}}">
-                                    <Label Content="Daire Sayısı" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding FlatCount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
-                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="Daire sayısı"/>
+                                    <TextBlock Text="Daire Sayısı" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ui:TextBox Text="{Binding FlatCount, UpdateSourceTrigger=PropertyChanged}" Height="32"/>
                                 </StackPanel>
                             </Grid>
-
-                            <!-- Toplam Birim Rozeti -->
-                            <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="6" Padding="10,6" Margin="0,10,0,0" HorizontalAlignment="Left"
-                                    Visibility="{Binding ShowFlatCount, Converter={StaticResource BoolToVis}}">
-                                <TextBlock Foreground="{DynamicResource ThemePrimary}" FontSize="12" FontWeight="SemiBold">
-                                    <Run Text="Toplam İşlem Birimi:"/>
-                                    <Run Text="{Binding TotalUnitCount, Mode=OneWay}" FontWeight="Bold"/>
-                                    <Run Text="bağımsız bölüm"/>
-                                </TextBlock>
-                            </Border>
                         </StackPanel>
                     </Border>
 
                     <!-- BÖLÜM 2: İŞ KATEGORİLERİ & AÇIKLAMA -->
-                    <Border Style="{StaticResource CardPanel}" Padding="20" Margin="0,0,0,16">
+                    <Border Style="{StaticResource SectionCard}">
                         <StackPanel>
-                            <TextBlock Text="2. İş Tanımı ve Kategoriler" Style="{StaticResource SectionHeader}" AutomationProperties.HeadingLevel="Level2"/>
+                            <TextBlock Text="2. İş Tanımı ve Kategoriler" Style="{StaticResource SectionHeader}"/>
 
-                            <TextBlock Text="İş Kategorileri" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,0,8"/>
-                            <ItemsControl ItemsSource="{Binding CategoryItems}" Margin="0,0,0,12">
+                            <TextBlock Text="İş Kategorileri" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+                            <ItemsControl ItemsSource="{Binding CategoryItems}" Margin="0,0,0,10">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <WrapPanel Orientation="Horizontal"/>
@@ -216,154 +205,141 @@
                                     <DataTemplate>
                                         <CheckBox Content="{Binding DisplayName}"
                                                   IsChecked="{Binding IsSelected}"
-                                                  Foreground="{DynamicResource ThemeTextPrimary}"
-                                                  Margin="0,2,14,6" FontSize="12"/>
+                                                  Foreground="{DynamicResource TextHeadingBrush}"
+                                                  Margin="0,2,12,4" FontSize="11"/>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <Label Content="İş Açıklaması / Arıza Detayı *" Style="{StaticResource ModernLabel}"/>
-                            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
-                                     Style="{StaticResource ModernTextBox}"
-                                     Height="110" TextWrapping="Wrap" AcceptsReturn="True"
-                                     VerticalScrollBarVisibility="Auto" Padding="10" Margin="0,0,0,12"
-                                     AutomationProperties.Name="İş açıklaması veya arıza detayı"
-                                     AutomationProperties.HelpText="Keşif dışındaki iş emirleri için zorunludur."/>
+                            <TextBlock Text="İş Açıklaması / Arıza Detayı *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                            <ui:TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                        Height="90" TextWrapping="Wrap" AcceptsReturn="True"
+                                        VerticalScrollBarVisibility="Auto" Margin="0,0,0,8"/>
 
-                            <CheckBox Content="Sadece Keşif Yapılacak (Malzeme Girilmez)" 
+                            <CheckBox Content="Sadece Keşif Yapılacak (Malzemeler Keşif Sonrası Girilecek)" 
                                       IsChecked="{Binding IsDiscoveryOnly}" 
                                       Foreground="{DynamicResource ThemePrimary}"
-                                      FontWeight="Bold"/>
+                                      FontWeight="Bold" FontSize="11"/>
                         </StackPanel>
                     </Border>
 
                     <!-- BÖLÜM 3: İŞ AYARLARI & TEKNİSYEN & SLA -->
-                    <Border Style="{StaticResource CardPanel}" Padding="20">
+                    <Border Style="{StaticResource SectionCard}">
                         <StackPanel>
-                            <TextBlock Text="3. Planlama ve Teknisyen Atama" Style="{StaticResource SectionHeader}" AutomationProperties.HeadingLevel="Level2"/>
+                            <TextBlock Text="3. Planlama ve Teknisyen Atama" Style="{StaticResource SectionHeader}"/>
 
-                            <Grid Margin="0,0,0,12">
+                            <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="8"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Grid.Column="0">
-                                    <Label Content="Öncelik Seviyesi" Style="{StaticResource ModernLabel}"/>
+                                    <TextBlock Text="Öncelik Seviyesi" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                                     <ComboBox ItemsSource="{Binding Priorities}"
                                               SelectedItem="{Binding SelectedPriority}"
-                                              Style="{StaticResource ModernComboBox}"
-                                              Height="36"/>
+                                              Height="32"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
-                                    <Label Content="Teknisyen Atama" Style="{StaticResource ModernLabel}"/>
+                                    <TextBlock Text="Teknisyen Atama" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                                     <ComboBox ItemsSource="{Binding Technicians}"
                                               SelectedValue="{Binding SelectedTechnicianId}"
                                               SelectedValuePath="Id"
                                               DisplayMemberPath="FullName"
-                                              Style="{StaticResource ModernComboBox}"
-                                              Height="36"/>
+                                              Height="32"/>
                                 </StackPanel>
                             </Grid>
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="8"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="8"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Grid.Column="0">
-                                    <Label Content="Planlanan Tarih" Style="{StaticResource ModernLabel}"/>
-                                    <DatePicker SelectedDate="{Binding ScheduledDate}" Height="36"/>
+                                    <TextBlock Text="Planlanan Tarih" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <DatePicker SelectedDate="{Binding ScheduledDate}" Height="32"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
-                                    <Label Content="SLA Son Tarih" Style="{StaticResource ModernLabel}"/>
-                                    <DatePicker SelectedDate="{Binding SlaDeadline}" Height="36"/>
+                                    <TextBlock Text="SLA Son Tarih" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <DatePicker SelectedDate="{Binding SlaDeadline}" Height="32"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="4">
-                                    <Label Content="Tahmini Süre (Dk)" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding EstimatedDuration, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
-                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="Tahmini süre dakika"/>
+                                    <TextBlock Text="Tahmini Süre (Dk)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ui:TextBox Text="{Binding EstimatedDuration, UpdateSourceTrigger=PropertyChanged}" Height="32"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
                     </Border>
                 </StackPanel>
 
-                <!-- ════ SAĞ KOLON: MALZEME YÖNETİMİ & MALİYET HESAPLAYICI ════ -->
+                <!-- ════ SAĞ KOLON: MALZEME VE CANLI MALİYET ÖZETİ ════ -->
                 <StackPanel Grid.Column="2">
                     
-                    <!-- BÖLÜM 4: MALZEME VE ÜRÜN YÖNETİMİ -->
-                    <Border Style="{StaticResource CardPanel}" Padding="20" Margin="0,0,0,16">
+                    <!-- BÖLÜM 4: MALZEME VE ÜRÜN YÖNETİMİ (Keşif modunda gizlenir) -->
+                    <Border Style="{StaticResource SectionCard}" Visibility="{Binding IsDiscoveryOnly, Converter={StaticResource InvertedBoolToVis}}">
                         <StackPanel>
-                            <TextBlock Text="4. Malzeme ve Ürün Ekleme" Style="{StaticResource SectionHeader}" AutomationProperties.HeadingLevel="Level2"/>
+                            <TextBlock Text="4. Malzeme ve Ürün Ekleme" Style="{StaticResource SectionHeader}"/>
 
                             <!-- Ekleme Çubuğu -->
-                            <Grid Margin="0,0,0,12">
+                            <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="2*"/>
-                                    <ColumnDefinition Width="8"/>
-                                    <ColumnDefinition Width="70"/>
-                                    <ColumnDefinition Width="8"/>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="6"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="6"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="6"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Grid.Column="0">
-                                    <Label Content="Ürün Seçin" Style="{StaticResource ModernLabel}"/>
+                                    <TextBlock Text="Ürün Seçin" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                                     <ComboBox ItemsSource="{Binding Products}"
                                               SelectedItem="{Binding SelectedProductToAdd}"
                                               DisplayMemberPath="ProductName"
                                               IsEditable="True" IsTextSearchEnabled="True"
-                                              Style="{StaticResource ModernComboBox}"
-                                              Height="40" AutomationProperties.Name="İş emrine eklenecek ürün"/>
+                                              Height="32"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
-                                    <Label Content="Miktar" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding QuantityToAdd, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
-                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="Malzeme miktarı"/>
+                                    <TextBlock Text="Adet" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ui:TextBox Text="{Binding QuantityToAdd, UpdateSourceTrigger=PropertyChanged}" Height="32"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="4">
-                                    <Label Content="Birim Fiyat" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding UnitPriceToAdd, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True}"
-                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="Malzeme birim fiyatı"/>
+                                    <TextBlock Text="Fiyat" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ui:TextBox Text="{Binding UnitPriceToAdd, UpdateSourceTrigger=PropertyChanged}" Height="32"/>
                                 </StackPanel>
 
                                 <ui:Button Grid.Column="6" Content="Ekle" Icon="{ui:SymbolIcon Add24}"
                                            Command="{Binding AddItemToJobCommand}"
-                                           Appearance="Primary" Height="40" Padding="14,0" VerticalAlignment="Bottom"
-                                           AutomationProperties.HelpText="Seçilen ürünü miktar ve fiyatıyla iş emrine ekler."/>
+                                           Appearance="Primary" Height="32" Padding="12,0" VerticalAlignment="Bottom"/>
                             </Grid>
 
                             <!-- Malzeme Tablosu -->
                             <DataGrid ItemsSource="{Binding CurrentJobItems}"
-                                      Style="{StaticResource AccessibleDataGrid}"
-                                      ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
                                       AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                                      MinHeight="180" MaxHeight="260"
+                                      MinHeight="160" MaxHeight="240"
                                       GridLinesVisibility="Horizontal" HeadersVisibility="Column">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Ürün / Malzeme" Binding="{Binding ProductName}" Width="*" IsReadOnly="True" FontWeight="Bold"/>
-                                    <DataGridTextColumn Header="Adet" Binding="{Binding QuantityUsed}" Width="70"/>
-                                    <DataGridTextColumn Header="Fiyat" Binding="{Binding UnitPrice, StringFormat='{}₺{0:N2}'}" Width="100"/>
-                                    <DataGridTemplateColumn Header="Sil" Width="50">
+                                    <DataGridTextColumn Header="Ürün" Binding="{Binding ProductName}" Width="*" IsReadOnly="True" FontWeight="SemiBold"/>
+                                    <DataGridTextColumn Header="Adet" Binding="{Binding QuantityUsed}" Width="55"/>
+                                    <DataGridTextColumn Header="Fiyat" Binding="{Binding UnitPrice, StringFormat='{}₺{0:N2}'}" Width="80"/>
+                                    <DataGridTemplateColumn Header="Sil" Width="45">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <ui:Button Icon="{ui:SymbolIcon Delete24}"
                                                            Command="{Binding DataContext.RemoveItemFromJobCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                            CommandParameter="{Binding}"
-                                                           Appearance="Secondary" Height="28" Width="28" Padding="0" Foreground="{DynamicResource StatusErrorFg}" ToolTip="Malzemeyi kaldır"
-                                                           AutomationProperties.Name="Malzemeyi iş emrinden kaldır"/>
+                                                           Appearance="Secondary" Height="24" Width="24" Padding="0" Foreground="{DynamicResource ThemeError}" ToolTip="Kaldır"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -372,54 +348,52 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- BÖLÜM 5: CANLI MALIYET HESAPLAYICISI (Live Calculator) -->
-                    <Border Style="{StaticResource CardPanel}" Padding="20" Background="{DynamicResource SurfacePageBrush}">
+                    <!-- BÖLÜM 5: CANLI MALIYET HESAPLAYICISI (Keşif modunda gizlenir) -->
+                    <Border Style="{StaticResource SectionCard}" Visibility="{Binding IsDiscoveryOnly, Converter={StaticResource InvertedBoolToVis}}">
                         <StackPanel>
-                            <TextBlock Text="💰 5. Canlı Finansal Maliyet Özeti" Style="{StaticResource SectionHeader}"/>
+                            <TextBlock Text="💰 5. Finansal Özet ve Maliyet" Style="{StaticResource SectionHeader}"/>
 
-                            <DockPanel Margin="0,0,0,10">
-                                <TextBlock Text="Malzeme Toplamı:" Foreground="{DynamicResource ThemeTextSecondary}" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding MaterialTotal, StringFormat='{}₺{0:N2}'}" HorizontalAlignment="Right" FontWeight="SemiBold" FontSize="14"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Malzeme Toplamı:" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding MaterialTotal, StringFormat='{}₺{0:N2}'}" HorizontalAlignment="Right" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}"/>
                             </DockPanel>
 
-                            <Grid Margin="0,0,0,10">
+                            <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="8"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <Label Content="İşçilik Ücreti (₺)" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
-                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="İşçilik ücreti"/>
+                                    <TextBlock Text="İşçilik Ücreti (₺)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ui:TextBox Text="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged}" Height="32"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
-                                    <Label Content="İskonto / İndirim (₺)" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True, ValidatesOnExceptions=True}"
-                                             Style="{StaticResource ModernTextBox}" Height="40" AutomationProperties.Name="İskonto tutarı"/>
+                                    <TextBlock Text="İndirim / İskonto (₺)" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                                    <ui:TextBox Text="{Binding DiscountAmount, UpdateSourceTrigger=PropertyChanged}" Height="32"/>
                                 </StackPanel>
                             </Grid>
 
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Ara Toplam:" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding SubTotal, StringFormat='{}₺{0:N2}'}" HorizontalAlignment="Right" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}"/>
+                            </DockPanel>
+
                             <DockPanel Margin="0,0,0,10">
-                                <TextBlock Text="Ara Toplam:" Foreground="{DynamicResource ThemeTextSecondary}" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding SubTotal, StringFormat='{}₺{0:N2}'}" HorizontalAlignment="Right" FontWeight="SemiBold" FontSize="14"/>
-                            </DockPanel>
-
-                            <DockPanel Margin="0,0,0,12">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="KDV Oranı: %" Foreground="{DynamicResource ThemeTextSecondary}" VerticalAlignment="Center"/>
-                                    <ComboBox ItemsSource="{Binding KdvRates}" SelectedItem="{Binding KdvRate}" Style="{StaticResource ModernComboBox}" Width="65" Height="28" Padding="4,0"/>
+                                    <TextBlock Text="KDV Oranı: %" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" VerticalAlignment="Center"/>
+                                    <ComboBox ItemsSource="{Binding KdvRates}" SelectedItem="{Binding KdvRate}" Width="65" Height="26" Padding="4,0"/>
                                 </StackPanel>
-                                <TextBlock Text="{Binding KdvAmount, StringFormat='{}₺{0:N2}'}" HorizontalAlignment="Right" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding KdvAmount, StringFormat='{}₺{0:N2}'}" HorizontalAlignment="Right" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
                             </DockPanel>
 
-                            <Separator Margin="0,0,0,14" Background="{DynamicResource ThemeBorder}"/>
+                            <Separator Margin="0,0,0,10" Background="{DynamicResource BorderSubtleBrush}"/>
 
                             <!-- Genel Toplam Büyük Vurgu Kartı -->
-                            <Border Background="{DynamicResource ThemePrimary}" CornerRadius="10" Padding="16">
+                            <Border Background="{DynamicResource ThemePrimary}" CornerRadius="8" Padding="14">
                                 <DockPanel>
-                                    <TextBlock Text="GENEL TOPLAM:" FontWeight="Bold" FontSize="15" Foreground="White" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding GrandTotalWithKdv, StringFormat='{}₺{0:N2}'}" FontWeight="Bold" FontSize="24" HorizontalAlignment="Right" Foreground="White"/>
+                                    <TextBlock Text="GENEL TOPLAM:" FontWeight="Bold" FontSize="14" Foreground="White" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding GrandTotalWithKdv, StringFormat='{}₺{0:N2}'}" FontWeight="Bold" FontSize="20" HorizontalAlignment="Right" Foreground="White"/>
                                 </DockPanel>
                             </Border>
                         </StackPanel>
@@ -428,30 +402,32 @@
             </Grid>
         </ScrollViewer>
 
-        <!-- ════════ ROW 2: FOOTER (Actions) ════════ -->
-        <Border Grid.Row="2" Background="{DynamicResource CardPanelBackgroundBrush}" 
-                Padding="24,14" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,1,0,0">
+        <!-- ════════ ROW 2: PERSISTENT STICKY FOOTER (ACTIONS) ════════ -->
+        <Border Grid.Row="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                Padding="20,12" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,1,0,0">
             <Grid>
                 <!-- İptal (Esc) -->
                 <ui:Button HorizontalAlignment="Left" Content="İptal Et (Esc)" 
                            Command="{Binding CancelCommand}"
-                           Appearance="Secondary" Height="42" Padding="24,0"/>
+                           Appearance="Secondary" Height="36" Padding="20,0" Cursor="Hand"/>
 
-                <!-- Kaydet (Ctrl+S) -->
+                <!-- Kaydet (Ctrl+S) - Dinamik Metinli -->
                 <ui:Button HorizontalAlignment="Right" Command="{Binding SaveServiceJobCommand}"
-                           Appearance="Primary" Height="42" Padding="32,0"
-                           AutomationProperties.HelpText="Geçerli alanlarla iş emrini, malzemeleri ve stok rezervasyonlarını birlikte kaydeder.">
+                           Appearance="Primary" Height="36" Padding="28,0" Cursor="Hand">
                     <ui:Button.Content>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <ui:ProgressRing IsIndeterminate="True" Width="18" Height="18" Margin="0,0,8,0"
+                            <ui:ProgressRing IsIndeterminate="True" Width="16" Height="16" Margin="0,0,8,0"
                                              Visibility="{Binding IsSaving, Converter={StaticResource BoolToVis}}"/>
-                            <ui:SymbolIcon Symbol="Save24" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"
+                            <ui:SymbolIcon Symbol="Save24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"
                                            Visibility="{Binding IsSaving, Converter={StaticResource InvertedBoolToVis}}"/>
-                            <TextBlock FontSize="14" FontWeight="Bold" VerticalAlignment="Center">
+                            <TextBlock FontSize="13" FontWeight="Bold" VerticalAlignment="Center">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Text" Value="İŞ EMRİNİ KAYDET (Ctrl+S)"/>
                                         <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsDiscoveryOnly}" Value="True">
+                                                <Setter Property="Text" Value="KEŞİF TALEBİNİ KAYDET (Ctrl+S)"/>
+                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding IsSaving}" Value="True">
                                                 <Setter Property="Text" Value="KAYDEDİLİYOR..."/>
                                             </DataTrigger>

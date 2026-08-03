@@ -71,6 +71,44 @@ public sealed class ServiceJobRowDto
         _ => Priority.ToString()
     };
     public WorkOrderType WorkOrderType { get; init; }
+    public string WorkOrderTypeDisplay => WorkOrderType switch
+    {
+        WorkOrderType.Discovery => "🔍 Keşif",
+        WorkOrderType.Repair => "🔧 Tamir",
+        WorkOrderType.Installation => "🏗️ Kurulum",
+        WorkOrderType.Maintenance => "🛠️ Bakım",
+        WorkOrderType.Inspection => "📋 Kontrol",
+        WorkOrderType.Replacement => "🔄 Değişim",
+        _ => WorkOrderType.ToString()
+    };
+    public string SlaStatusDisplay
+    {
+        get
+        {
+            if (Status == JobStatus.Completed) return "Completed";
+            if (Status == JobStatus.Cancelled) return "—";
+            if (!SlaDeadline.HasValue) return "SLA Yok";
+
+            var remaining = SlaDeadline.Value - DateTime.UtcNow;
+            if (remaining.TotalSeconds < 0)
+            {
+                var overdueHours = Math.Abs((int)remaining.TotalHours);
+                if (overdueHours < 24)
+                    return $"{overdueHours}s gecikti";
+                var overdueDays = Math.Abs((int)remaining.TotalDays);
+                return $"{overdueDays}d gecikti";
+            }
+            if (remaining.TotalHours <= 2)
+            {
+                return $"{(int)remaining.TotalMinutes} dk kaldı";
+            }
+            if (remaining.TotalHours <= 24)
+            {
+                return $"{(int)remaining.TotalHours} sa kaldı";
+            }
+            return $"{SlaDeadline.Value:dd.MM.yyyy}";
+        }
+    }
     public JobCategory JobCategory { get; init; }
     public string CategoriesJson { get; init; } = "[]";
     public DateTime CreatedDate { get; init; }
