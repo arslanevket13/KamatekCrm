@@ -36,6 +36,30 @@
             <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>
+
+        <!-- ToggleButtonPillStyle for Work Order Type RadioButtons -->
+        <Style x:Key="ToggleButtonPillStyle" TargetType="RadioButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="{DynamicResource SurfacePageBrush}" 
+                                BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" 
+                                CornerRadius="6" Padding="12,6" Cursor="Hand">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
