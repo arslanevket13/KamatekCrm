@@ -26,6 +26,7 @@ namespace KamatekCrm
     public partial class App : System.Windows.Application
     {
         private IHost? _host;
+        private readonly System.Threading.CancellationTokenSource _appCts = new();
 
         public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
@@ -141,32 +142,8 @@ namespace KamatekCrm
                 
                 Log.Information("Desktop application started successfully.");
 
-                // Arka planda güncelleme kontrolü (5 saniye sonra, açılışı bloklamadan)
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(5000);
-                    try
-                    {
-                        var updateService = _host?.Services.GetService<Services.Update.IUpdateService>();
-                        if (updateService != null && updateService.GetSettings().CheckForUpdatesOnStartup)
-                        {
-                            var update = await updateService.CheckForUpdatesAsync(isAutoCheck: true);
-                            if (update != null)
-                            {
-                                Dispatcher.BeginInvoke(() =>
-                                {
-                                    var updateDialog = new Views.UpdateNotificationWindow(updateService);
-                                    updateDialog.Owner = MainWindow;
-                                    updateDialog.ShowDialog();
-                                });
-                            }
-                        }
-                    }
-                    catch (Exception updateEx)
-                    {
-                        Log.Warning(updateEx, "Background startup update check failed silently.");
-                    }
-                });
+                // Açılış sonrasında ana pencere ve login akışını bloklamadan güncelleme denetimi (5s gecikmeli, await edilebilir)
+                await CheckStartupUpdatesAsync(_appCts.Token);
             }
             catch (Exception ex)
             {
@@ -335,11 +312,55 @@ namespace KamatekCrm
             await Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Ana pencere açıldıktan sonra UI mesaj döngüsünü bloklamadan 5s gecikmeli güncelleme taraması yapar.
+        /// </summary>
+        private async Task CheckStartupUpdatesAsync(System.Threading.CancellationToken cancellationToken)
+        {
+            try
+            {
+                await Task.Delay(5000, cancellationToken);
+
+                var updateService = _host?.Services.GetService<Services.Update.IUpdateService>();
+                if (updateService != null && updateService.GetSettings().CheckForUpdatesOnStartup)
+                {
+                    var update = await updateService.CheckForUpdatesAsync(isAutoCheck: true, ct: cancellationToken);
+                    if (update != null && !cancellationToken.IsCancellationRequested)
+                    {
+                        var updateDialog = new Views.UpdateNotificationWindow(updateService)
+                        {
+                            Owner = MainWindow
+                        };
+                        updateDialog.ShowDialog();
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                Log.Information("Startup update check cancelled.");
+            }
+            catch (Exception updateEx)
+            {
+                Log.Warning(updateEx, "Background startup update check failed silently.");
+            }
+        }
+
         protected override async void OnExit(ExitEventArgs e)
         {
             try
             {
                 Log.Information("Application shutting down...");
+
+                // Aktif arka plan güncelleme taramasını iptal et
+                try
+                {
+                    _appCts.Cancel();
+                    _appCts.Dispose();
+                }
+                catch
+                {
+                    // CancellationTokenSource temizleme hatası yutulur
+                }
                 
                 // Uygulama kapanırken otomatik yedek al (DI üzerinden)
                 if (_host != null)
