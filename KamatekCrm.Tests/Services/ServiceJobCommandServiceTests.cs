@@ -136,14 +136,15 @@ public class ServiceJobCommandServiceTests
         var second = await service.ConvertToQuoteAsync(save.Value.JobId, "test-user");
 
         first.IsSuccess.Should().BeTrue();
-        second.IsSuccess.Should().BeTrue();
+        second.IsFailure.Should().BeTrue(); // Double conversion must be rejected
         first.Value!.CustomerId.Should().Be(customerId);
 
         await using var verify = await factory.CreateDbContextAsync();
         var job = await verify.ServiceJobs.SingleAsync();
-        job.Status.Should().Be(JobStatus.Quoting);
+        job.Status.Should().Be(JobStatus.ConvertedToQuote);
         job.IsConvertedToQuote.Should().BeTrue();
-        (await verify.ServiceJobHistories.CountAsync()).Should().Be(2);
+        (await verify.WorkOrderQuotations.CountAsync()).Should().Be(1);
+        (await verify.DiscoveryReports.CountAsync()).Should().Be(1);
     }
 
     [Fact]

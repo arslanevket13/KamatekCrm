@@ -1,5 +1,5 @@
+using System;
 using System.Windows;
-using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Views
@@ -9,23 +9,37 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class NewServiceJobWindow : Window
     {
+        private readonly ServiceJobViewModel _viewModel;
+
         public NewServiceJobWindow(ServiceJobViewModel vm)
         {
             InitializeComponent();
-            
-            vm.CancelRequested += () =>
-            {
-                try { DialogResult = false; } catch { }
-                Close();
-            };
 
-            vm.SaveCompleted += () =>
-            {
-                try { DialogResult = true; } catch { }
-                Close();
-            };
+            _viewModel = vm ?? throw new ArgumentNullException(nameof(vm));
+            DataContext = _viewModel;
 
-            DataContext = vm;
+            _viewModel.CancelRequested += OnCancelRequested;
+            _viewModel.SaveCompleted += OnSaveCompleted;
+            Closed += OnWindowClosed;
+        }
+
+        private void OnCancelRequested()
+        {
+            try { DialogResult = false; } catch { }
+            Close();
+        }
+
+        private void OnSaveCompleted()
+        {
+            try { DialogResult = true; } catch { }
+            Close();
+        }
+
+        private void OnWindowClosed(object? sender, EventArgs e)
+        {
+            _viewModel.CancelRequested -= OnCancelRequested;
+            _viewModel.SaveCompleted -= OnSaveCompleted;
+            Closed -= OnWindowClosed;
         }
 
         public override void OnApplyTemplate()

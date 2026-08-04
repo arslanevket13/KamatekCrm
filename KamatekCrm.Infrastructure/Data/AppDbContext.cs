@@ -11,6 +11,7 @@ using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Models.Common;
 using KamatekCrm.Shared.Models.Specs;
 using KamatekCrm.Shared.Models.JobDetails;
+using KamatekCrm.Shared.Models.WorkOrders;
 
 namespace KamatekCrm.Infrastructure.Data
 {
@@ -100,6 +101,15 @@ namespace KamatekCrm.Infrastructure.Data
         // --- Rota Planlama & Teknisyen Konum ---
         public DbSet<RoutePoint> RoutePoints { get; set; }
         public DbSet<TechnicianLocation> TechnicianLocations { get; set; }
+
+        // --- İş Emri İş Akışı (Keşif → Teklif → Montaj) ---
+        public DbSet<DiscoveryReport> DiscoveryReports { get; set; }
+        public DbSet<DiscoveryMaterial> DiscoveryMaterials { get; set; }
+        public DbSet<WorkOrderQuotation> WorkOrderQuotations { get; set; }
+        public DbSet<QuotationItem> QuotationItems { get; set; }
+        public DbSet<InstallationOrder> InstallationOrders { get; set; }
+        public DbSet<InstallationMaterial> InstallationMaterials { get; set; }
+        public DbSet<InstallationTask> InstallationTasks { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -246,6 +256,82 @@ namespace KamatekCrm.Infrastructure.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.CustomerInteractionId);
+            });
+
+            // ── İş Emri İş Akışı (Keşif → Teklif → Montaj) ──
+            modelBuilder.Entity<DiscoveryReport>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ServiceJobId).IsUnique();
+                entity.Property(e => e.EstimatedLaborHours).HasColumnType("double precision");
+                entity.HasMany(e => e.Materials)
+                    .WithOne(e => e.DiscoveryReport)
+                    .HasForeignKey(e => e.DiscoveryReportId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<DiscoveryMaterial>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.DiscoveryReportId);
+                entity.HasIndex(e => e.ProductId);
+            });
+
+            modelBuilder.Entity<WorkOrderQuotation>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ServiceJobId);
+                entity.HasIndex(e => e.QuotationNumber).IsUnique();
+                entity.Property(e => e.LaborCost).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.ShippingCost).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.DiscountAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.TaxRate).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.TaxAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
+                entity.HasMany(e => e.Items)
+                    .WithOne(e => e.Quotation)
+                    .HasForeignKey(e => e.QuotationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<QuotationItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.QuotationId);
+                entity.HasIndex(e => e.ProductId);
+                entity.Property(e => e.UnitPrice).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.DiscountPercent).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.TaxPercent).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.LineTotal).HasColumnType("decimal(18,2)");
+            });
+
+            modelBuilder.Entity<InstallationOrder>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ServiceJobId).IsUnique();
+                entity.HasIndex(e => e.QuotationId);
+                entity.HasMany(e => e.Materials)
+                    .WithOne(e => e.InstallationOrder)
+                    .HasForeignKey(e => e.InstallationOrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasMany(e => e.Tasks)
+                    .WithOne(e => e.InstallationOrder)
+                    .HasForeignKey(e => e.InstallationOrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<InstallationMaterial>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.InstallationOrderId);
+                entity.HasIndex(e => e.ProductId);
+                entity.Property(e => e.UnitPrice).HasColumnType("decimal(18,2)");
+            });
+
+            modelBuilder.Entity<InstallationTask>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.InstallationOrderId);
             });
 
             modelBuilder.Entity<Product>(entity =>

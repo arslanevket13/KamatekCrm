@@ -13,10 +13,14 @@ public sealed class ServiceJobStatusPolicy : IServiceJobStatusPolicy
     private static readonly IReadOnlyDictionary<JobStatus, JobStatus[]> AllowedTransitions =
         new Dictionary<JobStatus, JobStatus[]>
         {
-            [JobStatus.Pending] = [JobStatus.InProgress, JobStatus.PendingDiscovery, JobStatus.Cancelled],
-            [JobStatus.PendingDiscovery] = [JobStatus.DiscoveryCompleted, JobStatus.Cancelled],
-            [JobStatus.DiscoveryCompleted] = [JobStatus.Quoting, JobStatus.InProgress, JobStatus.Cancelled],
-            [JobStatus.Quoting] = [JobStatus.WaitingForApproval, JobStatus.InProgress, JobStatus.Rejected, JobStatus.Cancelled],
+            [JobStatus.DiscoveryRequest] = [JobStatus.ConvertedToQuote, JobStatus.Cancelled],
+            [JobStatus.ConvertedToQuote] = [JobStatus.InstallationPlanned, JobStatus.Cancelled],
+            [JobStatus.InstallationPlanned] = [JobStatus.InstallationCompleted, JobStatus.Cancelled],
+            [JobStatus.InstallationCompleted] = [],
+            [JobStatus.Pending] = [JobStatus.ConvertedToQuote, JobStatus.InProgress, JobStatus.PendingDiscovery, JobStatus.Cancelled],
+            [JobStatus.PendingDiscovery] = [JobStatus.ConvertedToQuote, JobStatus.DiscoveryCompleted, JobStatus.Cancelled],
+            [JobStatus.DiscoveryCompleted] = [JobStatus.ConvertedToQuote, JobStatus.Quoting, JobStatus.InProgress, JobStatus.Cancelled],
+            [JobStatus.Quoting] = [JobStatus.ConvertedToQuote, JobStatus.InstallationPlanned, JobStatus.WaitingForApproval, JobStatus.InProgress, JobStatus.Rejected, JobStatus.Cancelled],
             [JobStatus.WaitingForApproval] = [JobStatus.InProgress, JobStatus.Rejected, JobStatus.Cancelled],
             [JobStatus.InProgress] = [JobStatus.WaitingForParts, JobStatus.WaitingForApproval, JobStatus.Completed, JobStatus.Cancelled],
             [JobStatus.WaitingForParts] = [JobStatus.InProgress, JobStatus.Cancelled],
@@ -44,12 +48,16 @@ public sealed class ServiceJobStatusPolicy : IServiceJobStatusPolicy
 
     private static string GetDisplayName(JobStatus status) => status switch
     {
+        JobStatus.DiscoveryRequest => "Keşif Talebi",
+        JobStatus.ConvertedToQuote => "Teklife Dönüştürüldü",
+        JobStatus.InstallationPlanned => "Montaj Yapılacak",
+        JobStatus.InstallationCompleted => "Montaj Tamamlandı",
         JobStatus.Pending => "Bekliyor",
         JobStatus.InProgress => "Devam Ediyor",
         JobStatus.WaitingForParts => "Parça Bekleniyor",
         JobStatus.WaitingForApproval => "Onay Bekleniyor",
         JobStatus.Completed => "Tamamlandı",
-        JobStatus.Cancelled => "İptal",
+        JobStatus.Cancelled => "İptal Edildi",
         JobStatus.Rejected => "Reddedildi",
         JobStatus.PendingDiscovery => "Keşif Bekliyor",
         JobStatus.DiscoveryCompleted => "Keşif Tamamlandı",

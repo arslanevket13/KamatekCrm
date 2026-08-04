@@ -672,7 +672,7 @@ namespace KamatekCrm.ViewModels
                         {
                             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                             string pdfPath = System.IO.Path.Combine(desktopPath, $"CihazKabul_{faultTicket.Id:D6}.pdf");
-                            _pdfService.GenerateServiceJobPdf(faultTicket, pdfPath);
+                            _pdfService.GenerateServiceForm(faultTicket, pdfPath);
                             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                             {
                                 FileName = pdfPath,

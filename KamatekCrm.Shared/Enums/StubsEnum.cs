@@ -35,7 +35,7 @@ namespace KamatekCrm.Shared.Enums
     
     public enum JobType { Standard, Project, Emergency, Maintenance, SecurityCamera, VideoIntercom, SatelliteSystem }
     
-    public enum StatusFilter { All, Active, Completed, Cancelled, Pending, InProgress }
+    public enum StatusFilter { All, Active, Completed, Cancelled, Pending, InProgress, SlaBreached }
     
     public enum StructureType { Building, Floor, Room, Outdoor, Rack, Other, SingleUnit, Apartment, Site, Commercial }
     public enum DeviceType { Camera, Sensor, Panel, Keypad, Switch, Router, NVR, AccessPoint, Other, IpCamera }

@@ -4,6 +4,7 @@ using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models.WorkOrders;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.Infrastructure.Services;
@@ -78,6 +79,11 @@ public sealed class ServiceJobReadService : IServiceJobReadService
                                         item.Customer.PhoneNumber.Contains(searchText));
         }
         if (request.Status.HasValue) query = query.Where(item => item.Status == request.Status.Value);
+        if (request.IsSlaBreachedOnly)
+        {
+            DateTime now = DateTime.UtcNow;
+            query = query.Where(item => item.SlaDeadline < now && item.Status != JobStatus.Completed && item.Status != JobStatus.Cancelled);
+        }
         if (request.StartDate.HasValue) query = query.Where(item => item.CreatedDate >= request.StartDate.Value);
         if (request.EndDate.HasValue)
         {
@@ -252,6 +258,101 @@ public sealed class ServiceJobReadService : IServiceJobReadService
             row.TechnicianNotes, row.AssignedTechnician, row.Priority, row.ScheduledDate,
             row.CustomerId, row.FullName, row.CompanyName ?? string.Empty, row.PhoneNumber,
             BuildAddress(row.Neighborhood, row.Street, row.BuildingNo, row.ApartmentNo, row.District, row.City)));
+    }
+
+    public async Task<Result<WorkOrderWorkflowDto>> GetWorkOrderWorkflowAsync(
+        int jobId,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = AuthorizeRead();
+        if (authorization.IsFailure) return Result.Failure<WorkOrderWorkflowDto>(authorization.Error);
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var job = await context.ServiceJobs.AsNoTracking()
+            .Where(item => item.Id == jobId)
+            .Select(item => new { item.Id, item.Status })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (job is null) return Result.Failure<WorkOrderWorkflowDto>($"İş kaydı bulunamadı (ID: {jobId}).");
+
+        var discovery = await context.DiscoveryReports.AsNoTracking()
+            .Include(d => d.Materials)
+            .FirstOrDefaultAsync(d => d.ServiceJobId == jobId, cancellationToken);
+
+        var quotation = await context.WorkOrderQuotations.AsNoTracking()
+            .Include(q => q.Items)
+            .Where(q => q.ServiceJobId == jobId)
+            .OrderByDescending(q => q.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var installation = await context.InstallationOrders.AsNoTracking()
+            .Include(i => i.Materials)
+            .Include(i => i.Tasks)
+            .FirstOrDefaultAsync(i => i.ServiceJobId == jobId, cancellationToken);
+
+        return Result.Success(new WorkOrderWorkflowDto(
+            job.Id,
+            job.Status,
+            discovery is null
+                ? null
+                : new DiscoveryReportDto(
+                    discovery.Id,
+                    discovery.ServiceJobId,
+                    discovery.TechnicalNotes,
+                    discovery.RecommendedSolution,
+                    discovery.PhotoPathsList,
+                    discovery.EstimatedLaborHours,
+                    discovery.TechnicianName,
+                    discovery.Materials
+                        .Select(m => new DiscoveryMaterialDto(m.Id, m.ProductId, m.ProductName, m.Quantity, m.Notes))
+                        .ToList()),
+            quotation is null
+                ? null
+                : new WorkOrderQuotationDto(
+                    quotation.Id,
+                    quotation.ServiceJobId,
+                    quotation.QuotationNumber,
+                    quotation.Status,
+                    quotation.IssuedDate,
+                    quotation.ValidUntil,
+                    quotation.Description,
+                    quotation.Warranty,
+                    quotation.DeliveryTime,
+                    quotation.PaymentTerms,
+                    quotation.LaborCost,
+                    quotation.ShippingCost,
+                    quotation.DiscountAmount,
+                    quotation.TaxRate,
+                    quotation.TaxAmount,
+                    quotation.TotalAmount,
+                    quotation.SentDate,
+                    quotation.AcceptedAt,
+                    quotation.RejectedAt,
+                    quotation.RejectionReason,
+                    quotation.Items
+                        .Select(i => new QuotationItemDto(
+                            i.Id, i.ProductId, i.ProductName, i.Quantity,
+                            i.UnitPrice, i.DiscountPercent, i.TaxPercent, i.LineTotal))
+                        .ToList()),
+            installation is null
+                ? null
+                : new InstallationOrderDto(
+                    installation.Id,
+                    installation.ServiceJobId,
+                    installation.QuotationId,
+                    installation.TechnicianId,
+                    installation.TechnicianName,
+                    installation.InstallationDate,
+                    installation.Notes,
+                    installation.CompletedAt,
+                    installation.CompletionTechnician,
+                    installation.DeliveryNote,
+                    installation.CustomerSignature,
+                    installation.Materials
+                        .Select(m => new InstallationMaterialDto(m.Id, m.ProductId, m.ProductName, m.Quantity, m.UnitPrice, m.Notes))
+                        .ToList(),
+                    installation.Tasks
+                        .Select(t => new InstallationTaskDto(t.Id, t.Title, t.Description, t.IsCompleted, t.CompletedAt))
+                        .ToList())));
     }
 
     private Result AuthorizeRead()

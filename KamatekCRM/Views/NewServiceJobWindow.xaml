@@ -16,7 +16,7 @@
         Background="{DynamicResource SurfacePageBrush}">
 
     <Window.InputBindings>
-        <KeyBinding Key="Esc" Command="{Binding CancelCommand}"/>
+        <KeyBinding Key="Esc" Command="{Binding CancelFormCommand}"/>
         <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveServiceJobCommand}"/>
     </Window.InputBindings>
 
@@ -116,7 +116,7 @@
                     <RadioButton Content="🔍 Keşif Talebi" IsChecked="{Binding IsDiscoveryOnly, Mode=TwoWay}"
                                  Style="{StaticResource ToggleButtonPillStyle}" Height="30" Padding="12,0" Margin="0,0,8,0" Cursor="Hand"/>
 
-                    <RadioButton Content="🔧 Servis İş Emri" IsChecked="{Binding IsDiscoveryOnly, Converter={StaticResource InverseBoolConverter}, Mode=OneWay}"
+                    <RadioButton Content="🔧 Servis İş Emri" IsChecked="{Binding IsDiscoveryOnly, Converter={StaticResource InverseBoolConverter}, Mode=TwoWay}"
                                  Style="{StaticResource ToggleButtonPillStyle}" Height="30" Padding="12,0" Margin="0,0,8,0" Cursor="Hand"/>
                 </StackPanel>
             </Grid>
@@ -432,11 +432,12 @@
             <Grid>
                 <!-- İptal (Esc) -->
                 <ui:Button HorizontalAlignment="Left" Content="İptal Et (Esc)" 
-                           Command="{Binding CancelCommand}"
+                           Command="{Binding CancelFormCommand}"
                            Appearance="Secondary" Height="36" Padding="20,0" Cursor="Hand"/>
 
                 <!-- Kaydet (Ctrl+S) - Dinamik Metinli -->
                 <ui:Button HorizontalAlignment="Right" Command="{Binding SaveServiceJobCommand}"
+                           ToolTip="{Binding SaveDisabledReason}"
                            Appearance="Primary" Height="36" Padding="28,0" Cursor="Hand">
                     <ui:Button.Content>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

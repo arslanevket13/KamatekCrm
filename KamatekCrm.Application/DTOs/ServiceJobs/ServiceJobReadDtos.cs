@@ -7,7 +7,12 @@ public sealed record ServiceJobSearchRequest(
     JobStatus? Status,
     DateTime? StartDate,
     DateTime? EndDate,
-    int Take = 50);
+    int Take = 50,
+    bool IsSlaBreachedOnly = false);
+
+public sealed record ChangeServiceJobStatusCommandParameter(
+    ServiceJobRowDto? Job,
+    JobStatus Status);
 
 public sealed record ServiceJobCustomerLookupDto(
     int Id,
@@ -53,12 +58,16 @@ public sealed class ServiceJobRowDto
     public JobStatus Status { get; set; }
     public string StatusDisplay => Status switch
     {
+        JobStatus.DiscoveryRequest => "🔍 Keşif Talebi",
+        JobStatus.ConvertedToQuote => "📄 Teklife Dönüştürüldü",
+        JobStatus.InstallationPlanned => "🛠️ Montaj Yapılacak",
+        JobStatus.InstallationCompleted => "✅ Montaj Tamamlandı",
         JobStatus.Pending => "⏳ Bekliyor",
         JobStatus.InProgress => "🔵 Devam Ediyor",
         JobStatus.WaitingForParts => "📦 Parça Bekleniyor",
         JobStatus.WaitingForApproval => "✋ Onay Bekleniyor",
         JobStatus.Completed => "✅ Tamamlandı",
-        JobStatus.Cancelled => "❌ İptal",
+        JobStatus.Cancelled => "❌ İptal Edildi",
         _ => Status.ToString()
     };
     public JobPriority Priority { get; init; }

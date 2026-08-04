@@ -94,7 +94,7 @@ namespace KamatekCrm.ViewModels
                 UpdateTotals();
                 OnPropertyChanged(nameof(ItemCount));
             };
-            ErrorsChanged += (_, _) => SaveServiceJobCommand.NotifyCanExecuteChanged();
+            ErrorsChanged += (_, _) => RefreshSaveState();
 
             CategoryItems = new ObservableCollection<CategorySelectItem>
             {
@@ -630,7 +630,7 @@ namespace KamatekCrm.ViewModels
                     ValidateProperty(QuickCustomerName, nameof(QuickCustomerName));
                     ValidateProperty(QuickCustomerPhone, nameof(QuickCustomerPhone));
                     (GoNextStepCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
-                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                    RefreshSaveState();
                 }
             }
         }
@@ -647,7 +647,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _isDiscoveryOnly, value))
                 {
                     ValidateProperty(Description, nameof(Description));
-                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                    RefreshSaveState();
                 }
             }
         }
@@ -665,7 +665,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _quickCustomerName, value))
                 {
                     (GoNextStepCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
-                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                    RefreshSaveState();
                 }
             }
         }
@@ -683,7 +683,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _quickCustomerPhone, value))
                 {
                     (GoNextStepCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
-                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                    RefreshSaveState();
                 }
             }
         }
@@ -694,7 +694,13 @@ namespace KamatekCrm.ViewModels
         public bool IsSaving
         {
             get => _isSaving;
-            set => SetProperty(ref _isSaving, value);
+            set
+            {
+                if (SetProperty(ref _isSaving, value))
+                {
+                    RefreshSaveState();
+                }
+            }
         }
 
         /// <summary>
@@ -710,6 +716,44 @@ namespace KamatekCrm.ViewModels
         {
             get => _uploadedPhotos;
             set => SetProperty(ref _uploadedPhotos, value);
+        }
+
+        /// <summary>
+        /// Kaydet butonunun pasif kalma nedenini kullanıcıya sunar (ToolTip binding)
+        /// </summary>
+        public string SaveDisabledReason
+        {
+            get
+            {
+                if (IsSaving)
+                    return "Kayıt işlemi devam ediyor.";
+
+                if (!IsQuickAddCustomer && SelectedCustomer is null)
+                    return "Lütfen bir müşteri seçin veya hızlı müşteri ekleyin.";
+
+                if (IsQuickAddCustomer && string.IsNullOrWhiteSpace(QuickCustomerName))
+                    return "Yeni müşteri adı zorunludur.";
+
+                if (IsQuickAddCustomer && string.IsNullOrWhiteSpace(QuickCustomerPhone))
+                    return "Yeni müşteri telefonu zorunludur.";
+
+                if (!IsDiscoveryOnly && string.IsNullOrWhiteSpace(Description))
+                    return "İş açıklaması zorunludur.";
+
+                if (IsNewAsset && (string.IsNullOrWhiteSpace(NewAssetBrand) || string.IsNullOrWhiteSpace(NewAssetModel)))
+                    return "Yeni cihaz için marka ve model zorunludur.";
+
+                if (HasErrors)
+                    return "Formda doğrulama hataları bulunmaktadır.";
+
+                return string.Empty;
+            }
+        }
+
+        public void RefreshSaveState()
+        {
+            OnPropertyChanged(nameof(SaveDisabledReason));
+            SaveServiceJobCommand.NotifyCanExecuteChanged();
         }
 
         /// <summary>
@@ -933,6 +977,7 @@ namespace KamatekCrm.ViewModels
                 "InProgress" => StatusFilter.InProgress,
                 "Completed" => StatusFilter.Completed,
                 "Cancelled" => StatusFilter.Cancelled,
+                "SlaBreached" => StatusFilter.SlaBreached,
                 _ => StatusFilter.All
             };
         }
@@ -959,7 +1004,7 @@ namespace KamatekCrm.ViewModels
                     OnPropertyChanged(nameof(IsRepairWorkOrder));
                     OnPropertyChanged(nameof(IsInstallationWorkOrder));
                     OnPropertyChanged(nameof(IsMaintenanceWorkOrder));
-                    SaveServiceJobCommand.NotifyCanExecuteChanged();
+                    RefreshSaveState();
                 }
             }
         }
@@ -1002,7 +1047,8 @@ namespace KamatekCrm.ViewModels
             new(StatusFilter.Pending, "Bekliyor"),
             new(StatusFilter.InProgress, "Devam Ediyor"),
             new(StatusFilter.Completed, "Tamamlandı"),
-            new(StatusFilter.Cancelled, "İptal Edildi")
+            new(StatusFilter.Cancelled, "İptal Edildi"),
+            new(StatusFilter.SlaBreached, "SLA Aşan")
         };
         /// <summary>
         /// Başlangıç tarihi filtresi
@@ -1281,74 +1327,14 @@ namespace KamatekCrm.ViewModels
             return true;
         }
 
-        /// <summary>
-        /// Yeni iş formunu aç
-        /// </summary>
-        [RelayCommand]
-        private async Task OpenNewJobForm()
+        public async Task InitializeForCreateAsync(CancellationToken cancellationToken = default)
         {
-            // Create a new ViewModel with dependencies
-            var newVm = new ServiceJobViewModel(
-                _navigationService,
-                _toastService,
-                _loadingService,
-                _serviceJobCommandService,
-                _serviceJobReadService,
-                _pdfService,
-                _dialogService);
-            
-            // Veri aktarımı (YENI: API cagrisini beklememek icin ana VM'den listeleri gonderiyoruz)
-            foreach (var cust in Customers) newVm.Customers.Add(cust);
-            foreach (var prod in Products) newVm.Products.Add(prod);
-            foreach (var tech in Technicians) newVm.Technicians.Add(tech);
-            foreach (var asset in CustomerAssets) newVm.CustomerAssets.Add(asset);
-
-            var window = new NewServiceJobWindow(newVm);
-            window.Owner = System.Windows.Application.Current.MainWindow;
-            var result = window.ShowDialog();
-
-            if (result == true)
-            {
-                await RefreshList();
-            }
+            await LoadWorkspace();
         }
 
-        [RelayCommand]
-        private void NavigateBack()
+        public async Task InitializeForEditAsync(ServiceJobRowDto job, CancellationToken cancellationToken = default)
         {
-            _navigationService.NavigateTo<DashboardViewModel>();
-        }
-
-        public IRelayCommand BackCommand => NavigateBackCommand;
-
-        /// <summary>
-        /// Listeyi yenile
-        /// </summary>
-        [RelayCommand]
-        private async Task RefreshList()
-        {
-            await LoadServiceJobs();
-            _serviceJobsView?.Refresh();
-        }
-
-        /// <summary>
-        /// İş detayını görüntüle (Sağ Çekmece Panelini Aç)
-        /// </summary>
-        [RelayCommand]
-        private void ViewJobDetail(ServiceJobRowDto? job)
-        {
-            if (job != null)
-            {
-                SelectedServiceJob = job;
-                _ = LoadSelectedJobHistory();
-            }
-            IsDetailPanelOpen = true;
-        }
-
-        [RelayCommand]
-        private async Task EditJob(ServiceJobRowDto? job)
-        {
-            if (job == null) return;
+            await LoadWorkspace();
 
             ClearForm();
             SelectedServiceJob = job;
@@ -1356,6 +1342,7 @@ namespace KamatekCrm.ViewModels
             _isEditing = true;
 
             Description = job.Description ?? string.Empty;
+            SelectedWorkOrderType = job.WorkOrderType;
             IsDiscoveryOnly = job.WorkOrderType == WorkOrderType.Discovery;
             ScheduledDate = job.ScheduledDate;
             SelectedPriority = job.Priority;
@@ -1391,10 +1378,89 @@ namespace KamatekCrm.ViewModels
             }
 
             CurrentWizardStep = 1;
+        }
+
+        /// <summary>
+        /// Yeni iş formunu aç
+        /// </summary>
+        [RelayCommand]
+        private async Task OpenNewJobForm()
+        {
+            // Create a new ViewModel with dependencies
+            var newVm = new ServiceJobViewModel(
+                _navigationService,
+                _toastService,
+                _loadingService,
+                _serviceJobCommandService,
+                _serviceJobReadService,
+                _pdfService,
+                _dialogService);
             
-            // Edit işlemi için yeni pencereyi kendi contextimiz ile açıyoruz
-            var window = new NewServiceJobWindow(this);
+            await newVm.InitializeForCreateAsync();
+
+            var window = new NewServiceJobWindow(newVm);
             window.Owner = System.Windows.Application.Current.MainWindow;
+            var result = window.ShowDialog();
+
+            if (result == true)
+            {
+                await RefreshList();
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateBack()
+        {
+            _navigationService.NavigateTo<DashboardViewModel>();
+        }
+
+        public IRelayCommand BackCommand => NavigateBackCommand;
+
+        /// <summary>
+        /// Listeyi yenile
+        /// </summary>
+        [RelayCommand]
+        private async Task RefreshList()
+        {
+            await LoadServiceJobs();
+            await LoadDashboardAsync();
+            _serviceJobsView?.Refresh();
+        }
+
+        /// <summary>
+        /// İş detayını görüntüle (Sağ Çekmece Panelini Aç)
+        /// </summary>
+        [RelayCommand]
+        private void ViewJobDetail(ServiceJobRowDto? job)
+        {
+            if (job != null)
+            {
+                SelectedServiceJob = job;
+                _ = LoadSelectedJobHistory();
+            }
+            IsDetailPanelOpen = true;
+        }
+
+        [RelayCommand]
+        private async Task EditJob(ServiceJobRowDto? job)
+        {
+            var targetJob = job ?? SelectedServiceJob;
+            if (targetJob == null) return;
+
+            var editVm = new ServiceJobViewModel(
+                _navigationService,
+                _toastService,
+                _loadingService,
+                _serviceJobCommandService,
+                _serviceJobReadService,
+                _pdfService,
+                _dialogService);
+
+            await editVm.InitializeForEditAsync(targetJob);
+            var window = new NewServiceJobWindow(editVm)
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
             var result = window.ShowDialog();
 
             if (result == true) await RefreshList();
@@ -1406,76 +1472,52 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task ApproveDiscovery(ServiceJobRowDto? job)
         {
-            if (job == null) return;
+            var targetJob = job ?? SelectedServiceJob;
+            if (targetJob == null) return;
 
-            ClearForm();
-            
-            _isEditing = true;
-            Description = job.Description ?? string.Empty;
-            IsDiscoveryOnly = false;
-            
-            ScheduledDate = job.ScheduledDate;
-            SelectedPriority = job.Priority;
-            LaborCost = job.LaborCost;
-            DiscountAmount = job.DiscountAmount;
-            TechnicianNotes = job.TechnicianNotes;
-            EstimatedDuration = job.EstimatedDuration;
-            SlaDeadline = job.SlaDeadline;
-            SelectedTechnicianId = job.AssignedTechnicianId;
+            var editVm = new ServiceJobViewModel(
+                _navigationService,
+                _toastService,
+                _loadingService,
+                _serviceJobCommandService,
+                _serviceJobReadService,
+                _pdfService,
+                _dialogService);
 
-            SelectedCustomer = Customers.FirstOrDefault(c => c.Id == job.CustomerId);
-            if (SelectedCustomer != null && job.CustomerAssetId.HasValue)
-            {
-                await LoadCustomerAssets();
-                IsExistingAsset = true;
-                SelectedAsset = CustomerAssets.FirstOrDefault(a => a.Id == job.CustomerAssetId.Value);
-            }
+            await editVm.InitializeForEditAsync(targetJob);
+            editVm.IsDiscoveryOnly = false;
+            editVm.CurrentWizardStep = 3;
 
-            if (!string.IsNullOrEmpty(job.CategoriesJson))
-            {
-                var jobCats = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<int>>(job.CategoriesJson);
-                if (jobCats != null)
-                {
-                    foreach (var cat in CategoryItems)
-                        cat.IsSelected = jobCats.Contains((int)cat.Category);
-                }
-            }
-
-            _selectedServiceJob = job;
-            await LoadJobItems();
-
-            var photos = job.PhotoPathsList;
-            if (photos != null)
-            {
-                foreach (var p in photos) UploadedPhotos.Add(p);
-            }
-
-            CurrentWizardStep = 3;
-            
-            var window = new NewServiceJobWindow(this)
+            var window = new NewServiceJobWindow(editVm)
             {
                 Owner = System.Windows.Application.Current.MainWindow
             };
             var result = window.ShowDialog();
 
-            if (result == true) _ = LoadServiceJobs();
+            if (result == true) await RefreshList();
         }
 
         /// <summary>
-        /// Keşif kaydını teklife dönüştürür ve Teklif Ekranına (QuotationViewModel) yönlendirir.
+        /// Keşif kaydını teklife dönüştürür (yalnızca Keşif Talebi aşamasında aktiftir).
+        /// Keşif verileri DiscoveryReport'a, malzemeler QuotationItem'a kopyalanır.
         /// </summary>
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanConvertToQuote))]
         private async Task ConvertToQuote(object? param)
         {
             int? jobId = param switch
             {
-                ServiceJobListItemDto dto => dto.Id,
                 ServiceJobRowDto row => row.Id,
+                ServiceJobListItemDto dto => dto.Id,
                 ServiceJob job => job.Id,
-                _ => null
+                int id => id,
+                _ => SelectedServiceJob?.Id
             };
 
-            if (!jobId.HasValue) return;
+            if (!jobId.HasValue)
+            {
+                _toastService?.ShowWarning("Lütfen teklife dönüştürmek istediğiniz iş emrini seçin.");
+                return;
+            }
 
             try
             {
@@ -1490,15 +1532,16 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
-                _toastService?.ShowSuccess($"İş #{conversion.Value!.JobId} teklif aşamasına alındı. Teklif ekranına yönlendiriliyorsunuz.");
+                _toastService?.ShowSuccess($"İş #{conversion.Value!.JobId} teklif aşamasına alındı ve teklif kaydı oluşturuldu.");
+                await RefreshList();
 
-                // Teklif ekranına yönlendir ve müşteriyi otomatik seç
-                var quoteVm = _navigationService?.NavigateTo<QuotationViewModel>();
-                if (quoteVm != null && conversion.Value.CustomerId > 0)
+                // Kullanıcıya teklif düzenleme ekranını aç
+                if (await _dialogService.ShowConfirmationAsync(
+                        "Teklif kaydı oluşturuldu. Fiyat ve şartları düzenlemek için teklif ekranını açmak ister misiniz?",
+                        "Teklif Düzenle") &&
+                    await OpenQuotationEditorAsync(conversion.Value.JobId))
                 {
-                    await quoteVm.InitializeFromServiceJobAsync(
-                        conversion.Value.JobId,
-                        conversion.Value.CustomerId);
+                    await RefreshList();
                 }
             }
             catch (Exception ex)
@@ -1511,6 +1554,392 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        /// <summary>
+        /// Teklife dönüştürülmüş iş için montajı planlar (yalnızca kabul edilmiş tekliflerde).
+        /// Teklif kalemleri montaj malzemelerine kopyalanır.
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanSetInstallationPlanned))]
+        private async Task SetInstallationPlanned(object? param)
+        {
+            int? jobId = param switch
+            {
+                ServiceJobRowDto row => row.Id,
+                ServiceJobListItemDto dto => dto.Id,
+                ServiceJob job => job.Id,
+                int id => id,
+                _ => SelectedServiceJob?.Id
+            };
+
+            if (!jobId.HasValue)
+            {
+                _toastService?.ShowWarning("Lütfen işlem yapılacak iş emrini seçin.");
+                return;
+            }
+
+            string? dateInput = await _dialogService.ShowInputAsync(
+                "Montaj tarihi (ör. 2026-08-10) ve/veya boş bırakarak planlayın:",
+                "Montaj Planlama",
+                DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"));
+            if (dateInput is null) return; // iptal edildi
+
+            DateTime? installationDate = null;
+            if (DateTime.TryParse(dateInput.Trim(), out var parsed))
+            {
+                installationDate = parsed;
+            }
+
+            try
+            {
+                _loadingService?.Show("Montaj planlanıyor...");
+
+                var result = await _serviceJobCommandService.PlanInstallationAsync(
+                    new PlanInstallationRequest(
+                        jobId.Value,
+                        null,
+                        null,
+                        installationDate,
+                        null,
+                        App.CurrentUser?.Username ?? "Sistem"));
+
+                if (result.IsFailure || result.Value is null)
+                {
+                    _toastService?.ShowError(result.Error);
+                    return;
+                }
+
+                _toastService?.ShowSuccess($"İş #{jobId.Value} 'Montaj Yapılacak' durumuna alındı.");
+                await RefreshList();
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Hata: {ex.Message}");
+            }
+            finally
+            {
+                _loadingService?.Hide();
+            }
+        }
+
+        /// <summary>
+        /// Montajı tamamlar (yalnızca Montaj Yapılacak aşamasında aktiftir).
+        /// Teslim notu, teknisyen ve müşteri imzası montaj emrine saklanır.
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanSetInstallationCompleted))]
+        private async Task SetInstallationCompleted(object? param)
+        {
+            int? jobId = param switch
+            {
+                ServiceJobRowDto row => row.Id,
+                ServiceJobListItemDto dto => dto.Id,
+                ServiceJob job => job.Id,
+                int id => id,
+                _ => SelectedServiceJob?.Id
+            };
+
+            if (!jobId.HasValue)
+            {
+                _toastService?.ShowWarning("Lütfen işlem yapılacak iş emrini seçin.");
+                return;
+            }
+
+            string? deliveryNote = await _dialogService.ShowInputAsync(
+                "Teslim notu (boş bırakılabilir):",
+                "Montaj Tamamlama",
+                "Cihaz test edilerek teslim edildi.");
+            if (deliveryNote is null) return; // iptal edildi
+
+            try
+            {
+                _loadingService?.Show("Montaj tamamlanıyor...");
+
+                var result = await _serviceJobCommandService.CompleteInstallationAsync(
+                    new CompleteInstallationRequest(
+                        jobId.Value,
+                        deliveryNote.Trim(),
+                        null,
+                        null,
+                        App.CurrentUser?.Username ?? "Sistem"));
+
+                if (result.IsFailure || result.Value is null)
+                {
+                    _toastService?.ShowError(result.Error);
+                    return;
+                }
+
+                _toastService?.ShowSuccess($"İş #{jobId.Value} montajı tamamlandı.");
+                await RefreshList();
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Hata: {ex.Message}");
+            }
+            finally
+            {
+                _loadingService?.Hide();
+            }
+        }
+
+        /// <summary>
+        /// İş emrini iptal eder (yalnızca sonlanmamış durumlarda aktiftir)
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanCancelJob))]
+        private async Task CancelJob(object? param)
+        {
+            int? jobId = param switch
+            {
+                ServiceJobRowDto row => row.Id,
+                ServiceJobListItemDto dto => dto.Id,
+                ServiceJob job => job.Id,
+                int id => id,
+                _ => SelectedServiceJob?.Id
+            };
+
+            if (!jobId.HasValue)
+            {
+                _toastService?.ShowWarning("Lütfen iptal edilecek iş emrini seçin.");
+                return;
+            }
+
+            bool confirmed = await _dialogService.ShowConfirmationAsync(
+                $"İş #{jobId.Value} iptal edilecek. Emin misiniz?",
+                "İptal Onayı");
+            if (!confirmed) return;
+
+            try
+            {
+                _loadingService?.Show("İş emri iptal ediliyor...");
+
+                var result = await _serviceJobCommandService.ChangeStatusAsync(
+                    jobId.Value,
+                    JobStatus.Cancelled,
+                    App.CurrentUser?.Username ?? "Sistem");
+
+                if (result.IsFailure || result.Value is null)
+                {
+                    _toastService?.ShowError(result.Error);
+                    return;
+                }
+
+                _toastService?.ShowSuccess($"İş #{jobId.Value} iptal edildi; varsa stok rezervasyonları serbest bırakıldı.");
+                await RefreshList();
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Hata: {ex.Message}");
+            }
+            finally
+            {
+                _loadingService?.Hide();
+            }
+        }
+
+        // ── İş akışı komut aktiflik kuralları (yalnızca uygun aşamada) ──
+
+        private static JobStatus? GetJobStatusFromParam(object? param) => param switch
+        {
+            ServiceJobRowDto row => row.Status,
+            ServiceJobListItemDto dto => dto.Status,
+            ServiceJob job => job.Status,
+            _ => null
+        };
+
+        private bool CanConvertToQuote(object? param) =>
+            GetJobStatusFromParam(param) == JobStatus.DiscoveryRequest;
+
+        private bool CanSetInstallationPlanned(object? param) =>
+            GetJobStatusFromParam(param) == JobStatus.ConvertedToQuote;
+
+        private bool CanSetInstallationCompleted(object? param) =>
+            GetJobStatusFromParam(param) == JobStatus.InstallationPlanned;
+
+        private bool CanCancelJob(object? param) =>
+            GetJobStatusFromParam(param) is { } status and not (JobStatus.Completed or JobStatus.InstallationCompleted or JobStatus.Cancelled);
+
+        private bool CanEditQuote(object? param) =>
+            GetJobStatusFromParam(param) is JobStatus.ConvertedToQuote;
+
+        private bool CanAcceptQuote(object? param) =>
+            GetJobStatusFromParam(param) is JobStatus.ConvertedToQuote;
+
+        /// <summary>
+        /// Teklif düzenleme ekranını açar (malzeme, miktar, birim fiyat, iskonto, KDV,
+        /// işçilik, nakliye, açıklamalar, garanti, teslim süresi, ödeme şartları).
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanEditQuote))]
+        private async Task EditQuote(object? param)
+        {
+            int? jobId = param switch
+            {
+                ServiceJobRowDto row => row.Id,
+                ServiceJobListItemDto dto => dto.Id,
+                ServiceJob job => job.Id,
+                int id => id,
+                _ => SelectedServiceJob?.Id
+            };
+            if (!jobId.HasValue) return;
+
+            await OpenQuotationEditorAsync(jobId.Value);
+        }
+
+        /// <summary>
+        /// Teklifi müşteri kabul etti olarak işaretler (Montaj Yapılacak buna bağlıdır).
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanAcceptQuote))]
+        private async Task AcceptQuote(object? param)
+        {
+            int? jobId = param switch
+            {
+                ServiceJobRowDto row => row.Id,
+                ServiceJobListItemDto dto => dto.Id,
+                ServiceJob job => job.Id,
+                int id => id,
+                _ => SelectedServiceJob?.Id
+            };
+            if (!jobId.HasValue)
+            {
+                _toastService?.ShowWarning("Lütfen işlem yapılacak iş emrini seçin.");
+                return;
+            }
+
+            var workflow = await _serviceJobReadService.GetWorkOrderWorkflowAsync(jobId.Value);
+            if (workflow.IsFailure || workflow.Value?.Quotation is null)
+            {
+                _toastService?.ShowError(workflow.Error ?? "Teklif bulunamadı.");
+                return;
+            }
+
+            var quote = workflow.Value.Quotation;
+            if (quote.Status == QuotationStatus.Accepted)
+            {
+                _toastService?.ShowInfo("Teklif zaten kabul edilmiş durumda.");
+                return;
+            }
+
+            bool confirmed = await _dialogService.ShowConfirmationAsync(
+                $"Teklif {quote.QuotationNumber} ({quote.TotalAmount:N2} ₺) müşteri tarafından kabul edildi olarak işaretlenecek. Devam edilsin mi?",
+                "Teklif Kabulü");
+            if (!confirmed) return;
+
+            try
+            {
+                _loadingService?.Show("Teklif kabul ediliyor...");
+                var result = await _serviceJobCommandService.AcceptQuotationAsync(
+                    quote.Id,
+                    App.CurrentUser?.Username ?? "Sistem");
+                if (result.IsFailure)
+                {
+                    _toastService?.ShowError(result.Error);
+                    return;
+                }
+
+                _toastService?.ShowSuccess("Teklif kabul edildi. Artık 'Montaj Yapılacak' aşamasına geçilebilir.");
+                await RefreshList();
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Hata: {ex.Message}");
+            }
+            finally
+            {
+                _loadingService?.Hide();
+            }
+        }
+
+        /// <summary>
+        /// Teklifi müşteri reddetti olarak işaretler (gerekçe istenir).
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanAcceptQuote))]
+        private async Task RejectQuote(object? param)
+        {
+            int? jobId = param switch
+            {
+                ServiceJobRowDto row => row.Id,
+                ServiceJobListItemDto dto => dto.Id,
+                ServiceJob job => job.Id,
+                int id => id,
+                _ => SelectedServiceJob?.Id
+            };
+            if (!jobId.HasValue)
+            {
+                _toastService?.ShowWarning("Lütfen işlem yapılacak iş emrini seçin.");
+                return;
+            }
+
+            var workflow = await _serviceJobReadService.GetWorkOrderWorkflowAsync(jobId.Value);
+            if (workflow.IsFailure || workflow.Value?.Quotation is null)
+            {
+                _toastService?.ShowError(workflow.Error ?? "Teklif bulunamadı.");
+                return;
+            }
+
+            var quote = workflow.Value.Quotation;
+            string? reason = await _dialogService.ShowInputAsync(
+                "Red gerekçesi:",
+                "Teklif Reddi",
+                "Fiyat uygun bulunmadı.");
+            if (reason is null) return;
+
+            try
+            {
+                _loadingService?.Show("Teklif reddediliyor...");
+                var result = await _serviceJobCommandService.RejectQuotationAsync(
+                    quote.Id,
+                    reason.Trim(),
+                    App.CurrentUser?.Username ?? "Sistem");
+                if (result.IsFailure)
+                {
+                    _toastService?.ShowError(result.Error);
+                    return;
+                }
+
+                _toastService?.ShowSuccess("Teklif reddedildi.");
+                await RefreshList();
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Hata: {ex.Message}");
+            }
+            finally
+            {
+                _loadingService?.Hide();
+            }
+        }
+
+        /// <summary>
+        /// Teklif düzenleme penceresini açar ve sonucuna göre listeyi yeniler.
+        /// </summary>
+        private async Task<bool> OpenQuotationEditorAsync(int jobId)
+        {
+            try
+            {
+                var vm = new WorkOrderQuotationViewModel(
+                    jobId,
+                    _serviceJobReadService,
+                    _serviceJobCommandService,
+                    _pdfService,
+                    _dialogService,
+                    _toastService);
+
+                if (!await vm.InitializeAsync())
+                {
+                    _toastService?.ShowError("Teklif verileri yüklenemedi.");
+                    return false;
+                }
+
+                var window = new WorkOrderQuotationWindow(vm)
+                {
+                    Owner = System.Windows.Application.Current.MainWindow
+                };
+                var result = window.ShowDialog();
+                if (result == true) await RefreshList();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError($"Teklif ekranı açılamadı: {ex.Message}");
+                return false;
+            }
+        }
 
         [RelayCommand]
         private async Task BrowsePhotos()
@@ -1670,6 +2099,7 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private async Task LoadServiceJobs()
         {
+            bool isSlaBreached = SelectedStatusFilter == StatusFilter.SlaBreached;
             JobStatus? status = SelectedStatusFilter switch
             {
                 StatusFilter.Pending => JobStatus.Pending,
@@ -1679,7 +2109,7 @@ namespace KamatekCrm.ViewModels
                 _ => null
             };
             var result = await _serviceJobReadService.SearchAsync(new ServiceJobSearchRequest(
-                SearchText, status, FilterStartDate, FilterEndDate, 50));
+                SearchText, status, FilterStartDate, FilterEndDate, 50, isSlaBreached));
             if (result.IsFailure)
             {
                 _toastService.ShowError(result.Error);
@@ -1990,7 +2420,9 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Servis formunu PDF olarak yazdır
+        /// İş emri belgesini PDF olarak yazdır. Üretilen belge iş emrinin aşamasına göre belirlenir:
+        /// Keşif → Keşif Raporu, Teklif → Fiyat Teklifi, Montaj → Montaj İş Emri,
+        /// Montaj Tamamlandı → Montaj Tamamlama Formu. Varsayılan olarak Keşif PDF'i üretilmez.
         /// </summary>
         [RelayCommand]
         private async Task PrintServiceForm(object? param)
@@ -2014,28 +2446,126 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
-                var filePath = await _dialogService.ShowSaveFileDialogAsync(
-                    "Servis Formunu Kaydet",
-                    "PDF Dosyası (*.pdf)|*.pdf",
-                    $"ServisFormu_{document.Value.Id:D6}.pdf");
-                if (!string.IsNullOrWhiteSpace(filePath))
+                var workflow = await _serviceJobReadService.GetWorkOrderWorkflowAsync(jobId.Value);
+                if (workflow.IsFailure || workflow.Value is null)
                 {
-                    _pdfService.GenerateServiceJobPdf(document.Value, filePath);
-
-                    var processInfo = new ProcessStartInfo
-                    {
-                        FileName = filePath,
-                        UseShellExecute = true
-                    };
-                    Process.Start(processInfo);
-
-                    _toastService.ShowSuccess("Servis formu başarıyla oluşturuldu.");
+                    _toastService.ShowError(workflow.Error);
+                    return;
                 }
+
+                var jobInfo = document.Value;
+                var data = workflow.Value;
+
+                string suggestedName;
+                string documentLabel;
+
+                switch (data.JobStatus)
+                {
+                    case JobStatus.ConvertedToQuote when data.Quotation is not null:
+                        suggestedName = $"FiyatTeklifi_{jobInfo.Id:D6}.pdf";
+                        documentLabel = "Fiyat Teklifi";
+                        if (!await ChooseAndGenerateAsync("Fiyat Teklifini Kaydet", suggestedName, filePath =>
+                                _pdfService.GenerateWorkOrderQuotationPdf(data.Quotation!, jobInfo, filePath)))
+                            return;
+                        break;
+
+                    case JobStatus.InstallationPlanned when data.Installation is not null:
+                        suggestedName = $"MontajIsEmri_{jobInfo.Id:D6}.pdf";
+                        documentLabel = "Montaj İş Emri";
+                        if (!await ChooseAndGenerateAsync("Montaj İş Emrini Kaydet", suggestedName, filePath =>
+                                _pdfService.GenerateInstallationOrderPdf(data.Installation!, jobInfo, filePath)))
+                            return;
+                        break;
+
+                    case JobStatus.InstallationCompleted when data.Installation is not null:
+                        suggestedName = $"MontajTamamlama_{jobInfo.Id:D6}.pdf";
+                        documentLabel = "Montaj Tamamlama Formu";
+                        if (!await ChooseAndGenerateAsync("Montaj Tamamlama Formunu Kaydet", suggestedName, filePath =>
+                                _pdfService.GenerateInstallationCompletionFormPdf(data.Installation!, jobInfo, filePath)))
+                            return;
+                        break;
+
+                    case JobStatus.DiscoveryRequest:
+                    case JobStatus.PendingDiscovery:
+                    case JobStatus.DiscoveryCompleted:
+                        suggestedName = $"KesifRaporu_{jobInfo.Id:D6}.pdf";
+                        documentLabel = "Keşif Raporu";
+                        if (data.Discovery is not null)
+                        {
+                            if (!await ChooseAndGenerateAsync("Keşif Raporunu Kaydet", suggestedName, filePath =>
+                                    _pdfService.GenerateDiscoveryReportPdf(data.Discovery, jobInfo, filePath)))
+                                return;
+                        }
+                        else
+                        {
+                            // Henüz dönüştürülmemiş keşif kayıtlarında iş kaydı üzerinden rapor üretilir
+                            if (!await ChooseAndGenerateAsync("Keşif Raporunu Kaydet", suggestedName, filePath =>
+                                    _pdfService.GenerateServiceJobPdf(jobInfo, filePath)))
+                                return;
+                        }
+                        break;
+
+                    default:
+                        // Eski/legacy durumlar için servis formu şablonu kullanılır (keşif PDF'i değil)
+                        suggestedName = $"ServisFormu_{jobInfo.Id:D6}.pdf";
+                        documentLabel = "Servis Formu";
+                        if (!await ChooseAndGenerateAsync("Servis Formunu Kaydet", suggestedName, filePath =>
+                                GenerateLegacyServiceFormPdfAsync(jobInfo, filePath)))
+                            return;
+                        break;
+                }
+
+                _toastService.ShowSuccess($"{documentLabel} başarıyla oluşturuldu.");
             }
             catch (Exception ex)
             {
                 _toastService.ShowError($"PDF oluşturulurken hata: {ex.Message}");
             }
+        }
+
+        private async Task<bool> ChooseAndGenerateAsync(string title, string suggestedName, Action<string> generate)
+        {
+            var filePath = await _dialogService.ShowSaveFileDialogAsync(
+                title,
+                "PDF Dosyası (*.pdf)|*.pdf",
+                suggestedName);
+            if (string.IsNullOrWhiteSpace(filePath)) return false;
+
+            generate(filePath);
+
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = filePath,
+                UseShellExecute = true
+            };
+            Process.Start(processInfo);
+            return true;
+        }
+
+        private Task GenerateLegacyServiceFormPdfAsync(ServiceJobDocumentDto jobInfo, string filePath)
+        {
+            var job = new ServiceJob
+            {
+                Id = jobInfo.Id,
+                WorkOrderType = jobInfo.WorkOrderType,
+                Description = jobInfo.Description,
+                DiscoveryTechnicalNotes = jobInfo.DiscoveryTechnicalNotes,
+                TechnicianNotes = jobInfo.TechnicianNotes,
+                AssignedTechnician = jobInfo.AssignedTechnician,
+                Priority = jobInfo.Priority,
+                ScheduledDate = jobInfo.ScheduledDate,
+                CustomerId = jobInfo.CustomerId,
+                Customer = new Customer
+                {
+                    Id = jobInfo.CustomerId,
+                    FullName = jobInfo.CustomerName,
+                    CompanyName = jobInfo.CustomerCompanyName,
+                    PhoneNumber = jobInfo.CustomerPhone,
+                    City = jobInfo.CustomerAddress
+                }
+            };
+            _pdfService.GenerateServiceForm(job, filePath);
+            return Task.CompletedTask;
         }
 
         #endregion
@@ -2122,7 +2652,12 @@ namespace KamatekCrm.ViewModels
             };
         }
 
-        private bool CanChangeJobStatus(object? param) => SelectedServiceJob != null;
+        private bool CanChangeJobStatus(object? param)
+        {
+            if (param is ChangeServiceJobStatusCommandParameter typed)
+                return typed.Job != null || SelectedServiceJob != null;
+            return SelectedServiceJob != null;
+        }
 
         /// <summary>
         /// İş durumunu değiştir (Dashboard / Context Menu)
@@ -2131,40 +2666,42 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(CanChangeJobStatus))]
         private async Task ChangeJobStatus(object? param)
         {
-            // ── Guard Clause 1: Parametre ve Seçili İş Kontrolü (Fail-Fast) ──
-            var targetJob = SelectedServiceJob;
+            ServiceJobRowDto? targetJob = SelectedServiceJob;
+            JobStatus? newStatus = null;
+
+            if (param is ChangeServiceJobStatusCommandParameter typedParam)
+            {
+                if (typedParam.Job != null) targetJob = typedParam.Job;
+                newStatus = typedParam.Status;
+            }
+            else if (param is JobStatus js)
+            {
+                newStatus = js;
+            }
+            else if (param != null && Enum.TryParse<JobStatus>(param.ToString(), out var parsed))
+            {
+                newStatus = parsed;
+            }
+
             if (targetJob is null)
             {
                 _toastService?.ShowWarning("Lütfen durumunu değiştirmek istediğiniz iş emrini seçin.");
                 return;
             }
 
-            if (param is null) return;
-
-            // ── Guard Clause 2: Yeni Durum Parse Kontrolü ──
-            JobStatus newStatus;
-            if (param is JobStatus js)
-            {
-                newStatus = js;
-            }
-            else if (Enum.TryParse<JobStatus>(param.ToString(), out var parsed))
-            {
-                newStatus = parsed;
-            }
-            else
+            if (!newStatus.HasValue)
             {
                 _toastService?.ShowError("Geçersiz iş durumu.");
                 return;
             }
 
-            // ── Local Capture (Async işlem sırasında NullReference olmasını engeller) ──
             int targetJobId = targetJob.Id;
 
             try
             {
                 var result = await _serviceJobCommandService.ChangeStatusAsync(
                     targetJobId,
-                    newStatus,
+                    newStatus.Value,
                     App.CurrentUser?.Username ?? "Sistem");
 
                 if (result.IsFailure || result.Value is null)

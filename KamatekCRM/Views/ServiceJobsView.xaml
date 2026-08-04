@@ -141,7 +141,7 @@
                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                     <Border.InputBindings>
-                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectStatusFilterCommand}" CommandParameter="Cancelled"/>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectStatusFilterCommand}" CommandParameter="SlaBreached"/>
                     </Border.InputBindings>
                     <DockPanel VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Warning24" FontSize="18" Foreground="{DynamicResource ThemeError}" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -224,53 +224,54 @@
                           VirtualizingPanel.IsVirtualizing="True"
                           VirtualizingPanel.VirtualizationMode="Recycling">
 
-                    <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="FontSize" Value="11"/>
-                            <Setter Property="Padding" Value="8,6"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
-                        </Style>
-                    </DataGrid.ColumnHeaderStyle>
-
-                    <DataGrid.CellStyle>
-                        <Style TargetType="DataGridCell">
-                            <Setter Property="Padding" Value="8,0"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
-                            <Setter Property="FontSize" Value="12"/>
-                            <Setter Property="Template">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <EventSetter Event="PreviewMouseRightButtonDown" Handler="DataGridRow_PreviewMouseRightButtonDown"/>
+                            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <Setter Property="ContextMenu">
                                 <Setter.Value>
-                                    <ControlTemplate TargetType="DataGridCell">
-                                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
-                                            <ContentPresenter VerticalAlignment="Center"/>
-                                        </Border>
-                                    </ControlTemplate>
+                                    <ContextMenu DataContext="{Binding PlacementTarget, RelativeSource={RelativeSource Self}}">
+                                        <MenuItem Header="📋 Detay Göster"
+                                                  Command="{Binding Tag.ViewJobDetailCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                        <MenuItem Header="✏️ İşi Düzenle"
+                                                  Command="{Binding Tag.EditJobCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                        <Separator/>
+                                        <MenuItem Header="📄 Teklife Dönüştür"
+                                                  Command="{Binding Tag.ConvertToQuoteCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                        <MenuItem Header="✏️ Teklifi Düzenle"
+                                                  Command="{Binding Tag.EditQuoteCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                        <MenuItem Header="✅ Teklifi Kabul Et"
+                                                  Command="{Binding Tag.AcceptQuoteCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                        <MenuItem Header="❌ Teklifi Reddet"
+                                                  Command="{Binding Tag.RejectQuoteCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                        <MenuItem Header="🛠️ Montaj Yapılacak"
+                                                  Command="{Binding Tag.SetInstallationPlannedCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                        <MenuItem Header="✅ Montaj Tamamlandı"
+                                                  Command="{Binding Tag.SetInstallationCompletedCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                        <MenuItem Header="❌ İptal Et"
+                                                  Command="{Binding Tag.CancelJobCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                        <Separator/>
+                                        <MenuItem Header="🖨️ PDF Yazdır"
+                                                  Command="{Binding Tag.PrintServiceFormCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                        <Separator/>
+                                        <MenuItem Header="🗑️ Sil"
+                                                  Command="{Binding Tag.DeleteJobCommand}"
+                                                  CommandParameter="{Binding DataContext}"/>
+                                    </ContextMenu>
                                 </Setter.Value>
                             </Setter>
                         </Style>
-                    </DataGrid.CellStyle>
-
-                    <DataGrid.ContextMenu>
-                        <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-                            <MenuItem Header="📋 Detay Göster" Command="{Binding ViewJobDetailCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
-                            <MenuItem Header="✏️ İşi Düzenle" Command="{Binding EditJobCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
-                            <Separator/>
-                            <MenuItem Header="Teklife Dönüştür" Command="{Binding ConvertToQuoteCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
-                            <Separator/>
-                            <MenuItem Header="Bekliyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Pending"/>
-                            <MenuItem Header="Devam Ediyor Yap" Command="{Binding ChangeJobStatusCommand}" CommandParameter="InProgress"/>
-                            <MenuItem Header="Tamamla" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Completed"/>
-                            <MenuItem Header="İptal Et" Command="{Binding ChangeJobStatusCommand}" CommandParameter="Cancelled"/>
-                            <Separator/>
-                            <MenuItem Header="PDF Yazdır" Command="{Binding PrintServiceFormCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
-                            <Separator/>
-                            <MenuItem Header="🗑️ Sil" Command="{Binding DeleteJobCommand}" CommandParameter="{Binding SelectedServiceJob}"/>
-                        </ContextMenu>
-                    </DataGrid.ContextMenu>
+                    </DataGrid.RowStyle>
 
                     <DataGrid.Columns>
                         <!-- No -->

@@ -49,6 +49,9 @@ namespace KamatekCrm.Extensions
             services.AddTransient<KamatekCrm.Shared.Services.IPurchaseOrderPdfService>(sp => sp.GetRequiredService<PdfService>());
             services.AddTransient<KamatekCrm.Shared.Services.IInvoicePdfService>(sp => sp.GetRequiredService<PdfService>());
             services.AddTransient<KamatekCrm.Shared.Services.IServiceReportPdfService>(sp => sp.GetRequiredService<PdfService>());
+            services.AddTransient<KamatekCrm.Shared.Services.IDiscoveryPdfService>(sp => sp.GetRequiredService<PdfService>());
+            services.AddTransient<KamatekCrm.Shared.Services.IQuotationPdfService>(sp => sp.GetRequiredService<PdfService>());
+            services.AddTransient<KamatekCrm.Shared.Services.IInstallationPdfService>(sp => sp.GetRequiredService<PdfService>());
 
             services.AddTransient<ReportService>();
             services.AddTransient<SmsService>();

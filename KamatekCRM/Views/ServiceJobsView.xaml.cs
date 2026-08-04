@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace KamatekCrm.Views
 {
@@ -10,6 +11,15 @@ namespace KamatekCrm.Views
         public ServiceJobsView()
         {
             InitializeComponent();
+        }
+
+        private void DataGridRow_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is DataGridRow row)
+            {
+                row.IsSelected = true;
+                row.Focus();
+            }
         }
     }
 }

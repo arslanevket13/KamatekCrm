@@ -13,4 +13,10 @@ public interface IServiceJobReadService
     Task<Result<IReadOnlyList<ServiceJobHistoryDto>>> GetHistoryAsync(int jobId, CancellationToken cancellationToken = default);
     Task<Result<ServiceJobDashboardDto>> GetDashboardAsync(CancellationToken cancellationToken = default);
     Task<Result<ServiceJobDocumentDto>> GetDocumentAsync(int jobId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Bir iş emrinin tüm iş akışı verisini (keşif raporu + teklif + montaj emri) döndürür.
+    /// PDF üretimi ve teklif düzenleme ekranı bu veriyle çalışır.
+    /// </summary>
+    Task<Result<WorkOrderWorkflowDto>> GetWorkOrderWorkflowAsync(int jobId, CancellationToken cancellationToken = default);
 }

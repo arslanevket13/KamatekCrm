@@ -180,12 +180,16 @@ namespace KamatekCrm.Shared.Models
         [NotMapped]
         public string StatusDisplay => Status switch
         {
+            JobStatus.DiscoveryRequest => "🔍 Keşif Talebi",
+            JobStatus.ConvertedToQuote => "📄 Teklife Dönüştürüldü",
+            JobStatus.InstallationPlanned => "🛠️ Montaj Yapılacak",
+            JobStatus.InstallationCompleted => "✅ Montaj Tamamlandı",
             JobStatus.Pending => "⏳ Bekliyor",
             JobStatus.InProgress => "🔵 Devam Ediyor",
             JobStatus.WaitingForParts => "📦 Parça Bekleniyor",
             JobStatus.WaitingForApproval => "✋ Onay Bekleniyor",
             JobStatus.Completed => "✅ Tamamlandı",
-            JobStatus.Cancelled => "❌ İptal",
+            JobStatus.Cancelled => "❌ İptal Edildi",
             _ => Status.ToString()
         };
 
