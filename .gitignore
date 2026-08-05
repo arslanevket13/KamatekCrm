@@ -41,4 +41,5 @@ graphify-out/
 # Agent Internal
 .gemini/
 TencentDB-Agent-Memory/
+.freebuff/
 

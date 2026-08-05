@@ -218,10 +218,10 @@
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
                                             <TextBlock>
-                                                <Run Text="{Binding Brand}" FontWeight="SemiBold"/>
-                                                <Run Text="{Binding Model}"/>
+                                                <Run Text="{Binding Brand, Mode=OneWay}" FontWeight="SemiBold"/>
+                                                <Run Text="{Binding Model, Mode=OneWay}"/>
                                                 <Run Text=" - SN:" Foreground="{DynamicResource ThemeForegroundMuted}"/>
-                                                <Run Text="{Binding SerialNumber}" Foreground="{DynamicResource ThemeForegroundMuted}"/>
+                                                <Run Text="{Binding SerialNumber, Mode=OneWay}" Foreground="{DynamicResource ThemeForegroundMuted}"/>
                                             </TextBlock>
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>

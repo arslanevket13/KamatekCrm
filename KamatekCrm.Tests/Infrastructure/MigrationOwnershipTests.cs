@@ -29,7 +29,11 @@ public class MigrationOwnershipTests
             "20260802010000_ReturnAndFinancialIntegrity",
             "20260802030000_StockCountIntegrity",
             "20260803160000_AddCustomerInteractions",
-            "20260804201621_AddWorkOrderWorkflowEntities");
+            "20260804201621_AddWorkOrderWorkflowEntities",
+            "20260804234548_AddQuotationRevisionsAndSequence",
+            "20260805064036_AddDiscoveryVisits",
+            "20260805101539_AddInstallationLaborHours",
+            "20260805114905_AddJobDelivery");
 
         context.Database.HasPendingModelChanges().Should().BeFalse(
             "çalışma modeli ile Infrastructure model snapshot'ı aynı olmalıdır");

@@ -81,7 +81,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="👤 " FontSize="14"/>
                                     <TextBlock FontSize="14">
-                                        <Run Text="{Binding Ad}"/> <Run Text="{Binding Soyad}"/>
+                                        <Run Text="{Binding Ad, Mode=OneWay}"/> <Run Text="{Binding Soyad, Mode=OneWay}"/>
                                     </TextBlock>
                                 </StackPanel>
                             </DataTemplate>

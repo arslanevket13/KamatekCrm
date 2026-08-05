@@ -18,11 +18,17 @@
         <KeyBinding Key="Esc" Command="{Binding CancelCommand}"/>
         <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveCommand}"/>
         <KeyBinding Key="P" Modifiers="Ctrl" Command="{Binding PrintPdfCommand}"/>
+        <KeyBinding Key="P" Modifiers="Ctrl+Shift" Command="{Binding PreviewPdfCommand}"/>
     </Window.InputBindings>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
 
     <Grid Margin="22">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- Kilit rozeti -->
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -37,24 +43,43 @@
                 <TextBlock Text="FİYAT TEKLİFİ" FontSize="20" FontWeight="Bold"
                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                 <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
-                    <Run Text="Teklif No: "/><Run Text="{Binding QuotationNumber}" FontWeight="SemiBold"/>
-                    <Run Text="   |   Durum: "/><Run Text="{Binding StatusDisplay}" FontWeight="SemiBold"/>
+                    <Run Text="Teklif No: "/><Run Text="{Binding QuotationNumber, Mode=OneWay}" FontWeight="SemiBold"/>
+                    <Run Text="   |   "/><Run Text="{Binding RevisionDisplay, Mode=OneWay}" FontWeight="SemiBold"/>
+                    <Run Text="   |   Durum: "/><Run Text="{Binding StatusDisplay, Mode=OneWay}" FontWeight="SemiBold"/>
                 </TextBlock>
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <ui:Button Content="👁️ Önizle" Command="{Binding PreviewPdfCommand}" Appearance="Secondary"
+                           Height="38" Padding="16,0" Margin="0,0,8,0" Cursor="Hand" ToolTip="Kaydetmeden geçerli durumu PDF olarak önizle (Ctrl+Shift+P)"/>
                 <ui:Button Content="🖨️ PDF" Command="{Binding PrintPdfCommand}" Appearance="Secondary"
-                           Height="34" Padding="16,0" Margin="0,0,8,0" Cursor="Hand" ToolTip="Fiyat Teklifi PDF'i oluştur (Ctrl+P)"/>
+                           Height="38" Padding="16,0" Margin="0,0,8,0" Cursor="Hand" ToolTip="Fiyat Teklifi PDF'i oluştur (Ctrl+P)"/>
+                <ui:Button Content="🔄 Revizyon" Command="{Binding CreateRevisionCommand}" Appearance="Secondary"
+                           Height="38" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"
+                           IsEnabled="{Binding CanCreateRevision}"
+                           ToolTip="Kabul edilmiş/reddedilmiş teklifi değiştirmek için yeni revizyon oluştur"/>
                 <ui:Button Content="❌ Reddet" Command="{Binding RejectCommand}" Appearance="Danger"
-                           Height="34" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"
+                           Height="38" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"
                            IsEnabled="{Binding IsEditable}"/>
                 <ui:Button Content="✅ Kabul Et" Command="{Binding AcceptCommand}" Appearance="Success"
-                           Height="34" Padding="16,0" Cursor="Hand"
+                           Height="38" Padding="16,0" Cursor="Hand"
                            IsEnabled="{Binding IsEditable}"/>
             </StackPanel>
         </Grid>
 
+        <!-- ── Kilit rozeti (salt okunur mod) ── -->
+        <Border Grid.Row="1" CornerRadius="8" Padding="12,9" Margin="0,0,0,10"
+                Background="#14C61F25" BorderBrush="#33C61F25" BorderThickness="1"
+                Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+                <TextBlock Text="{Binding ViewModeBannerText}" FontSize="12.5" FontWeight="SemiBold"
+                           Foreground="#C61F25" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding ViewingRevisionDisplay}" FontSize="11.5"
+                           Foreground="#8A1E22" TextWrapping="Wrap" Margin="0,2,0,0"/>
+            </StackPanel>
+        </Border>
+
         <!-- ── İçerik ── -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="18"/>
@@ -69,23 +94,58 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="TEKLİF KALEMLERİ" FontSize="13" FontWeight="Bold"
-                               Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,10"/>
+                    <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <ui:Button Content="➕ Stoktan Ekle" Command="{Binding AddStockItemCommand}" Appearance="Primary"
+                                       Height="38" Padding="12,0" Margin="0,0,6,0" Cursor="Hand" FontSize="12"
+                                       IsEnabled="{Binding IsEditable}"
+                                       ToolTip="Stoktan ürün ara ve teklife ekle"/>
+                            <ui:Button Content="📦 Özel Malzeme" Command="{Binding AddCustomItemCommand}" Appearance="Secondary"
+                                       Height="38" Padding="12,0" Margin="0,0,6,0" Cursor="Hand" FontSize="12"
+                                       IsEnabled="{Binding IsEditable}"/>
+                            <ui:Button Content="🧰 Hizmet / İşçilik" Command="{Binding AddServiceItemCommand}" Appearance="Secondary"
+                                       Height="38" Padding="12,0" Cursor="Hand" FontSize="12"
+                                       IsEnabled="{Binding IsEditable}"/>
+                        </StackPanel>
+                        <TextBlock Text="TEKLİF KALEMLERİ" FontSize="13" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
+                    </DockPanel>
                     <DataGrid Grid.Row="1" ItemsSource="{Binding Items}" AutoGenerateColumns="False"
-                              CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="{Binding IsViewMode}"
                               HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                               HorizontalGridLinesBrush="{DynamicResource BorderSubtleBrush}"
-                              Background="Transparent" BorderThickness="0" RowHeaderWidth="0"
+                              Background="Transparent" BorderThickness="0" RowHeaderWidth="0" MinRowHeight="38"
                               AlternatingRowBackground="#0A000000" SelectionMode="Single">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Malzeme / Hizmet" Binding="{Binding ProductName}" Width="*"
-                                                IsReadOnly="True"/>
-                            <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
-                            <DataGridTextColumn Header="Birim Fiyat (₺)" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="95"/>
-                            <DataGridTextColumn Header="İskonto %" Binding="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
-                            <DataGridTextColumn Header="KDV %" Binding="{Binding TaxPercent, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
-                            <DataGridTextColumn Header="Ara Toplam" Binding="{Binding LineTotal, StringFormat={}{0:N2}}" Width="95"
-                                                IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Malzeme / Hizmet" Binding="{Binding ProductName}" Width="*"/>
+                            <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="55"/>
+                            <DataGridTextColumn Header="Birim Fiyat (₺)" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
+                            <DataGridTextColumn Header="İsk. %" Binding="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged}" Width="55"/>
+                            <DataGridTextColumn Header="KDV %" Binding="{Binding TaxPercent, UpdateSourceTrigger=PropertyChanged}" Width="55"/>
+                            <DataGridTextColumn Header="Net (₺)" Binding="{Binding LineNet, StringFormat={}{0:N2}}" Width="75" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="KDV (₺)" Binding="{Binding LineTax, StringFormat={}{0:N2}}" Width="70" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Toplam (₺)" Binding="{Binding LineTotalWithTax, StringFormat={}{0:N2}}" Width="80" IsReadOnly="True"/>
+                            <DataGridTemplateColumn Header="İşlemler" Width="122">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <ui:Button Content="⧉" Command="{Binding DataContext.DuplicateItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                       CommandParameter="{Binding}" Height="26" Width="26" Padding="0" Margin="0,0,3,0" FontSize="11" ToolTip="Satırı Çoğalt" Cursor="Hand"
+                                                       IsEnabled="{Binding DataContext.IsEditable, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                            <ui:Button Content="▲" Command="{Binding DataContext.MoveItemUpCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                       CommandParameter="{Binding}" Height="26" Width="26" Padding="0" Margin="0,0,3,0" FontSize="10" ToolTip="Yukarı Taşı" Cursor="Hand"
+                                                       IsEnabled="{Binding DataContext.IsEditable, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                            <ui:Button Content="▼" Command="{Binding DataContext.MoveItemDownCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                       CommandParameter="{Binding}" Height="26" Width="26" Padding="0" Margin="0,0,3,0" FontSize="10" ToolTip="Aşağı Taşı" Cursor="Hand"
+                                                       IsEnabled="{Binding DataContext.IsEditable, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                            <ui:Button Content="🗑" Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                       CommandParameter="{Binding}" Height="26" Width="26" Padding="0" FontSize="11" ToolTip="Satırı Sil"
+                                                       Foreground="{DynamicResource ThemeError}" Cursor="Hand"
+                                                       IsEnabled="{Binding DataContext.IsEditable, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
@@ -114,26 +174,28 @@
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="İşçilik (₺)" VerticalAlignment="Center" FontSize="12"/>
-                                <ui:NumberBox Grid.Row="0" Grid.Column="1" Value="{Binding LaborCost}" Minimum="0"
-                                              HorizontalAlignment="Stretch" Height="30" Margin="6,0,0,6"/>
+                                <ui:NumberBox Grid.Row="0" Grid.Column="1" Value="{Binding LaborCost}" Minimum="0" IsEnabled="{Binding IsEditable}"
+                                              HorizontalAlignment="Stretch" Height="38" Margin="6,0,0,6"/>
 
                                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Nakliye (₺)" VerticalAlignment="Center" FontSize="12"/>
-                                <ui:NumberBox Grid.Row="1" Grid.Column="1" Value="{Binding ShippingCost}" Minimum="0"
-                                              HorizontalAlignment="Stretch" Height="30" Margin="6,0,0,6"/>
+                                <ui:NumberBox Grid.Row="1" Grid.Column="1" Value="{Binding ShippingCost}" Minimum="0" IsEnabled="{Binding IsEditable}"
+                                              HorizontalAlignment="Stretch" Height="38" Margin="6,0,0,6"/>
 
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="İskonto (₺)" VerticalAlignment="Center" FontSize="12"/>
-                                <ui:NumberBox Grid.Row="2" Grid.Column="1" Value="{Binding DiscountAmount}" Minimum="0"
-                                              HorizontalAlignment="Stretch" Height="30" Margin="6,0,0,6"/>
+                                <ui:NumberBox Grid.Row="2" Grid.Column="1" Value="{Binding DiscountAmount}" Minimum="0" IsEnabled="{Binding IsEditable}"
+                                              HorizontalAlignment="Stretch" Height="38" Margin="6,0,0,6"/>
 
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="KDV Oranı (%)" VerticalAlignment="Center" FontSize="12"/>
-                                <ui:NumberBox Grid.Row="3" Grid.Column="1" Value="{Binding TaxRate}" Minimum="0" Maximum="100"
-                                              HorizontalAlignment="Stretch" Height="30" Margin="6,0,0,6"/>
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Varsayılan KDV %" VerticalAlignment="Center" FontSize="12"
+                                           ToolTip="Yeni eklenen satırlar için geçerli KDV oranı. Teklif toplamı satır bazlı oranlardan hesaplanır."/>
+                                <ui:NumberBox Grid.Row="3" Grid.Column="1" Value="{Binding TaxRate}" Minimum="0" Maximum="100" IsEnabled="{Binding IsEditable}"
+                                              HorizontalAlignment="Stretch" Height="38" Margin="6,0,0,6"
+                                              ToolTip="Yeni eklenen satırlar için geçerli KDV oranı. Teklif toplamı satır bazlı oranlardan hesaplanır."/>
 
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Malzeme Ara Toplamı" VerticalAlignment="Center" FontSize="12"/>
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Malzeme/Hizmet Net" VerticalAlignment="Center" FontSize="12"/>
                                 <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Subtotal, StringFormat={}{0:N2}}" 
                                            FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Right" Margin="0,0,4,6"/>
 
-                                <TextBlock Grid.Row="5" Grid.Column="0" Text="KDV Tutarı" VerticalAlignment="Center" FontSize="12"/>
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="KDV Tutarı (satır bazlı)" VerticalAlignment="Center" FontSize="12"/>
                                 <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding TaxAmount, StringFormat={}{0:N2}}"
                                            FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Right" Margin="0,0,4,0"/>
                             </Grid>
@@ -159,14 +221,66 @@
                             <TextBlock Text="TİCARİ ŞARTLAR" FontSize="13" FontWeight="Bold"
                                        Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,10"/>
                             <TextBlock Text="Açıklama" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <ui:TextBox Text="{Binding Description}" AcceptsReturn="True" MinHeight="54"
+                            <ui:TextBox Text="{Binding Description}" AcceptsReturn="True" MinHeight="54" IsEnabled="{Binding IsEditable}"
                                         Margin="0,2,0,8" HorizontalAlignment="Stretch"/>
                             <TextBlock Text="Garanti" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <ui:TextBox Text="{Binding Warranty}" Margin="0,2,0,8"/>
+                            <ui:TextBox Text="{Binding Warranty}" IsEnabled="{Binding IsEditable}" Margin="0,2,0,8"/>
                             <TextBlock Text="Teslim Süresi" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <ui:TextBox Text="{Binding DeliveryTime}" Margin="0,2,0,8"/>
+                            <ui:TextBox Text="{Binding DeliveryTime}" IsEnabled="{Binding IsEditable}" Margin="0,2,0,8"/>
                             <TextBlock Text="Ödeme Şartları" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <ui:TextBox Text="{Binding PaymentTerms}" Margin="0,2,0,0"/>
+                            <ui:TextBox Text="{Binding PaymentTerms}" IsEnabled="{Binding IsEditable}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── Revizyon Geçmişi ── -->
+                    <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,12,0,0">
+                        <StackPanel>
+                            <TextBlock Text="REVİZYON GEÇMİŞİ" FontSize="13" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,6"/>
+                            <TextBlock Text="{Binding ViewingRevisionDisplay}" FontSize="11"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,6"/>
+
+                            <ListBox ItemsSource="{Binding Revisions}" SelectedItem="{Binding SelectedRevision}"
+                                     MaxHeight="170" Background="Transparent" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="5" Padding="8,6" Margin="0,1"
+                                                Background="{DynamicResource SurfacePageBrush}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding RevisionNumber, StringFormat='Revizyon {0}'}" FontSize="12" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextHeadingBrush}"/>
+                                                        <TextBlock Text="{Binding StatusDisplay}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                                   Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                                        <Border CornerRadius="3" Padding="5,1" Background="#14C61F25" Margin="8,0,0,0"
+                                                                Visibility="{Binding IsCurrent, Converter={StaticResource BoolToVis}}">
+                                                            <TextBlock Text="GÜNCEL" FontSize="9" FontWeight="Bold" Foreground="#C61F25" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding IssuedDate, StringFormat='{}{0:dd.MM.yyyy}'}" FontSize="10.5"
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,1,0,0"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding TotalAmount, StringFormat='{}{0:N2} ₺'}" FontSize="12" FontWeight="Bold"
+                                                           Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <ui:Button Content="👁️ Görüntüle" Command="{Binding ViewRevisionCommand}" CommandParameter="{Binding SelectedRevision}"
+                                           Appearance="Secondary" Height="34" Padding="14,0" Margin="0,0,8,0" Cursor="Hand" FontSize="12"/>
+                                <ui:Button Content="↩️ Güncel Revizyona Dön" Command="{Binding BackToCurrentCommand}"
+                                           Visibility="{Binding IsViewingHistoricRevision, Converter={StaticResource BoolToVis}}"
+                                           Appearance="Primary" Height="34" Padding="14,0" Cursor="Hand" FontSize="12"/>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -174,11 +288,11 @@
         </Grid>
 
         <!-- ── Alt Butonlar ── -->
-        <Grid Grid.Row="2" Margin="0,14,0,0">
+        <Grid Grid.Row="3" Margin="0,14,0,0">
             <ui:Button HorizontalAlignment="Left" Content="İptal (Esc)" Command="{Binding CancelCommand}"
-                       Appearance="Secondary" Height="36" Padding="20,0" Cursor="Hand"/>
+                       Appearance="Secondary" Height="40" Padding="20,0" Cursor="Hand"/>
             <ui:Button HorizontalAlignment="Right" Content="💾 Teklifi Kaydet (Ctrl+S)" Command="{Binding SaveCommand}"
-                       Appearance="Primary" Height="36" Padding="24,0" Cursor="Hand"/>
+                       Appearance="Primary" Height="40" Padding="24,0" Cursor="Hand"/>
         </Grid>
     </Grid>
 </Window>

@@ -1269,7 +1269,7 @@ namespace KamatekCrm.Services
                                         foreach (var item in quotation.Items)
                                         {
                                             table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).Text(item.ProductName).FontSize(9);
-                                            table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{item.Quantity:N0}").FontSize(9);
+                                            table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{item.Quantity:N2}").FontSize(9);
                                             table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{item.UnitPrice:C2}").FontSize(9);
                                             table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{item.DiscountPercent:N2}%").FontSize(9);
                                             table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{item.LineTotal:C2}").FontSize(9);
@@ -1302,7 +1302,7 @@ namespace KamatekCrm.Services
                                 });
                                 c1.Item().Row(r =>
                                 {
-                                    r.RelativeItem().Text($"KDV (%{quotation.TaxRate:N0}):").FontSize(9);
+                                    r.RelativeItem().Text("KDV (satır bazlı):").FontSize(9);
                                     r.RelativeItem().AlignRight().Text($"{quotation.TaxAmount:C2}").FontSize(9);
                                 });
                                 c1.Item().PaddingTop(6).LineHorizontal(1).LineColor(BrandColors.Secondary);
@@ -1395,7 +1395,7 @@ namespace KamatekCrm.Services
                                         foreach (var material in order.Materials)
                                         {
                                             table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).Text(material.ProductName).FontSize(9);
-                                            table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{material.Quantity:N0}").FontSize(9);
+                                            table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{material.Quantity:N2}").FontSize(9);
                                             table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).Text(material.Notes ?? "").FontSize(9);
                                         }
                                     }
@@ -1505,14 +1505,28 @@ namespace KamatekCrm.Services
                                 });
                             });
 
-                            if (!string.IsNullOrWhiteSpace(order.DeliveryNote))
+                            col.Item().Border(1).BorderColor("#E0E0E0").Padding(12).Column(c1 =>
                             {
-                                col.Item().Border(1).BorderColor("#E0E0E0").Padding(12).Column(c1 =>
+                                c1.Item().Text("İŞÇİLİK VE TESLİM").FontSize(11).Bold().FontColor(BrandColors.Primary);
+                                c1.Item().PaddingTop(6).Row(r =>
                                 {
-                                    c1.Item().Text("TESLİM NOTU").FontSize(11).Bold().FontColor(BrandColors.Secondary);
-                                    c1.Item().PaddingTop(6).Text(order.DeliveryNote).FontSize(9);
+                                    r.RelativeItem().Text("İşçilik Saati:").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text($"{order.LaborHours:N1} saat").FontSize(9).Bold();
                                 });
-                            }
+                                if (!string.IsNullOrWhiteSpace(order.CompletionTechnician))
+                                {
+                                    c1.Item().PaddingTop(3).Row(r =>
+                                    {
+                                        r.RelativeItem().Text("Tamamlayan Teknisyen:").FontSize(9);
+                                        r.RelativeItem().AlignRight().Text(order.CompletionTechnician).FontSize(9);
+                                    });
+                                }
+                                if (!string.IsNullOrWhiteSpace(order.DeliveryNote))
+                                {
+                                    c1.Item().PaddingTop(8).Text("Teslim Notu:").FontSize(9).FontColor(BrandColors.Secondary);
+                                    c1.Item().PaddingTop(3).Text(order.DeliveryNote).FontSize(9);
+                                }
+                            });
 
                             col.Item().PaddingTop(10).Row(r => BuildCompletionSignatureBlock(r, order, job));
                         });
@@ -1552,8 +1566,9 @@ namespace KamatekCrm.Services
                 quotation.DeliveryTime, quotation.PaymentTerms, quotation.LaborCost, quotation.ShippingCost,
                 quotation.DiscountAmount, quotation.TaxRate, quotation.TaxAmount, quotation.TotalAmount,
                 quotation.SentDate, quotation.AcceptedAt, quotation.RejectedAt, quotation.RejectionReason,
-                quotation.Items.Select(i => new QuotationItemDto(
-                    i.Id, i.ProductId, i.ProductName, i.Quantity, i.UnitPrice, i.DiscountPercent, i.TaxPercent, i.LineTotal)).ToList());
+                quotation.Items.OrderBy(i => i.Sequence).Select(i => new QuotationItemDto(
+                    i.Id, i.ProductId, i.ProductName, i.Quantity, i.UnitPrice, i.DiscountPercent, i.TaxPercent, i.LineTotal, i.Sequence)).ToList(),
+                quotation.RevisionNumber, quotation.ParentQuotationId);
 
             var job = new ServiceJobDocumentDto(
                 quotation.ServiceJobId, WorkOrderType.Repair, quotation.Description ?? string.Empty, null, null,
@@ -1582,10 +1597,276 @@ namespace KamatekCrm.Services
 
         private static InstallationOrderDto ToInstallationOrderDto(InstallationOrder order) => new(
             order.Id, order.ServiceJobId, order.QuotationId, order.TechnicianId, order.TechnicianName,
-            order.InstallationDate, order.Notes, order.CompletedAt, order.CompletionTechnician,
+            order.InstallationDate, order.Notes, order.LaborHours, order.CompletedAt, order.CompletionTechnician,
             order.DeliveryNote, order.CustomerSignature,
             order.Materials.Select(m => new InstallationMaterialDto(m.Id, m.ProductId, m.ProductName, m.Quantity, m.UnitPrice, m.Notes)).ToList(),
             order.Tasks.Select(t => new InstallationTaskDto(t.Id, t.Title, t.Description, t.IsCompleted, t.CompletedAt)).ToList());
+
+        // ── Teslim & Faturalandırma (Paket 7) ──
+
+        /// <summary>
+        /// İş emri faturası — kabul edilen teklif kalemleri, işçilik, nakliye, iskonto ve KDV
+        /// üzerinden üretilir; teslim/ödeme bilgileri (durum, yöntem, tahsilat, bakiye, fatura no)
+        /// faturanın altında gösterilir.
+        /// </summary>
+        public void GenerateWorkOrderInvoice(WorkOrderWorkflowDto workflow, ServiceJobDocumentDto job, string filePath)
+        {
+            var quotation = workflow.Quotation
+                ?? throw new ArgumentException("Fatura üretimi için teklif kaydı gerekir.");
+
+            AuditSensitiveDocumentAccess("Fatura", job.CustomerId);
+            var logoBytes = GetLogoBytes();
+            var delivery = workflow.Delivery;
+            var invoiceNumber = string.IsNullOrWhiteSpace(delivery?.InvoiceNumber)
+                ? $"INV-{workflow.JobId:D6}"
+                : delivery!.InvoiceNumber;
+
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(30);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
+
+                    page.Header().Element(c => BuildWorkOrderHeader(c, logoBytes, "FATURA",
+                        $"Fatura No: {invoiceNumber} | Takip No: #{job.Id}", job,
+                        $"Tarih: {DateTime.Now:dd MMMM yyyy}"));
+
+                    page.Content().Element(c =>
+                    {
+                        c.PaddingTop(15).Column(col =>
+                        {
+                            col.Spacing(15);
+
+                            col.Item().Element(c1 => BuildWorkOrderCustomerBox(c1, job, job.AssignedTechnician));
+
+                            col.Item().Border(1).BorderColor("#E0E0E0").Padding(12).Column(c1 =>
+                            {
+                                c1.Item().Text("FATURA KALEMLERİ").FontSize(11).Bold().FontColor(BrandColors.Primary);
+                                c1.Item().PaddingTop(6).Table(table =>
+                                {
+                                    table.ColumnsDefinition(cols =>
+                                    {
+                                        cols.RelativeColumn(3);
+                                        cols.RelativeColumn(1);
+                                        cols.RelativeColumn(1);
+                                        cols.RelativeColumn(1);
+                                        cols.RelativeColumn(1);
+                                        cols.RelativeColumn(1);
+                                    });
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Background(BrandColors.TableHeader).Padding(6).Text("Malzeme / Hizmet").Bold().FontColor(BrandColors.Primary);
+                                        header.Cell().Background(BrandColors.TableHeader).Padding(6).AlignRight().Text("Miktar").Bold().FontColor(BrandColors.Primary);
+                                        header.Cell().Background(BrandColors.TableHeader).Padding(6).AlignRight().Text("Birim Fiyat").Bold().FontColor(BrandColors.Primary);
+                                        header.Cell().Background(BrandColors.TableHeader).Padding(6).AlignRight().Text("İskonto").Bold().FontColor(BrandColors.Primary);
+                                        header.Cell().Background(BrandColors.TableHeader).Padding(6).AlignRight().Text("KDV %").Bold().FontColor(BrandColors.Primary);
+                                        header.Cell().Background(BrandColors.TableHeader).Padding(6).AlignRight().Text("Tutar").Bold().FontColor(BrandColors.Primary);
+                                    });
+                                    if (quotation.Items.Count == 0)
+                                    {
+                                        table.Cell().ColumnSpan(6).Padding(8).Text("Fatura kalemi bulunamadı.").FontSize(9).FontColor(BrandColors.TextSecondary);
+                                    }
+                                    else
+                                    {
+                                        foreach (var item in quotation.Items)
+                                        {
+                                            table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).Text(item.ProductName).FontSize(9);
+                                            table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{item.Quantity:N2}").FontSize(9);
+                                            table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{item.UnitPrice:C2}").FontSize(9);
+                                            table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{item.DiscountPercent:N2}%").FontSize(9);
+                                            table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{item.TaxPercent:N2}%").FontSize(9);
+                                            table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(6).AlignRight().Text($"{item.LineTotal:C2}").FontSize(9);
+                                        }
+                                    }
+                                });
+                            });
+
+                            col.Item().AlignRight().Width(280).Column(c1 =>
+                            {
+                                c1.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("Malzeme Ara Toplamı:").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text($"{quotation.Items.Sum(i => i.LineTotal):C2}").FontSize(9).Bold();
+                                });
+                                c1.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("İskonto:").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text($"-{quotation.DiscountAmount:C2}").FontSize(9);
+                                });
+                                c1.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("İşçilik:").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text($"{quotation.LaborCost:C2}").FontSize(9);
+                                });
+                                c1.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("Nakliye:").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text($"{quotation.ShippingCost:C2}").FontSize(9);
+                                });
+                                c1.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("KDV (satır bazlı):").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text($"{quotation.TaxAmount:C2}").FontSize(9);
+                                });
+                                c1.Item().PaddingTop(6).LineHorizontal(1).LineColor(BrandColors.Secondary);
+                                c1.Item().PaddingTop(6).Row(r =>
+                                {
+                                    r.RelativeItem().Text("GENEL TOPLAM:").FontSize(12).Bold().FontColor(BrandColors.Primary);
+                                    r.RelativeItem().AlignRight().Text($"{quotation.TotalAmount:C2}").FontSize(12).Bold().FontColor(BrandColors.Secondary);
+                                });
+                            });
+
+                            col.Item().Border(1).BorderColor("#E0E0E0").Background("#F8F9FA").Padding(12).Column(c1 =>
+                            {
+                                c1.Item().Text("ÖDEME BİLGİLERİ").FontSize(11).Bold().FontColor(BrandColors.Secondary);
+                                c1.Item().PaddingTop(5).Row(r =>
+                                {
+                                    r.RelativeItem().Text("Ödeme Durumu:").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text(PaymentStatusLabels.Map(delivery?.PaymentStatus ?? PaymentStatus.Unpaid)).FontSize(9).Bold();
+                                });
+                                c1.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("Ödeme Yöntemi:").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text(PaymentMethodLabels.Map(delivery?.PaymentMethod ?? PaymentMethod.Cash)).FontSize(9);
+                                });
+                                c1.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("Tahsil Edilen:").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text($"{(delivery?.PaidAmount ?? 0m):C2}").FontSize(9);
+                                });
+                                c1.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("Kalan Bakiye:").FontSize(9);
+                                    r.RelativeItem().AlignRight().Text($"{Math.Max(0m, quotation.TotalAmount - (delivery?.PaidAmount ?? 0m)):C2}").FontSize(9).Bold();
+                                });
+                            });
+
+                            col.Item().PaddingTop(10).Row(r => BuildSignatureBlock(
+                                r, "FATURAYI DÜZENLEYEN", job.AssignedTechnician ?? "", "MÜŞTERİ İMZASI", job.CustomerName));
+                        });
+                    });
+
+                    page.Footer().Element(c => BuildWorkOrderFooter(c, "Kamatek CRM Fatura"));
+                });
+            })
+            .GeneratePdf(filePath);
+        }
+
+        /// <summary>
+        /// Servis / İş Formu — iş künyesi, keşif özeti, montaj özeti ve teslim/ödeme bilgileri
+        /// tek belgede birleştirilir (masaüstü workspace'ten üretilir).
+        /// </summary>
+        public void GenerateWorkOrderServiceReport(WorkOrderWorkflowDto workflow, ServiceJobDocumentDto job, string filePath)
+        {
+            AuditSensitiveDocumentAccess("Servis raporu", job.CustomerId);
+            var logoBytes = GetLogoBytes();
+            var delivery = workflow.Delivery;
+            var installation = workflow.Installation;
+            var discovery = workflow.Discovery;
+
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(30);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
+
+                    page.Header().Element(c => BuildWorkOrderHeader(c, logoBytes, "SERVİS / İŞ FORMU",
+                        $"Takip No: #{job.Id}", job,
+                        $"Tarih: {DateTime.Now:dd MMMM yyyy}"));
+
+                    page.Content().Element(c =>
+                    {
+                        c.PaddingTop(15).Column(col =>
+                        {
+                            col.Spacing(12);
+
+                            col.Item().Element(c1 => BuildWorkOrderCustomerBox(c1, job, job.AssignedTechnician));
+
+                            col.Item().Border(1).BorderColor("#E0E0E0").Padding(12).Column(c1 =>
+                            {
+                                c1.Item().Text("İŞ BİLGİLERİ").FontSize(11).Bold().FontColor(BrandColors.Primary);
+                                c1.Item().PaddingTop(5).Text($"Açıklama: {(string.IsNullOrWhiteSpace(job.Description) ? "Belirtilmedi" : job.Description)}").FontSize(9);
+                                c1.Item().Text($"Öncelik: {job.Priority}   |   Planlanan: {(job.ScheduledDate.HasValue ? job.ScheduledDate.Value.ToString("dd MMMM yyyy HH:mm") : "Belirtilmedi")}").FontSize(9);
+                                c1.Item().Text($"İş Durumu: {ServiceJobRowDto.MapStatusDisplay(workflow.JobStatus)}").FontSize(9);
+                            });
+
+                            if (discovery is not null)
+                            {
+                                col.Item().Border(1).BorderColor("#E0E0E0").Padding(12).Column(c1 =>
+                                {
+                                    c1.Item().Text("KEŞİF ÖZETİ").FontSize(11).Bold().FontColor(BrandColors.Secondary);
+                                    if (!string.IsNullOrWhiteSpace(discovery.TechnicalNotes))
+                                        c1.Item().PaddingTop(5).Text($"Teknik Tespitler: {discovery.TechnicalNotes}").FontSize(9);
+                                    if (!string.IsNullOrWhiteSpace(discovery.RecommendedSolution))
+                                        c1.Item().PaddingTop(3).Text($"Önerilen Çözüm: {discovery.RecommendedSolution}").FontSize(9);
+                                    c1.Item().PaddingTop(3).Text($"Tahmini Malzeme: {discovery.Materials.Count} kalem   |   Tahmini İşçilik: {discovery.EstimatedLaborHours:N1} saat").FontSize(9);
+                                });
+                            }
+
+                            if (installation is not null)
+                            {
+                                col.Item().Border(1).BorderColor("#E0E0E0").Padding(12).Column(c1 =>
+                                {
+                                    c1.Item().Text("MONTAJ ÖZETİ").FontSize(11).Bold().FontColor(BrandColors.Secondary);
+                                    c1.Item().PaddingTop(5).Text($"Teknisyen: {installation.TechnicianName ?? "Atanmadı"}   |   Tarih: {(installation.InstallationDate.HasValue ? installation.InstallationDate.Value.ToString("dd MMMM yyyy") : "Planlanmadı")}").FontSize(9);
+                                    c1.Item().Text($"İşçilik: {installation.LaborHours:N1} saat   |   Durum: {(installation.CompletedAt.HasValue ? "Tamamlandı" : "Devam Ediyor")}").FontSize(9);
+                                    if (installation.Materials.Count > 0)
+                                    {
+                                        c1.Item().PaddingTop(5).Table(table =>
+                                        {
+                                            table.ColumnsDefinition(cols =>
+                                            {
+                                                cols.RelativeColumn(3);
+                                                cols.RelativeColumn(1);
+                                                cols.RelativeColumn(1);
+                                            });
+                                            table.Header(header =>
+                                            {
+                                                header.Cell().Background(BrandColors.TableHeader).Padding(5).Text("Kullanılan Malzeme").Bold().FontColor(BrandColors.Primary).FontSize(9);
+                                                header.Cell().Background(BrandColors.TableHeader).Padding(5).AlignRight().Text("Miktar").Bold().FontColor(BrandColors.Primary).FontSize(9);
+                                                header.Cell().Background(BrandColors.TableHeader).Padding(5).AlignRight().Text("Birim Fiyat").Bold().FontColor(BrandColors.Primary).FontSize(9);
+                                            });
+                                            foreach (var material in installation.Materials)
+                                            {
+                                                table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(5).Text(material.ProductName).FontSize(8.5f);
+                                                table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(5).AlignRight().Text($"{material.Quantity:N2}").FontSize(8.5f);
+                                                table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(5).AlignRight().Text($"{material.UnitPrice:C2}").FontSize(8.5f);
+                                            }
+                                        });
+                                    }
+                                    if (!string.IsNullOrWhiteSpace(installation.DeliveryNote))
+                                        c1.Item().PaddingTop(5).Text($"Teslim Notu: {installation.DeliveryNote}").FontSize(9);
+                                });
+                            }
+
+                            if (delivery is not null)
+                            {
+                                col.Item().Border(1).BorderColor("#E0E0E0").Padding(12).Column(c1 =>
+                                {
+                                    c1.Item().Text("TESLİM VE ÖDEME").FontSize(11).Bold().FontColor(BrandColors.Primary);
+                                    c1.Item().PaddingTop(5).Text($"Teslim Tarihi: {delivery.DeliveryDate:dd MMMM yyyy HH:mm}   |   Teslim Eden: {delivery.DeliveredBy ?? "—"}").FontSize(9);
+                                    c1.Item().Text($"Ödeme: {PaymentStatusLabels.Map(delivery.PaymentStatus)} ({PaymentMethodLabels.Map(delivery.PaymentMethod)}) — Tahsilat: {delivery.PaidAmount:C2}").FontSize(9);
+                                    if (!string.IsNullOrWhiteSpace(delivery.InvoiceNumber))
+                                        c1.Item().Text($"Fatura No: {delivery.InvoiceNumber}").FontSize(9);
+                                    if (!string.IsNullOrWhiteSpace(delivery.DeliveryNote))
+                                        c1.Item().Text($"Teslim Notu: {delivery.DeliveryNote}").FontSize(9);
+                                });
+                            }
+
+                            col.Item().PaddingTop(10).Row(r => BuildSignatureBlock(
+                                r, "TEKNİSYEN", job.AssignedTechnician ?? "", "MÜŞTERİ İMZASI", job.CustomerName));
+                        });
+                    });
+
+                    page.Footer().Element(c => BuildWorkOrderFooter(c, "Kamatek CRM Servis Raporu"));
+                });
+            })
+            .GeneratePdf(filePath);
+        }
 
         // ── Ortak Başlık / Alt Bilgi / Blok Yardımcıları ──
 

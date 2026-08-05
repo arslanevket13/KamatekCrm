@@ -4,6 +4,7 @@ using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Infrastructure.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Models.WorkOrders;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
@@ -41,6 +42,94 @@ public sealed class ServiceJobReadServiceTests
         await using var verify = new AppDbContext(options);
         verify.ChangeTracker.Entries().Should().BeEmpty();
         factory.Verify(item => item.CreateDbContextAsync(It.IsAny<CancellationToken>()), Times.Exactly(8));
+    }
+
+    [Fact]
+    public async Task GetQuotationRevisionsAsync_ReturnsHistoryNewestFirstWithCurrentFlag()
+    {
+        var (service, factory, options, jobId, _) = await CreateServiceAsync();
+
+        await using (var seed = new AppDbContext(options))
+        {
+            seed.WorkOrderQuotations.AddRange(
+                new WorkOrderQuotation
+                {
+                    ServiceJobId = jobId,
+                    QuotationNumber = $"TEK-{jobId}-0",
+                    RevisionNumber = 0,
+                    Status = QuotationStatus.Rejected,
+                    IssuedDate = DateTime.UtcNow.AddDays(-6),
+                    TotalAmount = 1000m
+                },
+                new WorkOrderQuotation
+                {
+                    ServiceJobId = jobId,
+                    QuotationNumber = $"TEK-{jobId}-1",
+                    RevisionNumber = 1,
+                    Status = QuotationStatus.Sent,
+                    IssuedDate = DateTime.UtcNow.AddDays(-3),
+                    TotalAmount = 1100m,
+                    SentDate = DateTime.UtcNow.AddDays(-3)
+                },
+                new WorkOrderQuotation
+                {
+                    ServiceJobId = jobId,
+                    QuotationNumber = $"TEK-{jobId}-2",
+                    RevisionNumber = 2,
+                    Status = QuotationStatus.Accepted,
+                    IssuedDate = DateTime.UtcNow.AddDays(-1),
+                    TotalAmount = 1200m,
+                    AcceptedAt = DateTime.UtcNow,
+                    ParentQuotationId = null
+                });
+            await seed.SaveChangesAsync();
+        }
+
+        var result = await service.GetQuotationRevisionsAsync(jobId);
+
+        result.IsSuccess.Should().BeTrue(result.Error);
+        var revisions = result.Value!;
+        revisions.Select(r => r.RevisionNumber).Should().Equal(2, 1, 0);
+        revisions.Single(r => r.IsCurrent).RevisionNumber.Should().Be(2);
+        revisions.Single(r => r.RevisionNumber == 2).Status.Should().Be(QuotationStatus.Accepted);
+        revisions.Single(r => r.RevisionNumber == 0).AcceptedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetQuotationByIdAsync_ReturnsRevisionWithItemsOrderedBySequence()
+    {
+        var (service, factory, options, jobId, _) = await CreateServiceAsync();
+        int quotationId;
+
+        await using (var seed = new AppDbContext(options))
+        {
+            var quotation = new WorkOrderQuotation
+            {
+                ServiceJobId = jobId,
+                QuotationNumber = $"TEK-{jobId}-1",
+                RevisionNumber = 1,
+                Status = QuotationStatus.Draft,
+                IssuedDate = DateTime.UtcNow,
+                TotalAmount = 250m
+            };
+            seed.WorkOrderQuotations.Add(quotation);
+            await seed.SaveChangesAsync();
+            quotationId = quotation.Id;
+            seed.QuotationItems.AddRange(
+                new QuotationItem { QuotationId = quotationId, ProductName = "Kablo", Quantity = 50m, UnitPrice = 10m, Sequence = 1, LineTotal = 500m },
+                new QuotationItem { QuotationId = quotationId, ProductName = "Kamera", Quantity = 2m, UnitPrice = 1000m, Sequence = 0, LineTotal = 2000m });
+            await seed.SaveChangesAsync();
+        }
+
+        var result = await service.GetQuotationByIdAsync(quotationId);
+
+        result.IsSuccess.Should().BeTrue(result.Error);
+        result.Value!.RevisionNumber.Should().Be(1);
+        result.Value.Items.Select(i => i.ProductName).Should().Equal("Kamera", "Kablo");
+        result.Value.Items.First().Sequence.Should().Be(0);
+
+        var missing = await service.GetQuotationByIdAsync(999999);
+        missing.IsFailure.Should().BeTrue();
     }
 
     [Fact]

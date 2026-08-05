@@ -76,6 +76,45 @@ namespace KamatekCrm.Shared.Models.WorkOrders
     }
 
     /// <summary>
+    /// Keşif aşamasındaki tek bir saha ziyareti. Bir iş emri için birden çok ziyaret
+    /// kaydedilebilir (ilk keşif, ek keşif, kontrol ziyareti vb.). Her ziyaretin kendi
+    /// tarihi, teknisyeni, notu ve fotoğrafları vardır. Fiyat içermez.
+    /// </summary>
+    public class DiscoveryVisit
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int ServiceJobId { get; set; }
+
+        [ForeignKey(nameof(ServiceJobId))]
+        public virtual ServiceJob? ServiceJob { get; set; }
+
+        /// <summary>Ziyaret tarihi/saati</summary>
+        public DateTime VisitDate { get; set; } = System.DateTime.UtcNow;
+
+        /// <summary>Ziyareti yapan teknisyen</summary>
+        [MaxLength(100)]
+        public string? TechnicianName { get; set; }
+
+        /// <summary>Ziyarette alınan notlar</summary>
+        [MaxLength(4000)]
+        public string? Notes { get; set; }
+
+        /// <summary>Ziyaret fotoğrafları (JSON dizi)</summary>
+        public string? PhotoPathsJson { get; set; }
+
+        public DateTime CreatedDate { get; set; } = System.DateTime.UtcNow;
+
+        [NotMapped]
+        public IReadOnlyList<string> PhotoPathsList =>
+            string.IsNullOrWhiteSpace(PhotoPathsJson)
+                ? new List<string>()
+                : System.Text.Json.JsonSerializer.Deserialize<List<string>>(PhotoPathsJson) ?? new List<string>();
+    }
+
+    /// <summary>
     /// İş emrine bağlı fiyat teklifi. Keşif malzemeleri kopyalanarak oluşturulur;
     /// fiyat, iskonto, KDV, işçilik, nakliye, garanti, teslim ve ödeme şartları burada tutulur.
     /// </summary>
@@ -92,6 +131,12 @@ namespace KamatekCrm.Shared.Models.WorkOrders
 
         [MaxLength(50)]
         public string QuotationNumber { get; set; } = string.Empty;
+
+        /// <summary>Bu teklifin revizyonunu türettiği ana teklif. İlk teklifte null.</summary>
+        public int? ParentQuotationId { get; set; }
+
+        /// <summary>Revizyon numarası (ilk teklif 0, sonraki her revizyon +1).</summary>
+        public int RevisionNumber { get; set; }
 
         public QuotationStatus Status { get; set; } = QuotationStatus.Draft;
 
@@ -161,7 +206,11 @@ namespace KamatekCrm.Shared.Models.WorkOrders
         [MaxLength(200)]
         public string ProductName { get; set; } = string.Empty;
 
-        public int Quantity { get; set; }
+        /// <summary>Miktar; metre, kilogram, saat gibi kesirli birimleri destekler.</summary>
+        public decimal Quantity { get; set; }
+
+        /// <summary>Teklif içindeki satır sırası (0'dan başlar).</summary>
+        public int Sequence { get; set; }
 
         public decimal UnitPrice { get; set; }
 
@@ -205,6 +254,9 @@ namespace KamatekCrm.Shared.Models.WorkOrders
         [MaxLength(2000)]
         public string? Notes { get; set; }
 
+        /// <summary>Montajda harcanan işçilik saati (tamamlama formunda fiili değerle güncellenir).</summary>
+        public decimal LaborHours { get; set; }
+
         public DateTime CreatedDate { get; set; } = System.DateTime.UtcNow;
 
         // ── Tamamlama Verileri ──
@@ -244,7 +296,8 @@ namespace KamatekCrm.Shared.Models.WorkOrders
         [MaxLength(200)]
         public string ProductName { get; set; } = string.Empty;
 
-        public int Quantity { get; set; }
+        /// <summary>Kullanılacak miktar; kesirli birimler (metre vb.) desteklenir.</summary>
+        public decimal Quantity { get; set; }
 
         public decimal UnitPrice { get; set; }
 
@@ -274,5 +327,51 @@ namespace KamatekCrm.Shared.Models.WorkOrders
         public bool IsCompleted { get; set; }
 
         public DateTime? CompletedAt { get; set; }
+    }
+
+    /// <summary>
+    /// Teslim aşaması kaydı (Paket 7). İş teslim edildiğinde teslim tarihi, teslim eden,
+    /// teslim notu, müşteri imzası ve ödeme bilgileri (durum, yöntem, tahsilat, fatura no)
+    /// burada saklanır. Her iş emri için tek teslim kaydı vardır (1:1).
+    /// </summary>
+    public class JobDelivery
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int ServiceJobId { get; set; }
+
+        [ForeignKey(nameof(ServiceJobId))]
+        public virtual ServiceJob? ServiceJob { get; set; }
+
+        /// <summary>Teslim tarihi/saati</summary>
+        public DateTime DeliveryDate { get; set; } = System.DateTime.UtcNow;
+
+        /// <summary>Teslim eden kişi</summary>
+        [MaxLength(100)]
+        public string? DeliveredBy { get; set; }
+
+        /// <summary>Teslim notu</summary>
+        [MaxLength(2000)]
+        public string? DeliveryNote { get; set; }
+
+        /// <summary>Müşteri imzası (base64 veya metin)</summary>
+        public string? CustomerSignature { get; set; }
+
+        /// <summary>Ödeme durumu (tahsilat bekleniyor / kısmi / ödendi)</summary>
+        public KamatekCrm.Shared.Enums.PaymentStatus PaymentStatus { get; set; } = KamatekCrm.Shared.Enums.PaymentStatus.Unpaid;
+
+        /// <summary>Ödeme yöntemi</summary>
+        public KamatekCrm.Shared.Enums.PaymentMethod PaymentMethod { get; set; } = KamatekCrm.Shared.Enums.PaymentMethod.Cash;
+
+        /// <summary>Tahsil edilen tutar</summary>
+        public decimal PaidAmount { get; set; }
+
+        /// <summary>Fatura numarası</summary>
+        [MaxLength(50)]
+        public string? InvoiceNumber { get; set; }
+
+        public DateTime CreatedDate { get; set; } = System.DateTime.UtcNow;
     }
 }

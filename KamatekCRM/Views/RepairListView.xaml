@@ -240,13 +240,13 @@
                                     <StackPanel Grid.Column="1" Margin="16,0,0,0">
                                         <TextBlock FontWeight="SemiBold" FontSize="14"
                                                    Foreground="{DynamicResource ThemeForeground}">
-                                            <Run Text="{Binding CustomerName}"/>
+                                            <Run Text="{Binding CustomerName, Mode=OneWay}"/>
                                         </TextBlock>
                                         <TextBlock FontSize="11" Margin="0,0,0,0"
                                                    Foreground="{DynamicResource ThemeForegroundMuted}">
-                                            <Run Text="{Binding DeviceDisplay}"/>
+                                            <Run Text="{Binding DeviceDisplay, Mode=OneWay}"/>
                                             <Run Text=" · "/>
-                                            <Run Text="{Binding TicketNo}"/>
+                                            <Run Text="{Binding TicketNo, Mode=OneWay}"/>
                                         </TextBlock>
                                     </StackPanel>
 
@@ -306,10 +306,10 @@
                                                    FontSize="16" FontWeight="Bold"
                                                    Foreground="{DynamicResource ThemeForeground}"/>
                                         <TextBlock Foreground="{DynamicResource ThemeForegroundMuted}" FontSize="12" Margin="0,4,0,0">
-                                            <Run Text="{Binding SelectedJob.DeviceBrand}"/>
-                                            <Run Text="{Binding SelectedJob.DeviceModel}"/>
+                                            <Run Text="{Binding SelectedJob.DeviceBrand, Mode=OneWay}"/>
+                                            <Run Text="{Binding SelectedJob.DeviceModel, Mode=OneWay}"/>
                                             <Run Text=" · SN:"/>
-                                            <Run Text="{Binding SelectedJob.SerialNumber}"/>
+                                            <Run Text="{Binding SelectedJob.SerialNumber, Mode=OneWay}"/>
                                         </TextBlock>
                                         <TextBlock Text="{Binding SelectedJob.Description}" 
                                                    FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="400"
@@ -629,9 +629,9 @@
                                                                Foreground="{DynamicResource ThemeForeground}"/>
                                                     <TextBlock Grid.Column="1" FontSize="12" VerticalAlignment="Center" Margin="8,0"
                                                                Foreground="{DynamicResource ThemeForegroundMuted}">
-                                                        <Run Text="{Binding QuantityUsed}"/>
+                                                        <Run Text="{Binding QuantityUsed, Mode=OneWay}"/>
                                                         <Run Text="×"/>
-                                                        <Run Text="{Binding UnitPrice, StringFormat='{}{0:N2} ₺'}"/>
+                                                        <Run Text="{Binding UnitPrice, Mode=OneWay, StringFormat='{}{0:N2} ₺'}"/>
                                                     </TextBlock>
                                                     <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="8,0"
                                                                FontWeight="SemiBold" FontSize="12"

@@ -24,6 +24,9 @@ namespace KamatekCrm.Shared.Enums
     
     public enum AttachmentEntityType { ServiceJob, Customer, Product, Quote, Invoice }
     public enum PaymentMethod { Cash, CreditCard, BankTransfer, MobilePayment, Check, OnAccount }
+
+    /// <summary>İş emri tesliminde ödeme durumu (Paket 7 — Teslim & Faturalandırma).</summary>
+    public enum PaymentStatus { Unpaid = 0, Partial = 1, Paid = 2 }
     public enum PipelineStage { New, Qualification, Proposal, Negotiation, Negotiating, Won, Lost, Lead, Quoted }
 
     public enum TransactionType { Income, Expense, Transfer, Debt, Payment, CreditNote, Refund }

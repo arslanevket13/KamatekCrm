@@ -240,25 +240,39 @@
                                         <Separator/>
                                         <MenuItem Header="📄 Teklife Dönüştür"
                                                   Command="{Binding Tag.ConvertToQuoteCommand}"
-                                                  CommandParameter="{Binding DataContext}"/>
+                                                  CommandParameter="{Binding DataContext}"
+                                                  IsEnabled="{Binding DataContext.CanConvertToQuote}"
+                                                  ToolTip="{Binding DataContext.ConvertToQuoteDisabledReason}"/>
                                         <MenuItem Header="✏️ Teklifi Düzenle"
                                                   Command="{Binding Tag.EditQuoteCommand}"
-                                                  CommandParameter="{Binding DataContext}"/>
+                                                  CommandParameter="{Binding DataContext}"
+                                                  IsEnabled="{Binding DataContext.CanEditQuote}"
+                                                  ToolTip="{Binding DataContext.EditQuoteDisabledReason}"/>
                                         <MenuItem Header="✅ Teklifi Kabul Et"
                                                   Command="{Binding Tag.AcceptQuoteCommand}"
-                                                  CommandParameter="{Binding DataContext}"/>
+                                                  CommandParameter="{Binding DataContext}"
+                                                  IsEnabled="{Binding DataContext.CanAcceptQuote}"
+                                                  ToolTip="{Binding DataContext.AcceptQuoteDisabledReason}"/>
                                         <MenuItem Header="❌ Teklifi Reddet"
                                                   Command="{Binding Tag.RejectQuoteCommand}"
-                                                  CommandParameter="{Binding DataContext}"/>
+                                                  CommandParameter="{Binding DataContext}"
+                                                  IsEnabled="{Binding DataContext.CanRejectQuote}"
+                                                  ToolTip="{Binding DataContext.RejectQuoteDisabledReason}"/>
                                         <MenuItem Header="🛠️ Montaj Yapılacak"
                                                   Command="{Binding Tag.SetInstallationPlannedCommand}"
-                                                  CommandParameter="{Binding DataContext}"/>
+                                                  CommandParameter="{Binding DataContext}"
+                                                  IsEnabled="{Binding DataContext.CanSetInstallationPlanned}"
+                                                  ToolTip="{Binding DataContext.SetInstallationPlannedDisabledReason}"/>
                                         <MenuItem Header="✅ Montaj Tamamlandı"
                                                   Command="{Binding Tag.SetInstallationCompletedCommand}"
-                                                  CommandParameter="{Binding DataContext}"/>
+                                                  CommandParameter="{Binding DataContext}"
+                                                  IsEnabled="{Binding DataContext.CanSetInstallationCompleted}"
+                                                  ToolTip="{Binding DataContext.SetInstallationCompletedDisabledReason}"/>
                                         <MenuItem Header="❌ İptal Et"
                                                   Command="{Binding Tag.CancelJobCommand}"
-                                                  CommandParameter="{Binding DataContext}"/>
+                                                  CommandParameter="{Binding DataContext}"
+                                                  IsEnabled="{Binding DataContext.CanCancelJob}"
+                                                  ToolTip="{Binding DataContext.CancelJobDisabledReason}"/>
                                         <Separator/>
                                         <MenuItem Header="🖨️ PDF Yazdır"
                                                   Command="{Binding Tag.PrintServiceFormCommand}"
@@ -266,7 +280,9 @@
                                         <Separator/>
                                         <MenuItem Header="🗑️ Sil"
                                                   Command="{Binding Tag.DeleteJobCommand}"
-                                                  CommandParameter="{Binding DataContext}"/>
+                                                  CommandParameter="{Binding DataContext}"
+                                                  IsEnabled="{Binding DataContext.CanDeleteJob}"
+                                                  ToolTip="{Binding DataContext.DeleteJobDisabledReason}"/>
                                     </ContextMenu>
                                 </Setter.Value>
                             </Setter>
@@ -452,6 +468,8 @@
                             <ui:Button Content="Teklife Dönüştür" Icon="{ui:SymbolIcon DocumentAdd24}"
                                        Command="{Binding DataContext.ConvertToQuoteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                        CommandParameter="{Binding}"
+                                       IsEnabled="{Binding CanConvertToQuote}"
+                                       ToolTip="{Binding ConvertToQuoteDisabledReason}"
                                        Appearance="Secondary" Height="30" HorizontalAlignment="Stretch" Margin="0,0,0,4" FontSize="12" Cursor="Hand"/>
 
                             <ui:Button Content="PDF Yazdır" Icon="{ui:SymbolIcon Print24}"
@@ -462,6 +480,8 @@
                             <ui:Button Content="Sil" Icon="{ui:SymbolIcon Delete24}"
                                        Command="{Binding DataContext.DeleteJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                        CommandParameter="{Binding}"
+                                       IsEnabled="{Binding CanDeleteJob}"
+                                       ToolTip="{Binding DeleteJobDisabledReason}"
                                        Appearance="Secondary" Height="30" HorizontalAlignment="Stretch" Foreground="{DynamicResource ThemeError}" FontSize="12" Cursor="Hand"/>
 
                         </StackPanel>

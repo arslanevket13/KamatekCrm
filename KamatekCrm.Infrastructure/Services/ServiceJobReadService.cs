@@ -82,7 +82,10 @@ public sealed class ServiceJobReadService : IServiceJobReadService
         if (request.IsSlaBreachedOnly)
         {
             DateTime now = DateTime.UtcNow;
-            query = query.Where(item => item.SlaDeadline < now && item.Status != JobStatus.Completed && item.Status != JobStatus.Cancelled);
+            query = query.Where(item => item.SlaDeadline < now &&
+                                        item.Status != JobStatus.Completed &&
+                                        item.Status != JobStatus.Cancelled &&
+                                        item.Status != JobStatus.Delivered);
         }
         if (request.StartDate.HasValue) query = query.Where(item => item.CreatedDate >= request.StartDate.Value);
         if (request.EndDate.HasValue)
@@ -119,7 +122,12 @@ public sealed class ServiceJobReadService : IServiceJobReadService
                 EstimatedDuration = item.EstimatedDuration,
                 SlaDeadline = item.SlaDeadline,
                 TechnicianNotes = item.TechnicianNotes,
-                PhotoPathsJson = item.PhotoPathsJson
+                PhotoPathsJson = item.PhotoPathsJson,
+                DiscoveryReportId = context.DiscoveryReports.Where(d => d.ServiceJobId == item.Id).Select(d => (int?)d.Id).FirstOrDefault(),
+                QuotationId = context.WorkOrderQuotations.Where(q => q.ServiceJobId == item.Id).OrderByDescending(q => q.Id).Select(q => (int?)q.Id).FirstOrDefault(),
+                QuotationStatus = context.WorkOrderQuotations.Where(q => q.ServiceJobId == item.Id).OrderByDescending(q => q.Id).Select(q => (QuotationStatus?)q.Status).FirstOrDefault(),
+                InstallationOrderId = context.InstallationOrders.Where(i => i.ServiceJobId == item.Id).Select(i => (int?)i.Id).FirstOrDefault(),
+                IsInstallationCompleted = context.InstallationOrders.Where(i => i.ServiceJobId == item.Id).Select(i => i.CompletedAt != null).FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
         return Result.Success<IReadOnlyList<ServiceJobRowDto>>(rows);
@@ -212,9 +220,13 @@ public sealed class ServiceJobReadService : IServiceJobReadService
         int total = await context.ServiceJobs.AsNoTracking().CountAsync(cancellationToken);
         int pending = await context.ServiceJobs.AsNoTracking().CountAsync(item => item.Status == JobStatus.Pending, cancellationToken);
         int inProgress = await context.ServiceJobs.AsNoTracking().CountAsync(item => item.Status == JobStatus.InProgress, cancellationToken);
-        int completed = await context.ServiceJobs.AsNoTracking().CountAsync(item => item.Status == JobStatus.Completed, cancellationToken);
+        int completed = await context.ServiceJobs.AsNoTracking().CountAsync(
+            item => item.Status == JobStatus.Completed || item.Status == JobStatus.Delivered, cancellationToken);
         int breached = await context.ServiceJobs.AsNoTracking().CountAsync(
-            item => item.SlaDeadline < now && item.Status != JobStatus.Completed && item.Status != JobStatus.Cancelled,
+            item => item.SlaDeadline < now &&
+                    item.Status != JobStatus.Completed &&
+                    item.Status != JobStatus.Cancelled &&
+                    item.Status != JobStatus.Delivered,
             cancellationToken);
         int todayCreated = await context.ServiceJobs.AsNoTracking().CountAsync(
             item => item.CreatedDate >= today && item.CreatedDate < tomorrow,
@@ -289,6 +301,20 @@ public sealed class ServiceJobReadService : IServiceJobReadService
             .Include(i => i.Tasks)
             .FirstOrDefaultAsync(i => i.ServiceJobId == jobId, cancellationToken);
 
+        var visits = await context.DiscoveryVisits.AsNoTracking()
+            .Where(v => v.ServiceJobId == jobId)
+            .OrderByDescending(v => v.VisitDate)
+            .Select(v => new DiscoveryVisitDto(
+                v.Id,
+                v.VisitDate,
+                v.TechnicianName,
+                v.Notes,
+                v.PhotoPathsList))
+            .ToListAsync(cancellationToken);
+
+        var delivery = await context.JobDeliveries.AsNoTracking()
+            .FirstOrDefaultAsync(d => d.ServiceJobId == jobId, cancellationToken);
+
         return Result.Success(new WorkOrderWorkflowDto(
             job.Id,
             job.Status,
@@ -305,34 +331,7 @@ public sealed class ServiceJobReadService : IServiceJobReadService
                     discovery.Materials
                         .Select(m => new DiscoveryMaterialDto(m.Id, m.ProductId, m.ProductName, m.Quantity, m.Notes))
                         .ToList()),
-            quotation is null
-                ? null
-                : new WorkOrderQuotationDto(
-                    quotation.Id,
-                    quotation.ServiceJobId,
-                    quotation.QuotationNumber,
-                    quotation.Status,
-                    quotation.IssuedDate,
-                    quotation.ValidUntil,
-                    quotation.Description,
-                    quotation.Warranty,
-                    quotation.DeliveryTime,
-                    quotation.PaymentTerms,
-                    quotation.LaborCost,
-                    quotation.ShippingCost,
-                    quotation.DiscountAmount,
-                    quotation.TaxRate,
-                    quotation.TaxAmount,
-                    quotation.TotalAmount,
-                    quotation.SentDate,
-                    quotation.AcceptedAt,
-                    quotation.RejectedAt,
-                    quotation.RejectionReason,
-                    quotation.Items
-                        .Select(i => new QuotationItemDto(
-                            i.Id, i.ProductId, i.ProductName, i.Quantity,
-                            i.UnitPrice, i.DiscountPercent, i.TaxPercent, i.LineTotal))
-                        .ToList()),
+            quotation is null ? null : MapQuotation(quotation),
             installation is null
                 ? null
                 : new InstallationOrderDto(
@@ -343,6 +342,7 @@ public sealed class ServiceJobReadService : IServiceJobReadService
                     installation.TechnicianName,
                     installation.InstallationDate,
                     installation.Notes,
+                    installation.LaborHours,
                     installation.CompletedAt,
                     installation.CompletionTechnician,
                     installation.DeliveryNote,
@@ -352,8 +352,128 @@ public sealed class ServiceJobReadService : IServiceJobReadService
                         .ToList(),
                     installation.Tasks
                         .Select(t => new InstallationTaskDto(t.Id, t.Title, t.Description, t.IsCompleted, t.CompletedAt))
-                        .ToList())));
+                        .ToList()),
+            visits,
+            delivery is null
+                ? null
+                : new JobDeliveryDto(
+                    delivery.Id,
+                    delivery.ServiceJobId,
+                    delivery.DeliveryDate,
+                    delivery.DeliveredBy,
+                    delivery.DeliveryNote,
+                    delivery.CustomerSignature,
+                    delivery.PaymentStatus,
+                    delivery.PaymentMethod,
+                    delivery.PaidAmount,
+                    delivery.InvoiceNumber)));
     }
+
+    public async Task<Result<IReadOnlyList<QuotationProductLookupDto>>> SearchProductsAsync(
+        string searchText,
+        int take = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = AuthorizeRead();
+        if (authorization.IsFailure) return Result.Failure<IReadOnlyList<QuotationProductLookupDto>>(authorization.Error);
+
+        var term = searchText.Trim();
+        if (term.Length < 2)
+        {
+            return Result.Success<IReadOnlyList<QuotationProductLookupDto>>([]);
+        }
+        take = Math.Clamp(take, 1, 50);
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var normalized = term.ToLower();
+        var products = await context.Products.AsNoTracking()
+            .Where(product => product.ProductName.ToLower().Contains(normalized) ||
+                              product.SKU.ToLower().Contains(normalized))
+            .OrderBy(product => product.ProductName)
+            .Take(take)
+            .Select(product => new QuotationProductLookupDto(
+                product.Id, product.ProductName, product.SKU, product.Unit,
+                product.SalePrice, product.TotalStockQuantity))
+            .ToListAsync(cancellationToken);
+        return Result.Success<IReadOnlyList<QuotationProductLookupDto>>(products);
+    }
+
+    public async Task<Result<IReadOnlyList<QuotationRevisionSummaryDto>>> GetQuotationRevisionsAsync(
+        int jobId,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = AuthorizeRead();
+        if (authorization.IsFailure) return Result.Failure<IReadOnlyList<QuotationRevisionSummaryDto>>(authorization.Error);
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var latestId = await context.WorkOrderQuotations.AsNoTracking()
+            .Where(q => q.ServiceJobId == jobId)
+            .MaxAsync(q => (int?)q.Id, cancellationToken);
+
+        var rows = await context.WorkOrderQuotations.AsNoTracking()
+            .Where(q => q.ServiceJobId == jobId)
+            .OrderByDescending(q => q.RevisionNumber).ThenByDescending(q => q.Id)
+            .Select(q => new QuotationRevisionSummaryDto(
+                q.Id,
+                q.RevisionNumber,
+                q.Status,
+                q.TotalAmount,
+                q.IssuedDate,
+                q.SentDate,
+                q.AcceptedAt,
+                q.RejectedAt,
+                q.Id == latestId))
+            .ToListAsync(cancellationToken);
+        return Result.Success<IReadOnlyList<QuotationRevisionSummaryDto>>(rows);
+    }
+
+    public async Task<Result<WorkOrderQuotationDto>> GetQuotationByIdAsync(
+        int quotationId,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = AuthorizeRead();
+        if (authorization.IsFailure) return Result.Failure<WorkOrderQuotationDto>(authorization.Error);
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var quotation = await context.WorkOrderQuotations.AsNoTracking()
+            .Include(q => q.Items)
+            .FirstOrDefaultAsync(q => q.Id == quotationId, cancellationToken);
+        if (quotation is null)
+        {
+            return Result.Failure<WorkOrderQuotationDto>($"Teklif bulunamadı (ID: {quotationId}).");
+        }
+        return Result.Success(MapQuotation(quotation));
+    }
+
+    private static WorkOrderQuotationDto MapQuotation(WorkOrderQuotation quotation) => new(
+        quotation.Id,
+        quotation.ServiceJobId,
+        quotation.QuotationNumber,
+        quotation.Status,
+        quotation.IssuedDate,
+        quotation.ValidUntil,
+        quotation.Description,
+        quotation.Warranty,
+        quotation.DeliveryTime,
+        quotation.PaymentTerms,
+        quotation.LaborCost,
+        quotation.ShippingCost,
+        quotation.DiscountAmount,
+        quotation.TaxRate,
+        quotation.TaxAmount,
+        quotation.TotalAmount,
+        quotation.SentDate,
+        quotation.AcceptedAt,
+        quotation.RejectedAt,
+        quotation.RejectionReason,
+        quotation.Items
+            .OrderBy(i => i.Sequence).ThenBy(i => i.Id)
+            .Select(i => new QuotationItemDto(
+                i.Id, i.ProductId, i.ProductName, i.Quantity,
+                i.UnitPrice, i.DiscountPercent, i.TaxPercent, i.LineTotal, i.Sequence))
+            .ToList(),
+        quotation.RevisionNumber,
+        quotation.ParentQuotationId);
 
     private Result AuthorizeRead()
     {

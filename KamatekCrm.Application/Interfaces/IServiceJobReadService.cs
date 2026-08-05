@@ -19,4 +19,27 @@ public interface IServiceJobReadService
     /// PDF üretimi ve teklif düzenleme ekranı bu veriyle çalışır.
     /// </summary>
     Task<Result<WorkOrderWorkflowDto>> GetWorkOrderWorkflowAsync(int jobId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Teklif düzenleyicide stoktan ürün eklemek için ürün arar (ad veya SKU ile).
+    /// </summary>
+    Task<Result<IReadOnlyList<QuotationProductLookupDto>>> SearchProductsAsync(
+        string searchText,
+        int take = 20,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Bir iş emrinin tüm teklif revizyonlarını en yeni üstte olacak şekilde döndürür.
+    /// IsCurrent bayrağı iş emrinin halen bağlı olduğu teklifi işaretler.
+    /// </summary>
+    Task<Result<IReadOnlyList<QuotationRevisionSummaryDto>>> GetQuotationRevisionsAsync(
+        int jobId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Belirli bir teklif revizyonunu kalemleriyle birlikte döndürür (geçmiş görüntüleme için).
+    /// </summary>
+    Task<Result<WorkOrderQuotationDto>> GetQuotationByIdAsync(
+        int quotationId,
+        CancellationToken cancellationToken = default);
 }

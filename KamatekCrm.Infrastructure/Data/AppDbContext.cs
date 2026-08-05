@@ -105,11 +105,13 @@ namespace KamatekCrm.Infrastructure.Data
         // --- İş Emri İş Akışı (Keşif → Teklif → Montaj) ---
         public DbSet<DiscoveryReport> DiscoveryReports { get; set; }
         public DbSet<DiscoveryMaterial> DiscoveryMaterials { get; set; }
+        public DbSet<DiscoveryVisit> DiscoveryVisits { get; set; }
         public DbSet<WorkOrderQuotation> WorkOrderQuotations { get; set; }
         public DbSet<QuotationItem> QuotationItems { get; set; }
         public DbSet<InstallationOrder> InstallationOrders { get; set; }
         public DbSet<InstallationMaterial> InstallationMaterials { get; set; }
         public DbSet<InstallationTask> InstallationTasks { get; set; }
+        public DbSet<JobDelivery> JobDeliveries { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -275,6 +277,26 @@ namespace KamatekCrm.Infrastructure.Data
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.DiscoveryReportId);
                 entity.HasIndex(e => e.ProductId);
+            });
+
+            modelBuilder.Entity<DiscoveryVisit>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ServiceJobId);
+                entity.HasOne(e => e.ServiceJob)
+                    .WithMany()
+                    .HasForeignKey(e => e.ServiceJobId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<JobDelivery>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ServiceJobId).IsUnique();
+                entity.HasOne(e => e.ServiceJob)
+                    .WithMany()
+                    .HasForeignKey(e => e.ServiceJobId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<WorkOrderQuotation>(entity =>

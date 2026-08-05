@@ -13,10 +13,11 @@ public sealed class ServiceJobStatusPolicy : IServiceJobStatusPolicy
     private static readonly IReadOnlyDictionary<JobStatus, JobStatus[]> AllowedTransitions =
         new Dictionary<JobStatus, JobStatus[]>
         {
-            [JobStatus.DiscoveryRequest] = [JobStatus.ConvertedToQuote, JobStatus.Cancelled],
+            [JobStatus.DiscoveryRequest] = [JobStatus.ConvertedToQuote, JobStatus.DiscoveryCompleted, JobStatus.Cancelled],
             [JobStatus.ConvertedToQuote] = [JobStatus.InstallationPlanned, JobStatus.Cancelled],
             [JobStatus.InstallationPlanned] = [JobStatus.InstallationCompleted, JobStatus.Cancelled],
-            [JobStatus.InstallationCompleted] = [],
+            [JobStatus.InstallationCompleted] = [JobStatus.Delivered],
+            [JobStatus.Delivered] = [],
             [JobStatus.Pending] = [JobStatus.ConvertedToQuote, JobStatus.InProgress, JobStatus.PendingDiscovery, JobStatus.Cancelled],
             [JobStatus.PendingDiscovery] = [JobStatus.ConvertedToQuote, JobStatus.DiscoveryCompleted, JobStatus.Cancelled],
             [JobStatus.DiscoveryCompleted] = [JobStatus.ConvertedToQuote, JobStatus.Quoting, JobStatus.InProgress, JobStatus.Cancelled],
@@ -52,6 +53,7 @@ public sealed class ServiceJobStatusPolicy : IServiceJobStatusPolicy
         JobStatus.ConvertedToQuote => "Teklife Dönüştürüldü",
         JobStatus.InstallationPlanned => "Montaj Yapılacak",
         JobStatus.InstallationCompleted => "Montaj Tamamlandı",
+        JobStatus.Delivered => "Teslim Edildi",
         JobStatus.Pending => "Bekliyor",
         JobStatus.InProgress => "Devam Ediyor",
         JobStatus.WaitingForParts => "Parça Bekleniyor",

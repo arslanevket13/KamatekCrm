@@ -2,33 +2,42 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.ApplicationCore.DTOs.ServiceJobs;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Services;
 using KamatekCrm.Services;
+using KamatekCrm.Views;
 
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
-    /// Teklif kalemi satırı — miktar/fiyat/iskonto/KDV düzenlenebilir, ara toplam anında hesaplanır.
+    /// Teklif kalemi satırı — miktar/fiyat/iskonto/KDV düzenlenebilir, satır bazlı
+    /// net, KDV ve toplam tutarlar anında hesaplanır.
     /// </summary>
     public sealed class QuotationItemRow : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        /// <summary>Kayıtlı satırın DB kimliği; yeni satırlarda null.</summary>
         public int? SourceId { get; }
-        public int? ProductId { get; }
-        public string ProductName { get; }
 
-        private int _quantity;
-        public int Quantity
+        private int? _productId;
+        public int? ProductId { get => _productId; set { _productId = value; OnChanged(); } }
+
+        private string _productName;
+        public string ProductName { get => _productName; set { _productName = value; OnChanged(); } }
+
+        private decimal _quantity;
+        public decimal Quantity
         {
             get => _quantity;
-            set { _quantity = Math.Max(0, value); OnChanged(); }
+            set { _quantity = Math.Max(0m, value); OnChanged(); }
         }
 
         private decimal _unitPrice;
@@ -52,25 +61,48 @@ namespace KamatekCrm.ViewModels
             set { _taxPercent = Math.Max(0m, value); OnChanged(); }
         }
 
-        public decimal LineTotal => Math.Round(Quantity * UnitPrice * (1m - DiscountPercent / 100m), 2);
+        /// <summary>Net satır toplamı (iskonto uygulanmış, KDV hariç).</summary>
+        public decimal LineNet => Math.Round(Quantity * UnitPrice * (1m - DiscountPercent / 100m), 2);
+
+        /// <summary>Satır KDV tutarı (satırın kendi oranıyla).</summary>
+        public decimal LineTax => Math.Round(LineNet * TaxPercent / 100m, 2);
+
+        /// <summary>KDV dahil satır toplamı.</summary>
+        public decimal LineTotalWithTax => Math.Round(LineNet + LineTax, 2);
 
         public QuotationItemRow(QuotationItemDto item)
+            : this(item.Id, item.ProductId, item.ProductName, item.Quantity,
+                   item.UnitPrice, item.DiscountPercent, item.TaxPercent)
         {
-            SourceId = item.Id;
-            ProductId = item.ProductId;
-            ProductName = item.ProductName;
-            _quantity = item.Quantity;
-            _unitPrice = item.UnitPrice;
-            _discountPercent = item.DiscountPercent;
-            _taxPercent = item.TaxPercent;
         }
 
-        private void OnChanged() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LineTotal)));
+        public QuotationItemRow(
+            int? sourceId,
+            int? productId,
+            string productName,
+            decimal quantity,
+            decimal unitPrice,
+            decimal discountPercent,
+            decimal taxPercent)
+        {
+            SourceId = sourceId;
+            ProductId = productId;
+            _productName = productName;
+            _quantity = quantity;
+            _unitPrice = unitPrice;
+            _discountPercent = discountPercent;
+            _taxPercent = taxPercent;
+        }
+
+        private void OnChanged() => PropertyChanged?.Invoke(
+            this,
+            new PropertyChangedEventArgs(string.Empty));
     }
 
     /// <summary>
-    /// İş emri teklif düzenleme ekranı: malzeme, miktar, birim fiyat, iskonto, KDV,
-    /// işçilik, nakliye, açıklamalar, garanti, teslim süresi ve ödeme şartları.
+    /// İş emri teklif düzenleme ekranı: malzeme ekleme (stok/özel/hizmet), satır
+    /// silme/çoğaltma/sıralama, satır bazlı KDV, işçilik, nakliye, açıklamalar,
+    /// garanti, teslim süresi ve ödeme şartları.
     /// </summary>
     public partial class WorkOrderQuotationViewModel : ViewModelBase
     {
@@ -91,7 +123,24 @@ namespace KamatekCrm.ViewModels
 
         public string QuotationNumber { get; private set; } = string.Empty;
         public string StatusDisplay { get; private set; } = string.Empty;
+        public string RevisionDisplay { get; private set; } = "Revizyon 0";
         public bool IsEditable { get; private set; } = true;
+
+        /// <summary>Taslak teklif doğrudan düzenlenebildiği için revizyon yalnızca diğer durumlarda açılır.</summary>
+        public bool CanCreateRevision { get; private set; }
+
+        /// <summary>Kabul edilmiş/reddedilmiş teklif veya geçmiş revizyon görüntülenirken salt okunur mod.</summary>
+        public bool IsViewMode { get; private set; }
+
+        /// <summary>Geçmiş bir revizyon görüntülenirken true (güncel kayıt değil).</summary>
+        public bool IsViewingHistoricRevision { get; private set; }
+        public string ViewingRevisionDisplay { get; private set; } = string.Empty;
+        public string ViewModeBannerText { get; private set; } = string.Empty;
+
+        public ObservableCollection<QuotationRevisionSummaryDto> Revisions { get; } = new();
+        public QuotationRevisionSummaryDto? SelectedRevision { get; set; }
+
+        private int _currentQuotationId;
 
         private string _description = string.Empty;
         public string Description { get => _description; set => SetProperty(ref _description, value); }
@@ -114,12 +163,16 @@ namespace KamatekCrm.ViewModels
         private decimal _discountAmount;
         public decimal DiscountAmount { get => _discountAmount; set { SetProperty(ref _discountAmount, value); RecalculateTotals(); } }
 
+        /// <summary>Yeni eklenen satırlar için varsayılan KDV oranı (%).</summary>
         private decimal _taxRate = 20m;
         public decimal TaxRate { get => _taxRate; set { SetProperty(ref _taxRate, value); RecalculateTotals(); } }
 
-        public decimal Subtotal => Items.Sum(i => i.LineTotal);
+        /// <summary>Malzeme/hizmet net toplamı (satır bazlı iskonto uygulanmış, KDV hariç).</summary>
+        public decimal Subtotal => Items.Sum(i => i.LineNet);
         public decimal NetTotal => Subtotal - DiscountAmount + LaborCost + ShippingCost;
-        public decimal TaxAmount => Math.Round(NetTotal * TaxRate / 100m, 2);
+
+        /// <summary>KDV tutarı — satır bazlı oranların toplamı (servisle aynı yuvarlama).</summary>
+        public decimal TaxAmount => Math.Round(Items.Sum(i => i.LineTax), 2);
         public decimal TotalAmount => Math.Round(NetTotal + TaxAmount, 2);
 
         public WorkOrderQuotationViewModel(
@@ -138,7 +191,6 @@ namespace KamatekCrm.ViewModels
             _toastService = toastService;
 
             Items.CollectionChanged += (_, _) => RecalculateTotals();
-            foreach (var item in Items) item.PropertyChanged += (_, _) => RecalculateTotals();
         }
 
         public async Task<bool> InitializeAsync()
@@ -159,43 +211,74 @@ namespace KamatekCrm.ViewModels
 
             _quotation = workflow.Value.Quotation;
             _jobDocument = document.Value;
+            _currentQuotationId = _quotation.Id;
 
-            QuotationNumber = _quotation.QuotationNumber;
-            StatusDisplay = _quotation.Status switch
+            var revisions = await _readService.GetQuotationRevisionsAsync(_jobId);
+            if (revisions.IsSuccess && revisions.Value is not null)
             {
-                QuotationStatus.Draft => "📝 Taslak",
-                QuotationStatus.Sent => "✉️ Gönderildi",
-                QuotationStatus.Accepted => "✅ Kabul Edildi",
-                QuotationStatus.Rejected => "❌ Reddedildi",
-                QuotationStatus.Cancelled => "🚫 İptal Edildi",
-                QuotationStatus.Expired => "⏳ Süresi Doldu",
-                _ => _quotation.Status.ToString()
-            };
+                Revisions.Clear();
+                foreach (var revision in revisions.Value) Revisions.Add(revision);
+            }
+            else if (revisions.IsFailure)
+            {
+                _toastService.ShowError(revisions.Error);
+            }
 
             IsEditable = _quotation.Status is QuotationStatus.Draft or QuotationStatus.Sent;
+            CanCreateRevision = _quotation.Status != QuotationStatus.Draft;
+            IsViewMode = !IsEditable;
+            IsViewingHistoricRevision = false;
+            ViewingRevisionDisplay = string.Empty;
+            UpdateBanner();
 
-            Description = _quotation.Description ?? string.Empty;
-            Warranty = _quotation.Warranty ?? string.Empty;
-            DeliveryTime = _quotation.DeliveryTime ?? string.Empty;
-            PaymentTerms = _quotation.PaymentTerms ?? string.Empty;
-            LaborCost = _quotation.LaborCost;
-            ShippingCost = _quotation.ShippingCost;
-            DiscountAmount = _quotation.DiscountAmount;
-            TaxRate = _quotation.TaxRate;
+            ApplyQuotation(_quotation);
+            return true;
+        }
+
+        /// <summary>Ekranda gösterilecek teklifi alanlara uygular (başlangıç, revizyon görüntüleme, güncele dönüş).</summary>
+        private void ApplyQuotation(WorkOrderQuotationDto quotation)
+        {
+            _quotation = quotation;
+
+            QuotationNumber = quotation.QuotationNumber;
+            RevisionDisplay = $"Revizyon {quotation.RevisionNumber}";
+            StatusDisplay = QuotationStatusLabels.Map(quotation.Status);
+
+            Description = quotation.Description ?? string.Empty;
+            Warranty = quotation.Warranty ?? string.Empty;
+            DeliveryTime = quotation.DeliveryTime ?? string.Empty;
+            PaymentTerms = quotation.PaymentTerms ?? string.Empty;
+            LaborCost = quotation.LaborCost;
+            ShippingCost = quotation.ShippingCost;
+            DiscountAmount = quotation.DiscountAmount;
+            TaxRate = quotation.TaxRate;
 
             Items.Clear();
-            foreach (var item in _quotation.Items)
+            foreach (var item in quotation.Items)
             {
-                var row = new QuotationItemRow(item);
-                row.PropertyChanged += (_, _) => RecalculateTotals();
-                Items.Add(row);
+                Items.Add(new QuotationItemRow(item));
             }
 
             OnPropertyChanged(nameof(IsEditable));
+            OnPropertyChanged(nameof(CanCreateRevision));
+            OnPropertyChanged(nameof(IsViewMode));
+            OnPropertyChanged(nameof(IsViewingHistoricRevision));
+            OnPropertyChanged(nameof(ViewingRevisionDisplay));
+            OnPropertyChanged(nameof(ViewModeBannerText));
             OnPropertyChanged(nameof(QuotationNumber));
             OnPropertyChanged(nameof(StatusDisplay));
+            OnPropertyChanged(nameof(RevisionDisplay));
             RecalculateTotals();
-            return true;
+        }
+
+        private void UpdateBanner()
+        {
+            ViewModeBannerText = IsViewingHistoricRevision
+                ? "🕓 Geçmiş revizyon görüntüleniyor (salt okunur). Güncel kayda dönmek için 'Güncel Revizyona Dön' kullanın."
+                : IsViewMode
+                    ? "🔒 Görüntüleme modu — bu teklif kabul edilmiş/reddedilmiş durumda; değişiklik için yeni revizyon oluşturun."
+                    : string.Empty;
+            OnPropertyChanged(nameof(ViewModeBannerText));
         }
 
         private void RecalculateTotals()
@@ -228,9 +311,9 @@ namespace KamatekCrm.ViewModels
                 ShippingCost,
                 DiscountAmount,
                 TaxRate,
-                Items.Select(i => new QuotationItemInput(
+                Items.Select((i, index) => new QuotationItemInput(
                     i.SourceId, i.ProductId, i.ProductName, i.Quantity,
-                    i.UnitPrice, i.DiscountPercent, i.TaxPercent)).ToList());
+                    i.UnitPrice, i.DiscountPercent, i.TaxPercent, index)).ToList());
 
             var result = await _commandService.UpdateQuotationAsync(request);
             if (result.IsFailure)
@@ -243,9 +326,146 @@ namespace KamatekCrm.ViewModels
             RequestCloseWithSuccess?.Invoke();
         }
 
+        // ── Satır yönetimi ──
+
+        [RelayCommand]
+        private async Task AddStockItem()
+        {
+            if (!IsEditable)
+            {
+                _toastService.ShowWarning("Bu teklif düzenlenemez; durum kilidi aktif.");
+                return;
+            }
+
+            var picker = new ProductPickerWindow(async term =>
+            {
+                var result = await _readService.SearchProductsAsync(term);
+                return result.IsSuccess && result.Value is not null ? result.Value : [];
+            });
+            picker.Owner = Application.Current?.MainWindow;
+            if (picker.ShowDialog() != true || picker.SelectedProduct is null) return;
+
+            var product = picker.SelectedProduct;
+            AddRow(
+                product.Id,
+                product.ProductName,
+                product.SalePrice,
+                product.StockQuantity);
+        }
+
+        [RelayCommand]
+        private async Task AddCustomItem()
+        {
+            if (!IsEditable)
+            {
+                _toastService.ShowWarning("Bu teklif düzenlenemez; durum kilidi aktif.");
+                return;
+            }
+            string? name = await _dialogService.ShowInputAsync("Özel malzeme adı:", "Özel Malzeme Ekle");
+            if (string.IsNullOrWhiteSpace(name)) return;
+            AddRow(null, name.Trim(), 0m, null);
+        }
+
+        [RelayCommand]
+        private async Task AddServiceItem()
+        {
+            if (!IsEditable)
+            {
+                _toastService.ShowWarning("Bu teklif düzenlenemez; durum kilidi aktif.");
+                return;
+            }
+            string? name = await _dialogService.ShowInputAsync(
+                "Hizmet / işçilik açıklaması:", "Hizmet ve İşçilik Ekle", "İşçilik");
+            if (string.IsNullOrWhiteSpace(name)) return;
+            AddRow(null, name.Trim(), 0m, null);
+        }
+
+        [RelayCommand]
+        private void RemoveItem(QuotationItemRow? row)
+        {
+            if (!IsEditable || row is null) return;
+            Items.Remove(row);
+            RecalculateTotals();
+        }
+
+        [RelayCommand]
+        private void DuplicateItem(QuotationItemRow? row)
+        {
+            if (!IsEditable || row is null) return;
+            var copy = new QuotationItemRow(
+                null, row.ProductId, row.ProductName, row.Quantity,
+                row.UnitPrice, row.DiscountPercent, row.TaxPercent);
+            int index = Items.IndexOf(row);
+            Items.Insert(index + 1, copy);
+            RecalculateTotals();
+        }
+
+        [RelayCommand]
+        private void MoveItemUp(QuotationItemRow? row)
+        {
+            if (!IsEditable || row is null) return;
+            int index = Items.IndexOf(row);
+            if (index <= 0) return;
+            Items.Move(index, index - 1);
+        }
+
+        [RelayCommand]
+        private void MoveItemDown(QuotationItemRow? row)
+        {
+            if (!IsEditable || row is null) return;
+            int index = Items.IndexOf(row);
+            if (index < 0 || index >= Items.Count - 1) return;
+            Items.Move(index, index + 1);
+        }
+
+        private void AddRow(int? productId, string name, decimal unitPrice, int? stockQuantity)
+        {
+            if (!IsEditable) return;
+
+            var row = new QuotationItemRow(
+                null, productId, name, 1, unitPrice, 0m, TaxRate);
+            Items.Add(row);
+
+            _toastService.ShowInfo(
+                productId.HasValue && stockQuantity is { } stock
+                    ? $"'{name}' teklife eklendi (stok: {stock})."
+                    : $"'{name}' satırı eklendi.");
+            RecalculateTotals();
+        }
+
+        [RelayCommand]
+        private async Task CreateRevision()
+        {
+            if (IsViewingHistoricRevision)
+            {
+                _toastService.ShowWarning("Geçmiş revizyon üzerinden revizyon oluşturulamaz; önce güncel teklife dönün.");
+                return;
+            }
+            if (_quotation.Status == QuotationStatus.Draft)
+            {
+                _toastService.ShowInfo("Taslak teklif doğrudan düzenlenebilir; revizyon oluşturmaya gerek yok.");
+                return;
+            }
+
+            var result = await _commandService.CreateRevisionAsync(_quotation.Id, "Kullanıcı");
+            if (result.IsFailure)
+            {
+                _toastService.ShowError(result.Error);
+                return;
+            }
+
+            _toastService.ShowSuccess($"Revizyon {result.Value.RevisionNumber} oluşturuldu; düzenlemeye hazır.");
+            await InitializeAsync();
+        }
+
         [RelayCommand]
         private async Task Accept()
         {
+            if (IsViewingHistoricRevision)
+            {
+                _toastService.ShowWarning("Geçmiş revizyon üzerinde işlem yapılamaz; önce güncel teklife dönün.");
+                return;
+            }
             if (_quotation.Status == QuotationStatus.Accepted)
             {
                 _toastService.ShowInfo("Teklif zaten kabul edilmiş durumda.");
@@ -266,6 +486,11 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task Reject()
         {
+            if (IsViewingHistoricRevision)
+            {
+                _toastService.ShowWarning("Geçmiş revizyon üzerinde işlem yapılamaz; önce güncel teklife dönün.");
+                return;
+            }
             string? reason = await _dialogService.ShowInputAsync("Red gerekçesi:", "Teklif Reddi", "Fiyat uygun bulunmadı.");
             if (reason is null) return;
 
@@ -278,6 +503,112 @@ namespace KamatekCrm.ViewModels
 
             _toastService.ShowSuccess("Teklif reddedildi.");
             RequestCloseWithSuccess?.Invoke();
+        }
+
+        [RelayCommand]
+        private async Task ViewRevision(QuotationRevisionSummaryDto? revision)
+        {
+            if (revision is null)
+            {
+                _toastService.ShowInfo("Görüntülemek için listeden bir revizyon seçin.");
+                return;
+            }
+
+            // Güncel teklif zaten ekranda; onu kilitlemek yanlış olur (taslak/sent düzenlenebilir).
+            if (revision.Id == _currentQuotationId)
+            {
+                _toastService.ShowInfo("Bu zaten güncel teklif; doğrudan düzenleyebilirsiniz.");
+                return;
+            }
+
+            var result = await _readService.GetQuotationByIdAsync(revision.Id);
+            if (result.IsFailure || result.Value is null)
+            {
+                _toastService.ShowError(result.Error);
+                return;
+            }
+
+            IsViewingHistoricRevision = revision.Id != _currentQuotationId;
+            IsEditable = false;
+            CanCreateRevision = false;
+            IsViewMode = true;
+            ViewingRevisionDisplay = IsViewingHistoricRevision
+                ? $"Revizyon {revision.RevisionNumber} görüntüleniyor"
+                : string.Empty;
+            UpdateBanner();
+            ApplyQuotation(result.Value);
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+
+        [RelayCommand]
+        private async Task BackToCurrent()
+        {
+            var result = await _readService.GetQuotationByIdAsync(_currentQuotationId);
+            if (result.IsFailure || result.Value is null)
+            {
+                _toastService.ShowError(result.Error);
+                return;
+            }
+
+            var quote = result.Value;
+            IsEditable = quote.Status is QuotationStatus.Draft or QuotationStatus.Sent;
+            CanCreateRevision = quote.Status != QuotationStatus.Draft;
+            IsViewingHistoricRevision = false;
+            IsViewMode = !IsEditable;
+            ViewingRevisionDisplay = string.Empty;
+            UpdateBanner();
+            ApplyQuotation(quote);
+            SaveCommand.NotifyCanExecuteChanged();
+        }
+
+        /// <summary>
+        /// Kaydetmeden geçerli ekran durumunu (düzenlenmemiş değişiklikler dahil)
+        /// geçici bir PDF'e basıp sistem görüntüleyicisinde açar.
+        /// </summary>
+        [RelayCommand]
+        private async Task PreviewPdf()
+        {
+            try
+            {
+                var preview = new WorkOrderQuotationDto(
+                    _quotation.Id,
+                    _quotation.ServiceJobId,
+                    _quotation.QuotationNumber,
+                    _quotation.Status,
+                    _quotation.IssuedDate,
+                    _quotation.ValidUntil,
+                    Description,
+                    Warranty,
+                    DeliveryTime,
+                    PaymentTerms,
+                    LaborCost,
+                    ShippingCost,
+                    DiscountAmount,
+                    TaxRate,
+                    TaxAmount,
+                    TotalAmount,
+                    _quotation.SentDate,
+                    _quotation.AcceptedAt,
+                    _quotation.RejectedAt,
+                    _quotation.RejectionReason,
+                    Items.Select(i => new QuotationItemDto(
+                        i.SourceId ?? 0, i.ProductId, i.ProductName, i.Quantity,
+                        i.UnitPrice, i.DiscountPercent, i.TaxPercent, i.LineNet, 0)).ToList(),
+                    _quotation.RevisionNumber,
+                    _quotation.ParentQuotationId);
+
+                // Önizleme dosyası bilinçli olarak aynı geçici yola yazılır (her önizleme üzerine yazar);
+                // açık görüntüleyici dosyayı okurken silinmemesi için temizlik yapılmaz.
+                string filePath = Path.Combine(
+                    Path.GetTempPath(), $"KamatekTeklifOnizleme_{_jobId}.pdf");
+                _pdfService.GenerateWorkOrderQuotationPdf(preview, _jobDocument, filePath);
+                Process.Start(new ProcessStartInfo { FileName = filePath, UseShellExecute = true });
+                _toastService.ShowInfo("Önizleme PDF'i açıldı (henüz kaydedilmemiş değişiklikler dahildir).");
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError($"Önizleme oluşturulamadı: {ex.Message}");
+            }
         }
 
         [RelayCommand]

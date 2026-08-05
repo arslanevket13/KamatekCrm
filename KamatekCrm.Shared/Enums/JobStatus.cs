@@ -15,6 +15,7 @@ namespace KamatekCrm.Shared.Enums
         DiscoveryRequest = 10,  // Keşif Talebi
         ConvertedToQuote = 11,  // Teklife Dönüştürüldü
         InstallationPlanned = 12, // Montaj Yapılacak
-        InstallationCompleted = 13 // Montaj Tamamlandı
+        InstallationCompleted = 13, // Montaj Tamamlandı
+        Delivered = 14 // Teslim Edildi
     }
 }

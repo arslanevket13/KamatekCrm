@@ -15,8 +15,10 @@ public class ServiceJobStatusPolicyTests
     [InlineData(JobStatus.DiscoveryCompleted, JobStatus.Quoting)]
     [InlineData(JobStatus.Rejected, JobStatus.Quoting)]
     [InlineData(JobStatus.DiscoveryRequest, JobStatus.ConvertedToQuote)]
+    [InlineData(JobStatus.DiscoveryRequest, JobStatus.DiscoveryCompleted)]
     [InlineData(JobStatus.ConvertedToQuote, JobStatus.InstallationPlanned)]
     [InlineData(JobStatus.InstallationPlanned, JobStatus.InstallationCompleted)]
+    [InlineData(JobStatus.InstallationCompleted, JobStatus.Delivered)]
     [InlineData(JobStatus.DiscoveryRequest, JobStatus.Cancelled)]
     [InlineData(JobStatus.ConvertedToQuote, JobStatus.Cancelled)]
     [InlineData(JobStatus.InstallationPlanned, JobStatus.Cancelled)]
@@ -32,6 +34,9 @@ public class ServiceJobStatusPolicyTests
     [InlineData(JobStatus.WaitingForParts, JobStatus.Completed)]
     [InlineData(JobStatus.DiscoveryRequest, JobStatus.InstallationCompleted)]
     [InlineData(JobStatus.InstallationCompleted, JobStatus.InstallationPlanned)]
+    [InlineData(JobStatus.Delivered, JobStatus.InstallationCompleted)]
+    [InlineData(JobStatus.Delivered, JobStatus.Cancelled)]
+    [InlineData(JobStatus.Delivered, JobStatus.Pending)]
     public void ValidateTransition_RejectsWorkflowShortcuts(JobStatus current, JobStatus requested)
     {
         var result = _policy.ValidateTransition(current, requested);

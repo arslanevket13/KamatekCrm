@@ -1099,6 +1099,13 @@ namespace KamatekCrm.ViewModels
                     (ChangeJobStatusCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
                     (DeleteJobCommand as CommunityToolkit.Mvvm.Input.IRelayCommand)?.NotifyCanExecuteChanged();
                     CompleteJobCommand.NotifyCanExecuteChanged();
+                    ConvertToQuoteCommand.NotifyCanExecuteChanged();
+                    EditQuoteCommand.NotifyCanExecuteChanged();
+                    AcceptQuoteCommand.NotifyCanExecuteChanged();
+                    RejectQuoteCommand.NotifyCanExecuteChanged();
+                    SetInstallationPlannedCommand.NotifyCanExecuteChanged();
+                    SetInstallationCompletedCommand.NotifyCanExecuteChanged();
+                    CancelJobCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -1425,6 +1432,21 @@ namespace KamatekCrm.ViewModels
             await LoadServiceJobs();
             await LoadDashboardAsync();
             _serviceJobsView?.Refresh();
+            NotifyWorkflowCommands();
+        }
+
+        /// <summary>
+        /// İş akışı sağ tık komutlarının durumunu tazeler (satır durumları değişince).
+        /// </summary>
+        private void NotifyWorkflowCommands()
+        {
+            ConvertToQuoteCommand.NotifyCanExecuteChanged();
+            EditQuoteCommand.NotifyCanExecuteChanged();
+            AcceptQuoteCommand.NotifyCanExecuteChanged();
+            RejectQuoteCommand.NotifyCanExecuteChanged();
+            SetInstallationPlannedCommand.NotifyCanExecuteChanged();
+            SetInstallationCompletedCommand.NotifyCanExecuteChanged();
+            CancelJobCommand.NotifyCanExecuteChanged();
         }
 
         /// <summary>
@@ -1447,6 +1469,33 @@ namespace KamatekCrm.ViewModels
             var targetJob = job ?? SelectedServiceJob;
             if (targetJob == null) return;
 
+            // 'İşi Düzenle' artık yeni kayıt formunu değil, İş Emri Çalışma Alanını açar.
+            // Genel bilgiler, çalışma alanından ayrı bir butonla düzenlenebilir.
+            var workspaceVm = new WorkOrderWorkspaceViewModel(
+                targetJob,
+                _serviceJobReadService,
+                _serviceJobCommandService,
+                _pdfService,
+                _dialogService,
+                _toastService,
+                () => OpenGeneralEditorWindowAsync(targetJob));
+
+            if (!await workspaceVm.InitializeAsync()) return;
+
+            var window = new WorkOrderWorkspaceWindow(workspaceVm)
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+            window.ShowDialog();
+
+            await RefreshList();
+        }
+
+        /// <summary>
+        /// Genel bilgileri düzenlemek için yeni kayıt formunu düzenleme modunda açar.
+        /// </summary>
+        private async Task OpenGeneralEditorWindowAsync(ServiceJobRowDto job)
+        {
             var editVm = new ServiceJobViewModel(
                 _navigationService,
                 _toastService,
@@ -1456,7 +1505,7 @@ namespace KamatekCrm.ViewModels
                 _pdfService,
                 _dialogService);
 
-            await editVm.InitializeForEditAsync(targetJob);
+            await editVm.InitializeForEditAsync(job);
             var window = new NewServiceJobWindow(editVm)
             {
                 Owner = System.Windows.Application.Current.MainWindow
@@ -1498,10 +1547,10 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Keşif kaydını teklife dönüştürür (yalnızca Keşif Talebi aşamasında aktiftir).
+        /// Keşif kaydını teklife dönüştürür (yalnızca Keşif Talebi aşamasında geçerlidir).
         /// Keşif verileri DiscoveryReport'a, malzemeler QuotationItem'a kopyalanır.
         /// </summary>
-        [RelayCommand(CanExecute = nameof(CanConvertToQuote))]
+        [RelayCommand]
         private async Task ConvertToQuote(object? param)
         {
             int? jobId = param switch
@@ -1516,6 +1565,18 @@ namespace KamatekCrm.ViewModels
             if (!jobId.HasValue)
             {
                 _toastService?.ShowWarning("Lütfen teklife dönüştürmek istediğiniz iş emrini seçin.");
+                return;
+            }
+
+            var target = GetRowFromParam(param);
+            if (target is not null && target.QuotationId is not null)
+            {
+                _toastService?.ShowWarning("Bu iş emri zaten teklife dönüştürülmüş.");
+                return;
+            }
+            if (target is not null && target.Status is not (JobStatus.DiscoveryRequest or JobStatus.Pending or JobStatus.PendingDiscovery or JobStatus.DiscoveryCompleted))
+            {
+                _toastService?.ShowWarning("Bu iş emri yalnızca keşif aşamasında teklife dönüştürülebilir.");
                 return;
             }
 
@@ -1558,7 +1619,7 @@ namespace KamatekCrm.ViewModels
         /// Teklife dönüştürülmüş iş için montajı planlar (yalnızca kabul edilmiş tekliflerde).
         /// Teklif kalemleri montaj malzemelerine kopyalanır.
         /// </summary>
-        [RelayCommand(CanExecute = nameof(CanSetInstallationPlanned))]
+        [RelayCommand]
         private async Task SetInstallationPlanned(object? param)
         {
             int? jobId = param switch
@@ -1573,6 +1634,18 @@ namespace KamatekCrm.ViewModels
             if (!jobId.HasValue)
             {
                 _toastService?.ShowWarning("Lütfen işlem yapılacak iş emrini seçin.");
+                return;
+            }
+
+            var target = GetRowFromParam(param);
+            if (target is not null && target.QuotationStatus != QuotationStatus.Accepted)
+            {
+                _toastService?.ShowWarning("Montaj planlamak için teklifin önce 'Kabul Edildi' durumunda olması gerekir.");
+                return;
+            }
+            if (target is not null && target.InstallationOrderId is not null)
+            {
+                _toastService?.ShowWarning("Bu iş için montaj zaten planlanmış.");
                 return;
             }
 
@@ -1621,10 +1694,10 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Montajı tamamlar (yalnızca Montaj Yapılacak aşamasında aktiftir).
+        /// Montajı tamamlar (yalnızca Montaj Yapılacak aşamasında geçerlidir).
         /// Teslim notu, teknisyen ve müşteri imzası montaj emrine saklanır.
         /// </summary>
-        [RelayCommand(CanExecute = nameof(CanSetInstallationCompleted))]
+        [RelayCommand]
         private async Task SetInstallationCompleted(object? param)
         {
             int? jobId = param switch
@@ -1642,11 +1715,34 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
+            var target = GetRowFromParam(param);
+            if (target is not null && target.InstallationOrderId is null && target.Status != JobStatus.InstallationPlanned)
+            {
+                _toastService?.ShowWarning("Montaj tamamlamak için işin önce 'Montaj Yapılacak' aşamasında olması gerekir.");
+                return;
+            }
+            if (target is not null && target.IsInstallationCompleted)
+            {
+                _toastService?.ShowWarning("Bu işin montajı zaten tamamlanmış.");
+                return;
+            }
+
             string? deliveryNote = await _dialogService.ShowInputAsync(
                 "Teslim notu (boş bırakılabilir):",
                 "Montaj Tamamlama",
                 "Cihaz test edilerek teslim edildi.");
             if (deliveryNote is null) return; // iptal edildi
+
+            string? laborInput = await _dialogService.ShowInputAsync(
+                "Montajda harcanan işçilik saati (ör. 4 veya 6.5):",
+                "Montaj Tamamlama",
+                "4");
+            if (laborInput is null) return; // iptal edildi
+            if (!decimal.TryParse(laborInput.Trim(), out var laborHours) || laborHours <= 0m)
+            {
+                _toastService?.ShowWarning("İşçilik saati geçerli bir pozitif sayı olmalıdır.");
+                return;
+            }
 
             try
             {
@@ -1658,6 +1754,7 @@ namespace KamatekCrm.ViewModels
                         deliveryNote.Trim(),
                         null,
                         null,
+                        laborHours,
                         App.CurrentUser?.Username ?? "Sistem"));
 
                 if (result.IsFailure || result.Value is null)
@@ -1680,9 +1777,9 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// İş emrini iptal eder (yalnızca sonlanmamış durumlarda aktiftir)
+        /// İş emrini iptal eder (yalnızca sonlanmamış durumlarda geçerlidir)
         /// </summary>
-        [RelayCommand(CanExecute = nameof(CanCancelJob))]
+        [RelayCommand]
         private async Task CancelJob(object? param)
         {
             int? jobId = param switch
@@ -1733,39 +1830,20 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        // ── İş akışı komut aktiflik kuralları (yalnızca uygun aşamada) ──
+        // ── İş akışı komut durum yardımcıları (butonlar her zaman tıklanabilir;
+        //    geçersiz durumlarda açıklayıcı bir uyarı gösterilir) ──
 
-        private static JobStatus? GetJobStatusFromParam(object? param) => param switch
+        private ServiceJobRowDto? GetRowFromParam(object? param) => param switch
         {
-            ServiceJobRowDto row => row.Status,
-            ServiceJobListItemDto dto => dto.Status,
-            ServiceJob job => job.Status,
-            _ => null
+            ServiceJobRowDto row => row,
+            _ => SelectedServiceJob
         };
-
-        private bool CanConvertToQuote(object? param) =>
-            GetJobStatusFromParam(param) == JobStatus.DiscoveryRequest;
-
-        private bool CanSetInstallationPlanned(object? param) =>
-            GetJobStatusFromParam(param) == JobStatus.ConvertedToQuote;
-
-        private bool CanSetInstallationCompleted(object? param) =>
-            GetJobStatusFromParam(param) == JobStatus.InstallationPlanned;
-
-        private bool CanCancelJob(object? param) =>
-            GetJobStatusFromParam(param) is { } status and not (JobStatus.Completed or JobStatus.InstallationCompleted or JobStatus.Cancelled);
-
-        private bool CanEditQuote(object? param) =>
-            GetJobStatusFromParam(param) is JobStatus.ConvertedToQuote;
-
-        private bool CanAcceptQuote(object? param) =>
-            GetJobStatusFromParam(param) is JobStatus.ConvertedToQuote;
 
         /// <summary>
         /// Teklif düzenleme ekranını açar (malzeme, miktar, birim fiyat, iskonto, KDV,
         /// işçilik, nakliye, açıklamalar, garanti, teslim süresi, ödeme şartları).
         /// </summary>
-        [RelayCommand(CanExecute = nameof(CanEditQuote))]
+        [RelayCommand]
         private async Task EditQuote(object? param)
         {
             int? jobId = param switch
@@ -1776,7 +1854,11 @@ namespace KamatekCrm.ViewModels
                 int id => id,
                 _ => SelectedServiceJob?.Id
             };
-            if (!jobId.HasValue) return;
+            if (!jobId.HasValue)
+            {
+                _toastService?.ShowWarning("Lütfen düzenlenecek iş emrini seçin.");
+                return;
+            }
 
             await OpenQuotationEditorAsync(jobId.Value);
         }
@@ -1784,7 +1866,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Teklifi müşteri kabul etti olarak işaretler (Montaj Yapılacak buna bağlıdır).
         /// </summary>
-        [RelayCommand(CanExecute = nameof(CanAcceptQuote))]
+        [RelayCommand]
         private async Task AcceptQuote(object? param)
         {
             int? jobId = param switch
@@ -1848,7 +1930,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Teklifi müşteri reddetti olarak işaretler (gerekçe istenir).
         /// </summary>
-        [RelayCommand(CanExecute = nameof(CanAcceptQuote))]
+        [RelayCommand]
         private async Task RejectQuote(object? param)
         {
             int? jobId = param switch
@@ -2215,7 +2297,9 @@ namespace KamatekCrm.ViewModels
                     JobCategory = selectedCategories.Any() ? (JobCategory)selectedCategories.First() : JobCategory.CCTV,
                     CategoriesJson = categoriesJson,
                     Description = Description,
-                    Status = _isEditing ? SelectedServiceJob?.Status ?? JobStatus.Pending : JobStatus.Pending,
+                    Status = _isEditing
+                        ? SelectedServiceJob?.Status ?? JobStatus.Pending
+                        : IsDiscoveryOnly ? JobStatus.DiscoveryRequest : JobStatus.Pending,
                     CreatedDate = _isEditing ? SelectedServiceJob?.CreatedDate ?? DateTime.UtcNow : DateTime.UtcNow,
                     CompletedDate = _isEditing ? SelectedServiceJob?.CompletedDate : null,
                     ScheduledDate = ScheduledDate,

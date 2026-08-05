@@ -421,7 +421,9 @@ namespace KamatekCrm.API.Controllers
                     CompletedJobs = allJobs.Count(j => j.Status == JobStatus.Completed),
                     CancelledJobs = allJobs.Count(j => j.Status == JobStatus.Cancelled),
                     WaitingForPartsJobs = allJobs.Count(j => j.Status == JobStatus.WaitingForParts),
-                    SlaBreachedJobs = allJobs.Count(j => j.SlaDeadline.HasValue && j.SlaDeadline.Value < now && j.Status != JobStatus.Completed && j.Status != JobStatus.Cancelled),
+                    SlaBreachedJobs = allJobs.Count(j => j.SlaDeadline.HasValue && j.SlaDeadline.Value < now &&
+                                                         j.Status != JobStatus.Completed && j.Status != JobStatus.Cancelled &&
+                                                         j.Status != JobStatus.Delivered),
                     TodayCreated = allJobs.Count(j => j.CreatedDate >= todayStart),
                     AvgCompletionHours = Math.Round(avgHours, 1)
                 };

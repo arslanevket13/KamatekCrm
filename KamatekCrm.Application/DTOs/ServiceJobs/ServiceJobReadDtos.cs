@@ -1,4 +1,6 @@
 using KamatekCrm.Shared.Enums;
+// Satır DTO'sundaki QuotationStatus özelliği enum tip adıyla çakıştığı için alias kullanılır.
+using QuotationStatusEnum = KamatekCrm.Shared.Enums.QuotationStatus;
 
 namespace KamatekCrm.ApplicationCore.DTOs.ServiceJobs;
 
@@ -56,19 +58,71 @@ public sealed class ServiceJobRowDto
     public string CustomerPhone { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public JobStatus Status { get; set; }
-    public string StatusDisplay => Status switch
+    public int? DiscoveryReportId { get; init; }
+    public int? QuotationId { get; init; }
+    public QuotationStatus? QuotationStatus { get; init; }
+    public int? InstallationOrderId { get; init; }
+    public bool IsInstallationCompleted { get; init; }
+
+    // ── Sağ tık menüsü aktiflik kuralları (UI ipucu; kesin doğrulama servis katmanındadır) ──
+    public bool CanConvertToQuote =>
+        QuotationId is null &&
+        Status is JobStatus.DiscoveryRequest or JobStatus.Pending
+            or JobStatus.PendingDiscovery or JobStatus.DiscoveryCompleted;
+    public string ConvertToQuoteDisabledReason => QuotationId is not null
+        ? "Bu iş emri zaten teklife dönüştürülmüş."
+        : "Teklife dönüştürme yalnızca keşif aşamasındaki işler için geçerlidir.";
+
+    public bool CanEditQuote => QuotationId is not null && QuotationStatus is QuotationStatusEnum.Draft or QuotationStatusEnum.Sent;
+    public string EditQuoteDisabledReason => QuotationId is null
+        ? "Bu iş emri için teklif oluşturulmamış."
+        : "Bu durumdaki teklif düzenlenemez; yalnızca taslak veya gönderilmiş teklifler düzenlenir.";
+
+    public bool CanAcceptQuote => QuotationId is not null && QuotationStatus is QuotationStatusEnum.Draft or QuotationStatusEnum.Sent;
+    public string AcceptQuoteDisabledReason => QuotationId is null
+        ? "Bu iş emri için teklif oluşturulmamış."
+        : "Bu durumdaki teklif kabul edilemez.";
+
+    public bool CanRejectQuote => CanAcceptQuote;
+    public string RejectQuoteDisabledReason => AcceptQuoteDisabledReason;
+
+    public bool CanSetInstallationPlanned =>
+        QuotationStatus == QuotationStatusEnum.Accepted && InstallationOrderId is null;
+    public string SetInstallationPlannedDisabledReason => QuotationStatus != QuotationStatusEnum.Accepted
+        ? "Montaj planlamak için teklifin önce 'Kabul Edildi' durumunda olması gerekir."
+        : "Bu iş için montaj zaten planlanmış.";
+
+    public bool CanSetInstallationCompleted =>
+        InstallationOrderId is not null && !IsInstallationCompleted;
+    public string SetInstallationCompletedDisabledReason => InstallationOrderId is null
+        ? "Montaj tamamlamak için işin önce 'Montaj Yapılacak' aşamasında olması gerekir."
+        : "Bu işin montajı zaten tamamlanmış.";
+
+    public bool CanCancelJob =>
+        Status is not (JobStatus.Completed or JobStatus.InstallationCompleted or JobStatus.Delivered or JobStatus.Cancelled);
+    public string CancelJobDisabledReason => "Bu durumdaki iş iptal edilemez.";
+
+    public bool CanDeleteJob =>
+        Status is not (JobStatus.Completed or JobStatus.InstallationCompleted or JobStatus.Delivered);
+    public string DeleteJobDisabledReason => "Tamamlanmış veya stok tüketilmiş iş silinemez.";
+
+    public string StatusDisplay => MapStatusDisplay(Status);
+
+    /// <summary>JobStatus → Türkçe durum etiketi (liste satırı, sağ tık menüsü ve workspace rozeti ortak kullanır).</summary>
+    public static string MapStatusDisplay(JobStatus status) => status switch
     {
         JobStatus.DiscoveryRequest => "🔍 Keşif Talebi",
         JobStatus.ConvertedToQuote => "📄 Teklife Dönüştürüldü",
         JobStatus.InstallationPlanned => "🛠️ Montaj Yapılacak",
         JobStatus.InstallationCompleted => "✅ Montaj Tamamlandı",
+        JobStatus.Delivered => "🚚 Teslim Edildi",
         JobStatus.Pending => "⏳ Bekliyor",
         JobStatus.InProgress => "🔵 Devam Ediyor",
         JobStatus.WaitingForParts => "📦 Parça Bekleniyor",
         JobStatus.WaitingForApproval => "✋ Onay Bekleniyor",
         JobStatus.Completed => "✅ Tamamlandı",
         JobStatus.Cancelled => "❌ İptal Edildi",
-        _ => Status.ToString()
+        _ => status.ToString()
     };
     public JobPriority Priority { get; init; }
     public string PriorityDisplay => Priority switch
@@ -95,7 +149,7 @@ public sealed class ServiceJobRowDto
         get
         {
             if (Status == JobStatus.Completed) return "Completed";
-            if (Status == JobStatus.Cancelled) return "—";
+            if (Status is JobStatus.Cancelled or JobStatus.Delivered) return "—";
             if (!SlaDeadline.HasValue) return "SLA Yok";
 
             var remaining = SlaDeadline.Value - DateTime.UtcNow;

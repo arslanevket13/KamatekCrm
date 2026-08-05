@@ -3,6 +3,7 @@ using System;
 using KamatekCrm.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KamatekCrm.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260804234548_AddQuotationRevisionsAndSequence")]
+    partial class AddQuotationRevisionsAndSequence
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3355,47 +3358,6 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.ToTable("DiscoveryReports");
                 });
 
-            modelBuilder.Entity("KamatekCrm.Shared.Models.WorkOrders.DiscoveryVisit", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<string>("PhotoPathsJson")
-                        .HasColumnType("text");
-
-                    b.Property<int>("ServiceJobId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TechnicianName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("VisitDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<uint>("xmin")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ServiceJobId");
-
-                    b.ToTable("DiscoveryVisits");
-                });
-
             modelBuilder.Entity("KamatekCrm.Shared.Models.WorkOrders.InstallationMaterial", b =>
                 {
                     b.Property<int>("Id")
@@ -3468,9 +3430,6 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<DateTime?>("InstallationDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("LaborHours")
-                        .HasColumnType("numeric");
-
                     b.Property<string>("Notes")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
@@ -3541,61 +3500,6 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.HasIndex("InstallationOrderId");
 
                     b.ToTable("InstallationTasks");
-                });
-
-            modelBuilder.Entity("KamatekCrm.Shared.Models.WorkOrders.JobDelivery", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CustomerSignature")
-                        .HasColumnType("text");
-
-                    b.Property<string>("DeliveredBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("DeliveryDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DeliveryNote")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<string>("InvoiceNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<decimal>("PaidAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("PaymentMethod")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PaymentStatus")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ServiceJobId")
-                        .HasColumnType("integer");
-
-                    b.Property<uint>("xmin")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ServiceJobId")
-                        .IsUnique();
-
-                    b.ToTable("JobDeliveries");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.WorkOrders.QuotationItem", b =>
@@ -4308,17 +4212,6 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Navigation("ServiceJob");
                 });
 
-            modelBuilder.Entity("KamatekCrm.Shared.Models.WorkOrders.DiscoveryVisit", b =>
-                {
-                    b.HasOne("KamatekCrm.Shared.Models.ServiceJob", "ServiceJob")
-                        .WithMany()
-                        .HasForeignKey("ServiceJobId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ServiceJob");
-                });
-
             modelBuilder.Entity("KamatekCrm.Shared.Models.WorkOrders.InstallationMaterial", b =>
                 {
                     b.HasOne("KamatekCrm.Shared.Models.WorkOrders.InstallationOrder", "InstallationOrder")
@@ -4356,17 +4249,6 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("InstallationOrder");
-                });
-
-            modelBuilder.Entity("KamatekCrm.Shared.Models.WorkOrders.JobDelivery", b =>
-                {
-                    b.HasOne("KamatekCrm.Shared.Models.ServiceJob", "ServiceJob")
-                        .WithMany()
-                        .HasForeignKey("ServiceJobId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ServiceJob");
                 });
 
             modelBuilder.Entity("KamatekCrm.Shared.Models.WorkOrders.QuotationItem", b =>

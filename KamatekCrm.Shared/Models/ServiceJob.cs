@@ -184,6 +184,7 @@ namespace KamatekCrm.Shared.Models
             JobStatus.ConvertedToQuote => "📄 Teklife Dönüştürüldü",
             JobStatus.InstallationPlanned => "🛠️ Montaj Yapılacak",
             JobStatus.InstallationCompleted => "✅ Montaj Tamamlandı",
+            JobStatus.Delivered => "🚚 Teslim Edildi",
             JobStatus.Pending => "⏳ Bekliyor",
             JobStatus.InProgress => "🔵 Devam Ediyor",
             JobStatus.WaitingForParts => "📦 Parça Bekleniyor",
@@ -238,7 +239,7 @@ namespace KamatekCrm.Shared.Models
             get
             {
                 if (!SlaDeadline.HasValue) return "SLA Yok";
-                if (Status == JobStatus.Completed || Status == JobStatus.Cancelled) return "Tamamlandı";
+                if (Status is JobStatus.Completed or JobStatus.Cancelled or JobStatus.Delivered) return "Tamamlandı";
                 
                 var remaining = SlaDeadline.Value - DateTime.UtcNow;
                 if (remaining.TotalMinutes < 0) return "⚠️ SLA Aşıldı!";
@@ -249,7 +250,8 @@ namespace KamatekCrm.Shared.Models
         }
 
         [NotMapped]
-        public bool IsSlaBreached => SlaDeadline.HasValue && SlaDeadline.Value < DateTime.UtcNow && Status != JobStatus.Completed && Status != JobStatus.Cancelled;
+        public bool IsSlaBreached => SlaDeadline.HasValue && SlaDeadline.Value < DateTime.UtcNow &&
+                                     Status is not (JobStatus.Completed or JobStatus.Cancelled or JobStatus.Delivered);
 
         #endregion
     }

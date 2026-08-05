@@ -57,6 +57,14 @@ namespace KamatekCrm
             // PostgreSQL Legacy Timestamp Behavior (Fix for Kind=Local error)
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
+            // WPF bağlama hatalarını geliştirme sırasında görünür kıl (yalnızca DEBUG derlemeleri)
+            // Tüm hatalar Debug çıktısına; "TwoWay or OneWayToSource" sınıfı ayrıca popup'a düşer.
+#if DEBUG
+            PresentationTraceSources.Refresh();
+            PresentationTraceSources.DataBindingSource.Listeners.Add(new Diagnostics.BindingErrorTraceListener());
+            PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Warning;
+#endif
+
             // Logging'i ilk iş olarak yapılandır
             LoggingConfiguration.ConfigureLogging();
             
