@@ -1,0 +1,27 @@
+name: KamatekCRM Desktop Release
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: windows-latest 
+
+    steps:
+    - name: Depoyu Klonla (Checkout)
+      uses: actions/checkout@v4
+
+    - name: .NET 9 Çalışma Zamanı Kurulumu
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x' 
+
+    - name: Projeyi Derle ve Tek Dosya EXE Oluştur
+      run: dotnet publish KamatekCRM/KamatekCrm.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o ./publish_output
+
+    - name: Derleme Çıktısını (Artifact) Yükle
+      uses: actions/upload-artifact@v4
+      with:
+        name: KamatekCRM-App
+        path: ./publish_output/
+        
