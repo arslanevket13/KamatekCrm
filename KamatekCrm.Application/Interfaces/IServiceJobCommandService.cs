@@ -56,6 +56,16 @@ public interface IServiceJobCommandService
         UpdateWorkOrderQuotationRequest request,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Teklifi müşteriye gönderilmiş olarak işaretler (Draft → Sent): gönderim zamanı
+    /// saklanır ve iş tarihçesine yazılır. Zaten gönderilmiş teklifte idempotent başarı döner;
+    /// kabul/red/iptal edilmiş teklif gönderilemez.
+    /// </summary>
+    Task<Result<WorkOrderQuotationResult>> SendQuotationAsync(
+        int quotationId,
+        string changedBy,
+        CancellationToken cancellationToken = default);
+
     Task<Result<WorkOrderQuotationResult>> AcceptQuotationAsync(
         int quotationId,
         string changedBy,

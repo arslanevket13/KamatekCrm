@@ -17,13 +17,16 @@ public sealed class ServiceJobReadService : IServiceJobReadService
 {
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
     private readonly IApplicationAuthorizationService _authorization;
+    private readonly IWorkOrderNextActionResolver _nextActionResolver;
 
     public ServiceJobReadService(
         IDbContextFactory<AppDbContext> dbContextFactory,
-        IApplicationAuthorizationService authorization)
+        IApplicationAuthorizationService authorization,
+        IWorkOrderNextActionResolver nextActionResolver)
     {
         _dbContextFactory = dbContextFactory;
         _authorization = authorization;
+        _nextActionResolver = nextActionResolver;
     }
 
     public async Task<Result<ServiceJobWorkspaceDto>> GetWorkspaceAsync(CancellationToken cancellationToken = default)
@@ -367,6 +370,218 @@ public sealed class ServiceJobReadService : IServiceJobReadService
                     delivery.PaymentMethod,
                     delivery.PaidAmount,
                     delivery.InvoiceNumber)));
+    }
+
+    public async Task<Result<WorkOrderWorkspaceDto>> GetWorkspaceAsync(
+        int jobId,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = AuthorizeRead();
+        if (authorization.IsFailure) return Result.Failure<WorkOrderWorkspaceDto>(authorization.Error);
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var job = await context.ServiceJobs.AsNoTracking()
+            .Where(item => item.Id == jobId)
+            .Select(item => new
+            {
+                item.Id,
+                item.Title,
+                item.Description,
+                item.WorkOrderType,
+                item.Priority,
+                item.Status,
+                item.AssignedUserId,
+                item.AssignedTechnicianId,
+                item.AssignedTechnician,
+                AssignedUserName = item.AssignedUser != null
+                    ? ((item.AssignedUser.Ad + " " + item.AssignedUser.Soyad).Trim() == string.Empty
+                        ? item.AssignedUser.Username
+                        : (item.AssignedUser.Ad + " " + item.AssignedUser.Soyad).Trim())
+                    : null,
+                item.SlaDeadline,
+                item.ScheduledDate,
+                item.CreatedDate,
+                item.DiscoveryTechnicalNotes,
+                item.TechnicianNotes,
+                item.CustomerId,
+                CustomerName = item.Customer.FullName == string.Empty ? item.Customer.CompanyName : item.Customer.FullName,
+                item.Customer.PhoneNumber,
+                item.Customer.Neighborhood,
+                item.Customer.Street,
+                item.Customer.BuildingNo,
+                item.Customer.ApartmentNo,
+                item.Customer.District,
+                item.Customer.City
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (job is null) return Result.Failure<WorkOrderWorkspaceDto>($"İş kaydı bulunamadı (ID: {jobId}).");
+
+        var discovery = await context.DiscoveryReports.AsNoTracking()
+            .Include(d => d.Materials)
+            .FirstOrDefaultAsync(d => d.ServiceJobId == jobId, cancellationToken);
+
+        var quotation = await context.WorkOrderQuotations.AsNoTracking()
+            .Include(q => q.Items)
+            .Where(q => q.ServiceJobId == jobId)
+            .OrderByDescending(q => q.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var installation = await context.InstallationOrders.AsNoTracking()
+            .Include(i => i.Materials)
+            .Include(i => i.Tasks)
+            .FirstOrDefaultAsync(i => i.ServiceJobId == jobId, cancellationToken);
+
+        var visits = await context.DiscoveryVisits.AsNoTracking()
+            .Where(v => v.ServiceJobId == jobId)
+            .OrderByDescending(v => v.VisitDate)
+            .Select(v => new DiscoveryVisitDto(
+                v.Id, v.VisitDate, v.TechnicianName, v.Notes, v.PhotoPathsList))
+            .ToListAsync(cancellationToken);
+
+        var delivery = await context.JobDeliveries.AsNoTracking()
+            .FirstOrDefaultAsync(d => d.ServiceJobId == jobId, cancellationToken);
+
+        var history = await context.ServiceJobHistories.AsNoTracking()
+            .Where(item => item.ServiceJobId == jobId)
+            .OrderByDescending(item => item.Date)
+            .Take(10)
+            .Select(item => new ServiceJobHistoryDto(
+                item.Id, item.Date, item.JobStatusChange, item.TechnicianNote,
+                item.Action, item.Notes, item.UserId))
+            .ToListAsync(cancellationToken);
+
+        // ── Application katmanı: aşama / sıradaki işlem / izinli işlemler / uyarılar ──
+        // Resolver, ConvertToQuoteAsync ile aynı "efektif veri" semantiğini kullanır:
+        // keşif raporu yoksa iş kaydındaki keşif alanları ve iş kalemleri esas alınır.
+        // Böylece UI'nin pasif gördüğü buton ile servisin kabul ettiği işlem aynı kurala dayanır.
+        var effectiveNotes = discovery?.TechnicalNotes ?? job.DiscoveryTechnicalNotes ?? job.TechnicianNotes;
+        var effectiveSolution = discovery?.RecommendedSolution ?? job.TechnicianNotes;
+        var effectiveTechnician = discovery?.TechnicianName ?? job.AssignedTechnician;
+        int effectiveMaterialCount = discovery is not null
+            ? discovery.Materials.Count
+            : await context.ServiceJobItems.CountAsync(i => i.ServiceJobId == jobId, cancellationToken);
+        bool hasDiscoveryData = discovery is not null
+            || !string.IsNullOrWhiteSpace(effectiveNotes)
+            || !string.IsNullOrWhiteSpace(effectiveSolution)
+            || !string.IsNullOrWhiteSpace(effectiveTechnician)
+            || effectiveMaterialCount > 0;
+
+        var input = new WorkOrderWorkspaceInput(
+            job.Id,
+            job.Status,
+            job.AssignedUserId,
+            job.AssignedTechnician,
+            job.SlaDeadline,
+            hasDiscoveryData,
+            effectiveTechnician,
+            effectiveNotes,
+            effectiveSolution,
+            effectiveMaterialCount,
+            visits.Count,
+            visits.Count > 0 ? visits[0].VisitDate : null,
+            quotation?.Status,
+            quotation?.RevisionNumber ?? 0,
+            installation is not null,
+            installation?.InstallationDate,
+            installation?.CompletedAt is not null,
+            delivery is not null,
+            delivery?.DeliveryDate,
+            installation?.Materials.Count ?? 0,
+            installation?.LaborHours ?? 0m);
+
+        var stage = _nextActionResolver.ResolveStage(input);
+        var nextAction = _nextActionResolver.ResolveNextAction(input);
+        var allowedActions = _nextActionResolver.ResolveAllowedActions(input);
+        var warnings = _nextActionResolver.ResolveWarnings(input);
+
+        return Result.Success(new WorkOrderWorkspaceDto(
+            job.Id,
+            $"#{job.Id:D6}",
+            string.IsNullOrWhiteSpace(job.CustomerName) ? $"Müşteri #{job.CustomerId}" : job.CustomerName,
+            job.PhoneNumber ?? string.Empty,
+            BuildAddress(job.Neighborhood, job.Street, job.BuildingNo, job.ApartmentNo, job.District, job.City),
+            job.Title,
+            job.Description,
+            job.WorkOrderType,
+            job.Priority,
+            job.AssignedUserId,
+            job.AssignedUserName,
+            job.AssignedTechnicianId,
+            job.AssignedTechnician,
+            stage,
+            WorkOrderStageLabels.Map(stage),
+            job.Status,
+            job.CreatedDate,
+            history.Count > 0 ? history[0].Date : (DateTime?)null,
+            job.ScheduledDate,
+            visits.Count > 0 ? visits[0].VisitDate : null,
+            installation?.InstallationDate,
+            job.SlaDeadline,
+            MapSlaStatus(job.SlaDeadline, job.Status),
+            nextAction,
+            allowedActions,
+            warnings,
+            discovery is null
+                ? null
+                : new DiscoveryReportDto(
+                    discovery.Id,
+                    discovery.ServiceJobId,
+                    discovery.TechnicalNotes,
+                    discovery.RecommendedSolution,
+                    discovery.PhotoPathsList,
+                    discovery.EstimatedLaborHours,
+                    discovery.TechnicianName,
+                    discovery.Materials
+                        .Select(m => new DiscoveryMaterialDto(m.Id, m.ProductId, m.ProductName, m.Quantity, m.Notes))
+                        .ToList()),
+            quotation is null ? null : MapQuotation(quotation),
+            installation is null
+                ? null
+                : new InstallationOrderDto(
+                    installation.Id,
+                    installation.ServiceJobId,
+                    installation.QuotationId,
+                    installation.TechnicianId,
+                    installation.TechnicianName,
+                    installation.InstallationDate,
+                    installation.Notes,
+                    installation.LaborHours,
+                    installation.CompletedAt,
+                    installation.CompletionTechnician,
+                    installation.DeliveryNote,
+                    installation.CustomerSignature,
+                    installation.Materials
+                        .Select(m => new InstallationMaterialDto(m.Id, m.ProductId, m.ProductName, m.Quantity, m.UnitPrice, m.Notes))
+                        .ToList(),
+                    installation.Tasks
+                        .Select(t => new InstallationTaskDto(t.Id, t.Title, t.Description, t.IsCompleted, t.CompletedAt))
+                        .ToList()),
+            delivery is null
+                ? null
+                : new JobDeliveryDto(
+                    delivery.Id,
+                    delivery.ServiceJobId,
+                    delivery.DeliveryDate,
+                    delivery.DeliveredBy,
+                    delivery.DeliveryNote,
+                    delivery.CustomerSignature,
+                    delivery.PaymentStatus,
+                    delivery.PaymentMethod,
+                    delivery.PaidAmount,
+                    delivery.InvoiceNumber),
+            history,
+            visits));
+    }
+
+    private static string MapSlaStatus(DateTime? deadline, JobStatus status)
+    {
+        if (!deadline.HasValue) return "SLA Yok";
+        if (status is JobStatus.Completed or JobStatus.Cancelled or JobStatus.Delivered) return "Tamamlandı";
+        var remaining = deadline.Value - DateTime.UtcNow;
+        if (remaining.TotalMinutes < 0) return "⚠️ SLA Aşıldı!";
+        if (remaining.TotalHours < 2) return "🔴 Acil (2 saat)";
+        if (remaining.TotalHours < 8) return "🟡 Yaklaşıyor (8 saat)";
+        return "🟢 Normal";
     }
 
     public async Task<Result<IReadOnlyList<QuotationProductLookupDto>>> SearchProductsAsync(

@@ -21,6 +21,13 @@ public interface IServiceJobReadService
     Task<Result<WorkOrderWorkflowDto>> GetWorkOrderWorkflowAsync(int jobId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// İş Emri Çalışma Alanı merkezi projeksiyonunu döndürür: iş künyesi + alt kayıt özetleri
+    /// (keşif/teklif/montaj/teslim) + son hareketler + application katmanında çözümlenmiş
+    /// CurrentStage, NextAction, AllowedActions ve Warnings. UI bu DTO'yu yalnızca görüntüler.
+    /// </summary>
+    Task<Result<WorkOrderWorkspaceDto>> GetWorkspaceAsync(int jobId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Teklif düzenleyicide stoktan ürün eklemek için ürün arar (ad veya SKU ile).
     /// </summary>
     Task<Result<IReadOnlyList<QuotationProductLookupDto>>> SearchProductsAsync(

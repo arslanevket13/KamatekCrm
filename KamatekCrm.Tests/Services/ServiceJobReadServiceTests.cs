@@ -136,7 +136,7 @@ public sealed class ServiceJobReadServiceTests
     public async Task SearchAsync_WhenUnauthorized_ReturnsFailureWithoutData()
     {
         var (_, factory, _, _, _) = await CreateServiceAsync();
-        var service = new ServiceJobReadService(factory.Object, new TestAuthorizationService(isAuthorized: false));
+        var service = new ServiceJobReadService(factory.Object, new TestAuthorizationService(isAuthorized: false), new KamatekCrm.ApplicationCore.Services.WorkOrderNextActionResolver());
 
         var result = await service.SearchAsync(new ServiceJobSearchRequest(null, null, null, null));
 
@@ -214,7 +214,7 @@ public sealed class ServiceJobReadServiceTests
         var factory = new Mock<IDbContextFactory<AppDbContext>>();
         factory.Setup(item => item.CreateDbContextAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => new AppDbContext(options));
-        var service = new ServiceJobReadService(factory.Object, new TestAuthorizationService());
+        var service = new ServiceJobReadService(factory.Object, new TestAuthorizationService(), new KamatekCrm.ApplicationCore.Services.WorkOrderNextActionResolver());
         return (service, factory, options, jobId, customerId);
     }
 }

@@ -254,7 +254,7 @@ public sealed class InstallationV2Tests
         job.Status.Should().Be(JobStatus.InstallationCompleted);
 
         // Read servisi LaborHours'u döndürür
-        var readService = new ServiceJobReadService(factory, new TestAuthorizationService());
+        var readService = new ServiceJobReadService(factory, new TestAuthorizationService(), new KamatekCrm.ApplicationCore.Services.WorkOrderNextActionResolver());
         var workflow = await readService.GetWorkOrderWorkflowAsync(jobId);
         workflow.Value!.Installation!.LaborHours.Should().Be(7.5m);
     }
@@ -330,6 +330,9 @@ public sealed class InstallationV2Tests
         JobCategory = JobCategory.CCTV,
         WorkOrderType = WorkOrderType.Discovery,
         Status = JobStatus.DiscoveryRequest,
+        DiscoveryTechnicalNotes = "Sahada tespit notu",
+        TechnicianNotes = "Önerilen çözüm notu",
+        AssignedTechnician = "Teknisyen",
         CreatedDate = DateTime.UtcNow
     };
 

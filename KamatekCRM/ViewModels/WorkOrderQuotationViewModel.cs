@@ -129,6 +129,9 @@ namespace KamatekCrm.ViewModels
         /// <summary>Taslak teklif doğrudan düzenlenebildiği için revizyon yalnızca diğer durumlarda açılır.</summary>
         public bool CanCreateRevision { get; private set; }
 
+        /// <summary>"Teklifi Gönder" yalnızca Taslak teklifte anlamlıdır (gönderildi → durum değişir).</summary>
+        public bool CanSendQuotation => _quotation is not null && IsEditable && _quotation.Status == QuotationStatus.Draft;
+
         /// <summary>Kabul edilmiş/reddedilmiş teklif veya geçmiş revizyon görüntülenirken salt okunur mod.</summary>
         public bool IsViewMode { get; private set; }
 
@@ -261,6 +264,7 @@ namespace KamatekCrm.ViewModels
 
             OnPropertyChanged(nameof(IsEditable));
             OnPropertyChanged(nameof(CanCreateRevision));
+            OnPropertyChanged(nameof(CanSendQuotation));
             OnPropertyChanged(nameof(IsViewMode));
             OnPropertyChanged(nameof(IsViewingHistoricRevision));
             OnPropertyChanged(nameof(ViewingRevisionDisplay));
@@ -456,6 +460,37 @@ namespace KamatekCrm.ViewModels
 
             _toastService.ShowSuccess($"Revizyon {result.Value.RevisionNumber} oluşturuldu; düzenlemeye hazır.");
             await InitializeAsync();
+        }
+
+        [RelayCommand]
+        private async Task SendQuotation()
+        {
+            if (IsViewingHistoricRevision)
+            {
+                _toastService.ShowWarning("Geçmiş revizyon üzerinde işlem yapılamaz; önce güncel teklife dönün.");
+                return;
+            }
+            if (_quotation.Status == QuotationStatus.Sent)
+            {
+                _toastService.ShowInfo("Teklif zaten müşteriye gönderilmiş durumda.");
+                return;
+            }
+            if (_quotation.Status != QuotationStatus.Draft)
+            {
+                _toastService.ShowWarning("Bu teklif gönderilemez; yalnızca taslak teklif gönderilir.");
+                return;
+            }
+
+            var result = await _commandService.SendQuotationAsync(
+                _quotation.Id, App.CurrentUser?.Username ?? "Sistem");
+            if (result.IsFailure)
+            {
+                _toastService.ShowError(result.Error);
+                return;
+            }
+
+            _toastService.ShowSuccess("Teklif müşteriye gönderildi. Müşteri cevabı (kabul/ret) artık kaydedilebilir.");
+            RequestCloseWithSuccess?.Invoke();
         }
 
         [RelayCommand]

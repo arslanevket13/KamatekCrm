@@ -119,7 +119,7 @@ public sealed class DeliveryV2Tests
         history.TechnicianNote.Should().Contain("Kısmi Ödendi");
 
         // Read servisi workflow'a teslim verisini ekler
-        var readService = new ServiceJobReadService(factory, new TestAuthorizationService());
+        var readService = new ServiceJobReadService(factory, new TestAuthorizationService(), new KamatekCrm.ApplicationCore.Services.WorkOrderNextActionResolver());
         var workflow = await readService.GetWorkOrderWorkflowAsync(jobId);
         workflow.Value!.Delivery.Should().NotBeNull();
         workflow.Value.Delivery!.PaidAmount.Should().Be(1200m);
@@ -261,6 +261,9 @@ public sealed class DeliveryV2Tests
         JobCategory = JobCategory.CCTV,
         WorkOrderType = WorkOrderType.Discovery,
         Status = JobStatus.DiscoveryRequest,
+        DiscoveryTechnicalNotes = "Sahada tespit notu",
+        TechnicianNotes = "Önerilen çözüm notu",
+        AssignedTechnician = "Teknisyen",
         CreatedDate = DateTime.UtcNow
     };
 

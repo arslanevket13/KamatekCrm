@@ -128,7 +128,7 @@ public class ServiceJobCommandServiceTests
         var (service, factory, customerId) = CreateService(stockQuantity: 5);
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewJob(customerId, JobStatus.DiscoveryCompleted),
-            [],
+            [NewItem(1)],
             false,
             "test-user"));
 
@@ -332,6 +332,9 @@ public class ServiceJobCommandServiceTests
         WorkOrderType = WorkOrderType.Repair,
         Status = status,
         TotalAmount = 240m,
+        DiscoveryTechnicalNotes = "Sahada tespit notu",
+        TechnicianNotes = "Önerilen çözüm notu",
+        AssignedTechnician = "Teknisyen",
         CreatedDate = DateTime.UtcNow
     };
 

@@ -57,6 +57,10 @@
                            Height="38" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"
                            IsEnabled="{Binding CanCreateRevision}"
                            ToolTip="Kabul edilmiş/reddedilmiş teklifi değiştirmek için yeni revizyon oluştur"/>
+                <ui:Button Content="📨 Gönder" Command="{Binding SendQuotationCommand}" Appearance="Primary"
+                           Height="38" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"
+                           Visibility="{Binding CanSendQuotation, Converter={StaticResource BoolToVis}}"
+                           ToolTip="Teklifi müşteriye gönderilmiş olarak işaretle (taslak sonlandırılır, müşteri cevabı beklenir)"/>
                 <ui:Button Content="❌ Reddet" Command="{Binding RejectCommand}" Appearance="Danger"
                            Height="38" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"
                            IsEnabled="{Binding IsEditable}"/>

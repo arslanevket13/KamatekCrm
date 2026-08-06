@@ -269,6 +269,30 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
                     return Result.Failure<ServiceJobQuoteConversionResult>($"İş emri bulunamadı (ID: {jobId}).");
                 }
 
+                // Teklif oluşturma ön koşulları (§7): UI ile aynı kurallar servis tarafında
+                // tekrar doğrulanır — yalnızca UI kontrolüne güvenilmez. Keşif raporu henüz
+                // oluşturulmamışsa iş kaydındaki keşif alanları ve iş kalemleri esas alınır.
+                var existingReport = await context.DiscoveryReports
+                    .Include(r => r.Materials)
+                    .FirstOrDefaultAsync(d => d.ServiceJobId == job.Id, cancellationToken);
+                var effectiveNotes = existingReport?.TechnicalNotes ?? job.DiscoveryTechnicalNotes ?? job.TechnicianNotes;
+                var effectiveSolution = existingReport?.RecommendedSolution ?? job.TechnicianNotes;
+                var effectiveTechnician = existingReport?.TechnicianName ?? job.AssignedTechnician;
+                int effectiveMaterialCount = existingReport is not null
+                    ? existingReport.Materials.Count
+                    : await context.ServiceJobItems.CountAsync(i => i.ServiceJobId == job.Id, cancellationToken);
+
+                var missing = new List<string>();
+                if (string.IsNullOrWhiteSpace(effectiveNotes)) missing.Add("Teknik tespit girilmedi");
+                if (string.IsNullOrWhiteSpace(effectiveSolution)) missing.Add("Önerilen çözüm girilmedi");
+                if (effectiveMaterialCount == 0) missing.Add("En az bir tahmini malzeme/hizmet kalemi girilmelidir");
+                if (string.IsNullOrWhiteSpace(effectiveTechnician)) missing.Add("Keşfi tamamlayan teknisyen belirtilmedi");
+                if (missing.Count > 0)
+                {
+                    return Result.Failure<ServiceJobQuoteConversionResult>(
+                        "Teklif oluşturulamaz: " + string.Join("; ", missing));
+                }
+
                 var previousStatus = job.Status;
                 if (job.IsConvertedToQuote || previousStatus == JobStatus.ConvertedToQuote)
                 {
@@ -746,6 +770,66 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
             {
                 await RollbackIfPresentAsync(transaction, cancellationToken);
                 return Result.Failure<WorkOrderQuotationResult>($"Teklif güncellenemedi: {ex.Message}");
+            }
+        }, cancellationToken: cancellationToken);
+    }
+
+    public async Task<Result<WorkOrderQuotationResult>> SendQuotationAsync(
+        int quotationId,
+        string changedBy,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = _authorizationService.Authorize(ApplicationPermission.ManageServiceJobs);
+        if (authorization.IsFailure)
+        {
+            return Result.Failure<WorkOrderQuotationResult>(authorization.Error);
+        }
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.ExecuteInTransactionAsync(async transaction =>
+        {
+            try
+            {
+                var quote = await context.WorkOrderQuotations
+                    .FirstOrDefaultAsync(q => q.Id == quotationId, cancellationToken);
+                if (quote is null)
+                {
+                    return Result.Failure<WorkOrderQuotationResult>($"Teklif bulunamadı (ID: {quotationId}).");
+                }
+
+                if (quote.Status == QuotationStatus.Sent)
+                {
+                    // Zaten gönderilmiş — tekrarlanan gönderim idempotent başarıdır (tarih korunur).
+                    return Result.Success(new WorkOrderQuotationResult(quote.Id, quote.Status, quote.TotalAmount));
+                }
+
+                if (quote.Status is QuotationStatus.Accepted or QuotationStatus.Rejected
+                    or QuotationStatus.Cancelled or QuotationStatus.Expired)
+                {
+                    return Result.Failure<WorkOrderQuotationResult>(
+                        $"{quote.Status} durumundaki teklif gönderilemez.");
+                }
+
+                quote.Status = QuotationStatus.Sent;
+                quote.SentDate = DateTime.UtcNow;
+
+                await AppendWorkflowHistoryAsync(
+                    context,
+                    quote.ServiceJobId,
+                    $"Teklif {quote.QuotationNumber} müşteriye gönderildi.",
+                    "QuotationSent",
+                    changedBy,
+                    cancellationToken);
+
+                await context.SaveChangesAsync(cancellationToken);
+                await CommitIfPresentAsync(transaction, cancellationToken);
+
+                return Result.Success(new WorkOrderQuotationResult(quote.Id, quote.Status, quote.TotalAmount));
+            }
+            catch (Exception ex)
+            {
+                await RollbackIfPresentAsync(transaction, cancellationToken);
+                return Result.Failure<WorkOrderQuotationResult>($"Teklif gönderilemedi: {ex.Message}");
             }
         }, cancellationToken: cancellationToken);
     }

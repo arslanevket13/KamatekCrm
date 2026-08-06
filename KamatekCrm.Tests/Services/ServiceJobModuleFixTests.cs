@@ -75,7 +75,7 @@ public sealed class ServiceJobModuleFixTests
         factoryMock.Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => new AppDbContext(options));
 
-        var readService = new ServiceJobReadService(factoryMock.Object, new TestAuthorizationService(isAuthorized: true));
+        var readService = new ServiceJobReadService(factoryMock.Object, new TestAuthorizationService(isAuthorized: true), new KamatekCrm.ApplicationCore.Services.WorkOrderNextActionResolver());
 
         // Act
         var result = await readService.SearchAsync(new ServiceJobSearchRequest(

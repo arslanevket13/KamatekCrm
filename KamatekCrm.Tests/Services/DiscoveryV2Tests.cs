@@ -289,7 +289,7 @@ public sealed class DiscoveryV2Tests
             ],
             "test-user"));
 
-        var readService = new ServiceJobReadService(factory, new TestAuthorizationService());
+        var readService = new ServiceJobReadService(factory, new TestAuthorizationService(), new KamatekCrm.ApplicationCore.Services.WorkOrderNextActionResolver());
         var workflow = await readService.GetWorkOrderWorkflowAsync(save.Value!.JobId);
 
         workflow.IsSuccess.Should().BeTrue(workflow.Error);

@@ -91,7 +91,7 @@ public sealed class WorkOrderWorkflowTests
         var (service, factory, customerId) = CreateService();
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewDiscoveryJob(customerId),
-            [],
+            [NewItem("Kamera", 1, 1)],
             false,
             "test-user"));
         await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
@@ -162,7 +162,7 @@ public sealed class WorkOrderWorkflowTests
         var (service, factory, customerId) = CreateService();
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewDiscoveryJob(customerId),
-            [],
+            [NewItem("Kamera", 1, 1)],
             false,
             "test-user"));
         await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
@@ -180,7 +180,7 @@ public sealed class WorkOrderWorkflowTests
         var (service, factory, customerId) = CreateService();
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewDiscoveryJob(customerId),
-            [],
+            [NewItem("Kamera", 1, 1)],
             false,
             "test-user"));
         await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
@@ -258,7 +258,7 @@ public sealed class WorkOrderWorkflowTests
         var (service, factory, customerId) = CreateService();
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewDiscoveryJob(customerId),
-            [],
+            [NewItem("Kamera", 1, 1)],
             false,
             "test-user"));
         await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
@@ -268,6 +268,35 @@ public sealed class WorkOrderWorkflowTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().MatchRegex("montaj planlanmalı|durumuna geçilemez");
+    }
+
+    [Fact]
+    public async Task CompleteInstallationAsync_RejectsWhenLaborHoursMissing()
+    {
+        // Kapı malzeme bazlı olsa da servis, tamamlama anında işçilik saatinin > 0
+        // olduğunu doğrular — saat yalnızca tamamlama formunda girilir.
+        var (service, factory, customerId) = CreateService();
+        var save = await service.SaveAsync(new ServiceJobSaveRequest(
+            NewDiscoveryJob(customerId),
+            [NewItem("Kamera", 1, 1)],
+            false,
+            "test-user"));
+        await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
+
+        int quotationId;
+        await using (var ctx = await factory.CreateDbContextAsync())
+        {
+            quotationId = (await ctx.WorkOrderQuotations.SingleAsync()).Id;
+        }
+        await service.AcceptQuotationAsync(quotationId, "test-user");
+        (await service.PlanInstallationAsync(new PlanInstallationRequest(
+            save.Value!.JobId, null, "Ali Usta", null, null, "test-user"))).IsSuccess.Should().BeTrue();
+
+        var result = await service.CompleteInstallationAsync(new CompleteInstallationRequest(
+            save.Value!.JobId, null, "Ali Usta", null, LaborHours: 0m, "test-user"));
+
+        result.IsFailure.Should().BeTrue("işçilik saati girilmeden montaj tamamlanamaz");
+        result.Error.Should().Contain("işçilik saati");
     }
 
     [Fact]
@@ -513,7 +542,7 @@ public sealed class WorkOrderWorkflowTests
         var (service, factory, customerId) = CreateService();
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewDiscoveryJob(customerId),
-            [],
+            [NewItem("Kamera", 1, 1)],
             false,
             "test-user"));
         await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
@@ -536,7 +565,7 @@ public sealed class WorkOrderWorkflowTests
         var (service, factory, customerId) = CreateService();
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewDiscoveryJob(customerId),
-            [],
+            [NewItem("Kamera", 1, 1)],
             false,
             "test-user"));
         await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
@@ -565,7 +594,7 @@ public sealed class WorkOrderWorkflowTests
         var (service, factory, customerId) = CreateService();
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewDiscoveryJob(customerId),
-            [],
+            [NewItem("Kamera", 1, 1)],
             false,
             "test-user"));
         await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
@@ -591,7 +620,7 @@ public sealed class WorkOrderWorkflowTests
         var (service, factory, customerId) = CreateService();
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewDiscoveryJob(customerId),
-            [],
+            [NewItem("Kamera", 1, 1)],
             false,
             "test-user"));
         await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
@@ -611,7 +640,7 @@ public sealed class WorkOrderWorkflowTests
             ]));
         update.IsSuccess.Should().BeTrue(update.Error);
 
-        var readService = new ServiceJobReadService(factory, new TestAuthorizationService());
+        var readService = new ServiceJobReadService(factory, new TestAuthorizationService(), new KamatekCrm.ApplicationCore.Services.WorkOrderNextActionResolver());
         var workflow = await readService.GetWorkOrderWorkflowAsync(save.Value!.JobId);
 
         workflow.IsSuccess.Should().BeTrue(workflow.Error);
@@ -627,7 +656,7 @@ public sealed class WorkOrderWorkflowTests
         var (service, factory, customerId) = CreateService();
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewDiscoveryJob(customerId),
-            [],
+            [NewItem("Kamera", 1, 1)],
             false,
             "test-user"));
         await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
@@ -651,12 +680,72 @@ public sealed class WorkOrderWorkflowTests
     }
 
     [Fact]
+    public async Task SendQuotationAsync_MovesDraftToSent_AndIsIdempotent()
+    {
+        var (service, factory, customerId) = CreateService();
+        var save = await service.SaveAsync(new ServiceJobSaveRequest(
+            NewDiscoveryJob(customerId),
+            [NewItem("Kamera", 1, 1)],
+            false,
+            "test-user"));
+        await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
+
+        int quotationId;
+        await using (var ctx = await factory.CreateDbContextAsync())
+        {
+            quotationId = (await ctx.WorkOrderQuotations.SingleAsync()).Id;
+        }
+
+        var sent = await service.SendQuotationAsync(quotationId, "test-user");
+        var repeated = await service.SendQuotationAsync(quotationId, "test-user");
+
+        sent.IsSuccess.Should().BeTrue(sent.Error);
+        sent.Value!.Status.Should().Be(QuotationStatus.Sent);
+        repeated.IsSuccess.Should().BeTrue("zaten gönderilmiş teklifte tekrarlanan gönderim idempotent olmalı");
+
+        await using var verify = await factory.CreateDbContextAsync();
+        var quote = await verify.WorkOrderQuotations.SingleAsync();
+        quote.Status.Should().Be(QuotationStatus.Sent);
+        quote.SentDate.Should().NotBeNull();
+        (await verify.ServiceJobHistories.CountAsync(h => h.ServiceJobId == save.Value!.JobId && h.Action == "QuotationSent"))
+            .Should().Be(1, "gönderim tarihçeye yalnızca bir kez yazılır");
+
+        // Gönderildikten sonra müşteri cevabı kaydedilebilir (Sent → Accepted).
+        var accept = await service.AcceptQuotationAsync(quotationId, "test-user");
+        accept.IsSuccess.Should().BeTrue(accept.Error);
+    }
+
+    [Fact]
+    public async Task SendQuotationAsync_RejectsAcceptedQuote()
+    {
+        var (service, factory, customerId) = CreateService();
+        var save = await service.SaveAsync(new ServiceJobSaveRequest(
+            NewDiscoveryJob(customerId),
+            [NewItem("Kamera", 1, 1)],
+            false,
+            "test-user"));
+        await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
+
+        int quotationId;
+        await using (var ctx = await factory.CreateDbContextAsync())
+        {
+            quotationId = (await ctx.WorkOrderQuotations.SingleAsync()).Id;
+        }
+        await service.AcceptQuotationAsync(quotationId, "test-user");
+
+        var result = await service.SendQuotationAsync(quotationId, "test-user");
+
+        result.IsFailure.Should().BeTrue("kabul edilmiş teklif gönderilemez");
+        result.Error.Should().Contain("gönderilemez");
+    }
+
+    [Fact]
     public async Task RejectQuotationAsync_StoresReason()
     {
         var (service, factory, customerId) = CreateService();
         var save = await service.SaveAsync(new ServiceJobSaveRequest(
             NewDiscoveryJob(customerId),
-            [],
+            [NewItem("Kamera", 1, 1)],
             false,
             "test-user"));
         await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
@@ -697,7 +786,7 @@ public sealed class WorkOrderWorkflowTests
         await service.PlanInstallationAsync(new PlanInstallationRequest(
             save.Value!.JobId, null, "Ali Usta", null, null, "test-user"));
 
-        var readService = new ServiceJobReadService(factory, new TestAuthorizationService());
+        var readService = new ServiceJobReadService(factory, new TestAuthorizationService(), new KamatekCrm.ApplicationCore.Services.WorkOrderNextActionResolver());
         var workflow = await readService.GetWorkOrderWorkflowAsync(save.Value!.JobId);
 
         workflow.IsSuccess.Should().BeTrue(workflow.Error);
@@ -710,6 +799,72 @@ public sealed class WorkOrderWorkflowTests
         workflow.Value.Installation.Should().NotBeNull();
         workflow.Value.Installation!.Materials.Should().ContainSingle(m => m.ProductName == "Kamera");
         workflow.Value.Installation.Tasks.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task ConvertToQuoteAsync_RejectsWhenDiscoveryNotesMissing()
+    {
+        var (service, factory, customerId) = CreateService();
+        var save = await service.SaveAsync(new ServiceJobSaveRequest(
+            new ServiceJob
+            {
+                CustomerId = customerId,
+                Description = "Keşif testi",
+                JobCategory = JobCategory.CCTV,
+                WorkOrderType = WorkOrderType.Discovery,
+                Status = JobStatus.DiscoveryRequest,
+                AssignedTechnician = "Teknisyen"
+            },
+            [NewItem("Kamera", 2, 1)],
+            false,
+            "test-user"));
+
+        var result = await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
+
+        result.IsFailure.Should().BeTrue("teknik tespit ve önerilen çözüm olmadan teklif oluşturulamaz");
+        result.Error.Should().Contain("Teknik tespit girilmedi");
+        result.Error.Should().Contain("Önerilen çözüm girilmedi");
+    }
+
+    [Fact]
+    public async Task ConvertToQuoteAsync_RejectsWhenNoMaterials()
+    {
+        var (service, factory, customerId) = CreateService();
+        var save = await service.SaveAsync(new ServiceJobSaveRequest(
+            NewDiscoveryJob(customerId),
+            [],
+            false,
+            "test-user"));
+
+        var result = await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
+
+        result.IsFailure.Should().BeTrue("tahmini malzeme/hizmet kalemi olmadan teklif oluşturulamaz");
+        result.Error.Should().Contain("malzeme/hizmet kalemi");
+    }
+
+    [Fact]
+    public async Task ConvertToQuoteAsync_RejectsWhenNoTechnician()
+    {
+        var (service, factory, customerId) = CreateService();
+        var save = await service.SaveAsync(new ServiceJobSaveRequest(
+            new ServiceJob
+            {
+                CustomerId = customerId,
+                Description = "Keşif testi",
+                JobCategory = JobCategory.CCTV,
+                WorkOrderType = WorkOrderType.Discovery,
+                Status = JobStatus.DiscoveryRequest,
+                DiscoveryTechnicalNotes = "Sahada tespit notu",
+                TechnicianNotes = "Önerilen çözüm notu"
+            },
+            [NewItem("Kamera", 2, 1)],
+            false,
+            "test-user"));
+
+        var result = await service.ConvertToQuoteAsync(save.Value!.JobId, "test-user");
+
+        result.IsFailure.Should().BeTrue("keşfi yapan teknisyen belirtilmeden teklif oluşturulamaz");
+        result.Error.Should().Contain("teknisyen belirtilmedi");
     }
 
     // ───────────────────────────── Fixture ─────────────────────────────
