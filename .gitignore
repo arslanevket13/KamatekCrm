@@ -33,8 +33,6 @@ nul
 # Database Data
 PostgresData/
 
-# Graphify Output Directory
-graphify-out/
 # Added by code-review-graph
 .code-review-graph/
 
