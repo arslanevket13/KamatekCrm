@@ -1,4 +1,4 @@
-﻿using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Models;
 
 namespace KamatekCrm.Services
 {
@@ -24,5 +24,7 @@ namespace KamatekCrm.Services
         bool CanDeleteRecords { get; }
         bool CanApprovePurchase { get; }
         bool CanAccessSettings { get; }
+        bool HasRole(string role);
+        void EnsureAuthorized(KamatekCrm.ApplicationCore.Security.ApplicationPermission permission);
     }
 }

@@ -7,6 +7,7 @@ using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Models.WorkOrders;
+using KamatekCrm.Shared.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -749,17 +750,26 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
                 }
 
                 // Satır bazlı KDV: her satır kendi TaxPercent oranıyla vergilendirilir;
-                // quote.TaxRate toplam hesabına karışmaz (yalnızca yeni satırların varsayılanıdır).
-                decimal itemsNetTotal = validItems.Sum(item =>
-                    Math.Round(item.Quantity * Math.Max(0m, item.UnitPrice) * (1m - Math.Max(0m, item.DiscountPercent) / 100m), 2));
-                decimal itemsTaxTotal = validItems.Sum(item =>
-                {
-                    decimal net = Math.Round(item.Quantity * Math.Max(0m, item.UnitPrice) * (1m - Math.Max(0m, item.DiscountPercent) / 100m), 2);
-                    return Math.Round(net * Math.Max(0m, item.TaxPercent) / 100m, 2);
-                });
-                decimal netTotal = itemsNetTotal - quote.DiscountAmount + quote.LaborCost + quote.ShippingCost;
-                quote.TaxAmount = Math.Round(itemsTaxTotal, 2);
-                quote.TotalAmount = Math.Round(netTotal + quote.TaxAmount, 2);
+                // Largest Remainder ve kuruş dengelemesi FinancialCalculator ile kuruşu kuruşuna yapılır.
+                var calcInputs = validItems.Select(item => new LineCalculationInput(
+                    item.Id,
+                    item.ProductId,
+                    item.ProductName,
+                    item.Quantity,
+                    Math.Max(0m, item.UnitPrice),
+                    Math.Max(0m, item.DiscountPercent),
+                    Math.Max(0m, item.TaxPercent)
+                )).ToList();
+
+                var calcResult = FinancialCalculator.CalculateMultiLine(
+                    calcInputs,
+                    quote.DiscountAmount,
+                    quote.LaborCost,
+                    quote.ShippingCost,
+                    applyDiscountBeforeTax: false);
+
+                quote.TaxAmount = calcResult.TaxTotal;
+                quote.TotalAmount = calcResult.GrandTotal;
 
                 await context.SaveChangesAsync(cancellationToken);
                 await CommitIfPresentAsync(transaction, cancellationToken);

@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Services;
 
 namespace KamatekCrm.Services
 {
@@ -115,6 +116,46 @@ namespace KamatekCrm.Services
             commonAreas.AddChild("Bahçe", NodeType.Garden);
 
             return project;
+        }
+
+        /// <summary>
+        /// Proje ağacındaki tüm opsiyonel olmayan kalemleri toplar, alt iskontoyu
+        /// Largest Remainder ile satırlara dağıtır ve kuruş farkı dengeli genel toplamı hesaplar.
+        /// </summary>
+        public static MultiLineCalculationResult CalculateScopeTotals(
+            IEnumerable<ScopeNode> rootNodes,
+            decimal overallDiscountAmount = 0m,
+            decimal vatRate = 20m)
+        {
+            var lines = new List<LineCalculationInput>();
+            var stack = new Stack<ScopeNode>(rootNodes.Reverse());
+            while (stack.Count > 0)
+            {
+                var node = stack.Pop();
+                foreach (var item in node.Items ?? Enumerable.Empty<ScopeNodeItem>())
+                {
+                    if (item.IsOptional) continue;
+                    lines.Add(new LineCalculationInput(
+                        item.Id,
+                        item.ProductId,
+                        item.ProductName,
+                        item.Quantity,
+                        item.UnitPrice,
+                        0m,
+                        vatRate));
+                }
+                foreach (var child in (node.Children ?? Enumerable.Empty<ScopeNode>()).Reverse())
+                {
+                    stack.Push(child);
+                }
+            }
+
+            return FinancialCalculator.CalculateMultiLine(
+                lines,
+                overallDiscountAmount,
+                laborCost: 0m,
+                shippingCost: 0m,
+                applyDiscountBeforeTax: false);
         }
     }
 }

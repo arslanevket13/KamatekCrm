@@ -1,100 +1,244 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace KamatekCrm.Services
 {
     /// <summary>
-    /// Basit Event Aggregator (Pub/Sub) - ViewModel'ler arası iletişim için
-    /// WeakReference kullanarak memory leak önlenir
+    /// Thread-safe Event Aggregator (Pub/Sub) - ViewModel'ler arası iletişim için.
+    /// WeakReference kullanarak kapanan pencere ve ViewModel'lerin bellekte kalmasını (Memory Leak) önler.
     /// </summary>
     public class EventAggregator
     {
         private static readonly Lazy<EventAggregator> _instance = new(() => new EventAggregator());
         public static EventAggregator Instance => _instance.Value;
 
-        private readonly Dictionary<Type, List<WeakReference>> _subscribers = new();
-        private readonly object _lock = new();
+        private readonly ConcurrentDictionary<Type, List<IWeakSubscription>> _subscriptions = new();
+        private readonly object _syncLock = new();
 
-        private EventAggregator() { }
+        public EventAggregator() { }
 
         /// <summary>
-        /// Belirli bir event türüne abone ol
+        /// Belirli bir event türüne zayıf referans (WeakReference) ile abone ol.
+        /// Abonelik sonlandırma için IDisposable token döndürür; mevcut 'void' çağıran yerlerle tam geriye dönük uyumludur.
         /// </summary>
-        public void Subscribe<TEvent>(Action<TEvent> handler)
+        public IDisposable Subscribe<TEvent>(Action<TEvent> handler)
         {
-            lock (_lock)
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+
+            var eventType = typeof(TEvent);
+            var subscription = new WeakSubscription<TEvent>(this, handler);
+
+            lock (_syncLock)
             {
-                var eventType = typeof(TEvent);
-                if (!_subscribers.ContainsKey(eventType))
+                var list = _subscriptions.GetOrAdd(eventType, _ => new List<IWeakSubscription>());
+                list.Add(subscription);
+            }
+
+            return subscription;
+        }
+
+        /// <summary>
+        /// Event yayınla - tüm aktif abonelere bildirim gönderir, ölü referansları (!IsAlive) otomatik temizler.
+        /// </summary>
+        public void Publish<TEvent>(TEvent eventData)
+        {
+            var eventType = typeof(TEvent);
+            if (!_subscriptions.TryGetValue(eventType, out var list)) return;
+
+            List<IWeakSubscription>? deadList = null;
+            List<IWeakSubscription> currentList;
+
+            lock (_syncLock)
+            {
+                currentList = new List<IWeakSubscription>(list);
+            }
+
+            foreach (var sub in currentList)
+            {
+                if (sub.IsAlive)
                 {
-                    _subscribers[eventType] = new List<WeakReference>();
+                    try
+                    {
+                        sub.Invoke(eventData);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"EventAggregator handler error: {ex.Message}");
+                    }
                 }
-                _subscribers[eventType].Add(new WeakReference(handler));
+                else
+                {
+                    deadList ??= new List<IWeakSubscription>();
+                    deadList.Add(sub);
+                }
+            }
+
+            if (deadList != null && deadList.Count > 0)
+            {
+                lock (_syncLock)
+                {
+                    foreach (var dead in deadList)
+                    {
+                        list.Remove(dead);
+                    }
+                }
             }
         }
 
         /// <summary>
-        /// Event yayınla - tüm abonelere bildirim gönder
+        /// Belirli bir handler'ı abonelikten çıkar.
         /// </summary>
-        public void Publish<TEvent>(TEvent eventData)
+        public void Unsubscribe<TEvent>(Action<TEvent> handler)
         {
-            lock (_lock)
+            if (handler == null) return;
+
+            var eventType = typeof(TEvent);
+            if (!_subscriptions.TryGetValue(eventType, out var list)) return;
+
+            lock (_syncLock)
             {
-                var eventType = typeof(TEvent);
-                if (!_subscribers.ContainsKey(eventType)) return;
+                list.RemoveAll(s => !s.IsAlive || s.Matches(handler));
+            }
+        }
 
-                var deadReferences = new List<WeakReference>();
+        internal void RemoveSubscription(Type eventType, IWeakSubscription subscription)
+        {
+            if (!_subscriptions.TryGetValue(eventType, out var list)) return;
 
-                foreach (var weakRef in _subscribers[eventType])
+            lock (_syncLock)
+            {
+                list.Remove(subscription);
+            }
+        }
+
+        internal interface IWeakSubscription
+        {
+            bool IsAlive { get; }
+            bool Matches(Delegate handler);
+            void Invoke(object? eventData);
+        }
+
+        private sealed class WeakSubscription<TEvent> : IWeakSubscription, IDisposable
+        {
+            private readonly EventAggregator _aggregator;
+            private readonly WeakReference? _targetRef;
+            private readonly WeakReference? _enclosingTargetRef;
+            private readonly MethodInfo _method;
+            private readonly bool _isStatic;
+            private readonly Action<TEvent>? _closureDelegate; // Sadece lambda enclosure canlı kaldığı sürece tutulur
+            private bool _isDisposed;
+
+            public WeakSubscription(EventAggregator aggregator, Action<TEvent> handler)
+            {
+                _aggregator = aggregator;
+                _method = handler.Method;
+
+                if (handler.Target == null)
                 {
-                    if (weakRef.Target is Action<TEvent> handler)
+                    _isStatic = true;
+                }
+                else
+                {
+                    var target = handler.Target;
+                    var targetType = target.GetType();
+
+                    // Derleyici tarafından üretilen lambda / closure sınıfı kontrolü
+                    if (targetType.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     {
-                        try
+                        // Closure içerisindeki 'this' (ViewModel vb.) nesnesini zayıf referansla koru
+                        object? enclosingInstance = null;
+                        foreach (var field in targetType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                         {
-                            handler(eventData);
+                            if (!field.FieldType.IsPrimitive && field.FieldType != typeof(string))
+                            {
+                                var val = field.GetValue(target);
+                                if (val != null)
+                                {
+                                    enclosingInstance = val;
+                                    break;
+                                }
+                            }
                         }
-                        catch (Exception ex)
+
+                        if (enclosingInstance != null)
                         {
-                            // Hata olsa bile diğer subscriber'lara devam et
-                            System.Diagnostics.Debug.WriteLine($"EventAggregator handler error: {ex.Message}");
+                            _enclosingTargetRef = new WeakReference(enclosingInstance);
+                            _closureDelegate = handler;
+                        }
+                        else
+                        {
+                            _targetRef = new WeakReference(target);
+                            _closureDelegate = handler;
                         }
                     }
                     else
                     {
-                        deadReferences.Add(weakRef);
+                        _targetRef = new WeakReference(target);
                     }
-                }
-
-                // Ölü referansları temizle
-                foreach (var dead in deadReferences)
-                {
-                    _subscribers[eventType].Remove(dead);
                 }
             }
-        }
 
-        /// <summary>
-        /// Belirli bir handler'ı abonelikten çıkar
-        /// </summary>
-        public void Unsubscribe<TEvent>(Action<TEvent> handler)
-        {
-            lock (_lock)
+            public bool IsAlive
             {
-                var eventType = typeof(TEvent);
-                if (!_subscribers.ContainsKey(eventType)) return;
-
-                var toRemove = new List<WeakReference>();
-                foreach (var weakRef in _subscribers[eventType])
+                get
                 {
-                    if (weakRef.Target == null || weakRef.Target.Equals(handler))
-                    {
-                        toRemove.Add(weakRef);
-                    }
+                    if (_isDisposed) return false;
+                    if (_isStatic) return true;
+                    if (_enclosingTargetRef != null) return _enclosingTargetRef.IsAlive;
+                    return _targetRef != null && _targetRef.IsAlive;
+                }
+            }
+
+            public bool Matches(Delegate handler)
+            {
+                if (_isDisposed) return false;
+                if (handler.Method != _method) return false;
+
+                if (_isStatic) return handler.Target == null;
+
+                if (_enclosingTargetRef != null)
+                {
+                    return _enclosingTargetRef.Target == handler.Target;
                 }
 
-                foreach (var item in toRemove)
+                return _targetRef?.Target == handler.Target;
+            }
+
+            public void Invoke(object? eventData)
+            {
+                if (!IsAlive) return;
+
+                if (_isStatic)
                 {
-                    _subscribers[eventType].Remove(item);
+                    _method.Invoke(null, new[] { eventData });
+                    return;
+                }
+
+                if (_closureDelegate != null)
+                {
+                    if (_enclosingTargetRef == null || _enclosingTargetRef.IsAlive)
+                    {
+                        _closureDelegate((TEvent)eventData!);
+                    }
+                    return;
+                }
+
+                var target = _targetRef?.Target;
+                if (target != null)
+                {
+                    _method.Invoke(target, new[] { eventData });
+                }
+            }
+
+            public void Dispose()
+            {
+                if (!_isDisposed)
+                {
+                    _isDisposed = true;
+                    _aggregator.RemoveSubscription(typeof(TEvent), this);
                 }
             }
         }

@@ -21,7 +21,7 @@ namespace KamatekCrm.Events
             OldQuantity = oldQuantity;
             NewQuantity = newQuantity;
             Reason = reason;
-            UpdatedAt = DateTime.Now;
+            UpdatedAt = DateTime.UtcNow;
         }
     }
 }

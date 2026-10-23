@@ -328,6 +328,11 @@ public sealed class PurchasingCommandService : IPurchasingCommandService
             await CommitAsync(transaction, cancellationToken);
             return Result.Success(new ReturnTransactionResult(purchaseReturn.Id, purchaseReturn.ReturnNumber, purchaseReturn.TotalAmount, false));
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            await RollbackAsync(transaction, cancellationToken);
+            return Result.Failure<ReturnTransactionResult>("Eşzamanlı işlem çakışması tespit edildi. Lütfen stokları kontrol ederek tekrar deneyiniz.");
+        }
         catch (Exception exception)
         {
             await RollbackAsync(transaction, cancellationToken);

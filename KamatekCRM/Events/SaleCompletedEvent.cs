@@ -19,7 +19,7 @@ namespace KamatekCrm.Events
             TotalAmount = totalAmount;
             WarehouseId = warehouseId;
             ItemCount = itemCount;
-            CompletedAt = DateTime.Now;
+            CompletedAt = DateTime.UtcNow;
         }
     }
 }

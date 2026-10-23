@@ -128,7 +128,8 @@ public sealed class StockCountCommandService : IStockCountCommandService
                 var product = products[line.ProductId];
                 var inventory = targetInventories[line.ProductId];
                 int difference = line.CountedQuantity - line.SystemQuantity;
-                inventory.Quantity = line.CountedQuantity;
+                // Sayım sürerken gerçekleşen satışların ezilmemesi için mutlak değer ataması yerine fark (Delta) bazlı güncelleme
+                inventory.Quantity += difference;
 
                 var stockTransaction = new StockTransaction
                 {

@@ -17,6 +17,7 @@ namespace KamatekCrm.ViewModels
         private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
+        private readonly IAuthService? _authService;
         private readonly User _user;
 
         private string _ad;
@@ -159,11 +160,17 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public EditUserViewModel(User user, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory, IToastService toastService, ILoadingService loadingService)
+        public EditUserViewModel(
+            User user, 
+            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory, 
+            IToastService toastService, 
+            ILoadingService loadingService,
+            IAuthService? authService = null)
         {
             _dbContextFactory = dbContextFactory;
             _toastService = toastService;
             _loadingService = loadingService;
+            _authService = authService;
             _user = user;
 
             // Mevcut değerleri yükle
@@ -184,12 +191,19 @@ namespace KamatekCrm.ViewModels
             _expertiseAreas = user.ExpertiseAreas ?? "";
         }
 
+        private bool IsAuthorizedAdmin()
+        {
+            return (_authService?.IsAdmin ?? false) || 
+                   string.Equals(App.CurrentUser?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>
         /// Kayıt yapılabilir mi?
         /// </summary>
         private bool CanSaveUser()
         {
-            return !string.IsNullOrWhiteSpace(Ad) &&
+            return IsAuthorizedAdmin() &&
+                   !string.IsNullOrWhiteSpace(Ad) &&
                    !string.IsNullOrWhiteSpace(Soyad) &&
                    !string.IsNullOrWhiteSpace(SelectedRoleDisplay);
         }
@@ -200,6 +214,14 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(CanSaveUser))]
         private async Task Save()
         {
+            if (!IsAuthorizedAdmin())
+            {
+                IsSuccess = false;
+                StatusMessage = "❌ Yetkisiz işlem: Kullanıcı düzenlemek için yönetici yetkisi gereklidir.";
+                _toastService.ShowError("Yetkisiz İşlem", "Kullanıcı düzenlemek için yönetici yetkisi gereklidir.");
+                return;
+            }
+
             _loadingService.Show();
             try
             {

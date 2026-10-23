@@ -195,7 +195,7 @@ namespace KamatekCrm.Services
                 col.Item().Element(c => ComposeProductTable(c, items));
 
                 // 6. Finansal Özet
-                col.Item().Element(c => ComposeFinancialSummary(c, items));
+                col.Item().Element(c => ComposeFinancialSummary(c, items, project));
 
                 // 7. Ticari Şartlar
                 col.Item().Element(c => ComposeCommercialTerms(c));
@@ -439,11 +439,15 @@ namespace KamatekCrm.Services
             }
         }
 
-        private void ComposeFinancialSummary(IContainer container, List<PdfLineItem> items)
+        private void ComposeFinancialSummary(IContainer container, List<PdfLineItem> items, ServiceProject? project = null)
         {
-            var subTotal = items.Where(i => !i.IsSectionHeader).Sum(i => i.TotalPrice);
-            var vatTotal = subTotal * 0.20m;
-            var grandTotal = subTotal + vatTotal;
+            var subTotal = FinancialCalculator.RoundMoney(items.Where(i => !i.IsSectionHeader).Sum(i => i.TotalPrice));
+            decimal discountPercent = project?.DiscountPercent ?? 0m;
+            decimal kdvRate = project?.KdvRate ?? 20m;
+            decimal discountAmount = FinancialCalculator.RoundMoney(subTotal * discountPercent / 100m);
+            decimal netTotal = FinancialCalculator.RoundMoney(subTotal - discountAmount);
+            decimal vatTotal = FinancialCalculator.RoundMoney(netTotal * kdvRate / 100m);
+            decimal grandTotal = FinancialCalculator.RoundMoney(netTotal + vatTotal);
 
             container.PaddingTop(10).Row(r =>
             {
@@ -456,9 +460,18 @@ namespace KamatekCrm.Services
                         row.RelativeItem().AlignRight().Text($"{subTotal:N2} ₺").FontSize(11).Bold().FontColor(BrandColors.Primary);
                     });
 
+                    if (discountAmount > 0)
+                    {
+                        col.Item().PaddingTop(5).Row(row =>
+                        {
+                            row.RelativeItem().Text($"İskonto (%{discountPercent:N0}):").FontSize(11).FontColor(BrandColors.Warning);
+                            row.RelativeItem().AlignRight().Text($"-{discountAmount:N2} ₺").FontSize(11).FontColor(BrandColors.Warning);
+                        });
+                    }
+
                     col.Item().PaddingTop(5).Row(row =>
                     {
-                        row.RelativeItem().Text("KDV (%20):").FontSize(11).FontColor(BrandColors.TextSecondary);
+                        row.RelativeItem().Text($"KDV (%{kdvRate:N0}):").FontSize(11).FontColor(BrandColors.TextSecondary);
                         row.RelativeItem().AlignRight().Text($"{vatTotal:N2} ₺").FontSize(11).FontColor(BrandColors.Primary);
                     });
 
@@ -1091,25 +1104,66 @@ namespace KamatekCrm.Services
         #region Invoice & Purchase Order PDF
         public void GenerateInvoice(SalesOrder order, string filePath)
         {
-            GenerateStandardQuote(new Quote
+            var quote = new Quote
             {
-                QuoteNumber = $"INV-{order.Id}",
+                QuoteNumber = !string.IsNullOrWhiteSpace(order.OrderNumber) ? order.OrderNumber : $"INV-{order.Id}",
                 Date = order.Date,
                 ValidUntil = order.Date.AddDays(30),
                 Customer = order.Customer,
-                TermsAndConditions = order.Notes
-            }, filePath);
+                TermsAndConditions = order.Notes,
+                SubTotal = order.SubTotal,
+                TotalDiscount = order.DiscountTotal,
+                TotalTax = order.TaxTotal,
+                GrandTotal = order.TotalAmount
+            };
+
+            if (order.Items != null)
+            {
+                foreach (var item in order.Items)
+                {
+                    quote.Lines.Add(new QuoteLine
+                    {
+                        ProductName = item.ProductName,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                        DiscountPercent = item.DiscountPercent,
+                        LineTotal = item.LineTotal
+                    });
+                }
+            }
+
+            GenerateStandardQuote(quote, filePath);
         }
 
         public void GeneratePurchaseOrder(PurchaseInvoice invoice, string filePath)
         {
-            GenerateStandardQuote(new Quote
+            var quote = new Quote
             {
-                QuoteNumber = $"PO-{invoice.Id}",
+                QuoteNumber = !string.IsNullOrWhiteSpace(invoice.InvoiceNumber) ? invoice.InvoiceNumber : $"PO-{invoice.Id}",
                 Date = invoice.Date,
                 ValidUntil = invoice.Date.AddDays(30),
-                TermsAndConditions = invoice.Notes ?? string.Empty
-            }, filePath);
+                Customer = new Customer { FullName = invoice.Supplier?.CompanyName ?? "Tedarikçi" },
+                TermsAndConditions = invoice.Notes ?? string.Empty,
+                SubTotal = invoice.SubTotal,
+                TotalTax = invoice.VatTotal,
+                GrandTotal = invoice.GrandTotal
+            };
+
+            if (invoice.Lines != null)
+            {
+                foreach (var line in invoice.Lines)
+                {
+                    quote.Lines.Add(new QuoteLine
+                    {
+                        ProductName = line.ProductName,
+                        Quantity = line.Quantity,
+                        UnitPrice = line.UnitPrice,
+                        LineTotal = line.LineTotal
+                    });
+                }
+            }
+
+            GenerateStandardQuote(quote, filePath);
         }
         #endregion
 

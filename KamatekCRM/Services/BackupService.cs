@@ -98,17 +98,39 @@ public sealed class BackupService : IBackupService
 
     public BackupValidationResult ValidateBackup(string backupPath)
     {
-        var integrity = _integrityService.Validate(backupPath);
-        if (!integrity.IsValid) return integrity;
+        if (string.IsNullOrWhiteSpace(backupPath))
+            return BackupValidationResult.Invalid("Yedek dosyası yolu belirtilmedi.");
 
-        if (!string.Equals(Path.GetExtension(backupPath), ".backup", StringComparison.OrdinalIgnoreCase))
-            return BackupValidationResult.Invalid("Desteklenmeyen yedek biçimi. PostgreSQL custom .backup arşivi gereklidir.");
+        string fullPath;
+        try
+        {
+            fullPath = Path.GetFullPath(backupPath);
+        }
+        catch (Exception ex)
+        {
+            return BackupValidationResult.Invalid($"Geçersiz dosya yolu: {ex.Message}");
+        }
+
+        var ext = Path.GetExtension(fullPath);
+        if (!string.Equals(ext, ".backup", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(ext, ".sql", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(ext, ".dump", StringComparison.OrdinalIgnoreCase))
+        {
+            return BackupValidationResult.Invalid("Desteklenmeyen yedek biçimi. Yalnızca .backup, .sql ve .dump dosyaları desteklenir.");
+        }
+
+        var integrity = _integrityService.Validate(fullPath);
+        if (!integrity.IsValid) return integrity;
 
         try
         {
             EnsureToolExists(PgRestorePath, "pg_restore.exe");
             var connection = ParseConnectionString();
-            ValidateArchiveStructure(backupPath, connection.Password);
+            if (string.Equals(ext, ".backup", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(ext, ".dump", StringComparison.OrdinalIgnoreCase))
+            {
+                ValidateArchiveStructure(fullPath, connection.Password);
+            }
             return integrity;
         }
         catch (Exception ex)
@@ -119,7 +141,11 @@ public sealed class BackupService : IBackupService
 
     public string RestoreDatabase(string backupPath)
     {
-        var validation = ValidateBackup(backupPath);
+        if (string.IsNullOrWhiteSpace(backupPath))
+            throw new ArgumentException("Yedek yolu boş olamaz.", nameof(backupPath));
+
+        var fullPath = Path.GetFullPath(backupPath);
+        var validation = ValidateBackup(fullPath);
         if (!validation.IsValid)
             throw new InvalidOperationException(validation.Message);
 
@@ -129,14 +155,14 @@ public sealed class BackupService : IBackupService
 
         try
         {
-            RestoreArchive(backupPath, connection, "Geri yükleme");
+            RestoreArchive(fullPath, connection, "Geri yükleme");
         }
         catch (Exception restoreException)
         {
             Log.Error(
                 restoreException,
                 "Restore failed for {BackupPath}; automatic recovery is starting from {RecoveryBackup}",
-                backupPath,
+                fullPath,
                 recoveryBackup);
 
             try
@@ -162,7 +188,7 @@ public sealed class BackupService : IBackupService
 
         Log.Warning(
             "Database restored from {BackupPath}. Automatic recovery point: {RecoveryBackup}",
-            backupPath,
+            fullPath,
             recoveryBackup);
         return recoveryBackup;
     }
@@ -233,6 +259,7 @@ public sealed class BackupService : IBackupService
 
         using var process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"{Path.GetFileName(executable)} başlatılamadı.");
+        KamatekCrm.Helpers.ProcessManager.TrackProcess(process);
         var standardOutput = process.StandardOutput.ReadToEndAsync();
         var standardError = process.StandardError.ReadToEndAsync();
 

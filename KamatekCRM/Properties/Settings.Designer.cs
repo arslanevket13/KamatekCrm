@@ -88,10 +88,11 @@ namespace KamatekCrm.Properties {
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string AuthToken {
             get {
-                return ((string)(this["AuthToken"]));
+                var raw = ((string)(this["AuthToken"]));
+                return Security.DataProtectionHelper.Unprotect(raw);
             }
             set {
-                this["AuthToken"] = value;
+                this["AuthToken"] = Security.DataProtectionHelper.Protect(value);
             }
         }
         

@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Infrastructure;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Settings;
 using KamatekCrm.ViewModels;
@@ -14,6 +16,10 @@ namespace KamatekCrm.Extensions
         {
             // Infrastructure Layer Services (DbContext, UnitOfWork, Repositories, DatabaseConnectionProvider)
             services.AddInfrastructureServices(configuration);
+
+            // Non-Breaking DI Bridge: Henüz refactor edilmemiş eski ViewModel'ların kırılmaması için
+            // AppDbContext doğrudan istendiğinde fabrikadan yeni bir örnek döndüren Transient köprü kaydı
+            services.AddTransient<AppDbContext>(sp => sp.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext());
 
             // Application Layer Services (Use Cases, DTOs, Application Services)
             KamatekCrm.ApplicationCore.DependencyInjection.AddApplicationLayerServices(services);

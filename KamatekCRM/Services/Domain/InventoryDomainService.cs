@@ -134,6 +134,12 @@ namespace KamatekCrm.Services.Domain
 
                     return TransferResult.Ok(stockTransaction.Id);
                 }
+                catch (DbUpdateConcurrencyException)
+                {
+                    unitOfWork.Rollback();
+                    WriteAudit(AuditActionType.Create, "StockTransfer", null, "Transfer eşzamanlılık çakışması.");
+                    return TransferResult.Fail("Eşzamanlı işlem çakışması tespit edildi. Lütfen stok miktarını kontrol ederek tekrar deneyiniz.");
+                }
                 catch (Exception ex)
                 {
                     unitOfWork.Rollback();
@@ -183,6 +189,10 @@ namespace KamatekCrm.Services.Domain
                     int oldQty = 0;
                     if (inventory == null)
                     {
+                        if (request.QuantityChange < 0)
+                        {
+                            throw new InvalidOperationException($"Yetersiz stok. Mevcut: 0, Düşülecek: {Math.Abs(request.QuantityChange)}");
+                        }
                         inventory = new Inventory
                         {
                             ProductId = request.ProductId,
@@ -193,6 +203,10 @@ namespace KamatekCrm.Services.Domain
                     }
                     else
                     {
+                        if (request.QuantityChange < 0 && inventory.Quantity + request.QuantityChange < 0)
+                        {
+                            throw new InvalidOperationException($"Yetersiz stok. Mevcut: {inventory.Quantity}, Düşülecek: {Math.Abs(request.QuantityChange)}");
+                        }
                         oldQty = inventory.Quantity;
                         inventory.Quantity += request.QuantityChange;
                     }
@@ -224,6 +238,11 @@ namespace KamatekCrm.Services.Domain
                         inventory.Quantity,
                         request.Reason
                     ));
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    unitOfWork.Rollback();
+                    throw new InvalidOperationException("Eşzamanlı işlem çakışması tespit edildi. Lütfen tekrar deneyiniz.");
                 }
                 catch
                 {
@@ -404,6 +423,11 @@ namespace KamatekCrm.Services.Domain
 
                     return TransferResult.Ok(stockTransaction.Id);
                 }
+                catch (DbUpdateConcurrencyException)
+                {
+                    await unitOfWork.RollbackAsync(cancellationToken);
+                    return TransferResult.Fail("Eşzamanlı işlem çakışması tespit edildi. Lütfen stok miktarını kontrol ederek tekrar deneyiniz.");
+                }
                 catch (Exception ex)
                 {
                     await unitOfWork.RollbackAsync(cancellationToken);
@@ -437,43 +461,65 @@ namespace KamatekCrm.Services.Domain
                 using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
-                var inventory = await context.Inventories
-                    .FirstOrDefaultAsync(i => i.ProductId == request.ProductId && i.WarehouseId == request.WarehouseId, cancellationToken);
-
-                int oldQty = 0;
-                if (inventory == null)
+                await unitOfWork.BeginTransactionAsync(cancellationToken);
+                try
                 {
-                    inventory = new Inventory
+                    var inventory = await context.Inventories
+                        .FirstOrDefaultAsync(i => i.ProductId == request.ProductId && i.WarehouseId == request.WarehouseId, cancellationToken);
+
+                    int oldQty = 0;
+                    if (inventory == null)
                     {
+                        if (request.QuantityChange < 0)
+                        {
+                            throw new InvalidOperationException($"Yetersiz stok. Mevcut: 0, Düşülecek: {Math.Abs(request.QuantityChange)}");
+                        }
+                        inventory = new Inventory
+                        {
+                            ProductId = request.ProductId,
+                            WarehouseId = request.WarehouseId,
+                            Quantity = request.QuantityChange
+                        };
+                        context.Inventories.Add(inventory);
+                    }
+                    else
+                    {
+                        if (request.QuantityChange < 0 && inventory.Quantity + request.QuantityChange < 0)
+                        {
+                            throw new InvalidOperationException($"Yetersiz stok. Mevcut: {inventory.Quantity}, Düşülecek: {Math.Abs(request.QuantityChange)}");
+                        }
+                        oldQty = inventory.Quantity;
+                        inventory.Quantity += request.QuantityChange;
+                    }
+
+                    var transactionType = request.QuantityChange > 0 ? StockTransactionType.AdjustmentPlus : StockTransactionType.AdjustmentMinus;
+
+                    var stockTransaction = new StockTransaction
+                    {
+                        Date = DateTime.Now,
                         ProductId = request.ProductId,
-                        WarehouseId = request.WarehouseId,
-                        Quantity = request.QuantityChange
+                        SourceWarehouseId = request.WarehouseId,
+                        Quantity = Math.Abs(request.QuantityChange),
+                        TransactionType = transactionType,
+                        Description = request.Reason,
+                        ReferenceId = request.ReferenceId ?? string.Empty
                     };
-                    context.Inventories.Add(inventory);
+                    context.StockTransactions.Add(stockTransaction);
+
+                    await unitOfWork.CommitAsync(cancellationToken);
+
+                    EventAggregator.Instance.Publish(new StockUpdatedEvent(request.ProductId, request.WarehouseId, oldQty, inventory.Quantity, request.Reason));
                 }
-                else
+                catch (DbUpdateConcurrencyException)
                 {
-                    oldQty = inventory.Quantity;
-                    inventory.Quantity += request.QuantityChange;
+                    await unitOfWork.RollbackAsync(cancellationToken);
+                    throw new InvalidOperationException("Eşzamanlı işlem çakışması tespit edildi. Lütfen tekrar deneyiniz.");
                 }
-
-                var transactionType = request.QuantityChange > 0 ? StockTransactionType.AdjustmentPlus : StockTransactionType.AdjustmentMinus;
-
-                var stockTransaction = new StockTransaction
+                catch
                 {
-                    Date = DateTime.Now,
-                    ProductId = request.ProductId,
-                    SourceWarehouseId = request.WarehouseId,
-                    Quantity = Math.Abs(request.QuantityChange),
-                    TransactionType = transactionType,
-                    Description = request.Reason,
-                    ReferenceId = request.ReferenceId ?? string.Empty
-                };
-                context.StockTransactions.Add(stockTransaction);
-
-                await unitOfWork.CommitAsync(cancellationToken);
-
-                EventAggregator.Instance.Publish(new StockUpdatedEvent(request.ProductId, request.WarehouseId, oldQty, inventory.Quantity, request.Reason));
+                    await unitOfWork.RollbackAsync(cancellationToken);
+                    throw;
+                }
             }
             finally
             {
@@ -491,57 +537,71 @@ namespace KamatekCrm.Services.Domain
                 using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
-                var inventory = await context.Inventories
-                    .FirstOrDefaultAsync(i => i.ProductId == productId && i.WarehouseId == warehouseId, cancellationToken);
-
-                int oldQty = 0;
-                decimal oldCost = 0;
-
-                if (inventory == null)
+                await unitOfWork.BeginTransactionAsync(cancellationToken);
+                try
                 {
-                    inventory = new Inventory
-                    {
-                        ProductId = productId,
-                        WarehouseId = warehouseId,
-                        Quantity = quantity,
-                        AverageCost = unitCost
-                    };
-                    context.Inventories.Add(inventory);
-                }
-                else
-                {
-                    oldQty = inventory.Quantity;
-                    oldCost = inventory.AverageCost;
+                    var inventory = await context.Inventories
+                        .FirstOrDefaultAsync(i => i.ProductId == productId && i.WarehouseId == warehouseId, cancellationToken);
 
-                    decimal currentTotalValue = oldQty * oldCost;
-                    decimal newTotalValue = quantity * unitCost;
-                    int totalQty = oldQty + quantity;
+                    int oldQty = 0;
+                    decimal oldCost = 0;
 
-                    if (totalQty > 0)
+                    if (inventory == null)
                     {
-                        inventory.AverageCost = (currentTotalValue + newTotalValue) / totalQty;
+                        inventory = new Inventory
+                        {
+                            ProductId = productId,
+                            WarehouseId = warehouseId,
+                            Quantity = quantity,
+                            AverageCost = unitCost
+                        };
+                        context.Inventories.Add(inventory);
+                    }
+                    else
+                    {
+                        oldQty = inventory.Quantity;
+                        oldCost = inventory.AverageCost;
+
+                        decimal currentTotalValue = oldQty * oldCost;
+                        decimal newTotalValue = quantity * unitCost;
+                        int totalQty = oldQty + quantity;
+
+                        if (totalQty > 0)
+                        {
+                            inventory.AverageCost = (currentTotalValue + newTotalValue) / totalQty;
+                        }
+
+                        inventory.Quantity += quantity;
                     }
 
-                    inventory.Quantity += quantity;
+                    var stockTransaction = new StockTransaction
+                    {
+                        Date = DateTime.Now,
+                        ProductId = productId,
+                        TargetWarehouseId = warehouseId,
+                        Quantity = quantity,
+                        TransactionType = StockTransactionType.Purchase,
+                        UnitCost = unitCost,
+                        Description = $"Satın Alma - {referenceId}",
+                        ReferenceId = referenceId,
+                        UserId = _authService.CurrentUser?.AdSoyad ?? "Sistem"
+                    };
+                    context.StockTransactions.Add(stockTransaction);
+
+                    await unitOfWork.CommitAsync(cancellationToken);
+
+                    EventAggregator.Instance.Publish(new StockUpdatedEvent(productId, warehouseId, oldQty, inventory.Quantity, $"Stok Girişi - WAC: {inventory.AverageCost:C2}"));
                 }
-
-                var stockTransaction = new StockTransaction
+                catch (DbUpdateConcurrencyException)
                 {
-                    Date = DateTime.Now,
-                    ProductId = productId,
-                    TargetWarehouseId = warehouseId,
-                    Quantity = quantity,
-                    TransactionType = StockTransactionType.Purchase,
-                    UnitCost = unitCost,
-                    Description = $"Satın Alma - {referenceId}",
-                    ReferenceId = referenceId,
-                    UserId = _authService.CurrentUser?.AdSoyad ?? "Sistem"
-                };
-                context.StockTransactions.Add(stockTransaction);
-
-                await unitOfWork.CommitAsync(cancellationToken);
-
-                EventAggregator.Instance.Publish(new StockUpdatedEvent(productId, warehouseId, oldQty, inventory.Quantity, $"Stok Girişi - WAC: {inventory.AverageCost:C2}"));
+                    await unitOfWork.RollbackAsync(cancellationToken);
+                    throw new InvalidOperationException("Eşzamanlı işlem çakışması tespit edildi. Lütfen tekrar deneyiniz.");
+                }
+                catch
+                {
+                    await unitOfWork.RollbackAsync(cancellationToken);
+                    throw;
+                }
             }
             finally
             {
@@ -779,9 +839,10 @@ namespace KamatekCrm.Services.Domain
                 using var unitOfWork = new UnitOfWork(_dbContextFactory);
                 var context = unitOfWork.Context;
 
-                foreach (var entry in entries)
+                await unitOfWork.BeginTransactionAsync(cancellationToken);
+                try
                 {
-                    try
+                    foreach (var entry in entries)
                     {
                         var inventory = await context.Inventories
                             .FirstOrDefaultAsync(i => i.ProductId == entry.ProductId && i.WarehouseId == 1, cancellationToken);
@@ -824,14 +885,23 @@ namespace KamatekCrm.Services.Domain
 
                         result.SuccessCount++;
                     }
-                    catch (Exception ex)
-                    {
-                        result.FailureCount++;
-                        result.Errors.Add($"Ürün #{entry.ProductId}: {ex.Message}");
-                    }
-                }
 
-                await unitOfWork.CommitAsync(cancellationToken);
+                    await unitOfWork.CommitAsync(cancellationToken);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    await unitOfWork.RollbackAsync(cancellationToken);
+                    result.Success = false;
+                    result.FailureCount = entries.Count();
+                    result.Errors.Add("Eşzamanlı işlem çakışması tespit edildi. Lütfen tekrar deneyiniz.");
+                }
+                catch (Exception ex)
+                {
+                    await unitOfWork.RollbackAsync(cancellationToken);
+                    result.Success = false;
+                    result.FailureCount = entries.Count();
+                    result.Errors.Add($"Toplu stok girişi başarısız: {ex.Message}");
+                }
             }
             finally
             {

@@ -142,7 +142,7 @@ namespace KamatekCrm.ViewModels
                 
                 if (dbUser != null)
                 {
-                    dbUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(NewPassword);
+                    dbUser.PasswordHash = AuthService.HashPassword(NewPassword);
                     dbUser.MustChangePassword = false;
                     await context.SaveChangesAsync();
                     

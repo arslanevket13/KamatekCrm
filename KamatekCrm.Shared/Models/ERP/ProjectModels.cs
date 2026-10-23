@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Services;
 
 namespace KamatekCrm.Shared.Models
 {
@@ -152,10 +153,10 @@ namespace KamatekCrm.Shared.Models
 
         public void NotifyTotalsChanged()
         {
-            SubTotal = Items.Where(i => !i.IsOptional).Sum(i => i.TotalPrice);
-            SubTotalCost = Items.Where(i => !i.IsOptional).Sum(i => i.TotalItemCost);
-            RecursiveTotalCost = SubTotalCost + Children.Sum(c => c.RecursiveTotalCost);
-            RecursiveTotal = SubTotal + Children.Sum(c => c.RecursiveTotal);
+            SubTotal = FinancialCalculator.RoundMoney(Items.Where(i => !i.IsOptional).Sum(i => i.TotalPrice));
+            SubTotalCost = FinancialCalculator.RoundMoney(Items.Where(i => !i.IsOptional).Sum(i => i.TotalItemCost));
+            RecursiveTotalCost = FinancialCalculator.RoundMoney(SubTotalCost + Children.Sum(c => c.RecursiveTotalCost));
+            RecursiveTotal = FinancialCalculator.RoundMoney(SubTotal + Children.Sum(c => c.RecursiveTotal));
             OnPropertyChanged(nameof(SubTotal));
             OnPropertyChanged(nameof(SubTotalCost));
             OnPropertyChanged(nameof(RecursiveTotal));
@@ -330,9 +331,9 @@ namespace KamatekCrm.Shared.Models
         }
 
         public decimal TotalPrice { get; set; }
-        public decimal TotalItemCost => (UnitCost + LaborCost) * Quantity;
-        public decimal ItemProfit => TotalPrice - TotalItemCost;
-        public string MarginDisplay => TotalPrice > 0 ? $"%{((TotalPrice - TotalItemCost) / TotalPrice * 100):N1}" : "%0";
+        public decimal TotalItemCost => FinancialCalculator.RoundMoney((UnitCost + LaborCost) * Quantity);
+        public decimal ItemProfit => FinancialCalculator.RoundMoney(TotalPrice - TotalItemCost);
+        public string MarginDisplay => TotalPrice > 0 ? $"%{FinancialCalculator.RoundMoney((TotalPrice - TotalItemCost) / TotalPrice * 100m):N1}" : "%0";
 
         [System.Text.Json.Serialization.JsonIgnore]
         public Action OnItemChanged { get; set; } = delegate { };
@@ -346,7 +347,7 @@ namespace KamatekCrm.Shared.Models
 
         public void NotifyChanged()
         {
-            TotalPrice = UnitPrice * Quantity;
+            TotalPrice = FinancialCalculator.RoundMoney(UnitPrice * Quantity);
             OnPropertyChanged(nameof(TotalPrice));
             OnPropertyChanged(nameof(TotalItemCost));
             OnPropertyChanged(nameof(ItemProfit));

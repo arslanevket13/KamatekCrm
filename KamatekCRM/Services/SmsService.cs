@@ -12,17 +12,45 @@ namespace KamatekCrm.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<SmsService>? _logger;
+        private readonly Microsoft.Extensions.Configuration.IConfiguration? _configuration;
         
         private const string ApiUrl = "https://api.netgsm.com.tr/sms/send/json";
         private const string ApiKey = "YOUR_API_KEY_HERE";
         private const string ApiSecret = "YOUR_API_SECRET_HERE";
         private const string SenderTitle = "KAMATEK";
 
-        public SmsService(IHttpClientFactory httpClientFactory, ILogger<SmsService>? logger = null)
+        public SmsService(
+            IHttpClientFactory httpClientFactory, 
+            ILogger<SmsService>? logger = null,
+            Microsoft.Extensions.Configuration.IConfiguration? configuration = null)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _logger = logger;
+            _configuration = configuration;
         }
+
+        public string ResolvedApiKey
+        {
+            get
+            {
+                var key = _configuration?["SmsSettings:ApiKey"] ?? _configuration?["SmsSettings:UserCode"];
+                return !string.IsNullOrEmpty(key) ? Security.DataProtectionHelper.Unprotect(key) : ApiKey;
+            }
+        }
+
+        public string ResolvedApiSecret
+        {
+            get
+            {
+                var secret = _configuration?["SmsSettings:ApiSecret"] ?? _configuration?["SmsSettings:Password"];
+                return !string.IsNullOrEmpty(secret) ? Security.DataProtectionHelper.Unprotect(secret) : ApiSecret;
+            }
+        }
+
+        public string ResolvedSenderTitle =>
+            _configuration?["SmsSettings:SenderTitle"] ??
+            _configuration?["SmsSettings:Header"] ??
+            SenderTitle;
 
         /// <summary>
         /// SMS gönderir
@@ -45,14 +73,17 @@ namespace KamatekCrm.Services
                 if (string.IsNullOrEmpty(cleanNumber) || cleanNumber.Length < 10)
                     throw new ArgumentException("Telefon numarası geçersiz.");
 
+                string currentApiKey = ResolvedApiKey;
+                string currentApiSecret = ResolvedApiSecret;
+
                 // NetGSM API formatı (diğer sağlayıcılar için değiştirilmeli)
                 var payload = new
                 {
-                    usercode = ApiKey,
-                    password = ApiSecret,
+                    usercode = currentApiKey,
+                    password = currentApiSecret,
                     gsmno = cleanNumber,
                     message = message,
-                    msgheader = SenderTitle
+                    msgheader = ResolvedSenderTitle
                 };
 
                 var json = JsonSerializer.Serialize(payload);
@@ -62,7 +93,7 @@ namespace KamatekCrm.Services
                 // PRODUCTION: API çağrısı aktif
                 // Not: ApiKey/ApiSecret "YOUR_API_..." ise demo mod'da çalışır
                 // ═══════════════════════════════════════════════════════════════════
-                if (ApiKey.StartsWith("YOUR_") || ApiSecret.StartsWith("YOUR_"))
+                if (currentApiKey.StartsWith("YOUR_") || currentApiSecret.StartsWith("YOUR_"))
                 {
                     await Task.Delay(300);
                     _logger?.LogInformation("[SMS DEMO] → {CleanNumber}: {Message}", cleanNumber, message);

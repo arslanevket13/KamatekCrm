@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Services;
 using KamatekCrm.Services;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.ApplicationCore.Services;
@@ -103,8 +104,8 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _carriedOverBalance, value);
         }
 
-        public decimal DailyNetBalance => (CashIncome + CardIncome) - TotalExpense;
-        public decimal TotalVaultBalance => CarriedOverBalance + DailyNetBalance;
+        public decimal DailyNetBalance => FinancialCalculator.RoundMoney((CashIncome + CardIncome) - TotalExpense);
+        public decimal TotalVaultBalance => FinancialCalculator.RoundMoney(CarriedOverBalance + DailyNetBalance);
         public string NetBalanceDisplay => $"₺{TotalVaultBalance:N2}";
         public string CarriedOverDisplay => $"₺{CarriedOverBalance:N2}";
         public string NetBalanceColor => TotalVaultBalance >= 0 ? "#10B981" : "#EF4444";

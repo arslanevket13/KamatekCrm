@@ -186,6 +186,11 @@ public sealed class RetailTransactionService : IRetailTransactionService
             await CommitAsync(transaction, cancellationToken);
             return Result.Success(new SaleTransactionResult(order.Id, order.OrderNumber, false));
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            await RollbackAsync(transaction, cancellationToken);
+            return Result.Failure<SaleTransactionResult>("Eşzamanlı işlem çakışması tespit edildi. Lütfen güncel stokları kontrol ederek tekrar deneyiniz.");
+        }
         catch (Exception exception)
         {
             await RollbackAsync(transaction, cancellationToken);
@@ -434,6 +439,11 @@ public sealed class RetailTransactionService : IRetailTransactionService
             await context.SaveChangesAsync(cancellationToken);
             await CommitAsync(transaction, cancellationToken);
             return Result.Success(new ReturnTransactionResult(salesReturn.Id, salesReturn.ReturnNumber, salesReturn.TotalAmount, false));
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await RollbackAsync(transaction, cancellationToken);
+            return Result.Failure<ReturnTransactionResult>("Eşzamanlı işlem çakışması tespit edildi. Lütfen tekrar deneyiniz.");
         }
         catch (Exception exception)
         {

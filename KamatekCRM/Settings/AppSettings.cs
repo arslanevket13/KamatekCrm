@@ -66,10 +66,11 @@ namespace KamatekCrm.Settings
         }
 
         /// <summary>
-        /// PostgreSQL bağlantı dizesi
+        /// PostgreSQL bağlantı dizesi (DPAPI çözümlenmiş)
         /// </summary>
         public static string PostgreSqlConnectionString => 
-            Configuration["DatabaseSettings:ConnectionStrings:PostgreSQL"] ?? "";
+            Security.DataProtectionHelper.UnprotectConnectionString(
+                Configuration["DatabaseSettings:ConnectionStrings:PostgreSQL"] ?? "");
 
         /// <summary>
         /// Aktif bağlantı dizesi (PostgreSQL enforced)

@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Services;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.DTOs.Transactions;
 
@@ -90,8 +91,8 @@ namespace KamatekCrm.ViewModels
 
         public void UpdateTotal()
         {
-            var baseTotal = Quantity * UnitPrice;
-            LineTotal = baseTotal + (baseTotal * VatRate / 100m);
+            var baseTotal = FinancialCalculator.RoundMoney(Quantity * UnitPrice);
+            LineTotal = FinancialCalculator.RoundMoney(baseTotal + (baseTotal * VatRate / 100m));
         }
     }
 
@@ -205,7 +206,7 @@ namespace KamatekCrm.ViewModels
         // Main List
         public ObservableCollection<PurchasingLineItem> OrderItems { get; }
 
-        public decimal GrandTotal => OrderItems.Sum(x => x.LineTotal);
+        public decimal GrandTotal => FinancialCalculator.RoundMoney(OrderItems.Sum(x => x.LineTotal));
 
         // Sidebar Properties
         private bool _isSidebarOpen;

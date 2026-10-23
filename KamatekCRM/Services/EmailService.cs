@@ -37,12 +37,42 @@ namespace KamatekCrm.Services
         private const int SmtpPort = 587; // TLS portu, DEĞİŞTİRMEYİN
         private const bool EnableSsl = true; // Güvenli bağlantı, DEĞİŞTİRMEYİN
 
+        private readonly Microsoft.Extensions.Configuration.IConfiguration? _configuration;
+
+        public EmailService(Microsoft.Extensions.Configuration.IConfiguration? configuration = null)
+        {
+            _configuration = configuration;
+        }
+
         // ═══════════════════════════════════════════════════════════════════
-        // ⚠️ PRODUCTION: Aşağıdaki değerleri gerçek bilgilerle değiştirin
+        // ⚠️ PRODUCTION: Aşağıdaki değerleri gerçek bilgilerle değiştirin veya appsettings.json'da tanımlayın
         // ═══════════════════════════════════════════════════════════════════
-        private const string SenderEmail = "your-email@gmail.com"; // Gönderici e-posta
-        private const string SenderPassword = "xxxx xxxx xxxx xxxx"; // 16 karakterlik App Password (boşluksuz)
+        private const string SenderEmail = "your-email@gmail.com"; // Gönderici e-posta fallback
+        private const string SenderPassword = "xxxx xxxx xxxx xxxx"; // 16 karakterlik App Password fallback
         private const string SenderDisplayName = "Kamatek Teknik Servis";
+
+        public string ResolvedSenderEmail =>
+            _configuration?["EmailSettings:SenderEmail"] ??
+            _configuration?["EmailSettings:Username"] ??
+            SenderEmail;
+
+        public string ResolvedSenderPassword
+        {
+            get
+            {
+                var cfg = _configuration?["EmailSettings:SenderPassword"] ??
+                          _configuration?["EmailSettings:Password"];
+                if (!string.IsNullOrEmpty(cfg))
+                {
+                    return Security.DataProtectionHelper.Unprotect(cfg);
+                }
+                return SenderPassword;
+            }
+        }
+
+        public string ResolvedSenderDisplayName =>
+            _configuration?["EmailSettings:SenderDisplayName"] ??
+            SenderDisplayName;
 
         /// <summary>
         /// PDF teklif dosyasını e-posta ile gönderir
@@ -54,11 +84,11 @@ namespace KamatekCrm.Services
         public async Task SendQuoteEmailAsync(string toEmail, string subject, string body, string? attachmentPath = null)
         {
             // Placeholder kontrolü
-            if (SenderEmail.Contains("your-email") || SenderPassword == "xxxx xxxx xxxx xxxx")
+            if (ResolvedSenderEmail.Contains("your-email") || ResolvedSenderPassword == "xxxx xxxx xxxx xxxx")
             {
                 throw new Exception(
                     "E-posta ayarları yapılandırılmamış!\n\n" +
-                    "EmailService.cs dosyasındaki:\n" +
+                    "appsettings.json veya EmailService içindeki:\n" +
                     "• SenderEmail: Gerçek Gmail adresiniz\n" +
                     "• SenderPassword: Google App Password (16 karakter)\n\n" +
                     "değerlerini güncelleyin. Detaylar için dosyadaki yorumları okuyun.");
@@ -67,7 +97,7 @@ namespace KamatekCrm.Services
             try
             {
                 using var mail = new MailMessage();
-                mail.From = new MailAddress(SenderEmail, SenderDisplayName);
+                mail.From = new MailAddress(ResolvedSenderEmail, ResolvedSenderDisplayName);
                 mail.To.Add(toEmail);
                 mail.Subject = subject;
                 mail.Body = body;
@@ -84,7 +114,7 @@ namespace KamatekCrm.Services
                 try
                 {
                     using var smtp = new SmtpClient(SmtpHost, SmtpPort);
-                    smtp.Credentials = new NetworkCredential(SenderEmail, SenderPassword.Replace(" ", "")); // Boşlukları temizle
+                    smtp.Credentials = new NetworkCredential(ResolvedSenderEmail, ResolvedSenderPassword.Replace(" ", "")); // Boşlukları temizle
                     smtp.EnableSsl = EnableSsl;
                     smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
                     smtp.Timeout = 30000; // 30 saniye timeout

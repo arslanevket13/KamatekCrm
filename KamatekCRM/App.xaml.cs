@@ -87,7 +87,23 @@ namespace KamatekCrm
                     .UseSerilog()
                     .ConfigureAppConfiguration((context, config) =>
                     {
+                        var appSettingsFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+                        Security.DataProtectionHelper.MigrateAppSettingsIfNecessary(appSettingsFile);
                         config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+                        // Bellekteki konfigürasyonda şifreli bağlantı dizesini güvenli olarak çöz
+                        var tempConfig = config.Build();
+                        var rawConn = tempConfig.GetConnectionString("PostgreSQL")
+                            ?? tempConfig["DatabaseSettings:ConnectionStrings:PostgreSQL"];
+                        if (!string.IsNullOrEmpty(rawConn))
+                        {
+                            var decryptedConn = Security.DataProtectionHelper.UnprotectConnectionString(rawConn);
+                            config.AddInMemoryCollection(new System.Collections.Generic.Dictionary<string, string?>
+                            {
+                                ["DatabaseSettings:ConnectionStrings:PostgreSQL"] = decryptedConn,
+                                ["ConnectionStrings:PostgreSQL"] = decryptedConn
+                            });
+                        }
                     })
                     .ConfigureServices((context, services) =>
                     {
@@ -402,6 +418,16 @@ namespace KamatekCrm
                     _host.Dispose();
                 }
 
+                // Alt süreçlerin ve arka plan araçlarının (pg_dump, pg_restore vb.) güvenli şekilde sonlandırılması
+                try
+                {
+                    ProcessManager.StopServices();
+                }
+                catch (Exception procEx)
+                {
+                    Log.Warning(procEx, "Alt süreçler sonlandırılırken hata oluştu");
+                }
+
                 Log.Information("=== KamatekCRM Desktop Stopped ===");
             }
             catch (Exception ex)
@@ -411,6 +437,7 @@ namespace KamatekCrm
             }
             finally
             {
+                try { ProcessManager.StopServices(); } catch { }
                 Log.CloseAndFlush();
                 base.OnExit(e);
             }

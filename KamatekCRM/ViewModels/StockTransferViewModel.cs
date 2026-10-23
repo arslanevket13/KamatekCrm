@@ -34,6 +34,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _sourceWarehouse, value))
                 {
                     OnPropertyChanged(nameof(AvailableStock));
+                    TransferCommand?.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -45,6 +46,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _targetWarehouse, value))
                 {
+                    TransferCommand?.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -57,6 +59,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedProduct, value))
                 {
                     OnPropertyChanged(nameof(AvailableStock));
+                    TransferCommand?.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -68,6 +71,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _quantity, value))
                 {
+                    TransferCommand?.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -118,12 +122,37 @@ namespace KamatekCrm.ViewModels
                    Quantity <= AvailableStock;
         }
 
+        [RelayCommand(CanExecute = nameof(CanExecuteTransfer))]
+        private void Transfer()
+        {
+            ExecuteTransfer();
+        }
+
+        [RelayCommand]
+        private void Close(Window? window)
+        {
+            window?.Close();
+        }
+
         private void ExecuteTransfer()
         {
             if (SourceWarehouse == null || TargetWarehouse == null || SelectedProduct == null) return;
-
-            if (SourceWarehouse == null || TargetWarehouse == null || SelectedProduct == null) return;
             
+            if (Quantity <= 0)
+            {
+                StatusMessage = "Transfer miktarı sıfırdan büyük olmalıdır.";
+                IsActionSuccessful = false;
+                return;
+            }
+
+            int currentStock = AvailableStock;
+            if (Quantity > currentStock)
+            {
+                StatusMessage = $"Yetersiz stok! Kaynak depoda sadece {currentStock} adet mevcut.";
+                IsActionSuccessful = false;
+                return;
+            }
+
             var request = new KamatekCrm.Services.Domain.TransferRequest
             {
                 ProductId = SelectedProduct.Id,
@@ -143,6 +172,7 @@ namespace KamatekCrm.ViewModels
                 // Formu temizle
                 Quantity = 0;
                 OnPropertyChanged(nameof(AvailableStock));
+                TransferCommand.NotifyCanExecuteChanged();
             }
             else
             {

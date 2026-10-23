@@ -38,6 +38,20 @@ graphify-out/
 # Added by code-review-graph
 .code-review-graph/
 
+# Environment & Local Secrets
+.env
+*.env
+*.env.*
+appsettings.local.json
+appsettings.Development.json
+appsettings.Production.json
+
+# Database Backups & Dumps
+*.bak
+*.dump
+*.backup
+*.dmp
+
 # Agent Internal
 .gemini/
 TencentDB-Agent-Memory/

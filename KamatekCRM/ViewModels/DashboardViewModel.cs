@@ -365,6 +365,8 @@ namespace KamatekCrm.ViewModels
             public bool CanAccessSettings => true;
             public Task<bool> LoginAsync(string username, string password) => Task.FromResult(true);
             public void Logout() { }
+            public bool HasRole(string role) => true;
+            public void EnsureAuthorized(KamatekCrm.ApplicationCore.Security.ApplicationPermission permission) { }
         }
 
         #region Quick Action Commands

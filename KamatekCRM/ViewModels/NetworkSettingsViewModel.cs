@@ -550,7 +550,7 @@ namespace KamatekCrm.ViewModels
                         var builder = new Npgsql.NpgsqlConnectionStringBuilder(connStr);
                         if (!string.IsNullOrWhiteSpace(builder.Username))
                             _dbUsername = builder.Username;
-                        _dbPassword = builder.Password ?? string.Empty;
+                        _dbPassword = Security.DataProtectionHelper.Unprotect(builder.Password ?? string.Empty);
                         if (!string.IsNullOrWhiteSpace(builder.Database))
                             _dbName = builder.Database;
                         if (builder.Port > 0)
@@ -654,7 +654,7 @@ namespace KamatekCrm.ViewModels
                 Port = targetPort,
                 Database = string.IsNullOrWhiteSpace(_dbName) ? "kamatekcrm" : _dbName.Trim(),
                 Username = string.IsNullOrWhiteSpace(_dbUsername) ? "postgres" : _dbUsername.Trim(),
-                Password = _dbPassword ?? string.Empty
+                Password = Security.DataProtectionHelper.Protect(_dbPassword ?? string.Empty)
             };
             string newConnectionString = connBuilder.ConnectionString;
 

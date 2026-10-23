@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace KamatekCrm.Helpers
@@ -16,10 +19,22 @@ namespace KamatekCrm.Helpers
         public const string API_LOCAL_URL = "http://localhost:5050";
         public const string WEB_LOCAL_URL = "http://localhost:7000";
 
-        public static void StartServices()
+        private static readonly ConcurrentBag<Process> _trackedProcesses = new();
+
+        public static void TrackProcess(Process process)
+        {
+            if (process != null && !process.HasExited)
+            {
+                _trackedProcesses.Add(process);
+            }
+        }
+
+        public static void StartServices(CancellationToken cancellationToken = default)
         {
             try
             {
+                if (cancellationToken.IsCancellationRequested) return;
+
                 KillZombieProcesses();
 
                 // 1. API Sunucusunu Başlat (Port 5050) — Veritabanı, JWT, SLA hepsi burada
@@ -27,7 +42,7 @@ namespace KamatekCrm.Helpers
                 if (!string.IsNullOrEmpty(apiExe))
                 {
                     Serilog.Log.Information($"Starting API Server: {apiExe} (Port 5050)");
-                    StartVisibleProcess(apiExe, $"--urls \"{API_BIND_URL}\" --environment Development");
+                    StartVisibleProcess(apiExe, new[] { "--urls", API_BIND_URL, "--environment", "Development" });
                 }
                 else
                 {
@@ -36,12 +51,18 @@ namespace KamatekCrm.Helpers
                         "Kritik Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 }
 
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    StopServices();
+                    return;
+                }
+
                 // 2. Web Arayüzünü Başlat (Port 7000) — Teknisyen paneli
                 string? webExe = FindExeRecursive("KamatekCrm.Web.exe");
                 if (!string.IsNullOrEmpty(webExe))
                 {
                     Serilog.Log.Information($"Starting Web App: {webExe} (Port 7000)");
-                    StartVisibleProcess(webExe, $"--urls \"{WEB_BIND_URL}\" --environment Development");
+                    StartVisibleProcess(webExe, new[] { "--urls", WEB_BIND_URL, "--environment", "Development" });
                 }
                 else
                 {
@@ -51,7 +72,18 @@ namespace KamatekCrm.Helpers
                 }
 
                 // Open Browser after delay (Use Localhost URL for the server user)
-                Task.Delay(3000).ContinueWith(_ => OpenBrowser(WEB_LOCAL_URL));
+                Task.Delay(3000, cancellationToken).ContinueWith(t =>
+                {
+                    if (!t.IsCanceled && !cancellationToken.IsCancellationRequested)
+                    {
+                        OpenBrowser(WEB_LOCAL_URL);
+                    }
+                }, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                Serilog.Log.Information("ProcessManager.StartServices cancelled.");
+                StopServices();
             }
             catch (Exception ex)
             {
@@ -59,37 +91,81 @@ namespace KamatekCrm.Helpers
             }
         }
 
-        public static void StopServices()
-        {
-            KillZombieProcesses();
-        }
-
-        private static void KillZombieProcesses()
-        {
-            foreach (var process in Process.GetProcessesByName("KamatekCrm.API"))
-            {
-                try { process.Kill(); } catch { }
-            }
-            foreach (var process in Process.GetProcessesByName("KamatekCrm.Web"))
-            {
-                try { process.Kill(); } catch { }
-            }
-        }
-
-        private static void StartVisibleProcess(string exePath, string arguments = "")
+        public static void StopServices(CancellationToken cancellationToken = default)
         {
             try
             {
+                while (_trackedProcesses.TryTake(out var process))
+                {
+                    try
+                    {
+                        if (!process.HasExited)
+                        {
+                            process.Kill(entireProcessTree: true);
+                            process.Dispose();
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore already terminated processes
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "Error while stopping tracked processes");
+            }
+
+            KillZombieProcesses();
+        }
+
+        public static void KillZombieProcesses()
+        {
+            string[] processNames = { "KamatekCrm.API", "KamatekCrm.Web", "pg_dump", "pg_restore" };
+            foreach (var name in processNames)
+            {
+                try
+                {
+                    foreach (var process in Process.GetProcessesByName(name))
+                    {
+                        try
+                        {
+                            process.Kill(entireProcessTree: true);
+                            process.Dispose();
+                        }
+                        catch { }
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private static void StartVisibleProcess(string exePath, IEnumerable<string>? arguments = null)
+        {
+            try
+            {
+                var fullExePath = Path.GetFullPath(exePath);
                 var psi = new ProcessStartInfo
                 {
-                    FileName = exePath,
-                    Arguments = arguments,
-                    UseShellExecute = true, // [CRITICAL] Mandatory for visible console
-                    WindowStyle = ProcessWindowStyle.Normal, // [CRITICAL] Mandatory for debugging
-                    WorkingDirectory = Path.GetDirectoryName(exePath)
+                    FileName = fullExePath,
+                    UseShellExecute = true, // Mandatory for visible console
+                    WindowStyle = ProcessWindowStyle.Normal,
+                    WorkingDirectory = Path.GetDirectoryName(fullExePath)
                 };
+
+                if (arguments != null)
+                {
+                    foreach (var arg in arguments)
+                    {
+                        psi.ArgumentList.Add(arg);
+                    }
+                }
                 
-                Process.Start(psi);
+                var process = Process.Start(psi);
+                if (process != null)
+                {
+                    TrackProcess(process);
+                }
             }
             catch (Exception ex)
             {
@@ -102,9 +178,6 @@ namespace KamatekCrm.Helpers
             var currentProcessPath = Process.GetCurrentProcess().MainModule?.FileName;
             var currentDir = Path.GetDirectoryName(currentProcessPath) ?? AppDomain.CurrentDomain.BaseDirectory;
 
-            // Strategy: Look up the directory tree until we find the solution root (indicated by .sln)
-            // Then search down specifically in bin/Debug/net9.0/ folders for the target exe
-            
             var directory = new DirectoryInfo(currentDir);
             DirectoryInfo? solutionRoot = null;
 
@@ -120,36 +193,26 @@ namespace KamatekCrm.Helpers
 
             if (solutionRoot != null)
             {
-                // We found solution root. Now construct likely paths.
-                // Assuming standard project structure: SolutionRoot/ProjectName/bin/Debug/net9.0/ExeName
-                
-                string projectName = exeName.Replace(".exe", ""); // e.g. KamatekCrm.API
+                string projectName = exeName.Replace(".exe", "");
                 string likelyPath = Path.Combine(solutionRoot.FullName, projectName, "bin", "Debug", "net9.0", exeName);
 
                 if (File.Exists(likelyPath)) return likelyPath;
 
-                // Fallback: Search recursively in solution root but limit depth or filter by bin
-                // Search specifically for the file in AllDirectories
                 try 
                 {
                    var files = solutionRoot.GetFiles(exeName, SearchOption.AllDirectories);
-                   // Prefer bin/Debug/net9.0
                    var match = files.FirstOrDefault(f => f.FullName.Contains("bin") && f.FullName.Contains("Debug") && f.FullName.Contains("net9.0"));
                    if (match != null) return match.FullName;
                    
-                   // Fallback to any found
                    if (files.Any()) return files.First().FullName;
                 }
                 catch {}
             }
             else
             {
-                // Fallback for when running in VS without deployed structure or weird path
-                // Try relative paths from current dir
-                // ../../../KamatekCrm.API/bin/Debug/net9.0/KamatekCrm.API.exe
                  string[] searchPaths = new[]
                  {
-                    Path.Combine(currentDir, exeName), // Same folder
+                    Path.Combine(currentDir, exeName),
                     Path.Combine(currentDir, "..", "..", "..", exeName.Replace(".exe", ""), "bin", "Debug", "net9.0", exeName),
                     Path.Combine(currentDir, "..", "..", "..", exeName.Replace(".exe", ""), "bin", "Release", "net9.0", exeName)
                  };

@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Services;
 using KamatekCrm.Services;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
@@ -202,13 +203,13 @@ namespace KamatekCrm.ViewModels
         public bool HasParkedCarts => ParkedCarts.Count > 0;
 
         // --- Computed Totals ---
-        public decimal SubTotal => CartItems?.Sum(i => i.SubTotal) ?? 0;
-        public decimal DiscountTotal => CartItems?.Sum(i => i.DiscountAmount) ?? 0;
-        public decimal TaxTotal => CartItems?.Sum(i => i.TaxAmount) ?? 0;
-        public decimal GrandTotal => CartItems?.Sum(i => i.LineTotal) ?? 0;
+        public decimal SubTotal => FinancialCalculator.RoundMoney(CartItems?.Sum(i => i.SubTotal) ?? 0);
+        public decimal DiscountTotal => FinancialCalculator.RoundMoney(CartItems?.Sum(i => i.DiscountAmount) ?? 0);
+        public decimal TaxTotal => FinancialCalculator.RoundMoney(CartItems?.Sum(i => i.TaxAmount) ?? 0);
+        public decimal GrandTotal => FinancialCalculator.RoundMoney(CartItems?.Sum(i => i.LineTotal) ?? 0);
         public int CartItemCount => CartItems?.Sum(i => i.Quantity) ?? 0;
-        public decimal PaidAmount => Payments?.Sum(p => p.Amount) ?? 0;
-        public decimal RemainingAmount => GrandTotal - PaidAmount;
+        public decimal PaidAmount => FinancialCalculator.RoundMoney(Payments?.Sum(p => p.Amount) ?? 0);
+        public decimal RemainingAmount => FinancialCalculator.RoundMoney(GrandTotal - PaidAmount);
         public bool CanCompleteSale => RemainingAmount <= 0 && CartItems?.Count > 0;
 
         public Array PaymentMethods => Enum.GetValues(typeof(PaymentMethod));
@@ -977,17 +978,17 @@ namespace KamatekCrm.ViewModels
             set { if (_taxRate != value) { _taxRate = value; Notify(); NotifyTotals(); } }
         }
 
-        public decimal SubTotal => Quantity * UnitPrice;
+        public decimal SubTotal => FinancialCalculator.RoundMoney(Quantity * UnitPrice);
 
-        public decimal DiscountAmount => DiscountType == DiscountType.Percentage
+        public decimal DiscountAmount => FinancialCalculator.RoundMoney(DiscountType == DiscountType.Percentage
             ? SubTotal * DiscountPercent / 100m
-            : DiscountFlatAmount;
+            : DiscountFlatAmount);
 
-        public decimal AfterDiscount => SubTotal - DiscountAmount;
+        public decimal AfterDiscount => FinancialCalculator.RoundMoney(SubTotal - DiscountAmount);
 
-        public decimal TaxAmount => AfterDiscount * TaxRate / 100m;
+        public decimal TaxAmount => FinancialCalculator.RoundMoney(AfterDiscount * TaxRate / 100m);
 
-        public decimal LineTotal => AfterDiscount + TaxAmount;
+        public decimal LineTotal => FinancialCalculator.RoundMoney(AfterDiscount + TaxAmount);
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

@@ -36,7 +36,7 @@ namespace KamatekCrm.Services
                 {
                     if (_connectionProvider.IsConnected && !string.IsNullOrEmpty(_connectionProvider.CurrentServerIp))
                     {
-                        using var context = await _dbContextFactory.CreateDbContextAsync(stoppingToken);
+                        await using var context = await _dbContextFactory.CreateDbContextAsync(stoppingToken);
                         
                         bool isAlive = await context.Database.CanConnectAsync(stoppingToken);
 

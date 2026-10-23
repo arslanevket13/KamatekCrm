@@ -61,14 +61,26 @@ namespace KamatekCrm.ViewModels
             set { _taxPercent = Math.Max(0m, value); OnChanged(); }
         }
 
-        /// <summary>Net satır toplamı (iskonto uygulanmış, KDV hariç).</summary>
-        public decimal LineNet => Math.Round(Quantity * UnitPrice * (1m - DiscountPercent / 100m), 2);
+        private decimal? _balancedTax;
 
-        /// <summary>Satır KDV tutarı (satırın kendi oranıyla).</summary>
-        public decimal LineTax => Math.Round(LineNet * TaxPercent / 100m, 2);
+        /// <summary>Net satır toplamı (iskonto uygulanmış, KDV hariç).</summary>
+        public decimal LineNet => FinancialCalculator.RoundMoney(Quantity * UnitPrice * (1m - DiscountPercent / 100m));
+
+        /// <summary>Satır KDV tutarı (satırın kendi oranıyla, Largest Remainder dengeli).</summary>
+        public decimal LineTax => _balancedTax ?? FinancialCalculator.RoundMoney(LineNet * TaxPercent / 100m);
 
         /// <summary>KDV dahil satır toplamı.</summary>
-        public decimal LineTotalWithTax => Math.Round(LineNet + LineTax, 2);
+        public decimal LineTotalWithTax => FinancialCalculator.RoundMoney(LineNet + LineTax);
+
+        internal void SetCalculatedTax(decimal tax)
+        {
+            if (_balancedTax != tax)
+            {
+                _balancedTax = tax;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LineTax)));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LineTotalWithTax)));
+            }
+        }
 
         public QuotationItemRow(QuotationItemDto item)
             : this(item.Id, item.ProductId, item.ProductName, item.Quantity,
@@ -94,9 +106,11 @@ namespace KamatekCrm.ViewModels
             _taxPercent = taxPercent;
         }
 
-        private void OnChanged() => PropertyChanged?.Invoke(
-            this,
-            new PropertyChangedEventArgs(string.Empty));
+        private void OnChanged()
+        {
+            _balancedTax = null;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+        }
     }
 
     /// <summary>
@@ -171,12 +185,12 @@ namespace KamatekCrm.ViewModels
         public decimal TaxRate { get => _taxRate; set { SetProperty(ref _taxRate, value); RecalculateTotals(); } }
 
         /// <summary>Malzeme/hizmet net toplamı (satır bazlı iskonto uygulanmış, KDV hariç).</summary>
-        public decimal Subtotal => Items.Sum(i => i.LineNet);
-        public decimal NetTotal => Subtotal - DiscountAmount + LaborCost + ShippingCost;
+        public decimal Subtotal => FinancialCalculator.RoundMoney(Items.Sum(i => i.LineNet));
+        public decimal NetTotal => FinancialCalculator.RoundMoney(Subtotal - DiscountAmount + LaborCost + ShippingCost);
 
-        /// <summary>KDV tutarı — satır bazlı oranların toplamı (servisle aynı yuvarlama).</summary>
-        public decimal TaxAmount => Math.Round(Items.Sum(i => i.LineTax), 2);
-        public decimal TotalAmount => Math.Round(NetTotal + TaxAmount, 2);
+        /// <summary>KDV tutarı — satır bazlı oranların toplamı (Largest Remainder dengeli).</summary>
+        public decimal TaxAmount => FinancialCalculator.RoundMoney(Items.Sum(i => i.LineTax));
+        public decimal TotalAmount => FinancialCalculator.RoundMoney(NetTotal + TaxAmount);
 
         public WorkOrderQuotationViewModel(
             int jobId,
@@ -287,6 +301,25 @@ namespace KamatekCrm.ViewModels
 
         private void RecalculateTotals()
         {
+            if (Items.Count > 0)
+            {
+                var inputs = Items.Select(i => new LineCalculationInput(
+                    i.SourceId, i.ProductId, i.ProductName, i.Quantity, i.UnitPrice, i.DiscountPercent, i.TaxPercent
+                )).ToList();
+
+                var result = FinancialCalculator.CalculateMultiLine(
+                    inputs,
+                    DiscountAmount,
+                    LaborCost,
+                    ShippingCost,
+                    applyDiscountBeforeTax: false);
+
+                for (int idx = 0; idx < Items.Count && idx < result.Lines.Count; idx++)
+                {
+                    Items[idx].SetCalculatedTax(result.Lines[idx].TaxAmount);
+                }
+            }
+
             OnPropertyChanged(nameof(Subtotal));
             OnPropertyChanged(nameof(NetTotal));
             OnPropertyChanged(nameof(TaxAmount));

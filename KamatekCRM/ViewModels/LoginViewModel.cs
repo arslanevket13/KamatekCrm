@@ -347,7 +347,8 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorMessage = $"Giris hatasi: {ex.Message}";
+                ErrorMessage = ex.Message;
+                Password = string.Empty;
             }
             finally
             {

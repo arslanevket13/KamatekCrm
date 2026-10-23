@@ -42,6 +42,30 @@ public sealed class DesktopCurrentUserContext : ICurrentUserContext
         };
     }
 
-    private bool HasRole(string role) =>
+    public bool HasRole(string role) =>
+        string.Equals(Role, "Admin", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Role, role, StringComparison.OrdinalIgnoreCase);
+
+    public void EnsureAuthorized(ApplicationPermission permission)
+    {
+        if (!IsAuthenticated)
+            throw new UnauthorizedAccessException("Bu işlem için oturum açılmalıdır.");
+
+        if (!HasPermission(permission))
+            throw new UnauthorizedAccessException($"Bu işlem için yetkiniz bulunmuyor ({permission}).");
+    }
+
+    public void EnsureRole(params string[] allowedRoles)
+    {
+        if (!IsAuthenticated)
+            throw new UnauthorizedAccessException("Bu işlem için oturum açılmalıdır.");
+
+        if (string.Equals(Role, "Admin", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        if (allowedRoles.Any(r => string.Equals(Role, r, StringComparison.OrdinalIgnoreCase)))
+            return;
+
+        throw new UnauthorizedAccessException("Bu işlem için yetkiniz bulunmuyor.");
+    }
 }
