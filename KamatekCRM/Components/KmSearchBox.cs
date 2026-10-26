@@ -15,6 +15,7 @@ namespace KamatekCrm.Components
     public class KmSearchBox : Control
     {
         private DispatcherTimer? _debounceTimer;
+        private TextBox? _searchInput;
 
         static KmSearchBox()
         {
@@ -24,7 +25,21 @@ namespace KamatekCrm.Components
 
         public KmSearchBox()
         {
+            Focusable = true;
+            IsTabStop = false;
             ClearCommand = new RelayCommand(ExecuteClear);
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            _searchInput = GetTemplateChild("PART_SearchInput") as TextBox;
+        }
+
+        protected override void OnGotFocus(RoutedEventArgs e)
+        {
+            base.OnGotFocus(e);
+            _searchInput?.Focus();
         }
 
         #region Dependency Properties

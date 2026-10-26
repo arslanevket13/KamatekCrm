@@ -39,6 +39,16 @@ namespace KamatekCrm.Helpers
                         await webView.EnsureCoreWebView2Async();
                     }
 
+                    // Güvenlik sertleştirmesi
+                    if (webView.CoreWebView2?.Settings != null)
+                    {
+                        webView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
+#if !DEBUG
+                        webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
+                        webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+#endif
+                    }
+
                     // Başlatma tamamlandıktan sonra HTML'e git
                     webView.NavigateToString(html);
                 }

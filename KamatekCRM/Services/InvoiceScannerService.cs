@@ -10,8 +10,108 @@ namespace KamatekCrm.Services
 {
     public class InvoiceScannerService
     {
-        // Basit bir Levenshtein Distance implementasyonu
-        private int CalculateLevenshteinDistance(string source, string target)
+        /// <summary>
+        /// Kademeli Akıllı Eşleştirme Algoritması:
+        /// 1. Barkod veya SKU tam eşleşmesi
+        /// 2. Normalize edilmiş ürün adı tam eşleşmesi (Türkçe karakter ve noktalama temizliği)
+        /// 3. Levenshtein / Dice Coefficient benzerlik algoritması (En az %80 ve üzeri benzerlik)
+        /// </summary>
+        public Product? FindBestMatch(string description, List<Product> products)
+        {
+            if (string.IsNullOrWhiteSpace(description) || products == null || !products.Any()) return null;
+
+            var trimmedDesc = description.Trim();
+
+            // 1. ADIM: Barkod veya SKU tam eşleşmesi
+            var skuMatch = products.FirstOrDefault(p =>
+                (!string.IsNullOrWhiteSpace(p.SKU) && (string.Equals(p.SKU, trimmedDesc, StringComparison.OrdinalIgnoreCase) || trimmedDesc.Contains(p.SKU, StringComparison.OrdinalIgnoreCase))) ||
+                (!string.IsNullOrWhiteSpace(p.Barcode) && (string.Equals(p.Barcode, trimmedDesc, StringComparison.OrdinalIgnoreCase) || trimmedDesc.Contains(p.Barcode, StringComparison.OrdinalIgnoreCase))));
+
+            if (skuMatch != null) return skuMatch;
+
+            // 2. ADIM: Normalize edilmiş Ürün Adı tam eşleşmesi
+            var normalizedDesc = NormalizeText(trimmedDesc);
+            var normalizedExact = products.FirstOrDefault(p => NormalizeText(p.ProductName) == normalizedDesc);
+            if (normalizedExact != null) return normalizedExact;
+
+            // 3. ADIM: Levenshtein ve Dice Bigram Benzerlik Skoru (>= 0.80 / %80)
+            Product? bestMatch = null;
+            double maxSimilarity = 0.0;
+
+            foreach (var product in products)
+            {
+                var normProd = NormalizeText(product.ProductName);
+                if (string.IsNullOrWhiteSpace(normProd)) continue;
+
+                double similarity = CalculateCombinedSimilarity(normalizedDesc, normProd);
+
+                if (similarity >= 0.80 && similarity > maxSimilarity)
+                {
+                    maxSimilarity = similarity;
+                    bestMatch = product;
+                }
+            }
+
+            return bestMatch;
+        }
+
+        public static string NormalizeText(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+
+            string text = input.Trim().ToLowerInvariant()
+                .Replace('ı', 'i')
+                .Replace('ğ', 'g')
+                .Replace('ü', 'u')
+                .Replace('ş', 's')
+                .Replace('ö', 'o')
+                .Replace('ç', 'c');
+
+            var chars = text.Select(c => char.IsLetterOrDigit(c) ? c : ' ').ToArray();
+            text = new string(chars);
+
+            return Regex.Replace(text, @"\s+", " ").Trim();
+        }
+
+        public static double CalculateCombinedSimilarity(string source, string target)
+        {
+            if (string.IsNullOrEmpty(source) && string.IsNullOrEmpty(target)) return 1.0;
+            if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(target)) return 0.0;
+            if (source == target) return 1.0;
+
+            int levDistance = CalculateLevenshteinDistance(source, target);
+            int maxLen = Math.Max(source.Length, target.Length);
+            double levSim = maxLen == 0 ? 1.0 : 1.0 - ((double)levDistance / maxLen);
+
+            double diceSim = CalculateDiceCoefficient(source, target);
+
+            return Math.Max(levSim, diceSim);
+        }
+
+        private static double CalculateDiceCoefficient(string s1, string s2)
+        {
+            if (s1.Length < 2 || s2.Length < 2) return 0.0;
+
+            var bigrams1 = new HashSet<string>();
+            for (int i = 0; i < s1.Length - 1; i++)
+            {
+                bigrams1.Add(s1.Substring(i, 2));
+            }
+
+            int matches = 0;
+            for (int i = 0; i < s2.Length - 1; i++)
+            {
+                if (bigrams1.Contains(s2.Substring(i, 2)))
+                {
+                    matches++;
+                }
+            }
+
+            int totalBigrams = (s1.Length - 1) + (s2.Length - 1);
+            return totalBigrams == 0 ? 0.0 : (2.0 * matches) / totalBigrams;
+        }
+
+        private static int CalculateLevenshteinDistance(string source, string target)
         {
             if (string.IsNullOrEmpty(source))
             {
@@ -36,35 +136,6 @@ namespace KamatekCrm.Services
                 }
             }
             return d[source.Length, target.Length];
-        }
-
-        public Product? FindBestMatch(string description, List<Product> products)
-        {
-            if (string.IsNullOrWhiteSpace(description) || products == null || !products.Any()) return null;
-
-            description = description.ToLowerInvariant();
-            Product? bestMatch = null;
-            int minDistance = int.MaxValue;
-            
-            // Tam eşleşme kontrolü (Hızlandırma için)
-            var exactMatch = products.FirstOrDefault(p => p.ProductName.ToLowerInvariant() == description);
-            if (exactMatch != null) return exactMatch;
-
-            foreach (var product in products)
-            {
-                int distance = CalculateLevenshteinDistance(description, product.ProductName.ToLowerInvariant());
-                
-                // Kabul edilebilir eşik (Örn: uzunluğun %30'u kadar hata payı)
-                int threshold = Math.Max(3, product.ProductName.Length / 3);
-
-                if (distance < minDistance && distance <= threshold)
-                {
-                    minDistance = distance;
-                    bestMatch = product;
-                }
-            }
-
-            return bestMatch;
         }
 
         public List<PurchaseOrderItem> ExtractItemsFromPdf(string filePath, List<Product> availableProducts)

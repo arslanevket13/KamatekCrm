@@ -468,6 +468,12 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedJob == null || newStatus == null) return;
 
+            if (!RepairStatusHelper.CanTransition(SelectedJob.RepairStatus, newStatus.Value, out var transitionError))
+            {
+                _toastService?.ShowWarning(transitionError ?? "Geçersiz durum geçişi.");
+                return;
+            }
+
             if (newStatus == RepairStatus.Delivered)
             {
                 try

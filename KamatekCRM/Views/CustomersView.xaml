@@ -135,7 +135,12 @@
                               Background="Transparent" BorderThickness="0"
                               GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                               AlternatingRowBackground="{DynamicResource HoverOverlayBrush}"
-                              IsReadOnly="True">
+                              IsReadOnly="True"
+                              EnableRowVirtualization="True"
+                              EnableColumnVirtualization="True"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.CanContentScroll="True">
                         <DataGrid.Style>
                             <Style TargetType="DataGrid" BasedOn="{StaticResource AccessibleDataGrid}">
                                 <Setter Property="RowHeight" Value="54"/>

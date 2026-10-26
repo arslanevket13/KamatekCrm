@@ -29,6 +29,7 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly PdfService _pdfService;
         private readonly EmailService _emailService;
+        private readonly IDraftStorageService _draftStorageService;
         private readonly Task _workspaceLoadTask;
         private Guid _saveOperationId = Guid.NewGuid();
         private ProjectQuotePricingResult _pricing = EmptyPricing();
@@ -280,7 +281,8 @@ namespace KamatekCrm.ViewModels
             IDialogService dialogService,
             IToastService toastService,
             PdfService pdfService,
-            EmailService emailService)
+            EmailService emailService,
+            IDraftStorageService? draftStorageService = null)
         {
             _readService = readService;
             _commandService = commandService;
@@ -288,6 +290,7 @@ namespace KamatekCrm.ViewModels
             _toastService = toastService;
             _pdfService = pdfService;
             _emailService = emailService;
+            _draftStorageService = draftStorageService ?? new DraftStorageService();
 
             _workspaceLoadTask = RefreshAsync();
         }
@@ -449,8 +452,29 @@ namespace KamatekCrm.ViewModels
 
                 OnPropertyChanged(nameof(CanUndo));
                 OnPropertyChanged(nameof(CanRedo));
+
+                AutoSaveDraft(snapshot);
             }
             catch { }
+        }
+
+        private string GetDraftKey() => CurrentProject.Id > 0 
+            ? $"project_quote_{CurrentProject.Id}_R{CurrentProject.RevisionNumber}" 
+            : "project_quote_new";
+
+        private void AutoSaveDraft(string scopeJson)
+        {
+            var draft = new ProjectQuoteDraft
+            {
+                ProjectId = CurrentProject.Id,
+                CustomerId = SelectedCustomer?.Id,
+                ProjectName = ProjectName,
+                DiscountPercent = DiscountPercent,
+                KdvRate = KdvRate,
+                ScopeJson = scopeJson,
+                SavedAt = DateTime.UtcNow
+            };
+            _ = _draftStorageService.SaveDraftAsync(GetDraftKey(), draft);
         }
 
         [RelayCommand]
@@ -962,6 +986,8 @@ namespace KamatekCrm.ViewModels
                         ? $"Değişiklik bulunmadı: {saved.QuoteNumber} / R{saved.RevisionNumber}"
                         : $"Teklif kaydedildi: {saved.QuoteNumber} / R{saved.RevisionNumber} — {GrandTotalDisplay}";
                 _toastService.ShowSuccess(message);
+
+                _ = _draftStorageService.ClearDraftAsync(GetDraftKey());
             }
             catch (Exception ex)
             {
@@ -1156,5 +1182,19 @@ namespace KamatekCrm.ViewModels
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Çevrimdışı otomatik kaydedilen teklif taslak verisi
+    /// </summary>
+    public class ProjectQuoteDraft
+    {
+        public int ProjectId { get; set; }
+        public int? CustomerId { get; set; }
+        public string ProjectName { get; set; } = string.Empty;
+        public decimal DiscountPercent { get; set; }
+        public decimal KdvRate { get; set; }
+        public string ScopeJson { get; set; } = string.Empty;
+        public DateTime SavedAt { get; set; } = DateTime.UtcNow;
     }
 }

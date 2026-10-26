@@ -105,7 +105,7 @@ namespace KamatekCrm.ViewModels
             try
             {
                 using var context = _dbContextFactory.CreateDbContext();
-                var fieldJobs = context.ServiceJobs
+                var fieldJobs = context.ServiceJobs.AsNoTracking()
                     .Include(j => j.Customer)
                     .Where(j => j.WorkOrderType == WorkOrderType.Installation 
                              || j.WorkOrderType == WorkOrderType.Maintenance

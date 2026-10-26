@@ -15,6 +15,8 @@ namespace KamatekCrm.ViewModels
         private bool _showResults;
         private SearchResult? _selectedResult;
 
+        private System.Threading.CancellationTokenSource? _searchCts;
+
         /// <summary>
         /// Arama sorgusu
         /// </summary>
@@ -25,8 +27,27 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchQuery, value))
                 {
-                    _ = PerformSearchAsync();
+                    _searchCts?.Cancel();
+                    _searchCts = new System.Threading.CancellationTokenSource();
+                    var token = _searchCts.Token;
+                    _ = DebouncedSearchAsync(token);
                 }
+            }
+        }
+
+        private async Task DebouncedSearchAsync(System.Threading.CancellationToken token)
+        {
+            try
+            {
+                await Task.Delay(300, token);
+                if (!token.IsCancellationRequested)
+                {
+                    await PerformSearchAsync(token);
+                }
+            }
+            catch (System.OperationCanceledException)
+            {
+                // Debounced keystroke was superseded
             }
         }
 
@@ -79,10 +100,6 @@ namespace KamatekCrm.ViewModels
         public bool ShowNoResults => !HasResults && !string.IsNullOrWhiteSpace(SearchQuery) && SearchQuery.Length >= 2;
 
         /// <summary>
-        /// Temizle komutu
-        /// </summary>
-
-        /// <summary>
         /// Sonuç seçme event'i
         /// </summary>
         public event System.Action<string, int>? ResultSelected;
@@ -97,7 +114,7 @@ namespace KamatekCrm.ViewModels
             _searchService = searchService;
         }
 
-        private async Task PerformSearchAsync()
+        private async Task PerformSearchAsync(System.Threading.CancellationToken token = default)
         {
             Results.Clear();
 
@@ -114,11 +131,15 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                var results = await _searchService.SearchAsync(SearchQuery);
+                var results = await _searchService.SearchAsync(SearchQuery, 30, token);
                 foreach (var result in results)
                 {
                     Results.Add(result);
                 }
+            }
+            catch (System.OperationCanceledException)
+            {
+                // Request cancelled
             }
             finally
             {
@@ -134,6 +155,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void Clear()
         {
+            _searchCts?.Cancel();
             SearchQuery = string.Empty;
             Results.Clear();
             ShowResults = false;

@@ -124,6 +124,7 @@
     <SolidColorBrush x:Key="StatusWarningFg" Color="#D97706"/>
     <SolidColorBrush x:Key="StatusWarningBgLight" Color="#FEF3C7"/>
     <SolidColorBrush x:Key="StatusWarningFgLight" Color="#92400E"/>
+    <SolidColorBrush x:Key="StatusWarningFgDark" Color="#92400E"/>
 
     <SolidColorBrush x:Key="StatusErrorBg" Color="#EF4444" Opacity="0.10"/>
     <SolidColorBrush x:Key="StatusErrorFg" Color="#DC2626"/>

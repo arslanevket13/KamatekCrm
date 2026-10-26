@@ -50,8 +50,8 @@ namespace KamatekCrm.ViewModels
             _context = _dbContextFactory.CreateDbContext();
             
             Transactions = new ObservableCollection<StockTransactionReportItem>();
-            Warehouses = new ObservableCollection<Warehouse>(_context.Warehouses.ToList());
-            Products = new ObservableCollection<Product>(_context.Products.OrderBy(p => p.ProductName).ToList());
+            Warehouses = new ObservableCollection<Warehouse>(_context.Warehouses.AsNoTracking().ToList());
+            Products = new ObservableCollection<Product>(_context.Products.AsNoTracking().OrderBy(p => p.ProductName).ToList());
             
             TransactionTypes = new ObservableCollection<TransactionTypeItem>
             {
@@ -84,7 +84,7 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                var query = _context.StockTransactions
+                var query = _context.StockTransactions.AsNoTracking()
                     .Include(t => t.Product)
                     .Include(t => t.SourceWarehouse)
                     .Include(t => t.TargetWarehouse)

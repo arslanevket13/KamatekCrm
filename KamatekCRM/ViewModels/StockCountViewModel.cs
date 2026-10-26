@@ -36,6 +36,7 @@ namespace KamatekCrm.ViewModels
         private readonly IStockCountCommandService _stockCountCommandService;
         private readonly IStockCountReadService _stockCountReadService;
         private readonly IDialogService _dialogService;
+        private readonly Services.IDraftStorageService _draftStorageService;
         private Guid _currentCountIdempotencyKey = Guid.NewGuid();
         private Guid _manualCountIdempotencyKey = Guid.NewGuid();
         private CancellationTokenSource? _manualSearchCts;
@@ -230,11 +231,13 @@ namespace KamatekCrm.ViewModels
         public StockCountViewModel(
             IStockCountCommandService stockCountCommandService,
             IStockCountReadService stockCountReadService,
-            IDialogService dialogService)
+            IDialogService dialogService,
+            Services.IDraftStorageService? draftStorageService = null)
         {
             _stockCountCommandService = stockCountCommandService;
             _stockCountReadService = stockCountReadService;
             _dialogService = dialogService;
+            _draftStorageService = draftStorageService ?? new Services.DraftStorageService();
             
             Warehouses = new ObservableCollection<StockCountWarehouseDto>();
             CountItems = new ObservableCollection<StockCountItem>();
@@ -509,6 +512,7 @@ namespace KamatekCrm.ViewModels
                     ? $"Sayım daha önce uygulanmıştı ({result.Value.ReferenceNumber}); stok ikinci kez değiştirilmedi."
                     : $"Sayım kaydedildi ({result.Value.ReferenceNumber}). {result.Value.ProductCount} ürün güncellendi.";
                 IsActionSuccessful = true;
+                _ = _draftStorageService.ClearDraftAsync(GetDraftKey());
 
                 await RefreshCoreAsync();
             }
@@ -931,6 +935,7 @@ namespace KamatekCrm.ViewModels
                     ? $"Manuel sayım daha önce uygulanmıştı ({result.Value.ReferenceNumber}); stok ikinci kez değiştirilmedi."
                     : $"Manuel sayım kaydedildi ({result.Value.ReferenceNumber}). {result.Value.ProductCount} ürün güncellendi.";
                 IsActionSuccessful = true;
+                _ = _draftStorageService.ClearDraftAsync($"stock_count_manual_{ManualSelectedWarehouse.Id}");
 
                 ManualCountItems.Clear();
                 _manualCountIdempotencyKey = Guid.NewGuid();
@@ -1034,4 +1039,52 @@ namespace KamatekCrm.ViewModels
         }
     }
 
+    public partial class StockCountViewModel
+    {
+        private string GetDraftKey() => $"stock_count_{SelectedWarehouse?.Id ?? 0}";
+
+        public void AutoSaveDraft()
+        {
+            if (SelectedWarehouse == null || !CountItems.Any(i => i.IsCounted)) return;
+
+            try
+            {
+                var draft = new StockCountDraftData
+                {
+                    WarehouseId = SelectedWarehouse.Id,
+                    WarehouseName = SelectedWarehouse.Name,
+                    CountDate = CountDate,
+                    Items = CountItems.Where(i => i.IsCounted).Select(i => new StockCountDraftLine
+                    {
+                        ProductId = i.ProductId,
+                        CountedQuantity = i.CountedQuantity,
+                        SystemQuantity = i.SystemQuantity
+                    }).ToList(),
+                    SavedAt = DateTime.UtcNow
+                };
+
+                _ = _draftStorageService.SaveDraftAsync(GetDraftKey(), draft);
+            }
+            catch { }
+        }
+    }
+
+    /// <summary>
+    /// Çevrimdışı otomatik kaydedilen stok sayım taslak verisi
+    /// </summary>
+    public class StockCountDraftData
+    {
+        public int WarehouseId { get; set; }
+        public string WarehouseName { get; set; } = string.Empty;
+        public DateTime CountDate { get; set; }
+        public System.Collections.Generic.List<StockCountDraftLine> Items { get; set; } = new();
+        public DateTime SavedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public class StockCountDraftLine
+    {
+        public int ProductId { get; set; }
+        public int CountedQuantity { get; set; }
+        public int SystemQuantity { get; set; }
+    }
 }

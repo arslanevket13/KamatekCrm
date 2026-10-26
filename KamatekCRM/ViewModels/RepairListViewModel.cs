@@ -241,7 +241,7 @@ namespace KamatekCrm.ViewModels
             {
                 using var scope = _serviceProvider.CreateScope();
                 var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var products = await ctx.Products.OrderBy(p => p.ProductName).ToListAsync();
+                var products = await ctx.Products.AsNoTracking().OrderBy(p => p.ProductName).ToListAsync();
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -262,7 +262,7 @@ namespace KamatekCrm.ViewModels
                 using var scope = _serviceProvider.CreateScope();
                 var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                var job = await ctx.ServiceJobs
+                var job = await ctx.ServiceJobs.AsNoTracking()
                     .Include(j => j.Customer)
                         .ThenInclude(c => c.ServiceJobs)  // Müşterinin diğer tamir kayıtları
                     .FirstOrDefaultAsync(j => j.Id == id);
@@ -286,7 +286,7 @@ namespace KamatekCrm.ViewModels
             {
                 using var scope = _serviceProvider.CreateScope();
                 var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var history = await ctx.ServiceJobHistories
+                var history = await ctx.ServiceJobHistories.AsNoTracking()
                     .Where(h => h.ServiceJobId == jobId)
                     .OrderByDescending(h => h.Date)
                     .ToListAsync();
@@ -309,7 +309,7 @@ namespace KamatekCrm.ViewModels
             {
                 using var scope = _serviceProvider.CreateScope();
                 var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var items = await ctx.ServiceJobItems
+                var items = await ctx.ServiceJobItems.AsNoTracking()
                     .Include(i => i.Product)
                     .Where(i => i.ServiceJobId == jobId)
                     .ToListAsync();
@@ -356,6 +356,12 @@ namespace KamatekCrm.ViewModels
         private async Task UpdateStatusAsync(RepairStatus? newStatus)
         {
             if (SelectedJob == null || newStatus == null) return;
+
+            if (!RepairStatusHelper.CanTransition(SelectedJob.RepairStatus, newStatus.Value, out var transitionError))
+            {
+                _toastService.ShowWarning(transitionError ?? "Geçersiz durum geçişi.");
+                return;
+            }
 
             if (newStatus == RepairStatus.Delivered)
             {
@@ -655,7 +661,7 @@ namespace KamatekCrm.ViewModels
                 using var scope = _serviceProvider.CreateScope();
                 var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                var repairJobs = await ctx.ServiceJobs
+                var repairJobs = await ctx.ServiceJobs.AsNoTracking()
                     .Include(j => j.Customer)
                     .Where(j => j.WorkOrderType == WorkOrderType.Repair)
                     .OrderByDescending(j => j.CreatedDate)

@@ -45,11 +45,14 @@ namespace KamatekCrm.Services
 
             try
             {
+                // Dosya güvenlik ve boyut doğrulaması (Magic Bytes + Max 25MB)
+                FileSecurityValidator.ValidateAttachment(sourceFilePath);
+
                 var fileInfo = new FileInfo(sourceFilePath);
-                var originalFileName = fileInfo.Name;
+                var originalFileName = Path.GetFileName(fileInfo.Name);
                 var extension = fileInfo.Extension.ToLowerInvariant();
                 
-                var guidFileName = $"{Guid.NewGuid()}{extension}";
+                var guidFileName = FileSecurityValidator.GenerateSecureFileName(originalFileName);
                 var destinationPath = Path.Combine(_archivePath, guidFileName);
 
                 File.Copy(sourceFilePath, destinationPath, overwrite: true);
@@ -88,8 +91,13 @@ namespace KamatekCrm.Services
         {
             try
             {
-                var extension = Path.GetExtension(fileName).ToLowerInvariant();
-                var guidFileName = $"{Guid.NewGuid()}{extension}";
+                var cleanFileName = Path.GetFileName(fileName);
+                var extension = Path.GetExtension(cleanFileName).ToLowerInvariant();
+
+                // Dosya güvenlik ve boyut doğrulaması (Magic Bytes + Max 25MB)
+                FileSecurityValidator.ValidateAttachmentStream(stream, extension);
+
+                var guidFileName = FileSecurityValidator.GenerateSecureFileName(cleanFileName);
                 var destinationPath = Path.Combine(_archivePath, guidFileName);
 
                 using (var fileStream = File.Create(destinationPath))
@@ -105,7 +113,7 @@ namespace KamatekCrm.Services
                     EntityType = entityType,
                     EntityId = entityId,
                     FilePath = destinationPath,
-                    FileName = fileName,
+                    FileName = cleanFileName,
                     FileSize = fileInfo.Length,
                     ContentType = contentType,
                     UploadDate = DateTime.Now,

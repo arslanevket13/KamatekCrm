@@ -27,6 +27,15 @@ namespace KamatekCrm.Views
                 _isWebViewReady = true;
                 LoadingOverlay.Visibility = Visibility.Collapsed;
 
+                if (MapWebView.CoreWebView2?.Settings != null)
+                {
+                    MapWebView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
+#if !DEBUG
+                    MapWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
+                    MapWebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
+#endif
+                }
+
                 // WebView2 hazır olduğunda mevcut HTML'i yükle
                 if (DataContext is RoutePlanningViewModel vm && !string.IsNullOrEmpty(vm.MapHtmlContent))
                 {

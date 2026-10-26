@@ -103,6 +103,26 @@ namespace KamatekCrm.Services.Update
             SaveSettingsInternal(_settings);
         }
 
+        private IUpdateSource GetUpdateSource(bool allowPrerelease)
+        {
+            var sourceUrl = !string.IsNullOrWhiteSpace(_settings.CustomUpdateUrl)
+                ? _settings.CustomUpdateUrl.Trim()
+                : RepoUrl;
+
+            if (!UpdateSettings.IsValidUpdateSource(sourceUrl))
+            {
+                Log.Error("Güvensiz veya geçersiz güncelleme URL'si reddedildi: {Url}", sourceUrl);
+                throw new InvalidOperationException($"Güvensiz güncelleme kaynağı reddedildi: '{sourceUrl}'. Yalnızca https:// veya güvenli yerel/UNC dosya yolu kabul edilir.");
+            }
+
+            if (sourceUrl.StartsWith("https://github.com", StringComparison.OrdinalIgnoreCase))
+            {
+                return new GithubSource(sourceUrl, accessToken: null, prerelease: allowPrerelease);
+            }
+
+            return new SimpleWebSource(sourceUrl);
+        }
+
         public async Task<UpdateCheckResult?> CheckForUpdatesAsync(bool isAutoCheck, CancellationToken ct = default)
         {
             if (!await _checkLock.WaitAsync(0, ct))
@@ -112,13 +132,16 @@ namespace KamatekCrm.Services.Update
             }
 
             IsChecking = true;
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
             try
             {
                 Log.Information("=== Checking for updates (Current: {CurrentVersion}, Channel: {Channel}, AutoCheck: {IsAuto}) ===",
                     CurrentVersion, UpdateChannel, isAutoCheck);
 
                 bool allowPrerelease = string.Equals(UpdateChannel, "Beta", StringComparison.OrdinalIgnoreCase);
-                var source = new GithubSource(RepoUrl, accessToken: null, prerelease: allowPrerelease);
+                var source = GetUpdateSource(allowPrerelease);
                 var mgr = new UpdateManager(source);
 
                 if (!mgr.IsInstalled)
@@ -212,11 +235,14 @@ namespace KamatekCrm.Services.Update
 
             IsDownloading = true;
             DownloadProgress = 0;
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+
             try
             {
                 Log.Information("Starting update download for version {TargetVersion}...", AvailableUpdate?.TargetVersion);
                 bool allowPrerelease = string.Equals(UpdateChannel, "Beta", StringComparison.OrdinalIgnoreCase);
-                var source = new GithubSource(RepoUrl, accessToken: null, prerelease: allowPrerelease);
+                var source = GetUpdateSource(allowPrerelease);
                 var mgr = new UpdateManager(source);
 
                 if (!mgr.IsInstalled)
@@ -230,7 +256,7 @@ namespace KamatekCrm.Services.Update
                 {
                     DownloadProgress = p;
                     progress?.Report(p);
-                });
+                }, linkedCts.Token);
 
                 IsUpdateDownloaded = true;
                 _settings.LastDownloadedVersion = AvailableUpdate?.TargetVersion;
@@ -273,7 +299,7 @@ namespace KamatekCrm.Services.Update
             {
                 Log.Information("Applying update and restarting application for version {TargetVersion}...", AvailableUpdate?.TargetVersion);
                 bool allowPrerelease = string.Equals(UpdateChannel, "Beta", StringComparison.OrdinalIgnoreCase);
-                var source = new GithubSource(RepoUrl, accessToken: null, prerelease: allowPrerelease);
+                var source = GetUpdateSource(allowPrerelease);
                 var mgr = new UpdateManager(source);
 
                 if (!mgr.IsInstalled)
@@ -281,6 +307,24 @@ namespace KamatekCrm.Services.Update
                     Log.Warning("App is not running from a Velopack installed package (Unpackaged/Dev mode). Cannot apply Velopack update directly.");
                     _toastService?.ShowWarning("Geliştirme modundasınız. Paket yüklemesi yapılabilmesi için uygulamanın kurulu olması gerekir.");
                     return;
+                }
+
+                // Uygulama yeniden başlatılmadan önce arka plan servislerini ve veritabanı bağlantılarını güvenli kapat
+                try
+                {
+                    Log.Information("Güncelleme öncesi aktif bağlantılar ve süreçler güvenle durduruluyor...");
+                    if (App.ServiceProvider != null)
+                    {
+                        var discovery = App.ServiceProvider.GetService(typeof(NetworkDiscoveryService)) as NetworkDiscoveryService;
+                        discovery?.StopAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+                        var heartbeat = App.ServiceProvider.GetService(typeof(ConnectionHeartbeatService)) as ConnectionHeartbeatService;
+                        heartbeat?.StopAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    }
+                }
+                catch (Exception serviceEx)
+                {
+                    Log.Warning(serviceEx, "Güncelleme öncesi servisleri kapatırken uyarı oluştu");
                 }
 
                 mgr.ApplyUpdatesAndRestart(_velopackUpdateInfo);

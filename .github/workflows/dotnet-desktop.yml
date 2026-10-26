@@ -1,27 +1,45 @@
-name: KamatekCRM Desktop Release
+name: KamatekCRM Desktop CI/CD
 
 on:
-  workflow_dispatch: 
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: windows-latest 
+  build-and-test:
+    name: Build, Audit & Test
+    runs-on: windows-latest
 
     steps:
     - name: Depoyu Klonla (Checkout)
       uses: actions/checkout@v4
 
-    - name: .NET 9 Çalışma Zamanı Kurulumu
+    - name: .NET 9 SDK Kurulumu
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0.x' 
+        dotnet-version: '9.0.x'
 
-    - name: Projeyi Derle ve Tek Dosya EXE Oluştur
+    - name: Bağımlılıkları Geri Yükle (Restore)
+      run: dotnet restore KamatekCRM.sln
+
+    - name: Güvenlik Açığı Denetimi (NuGet Audit Check)
+      run: dotnet list KamatekCRM.sln package --vulnerable
+
+    - name: Çözümü Derle (Build Solution)
+      run: dotnet build KamatekCRM.sln --configuration Release --no-restore
+
+    - name: Otomatik Birim Testlerini Çalıştır (Run Unit Tests)
+      run: dotnet test KamatekCrm.Tests/KamatekCrm.Tests.csproj --configuration Release --no-build --verbosity normal
+
+    - name: Tek Dosya Masaüstü Paketi Yayınla (Publish)
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       run: dotnet publish KamatekCRM/KamatekCrm.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o ./publish_output
 
     - name: Derleme Çıktısını (Artifact) Yükle
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
       uses: actions/upload-artifact@v4
       with:
         name: KamatekCRM-App
         path: ./publish_output/
-        

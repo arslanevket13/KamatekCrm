@@ -221,8 +221,11 @@
                           Background="Transparent" BorderThickness="0"
                           GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                           AlternatingRowBackground="{DynamicResource HoverOverlayBrush}"
+                          EnableRowVirtualization="True"
+                          EnableColumnVirtualization="True"
                           VirtualizingPanel.IsVirtualizing="True"
-                          VirtualizingPanel.VirtualizationMode="Recycling">
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          ScrollViewer.CanContentScroll="True">
 
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow">

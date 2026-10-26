@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Models.Common;
@@ -21,12 +22,15 @@ namespace KamatekCrm.Infrastructure.Data
     /// </summary>
     public class AppDbContext : DbContext
     {
+        public ICurrentUserContext? CurrentUserContext { get; set; }
+
         public AppDbContext()
         {
         }
 
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUserContext? currentUserContext = null) : base(options)
         {
+            CurrentUserContext = currentUserContext;
         }
 
         // --- Mevcut DbSetler ---
@@ -227,6 +231,10 @@ namespace KamatekCrm.Infrastructure.Data
                 entity.Property(e => e.FullName).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Notes).HasMaxLength(2000);
                 entity.Ignore(e => e.FullAddress);
+                entity.HasIndex(e => e.FullName);
+                entity.HasIndex(e => e.PhoneNumber);
+                entity.HasIndex(e => e.CustomerCode);
+                entity.HasIndex(e => e.CreatedDate);
             });
 
             modelBuilder.Entity<CustomerInteraction>(entity =>
@@ -361,6 +369,8 @@ namespace KamatekCrm.Infrastructure.Data
                 entity.Property(e => e.ProductName).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.SalePrice).HasColumnType("decimal(18,2)");
+                entity.HasIndex(e => e.ProductName);
+                entity.HasIndex(e => e.CreatedDate);
                 
                 entity.Property(e => e.Specifications)
                       .HasColumnType("jsonb")
@@ -407,6 +417,13 @@ namespace KamatekCrm.Infrastructure.Data
 
             modelBuilder.Entity<ServiceJob>(entity =>
             {
+                entity.HasIndex(e => e.CustomerId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.RepairStatus);
+                entity.HasIndex(e => e.WorkOrderType);
+                entity.HasIndex(e => e.CreatedDate);
+                entity.HasIndex(e => e.ScheduledDate);
+
                 entity.Property(e => e.JobDetails)
                       .HasColumnType("jsonb")
                       .HasConversion(
@@ -615,6 +632,18 @@ namespace KamatekCrm.Infrastructure.Data
                       .HasForeignKey(e => e.ProductId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+
+            modelBuilder.Entity<CashTransaction>(entity =>
+            {
+                entity.HasIndex(e => e.Date);
+                entity.HasIndex(e => e.TransactionType);
+            });
+
+            modelBuilder.Entity<StockTransaction>(entity =>
+            {
+                entity.HasIndex(e => e.Date);
+                entity.HasIndex(e => e.TransactionType);
+            });
         }
 
         public override int SaveChanges() => SaveChanges(acceptAllChangesOnSuccess: true);
@@ -655,8 +684,9 @@ namespace KamatekCrm.Infrastructure.Data
         private void PrepareChanges()
         {
             ProtectCompletedReturns();
-            ProtectAndSealActivityLogs();
             ApplyAuditInformation();
+            CaptureAuditLogs();
+            ProtectAndSealActivityLogs();
         }
 
         private void ProtectCompletedReturns()
@@ -733,10 +763,129 @@ namespace KamatekCrm.Infrastructure.Data
             }
         }
 
+        private (int? UserId, string Username) GetCurrentUserInfo()
+        {
+            if (CurrentUserContext != null && CurrentUserContext.IsAuthenticated)
+            {
+                return (CurrentUserContext.UserId, CurrentUserContext.Username);
+            }
+
+            try
+            {
+                var wpfUser = typeof(AppDbContext).Assembly.GetType("KamatekCrm.App")?.GetProperty("CurrentUser")?.GetValue(null) as User;
+                if (wpfUser != null)
+                {
+                    return (wpfUser.Id, wpfUser.Username ?? "Sistem");
+                }
+            }
+            catch
+            {
+            }
+
+            return (null, "System");
+        }
+
+        private void CaptureAuditLogs()
+        {
+            var auditEntries = ChangeTracker.Entries()
+                .Where(e => e.Entity is not ActivityLog &&
+                            e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+                .ToList();
+
+            if (auditEntries.Count == 0) return;
+
+            var (userId, username) = GetCurrentUserInfo();
+            if (CurrentUserContext == null && username == "System") return;
+
+            var timestamp = DateTime.UtcNow;
+
+            var criticalTypes = new System.Collections.Generic.HashSet<Type>
+            {
+                typeof(Product), typeof(Customer), typeof(ServiceJob), typeof(User),
+                typeof(Transaction), typeof(CashTransaction), typeof(PosTransaction),
+                typeof(SalesOrder), typeof(PurchaseOrder), typeof(PurchaseInvoice),
+                typeof(StockTransaction), typeof(WorkOrderQuotation), typeof(InstallationOrder)
+            };
+
+            var logsToAdd = new System.Collections.Generic.List<ActivityLog>();
+
+            foreach (var entry in auditEntries)
+            {
+                var clrType = entry.Metadata.ClrType;
+                if (!criticalTypes.Contains(clrType)) continue;
+
+                var entityName = clrType.Name;
+                var actionType = entry.State switch
+                {
+                    EntityState.Added => "Create",
+                    EntityState.Modified => (entry.Entity is ISoftDeletable sd && sd.IsDeleted) ? "Delete" : "Update",
+                    EntityState.Deleted => "Delete",
+                    _ => "Update"
+                };
+
+                var changes = new System.Collections.Generic.Dictionary<string, object?>();
+                var changedPropNames = new System.Collections.Generic.List<string>();
+
+                if (entry.State == EntityState.Modified)
+                {
+                    foreach (var prop in entry.Properties)
+                    {
+                        if (prop.IsModified && !Equals(prop.OriginalValue, prop.CurrentValue))
+                        {
+                            var propName = prop.Metadata.Name;
+                            // Hassas alanları maskele
+                            if (propName.Contains("Password", StringComparison.OrdinalIgnoreCase) ||
+                                propName.Contains("Hash", StringComparison.OrdinalIgnoreCase) ||
+                                propName.Contains("Secret", StringComparison.OrdinalIgnoreCase))
+                            {
+                                changes[propName] = new { Old = "***", New = "***" };
+                            }
+                            else
+                            {
+                                changes[propName] = new { Old = prop.OriginalValue, New = prop.CurrentValue };
+                            }
+                            changedPropNames.Add(propName);
+                        }
+                    }
+
+                    if (changedPropNames.Count == 0 && actionType != "Delete") continue;
+                }
+
+                var keyProperty = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
+                var recordId = keyProperty?.CurrentValue?.ToString() ?? keyProperty?.OriginalValue?.ToString();
+
+                var log = new ActivityLog
+                {
+                    UserId = userId,
+                    Username = username,
+                    ActionType = actionType,
+                    Action = actionType,
+                    EntityName = entityName,
+                    RecordId = recordId,
+                    ReferenceId = recordId,
+                    Description = actionType switch
+                    {
+                        "Create" => $"{entityName} oluşturuldu.",
+                        "Delete" => $"{entityName} #{recordId} silindi.",
+                        _ => $"{entityName} #{recordId} güncellendi: {string.Join(", ", changedPropNames)}"
+                    },
+                    AdditionalData = changes.Count > 0 ? JsonSerializer.Serialize(changes) : null,
+                    Timestamp = timestamp
+                };
+
+                logsToAdd.Add(log);
+            }
+
+            if (logsToAdd.Count > 0)
+            {
+                ActivityLogs.AddRange(logsToAdd);
+            }
+        }
+
         private void ApplyAuditInformation()
         {
             var entries = ChangeTracker.Entries<BaseEntity>();
-            var currentUser = "System";
+            var currentUser = GetCurrentUserInfo().Username;
             var timestamp = DateTime.UtcNow;
 
             foreach (var entry in entries)

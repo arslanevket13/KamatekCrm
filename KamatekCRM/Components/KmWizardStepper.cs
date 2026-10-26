@@ -25,7 +25,7 @@ namespace KamatekCrm.Components
 
         public static readonly DependencyProperty CurrentStepIndexProperty = DependencyProperty.Register(
             nameof(CurrentStepIndex), typeof(int), typeof(KmWizardStepper),
-            new PropertyMetadata(0, OnCurrentStepChanged));
+            new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnCurrentStepChanged));
 
         public static readonly DependencyProperty TotalStepsProperty = DependencyProperty.Register(
             nameof(TotalSteps), typeof(int), typeof(KmWizardStepper),
@@ -134,6 +134,8 @@ namespace KamatekCrm.Components
 
         public KmWizardStepper()
         {
+            Focusable = true;
+            IsTabStop = true;
             Steps = new System.Collections.ObjectModel.ObservableCollection<WizardStep>();
         }
 

@@ -42,6 +42,7 @@ namespace KamatekCrm.ViewModels
 
         // Filtreleme i�in
         private string _searchText = string.Empty;
+        private System.Threading.CancellationTokenSource? _searchCts;
         private ICollectionView? _customersView;
 
         // Müşteri tipi filtreleme
@@ -81,8 +82,27 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _searchText, value))
                 {
                     // Arama metni değişince sayfa 1'e dön ve yenile
-                    CurrentPage = 1; 
+                    _searchCts?.Cancel();
+                    _searchCts = new System.Threading.CancellationTokenSource();
+                    var token = _searchCts.Token;
+                    _ = DebouncedSearchAsync(token);
                 }
+            }
+        }
+
+        private async Task DebouncedSearchAsync(System.Threading.CancellationToken token)
+        {
+            try
+            {
+                await Task.Delay(300, token);
+                if (!token.IsCancellationRequested)
+                {
+                    CurrentPage = 1;
+                    await RefreshDataAsync();
+                }
+            }
+            catch (System.OperationCanceledException)
+            {
             }
         }
 
@@ -359,6 +379,7 @@ namespace KamatekCrm.ViewModels
                     TotalCount = items.Count;
 
                     var pagedItems = items
+                        .OrderByDescending(c => c.Id)
                         .Skip((CurrentPage - 1) * PageSize)
                         .Take(PageSize);
 

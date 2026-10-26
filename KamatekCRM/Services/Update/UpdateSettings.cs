@@ -37,5 +37,33 @@ namespace KamatekCrm.Services.Update
         /// Son indirilen ve yüklenmeye hazır sürüm (örn: "v2.1.0")
         /// </summary>
         public string? LastDownloadedVersion { get; set; }
+
+        /// <summary>
+        /// Özel güncelleme kaynağı URL'si veya güvenli ağ yolu.
+        /// Yalnızca https:// veya güvenli yerel/UNC dosya yolu kabul edilir. http:// kesinlikle reddedilir.
+        /// </summary>
+        public string? CustomUpdateUrl { get; set; }
+
+        /// <summary>
+        /// Güncelleme kaynağının güvenliğini doğrular.
+        /// </summary>
+        public static bool IsValidUpdateSource(string? source)
+        {
+            if (string.IsNullOrWhiteSpace(source)) return false;
+
+            source = source.Trim();
+            if (source.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            {
+                return false; // Güvensiz HTTP protokolü engellendi
+            }
+
+            if (source.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                return Uri.TryCreate(source, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
+            }
+
+            // Yerel veya güvenli UNC ağ paylaşım yolu
+            return System.IO.Path.IsPathRooted(source) || source.StartsWith(@"\\", StringComparison.Ordinal);
+        }
     }
 }

@@ -11,21 +11,22 @@ namespace KamatekCrm.ViewModels.Common
         private int _pageSize = 20;
         private int _totalCount;
         private int _totalPages;
+        private bool _isRefreshing;
+        private bool _suppressRefresh;
 
         public int CurrentPage
         {
             get => _currentPage;
             set
             {
-                // If page changes, refresh data unless explicitly suppressed or if change is programmatic without refresh intent
-                // But for now, let's assume UI binding change means we want refresh.
-                // However, setting it programmatically might trigger unwanted refresh.
-                // Let's protect it or just call refresh.
                 if (SetProperty(ref _currentPage, value))
                 {
-                     OnPropertyChanged(nameof(HasNextPage));
-                     OnPropertyChanged(nameof(HasPreviousPage));
-                    _ = RefreshDataAsync();
+                    OnPropertyChanged(nameof(HasNextPage));
+                    OnPropertyChanged(nameof(HasPreviousPage));
+                    if (!_suppressRefresh)
+                    {
+                        _ = SafeRefreshDataAsync();
+                    }
                 }
             }
         }
@@ -37,11 +38,15 @@ namespace KamatekCrm.ViewModels.Common
             {
                 if (SetProperty(ref _pageSize, value))
                 {
-                    // If page size changes, reset to page 1 and refresh
-                    if (_currentPage != 1) 
-                        CurrentPage = 1; // Setter will trigger refresh
+                    // If page size changes, reset to page 1 and refresh without double refresh
+                    if (_currentPage != 1)
+                    {
+                        CurrentPage = 1; // Setter handles refresh
+                    }
                     else
-                        _ = RefreshDataAsync(); // Already at page 1, force refresh
+                    {
+                        _ = SafeRefreshDataAsync();
+                    }
                 }
             }
         }
@@ -53,7 +58,7 @@ namespace KamatekCrm.ViewModels.Common
             {
                 if (SetProperty(ref _totalCount, value))
                 {
-                    TotalPages = (int)Math.Ceiling(TotalCount / (double)PageSize);
+                    TotalPages = (int)Math.Ceiling(Math.Max(0, TotalCount) / (double)Math.Max(1, PageSize));
                 }
             }
         }
@@ -88,6 +93,49 @@ namespace KamatekCrm.ViewModels.Common
         protected void PreviousPage()
         {
             if (HasPreviousPage) CurrentPage--;
+        }
+
+        /// <summary>
+        /// Sayfa sıfırlanırken otomatik tetiklenmeyi bastırarak geçiş yapar
+        /// </summary>
+        public void ResetPageWithoutRefresh()
+        {
+            _suppressRefresh = true;
+            try
+            {
+                CurrentPage = 1;
+            }
+            finally
+            {
+                _suppressRefresh = false;
+            }
+        }
+
+        /// <summary>
+        /// Eşzamanlı çift refresh çağrılarını önler
+        /// </summary>
+        protected async Task SafeRefreshDataAsync()
+        {
+            if (_isRefreshing) return;
+            _isRefreshing = true;
+            try
+            {
+                await RefreshDataAsync();
+            }
+            finally
+            {
+                _isRefreshing = false;
+            }
+        }
+
+        /// <summary>
+        /// Bellek içi koleksiyonlar için sayfalama
+        /// </summary>
+        protected IEnumerable<T> ApplyPaging<T>(IEnumerable<T> source)
+        {
+            return source
+                .Skip(Math.Max(0, (CurrentPage - 1) * PageSize))
+                .Take(Math.Max(1, PageSize));
         }
 
         protected abstract Task RefreshDataAsync();

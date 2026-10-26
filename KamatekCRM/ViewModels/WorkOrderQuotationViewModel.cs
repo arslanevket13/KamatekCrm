@@ -241,8 +241,9 @@ namespace KamatekCrm.ViewModels
                 _toastService.ShowError(revisions.Error);
             }
 
-            IsEditable = _quotation.Status is QuotationStatus.Draft or QuotationStatus.Sent;
-            CanCreateRevision = _quotation.Status != QuotationStatus.Draft;
+            bool isJobTerminal = workflow.Value.JobStatus is JobStatus.Completed or JobStatus.Delivered or JobStatus.Cancelled;
+            IsEditable = !isJobTerminal && _quotation.Status is QuotationStatus.Draft or QuotationStatus.Sent;
+            CanCreateRevision = !isJobTerminal && _quotation.Status != QuotationStatus.Draft;
             IsViewMode = !IsEditable;
             IsViewingHistoricRevision = false;
             ViewingRevisionDisplay = string.Empty;

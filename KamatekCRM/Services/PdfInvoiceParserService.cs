@@ -10,8 +10,36 @@ namespace KamatekCrm.Services
 {
     public class PdfInvoiceParserService
     {
-        public List<PurchaseOrderItem> Parse(string filePath)
+        private readonly InvoiceScannerService _scannerService;
+        private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>? _dbContextFactory;
+
+        public PdfInvoiceParserService(
+            InvoiceScannerService? scannerService = null,
+            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>? dbContextFactory = null)
         {
+            _scannerService = scannerService ?? new InvoiceScannerService();
+            _dbContextFactory = dbContextFactory ?? (App.ServiceProvider?.GetService(typeof(Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>)) as Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>);
+        }
+
+        public List<PurchaseOrderItem> Parse(string filePath, List<Product>? availableProducts = null)
+        {
+            if (string.IsNullOrWhiteSpace(filePath) || !System.IO.File.Exists(filePath))
+                throw new System.IO.FileNotFoundException("PDF dosyası bulunamadı.", filePath);
+
+            // Eğer ürün listesi dışarıdan verilmediyse ve DbContext mevcutsa çek
+            if (availableProducts == null && _dbContextFactory != null)
+            {
+                try
+                {
+                    using var context = _dbContextFactory.CreateDbContext();
+                    availableProducts = Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AsNoTracking(context.Products).ToList();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[PdfInvoiceParserService] Ürün listesi çekilemedi: {ex.Message}");
+                }
+            }
+
             var items = new List<PurchaseOrderItem>();
 
             try
@@ -25,7 +53,7 @@ namespace KamatekCrm.Services
 
                         foreach (var line in lines)
                         {
-                            var item = ParseTxLine(line);
+                            var item = ParseTxLine(line, availableProducts);
                             if (item != null)
                             {
                                 items.Add(item);
@@ -36,45 +64,46 @@ namespace KamatekCrm.Services
             }
             catch (Exception ex)
             {
-                throw new Exception($"PDF okunurken hata oluştu: {ex.Message}");
+                throw new Exception($"PDF okunurken hata oluştu: {ex.Message}", ex);
             }
 
             return items;
         }
 
-        private PurchaseOrderItem? ParseTxLine(string line)
+        private PurchaseOrderItem? ParseTxLine(string line, List<Product>? availableProducts)
         {
-            // Simple Heuristic: Look for patterns like "Product Name ... 10 ... 100.00"
-            // This is a naive implementation and would need refinement for specific invoice formats.
-            // Assuming format: [Product Name] [Quantity] [Unit Price] [Total]
-            // Or: [Code] [Product Name] [Quantity] [Unit] [Price] ...
-
-            // Regex strategies
-            
-            // Strategy 1: End of line contains Price and Quantity
-            // Example: "Laptop 15.6 inch 2 15000,00 30000,00"
-            // Regex: (.*?) (\d+) (\d+[.,]\d+) (\d+[.,]\d+)$
-            
             var match = Regex.Match(line, @"^(.*)\s+(\d+)\s+([\d.,]+)\s+([\d.,]+)$");
             if (match.Success)
             {
                 var name = match.Groups[1].Value.Trim();
                 var qtyStr = match.Groups[2].Value;
-                var priceStr = match.Groups[3].Value; // Unit Price
+                var priceStr = match.Groups[3].Value;
 
                 if (decimal.TryParse(priceStr.Replace(".", "").Replace(",", "."), out decimal price) &&
                     int.TryParse(qtyStr, out int qty))
                 {
-                    // Clean up name
                     if (name.Length > 2 && !name.Contains("Toplam", StringComparison.OrdinalIgnoreCase))
                     {
-                         return new PurchaseOrderItem
-                         {
-                             ProductName = name,
-                             Quantity = qty,
-                             UnitPrice = price,
-                             LineTotal = qty * price
-                         };
+                        var item = new PurchaseOrderItem
+                        {
+                            ProductName = name,
+                            Quantity = qty,
+                            UnitPrice = price,
+                            LineTotal = qty * price
+                        };
+
+                        // Kademeli Akıllı Eşleştirme (Barkod/SKU -> Normalize İsim -> Levenshtein/Dice >= %80)
+                        if (availableProducts != null && availableProducts.Count > 0)
+                        {
+                            var matchedProduct = _scannerService.FindBestMatch(name, availableProducts);
+                            if (matchedProduct != null)
+                            {
+                                item.ProductId = matchedProduct.Id;
+                                item.ProductName = matchedProduct.ProductName;
+                            }
+                        }
+
+                        return item;
                     }
                 }
             }

@@ -317,9 +317,10 @@ namespace KamatekCrm.ViewModels
             {
                 using var context = _dbContextFactory.CreateDbContext();
                 // EF Core Include ile ilişkili verileri yükle
-                _customer = context.Customers
+                _customer = context.Customers.AsNoTracking()
                     .Include(c => c.ServiceJobs)
                     .Include(c => c.Transactions)
+                    .AsSplitQuery()
                     .FirstOrDefault(c => c.Id == _customerId);
 
                 if (_customer == null)
@@ -340,7 +341,7 @@ namespace KamatekCrm.ViewModels
                 }
 
                 // Customer modelinde SalesOrders koleksiyonu yoksa manuel yükle
-                var salesOrders = context.SalesOrders.Where(s => s.CustomerId == _customerId).ToList();
+                var salesOrders = context.SalesOrders.AsNoTracking().Where(s => s.CustomerId == _customerId).ToList();
 
                 // Editable alanları doldur
                 FullName = _customer.FullName;
@@ -414,7 +415,7 @@ namespace KamatekCrm.ViewModels
 
                 // Customer Activities (Timeline) yükle
                 Activities.Clear();
-                var activities = context.CustomerActivities
+                var activities = context.CustomerActivities.AsNoTracking()
                     .Where(a => a.CustomerId == _customerId)
                     .OrderByDescending(a => a.CreatedDate)
                     .Take(50)

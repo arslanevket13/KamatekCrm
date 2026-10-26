@@ -11,6 +11,7 @@
     <!-- Keyboard Shortcuts -->
     <UserControl.InputBindings>
         <KeyBinding Modifiers="Ctrl" Key="K" Command="{Binding OpenQuickAddCommand}"/>
+        <KeyBinding Modifiers="Ctrl" Key="F" Command="{Binding OpenQuickAddCommand}"/>
         <KeyBinding Modifiers="Ctrl" Key="B" Command="{Binding ToggleSidebarCommand}"/>
         <KeyBinding Modifiers="Ctrl" Key="D" Command="{Binding ToggleDarkModeCommand}"/>
         <KeyBinding Modifiers="Alt" Key="Left" Command="{Binding GoBackCommand}"/>

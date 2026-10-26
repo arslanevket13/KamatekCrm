@@ -187,6 +187,7 @@ namespace KamatekCrm.ViewModels
                         Description = job.Description ?? "",
                         Priority = job.Priority,
                         JobCategory = job.JobCategory,
+                        ScheduledDate = job.ScheduledDate,
                         Latitude = lat,
                         Longitude = lng,
                         HasCoordinates = lat != 0 && lng != 0,
@@ -238,7 +239,9 @@ namespace KamatekCrm.ViewModels
                         ActualArrival = pt.ActualArrival,
                         Title = pt.ServiceJob?.Title ?? pt.Address,
                         CustomerName = pt.ServiceJob?.Customer?.FullName ?? "",
-                        Description = pt.ServiceJob?.Description ?? ""
+                        Description = pt.ServiceJob?.Description ?? "",
+                        Priority = pt.ServiceJob?.Priority ?? JobPriority.Normal,
+                        ScheduledDate = pt.ServiceJob?.ScheduledDate
                     });
                 }
 
@@ -273,6 +276,8 @@ namespace KamatekCrm.ViewModels
                 Title = job.Title,
                 CustomerName = job.CustomerName,
                 Description = job.Description,
+                Priority = job.Priority,
+                ScheduledDate = job.ScheduledDate,
                 IsVisited = false
             };
 
@@ -327,32 +332,61 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void OptimizeRoute()
         {
-            if (RoutePoints.Count < 3) return;
+            if (RoutePoints.Count < 2) return;
 
-            // Nearest-neighbor algoritması
-            var points = RoutePoints.ToList();
-            var optimized = new List<RoutePointItem>();
-            var remaining = new List<RoutePointItem>(points);
+            // Ziyaret edilmiş noktaların sırası korunur
+            var visited = RoutePoints.Where(p => p.IsVisited).OrderBy(p => p.OrderIndex).ToList();
+            var unvisited = RoutePoints.Where(p => !p.IsVisited).ToList();
 
-            // İlk noktadan başla
-            var current = remaining[0];
-            optimized.Add(current);
-            remaining.Remove(current);
+            if (unvisited.Count == 0) return;
+
+            // Deterministik çok kriterli sıralama:
+            // 1. Aciliyet Kriteri (Critical / Urgent öncelikli)
+            // 2. Randevu Saati (Belirli randevular saat sırasıyla)
+            // 3. Konum / Coğrafi Mesafe Yakınlığı (Nearest-Neighbor)
+            var optimizedUnvisited = new List<RoutePointItem>();
+            var referencePoint = visited.LastOrDefault() ?? unvisited.FirstOrDefault();
+            var remaining = new List<RoutePointItem>(unvisited);
 
             while (remaining.Count > 0)
             {
-                var nearest = remaining
-                    .OrderBy(p => HaversineDistance(current.Latitude, current.Longitude, p.Latitude, p.Longitude))
-                    .First();
+                var urgentPool = remaining.Where(p => p.Priority is JobPriority.Critical or JobPriority.Urgent).ToList();
+                List<RoutePointItem> candidatePool;
 
-                optimized.Add(nearest);
-                remaining.Remove(nearest);
-                current = nearest;
+                if (urgentPool.Count > 0)
+                {
+                    candidatePool = urgentPool;
+                }
+                else
+                {
+                    var timedPool = remaining.Where(p => p.ScheduledDate.HasValue).ToList();
+                    candidatePool = timedPool.Count > 0 ? timedPool : remaining;
+                }
+
+                RoutePointItem nextPoint;
+                if (candidatePool.Any(p => p.ScheduledDate.HasValue))
+                {
+                    nextPoint = candidatePool
+                        .OrderBy(p => p.ScheduledDate.HasValue ? p.ScheduledDate.Value : DateTime.MaxValue)
+                        .ThenBy(p => referencePoint != null ? HaversineDistance(referencePoint.Latitude, referencePoint.Longitude, p.Latitude, p.Longitude) : 0)
+                        .First();
+                }
+                else
+                {
+                    nextPoint = candidatePool
+                        .OrderBy(p => referencePoint != null ? HaversineDistance(referencePoint.Latitude, referencePoint.Longitude, p.Latitude, p.Longitude) : 0)
+                        .ThenBy(p => p.Priority)
+                        .First();
+                }
+
+                optimizedUnvisited.Add(nextPoint);
+                remaining.Remove(nextPoint);
+                referencePoint = nextPoint;
             }
 
             RoutePoints.Clear();
             int order = 1;
-            foreach (var pt in optimized)
+            foreach (var pt in visited.Concat(optimizedUnvisited))
             {
                 pt.OrderIndex = order++;
                 RoutePoints.Add(pt);
@@ -510,9 +544,9 @@ namespace KamatekCrm.ViewModels
             var markersJs = string.Join(",\n", RoutePoints.Select((p, i) =>
                 $"{{lat:{p.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
                 $"lng:{p.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}," +
-                $"title:'{EscapeJs(p.Title)}'," +
-                $"customer:'{EscapeJs(p.CustomerName)}'," +
-                $"desc:'{EscapeJs(p.Description)}'," +
+                $"title:{EscapeJs(p.Title)}," +
+                $"customer:{EscapeJs(p.CustomerName)}," +
+                $"desc:{EscapeJs(p.Description)}," +
                 $"order:{i + 1}," +
                 $"visited:{(p.IsVisited ? "true" : "false")}}}"
             ));
@@ -625,8 +659,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
 
         private static string EscapeJs(string? s)
         {
-            if (string.IsNullOrEmpty(s)) return "";
-            return s.Replace("\\", "\\\\").Replace("'", "\\'").Replace("\n", " ").Replace("\r", "");
+            if (string.IsNullOrEmpty(s)) return "\"\"";
+            // XSS ve script injection engellemek için HTML-encode ardından JSON serialize
+            var encoded = System.Net.WebUtility.HtmlEncode(s);
+            return JsonSerializer.Serialize(encoded);
         }
 
         #endregion
@@ -647,6 +683,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
         public string Description { get; set; } = "";
         public JobPriority Priority { get; set; }
         public JobCategory JobCategory { get; set; }
+        public DateTime? ScheduledDate { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public bool HasCoordinates { get; set; }
@@ -680,6 +717,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
         public string Title { get; set; } = "";
         public string CustomerName { get; set; } = "";
         public string Description { get; set; } = "";
+        public JobPriority Priority { get; set; } = JobPriority.Normal;
+        public DateTime? ScheduledDate { get; set; }
         public DateTime? EstimatedArrival { get; set; }
         public DateTime? ActualArrival { get; set; }
 

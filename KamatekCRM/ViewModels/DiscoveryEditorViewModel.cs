@@ -97,6 +97,7 @@ namespace KamatekCrm.ViewModels
         private readonly IServiceJobCommandService _commandService;
         private readonly IDialogService _dialogService;
         private readonly IToastService _toastService;
+        private readonly IDraftStorageService _draftStorageService;
 
         public event Action? RequestClose;
         public event Action? RequestCloseWithSuccess;
@@ -139,13 +140,15 @@ namespace KamatekCrm.ViewModels
             IServiceJobReadService readService,
             IServiceJobCommandService commandService,
             IDialogService dialogService,
-            IToastService toastService)
+            IToastService toastService,
+            IDraftStorageService? draftStorageService = null)
         {
             _jobId = jobId;
             _readService = readService;
             _commandService = commandService;
             _dialogService = dialogService;
             _toastService = toastService;
+            _draftStorageService = draftStorageService ?? new DraftStorageService();
 
             Materials.CollectionChanged += (_, _) => RefreshCompletionCheck();
             Visits.CollectionChanged += (_, _) =>
@@ -256,6 +259,39 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(CompletionError));
             CompleteCommand.NotifyCanExecuteChanged();
             SaveCommand.NotifyCanExecuteChanged();
+
+            AutoSaveDraft();
+        }
+
+        private string GetDraftKey() => $"discovery_draft_{_jobId}";
+
+        private void AutoSaveDraft()
+        {
+            try
+            {
+                if (!CanSave()) return;
+
+                var validMaterials = Materials
+                    .Where(m => !string.IsNullOrWhiteSpace(m.ProductName))
+                    .Select(m => new DiscoveryMaterialDraft(m.SourceId, m.ProductId, m.ProductName, m.Quantity, m.Notes))
+                    .ToList();
+
+                var draft = new DiscoveryDraftData
+                {
+                    JobId = _jobId,
+                    TechnicalNotes = TechnicalNotes,
+                    RecommendedSolution = RecommendedSolution,
+                    EstimatedLaborHours = EstimatedLaborHours,
+                    TechnicianName = TechnicianName,
+                    Photos = Photos.ToList(),
+                    Materials = validMaterials,
+                    Visits = Visits.Select(v => new DiscoveryVisitDraft(v.SourceId, v.VisitDate, v.TechnicianName, v.Notes)).ToList(),
+                    SavedAt = DateTime.UtcNow
+                };
+
+                _ = _draftStorageService.SaveDraftAsync(GetDraftKey(), draft);
+            }
+            catch { }
         }
 
         // ── Malzeme yönetimi ──
@@ -362,6 +398,7 @@ namespace KamatekCrm.ViewModels
             }
 
             _toastService.ShowSuccess("Keşif kaydı kaydedildi.");
+            _ = _draftStorageService.ClearDraftAsync(GetDraftKey());
             RequestCloseWithSuccess?.Invoke();
         }
 
@@ -379,6 +416,7 @@ namespace KamatekCrm.ViewModels
             }
 
             _toastService.ShowSuccess("Keşif tamamlandı. Artık teklife dönüştürebilirsiniz.");
+            _ = _draftStorageService.ClearDraftAsync(GetDraftKey());
             RequestCloseWithSuccess?.Invoke();
         }
 
@@ -387,4 +425,21 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void Cancel() => RequestClose?.Invoke();
     }
+
+    /// <summary>Çevrimdışı otomatik kaydedilen keşif taslak verisi</summary>
+    public class DiscoveryDraftData
+    {
+        public int JobId { get; set; }
+        public string TechnicalNotes { get; set; } = string.Empty;
+        public string RecommendedSolution { get; set; } = string.Empty;
+        public double EstimatedLaborHours { get; set; }
+        public string TechnicianName { get; set; } = string.Empty;
+        public System.Collections.Generic.List<string> Photos { get; set; } = new();
+        public System.Collections.Generic.List<DiscoveryMaterialDraft> Materials { get; set; } = new();
+        public System.Collections.Generic.List<DiscoveryVisitDraft> Visits { get; set; } = new();
+        public DateTime SavedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public record DiscoveryMaterialDraft(int? SourceId, int? ProductId, string ProductName, int Quantity, string? Notes);
+    public record DiscoveryVisitDraft(int? SourceId, DateTime VisitDate, string? TechnicianName, string? Notes);
 }

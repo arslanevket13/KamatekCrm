@@ -85,7 +85,7 @@ namespace KamatekCrm.ViewModels
         private void Refresh()
         {
             // Verileri çek (Include ile ilişkili tabloları almayı unutma gerekirse)
-            var allJobs = _context.ServiceJobs.Include(j => j.AssignedUser).ToList();
+            var allJobs = _context.ServiceJobs.AsNoTracking().Include(j => j.AssignedUser).ToList();
 
             // --- KPI Hesaplama ---
             TotalJobs = allJobs.Count;

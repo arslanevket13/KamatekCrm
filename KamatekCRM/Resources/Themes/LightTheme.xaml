@@ -144,4 +144,49 @@
     <SolidColorBrush x:Key="PressedOverlayBrush" Color="#0F172A" Opacity="0.08"/>
     <SolidColorBrush x:Key="SelectedRowBrush" Color="#4F46E5" Opacity="0.06"/>
 
+    <!-- Parity Tokens with Premium Themes -->
+    <SolidColorBrush x:Key="CardStrokeBrush" Color="#E2E8F0" Opacity="0.5"/>
+    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="DisabledOverlayBrush" Color="#F8FAFC" Opacity="0.6"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#94A3B8"/>
+    <SolidColorBrush x:Key="FocusRingBrush" Color="#4F46E5" Opacity="0.4"/>
+    <SolidColorBrush x:Key="GlassBorderBrush" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="GlassBorderHighlight" Color="#FFFFFF" Opacity="0.8"/>
+    <SolidColorBrush x:Key="GlassBrush" Color="#FFFFFF" Opacity="0.8"/>
+    <SolidColorBrush x:Key="GlassBrushHigh" Color="#FFFFFF" Opacity="0.95"/>
+    <LinearGradientBrush x:Key="GlassCardGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFFFFF" Offset="0"/>
+        <GradientStop Color="#F8FAFC" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="KpiGradientError" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#EF4444" Offset="0"/>
+        <GradientStop Color="#DC2626" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="RippleBrush" Color="#4F46E5" Opacity="0.12"/>
+    <Color x:Key="ShadowColor">#020617</Color>
+    <DropShadowEffect x:Key="ShadowDefault" BlurRadius="8" ShadowDepth="2" Direction="270" Color="#020617" Opacity="0.06"/>
+    <DropShadowEffect x:Key="ShadowHigh" BlurRadius="16" ShadowDepth="4" Direction="270" Color="#020617" Opacity="0.10"/>
+    <DropShadowEffect x:Key="ShadowMedium" BlurRadius="10" ShadowDepth="3" Direction="270" Color="#020617" Opacity="0.08"/>
+    <DropShadowEffect x:Key="ShadowSubtle" BlurRadius="4" ShadowDepth="1" Direction="270" Color="#020617" Opacity="0.04"/>
+    <SolidColorBrush x:Key="StatusErrorBgLight" Color="#FEE2E2"/>
+    <SolidColorBrush x:Key="StatusErrorFgLight" Color="#991B1B"/>
+    <SolidColorBrush x:Key="StatusInfoBgLight" Color="#DBEAFE"/>
+    <SolidColorBrush x:Key="StatusInfoFgLight" Color="#1E40AF"/>
+    <SolidColorBrush x:Key="StatusNeutralBg" Color="#94A3B8" Opacity="0.12"/>
+    <SolidColorBrush x:Key="StatusSuccessBgLight" Color="#D1FAE5"/>
+    <SolidColorBrush x:Key="StatusSuccessFgLight" Color="#065F46"/>
+    <SolidColorBrush x:Key="StatusWarningBgLight" Color="#FEF3C7"/>
+    <SolidColorBrush x:Key="StatusWarningFgDark" Color="#92400E"/>
+    <SolidColorBrush x:Key="StatusWarningFgLight" Color="#92400E"/>
+    <SolidColorBrush x:Key="SystemAccentColorPrimaryBrush" Color="#4F46E5"/>
+    <SolidColorBrush x:Key="ThemeForeground" Color="#020617"/>
+    <SolidColorBrush x:Key="ThemeForegroundMuted" Color="#64748B"/>
+    <SolidColorBrush x:Key="ThemeHover" Color="#020617" Opacity="0.04"/>
+    <SolidColorBrush x:Key="ThemeHoverLight" Color="#020617" Opacity="0.06"/>
+    <SolidColorBrush x:Key="ThemePrimaryDark" Color="#3730A3"/>
+    <SolidColorBrush x:Key="ThemePrimaryLight" Color="#4F46E5" Opacity="0.10"/>
+    <SolidColorBrush x:Key="ThemePrimaryMuted" Color="#4F46E5" Opacity="0.15"/>
+    <Color x:Key="ThemeTextTertiaryColor">#64748B</Color>
+
 </ResourceDictionary>

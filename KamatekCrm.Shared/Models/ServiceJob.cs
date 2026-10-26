@@ -240,6 +240,7 @@ namespace KamatekCrm.Shared.Models
             {
                 if (!SlaDeadline.HasValue) return "SLA Yok";
                 if (Status is JobStatus.Completed or JobStatus.Cancelled or JobStatus.Delivered) return "Tamamlandı";
+                if (Status is JobStatus.WaitingForParts or JobStatus.WaitingForApproval) return "⏸️ Duraklatıldı (Beklemede)";
                 
                 var remaining = SlaDeadline.Value - DateTime.UtcNow;
                 if (remaining.TotalMinutes < 0) return "⚠️ SLA Aşıldı!";
@@ -251,7 +252,7 @@ namespace KamatekCrm.Shared.Models
 
         [NotMapped]
         public bool IsSlaBreached => SlaDeadline.HasValue && SlaDeadline.Value < DateTime.UtcNow &&
-                                     Status is not (JobStatus.Completed or JobStatus.Cancelled or JobStatus.Delivered);
+                                     Status is not (JobStatus.Completed or JobStatus.Cancelled or JobStatus.Delivered or JobStatus.WaitingForParts or JobStatus.WaitingForApproval);
 
         #endregion
     }

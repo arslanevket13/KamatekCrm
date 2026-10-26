@@ -113,13 +113,31 @@ namespace KamatekCrm.Services
 
                 try
                 {
-                    using var smtp = new SmtpClient(SmtpHost, SmtpPort);
-                    smtp.Credentials = new NetworkCredential(ResolvedSenderEmail, ResolvedSenderPassword.Replace(" ", "")); // Boşlukları temizle
-                    smtp.EnableSsl = EnableSsl;
-                    smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                    smtp.Timeout = 30000; // 30 saniye timeout
+                    int maxRetries = 2;
+                    for (int attempt = 1; attempt <= maxRetries; attempt++)
+                    {
+                        try
+                        {
+                            using var smtp = new SmtpClient(SmtpHost, SmtpPort);
+                            smtp.Credentials = new NetworkCredential(ResolvedSenderEmail, ResolvedSenderPassword.Replace(" ", "")); // Boşlukları temizle
+                            smtp.EnableSsl = EnableSsl;
+                            smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                            smtp.Timeout = 15000; // 15 saniye timeout
 
-                    await smtp.SendMailAsync(mail);
+                            await smtp.SendMailAsync(mail);
+                            break; // Başarılı, döngüden çık
+                        }
+                        catch (SmtpException ex) when (ex.Message.Contains("authentication") || ex.Message.Contains("535"))
+                        {
+                            // Kimlik doğrulama hatalarında tekrar deneme (circuit break)
+                            throw;
+                        }
+                        catch (Exception) when (attempt < maxRetries)
+                        {
+                            // Geçici ağ hatasında jitter ile kısa bekleme
+                            await Task.Delay(1000 + Random.Shared.Next(100, 500));
+                        }
+                    }
                 }
                 finally
                 {

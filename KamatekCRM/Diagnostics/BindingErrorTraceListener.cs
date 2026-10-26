@@ -78,4 +78,15 @@ namespace KamatekCrm.Diagnostics
         }
     }
 }
+#else
+using System.Diagnostics;
+
+namespace KamatekCrm.Diagnostics
+{
+    public sealed class BindingErrorTraceListener : TraceListener
+    {
+        public override void Write(string? message) { }
+        public override void WriteLine(string? message) { }
+    }
+}
 #endif

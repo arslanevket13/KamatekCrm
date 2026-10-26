@@ -12,6 +12,9 @@ namespace KamatekCrm.Services
 {
     public class ConnectionHeartbeatService : BackgroundService
     {
+        private const int MaxConsecutiveFailures = 3;
+        private int _consecutiveFailures = 0;
+
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly ILogger<ConnectionHeartbeatService> _logger;
@@ -40,18 +43,43 @@ namespace KamatekCrm.Services
                         
                         bool isAlive = await context.Database.CanConnectAsync(stoppingToken);
 
-                        if (!isAlive)
+                        if (isAlive)
                         {
-                            HandleDisconnection("Veritabanı bağlantısı reddedildi veya zaman aşımına uğradı.");
+                            // Başarılı ping durumunda ardışık hata sayacını sıfırla
+                            _consecutiveFailures = 0;
                         }
+                        else
+                        {
+                            RecordFailure("Veritabanı bağlantısı reddedildi veya zaman aşımına uğradı.");
+                        }
+                    }
+                    else
+                    {
+                        _consecutiveFailures = 0;
                     }
                 }
                 catch (Exception ex)
                 {
-                    HandleDisconnection($"Kalp atışı hatası (Exception): {ex.Message}");
+                    RecordFailure($"Kalp atışı hatası (Exception): {ex.Message}");
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                // Jitter (100 - 750 ms rastgele sapma): Retry storm ve tüm istemcilerin aynı anda sunucuya yüklenmesini önler
+                int jitterMs = Random.Shared.Next(100, 750);
+                TimeSpan delay = TimeSpan.FromMilliseconds(5000 + jitterMs);
+                await Task.Delay(delay, stoppingToken);
+            }
+        }
+
+        private void RecordFailure(string reason)
+        {
+            _consecutiveFailures++;
+            _logger.LogWarning("Veritabanı kalp atışı başarısız ({Count}/{Max}): {Reason}", 
+                _consecutiveFailures, MaxConsecutiveFailures, reason);
+
+            // Anlık tekil dalgalanmalarda hemen bağlantı kopartılmaz; ancak ardışık 3 başarısızlıktan sonra Circuit Breaker tetiklenir
+            if (_consecutiveFailures >= MaxConsecutiveFailures)
+            {
+                HandleDisconnection(reason);
             }
         }
 
@@ -59,7 +87,7 @@ namespace KamatekCrm.Services
         {
             if (_connectionProvider.IsConnected)
             {
-                _logger.LogWarning($"BAĞLANTI KOPTU! Sebep: {reason}. Discovery State'e dönülüyor...");
+                _logger.LogWarning($"BAĞLANTI KOPTU (Circuit Breaker tetiklendi)! Sebep: {reason}. Discovery State'e dönülüyor...");
                 
                 _connectionProvider.SetConnectionState(false);
                 

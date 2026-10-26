@@ -56,6 +56,8 @@ namespace KamatekCrm.Services
             if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
                 return new List<SearchResult>();
 
+            var boundedMax = Math.Clamp(maxResults, 1, 50);
+            var perCategory = Math.Max(1, boundedMax / 3);
             var results = new List<SearchResult>();
             var search = query.ToLower().Trim();
             var canSearchContactData = _personalDataProtection.CanView(PersonalDataKind.Phone);
@@ -65,12 +67,12 @@ namespace KamatekCrm.Services
                 using var context = _dbContextFactory.CreateDbContext();
 
                 // Müşterilerde ara
-                var customers = context.Customers
+                var customers = context.Customers.AsNoTracking()
                     .Where(c => c.FullName.ToLower().Contains(search) ||
                                (canSearchContactData && c.PhoneNumber != null && c.PhoneNumber.Contains(search)) ||
                                (canSearchContactData && c.Email != null && c.Email.ToLower().Contains(search)) ||
                                (c.CustomerCode != null && c.CustomerCode.ToLower().Contains(search)))
-                    .Take(maxResults / 3)
+                    .Take(perCategory)
                     .ToList();
 
                 foreach (var c in customers)
@@ -90,11 +92,11 @@ namespace KamatekCrm.Services
                 }
 
                 // Ürünlerde ara
-                var products = context.Products
+                var products = context.Products.AsNoTracking()
                     .Where(p => p.ProductName.ToLower().Contains(search) ||
                                (p.SKU != null && p.SKU.ToLower().Contains(search)) ||
                                (p.Barcode != null && p.Barcode.Contains(search)))
-                    .Take(maxResults / 3)
+                    .Take(perCategory)
                     .ToList();
 
                 foreach (var p in products)
@@ -112,9 +114,9 @@ namespace KamatekCrm.Services
                 }
 
                 // İş Emirlerinde ara
-                var jobs = context.ServiceJobs
+                var jobs = context.ServiceJobs.AsNoTracking()
                     .Where(j => j.Description.ToLower().Contains(search))
-                    .Take(maxResults / 3)
+                    .Take(perCategory)
                     .ToList();
 
                 foreach (var j in jobs)
@@ -136,7 +138,7 @@ namespace KamatekCrm.Services
                 // Arama hatası sessizce geçilir
             }
 
-            return results.Take(maxResults).ToList();
+            return results.Take(boundedMax).ToList();
         }
 
         /// <summary>
@@ -147,6 +149,8 @@ namespace KamatekCrm.Services
             if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
                 return new List<SearchResult>();
 
+            var boundedMax = Math.Clamp(maxResults, 1, 50);
+            var perCategory = Math.Max(1, boundedMax / 3);
             var results = new List<SearchResult>();
             var search = query.ToLower().Trim();
             var canSearchContactData = _personalDataProtection.CanView(PersonalDataKind.Phone);
@@ -155,12 +159,12 @@ namespace KamatekCrm.Services
             {
                 await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-                var customers = await context.Customers
+                var customers = await context.Customers.AsNoTracking()
                     .Where(c => c.FullName.ToLower().Contains(search) ||
                                (canSearchContactData && c.PhoneNumber != null && c.PhoneNumber.Contains(search)) ||
                                (canSearchContactData && c.Email != null && c.Email.ToLower().Contains(search)) ||
                                (c.CustomerCode != null && c.CustomerCode.ToLower().Contains(search)))
-                    .Take(maxResults / 3)
+                    .Take(perCategory)
                     .ToListAsync(cancellationToken);
 
                 foreach (var c in customers)
@@ -179,11 +183,11 @@ namespace KamatekCrm.Services
                     });
                 }
 
-                var products = await context.Products
+                var products = await context.Products.AsNoTracking()
                     .Where(p => p.ProductName.ToLower().Contains(search) ||
                                (p.SKU != null && p.SKU.ToLower().Contains(search)) ||
                                (p.Barcode != null && p.Barcode.Contains(search)))
-                    .Take(maxResults / 3)
+                    .Take(perCategory)
                     .ToListAsync(cancellationToken);
 
                 foreach (var p in products)
@@ -200,9 +204,9 @@ namespace KamatekCrm.Services
                     });
                 }
 
-                var jobs = await context.ServiceJobs
+                var jobs = await context.ServiceJobs.AsNoTracking()
                     .Where(j => j.Description.ToLower().Contains(search))
-                    .Take(maxResults / 3)
+                    .Take(perCategory)
                     .ToListAsync(cancellationToken);
 
                 foreach (var j in jobs)
@@ -223,7 +227,7 @@ namespace KamatekCrm.Services
             {
             }
 
-            return results.Take(maxResults).ToList();
+            return results.Take(boundedMax).ToList();
         }
 
         private static string GetStatusText(JobStatus status)

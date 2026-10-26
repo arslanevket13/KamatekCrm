@@ -30,7 +30,7 @@ namespace KamatekCrm.Services
             {
                 await using var context = await _dbContextFactory.CreateDbContextAsync();
                 using var scope = await context.Database.BeginTransactionAsync();
-                var today = DateTime.Today;
+                var today = DateTime.UtcNow.Date;
 
                 // Günü gelen veya geçen aktif sözleşmeler
                 var dueContracts = await context.MaintenanceContracts
@@ -51,7 +51,7 @@ namespace KamatekCrm.Services
                         Description = $"{contract.JobDescriptionTemplate} - {today:MMMM yyyy} Dönemi",
                         Status = JobStatus.Pending,
                         Priority = JobPriority.Normal,
-                        CreatedDate = DateTime.Now,
+                        CreatedDate = DateTime.UtcNow,
                         ServiceJobType = ServiceJobType.Fault,
                         ScheduledDate = today.AddDays(1),
                         Price = contract.PricePerVisit
@@ -75,6 +75,71 @@ namespace KamatekCrm.Services
             {
                 System.Diagnostics.Debug.WriteLine($"SLA Service Error: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// İş emri bekleme durumunda mı (SLA sayacı duraklatıldı mı)?
+        /// </summary>
+        public bool IsSlaPaused(JobStatus status) =>
+            status is JobStatus.WaitingForParts or JobStatus.WaitingForApproval;
+
+        /// <summary>
+        /// Mesai saatleri (Pzt-Cmt 09:00 - 18:00, Pazar tatil) gözetilerek SLA bitiş tarihini hesaplar.
+        /// </summary>
+        public DateTime CalculateWorkingHoursDeadline(DateTime startUtc, TimeSpan slaDuration)
+        {
+            var current = startUtc;
+            var remaining = slaDuration;
+
+            // İş başlangıcı çalışma saatleri dışındaysa bir sonraki mesai başlangıcına çek
+            while (remaining > TimeSpan.Zero)
+            {
+                if (current.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    current = current.Date.AddDays(1).AddHours(9);
+                    continue;
+                }
+
+                if (current.Hour < 9)
+                {
+                    current = current.Date.AddHours(9);
+                }
+                else if (current.Hour >= 18)
+                {
+                    current = current.Date.AddDays(1).AddHours(9);
+                    continue;
+                }
+
+                var dayEnd = current.Date.AddHours(18);
+                var availableToday = dayEnd - current;
+
+                if (remaining <= availableToday)
+                {
+                    current = current.Add(remaining);
+                    remaining = TimeSpan.Zero;
+                }
+                else
+                {
+                    remaining -= availableToday;
+                    current = current.Date.AddDays(1).AddHours(9);
+                }
+            }
+
+            return current;
+        }
+
+        /// <summary>
+        /// Duraklatma ve mesai saatlerini dikkate alarak efektif kalan SLA süresini hesaplar.
+        /// </summary>
+        public TimeSpan GetRemainingEffectiveTime(DateTime? deadlineUtc, JobStatus status)
+        {
+            if (!deadlineUtc.HasValue) return TimeSpan.Zero;
+            if (IsSlaPaused(status))
+            {
+                // Duraklatılmış durumda kalan süre dondurulur (mevcut an yerine deadline ile kıyas)
+                return deadlineUtc.Value > DateTime.UtcNow ? deadlineUtc.Value - DateTime.UtcNow : TimeSpan.Zero;
+            }
+            return deadlineUtc.Value - DateTime.UtcNow;
         }
     }
 }

@@ -420,7 +420,7 @@ namespace KamatekCrm.ViewModels
                 // 1. Low Stocks
                 var lowStock = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
                     System.Linq.Queryable.Take(
-                        System.Linq.Queryable.Where(context.Products, p => p.TotalStockQuantity <= p.MinStockLevel), 10));
+                        System.Linq.Queryable.Where(context.Products.AsNoTracking(), p => p.TotalStockQuantity <= p.MinStockLevel), 10));
                 
                 LowStockProducts.Clear();
                 foreach(var item in lowStock)
@@ -437,7 +437,7 @@ namespace KamatekCrm.ViewModels
                 LowStockCount = lowStock.Count;
                 
                 // 2. Todays Jobs
-                var todaysJobs = await context.ServiceJobs
+                var todaysJobs = await context.ServiceJobs.AsNoTracking()
                     .Include(j => j.Customer)
                     .Where(j => j.CreatedDate.Date == today)
                     .Take(10)
@@ -456,7 +456,7 @@ namespace KamatekCrm.ViewModels
                 TodaysJobsCount = TodaysJobs.Count;
                 
                 // 3. Ready Repairs
-                var readyJobs = await context.ServiceJobs
+                var readyJobs = await context.ServiceJobs.AsNoTracking()
                     .Include(j => j.Customer)
                     .Where(j => j.Status == JobStatus.Completed || j.Status == JobStatus.WaitingForApproval)
                     .Take(10)
@@ -474,31 +474,31 @@ namespace KamatekCrm.ViewModels
                 
                 // 4. Financials
                 DailyIncome = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date == today && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
+                    System.Linq.Queryable.Where(context.CashTransactions.AsNoTracking(), c => c.Date.Date == today && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
                 DailyExpense = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date == today && FinancialTransactionPolicy.CashExpenseTypes.Contains(c.TransactionType)), c => c.Amount);
+                    System.Linq.Queryable.Where(context.CashTransactions.AsNoTracking(), c => c.Date.Date == today && FinancialTransactionPolicy.CashExpenseTypes.Contains(c.TransactionType)), c => c.Amount);
                 MonthlySalesTotal = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date >= startOfMonth && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
+                    System.Linq.Queryable.Where(context.CashTransactions.AsNoTracking(), c => c.Date.Date >= startOfMonth && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
                 MonthlySalesCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
-                    System.Linq.Queryable.Where(context.ServiceJobs, j => j.CreatedDate >= startOfMonth));
+                    System.Linq.Queryable.Where(context.ServiceJobs.AsNoTracking(), j => j.CreatedDate >= startOfMonth));
                 MonthlyJobsCompleted = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
-                    System.Linq.Queryable.Where(context.ServiceJobs, j => j.CreatedDate >= startOfMonth && j.Status == JobStatus.Completed));
+                    System.Linq.Queryable.Where(context.ServiceJobs.AsNoTracking(), j => j.CreatedDate >= startOfMonth && j.Status == JobStatus.Completed));
                 ActiveJobsCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
-                    System.Linq.Queryable.Where(context.ServiceJobs, j => j.Status == JobStatus.Pending || j.Status == JobStatus.InProgress));
+                    System.Linq.Queryable.Where(context.ServiceJobs.AsNoTracking(), j => j.Status == JobStatus.Pending || j.Status == JobStatus.InProgress));
                 
                 // 5. Customer Stats
-                TotalCustomers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(context.Customers);
+                TotalCustomers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(context.Customers.AsNoTracking());
                 NewCustomersThisMonth = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
-                    System.Linq.Queryable.Where(context.Customers, c => c.CreatedDate >= startOfMonth));
+                    System.Linq.Queryable.Where(context.Customers.AsNoTracking(), c => c.CreatedDate >= startOfMonth));
                 VipCustomers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
-                    System.Linq.Queryable.Where(context.Customers, c => c.Type == CustomerType.Corporate));
+                    System.Linq.Queryable.Where(context.Customers.AsNoTracking(), c => c.Type == CustomerType.Corporate));
                 UpcomingBirthdays = 0;
                 
                 // 6. Sales Reports
                 TodaySalesTotal = DailyIncome;
                 TodaySalesCount = TodaysJobsCount;
                 WeekSalesTotal = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions, c => c.Date.Date >= startOfWeek && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
+                    System.Linq.Queryable.Where(context.CashTransactions.AsNoTracking(), c => c.Date.Date >= startOfWeek && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
                 AverageSaleAmount = MonthlySalesCount > 0 ? MonthlySalesTotal / MonthlySalesCount : 0;
                 
                 // 7. 7-Day Trend Chart Population
@@ -506,7 +506,7 @@ namespace KamatekCrm.ViewModels
                 // Böylece dashboard yenilemesindeki 14 veritabanı çağrısı 2 çağrıya iner.
                 var trendStartDate = today.AddDays(-6);
                 var trendEndDate = today.AddDays(1);
-                var incomeByDate = await context.CashTransactions
+                var incomeByDate = await context.CashTransactions.AsNoTracking()
                     .Where(c => c.Date >= trendStartDate &&
                                 c.Date < trendEndDate &&
                                 FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType))
@@ -514,7 +514,7 @@ namespace KamatekCrm.ViewModels
                     .Select(group => new { Date = group.Key, Total = group.Sum(item => item.Amount) })
                     .ToDictionaryAsync(item => item.Date, item => item.Total);
 
-                var completedJobsByDate = await context.ServiceJobs
+                var completedJobsByDate = await context.ServiceJobs.AsNoTracking()
                     .Where(j => j.CreatedDate >= trendStartDate &&
                                 j.CreatedDate < trendEndDate &&
                                 j.Status == JobStatus.Completed)
@@ -537,7 +537,7 @@ namespace KamatekCrm.ViewModels
                 LoadWeeklyTrendChart(weeklyTrendList);
 
                 // 8. Job Category Distribution
-                var categoryGroups = await context.ServiceJobs
+                var categoryGroups = await context.ServiceJobs.AsNoTracking()
                     .GroupBy(j => j.JobCategory)
                     .Select(g => new JobCategoryItemDto { Category = g.Key.ToString(), Count = g.Count() })
                     .ToListAsync();

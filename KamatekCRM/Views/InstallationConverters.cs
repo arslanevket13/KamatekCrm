@@ -15,7 +15,7 @@ namespace KamatekCrm.Views
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-            => throw new NotSupportedException();
+            => Binding.DoNothing;
     }
 
     /// <summary>Görev tamamlandıysa üstü çizili metin stili uygular.</summary>
@@ -32,6 +32,6 @@ namespace KamatekCrm.Views
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-            => throw new NotSupportedException();
+            => Binding.DoNothing;
     }
 }

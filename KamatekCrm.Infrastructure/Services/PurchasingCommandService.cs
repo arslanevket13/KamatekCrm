@@ -9,6 +9,7 @@ using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using KamatekCrm.Shared.Services;
 
 namespace KamatekCrm.Infrastructure.Services;
 
@@ -370,14 +371,16 @@ public sealed class PurchasingCommandService : IPurchasingCommandService
             }
             var oldQuantity = inventory.Quantity;
             inventory.Quantity += item.Quantity;
-            inventory.AverageCost = inventory.Quantity == 0 ? 0 : ((oldQuantity * inventory.AverageCost) + (item.Quantity * item.UnitPrice)) / inventory.Quantity;
+            inventory.AverageCost = oldQuantity > 0 && inventory.Quantity > 0
+                ? FinancialCalculator.RoundMoney(((oldQuantity * inventory.AverageCost) + (item.Quantity * item.UnitPrice)) / inventory.Quantity)
+                : FinancialCalculator.RoundMoney(item.UnitPrice);
             var product = await context.Products.FindAsync([item.ProductId.Value], cancellationToken);
             if (product is null) return $"Ürün bulunamadı: #{item.ProductId}.";
             var oldTotalQuantity = product.TotalStockQuantity;
             product.TotalStockQuantity += item.Quantity;
-            product.AverageCost = product.TotalStockQuantity == 0
-                ? 0
-                : ((oldTotalQuantity * product.AverageCost) + (item.Quantity * item.UnitPrice)) / product.TotalStockQuantity;
+            product.AverageCost = oldTotalQuantity > 0 && product.TotalStockQuantity > 0
+                ? FinancialCalculator.RoundMoney(((oldTotalQuantity * product.AverageCost) + (item.Quantity * item.UnitPrice)) / product.TotalStockQuantity)
+                : FinancialCalculator.RoundMoney(item.UnitPrice);
             product.PurchasePrice = item.UnitPrice;
             context.StockTransactions.Add(new StockTransaction
             {

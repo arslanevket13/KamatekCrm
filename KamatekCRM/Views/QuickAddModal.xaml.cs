@@ -18,6 +18,10 @@ namespace KamatekCrm.Views
         public QuickAddModal()
         {
             InitializeComponent();
+            if (Owner == null && Application.Current?.MainWindow != null && Application.Current.MainWindow != this)
+            {
+                Owner = Application.Current.MainWindow;
+            }
             Loaded += (s, e) => SearchBox.Focus();
             
             // Click outside to close

@@ -302,6 +302,7 @@ public sealed class ServiceJobReadService : IServiceJobReadService
         var installation = await context.InstallationOrders.AsNoTracking()
             .Include(i => i.Materials)
             .Include(i => i.Tasks)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(i => i.ServiceJobId == jobId, cancellationToken);
 
         var visits = await context.DiscoveryVisits.AsNoTracking()
@@ -577,6 +578,7 @@ public sealed class ServiceJobReadService : IServiceJobReadService
     {
         if (!deadline.HasValue) return "SLA Yok";
         if (status is JobStatus.Completed or JobStatus.Cancelled or JobStatus.Delivered) return "Tamamlandı";
+        if (status is JobStatus.WaitingForParts or JobStatus.WaitingForApproval) return "⏸️ Duraklatıldı (Beklemede)";
         var remaining = deadline.Value - DateTime.UtcNow;
         if (remaining.TotalMinutes < 0) return "⚠️ SLA Aşıldı!";
         if (remaining.TotalHours < 2) return "🔴 Acil (2 saat)";

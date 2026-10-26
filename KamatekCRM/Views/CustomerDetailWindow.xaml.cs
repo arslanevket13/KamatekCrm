@@ -7,6 +7,10 @@ namespace KamatekCrm.Views
         public CustomerDetailWindow()
         {
             InitializeComponent();
+            if (Owner == null && Application.Current?.MainWindow != null && Application.Current.MainWindow != this)
+            {
+                Owner = Application.Current.MainWindow;
+            }
         }
 
         public void Initialize(int customerId)

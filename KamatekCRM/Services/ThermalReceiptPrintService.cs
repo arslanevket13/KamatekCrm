@@ -92,6 +92,22 @@ namespace KamatekCrm.Services
             return sb.ToString();
         }
 
+        public byte[] GetReceiptBytes(SalesOrder salesOrder, Encoding? encoding = null)
+        {
+            var text = FormatReceiptText(salesOrder);
+            if (encoding != null) return encoding.GetBytes(text);
+
+            try
+            {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                return Encoding.GetEncoding("windows-1254").GetBytes(text);
+            }
+            catch
+            {
+                return Encoding.UTF8.GetBytes(text);
+            }
+        }
+
         public Task PrintSalesReturnReceiptAsync(SalesReturnReceiptDto salesReturn, string? printerName = null)
         {
             ArgumentNullException.ThrowIfNull(salesReturn);
@@ -140,6 +156,8 @@ namespace KamatekCrm.Services
             var g = ev.Graphics;
             if (g == null) return;
 
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
             using var titleFont = new Font("Courier New", 11, System.Drawing.FontStyle.Bold);
             using var headerFont = new Font("Courier New", 9, System.Drawing.FontStyle.Bold);
             using var bodyFont = new Font("Courier New", 8, System.Drawing.FontStyle.Regular);
@@ -162,7 +180,10 @@ namespace KamatekCrm.Services
 
             g.DrawString($"Fiş No : {salesOrder.OrderNumber}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
             g.DrawString($"Tarih  : {salesOrder.Date.ToLocalTime():dd.MM.yyyy HH:mm}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
-            g.DrawString($"Müşteri: {salesOrder.CustomerName}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
+            
+            var customerName = salesOrder.CustomerName ?? "Perakende";
+            if (customerName.Length > 24) customerName = customerName.Substring(0, 22) + "..";
+            g.DrawString($"Müşteri: {customerName}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
             g.DrawString($"Ödeme  : {salesOrder.PaymentMethod}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
 
             g.DrawString("------------------------------------------", bodyFont, Brushes.Black, leftMargin, y);
@@ -178,15 +199,19 @@ namespace KamatekCrm.Services
             g.DrawString("------------------------------------------", bodyFont, Brushes.Black, leftMargin, y);
             y += 12;
 
-            // Items
+            // Items (Word-wrap & Truncation Safe)
             foreach (var item in salesOrder.Items)
             {
-                var name = item.ProductName.Length > 22 ? item.ProductName.Substring(0, 20) + ".." : item.ProductName;
-                g.DrawString(name, bodyFont, Brushes.Black, leftMargin, y);
+                var productWidth = 135f;
+                var name = item.ProductName ?? string.Empty;
+                var nameSize = g.MeasureString(name, bodyFont, (int)productWidth);
+                var rowHeight = Math.Max(14f, nameSize.Height);
+
+                g.DrawString(name, bodyFont, Brushes.Black, new RectangleF(leftMargin, y, productWidth, rowHeight));
                 g.DrawString(item.Quantity.ToString(), bodyFont, Brushes.Black, leftMargin + 140, y);
                 g.DrawString(item.UnitPrice.ToString("N2"), bodyFont, Brushes.Black, leftMargin + 170, y);
                 g.DrawString(item.LineTotal.ToString("N2"), bodyFont, Brushes.Black, leftMargin + 220, y);
-                y += 14;
+                y += rowHeight + 2;
             }
 
             g.DrawString("------------------------------------------", bodyFont, Brushes.Black, leftMargin, y);
@@ -255,6 +280,8 @@ namespace KamatekCrm.Services
             var g = ev.Graphics;
             if (g == null) return;
 
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
             using var titleFont = new Font("Courier New", 11, System.Drawing.FontStyle.Bold);
             using var headerFont = new Font("Courier New", 9, System.Drawing.FontStyle.Bold);
             using var bodyFont = new Font("Courier New", 8, System.Drawing.FontStyle.Regular);
@@ -277,7 +304,10 @@ namespace KamatekCrm.Services
 
             g.DrawString($"Servis No: #{job.Id}", titleFont, Brushes.Black, leftMargin, y); y += 18;
             g.DrawString($"Tarih    : {job.CreatedDate.ToLocalTime():dd.MM.yyyy HH:mm}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
-            g.DrawString($"Müşteri  : {job.Customer?.FullName ?? "Belirtilmedi"}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
+            
+            var customerName = job.Customer?.FullName ?? "Belirtilmedi";
+            if (customerName.Length > 24) customerName = customerName.Substring(0, 22) + "..";
+            g.DrawString($"Müşteri  : {customerName}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
             var protectedPhone = _personalDataProtection.Protect(job.Customer?.PhoneNumber, PersonalDataKind.Phone);
             g.DrawString($"Tel      : {protectedPhone}", bodyFont, Brushes.Black, leftMargin, y); y += 14;
 
@@ -300,9 +330,10 @@ namespace KamatekCrm.Services
 
             g.DrawString("ARIZA ŞİKAYETİ / DURUM", boldFont, Brushes.Black, leftMargin, y); y += 14;
             var desc = job.Description ?? "";
-            if (desc.Length > 80) desc = desc.Substring(0, 77) + "...";
-            g.DrawString(desc, bodyFont, Brushes.Black, new RectangleF(leftMargin, y, width, 40));
-            y += 36;
+            var descSize = g.MeasureString(desc, bodyFont, (int)width);
+            var descHeight = Math.Min(Math.Max(24f, descSize.Height), 80f);
+            g.DrawString(desc, bodyFont, Brushes.Black, new RectangleF(leftMargin, y, width, descHeight));
+            y += descHeight + 6;
 
             if (job.LaborCost > 0)
             {

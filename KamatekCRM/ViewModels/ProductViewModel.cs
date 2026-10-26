@@ -32,6 +32,7 @@ namespace KamatekCrm.ViewModels
         private readonly IProductImageService _imageService;
         private Product? _selectedProduct;
         private string _searchText = string.Empty;
+        private System.Threading.CancellationTokenSource? _searchCts;
         private ICollectionView? _productsView;
         private string _statusMessage = string.Empty;
         private bool _isActionSuccessful;
@@ -75,8 +76,26 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
+                    _searchCts?.Cancel();
+                    _searchCts = new System.Threading.CancellationTokenSource();
+                    var token = _searchCts.Token;
+                    _ = DebouncedFilterAsync(token);
+                }
+            }
+        }
+
+        private async Task DebouncedFilterAsync(System.Threading.CancellationToken token)
+        {
+            try
+            {
+                await Task.Delay(300, token);
+                if (!token.IsCancellationRequested)
+                {
                     _productsView?.Refresh();
                 }
+            }
+            catch (System.OperationCanceledException)
+            {
             }
         }
 

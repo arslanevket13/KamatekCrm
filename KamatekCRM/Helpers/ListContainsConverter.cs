@@ -23,10 +23,7 @@ namespace KamatekCrm.Helpers
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            // ConvertBack için List<string> instance'ına ihtiyacımız var
-            // Bu nedenle bu converter MultiBinding ile kullanılmalı veya
-            // ViewModel'de ayrı boolean property'ler kullanılmalı
-            throw new NotImplementedException("ListContainsConverter.ConvertBack is not implemented. Use separate boolean properties in ViewModel instead.");
+            return Binding.DoNothing;
         }
     }
 }

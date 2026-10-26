@@ -91,7 +91,11 @@ namespace KamatekCrm.Helpers
         {
             if (onNew != null) Register(Key.N, ModifierKeys.Control, onNew);
             if (onSave != null) Register(Key.S, ModifierKeys.Control, onSave);
-            if (onSearch != null) Register(Key.F, ModifierKeys.Control, onSearch);
+            if (onSearch != null)
+            {
+                Register(Key.F, ModifierKeys.Control, onSearch);
+                Register(Key.K, ModifierKeys.Control, onSearch);
+            }
             if (onRefresh != null) Register(Key.F5, onRefresh);
             if (onEscape != null) Register(Key.Escape, onEscape);
             if (onExcel != null) Register(Key.E, ModifierKeys.Control, onExcel);

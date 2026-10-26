@@ -28,6 +28,8 @@ namespace KamatekCrm.Configuration
                 .WriteTo.File(
                     path: Path.Combine(logDirectory, "kamatek-.log"),
                     rollingInterval: RollingInterval.Day,
+                    fileSizeLimitBytes: 10 * 1024 * 1024,
+                    rollOnFileSizeLimit: true,
                     retainedFileCountLimit: 30,
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
                 .CreateLogger();

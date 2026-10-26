@@ -67,6 +67,17 @@ namespace KamatekCrm.ViewModels
         public string TaxDisplay { get; private set; } = "—";
         public string TotalDisplay { get; private set; } = "—";
 
+        public bool CanEdit { get; private set; }
+        public bool IsReadOnly => !CanEdit;
+
+        public override void ApplyActions(IReadOnlyList<WorkOrderActionInfo>? allowedActions)
+        {
+            base.ApplyActions(allowedActions);
+            CanEdit = IsActionEnabled(WorkOrderAction.EditQuotation, out _);
+            OnPropertyChanged(nameof(CanEdit));
+            OnPropertyChanged(nameof(IsReadOnly));
+        }
+
         public ObservableCollection<QuotationItemDto> Items { get; } = new();
 
         protected override bool IsRelevantAction(WorkOrderAction action) => action is

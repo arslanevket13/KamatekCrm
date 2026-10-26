@@ -39,9 +39,17 @@ namespace KamatekCrm.Converters
 
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
-                bitmap.UriSource = new Uri(absolutePath);
-                bitmap.DecodePixelWidth = 200;
+                bitmap.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.UriSource = new Uri(absolutePath);
+
+                int decodeWidth = 200;
+                if (parameter != null && int.TryParse(parameter.ToString(), out int customWidth) && customWidth > 0)
+                {
+                    decodeWidth = customWidth;
+                }
+                bitmap.DecodePixelWidth = decodeWidth;
+
                 bitmap.EndInit();
                 bitmap.Freeze();
                 return bitmap;
@@ -54,7 +62,7 @@ namespace KamatekCrm.Converters
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            throw new NotSupportedException();
+            return Binding.DoNothing;
         }
     }
 }

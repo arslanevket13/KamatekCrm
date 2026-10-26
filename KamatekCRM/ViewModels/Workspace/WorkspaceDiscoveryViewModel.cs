@@ -65,6 +65,17 @@ namespace KamatekCrm.ViewModels
         public ObservableCollection<DiscoveryVisitDto> Visits { get; } = new();
         public ObservableCollection<string> Photos { get; } = new();
 
+        public bool CanEdit { get; private set; }
+        public bool IsReadOnly => !CanEdit;
+
+        public override void ApplyActions(IReadOnlyList<WorkOrderActionInfo>? allowedActions)
+        {
+            base.ApplyActions(allowedActions);
+            CanEdit = IsActionEnabled(WorkOrderAction.EditDiscovery, out _);
+            OnPropertyChanged(nameof(CanEdit));
+            OnPropertyChanged(nameof(IsReadOnly));
+        }
+
         protected override bool IsRelevantAction(WorkOrderAction action) => action is
             WorkOrderAction.ScheduleDiscovery or
             WorkOrderAction.EditDiscovery or

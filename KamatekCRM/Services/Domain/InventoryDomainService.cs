@@ -14,6 +14,7 @@ using KamatekCrm.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
+using KamatekCrm.Shared.Services;
 namespace KamatekCrm.Services.Domain
 {
     /// <summary>
@@ -294,14 +295,21 @@ namespace KamatekCrm.Services.Domain
                         oldCost = inventory.AverageCost;
 
                         // Weighted Average Cost (WAC) Calculation
-                        // (OldQty * OldCost) + (NewQty * NewCost) / (OldQty + NewQty)
-                        decimal currentTotalValue = oldQty * oldCost;
-                        decimal newTotalValue = quantity * unitCost;
-                        int totalQty = oldQty + quantity;
-
-                        if (totalQty > 0)
+                        // Mevcut stok pozitifse WAC formülü uygulanır; değilse doğrudan yeni birim maliyet atanır.
+                        if (oldQty > 0)
                         {
-                            inventory.AverageCost = (currentTotalValue + newTotalValue) / totalQty;
+                            decimal currentTotalValue = oldQty * oldCost;
+                            decimal newTotalValue = quantity * unitCost;
+                            int totalQty = oldQty + quantity;
+
+                            if (totalQty > 0)
+                            {
+                                inventory.AverageCost = FinancialCalculator.RoundMoney((currentTotalValue + newTotalValue) / totalQty);
+                            }
+                        }
+                        else
+                        {
+                            inventory.AverageCost = FinancialCalculator.RoundMoney(unitCost);
                         }
                         
                         inventory.Quantity += quantity;
@@ -562,13 +570,21 @@ namespace KamatekCrm.Services.Domain
                         oldQty = inventory.Quantity;
                         oldCost = inventory.AverageCost;
 
-                        decimal currentTotalValue = oldQty * oldCost;
-                        decimal newTotalValue = quantity * unitCost;
-                        int totalQty = oldQty + quantity;
-
-                        if (totalQty > 0)
+                        // Weighted Average Cost (WAC) Calculation
+                        if (oldQty > 0)
                         {
-                            inventory.AverageCost = (currentTotalValue + newTotalValue) / totalQty;
+                            decimal currentTotalValue = oldQty * oldCost;
+                            decimal newTotalValue = quantity * unitCost;
+                            int totalQty = oldQty + quantity;
+
+                            if (totalQty > 0)
+                            {
+                                inventory.AverageCost = FinancialCalculator.RoundMoney((currentTotalValue + newTotalValue) / totalQty);
+                            }
+                        }
+                        else
+                        {
+                            inventory.AverageCost = FinancialCalculator.RoundMoney(unitCost);
                         }
 
                         inventory.Quantity += quantity;

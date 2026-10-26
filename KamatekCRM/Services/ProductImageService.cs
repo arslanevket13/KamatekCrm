@@ -47,6 +47,9 @@ namespace KamatekCrm.Services
             if (string.IsNullOrEmpty(sourceFilePath) || !File.Exists(sourceFilePath))
                 throw new FileNotFoundException("Kaynak dosya bulunamadı.", sourceFilePath);
 
+            // Güvenlik doğrulaması: Magic Bytes ve maksimum 10MB boyut kontrolü
+            FileSecurityValidator.ValidateImage(sourceFilePath);
+
             var absoluteDir = Path.Combine(_baseDirectory, SubFolder.Replace('/', Path.DirectorySeparatorChar));
             if (!Directory.Exists(absoluteDir))
                 Directory.CreateDirectory(absoluteDir);

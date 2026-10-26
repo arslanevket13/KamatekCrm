@@ -1,5 +1,4 @@
 using System.Windows;
-using System.Windows.Controls;
 
 namespace KamatekCrm.Views
 {
@@ -9,6 +8,10 @@ namespace KamatekCrm.Views
         {
             InitializeComponent();
             DataContext = viewModel;
+            if (Owner == null && Application.Current?.MainWindow != null && Application.Current.MainWindow != this)
+            {
+                Owner = Application.Current.MainWindow;
+            }
         }
 
         public override void OnApplyTemplate()

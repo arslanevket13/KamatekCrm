@@ -101,11 +101,41 @@ namespace KamatekCrm.Services
                 else
                 {
                     var client = _httpClientFactory.CreateClient("SmsClient");
-                    var response = await client.PostAsync(ApiUrl, content);
-                    response.EnsureSuccessStatusCode();
-                    
-                    var responseBody = await response.Content.ReadAsStringAsync();
-                    _logger?.LogInformation("[SMS SENT] → {CleanNumber} | Response: {ResponseBody}", cleanNumber, responseBody);
+                    int maxRetries = 2;
+                    HttpResponseMessage? response = null;
+
+                    for (int attempt = 1; attempt <= maxRetries; attempt++)
+                    {
+                        try
+                        {
+                            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
+                            response = await client.PostAsync(ApiUrl, content, cts.Token);
+                            if (response.IsSuccessStatusCode)
+                            {
+                                break;
+                            }
+
+                            // 5xx sunucu hatalarında tekrar dene
+                            if ((int)response.StatusCode >= 500 && attempt < maxRetries)
+                            {
+                                await Task.Delay(500 + Random.Shared.Next(100, 400));
+                                continue;
+                            }
+
+                            response.EnsureSuccessStatusCode();
+                        }
+                        catch (HttpRequestException) when (attempt < maxRetries)
+                        {
+                            await Task.Delay(500 + Random.Shared.Next(100, 400));
+                        }
+                    }
+
+                    if (response != null)
+                    {
+                        response.EnsureSuccessStatusCode();
+                        var responseBody = await response.Content.ReadAsStringAsync();
+                        _logger?.LogInformation("[SMS SENT] → {CleanNumber} | Response: {ResponseBody}", cleanNumber, responseBody);
+                    }
                 }
             }
             catch (HttpRequestException ex)

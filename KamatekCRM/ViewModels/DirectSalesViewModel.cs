@@ -16,6 +16,7 @@ using KamatekCrm.Shared.Services;
 using KamatekCrm.Services;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
+using KamatekCrm.ApplicationCore.Services;
 
 namespace KamatekCrm.ViewModels
 {
@@ -705,7 +706,7 @@ namespace KamatekCrm.ViewModels
         #region Payment Operations & Sale Completion
 
         [RelayCommand]
-        private void AddPayment()
+        private async Task AddPayment()
         {
             if (PaymentAmount <= 0) return;
 
@@ -714,6 +715,23 @@ namespace KamatekCrm.ViewModels
             {
                 StatusMessage = "Kalan tutar zaten ödendi.";
                 return;
+            }
+
+            if (SelectedPaymentMethod == PaymentMethod.OnAccount)
+            {
+                if (SelectedCustomer == null)
+                {
+                    MessageBox.Show("Veresiye / Cari Satış yapabilmek için önce kayıtlı bir Müşteri seçmelisiniz!",
+                        "Müşteri Gerekli", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var confirmed = await CheckOnAccountRiskAsync(SelectedCustomer, amount);
+                if (!confirmed)
+                {
+                    StatusMessage = "Cari ödeme kullanıcı tarafından onaylanmadı.";
+                    return;
+                }
             }
 
             Payments.Add(new PosPaymentEntry
@@ -761,7 +779,64 @@ namespace KamatekCrm.ViewModels
                     "Müşteri Gerekli", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
+            var confirmed = await CheckOnAccountRiskAsync(SelectedCustomer, GrandTotal);
+            if (!confirmed)
+            {
+                StatusMessage = "Cari satış kullanıcı tarafından onaylanmadı.";
+                return;
+            }
+
             await PayFull(PaymentMethod.OnAccount);
+        }
+
+        private async Task<bool> CheckOnAccountRiskAsync(Customer customer, decimal additionalAmount)
+        {
+            try
+            {
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                var transactions = await context.Transactions
+                    .Where(t => t.CustomerId == customer.Id)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var currentBalance = FinancialTransactionPolicy.CalculateCustomerBalance(transactions);
+                
+                var now = DateTime.UtcNow;
+                var overdueDebts = transactions
+                    .Where(t => t.Type == TransactionType.Debt && (now - t.Date).TotalDays > 30)
+                    .OrderBy(t => t.Date)
+                    .ToList();
+
+                var oldestDays = overdueDebts.Count > 0 ? (int)(now - overdueDebts.First().Date).TotalDays : 0;
+
+                if (currentBalance > 0 || overdueDebts.Count > 0)
+                {
+                    var msg = $"⚠️ CARİ RİSK UYARISI\n\n" +
+                              $"Müşteri: {customer.FullName}\n" +
+                              $"Mevcut Borç Bakiyesi: {currentBalance:C2}\n" +
+                              $"Eklenecek Tutar: {additionalAmount:C2}\n" +
+                              $"Yeni Toplam Borç: {(currentBalance + additionalAmount):C2}\n";
+
+                    if (overdueDebts.Count > 0)
+                    {
+                        msg += $"\n⚠️ DİKKAT: Bu müşterinin {oldestDays} gündür bekleyen gecikmiş borcu ({overdueDebts.Sum(d => d.Amount):C2}) bulunmaktadır!\n";
+                    }
+
+                    msg += "\nAçık hesap (veresiye) satışa devam etmek istiyor musunuz?";
+
+                    var result = MessageBox.Show(msg, "Cari Risk / Açık Hesap Onayı",
+                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                    return result == MessageBoxResult.Yes;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Cari risk kontrol hatası: {ex.Message}");
+            }
+
+            return true;
         }
 
         [RelayCommand]

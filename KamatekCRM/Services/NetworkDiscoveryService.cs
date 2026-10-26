@@ -100,14 +100,109 @@ namespace KamatekCrm.Services
                 }
             }
 
-            // 4. Fallback to Connection Wizard
+            // 4. Fallback to LAN Parallel Subnet Scan (SemaphoreSlim 32 + 300ms timeout)
+            _logger.LogInformation("Zero-Configuration: UDP yayını bulunamadı. Hızlı LAN paralel alt ağ taraması başlatılıyor (SemaphoreSlim 32)...");
+            string scannedIp = await ScanSubnetForPostgresAsync(stoppingToken);
+            if (!string.IsNullOrWhiteSpace(scannedIp))
+            {
+                _logger.LogInformation($"LAN taramasında PostgreSQL sunucusu bulundu: {scannedIp}. Bağlantı test ediliyor...");
+                if (await _connectionProvider.TestConnectionAsync(scannedIp))
+                {
+                    KamatekCrm.Properties.Settings.Default.SavedServerAddress = scannedIp;
+                    KamatekCrm.Properties.Settings.Default.Save();
+                    ConfirmConnection(scannedIp);
+                    return;
+                }
+            }
+
+            // 5. Fallback to Connection Wizard
             _logger.LogCritical("Zero-Configuration: Sunucu bulunamadı. Manuel bağlantı sihirbazı çağrılıyor.");
             try
             {
                 KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseConnectionLostEvent());
-                // TODO: ShowManualConnectionWizardEvent fırlatılabilir. Şu an DatabaseConnectionLostEvent, arayüzü çıkarıyor.
             }
             catch { }
+        }
+
+        /// <summary>
+        /// Yerel alt ağdaki olası PostgreSQL sunucularını SemaphoreSlim(32) ile paralel tarar.
+        /// </summary>
+        private async Task<string> ScanSubnetForPostgresAsync(CancellationToken stoppingToken)
+        {
+            var subnetPrefix = GetLocalSubnetPrefix();
+            if (string.IsNullOrEmpty(subnetPrefix))
+                return string.Empty;
+
+            using var semaphore = new SemaphoreSlim(32, 32);
+            using var searchCts = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+            string? foundIp = null;
+            var tasks = new System.Collections.Generic.List<Task>();
+
+            for (int i = 1; i <= 254; i++)
+            {
+                string targetIp = $"{subnetPrefix}{i}";
+                tasks.Add(Task.Run(async () =>
+                {
+                    if (searchCts.IsCancellationRequested || foundIp != null) return;
+
+                    await semaphore.WaitAsync(searchCts.Token).ConfigureAwait(false);
+                    try
+                    {
+                        if (searchCts.IsCancellationRequested || foundIp != null) return;
+
+                        using var ipCts = new CancellationTokenSource(300); // 300ms kısa bağlantı zaman aşımı
+                        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(searchCts.Token, ipCts.Token);
+                        using var client = new TcpClient();
+
+                        await client.ConnectAsync(targetIp, 5432, linkedCts.Token).ConfigureAwait(false);
+                        if (client.Connected)
+                        {
+                            foundIp = targetIp;
+                            searchCts.Cancel(); // Bulundu, diğer bekleyen istekleri iptal et
+                        }
+                    }
+                    catch
+                    {
+                        // Port kapalı veya zaman aşımı, sessizce geç
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                }, stoppingToken));
+            }
+
+            try
+            {
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Görevlerin erken iptal edilmesi normaldir
+            }
+
+            return foundIp ?? string.Empty;
+        }
+
+        private static string? GetLocalSubnetPrefix()
+        {
+            try
+            {
+                var host = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip))
+                    {
+                        var bytes = ip.GetAddressBytes();
+                        // 192.168.x. veya 10.x.x. vb.
+                        return $"{bytes[0]}.{bytes[1]}.{bytes[2]}.";
+                    }
+                }
+            }
+            catch
+            {
+            }
+            return null;
         }
 
         private void ConfirmConnection(string ip)

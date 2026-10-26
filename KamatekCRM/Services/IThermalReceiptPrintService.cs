@@ -18,6 +18,11 @@ namespace KamatekCrm.Services
         string FormatReceiptText(SalesOrder salesOrder);
 
         /// <summary>
+        /// Generates encoded bytes for raw/thermal printer output with Turkish encoding support
+        /// </summary>
+        byte[] GetReceiptBytes(SalesOrder salesOrder, System.Text.Encoding? encoding = null);
+
+        /// <summary>
         /// Prints a thermal ticket for a ServiceJob (Cihaz Kabul Fişi)
         /// </summary>
         Task PrintServiceJobTicketAsync(ServiceJob serviceJob, string? printerName = null);
