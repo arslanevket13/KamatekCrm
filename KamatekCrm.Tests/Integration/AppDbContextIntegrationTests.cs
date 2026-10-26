@@ -6,6 +6,7 @@ using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace KamatekCrm.Tests.Integration
@@ -68,5 +69,63 @@ namespace KamatekCrm.Tests.Integration
             savedJob.Customer.Should().NotBeNull();
             savedJob.Customer!.FullName.Should().Be("Ahmet Yılmaz");
         }
+
+        [Fact]
+        public void DbContextFactory_CreateDbContext_ResolvesSuccessfully_WithoutUserContext()
+        {
+            var services = new ServiceCollection();
+            services.AddDbContextFactory<AppDbContext>(options =>
+                options.UseInMemoryDatabase("TestDb_1"));
+            var sp = services.BuildServiceProvider();
+            var factory = sp.GetRequiredService<IDbContextFactory<AppDbContext>>();
+            using var context = factory.CreateDbContext();
+            context.Should().NotBeNull();
+        }
+
+        [Fact]
+        public void DbContextFactory_CreateDbContext_ResolvesSuccessfully_WithUserContext()
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton<KamatekCrm.ApplicationCore.Interfaces.ICurrentUserContext>(new TestUserContext());
+            services.AddDbContextFactory<AppDbContext>(options =>
+                options.UseInMemoryDatabase("TestDb_2"));
+            var sp = services.BuildServiceProvider();
+            var factory = sp.GetRequiredService<IDbContextFactory<AppDbContext>>();
+            using var context = factory.CreateDbContext();
+            context.Should().NotBeNull();
+            context.CurrentUserContext.Should().NotBeNull();
+        }
+
+        [Fact]
+        public void ServiceProvider_ResolvesTransientAppDbContext_AndUnitOfWork()
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton<KamatekCrm.ApplicationCore.Interfaces.ICurrentUserContext>(new TestUserContext());
+            services.AddDbContextFactory<AppDbContext>(options =>
+                options.UseInMemoryDatabase("TestDb_3"));
+            services.AddTransient<AppDbContext>(sp => sp.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext());
+            services.AddScoped<KamatekCrm.Shared.Repositories.IUnitOfWork, KamatekCrm.Infrastructure.Repositories.UnitOfWork>();
+
+            var sp = services.BuildServiceProvider();
+            using var scope = sp.CreateScope();
+
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            dbContext.Should().NotBeNull();
+            dbContext.CurrentUserContext.Should().NotBeNull();
+
+            var uow = scope.ServiceProvider.GetRequiredService<KamatekCrm.Shared.Repositories.IUnitOfWork>();
+            uow.Should().NotBeNull();
+            uow.Repository<Customer>().Should().NotBeNull();
+        }
+
+        private sealed class TestUserContext : KamatekCrm.ApplicationCore.Interfaces.ICurrentUserContext
+        {
+            public bool IsAuthenticated => true;
+            public int? UserId => 1;
+            public string Username => "test";
+            public string Role => "Admin";
+            public bool HasPermission(KamatekCrm.ApplicationCore.Security.ApplicationPermission permission) => true;
+        }
     }
 }
+

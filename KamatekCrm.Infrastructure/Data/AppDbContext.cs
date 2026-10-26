@@ -14,6 +14,8 @@ using KamatekCrm.Shared.Models.Specs;
 using KamatekCrm.Shared.Models.JobDetails;
 using KamatekCrm.Shared.Models.WorkOrders;
 
+using Microsoft.Extensions.DependencyInjection;
+
 namespace KamatekCrm.Infrastructure.Data
 {
     /// <summary>
@@ -28,6 +30,11 @@ namespace KamatekCrm.Infrastructure.Data
         {
         }
 
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
+
+        [ActivatorUtilitiesConstructor]
         public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUserContext? currentUserContext = null) : base(options)
         {
             CurrentUserContext = currentUserContext;
