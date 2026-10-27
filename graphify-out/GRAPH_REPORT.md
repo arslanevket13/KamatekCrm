@@ -1,14 +1,19 @@
-# Graph Report - KamatekCrm  (2026-10-23)
+# Graph Report - Antigravity  (2026-10-28)
 
 ## Corpus Check
-- 624 files · ~431,506 words
+- 636 files · ~423,864 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 22 file(s) not represented in the graph (top: .dll 9, .pubxml 4, (none) 2)
 
 ## Summary
-- 10554 nodes · 22523 edges · 434 communities (366 shown, 68 thin omitted)
-- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 2467 edges (avg confidence: 0.8)
+- 10778 nodes · 23140 edges · 439 communities (380 shown, 59 thin omitted)
+- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 2540 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `9e245711`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - IActionResult
@@ -18,10 +23,10 @@
 - Service Job & Work Order Management
 - Customer Operations & Interactions
 - DirectSalesViewModel
-- MigrationBuilder
+- DateTime
 - Database Migrations & Persistence
 - REST API Endpoints (LocationController)
-- MainViewModel
+- RelayCommand
 - .ShowError
 - KamatekCrm.Infrastructure.Data
 - KamatekCrm.Views
@@ -34,7 +39,7 @@
 - Project Quotes & Cost Estimation
 - WPF Desktop Views (RepairListView)
 - Customer Operations & Interactions
-- system_text_json
+- system_io
 - UI ViewModels (MainContentViewModel)
 - Stock & Inventory Control
 - UI ViewModels (RepairListViewModel)
@@ -45,7 +50,7 @@
 - Service Job & Work Order Management
 - Customer Operations & Interactions
 - Customer Operations & Interactions
-- system_threading
+- InventoryDomainService.cs
 - Service Job & Work Order Management
 - Service Job & Work Order Management
 - UI ViewModels (InstallationEditorViewModel)
@@ -56,23 +61,23 @@
 - Customer Operations & Interactions
 - UI ViewModels (ProductViewModel)
 - WPF Desktop Views (AddProductWindow)
-- ModelBuilder
+- UsersViewModel
 - WPF Desktop Views (PurchasingView)
 - WPF Desktop Views (RepairTrackingWindow)
-- TransactionReadService
+- PurchaseOrderViewModel
 - UI ViewModels (FaultTicketViewModel)
 - CustomerDetailWindow
-- PurchaseOrderItem
+- with
 - PasswordResetViewModel
 - WPF Desktop Views (FaultTicketWindow)
-- WPF Desktop Views (QuotationWindow)
+- QuotationWindow
 - ExceptionMapperTests Subsystem
 - SpecsAndJobDetails Subsystem
 - UI ViewModels (AddProductViewModel)
 - WPF Desktop Views (QuotationView)
 - UI ViewModels (RepairViewModel)
 - Project Quotes & Cost Estimation
-- ErrorCategory Subsystem
+- ErrorCategory
 - Service Job & Work Order Management
 - Task
 - Customer Operations & Interactions
@@ -106,7 +111,7 @@
 - Customer Operations & Interactions
 - ProjectQuoteReadService
 - DiscoveryVisit
-- RelayCommand
+- UpdateSettings
 - Service Job & Work Order Management
 - WPF Desktop Views (ProductsView)
 - Direct Sales & POS Operations
@@ -131,11 +136,11 @@
 - WPF Desktop Views (NetworkSettingsView)
 - Stock & Inventory Control
 - Quote
-- .SetupPlannedInstallationAsync
+- AuthService
 - Customer Operations & Interactions
 - LocationEndpoints Subsystem
 - Field Technician Tasks & Dispatch
-- Customer Operations & Interactions
+- CustomerInteractionsViewModel
 - UI ViewModels (FinanceViewModel)
 - WPF Desktop Views (LoginView)
 - VelopackUpdateService Subsystem
@@ -148,14 +153,14 @@
 - ReturnModels Subsystem
 - Authentication & User Management
 - HtmlTemplates Subsystem
-- Stock & Inventory Control
+- StockTransferViewModel
 - KmStatusBadge Subsystem
 - JobStatus Subsystem
 - KmNotificationCenter Subsystem
 - UI ViewModels (RoutePlanningViewModel)
 - Stock & Inventory Control
 - ApiClient Subsystem
-- IDialogService
+- steps
 - Authentication & User Management
 - Authentication & User Management
 - WPF Desktop Views (ProductPickerWindow)
@@ -163,9 +168,9 @@
 - KmSplitButton Subsystem
 - ProjectModels Subsystem
 - StubsEnum Subsystem
-- PdfService
-- StubsEnum.cs
-- UI ViewModels (DeliveryEditorViewModel)
+- ServiceJobDocumentDto
+- StatusFilter
+- PaymentMethod
 - microsoft_aspnetcore_mvc
 - ComponentStyles Subsystem
 - WPF Desktop Views (QuickNewProductForPurchaseWindo
@@ -178,6 +183,7 @@
 - WPF Desktop Views (DeliveryEditorWindow)
 - InstallationMaterial
 - Customer Operations & Interactions
+- InlineData
 - Direct Sales & POS Operations
 - RepairStatus
 - Customer Operations & Interactions
@@ -190,7 +196,7 @@
 - Customer Operations & Interactions
 - UI ViewModels (QuickInteractionAddViewModel)
 - Field Technician Tasks & Dispatch
-- UI ViewModels (WorkspaceDocumentsViewModel)
+- WorkOrderWorkflowDtos.cs
 - KmAvatar Subsystem
 - Customer Operations & Interactions
 - ApplicationPermission
@@ -219,14 +225,14 @@
 - Stock & Inventory Control
 - Direct Sales & POS Operations
 - UI ViewModels (RepairListViewModel)
-- UI ViewModels (WorkspaceQuotationViewModel)
+- DraftStorageService
 - RouteEndpoints Subsystem
 - KeyboardShortcutService Subsystem
-- ILogger
+- DailyPosReport
 - ServiceJobPdfData
 - PersonalDataKind Subsystem
 - .Validate
-- CacheService
+- TimeSpan
 - ProductDtos Subsystem
 - MiscModels Subsystem
 - UI ViewModels (FinancialHealthViewModel)
@@ -248,11 +254,11 @@
 - Customer Operations & Interactions
 - Auditing, Reporting & Analytics
 - Field Technician Tasks & Dispatch
-- StockTransferViewModel
+- UserControl
 - KamatekCrm.Application Subsystem
 - DatabaseConnectionProvider
 - QuotationItem
-- GreaterThanZeroConverter Subsystem
+- IsNegativeConverter
 - FixedScrollBar Subsystem
 - StubsEnum Subsystem
 - Authentication & User Management
@@ -262,21 +268,21 @@
 - UI ViewModels (RoutePlanningViewModel)
 - Stock & Inventory Control
 - AnimationHelper Subsystem
-- BoolToStringConverter Subsystem
-- ApiClient Subsystem
+- Type
+- PosTransactionLine
 - KmFilterPanel Subsystem
 - Customer Operations & Interactions
 - StubsEnum Subsystem
 - StubsEnum Subsystem
 - Service Job & Work Order Management
-- SystemLogsViewModel
+- PosCartItem
 - UpdateUserRequest
-- ServerDiscoveryMessage
-- WorkOrderWorkspaceDto
+- EventAggregator
+- WorkspaceOverviewViewModel
 - ApplicationAuthorizationService
 - KamatekCrm.Infrastructure Subsystem
 - NotificationService Subsystem
-- Supplier
+- WorkspaceDiscoveryViewModel
 - ProjectItem
 - AnalyticsViewModel
 - Stock & Inventory Control
@@ -292,8 +298,8 @@
 - GlobalExceptionMiddleware Subsystem
 - .Upload
 - Domain adapter: <sector>
-- UI ViewModels (QuotationViewModel)
-- ICurrentUserContext
+- .CreateAsync
+- TestCurrentUserContext
 - KmWizardStepper Subsystem
 - Field Technician Tasks & Dispatch
 - Field Technician Tasks & Dispatch
@@ -308,7 +314,7 @@
 - IBackupService
 - HtmxExtensions Subsystem
 - Category
-- AuditTrailService
+- ICurrentUserContext
 - IProductImageService
 - DashboardStats
 - DesktopCurrentUserContext
@@ -317,13 +323,13 @@
 - QuoteItem
 - Field Technician Tasks & Dispatch
 - Field Technician Tasks & Dispatch
-- .ApplyAsync
+- Task
 - StubsEnum Subsystem
-- CameraSpecs
+- FileSecurityValidator
 - MiscModels Subsystem
 - QuickAddModal
-- ExpiringStock
-- UI ViewModels (PaginationViewModel)
+- GetTechnicianTasksQuery
+- DirectSalesWindow
 - Domain adapter: devops and infrastructure
 - manifest Subsystem
 - ActionFilters Subsystem
@@ -331,19 +337,19 @@
 - Customer Operations & Interactions
 - AuditActionType
 - UserControl
-- PurchaseStatus
+- RepairStatusHelper
 - StubsEnum Subsystem
 - NotificationService
-- LowStockProduct
-- SplitButtonItem
+- StockCountDraftData
+- SaleItemRequest
 - Customer Operations & Interactions
 - JobType
-- Repository
+- CancellationToken
 - The Fable Loop
 - Stock & Inventory Control
 - Customer Operations & Interactions
-- UpdateCustomerInteractionStatusDto
-- QuotationStatus Subsystem
+- ApplicationError
+- ProjectQuoteEditorLauncher
 - Domain adapter: business and operations
 - Domain adapter: data analysis
 - SmsServiceTests Subsystem
@@ -358,58 +364,58 @@
 - Domain adapter: research and reporting
 - IUIService Subsystem
 - Field Technician Tasks & Dispatch
-- PagedResult
+- Exception
 - DashboardModels Subsystem
 - InstallationTask
 - DataProtectionHelper
 - LowStockItemDto
 - TodayJobItemDto
-- ProductSerial
+- DomainException
 - Stock & Inventory Control
 - Worked examples: one per ask shape
-- SaleCompletedEvent Subsystem
+- CustomerStatistics
 - JobListItem
 - CustomTheme Subsystem
-- GetTechnicianTasksQuery
+- IPersonalDataProtectionService
 - ProductListItem
 - ConnectedClientModel
 - DashboardModels Subsystem
-- MakeGlobalQueryFiltersNullable
+- CustomerPurchaseHistory
 - ServiceResponse Subsystem
 - UI ViewModels (SettingsViewModel)
 - MCP Tools: code-review-graph
 - Border
 - fable-judge
-- UpdatePendingChanges
+- CustomerDto
 - Field Technician Tasks & Dispatch
-- system
+- WorkOrderType
 - RequiredWhenAttribute Subsystem
 - Service Job & Work Order Management
 - Stock & Inventory Control
 - Stock & Inventory Control
 - StepBackgroundConverter Subsystem
-- MakeRelationshipsOptionalForSoftDelete
-- InstallationConverters Subsystem
+- PosParkedCart
+- MappingExtensions
 - Direct Sales & POS Operations
 - WPF Desktop Views (MainContentView)
 - MvvmRefactorTool Subsystem
-- InverseBooleanConverter Subsystem
+- CultureInfo
 - InvertedBooleanToVisibilityConverter Subsystem
 - NullToVisibilityConverter Subsystem
 - Project Quotes & Cost Estimation
+- JobPriority
 - Project Quotes & Cost Estimation
 - Project Quotes & Cost Estimation
-- Project Quotes & Cost Estimation
-- SensitiveDataConverter Subsystem
+- SensitiveDataConverter
 - CommonConverters Subsystem
 - CommonConverters Subsystem
-- CommonConverters Subsystem
+- DiscoveryMaterial
 - EnumToVisibilityConverter Subsystem
 - ListContainsConverter Subsystem
-- RoleDisplayConverter Subsystem
-- NetworkSettingsConverters Subsystem
+- CustomerAgingSummary
+- ReadyRepairItemDto
 - WPF Desktop Views (FaultTicketWindow)
-- InstallationConverters Subsystem
+- SaleRequest
 - WPF Desktop Views (RepairListView)
 - AGENTS Subsystem
 - Animations Subsystem
@@ -427,30 +433,35 @@
 - sw Subsystem
 - SKILL Subsystem
 - KamatekLogo Subsystem
-- .InsertAndRetrieve_ServiceJob_ShouldSaveAndRetrieveFlawlessly
-- FaultTicketWindow
+- TestUserContext
+- Window
 - container
-- AddSupplierTaxNumberAndAddress
-- AddDiscoveryFieldsToServiceJob
-- AddSalesIdempotency
-- SealAuditLogEntries
-- AddQuotationRevisionsAndSequence
-- PosTransactionStatus
-- RouteReorderRequest
-- PaymentRequest
-- ServiceJobsView
+- ProjectProfitItem
+- AttachmentEntityType
+- CategorySelectItem
+- TestCurrentUserContext
+- RepairStatusOption
+- SalesDomainService
+- UserRegisterDto
+- ReferentialIntegrityException
+- NotFoundException
 - border
+- MainWindow.xaml.cs
+- UpdateStatusRequest
+- EnumToBooleanConverter
+- ConnectionStatusColorConverter
+- FileIsImageConverter
 
 ## God Nodes (most connected - your core abstractions)
-1. `AppDbContext` - 267 edges
-2. `Result` - 223 edges
+1. `AppDbContext` - 277 edges
+2. `Result` - 230 edges
 3. `ServiceJobViewModel` - 198 edges
-4. `KamatekCrm.Shared.Enums` - 164 edges
-5. `KamatekCrm.Shared.Models` - 149 edges
-6. `ServiceJob` - 141 edges
-7. `KamatekCrm.Infrastructure.Data` - 133 edges
-8. `Window` - 131 edges
-9. `ProjectQuoteEditorViewModel` - 127 edges
+4. `KamatekCrm.Shared.Enums` - 166 edges
+5. `KamatekCrm.Shared.Models` - 150 edges
+6. `ServiceJob` - 142 edges
+7. `KamatekCrm.Infrastructure.Data` - 135 edges
+8. `ProjectQuoteEditorViewModel` - 131 edges
+9. `Window` - 131 edges
 10. `MainContentViewModel` - 122 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -471,59 +482,63 @@
 ## Hyperedges (group relationships)
 - **Work Order Audit, Fix and QA Test Cycle** — work_order_audit_report_work_order_module, work_order_fix_report_work_order_fixes, work_order_manual_test_plan_qa_verification [EXTRACTED 1.00]
 
-## Communities (434 total, 68 thin omitted)
+## Communities (439 total, 59 thin omitted)
 
 ### Community 0 - "IActionResult"
-Cohesion: 0.06
-Nodes (17): CustomersController, ExportController, FinanceController, InventoryController, LocationController, ProductsController, PurchasesController, ReportsController (+9 more)
+Cohesion: 0.07
+Nodes (12): CustomersController, DashboardController, ExportController, FinanceController, InventoryController, ProductsController, PurchasesController, ReportsController (+4 more)
 
 ### Community 1 - "Stock & Inventory Control"
-Cohesion: 0.03
-Nodes (81): IAuditTrailService, StockUpdatedEvent, NewQuantity, OldQuantity, ProductId, Reason, UpdatedAt, WarehouseId (+73 more)
+Cohesion: 0.02
+Nodes (98): IAuditTrailService, StockUpdatedEvent, NewQuantity, OldQuantity, ProductId, Reason, UpdatedAt, WarehouseId (+90 more)
 
 ### Community 2 - "Service Job & Work Order Management"
 Cohesion: 0.02
 Nodes (106): ServiceJobViewModel, AccessoryAdapter, AccessoryCable, AccessoryRemote, ApplyToAllUnits, AssignedTechnician, AvgCompletionHours, BackCommand (+98 more)
 
 ### Community 3 - "UI ViewModels (AddProductViewModel)"
-Cohesion: 0.09
-Nodes (6): KamatekCrm.ViewModels.Common, KamatekCrm.ViewModels, KamatekCrm.Models, KamatekCrm.Services, KamatekCrm.Validation, KamatekCrm.Shared.Services
+Cohesion: 0.08
+Nodes (9): KamatekCrm.ViewModels.Common, KamatekCrm.ViewModels, KamatekCrm.ApplicationCore.DTOs.ServiceJobs, KamatekCrm.ApplicationCore.DTOs.Transactions, KamatekCrm.Services, KamatekCrm.Validation, KamatekCrm.Shared.Services, KamatekCrm.ApplicationCore.Interfaces (+1 more)
 
 ### Community 4 - "Service Job & Work Order Management"
 Cohesion: 0.02
 Nodes (130): AcceptedDisplay, Action, Actions, ActiveTabIndex, BalanceDisplay, Command, CompletedDisplay, CompletionSummary (+122 more)
 
 ### Community 5 - "Customer Operations & Interactions"
-Cohesion: 0.06
-Nodes (18): GetTechnicianTasksQueryHandler, Result, Result, Value, Error, IsFailure, IsSuccess, ICustomerAppService (+10 more)
+Cohesion: 0.05
+Nodes (21): GetTechnicianTasksQueryHandler, DependencyInjection, IApplicationAuthorizationService, ICustomerAppService, ICustomerInteractionReadService, IServiceJobAppService, IUserAppService, CustomerAppService (+13 more)
 
 ### Community 6 - "DirectSalesViewModel"
-Cohesion: 0.02
-Nodes (80): PaymentMethod, BankTransfer, Cash, Check, CreditCard, MobilePayment, OnAccount, CartItem (+72 more)
+Cohesion: 0.04
+Nodes (42): DirectSalesViewModel, AllProducts, AutoPrintReceipt, BarcodeText, CanCompleteSale, CartGrandTotal, CartItemCount, CartItems (+34 more)
 
-### Community 7 - "MigrationBuilder"
-Cohesion: 0.06
-Nodes (11): FixShadowStatesAndRelations, FixFinalMigration, ReconcileQuoteAndUserSchema, EnforceTemporaryPasswordChange, ReturnAndFinancialIntegrity, StockCountIntegrity, AddCustomerInteractions, AddWorkOrderWorkflowEntities (+3 more)
+### Community 7 - "DateTime"
+Cohesion: 0.04
+Nodes (26): FixShadowStatesAndRelations, MakeGlobalQueryFiltersNullable, FixFinalMigration, UpdatePendingChanges, MakeRelationshipsOptionalForSoftDelete, AddSupplierTaxNumberAndAddress, AppDbContextModelSnapshot, AddDiscoveryFieldsToServiceJob (+18 more)
 
 ### Community 8 - "Database Migrations & Persistence"
 Cohesion: 0.03
-Nodes (65): AppDbContext, ActivityLogs, Attachments, Brands, CashTransactions, Categories, CustomerActivities, CustomerAssets (+57 more)
+Nodes (65): AppDbContext, ActivityLogs, Attachments, Brands, CashTransactions, Categories, CurrentUserContext, CustomerActivities (+57 more)
 
-### Community 10 - "MainViewModel"
-Cohesion: 0.04
-Nodes (35): NavigationService, CurrentView, CategoryFilterItem, Category, DisplayName, FullDisplay, Icon, IsSelected (+27 more)
+### Community 9 - "REST API Endpoints (LocationController)"
+Cohesion: 0.12
+Nodes (3): KamatekCrm.Infrastructure.Migrations, KamatekCrm.API.Migrations, KamatekCrm.Migrations
+
+### Community 10 - "RelayCommand"
+Cohesion: 0.03
+Nodes (33): FieldJobListViewModel, AllFieldJobs, CategoryFilters, CompleteFieldJobCommand, EndDate, FilteredFieldJobs, OpenMapCommand, SearchText (+25 more)
 
 ### Community 12 - "KamatekCrm.Infrastructure.Data"
-Cohesion: 0.06
-Nodes (20): KamatekCrm.ApplicationCore.DTOs.Inventory, KamatekCrm.Infrastructure.Services, KamatekCrm.ApplicationCore.Services, KamatekCrm.ApplicationCore.DTOs.Quotes, KamatekCrm.Tests.ViewModels, KamatekCrm.ApplicationCore.DTOs.CustomerInteractions, KamatekCrm.ApplicationCore.Common, KamatekCrm.ApplicationCore.DTOs.ServiceJobs (+12 more)
+Cohesion: 0.05
+Nodes (19): KamatekCrm.ApplicationCore.DTOs.Inventory, KamatekCrm.Infrastructure.Services, KamatekCrm.ApplicationCore.Services, KamatekCrm.Tests.Events, KamatekCrm.ApplicationCore.DTOs.Quotes, KamatekCrm.Tests.ViewModels, KamatekCrm.Tests.Integration, KamatekCrm.ApplicationCore.Common (+11 more)
 
 ### Community 13 - "KamatekCrm.Views"
-Cohesion: 0.04
-Nodes (20): KamatekCrm.Components, KamatekCrm.Diagnostics, KamatekCrm.Views, CustomerInteractionsView, CustomersView, DashboardView, FieldJobListView, FinanceView (+12 more)
+Cohesion: 0.05
+Nodes (6): KamatekCrm.Converters, KamatekCrm.Services.Update, KamatekCrm.Components, KamatekCrm.Helpers, KamatekCrm.Diagnostics, KamatekCrm.Views
 
 ### Community 14 - "Project Quotes & Cost Estimation"
 Cohesion: 0.02
-Nodes (78): AddBlockCommand, AddFlatCommand, AddFloorCommand, AddItemCommand, ApplyBulkMarginCommand, CanRedo, CanUndo, Children (+70 more)
+Nodes (80): AddBlockCommand, AddFlatCommand, AddFloorCommand, AddItemCommand, ApplyBulkMarginCommand, CanRedo, CanUndo, Children (+72 more)
 
 ### Community 15 - "Service Job & Work Order Management"
 Cohesion: 0.08
@@ -531,7 +546,7 @@ Nodes (25): ServiceJobDeleteResult, ServiceJobQuoteConversionResult, ServiceJobS
 
 ### Community 16 - "Project Quotes & Cost Estimation"
 Cohesion: 0.03
-Nodes (62): ProjectQuoteEditorViewModel, AddFlatCommand, AddItemCommand, AddZoneCommand, ApplyToSiblingsCommand, BlockCount, CanAddFlat, CanAddFloor (+54 more)
+Nodes (59): ProjectQuoteEditorViewModel, AddFlatCommand, AddZoneCommand, ApplyBulkMarginCommand, ApplyToSiblingsCommand, BlockCount, CanAddFlat, CanAddFloor (+51 more)
 
 ### Community 17 - "Service Job & Work Order Management"
 Cohesion: 0.03
@@ -543,23 +558,23 @@ Nodes (62): ActionCommand, ActionLabel, CurrentViewName, CurrentViewTitle, Force
 
 ### Community 19 - "Service Job & Work Order Management"
 Cohesion: 0.03
-Nodes (69): ServiceJob, Accessories, ActualDuration, ApprovalDate, AssignedTechnician, AssignedTechnicianId, AssignedUser, AssignedUserId (+61 more)
+Nodes (68): ServiceJob, Accessories, ActualDuration, ApprovalDate, AssignedTechnician, AssignedTechnicianId, AssignedUser, AssignedUserId (+60 more)
 
 ### Community 20 - "Project Quotes & Cost Estimation"
 Cohesion: 0.06
-Nodes (35): ChangeProjectQuoteStatusCommand, ConvertApprovedQuoteToWorkOrderCommand, DeleteProjectQuoteCommand, DuplicateProjectQuoteCommand, ExpireProjectQuotesResult, ProjectQuoteDuplicateResult, ProjectQuoteOperationResult, ProjectQuotePricingResult (+27 more)
+Nodes (32): ChangeProjectQuoteStatusCommand, ConvertApprovedQuoteToWorkOrderCommand, DeleteProjectQuoteCommand, DuplicateProjectQuoteCommand, ExpireProjectQuotesResult, ProjectQuoteDuplicateResult, ProjectQuoteOperationResult, ProjectQuotePricingResult (+24 more)
 
 ### Community 21 - "WPF Desktop Views (RepairListView)"
 Cohesion: 0.03
 Nodes (66): CreateNewRepairCommand, DataContext.AddPhotoCommand, DataContext.ClearFiltersCommand, DataContext.OpenPhotoCommand, DaysInShop, DeliveredCount, DeviceDisplay, FilteredRepairJobs (+58 more)
 
 ### Community 22 - "Customer Operations & Interactions"
-Cohesion: 0.08
-Nodes (6): KamatekCrm.Shared.Models, KamatekCrm.Shared.Models.Common, KamatekCrm.Shared.Enums, KamatekCrm.ApplicationCore.DTOs.Customers, KamatekCrm.API.Application.Queries.Tasks, KamatekCrm.API.Application.DTOs
+Cohesion: 0.05
+Nodes (11): KamatekCrm.Models, KamatekCrm.ApplicationCore.DTOs.CustomerInteractions, KamatekCrm.Shared.Models, KamatekCrm.Shared.Models.Common, KamatekCrm.Shared.Models.Specs, KamatekCrm.Shared.Enums, KamatekCrm.ApplicationCore.DTOs.Customers, KamatekCrm.Shared.Models.WorkOrders (+3 more)
 
-### Community 23 - "system_text_json"
-Cohesion: 0.11
-Nodes (4): KamatekCrm.Tests.ErrorHandling, KamatekCrm.Security, KamatekCrm.Infrastructure.ErrorHandling, DatabaseServiceFailedEvent
+### Community 23 - "system_io"
+Cohesion: 0.05
+Nodes (8): KamatekCrm.ApplicationCore.ErrorHandling, KamatekCrm.Tests.ErrorHandling, KamatekCrm.Configuration, KamatekCrm.Security, KamatekCrm.Infrastructure.ErrorHandling, KamatekCrm.API.Middleware, RateLimitingConfiguration, CacheKeys
 
 ### Community 24 - "UI ViewModels (MainContentViewModel)"
 Cohesion: 0.03
@@ -567,23 +582,23 @@ Nodes (59): NavigateToNetworkSettingsEvent, MainContentViewModel, CanAccessSetti
 
 ### Community 25 - "Stock & Inventory Control"
 Cohesion: 0.04
-Nodes (55): AddToManualCountCommand, BarcodeScanInput, ClearManualListCommand, CloseHistoryCommand, CloseHistoryDetailCommand, ConfirmManualCountCommand, IsNegativeConverter, IsPositiveConverter (+47 more)
+Nodes (56): AddToManualCountCommand, BarcodeScanInput, ClearManualListCommand, CloseHistoryCommand, CloseHistoryDetailCommand, ConfirmManualCountCommand, IsNegativeConverter, IsPositiveConverter (+48 more)
 
 ### Community 26 - "UI ViewModels (RepairListViewModel)"
 Cohesion: 0.03
 Nodes (51): CustomerActivity, CreatedBy, Customer, CustomerId, Description, RelatedId, RelatedType, Type (+43 more)
 
 ### Community 27 - "Service Job & Work Order Management"
-Cohesion: 0.03
-Nodes (78): WorkOrderAction, AcceptQuotation, AssignResponsible, CancelWorkOrder, CloseWorkOrder, CompleteDelivery, CompleteDiscovery, CompleteInstallation (+70 more)
+Cohesion: 0.02
+Nodes (88): ServiceJobHistoryDto, WorkOrderActionInfo, WorkOrderAction, AcceptQuotation, AssignResponsible, CancelWorkOrder, CloseWorkOrder, CompleteDelivery (+80 more)
 
 ### Community 28 - "Direct Sales & POS Operations"
 Cohesion: 0.03
 Nodes (58): BarcodeScanCommand, CartItemCount, CartItems, ChangeAmount, ClearCartCommand, ClearCustomerCommand, CompleteSaleCommand, CustomerDisplayName (+50 more)
 
 ### Community 29 - "UI ViewModels (DiscoveryEditorViewModel)"
-Cohesion: 0.04
-Nodes (34): DiscoveryEditorViewModel, CompletionCheckSummary, CompletionError, EstimatedLaborHours, HasMaterials, HasNoVisits, HasReport, HasTechnicalNotes (+26 more)
+Cohesion: 0.05
+Nodes (33): DiscoveryEditorViewModel, CompletionCheckSummary, CompletionError, EstimatedLaborHours, HasMaterials, HasNoVisits, HasReport, HasTechnicalNotes (+25 more)
 
 ### Community 30 - "Service Job & Work Order Management"
 Cohesion: 0.05
@@ -601,37 +616,37 @@ Nodes (45): CustomerDetailViewModel, ActiveJobCount, ActiveJobs, Activities, Add
 Cohesion: 0.04
 Nodes (54): AddDebtCommand, AddPaymentCommand, BalanceColor, CanViewContactData, CanViewIdentityData, NullToVisibilityConverter, SegmentToColorConverter, CreateNewServiceJobCommand (+46 more)
 
-### Community 34 - "system_threading"
-Cohesion: 0.08
-Nodes (11): KamatekCrm.Settings, KamatekCrm.Services.Domain, KamatekCrm.Extensions, KamatekCrm.Infrastructure, KamatekCrm, KamatekCrm.Configuration, KamatekCrm.Shared.Repositories, KamatekCrm.Infrastructure.Repositories (+3 more)
+### Community 34 - "InventoryDomainService.cs"
+Cohesion: 0.10
+Nodes (6): KamatekCrm.Shared.Exceptions, KamatekCrm.Events, KamatekCrm.Services.Domain, KamatekCrm.Shared.Repositories, KamatekCrm.Infrastructure.Repositories, ShowManualConnectionWizardEvent
 
 ### Community 35 - "Service Job & Work Order Management"
 Cohesion: 0.05
-Nodes (60): ChangeServiceJobStatusCommandParameter, ServiceJobMaterialDto, Id, ProductId, ProductName, QuantityUsed, UnitCost, UnitPrice (+52 more)
+Nodes (59): ServiceJobMaterialDto, Id, ProductId, ProductName, QuantityUsed, UnitCost, UnitPrice, ServiceJobRowDto (+51 more)
 
 ### Community 36 - "Service Job & Work Order Management"
 Cohesion: 0.04
 Nodes (52): CancelFormCommand, DisplayName, EstimatedDuration, FlatCount, GrandTotalWithKdv, IsChecked, IsDiscoveryOnly, KdvAmount (+44 more)
 
 ### Community 37 - "UI ViewModels (InstallationEditorViewModel)"
-Cohesion: 0.05
-Nodes (32): InstallationEditorViewModel, CompletionCheckSummary, CompletionError, CompletionLaborHours, CompletionTechnician, CustomerSignature, DeliveryNote, HasLaborHours (+24 more)
+Cohesion: 0.04
+Nodes (40): NavigationService, CurrentView, CategoryFilterItem, Category, DisplayName, FullDisplay, Icon, IsSelected (+32 more)
 
 ### Community 38 - "UI ViewModels (SettingsViewModel)"
 Cohesion: 0.04
-Nodes (38): SettingsViewModel, AccentColor, ApplyLegacyLedgerCorrectionsCommand, ApplyUpdateNowCommand, AutoDownloadUpdates, AutoPrintReceipt, AvailablePrinters, AvailableThemes (+30 more)
+Nodes (40): SettingsViewModel, AccentColor, ApplyLegacyLedgerCorrectionsCommand, ApplyUpdateNowCommand, AutoDownloadUpdates, AutoPrintReceipt, AvailablePrinters, AvailableThemes (+32 more)
 
 ### Community 39 - "Authentication & User Management"
 Cohesion: 0.04
-Nodes (39): ToastMessage, Duration, Message, Title, Type, ILoadingService, IToastService, ToastService (+31 more)
+Nodes (41): ToastMessage, Duration, Message, Title, Type, IToastService, ToastService, ToastType (+33 more)
 
 ### Community 40 - "Stock & Inventory Control"
 Cohesion: 0.04
-Nodes (46): StockCountViewModel, AddToManualCountCommand, BarcodeScanInput, ClearManualListCommand, CloseHistoryCommand, CloseHistoryDetailCommand, ConfirmManualCountCommand, CountDate (+38 more)
+Nodes (47): StockCountWarehouseDto, StockCountViewModel, AddToManualCountCommand, BarcodeScanInput, ClearManualListCommand, CloseHistoryCommand, CloseHistoryDetailCommand, ConfirmManualCountCommand (+39 more)
 
 ### Community 41 - "WPF Desktop Views (SettingsView)"
 Cohesion: 0.04
-Nodes (52): ApplyLegacyLedgerCorrectionsCommand, ApplyUpdateNowCommand, AutoDownloadUpdates, AvailablePrinters, AvailableThemes, AvailableUpdateChannels, CheckForUpdatesNowCommand, CheckForUpdatesOnStartup (+44 more)
+Nodes (50): ApplyLegacyLedgerCorrectionsCommand, ApplyUpdateNowCommand, AutoDownloadUpdates, AvailablePrinters, AvailableThemes, AvailableUpdateChannels, CheckForUpdatesNowCommand, CheckForUpdatesOnStartup (+42 more)
 
 ### Community 42 - "Customer Operations & Interactions"
 Cohesion: 0.04
@@ -639,15 +654,15 @@ Nodes (51): AssignedToUsername, CompleteInteractionCommand, ConvertToQuoteComman
 
 ### Community 43 - "UI ViewModels (ProductViewModel)"
 Cohesion: 0.06
-Nodes (26): ProductViewModel, CategoryFilterItems, DeleteProductCommand, DeleteProductPhotoCommand, EditProductCommand, HasProductPhoto, ImportExcelCommand, IsActionSuccessful (+18 more)
+Nodes (27): ProductViewModel, AddNewProductCommand, CategoryFilterItems, DeleteProductCommand, DeleteProductPhotoCommand, EditProductCommand, HasProductPhoto, ImportExcelCommand (+19 more)
 
 ### Community 44 - "WPF Desktop Views (AddProductWindow)"
 Cohesion: 0.04
 Nodes (49): BrowseImageCommand, CameraType, Color, Compression, CurrentSpecs, CurrentSpecs.Notes, CurrentTotalStock, GenerateBarcodeCommand (+41 more)
 
-### Community 45 - "ModelBuilder"
-Cohesion: 0.08
-Nodes (8): KamatekCrm.Migrations, AppDbContextModelSnapshot, AppDbContextModelSnapshot, InitialCreate, AddActivityLogsTable, RefactorSpecsToJsonb, MakeServiceJobDatesNullable, AppDbContextModelSnapshot
+### Community 45 - "UsersViewModel"
+Cohesion: 0.07
+Nodes (18): EnumBindingSource, EnumType, UsersViewModel, ActiveTechniciansCount, AdminCount, CategoryItems, CurrentUser, CurrentUserName (+10 more)
 
 ### Community 46 - "WPF Desktop Views (PurchasingView)"
 Cohesion: 0.04
@@ -657,9 +672,9 @@ Nodes (47): AddLineItemCommand, CloseSidebarCommand, CreateNewProductCommand, Da
 Cohesion: 0.04
 Nodes (47): AllRepairs, DeviceBrand, DeviceModel, OpenRegistrationCommand, PrintServiceFormCommand, SelectedJob, SelectedJob.Accessories, SelectedJob.Id (+39 more)
 
-### Community 48 - "TransactionReadService"
-Cohesion: 0.17
-Nodes (10): PurchaseHistoryDto, PurchaseProductLookupDto, PurchasingWorkspaceDto, SalesReturnReceiptDto, SalesReturnReceiptLineDto, SalesReturnReceiptPaymentDto, SupplierLookupDto, WarehouseLookupDto (+2 more)
+### Community 48 - "PurchaseOrderViewModel"
+Cohesion: 0.05
+Nodes (36): PurchaseHistoryDto, PurchaseProductLookupDto, PurchasingWorkspaceDto, SalesReturnReceiptDto, SalesReturnReceiptLineDto, SalesReturnReceiptPaymentDto, SupplierLookupDto, WarehouseLookupDto (+28 more)
 
 ### Community 49 - "UI ViewModels (FaultTicketViewModel)"
 Cohesion: 0.04
@@ -669,9 +684,9 @@ Nodes (38): FaultTicketViewModel, AccessoryAdapter, AccessoryBox, AccessoryCable
 Cohesion: 0.29
 Nodes (4): DetailView, Window, CustomerDetailWindow, CustomerDetailView
 
-### Community 51 - "PurchaseOrderItem"
-Cohesion: 0.08
-Nodes (24): PurchaseReturnItem, Id, LineTotal, ProductId, PurchaseOrderItem, PurchaseOrderItemId, PurchaseReturn, PurchaseReturnId (+16 more)
+### Community 51 - "with"
+Cohesion: 0.07
+Nodes (27): name, runs-on, steps, GITHUB_TOKEN, jobs, build-and-release, name, on (+19 more)
 
 ### Community 52 - "PasswordResetViewModel"
 Cohesion: 0.11
@@ -681,25 +696,25 @@ Nodes (12): PasswordPolicy, PasswordSecurityTests, PasswordResetViewModel, AdSoy
 Cohesion: 0.04
 Nodes (45): AccessoryAdapter, AccessoryBox, AccessoryCable, AccessoryRemote, AddPhotoCommand, AutoPrintPdf, CustomerAddress, CustomerAssets (+37 more)
 
-### Community 54 - "WPF Desktop Views (QuotationWindow)"
-Cohesion: 0.04
-Nodes (46): ExportToPdfCommand, SaveAndSendCommand, LayoutRoot, Window, AddProductCommand, BooleanToVisibilityConverter, ImagePathConverter, Currencies (+38 more)
+### Community 54 - "QuotationWindow"
+Cohesion: 0.29
+Nodes (4): DetailView, Window, QuotationWindow, QuotationView
 
 ### Community 55 - "ExceptionMapperTests Subsystem"
-Cohesion: 0.09
-Nodes (8): IExceptionClassifier, ExceptionMapper, ExceptionMapperTests, ServiceJobModuleFixTests, StandardQuoteServiceTests, TestAuthorizationService, UnitTest1, CustomerAddViewModelTests
+Cohesion: 0.10
+Nodes (7): ChangeServiceJobStatusCommandParameter, ExceptionMapper, ExceptionMapperTests, InventoryAlgorithmTests, ServiceJobModuleFixTests, UnitTest1, CustomerAddViewModelTests
 
 ### Community 56 - "SpecsAndJobDetails Subsystem"
-Cohesion: 0.04
-Nodes (73): KamatekCrm.Shared.Models.Specs, KamatekCrm.Shared.Models.JobDetails, AccessControlJobDetail, DoorCount, BurglarAlarmJobDetail, SensorCount, CctvJobDetail, CameraCount (+65 more)
+Cohesion: 0.03
+Nodes (82): KamatekCrm.Shared.Models.JobDetails, AccessControlJobDetail, DoorCount, BurglarAlarmJobDetail, SensorCount, CctvJobDetail, CameraCount, FiberOpticJobDetail (+74 more)
 
 ### Community 57 - "UI ViewModels (AddProductViewModel)"
-Cohesion: 0.06
+Cohesion: 0.05
 Nodes (29): AddProductViewModelTests, AddProductViewModel, BrowseImageCommand, CancelCommand, Categories, Currencies, CurrentSpecs, CurrentTotalStock (+21 more)
 
 ### Community 58 - "WPF Desktop Views (QuotationView)"
 Cohesion: 0.05
-Nodes (43): SaveQuoteCommand, UserControl, AddProductCommand, BooleanToVisibilityConverter, ImagePathConverter, Currencies, CurrentStockQuantity, Customers (+35 more)
+Nodes (43): AddProductCommand, CurrentStockQuantity, DataContext.AddProductDirectCommand, DataContext.DecreaseLineQuantityCommand, DataContext.IncreaseLineQuantityCommand, DataContext.RemoveLineCommand, NewDiscount, NewQuantity (+35 more)
 
 ### Community 59 - "UI ViewModels (RepairViewModel)"
 Cohesion: 0.05
@@ -709,29 +724,29 @@ Nodes (32): RepairViewModel, AccessoryAdapter, AccessoryCable, AccessoryRemote, 
 Cohesion: 0.05
 Nodes (42): ApprovedCount, DateConverter, StatusTextConverter, ConvertToWorkOrderCommand, DeleteQuoteCommand, DraftCount, DuplicateQuoteCommand, EditQuoteCommand (+34 more)
 
-### Community 61 - "ErrorCategory Subsystem"
-Cohesion: 0.06
-Nodes (32): KamatekCrm.ApplicationCore.ErrorHandling, ResultErrorExtensions, ApplicationError, Category, Code, CorrelationId, IsCancellation, UserMessage (+24 more)
+### Community 61 - "ErrorCategory"
+Cohesion: 0.12
+Nodes (15): ErrorCategory, Authentication, Authorization, Cancellation, Concurrency, Conflict, DatabaseConnection, DatabaseConstraint (+7 more)
 
 ### Community 62 - "Service Job & Work Order Management"
 Cohesion: 0.07
 Nodes (26): WorkOrderQuotation, AcceptedAt, DeliveryTime, Description, DiscountAmount, Id, IssuedDate, Items (+18 more)
 
 ### Community 63 - "Task"
-Cohesion: 0.05
-Nodes (18): StockCountHistoryDto, StockCountHistoryLineDto, StockCountProductDto, StockCountWarehouseDto, ServiceJobAssetLookupDto, FullName, ServiceJobDashboardDto, ServiceJobProjectLookupDto (+10 more)
+Cohesion: 0.06
+Nodes (25): Result, Result, Value, Error, IsFailure, IsSuccess, StockCountHistoryDto, StockCountHistoryLineDto (+17 more)
 
 ### Community 64 - "Customer Operations & Interactions"
-Cohesion: 0.05
-Nodes (37): CustomersViewModel, ApartmentNo, BuildingNo, Cities, City, ClearFormCommand, CorporateCount, CreateQuoteForCustomerCommand (+29 more)
+Cohesion: 0.04
+Nodes (44): PaginationViewModel, CurrentPage, HasNextPage, HasPreviousPage, PageSize, TotalCount, TotalPages, CustomersViewModel (+36 more)
 
 ### Community 65 - "UI ViewModels (QuotationViewModel)"
 Cohesion: 0.05
 Nodes (37): QuotationViewModel, AddProductCommand, AddProductDirectCommand, Currencies, Customers, DecreaseLineQuantityCommand, ExportPdfCommand, ExportToPdfCommand (+29 more)
 
 ### Community 66 - "IInstallationPdfService Subsystem"
-Cohesion: 0.08
-Nodes (9): ServiceCollectionExtensions, EmailService, ResolvedSenderDisplayName, ResolvedSenderEmail, ResolvedSenderPassword, ISlaService, IQuotationLauncher, QuotationLauncher (+1 more)
+Cohesion: 0.10
+Nodes (4): ServiceCollectionExtensions, IQuotationLauncher, QuotationLauncher, IServiceReportPdfService
 
 ### Community 67 - "ServiceJobExportRow"
 Cohesion: 0.09
@@ -742,16 +757,16 @@ Cohesion: 0.05
 Nodes (36): DatabaseConnectionEstablishedEvent, DashboardViewModel, ActiveJobsCount, AverageSaleAmount, BirthdayCustomers, CurrentMonthName, DailyExpense, DailyIncome (+28 more)
 
 ### Community 69 - ".ProcessSaleAsync"
-Cohesion: 0.16
-Nodes (12): SaleRequest, CreatedBy, CustomerId, CustomerName, Items, PaymentMethod, WarehouseId, SaleResult (+4 more)
+Cohesion: 0.31
+Nodes (5): SaleResult, ErrorMessage, OrderNumber, Success, TotalAmount
 
 ### Community 70 - "UI ViewModels (PurchasingViewModel)"
-Cohesion: 0.06
-Nodes (31): PurchasingLineItem, Barcode, IsNewProduct, LineTotal, ProductId, ProductName, Quantity, Sku (+23 more)
+Cohesion: 0.04
+Nodes (35): PdfImportPreviewViewModel, IsConfirmed, ParsedItems, PurchasingLineItem, Barcode, IsNewProduct, LineTotal, ProductId (+27 more)
 
 ### Community 71 - "PurchaseOrder"
-Cohesion: 0.08
-Nodes (24): PurchaseOrder, Date, IdempotencyKey, InvoiceNumber, Items, Notes, OrderDate, Payments (+16 more)
+Cohesion: 0.06
+Nodes (35): PurchaseOrder, Date, IdempotencyKey, InvoiceNumber, Items, Notes, OrderDate, Payments (+27 more)
 
 ### Community 72 - "Service Job & Work Order Management"
 Cohesion: 0.05
@@ -762,28 +777,28 @@ Cohesion: 0.08
 Nodes (25): SalesReturn, CreatedBy, Date, DiscountTotal, Id, IdempotencyKey, Items, Notes (+17 more)
 
 ### Community 74 - "Project Quotes & Cost Estimation"
-Cohesion: 0.06
-Nodes (23): EnumBindingSource, EnumType, IProjectQuoteEditorLauncher, ProjectQuoteEditorLauncher, QuoteListViewModel, ApprovedCount, DraftCount, HasSelectedQuote (+15 more)
+Cohesion: 0.08
+Nodes (19): QuoteListViewModel, ApprovedCount, DraftCount, HasSelectedQuote, IsActionSuccessful, Quotes, QuotesView, RejectedCount (+11 more)
 
 ### Community 75 - "ApiResponse Subsystem"
-Cohesion: 0.14
-Nodes (14): AuthController, ApiErrorInfo, CorrelationId, Message, Type, ApiMeta, Pagination, ApiResponse (+6 more)
+Cohesion: 0.10
+Nodes (21): AuthController, ApiErrorInfo, CorrelationId, Message, Type, ApiMeta, Pagination, ApiResponse (+13 more)
 
 ### Community 76 - "IDbContextFactory"
-Cohesion: 0.05
-Nodes (30): CancelPurchaseCommand, CreatePurchaseCommand, PurchaseCommandResult, PurchaseLineInput, PurchaseReturnLineInput, ReceivePurchaseCommand, ReturnablePurchaseDto, ReturnablePurchaseLineDto (+22 more)
+Cohesion: 0.10
+Nodes (19): CancelPurchaseCommand, CreatePurchaseCommand, PurchaseCommandResult, PurchaseLineInput, PurchaseReturnLineInput, ReceivePurchaseCommand, ReturnablePurchaseDto, ReturnablePurchaseLineDto (+11 more)
 
 ### Community 77 - "Service Job & Work Order Management"
 Cohesion: 0.12
-Nodes (12): WorkOrderActionInfo, WorkOrderNextActionInfo, WorkOrderWarning, WorkOrderWorkspaceInput, IWorkOrderNextActionResolver, WorkOrderNextActionResolver, WorkOrderSeverity, Action (+4 more)
+Nodes (11): WorkOrderNextActionInfo, WorkOrderWarning, WorkOrderWorkspaceInput, IWorkOrderNextActionResolver, WorkOrderNextActionResolver, WorkOrderSeverity, Action, Critical (+3 more)
 
 ### Community 78 - "Stock & Inventory Control"
-Cohesion: 0.07
-Nodes (29): InvoiceScannerService, Brand, BrandName, Id, Name, Product, AverageCost, Barcode (+21 more)
+Cohesion: 0.05
+Nodes (43): InvoiceScannerService, PdfInvoiceParserService, Brand, BrandName, Id, Name, Product, AverageCost (+35 more)
 
 ### Community 79 - "WPF Desktop Views (RoutePlanningView)"
 Cohesion: 0.05
-Nodes (38): Address, AvailableJobs, ClearRouteCommand, CompletedPoints, DataContext.AddToRouteCommand, DataContext.MarkVisitedCommand, DataContext.MoveDownCommand, DataContext.MoveUpCommand (+30 more)
+Nodes (37): Address, AvailableJobs, ClearRouteCommand, CompletedPoints, DataContext.AddToRouteCommand, DataContext.MarkVisitedCommand, DataContext.MoveDownCommand, DataContext.MoveUpCommand (+29 more)
 
 ### Community 80 - "UI ViewModels (SuppliersViewModel)"
 Cohesion: 0.06
@@ -794,8 +809,8 @@ Cohesion: 0.05
 Nodes (35): ThermalReceiptPrintService, SalesOrderStatus, Cancelled, Completed, Draft, PartiallyRefunded, Refunded, SalesOrder (+27 more)
 
 ### Community 82 - "PurchaseInvoice"
-Cohesion: 0.11
-Nodes (19): PurchaseInvoicePaymentStatus, Paid, PartiallyPaid, Unpaid, PurchaseInvoice, Date, GrandTotal, InvoiceNumber (+11 more)
+Cohesion: 0.07
+Nodes (28): PurchaseInvoicePaymentStatus, Paid, PartiallyPaid, Unpaid, PurchaseStatus, Cancelled, Completed, Ordered (+20 more)
 
 ### Community 83 - "GetDashboardStatsQuery Subsystem"
 Cohesion: 0.07
@@ -807,11 +822,11 @@ Nodes (32): DbInitializer, ForcedPasswordChangeService, IForcedPasswordChangeSer
 
 ### Community 85 - "Customer Operations & Interactions"
 Cohesion: 0.06
-Nodes (33): MappingExtensions, Customer, ApartmentNo, Assets, BirthDate, BuildingNo, City, CompanyName (+25 more)
+Nodes (32): Customer, ApartmentNo, Assets, BirthDate, BuildingNo, City, CompanyName, CustomerCode (+24 more)
 
 ### Community 86 - "IAuthService"
-Cohesion: 0.06
-Nodes (30): AccountLockoutInfo, FailedAttempts, LockoutUntil, AuthService, CanAccessSettings, CanApprovePurchase, CanDeleteRecords, CanViewAnalytics (+22 more)
+Cohesion: 0.09
+Nodes (18): IAuthService, CanAccessSettings, CanApprovePurchase, CanDeleteRecords, CanViewAnalytics, CanViewFinance, CurrentUser, IsAdmin (+10 more)
 
 ### Community 87 - "Service Job & Work Order Management"
 Cohesion: 0.04
@@ -819,11 +834,11 @@ Nodes (47): WorkOrderStageLabels, WorkOrderStage, Cancelled, Closed, Delivery, D
 
 ### Community 88 - "Project Quotes & Cost Estimation"
 Cohesion: 0.08
-Nodes (18): SaveStandardQuoteCommand, StandardQuoteCustomerDto, StandardQuoteDocumentDto, StandardQuoteLineInput, StandardQuoteProductDto, StandardQuoteSaveResult, StandardQuoteWorkspaceDto, IApplicationAuthorizationService (+10 more)
+Nodes (21): SaveStandardQuoteCommand, StandardQuoteCustomerDto, StandardQuoteDocumentDto, StandardQuoteLineInput, StandardQuoteLinePricing, StandardQuotePricingResult, StandardQuoteProductDto, StandardQuoteSaveResult (+13 more)
 
 ### Community 89 - "ProjectModels Subsystem"
 Cohesion: 0.09
-Nodes (17): ProjectQuotePricingPolicy, ProjectScopeService, StructureGeneratorService, ScopeNode, Children, HeaderDisplay, Id, IsExpanded (+9 more)
+Nodes (16): ProjectScopeService, StructureGeneratorService, ScopeNode, Children, HeaderDisplay, Id, IsExpanded, IsSelected (+8 more)
 
 ### Community 90 - "Customer Operations & Interactions"
 Cohesion: 0.06
@@ -838,16 +853,16 @@ Cohesion: 0.06
 Nodes (34): ClearTypeFilterCommand, CorporateCount, CurrentPage, CustomersView, DataContext.CreateQuoteForCustomerCommand, DataContext.OpenCustomerProfileCommand, FullAddress, HasSelectedCustomer (+26 more)
 
 ### Community 93 - "ProjectQuoteReadService"
-Cohesion: 0.20
+Cohesion: 0.24
 Nodes (8): ProjectQuoteCustomerDto, ProjectQuoteDetailDto, ProjectQuoteExportDto, ProjectQuoteListItemDto, ProjectQuoteProductDto, ProjectQuoteWorkspaceDto, IProjectQuoteReadService, ProjectQuoteReadService
 
 ### Community 94 - "DiscoveryVisit"
 Cohesion: 0.20
 Nodes (10): DiscoveryVisit, CreatedDate, Id, Notes, PhotoPathsJson, PhotoPathsList, ServiceJob, ServiceJobId (+2 more)
 
-### Community 95 - "RelayCommand"
-Cohesion: 0.04
-Nodes (12): FieldJobListViewModel, AllFieldJobs, CategoryFilters, CompleteFieldJobCommand, EndDate, FilteredFieldJobs, OpenMapCommand, SearchText (+4 more)
+### Community 95 - "UpdateSettings"
+Cohesion: 0.14
+Nodes (9): UpdateSettings, AutoDownloadUpdates, CheckForUpdatesOnStartup, CustomUpdateUrl, InstallOnClose, LastCheckTime, LastDownloadedVersion, UpdateChannel (+1 more)
 
 ### Community 96 - "Service Job & Work Order Management"
 Cohesion: 0.10
@@ -855,7 +870,7 @@ Nodes (19): InstallationOrder, CompletedAt, CompletionTechnician, CreatedDate, C
 
 ### Community 97 - "WPF Desktop Views (ProductsView)"
 Cohesion: 0.06
-Nodes (34): AddNewProductCommand, Brand.BrandName, Category.Name, CategoryFilterItems, DataContext.DeleteProductCommand, DataContext.EditProductCommand, DataContext.QuickAdjustStockCommand, DeleteProductCommand (+26 more)
+Nodes (33): AddNewProductCommand, Brand.BrandName, Category.Name, CategoryFilterItems, DataContext.DeleteProductCommand, DataContext.EditProductCommand, DataContext.QuickAdjustStockCommand, DeleteProductCommand (+25 more)
 
 ### Community 98 - "Direct Sales & POS Operations"
 Cohesion: 0.06
@@ -882,12 +897,12 @@ Cohesion: 0.06
 Nodes (32): AddPhotosCommand, AddVisitCommand, DataContext.RemoveVisitCommand, EstimatedLaborHours, HasNoVisits, Visits.Count, Window, AddCustomMaterialCommand (+24 more)
 
 ### Community 104 - "Authentication & User Management"
-Cohesion: 0.06
-Nodes (29): InitialPassword, IsCustomPassword, UsernameValidationMessage, ClearCommand, AdTextBox, Window, Ad, CanAccessSettings (+21 more)
+Cohesion: 0.07
+Nodes (29): InitialPassword, IsCustomPassword, UsernameValidationMessage, ClearCommand, SaveCommand, AdTextBox, Window, Ad (+21 more)
 
 ### Community 105 - "IDatabaseConnectionProvider"
-Cohesion: 0.15
-Nodes (8): NetworkDiscoveryService, ConnectionHeartbeatService, DatabaseConnectionLostEvent, DatabaseConnectionRestoredEvent, NetworkDiscoveryService, IDatabaseConnectionProvider, CurrentServerIp, IsConnected
+Cohesion: 0.23
+Nodes (5): DatabaseConnectionRestoredEvent, NetworkDiscoveryService, IDatabaseConnectionProvider, CurrentServerIp, IsConnected
 
 ### Community 106 - "KamatekCrm Subsystem"
 Cohesion: 0.06
@@ -906,8 +921,8 @@ Cohesion: 0.06
 Nodes (30): CategoryColor, CategoryFilters, CategoryIcon, DataContext.CompleteFieldJobCommand, DataContext.OpenMapCommand, DataContext.ShowFieldPhotosCommand, DataContext.ToggleCategoryCommand, FilteredFieldJobs (+22 more)
 
 ### Community 110 - "KmKpiCard Subsystem"
-Cohesion: 0.11
-Nodes (16): KmKpiCard, AccentBrush, Animate, DisplayValue, Format, Icon, Prefix, Subtitle (+8 more)
+Cohesion: 0.09
+Nodes (17): KmKpiCard, AccentBrush, Animate, DisplayValue, Format, Icon, Prefix, Subtitle (+9 more)
 
 ### Community 111 - "Customer Operations & Interactions"
 Cohesion: 0.07
@@ -923,11 +938,11 @@ Nodes (32): CustomerDetailDto, ApartmentNo, BirthDate, BuildingNo, City, Company
 
 ### Community 114 - "ProjectModels Subsystem"
 Cohesion: 0.05
-Nodes (38): ProjectStatus, Active, Cancelled, Completed, Draft, Pending, PendingApproval, ServiceProject (+30 more)
+Nodes (37): ProjectStatus, Active, Cancelled, Completed, Draft, Pending, PendingApproval, ServiceProject (+29 more)
 
 ### Community 115 - "Authentication & User Management"
-Cohesion: 0.06
-Nodes (30): ActiveTechniciansCount, AddUserCommand, AdminCount, DataContext.DeleteUserCommand, DataContext.EditUserCommand, DataContext.ResetPasswordCommand, DataContext.SetPasswordCommand, HasSelectedUser (+22 more)
+Cohesion: 0.07
+Nodes (29): ActiveTechniciansCount, AddUserCommand, AdminCount, DataContext.DeleteUserCommand, DataContext.EditUserCommand, DataContext.ResetPasswordCommand, DataContext.SetPasswordCommand, HasSelectedUser (+21 more)
 
 ### Community 116 - "Styles Subsystem"
 Cohesion: 0.08
@@ -938,35 +953,35 @@ Cohesion: 0.07
 Nodes (29): ClientAddress, ConfiguredPort, ConfiguredTimeout, ConnectedClients, ConnectedClients.Count, ConnectionStatus, DbName, DbPassword (+21 more)
 
 ### Community 118 - "Stock & Inventory Control"
-Cohesion: 0.08
-Nodes (23): KamatekCrm.Shared.Exceptions, BusinessRuleException, RuleName, BusinessRuleValidationException, BrokenRules, RuleName, DomainException, InsufficientStockException (+15 more)
+Cohesion: 0.12
+Nodes (14): BusinessRuleException, RuleName, BusinessRuleValidationException, BrokenRules, RuleName, DomainException, InsufficientStockException, AvailableQuantity (+6 more)
 
 ### Community 119 - "Quote"
-Cohesion: 0.10
-Nodes (16): Quote, Currency, Customer, CustomerId, Date, GrandTotal, Id, Lines (+8 more)
+Cohesion: 0.08
+Nodes (21): BrandColors, PdfService, Quote, Currency, Customer, CustomerId, Date, GrandTotal (+13 more)
 
-### Community 120 - ".SetupPlannedInstallationAsync"
-Cohesion: 0.37
-Nodes (5): CompleteInstallationRequest, InstallationMaterialInput, InstallationTaskInput, SaveInstallationRequest, InstallationV2Tests
+### Community 120 - "AuthService"
+Cohesion: 0.14
+Nodes (13): AccountLockoutInfo, FailedAttempts, LockoutUntil, AuthService, CanAccessSettings, CanApprovePurchase, CanDeleteRecords, CanViewAnalytics (+5 more)
 
 ### Community 121 - "Customer Operations & Interactions"
 Cohesion: 0.06
 Nodes (31): CustomerInteractionDto, AssignedToUserId, AssignedToUsername, CallerName, CallerPhone, Channel, CompletedDate, CreatedByUserId (+23 more)
 
 ### Community 122 - "LocationEndpoints Subsystem"
-Cohesion: 0.17
-Nodes (11): KamatekCrm.Web.Features.Location, KamatekCrm.Web.Features.Auth, KamatekCrm.Web.Features.Technician, KamatekCrm.Web.Features.Products, KamatekCrm.Web.Features.Route, KamatekCrm.Web.Features.Sales, KamatekCrm.Web.Features.Jobs, KamatekCrm.Web.Features.Customers (+3 more)
+Cohesion: 0.12
+Nodes (18): KamatekCrm.Web.Features.Location, KamatekCrm.Web.Features.Auth, KamatekCrm.Web.Features.Technician, KamatekCrm.Web.Features.Products, KamatekCrm.Web.Features.Route, KamatekCrm.Web.Features.Sales, KamatekCrm.Web.Features.Jobs, KamatekCrm.Web.Features.Customers (+10 more)
 
 ### Community 123 - "Field Technician Tasks & Dispatch"
 Cohesion: 0.05
 Nodes (37): BaseEntity, CreatedBy, CreatedDate, DeletedAt, DeletedBy, Id, IsDeleted, ModifiedBy (+29 more)
 
-### Community 124 - "Customer Operations & Interactions"
-Cohesion: 0.07
-Nodes (22): CustomerInteractionsViewModel, ActiveFilter, HasCustomerContext, HasSelectedInteraction, InlineFormViewModel, Interactions, IsAdmin, IsDetailExpanded (+14 more)
+### Community 124 - "CustomerInteractionsViewModel"
+Cohesion: 0.04
+Nodes (40): UpdateCustomerInteractionStatusDto, InteractionId, NewAssignedToUserId, NewAssignedToUsername, NewStatus, Reason, ResolutionNotes, ILoadingService (+32 more)
 
 ### Community 125 - "UI ViewModels (FinanceViewModel)"
-Cohesion: 0.07
+Cohesion: 0.06
 Nodes (24): FinanceViewModel, CardIncome, CarriedOverBalance, CarriedOverDisplay, CashIncome, DailyNetBalance, DeleteTransactionCommand, ExpenseCategories (+16 more)
 
 ### Community 126 - "WPF Desktop Views (LoginView)"
@@ -974,12 +989,12 @@ Cohesion: 0.09
 Nodes (22): IsServerNotFound, OpenConnectionSettingsCommand, Password, RememberMe, ServerStatusMessage, IsServerNotFound, OpenConnectionSettingsCommand, ServerStatusMessage (+14 more)
 
 ### Community 127 - "VelopackUpdateService Subsystem"
-Cohesion: 0.07
-Nodes (24): IUpdateService, AvailableUpdate, CurrentVersion, DownloadProgress, IsChecking, IsDownloading, IsUpdateDownloaded, UpdateChannel (+16 more)
+Cohesion: 0.09
+Nodes (17): IUpdateService, AvailableUpdate, CurrentVersion, DownloadProgress, IsChecking, IsDownloading, IsUpdateDownloaded, UpdateChannel (+9 more)
 
 ### Community 128 - "MiscModels Subsystem"
 Cohesion: 0.10
-Nodes (19): AttachmentService, AttachmentEntityType, Customer, Invoice, Product, Quote, ServiceJob, Attachment (+11 more)
+Nodes (17): AttachmentService, EmailService, ResolvedSenderDisplayName, ResolvedSenderEmail, ResolvedSenderPassword, Attachment, ContentType, Description (+9 more)
 
 ### Community 129 - "Stock & Inventory Control"
 Cohesion: 0.07
@@ -990,40 +1005,36 @@ Cohesion: 0.10
 Nodes (13): LoginCommand, LoginViewModel, ErrorMessage, HasError, IsLoading, IsSearchingForServer, IsServerFound, LoginCommand (+5 more)
 
 ### Community 131 - "Stock & Inventory Control"
-Cohesion: 0.07
-Nodes (28): StockCountSession, CountedAt, CountedBy, FinancialDifference, IdempotencyKey, Items, Mode, ProductCount (+20 more)
+Cohesion: 0.06
+Nodes (31): StockCountMode, FullWarehouse, Manual, StockCountSession, CountedAt, CountedBy, FinancialDifference, IdempotencyKey (+23 more)
 
 ### Community 132 - "WPF Desktop Views (PurchaseReturnWindow)"
 Cohesion: 0.08
 Nodes (25): CancelOrderCommand, LegacySettlementOverride, OrderDate, Orders, SelectedOrder, SettlementMethod, SettlementMethods, SettlementReference (+17 more)
 
-### Community 133 - "INotificationService"
-Cohesion: 0.14
-Nodes (3): INotificationService, NotificationHub, NotificationService
-
 ### Community 134 - "ReturnModels Subsystem"
-Cohesion: 0.12
-Nodes (16): PurchaseReturn, CreatedBy, Date, Id, IdempotencyKey, Items, LegacySettlementOverride, Notes (+8 more)
+Cohesion: 0.07
+Nodes (27): PurchaseReturn, CreatedBy, Date, Id, IdempotencyKey, Items, LegacySettlementOverride, Notes (+19 more)
 
 ### Community 135 - "Authentication & User Management"
-Cohesion: 0.07
-Nodes (24): AddUserViewModel, Ad, CanAccessSettings, CanApprovePurchase, CanDeleteRecords, CanViewAnalytics, CanViewFinance, ExpertiseAreas (+16 more)
+Cohesion: 0.08
+Nodes (23): AddUserViewModel, Ad, CanAccessSettings, CanApprovePurchase, CanDeleteRecords, CanViewAnalytics, CanViewFinance, ExpertiseAreas (+15 more)
 
 ### Community 136 - "HtmlTemplates Subsystem"
-Cohesion: 0.07
-Nodes (20): CustomersEndpoints, DashboardEndpoints, JobsEndpoints, LocationEndpoints, ProductsEndpoints, RouteEndpoints, SalesEndpoints, JobWorkflowEndpoints (+12 more)
+Cohesion: 0.09
+Nodes (13): SalesEndpoints, JobWorkflowEndpoints, JobListItem, AssignedTo, CreatedDate, CustomerName, Description, Id (+5 more)
 
-### Community 137 - "Stock & Inventory Control"
-Cohesion: 0.13
-Nodes (13): AvailableStock, SourceWarehouse, TargetWarehouse, TransferCommand, Window, CloseCommand, IsActionSuccessful, Products (+5 more)
+### Community 137 - "StockTransferViewModel"
+Cohesion: 0.07
+Nodes (25): AvailableStock, SourceWarehouse, TargetWarehouse, TransferCommand, StockTransferViewModel, AvailableStock, CloseCommand, IsActionSuccessful (+17 more)
 
 ### Community 138 - "KmStatusBadge Subsystem"
-Cohesion: 0.14
-Nodes (13): KmBreadcrumb, Items, NavigateCommand, KmEmptyState, ActionCommand, ActionText, ActionVisibility, Icon (+5 more)
+Cohesion: 0.10
+Nodes (19): KmBreadcrumb, Items, NavigateCommand, KmEmptyState, ActionCommand, ActionText, ActionVisibility, Icon (+11 more)
 
 ### Community 139 - "JobStatus Subsystem"
-Cohesion: 0.08
-Nodes (24): UpdateJobStatusRequest, Notes, Status, UpdateStatusRequest, Notes, Status, ServiceJobStatusPolicy, JobStatus (+16 more)
+Cohesion: 0.11
+Nodes (18): ServiceJobStatusPolicy, JobStatus, Cancelled, Completed, ConvertedToQuote, Delivered, DiscoveryCompleted, DiscoveryRequest (+10 more)
 
 ### Community 140 - "KmNotificationCenter Subsystem"
 Cohesion: 0.08
@@ -1031,35 +1042,35 @@ Nodes (24): KmNotificationCenter, ClearAllCommand, IsOpen, MarkAllReadCommand, N
 
 ### Community 141 - "UI ViewModels (RoutePlanningViewModel)"
 Cohesion: 0.08
-Nodes (22): RoutePlanningViewModel, AddToRouteCommand, AvailableJobs, CompletedPoints, EstimatedDurationDisplay, EstimatedDurationMinutes, IsBusy, IsTechnicianSelected (+14 more)
+Nodes (23): RoutePlanningViewModel, AddToRouteCommand, AvailableJobs, CompletedPoints, EstimatedDurationDisplay, EstimatedDurationMinutes, IsBusy, IsTechnicianSelected (+15 more)
 
 ### Community 142 - "Stock & Inventory Control"
 Cohesion: 0.09
 Nodes (19): StockReportsViewModel, ClearFiltersCommand, EndDate, ExportCommand, IsLoading, NetChange, Products, SearchCommand (+11 more)
 
 ### Community 143 - "ApiClient Subsystem"
-Cohesion: 0.22
-Nodes (3): KamatekCrm.Shared.DTOs, ApiClient, IApiClient
+Cohesion: 0.12
+Nodes (12): ApiClient, IApiClient, ProductListItem, Barcode, CategoryName, Id, MinStockLevel, ProductName (+4 more)
 
-### Community 144 - "IDialogService"
-Cohesion: 0.07
-Nodes (16): PdfInvoiceParserService, WpfDialogService, IDialogService, PdfImportPreviewViewModel, IsConfirmed, ParsedItems, PurchaseReturnLineSelection, EstimatedAmount (+8 more)
+### Community 144 - "steps"
+Cohesion: 0.10
+Nodes (20): name, runs-on, steps, jobs, build-and-test, name, on, pull_request (+12 more)
 
 ### Community 145 - "Authentication & User Management"
 Cohesion: 0.08
-Nodes (20): EditUserViewModel, Ad, CanAccessSettings, CanApprovePurchase, CanDeleteRecords, CanViewAnalytics, CanViewFinance, ExpertiseAreas (+12 more)
+Nodes (21): EditUserViewModel, Ad, CanAccessSettings, CanApprovePurchase, CanDeleteRecords, CanViewAnalytics, CanViewFinance, ExpertiseAreas (+13 more)
 
 ### Community 146 - "Authentication & User Management"
 Cohesion: 0.08
-Nodes (25): CancelCommand, SaveCommand, Window, Ad, CanAccessSettings, CanApprovePurchase, CancelCommand, CanDeleteRecords (+17 more)
+Nodes (24): CancelCommand, Window, Ad, CanAccessSettings, CanApprovePurchase, CancelCommand, CanDeleteRecords, CanViewAnalytics (+16 more)
 
 ### Community 147 - "WPF Desktop Views (ProductPickerWindow)"
 Cohesion: 0.10
 Nodes (17): AddButton, ResultsGrid, SearchBox, StatusText, Window, ProductName, SalePrice, Sku (+9 more)
 
 ### Community 148 - "WPF Desktop Views (PurchaseOrderView)"
-Cohesion: 0.05
-Nodes (41): AddManualItemCommand, CreateOrderCommand, CurrentOrderItems, ProductList, SaveOrderCommand, PurchaseOrderViewModel, AddManualItemCommand, CreateAndAddProductCommand (+33 more)
+Cohesion: 0.08
+Nodes (24): AddManualItemCommand, CreateOrderCommand, CurrentOrderItems, ProductList, SaveOrderCommand, AddManualItemCommand, CreateOrderCommand, SaveAndReceiveCommand (+16 more)
 
 ### Community 149 - "KmSplitButton Subsystem"
 Cohesion: 0.12
@@ -1070,24 +1081,24 @@ Cohesion: 0.11
 Nodes (16): ScopeNodeItem, Id, ImagePath, IsOptional, ItemProfit, LaborCost, MarginDisplay, Name (+8 more)
 
 ### Community 151 - "StubsEnum Subsystem"
-Cohesion: 0.08
-Nodes (23): ServiceJobNewAssetInput, JobCategory, AccessControl, Automation, BurglarAlarm, CCTV, Electrical, Fault (+15 more)
+Cohesion: 0.11
+Nodes (17): ServiceJobNewAssetInput, JobCategory, AccessControl, Automation, BurglarAlarm, CCTV, Electrical, Fault (+9 more)
 
-### Community 152 - "PdfService"
-Cohesion: 0.10
-Nodes (17): ServiceJobDocumentDto, DiscoveryMaterialDto, DiscoveryReportDto, DiscoveryVisitDto, InstallationMaterialDto, InstallationOrderDto, InstallationTaskDto, JobDeliveryDto (+9 more)
+### Community 152 - "ServiceJobDocumentDto"
+Cohesion: 0.18
+Nodes (3): ServiceJobDocumentDto, PaymentMethodLabels, PaymentStatusLabels
 
-### Community 153 - "StubsEnum.cs"
-Cohesion: 0.08
-Nodes (23): DiscountType, FlatAmount, Percentage, ReturnStatus, Completed, ServiceJobType, Fault, Project (+15 more)
+### Community 153 - "StatusFilter"
+Cohesion: 0.22
+Nodes (9): StatusFilter, Active, All, Cancelled, Completed, InProgress, Pending, SlaBreached (+1 more)
 
-### Community 154 - "UI ViewModels (DeliveryEditorViewModel)"
-Cohesion: 0.08
-Nodes (22): DeliveryEditorViewModel, CompletionCheckSummary, CompletionError, CustomerSignature, DeliveredBy, DeliveryNote, HeaderSubtitle, HeaderTitle (+14 more)
+### Community 154 - "PaymentMethod"
+Cohesion: 0.11
+Nodes (15): PaymentMethod, BankTransfer, Cash, Check, CreditCard, MobilePayment, OnAccount, PaymentMethodOption (+7 more)
 
 ### Community 155 - "microsoft_aspnetcore_mvc"
-Cohesion: 0.09
-Nodes (12): KamatekCrm.Infrastructure.Data, KamatekCrm.API.Models, KamatekCrm.Tests.Integration, KamatekCrm.API.Application.Commands.Tasks, KamatekCrm.API.Hubs, KamatekCrm.API.Controllers, KamatekCrm.Tests.Infrastructure, KamatekCrm.API.Services (+4 more)
+Cohesion: 0.08
+Nodes (14): KamatekCrm.Infrastructure.Data, KamatekCrm.Settings, KamatekCrm.API.Models, KamatekCrm.API.Application.Commands.Tasks, KamatekCrm.API.Hubs, KamatekCrm.Extensions, KamatekCrm.API.Controllers, KamatekCrm.Tests.Infrastructure (+6 more)
 
 ### Community 156 - "ComponentStyles Subsystem"
 Cohesion: 0.10
@@ -1118,12 +1129,12 @@ Cohesion: 0.11
 Nodes (17): PasswordMatchMessage, PasswordsMatch, CancelCommand, SaveCommand, ConfirmPasswordBox, NewPasswordBox, Window, AdSoyad (+9 more)
 
 ### Community 164 - "WPF Desktop Views (SystemLogsView)"
-Cohesion: 0.09
-Nodes (21): ActionIcon, ActionType, ActionTypeDisplay, ActionTypes, EntityName, EntityTypes, IntegritySummary, Logs (+13 more)
+Cohesion: 0.06
+Nodes (34): ActionIcon, ActionType, ActionTypeDisplay, ActionTypes, EntityName, EntityTypes, IntegritySummary, Logs (+26 more)
 
 ### Community 165 - "WPF Desktop Views (DeliveryEditorWindow)"
 Cohesion: 0.09
-Nodes (21): DeliveredBy, PaidAmount, PaymentMethodOptions, PaymentStatus, PaymentStatusOptions, QuotationTotalDisplay, Window, CancelCommand (+13 more)
+Nodes (22): DeliveredBy, PaidAmount, PaymentMethodOptions, PaymentStatus, PaymentStatusOptions, QuotationTotalDisplay, Window, CancelCommand (+14 more)
 
 ### Community 166 - "InstallationMaterial"
 Cohesion: 0.22
@@ -1134,16 +1145,16 @@ Cohesion: 0.10
 Nodes (21): CreateCustomerInteractionDto, AssignedToUserId, AssignedToUsername, CallerName, CallerPhone, Channel, CustomerId, CustomerName (+13 more)
 
 ### Community 169 - "Direct Sales & POS Operations"
-Cohesion: 0.10
-Nodes (21): PosTransactionDto, CardAmount, CashAmount, CustomerId, Lines, Notes, PaymentMethod, PosTransactionLineDto (+13 more)
+Cohesion: 0.07
+Nodes (28): KamatekCrm.Shared.DTOs, PosTransactionDto, CardAmount, CashAmount, CustomerId, Lines, Notes, PaymentMethod (+20 more)
 
 ### Community 170 - "RepairStatus"
-Cohesion: 0.06
-Nodes (31): RepairStatus, Cancelled, Completed, Delivered, Diagnosing, InProgress, InRepair, Pending (+23 more)
+Cohesion: 0.12
+Nodes (15): RepairStatus, Cancelled, Completed, Delivered, Diagnosing, InProgress, InRepair, Pending (+7 more)
 
 ### Community 171 - "Customer Operations & Interactions"
-Cohesion: 0.08
-Nodes (21): DuplicatePhoneWarning, HasDuplicatePhoneWarning, IdNumber, IsCorporate, IsIndividual, SaveCustomerCommand, border, FullNameBox (+13 more)
+Cohesion: 0.10
+Nodes (20): DuplicatePhoneWarning, HasDuplicatePhoneWarning, IdNumber, IsCorporate, IsIndividual, SaveCustomerCommand, border, FullNameBox (+12 more)
 
 ### Community 172 - "AddressService Subsystem"
 Cohesion: 0.11
@@ -1154,8 +1165,8 @@ Cohesion: 0.10
 Nodes (16): KamatekCrm.API.Common, ErrorCodes, PagedResult, HasNextPage, HasPreviousPage, Items, Page, PageSize (+8 more)
 
 ### Community 174 - "ServiceJobItem"
-Cohesion: 0.19
-Nodes (11): CompleteDeliveryRequest, ServiceJobItem, Id, Product, ProductId, QuantityUsed, ServiceJob, ServiceJobId (+3 more)
+Cohesion: 0.13
+Nodes (16): CompleteDeliveryRequest, CompleteInstallationRequest, InstallationMaterialInput, InstallationTaskInput, SaveInstallationRequest, ServiceJobItem, Id, Product (+8 more)
 
 ### Community 175 - "Authentication & User Management"
 Cohesion: 0.10
@@ -1181,64 +1192,64 @@ Nodes (17): QuickInteractionAddViewModel, CallerName, CallerPhone, DetailedNotes
 Cohesion: 0.11
 Nodes (18): CustomerDto, Address, City, District, FullName, Id, PhoneNumber, TaskDto (+10 more)
 
-### Community 181 - "UI ViewModels (WorkspaceDocumentsViewModel)"
-Cohesion: 0.12
-Nodes (16): WorkspaceDocumentItem, Command, Description, Glyph, IsAvailable, Key, Title, UnavailableReason (+8 more)
+### Community 181 - "WorkOrderWorkflowDtos.cs"
+Cohesion: 0.08
+Nodes (35): DiscoveryMaterialDto, DiscoveryReportDto, DiscoveryVisitDto, InstallationMaterialDto, InstallationOrderDto, InstallationTaskDto, JobDeliveryDto, QuotationItemDto (+27 more)
 
 ### Community 182 - "KmAvatar Subsystem"
-Cohesion: 0.08
-Nodes (16): AvatarSize, Large, Medium, Small, XLarge, KmAvatar, AvatarBackground, AvatarDiameter (+8 more)
+Cohesion: 0.12
+Nodes (14): AvatarSize, Large, Medium, Small, XLarge, KmAvatar, AvatarBackground, AvatarDiameter (+6 more)
 
 ### Community 183 - "Customer Operations & Interactions"
 Cohesion: 0.10
 Nodes (19): CustomerListItemDto, City, CompanyName, CreatedDate, CustomerCode, District, Email, FullName (+11 more)
 
 ### Community 184 - "ApplicationPermission"
-Cohesion: 0.11
+Cohesion: 0.12
 Nodes (13): ApplicationPermission, AccessSettings, AdjustInventory, ApprovePurchase, DeleteRecords, ExecuteSales, ManageQuotes, ManageServiceJobs (+5 more)
 
 ### Community 185 - ".SaveChangesAsync"
-Cohesion: 0.10
-Nodes (5): ServiceJobsController, SuppliersController, ChangePasswordRequest, NewPassword, UsersController
+Cohesion: 0.08
+Nodes (10): LocationController, RouteReorderRequest, NewIndex, PointId, PaymentRequest, Amount, Notes, ChangePasswordRequest (+2 more)
 
 ### Community 186 - "UI ViewModels (GlobalSearchViewModel)"
-Cohesion: 0.11
-Nodes (17): ISearchService, SearchResult, Category, CategoryColor, EntityType, Icon, Id, Subtitle (+9 more)
+Cohesion: 0.12
+Nodes (16): SearchResult, Category, CategoryColor, EntityType, Icon, Id, Subtitle, Title (+8 more)
 
 ### Community 187 - "PurchaseDtos Subsystem"
-Cohesion: 0.11
-Nodes (19): PurchaseInvoiceDto, Date, InvoiceNumber, Lines, Notes, OcrRawText, SupplierId, PurchaseInvoiceLineDto (+11 more)
+Cohesion: 0.15
+Nodes (13): PurchaseInvoiceDto, Date, InvoiceNumber, Lines, Notes, OcrRawText, SupplierId, PurchaseInvoiceLineDto (+5 more)
 
 ### Community 188 - "Customer Operations & Interactions"
 Cohesion: 0.11
 Nodes (19): CustomerActivityType, Complaint, Email, Follow_Up, Note, Payment, PhoneCall, Proposal (+11 more)
 
 ### Community 189 - "DashboardSummaryDto"
-Cohesion: 0.08
-Nodes (26): DashboardCustomerStatsDto, BirthdayCustomers, NewCustomersThisMonth, TotalCustomers, UpcomingBirthdays, VipCustomers, DashboardSalesReportsDto, AverageSaleAmount (+18 more)
+Cohesion: 0.11
+Nodes (19): DashboardCustomerStatsDto, BirthdayCustomers, NewCustomersThisMonth, TotalCustomers, UpcomingBirthdays, VipCustomers, DashboardSalesReportsDto, AverageSaleAmount (+11 more)
 
 ### Community 190 - "Direct Sales & POS Operations"
-Cohesion: 0.06
-Nodes (36): PosTransaction, CardAmount, CashAmount, CashierUser, CashierUserId, Customer, CustomerId, Date (+28 more)
+Cohesion: 0.08
+Nodes (24): PosTransactionStatus, Cancelled, Completed, Refunded, PosTransaction, CardAmount, CashAmount, CashierUser (+16 more)
 
 ### Community 191 - ".CreateServiceAsync"
-Cohesion: 0.08
-Nodes (14): DelegateFactory, PurchaseFixture, DelegateFactory, RetailFixture, StandardQuoteFixture, Command, CustomerId, ProductId (+6 more)
+Cohesion: 0.07
+Nodes (18): ProjectQuoteFixture, Command, CustomerId, Read, DelegateFactory, PurchaseFixture, DelegateFactory, RetailFixture (+10 more)
 
 ### Community 192 - "Service Job & Work Order Management"
-Cohesion: 0.13
+Cohesion: 0.14
 Nodes (13): DiscoveryReport, CreatedDate, EstimatedLaborHours, Id, Materials, PhotoPathsJson, PhotoPathsList, RecommendedSolution (+5 more)
 
 ### Community 193 - "UI ViewModels (QuickNewProductForPurchaseViewModel"
-Cohesion: 0.09
-Nodes (18): QuickNewProductForPurchaseViewModel, Barcode, Categories, ErrorMessage, HasError, InitialQuantity, IsBusy, ProductName (+10 more)
+Cohesion: 0.06
+Nodes (26): DbSeeder, Inventory, AverageCost, Id, Product, ProductId, Quantity, Warehouse (+18 more)
 
 ### Community 194 - "Service Job & Work Order Management"
 Cohesion: 0.11
 Nodes (19): ServiceJobListItemDto, AssignedTechnician, CreatedAt, CustomerFullName, CustomerId, CustomerName, CustomerPhone, Id (+11 more)
 
 ### Community 195 - "StubsEnum Subsystem"
-Cohesion: 0.14
+Cohesion: 0.17
 Nodes (11): FinancialTransactionPolicy, CashTransactionType, CardExpense, CardIncome, CashExpense, CashIncome, Expense, Income (+3 more)
 
 ### Community 196 - "JobDtos Subsystem"
@@ -1262,12 +1273,12 @@ Cohesion: 0.11
 Nodes (18): QuoteLine, CurrentStockQuantity, DiscountPercent, Id, LineCost, LineProfit, LineTotal, Product (+10 more)
 
 ### Community 201 - "Direct Sales & POS Operations"
-Cohesion: 0.08
-Nodes (22): LoadingService, ReturnDisposition, Quarantine, Restock, LoadingViewModel, ReturnPaymentEntryViewModel, Amount, PaymentMethod (+14 more)
+Cohesion: 0.09
+Nodes (21): ReturnDisposition, Quarantine, Restock, LoadingViewModel, ReturnPaymentEntryViewModel, Amount, PaymentMethod, Reference (+13 more)
 
 ### Community 202 - "UI ViewModels (RoutePlanningViewModel)"
-Cohesion: 0.11
-Nodes (17): RoutePointItem, ActualArrival, Address, CustomerId, CustomerName, Description, EstimatedArrival, Id (+9 more)
+Cohesion: 0.10
+Nodes (19): RoutePointItem, ActualArrival, Address, CustomerId, CustomerName, Description, EstimatedArrival, Id (+11 more)
 
 ### Community 203 - "WPF Desktop Views (ManagerAgendaView)"
 Cohesion: 0.11
@@ -1282,8 +1293,8 @@ Cohesion: 0.16
 Nodes (11): ReportService, ReportResult, Columns, EndDate, GeneratedAt, Rows, StartDate, Summary (+3 more)
 
 ### Community 206 - "EventAggregator"
-Cohesion: 0.12
-Nodes (6): EventAggregator, Instance, IWeakSubscription, IsAlive, WeakSubscription, IsAlive
+Cohesion: 0.14
+Nodes (4): IWeakSubscription, IsAlive, WeakSubscription, IsAlive
 
 ### Community 207 - "Stock & Inventory Control"
 Cohesion: 0.12
@@ -1297,37 +1308,37 @@ Nodes (18): CashTransaction, Amount, Category, CreatedAt, CreatedBy, Customer, C
 Cohesion: 0.11
 Nodes (18): RepairJobDisplayItem, CreatedDate, CustomerName, CustomerPhone, DaysInShop, Description, DeviceBrand, DeviceDisplay (+10 more)
 
-### Community 210 - "UI ViewModels (WorkspaceQuotationViewModel)"
-Cohesion: 0.11
-Nodes (17): WorkspaceQuotationViewModel, AcceptedDisplay, DiscountDisplay, HasQuotation, IssuedDisplay, Items, LaborDisplay, NumberDisplay (+9 more)
+### Community 210 - "DraftStorageService"
+Cohesion: 0.13
+Nodes (10): DraftStorageService, IDraftStorageService, ProjectQuoteDraft, CustomerId, DiscountPercent, KdvRate, ProjectId, ProjectName (+2 more)
 
 ### Community 211 - "RouteEndpoints Subsystem"
 Cohesion: 0.10
 Nodes (21): ApiRouteResponse, Data, Success, RoutePointDto, ActualArrival, Address, CustomerId, CustomerName (+13 more)
 
 ### Community 212 - "KeyboardShortcutService Subsystem"
-Cohesion: 0.11
-Nodes (9): KeyboardShortcutService, KeyCombination, DisplayText, KeyText, ModifierText, WindowControlHelper, DeliveryEditorWindow, InstallationEditorWindow (+1 more)
+Cohesion: 0.24
+Nodes (5): KeyboardShortcutService, KeyCombination, DisplayText, KeyText, ModifierText
 
-### Community 213 - "ILogger"
-Cohesion: 0.04
-Nodes (41): ISalesDomainService, SalesDomainService, CustomerPurchaseHistory, Date, ItemCount, OrderNumber, PaymentMethod, TotalAmount (+33 more)
+### Community 213 - "DailyPosReport"
+Cohesion: 0.13
+Nodes (15): DailyPosReport, Date, RegisteredCustomerCount, TopProducts, TotalCard, TotalCash, TotalDiscount, TotalItemsSold (+7 more)
 
 ### Community 214 - "ServiceJobPdfData"
 Cohesion: 0.03
 Nodes (60): PdfController, InvoiceLine, Description, LineTotal, Quantity, UnitPrice, VatAmount, VatRate (+52 more)
 
 ### Community 215 - "PersonalDataKind Subsystem"
-Cohesion: 0.16
-Nodes (10): IPersonalDataProtectionService, PersonalDataKind, Address, Email, NationalIdentity, Phone, TaxNumber, PersonalDataProtectionService (+2 more)
+Cohesion: 0.21
+Nodes (8): PersonalDataKind, Address, Email, NationalIdentity, Phone, TaxNumber, PersonalDataProtectionService, PersonalDataProtectionServiceTests
 
 ### Community 216 - ".Validate"
 Cohesion: 0.26
 Nodes (5): BackupIntegrityService, BackupManifest, BackupValidationResult, IBackupIntegrityService, BackupIntegrityServiceTests
 
-### Community 217 - "CacheService"
-Cohesion: 0.13
-Nodes (4): DashboardController, CacheKeys, CacheService, ICacheService
+### Community 217 - "TimeSpan"
+Cohesion: 0.15
+Nodes (3): CacheService, ISlaService, SlaService
 
 ### Community 218 - "ProductDtos Subsystem"
 Cohesion: 0.12
@@ -1339,7 +1350,7 @@ Nodes (19): ActivityLogIntegrity, ActivityLog, Action, ActionType, AdditionalDat
 
 ### Community 220 - "UI ViewModels (FinancialHealthViewModel)"
 Cohesion: 0.12
-Nodes (15): FinancialHealthViewModel, CostBreakdownSeries, MonthlyFinancialSeries, MonthlyXAxes, NetProfit, ProjectProfits, TotalCost, TotalRevenue (+7 more)
+Nodes (15): FinancialHealthViewModel, Aging0To30, Aging31To60, Aging61To90, Aging90Plus, AgingBreakdownSeries, CostBreakdownSeries, CustomerAgings (+7 more)
 
 ### Community 221 - "Settings.Designer Subsystem"
 Cohesion: 0.12
@@ -1409,9 +1420,9 @@ Nodes (15): ReportType, CustomerActivity, CustomerBalance, CustomerList, DailyCa
 Cohesion: 0.13
 Nodes (15): RoutePoint, ActualArrival, Address, CustomerId, Date, EstimatedArrival, Id, IsVisited (+7 more)
 
-### Community 240 - "StockTransferViewModel"
-Cohesion: 0.15
-Nodes (10): StockTransferViewModel, AvailableStock, IsActionSuccessful, Products, Quantity, SelectedProduct, SourceWarehouse, StatusMessage (+2 more)
+### Community 240 - "UserControl"
+Cohesion: 0.10
+Nodes (19): CustomerInteractionsView, CustomersView, DashboardView, FieldJobListView, FinanceView, ShimmerTransform, UserControl, LoadingSkeletonControl (+11 more)
 
 ### Community 241 - "KamatekCrm.Application Subsystem"
 Cohesion: 0.16
@@ -1425,10 +1436,6 @@ Nodes (4): DatabaseConnectionProvider, CurrentServerIp, IsConnected, DatabaseCon
 Cohesion: 0.15
 Nodes (13): QuotationItem, DiscountPercent, Id, LineTotal, LineTotalBeforeTax, ProductId, ProductName, Quantity (+5 more)
 
-### Community 244 - "GreaterThanZeroConverter Subsystem"
-Cohesion: 0.19
-Nodes (5): GreaterThanZeroConverter, IsNegativeConverter, StringToVisibilityConverter, EnumToBooleanConverter, IsNegativeConverter
-
 ### Community 245 - "FixedScrollBar Subsystem"
 Cohesion: 0.16
 Nodes (13): arrow, border, PART_HorizontalScrollBar, PART_ScrollContentPresenter, PART_Track, PART_VerticalScrollBar, ResourceDictionary, ThumbBorder (+5 more)
@@ -1438,8 +1445,8 @@ Cohesion: 0.14
 Nodes (13): NodeType, Block, CommonArea, Entrance, Flat, Floor, Garden, Group (+5 more)
 
 ### Community 247 - "Authentication & User Management"
-Cohesion: 0.11
-Nodes (17): LoginRequestDto, Password, Username, LoginResponseDto, FullName, Message, Role, Success (+9 more)
+Cohesion: 0.15
+Nodes (12): LoginRequestDto, Password, Username, LoginResponseDto, FullName, Message, Role, Success (+4 more)
 
 ### Community 248 - "Customer Operations & Interactions"
 Cohesion: 0.14
@@ -1450,28 +1457,28 @@ Cohesion: 0.15
 Nodes (13): TechnicianLocation, Accuracy, BatteryLevel, Heading, Id, IsBackground, Latitude, Longitude (+5 more)
 
 ### Community 250 - "UI ViewModels (QuotationViewModel)"
-Cohesion: 0.12
+Cohesion: 0.10
 Nodes (12): StandardQuoteLineViewModel, CurrentStockQuantity, DiscountPercent, LineTotal, ProductCode, ProductId, ProductName, PurchasePrice (+4 more)
 
 ### Community 251 - "UI ViewModels (RoutePlanningViewModel)"
-Cohesion: 0.14
-Nodes (14): RouteJobItem, Address, CategoryDisplay, CustomerName, CustomerPhone, Description, HasCoordinates, JobCategory (+6 more)
+Cohesion: 0.13
+Nodes (15): RouteJobItem, Address, CategoryDisplay, CustomerName, CustomerPhone, Description, HasCoordinates, JobCategory (+7 more)
 
 ### Community 252 - "Stock & Inventory Control"
 Cohesion: 0.14
 Nodes (14): StockTransactionReportItem, Date, Description, Id, IsIncoming, ProductCode, ProductName, Quantity (+6 more)
 
 ### Community 253 - "AnimationHelper Subsystem"
-Cohesion: 0.19
+Cohesion: 0.21
 Nodes (7): AnimationHelper, AnimationType, FadeIn, None, PopIn, SlideInFromBottom, SlideInFromRight
 
-### Community 254 - "BoolToStringConverter Subsystem"
-Cohesion: 0.21
-Nodes (4): BoolToStringConverter, ImagePathConverter, ConnectionStatusColorConverter, FileIsImageConverter
+### Community 254 - "Type"
+Cohesion: 0.15
+Nodes (5): BoolToStringConverter, ImagePathConverter, DateDisplayConverter, StringToVisibilityConverter, StrikeConverter
 
-### Community 255 - "ApiClient Subsystem"
-Cohesion: 0.20
-Nodes (10): ProductListItem, Barcode, CategoryName, Id, MinStockLevel, ProductName, PurchasePrice, SalePrice (+2 more)
+### Community 255 - "PosTransactionLine"
+Cohesion: 0.11
+Nodes (19): DiscountType, FlatAmount, Percentage, PosTransactionLine, DiscountAmount, DiscountType, DiscountValue, Id (+11 more)
 
 ### Community 256 - "KmFilterPanel Subsystem"
 Cohesion: 0.15
@@ -1493,21 +1500,21 @@ Nodes (13): ProductCategoryType, AccessControl, BurglarAlarm, Cable, Camera, Fib
 Cohesion: 0.10
 Nodes (20): PaymentStatus, Paid, Partial, Unpaid, JobDelivery, CreatedDate, CustomerSignature, DeliveredBy (+12 more)
 
-### Community 261 - "SystemLogsViewModel"
-Cohesion: 0.15
-Nodes (13): SystemLogsViewModel, ActionTypes, ClearFiltersCommand, EndDate, EntityTypes, IntegritySummary, IsAdmin, Logs (+5 more)
+### Community 261 - "PosCartItem"
+Cohesion: 0.12
+Nodes (16): CartItem, PosCartItem, AfterDiscount, DiscountAmount, DiscountFlatAmount, DiscountPercent, DiscountType, LineTotal (+8 more)
 
 ### Community 262 - "UpdateUserRequest"
 Cohesion: 0.13
 Nodes (15): UpdateUserRequest, Ad, CanAccessSettings, CanApprovePurchase, CanDeleteRecords, CanViewAnalytics, CanViewFinance, ExpertiseAreas (+7 more)
 
-### Community 263 - "ServerDiscoveryMessage"
-Cohesion: 0.29
-Nodes (7): ServerDiscoveryMessage, ApiUrl, DatabaseHost, ServerName, Timestamp, Version, WebUrl
+### Community 263 - "EventAggregator"
+Cohesion: 0.33
+Nodes (6): EventAggregator, Instance, EventAggregatorTests, SampleMessageEvent, SubscriberTarget, ReceivedMessages
 
-### Community 264 - "WorkOrderWorkspaceDto"
-Cohesion: 0.05
-Nodes (28): ServiceJobHistoryDto, QuotationStatusLabels, WorkOrderWorkspaceDto, JobPriority, Critical, High, Low, Medium (+20 more)
+### Community 264 - "WorkspaceOverviewViewModel"
+Cohesion: 0.15
+Nodes (8): WorkspaceOverviewViewModel, HasGeneralEditor, Header, Materials, MaterialSummary, MaterialTotalDisplay, QuoteSummaryDisplay, WorkspaceJobHeader
 
 ### Community 265 - "ApplicationAuthorizationService"
 Cohesion: 0.30
@@ -1521,9 +1528,9 @@ Nodes (11): net9.0, BCrypt.Net-Next (4.2.0), Microsoft.EntityFrameworkCore (9.0.
 Cohesion: 0.17
 Nodes (12): NotificationItem, ActionCommand, ActionLabel, Id, Message, Title, Type, NotificationType (+4 more)
 
-### Community 268 - "Supplier"
-Cohesion: 0.17
-Nodes (11): Supplier, Address, Balance, CompanyName, ContactPerson, Email, IsActive, Name (+3 more)
+### Community 268 - "WorkspaceDiscoveryViewModel"
+Cohesion: 0.12
+Nodes (16): WorkspaceDiscoveryViewModel, CanEdit, CompletionSummary, HasDiscovery, IsReadOnly, LaborHours, Materials, MaterialSummary (+8 more)
 
 ### Community 269 - "ProjectItem"
 Cohesion: 0.17
@@ -1570,7 +1577,7 @@ Cohesion: 0.18
 Nodes (10): ConfirmCommand, ParsedItems, PdfImportPreviewWindow, Window, CancelCommand, DataContext.RemoveItemCommand, LineTotal, ProductName (+2 more)
 
 ### Community 280 - "KmSearchBox Subsystem"
-Cohesion: 0.20
+Cohesion: 0.17
 Nodes (7): KmSearchBox, ClearCommand, DebounceMs, HasText, Placeholder, SearchCommand, SearchText
 
 ### Community 282 - ".Upload"
@@ -1581,21 +1588,17 @@ Nodes (3): PhotoController, IPhotoStorageService, PhotoStorageService
 Cohesion: 0.18
 Nodes (10): Authority order, Domain adapter: <sector>, Domain adapter: TEMPLATE (the schema every adapter conforms to), Done, by example, Evidence and primary sources, Fraud table (for fable-judge), Minimum evidence set (binding, before any <the sector's first act: writing, aggregate, figure, pixel...>), Sources (+2 more)
 
-### Community 284 - "UI ViewModels (QuotationViewModel)"
-Cohesion: 0.24
-Nodes (3): StandardQuoteLinePricing, StandardQuotePricingResult, StandardQuotePricingPolicy
-
-### Community 285 - "ICurrentUserContext"
-Cohesion: 0.12
-Nodes (15): ICurrentUserContext, IsAuthenticated, Role, UserId, Username, TestCurrentUserContext, IsAuthenticated, Role (+7 more)
+### Community 285 - "TestCurrentUserContext"
+Cohesion: 0.33
+Nodes (5): TestCurrentUserContext, IsAuthenticated, Role, UserId, Username
 
 ### Community 286 - "KmWizardStepper Subsystem"
 Cohesion: 0.18
 Nodes (11): WizardStep, Description, Icon, Status, StatusIcon, Title, WizardStepStatus, Active (+3 more)
 
 ### Community 287 - "Field Technician Tasks & Dispatch"
-Cohesion: 0.10
-Nodes (20): CustomerDto, Address, City, District, Id, Latitude, Longitude, Name (+12 more)
+Cohesion: 0.18
+Nodes (11): TaskDto, Category, CreatedAt, Customer, Description, EstimatedDuration, Id, Priority (+3 more)
 
 ### Community 288 - "Field Technician Tasks & Dispatch"
 Cohesion: 0.18
@@ -1614,8 +1617,8 @@ Cohesion: 0.18
 Nodes (11): DeviceType, AccessPoint, Camera, IpCamera, Keypad, NVR, Other, Panel (+3 more)
 
 ### Community 292 - "StubsEnum Subsystem"
-Cohesion: 0.18
-Nodes (11): StructureType, Apartment, Building, Commercial, Floor, Other, Outdoor, Rack (+3 more)
+Cohesion: 0.10
+Nodes (19): ReturnStatus, Completed, ServiceJobType, Fault, Project, StructureType, Apartment, Building (+11 more)
 
 ### Community 293 - "Stock & Inventory Control"
 Cohesion: 0.18
@@ -1626,7 +1629,7 @@ Cohesion: 0.18
 Nodes (10): net9.0-windows, Microsoft.NET.Sdk, coverlet.collector (6.0.2), FluentAssertions (6.12.2), Microsoft.EntityFrameworkCore.InMemory (9.0.0), Microsoft.EntityFrameworkCore.Sqlite (9.0.0), Microsoft.NET.Test.Sdk (17.12.0), Moq (4.20.72) (+2 more)
 
 ### Community 295 - "Service Job & Work Order Management"
-Cohesion: 0.17
+Cohesion: 0.18
 Nodes (11): WorkOrderStageItem, Glyph, Name, NavigateCommand, State, TargetTabIndex, WorkOrderStageState, Completed (+3 more)
 
 ### Community 296 - "ARCHITECTURE Subsystem"
@@ -1634,7 +1637,7 @@ Cohesion: 0.20
 Nodes (10): Clean Architecture Layering & Dependency Flow, Read/Command Service CQRS Variant Pattern, KamatekCRM Architecture System Overview, Feature Vertical Slice Pattern, Desktop Product and Architecture Review, Enterprise Security and Quality Audit, KamatekCRM Web Portal (HTMX + Minimal API), Work Order Audit Report & SLA Lifecycle (+2 more)
 
 ### Community 297 - "IBackupService"
-Cohesion: 0.22
+Cohesion: 0.17
 Nodes (3): IBackupService, BackupFilePattern, DefaultBackupDirectory
 
 ### Community 298 - "HtmxExtensions Subsystem"
@@ -1642,12 +1645,12 @@ Cohesion: 0.27
 Nodes (6): HtmxExtensions, ToastType, Error, Info, Success, Warning
 
 ### Community 299 - "Category"
-Cohesion: 0.09
-Nodes (17): CategoriesController, ServiceJobStatsResponse, AvgCompletionHours, CancelledJobs, CompletedJobs, InProgressJobs, PendingJobs, SlaBreachedJobs (+9 more)
+Cohesion: 0.08
+Nodes (21): CategoriesController, ServiceJobsController, ServiceJobStatsResponse, AvgCompletionHours, CancelledJobs, CompletedJobs, InProgressJobs, PendingJobs (+13 more)
 
-### Community 300 - "AuditTrailService"
-Cohesion: 0.31
-Nodes (7): AuditTrailService, AuditTrailServiceTests, CurrentUserStub, IsAuthenticated, Role, UserId, Username
+### Community 300 - "ICurrentUserContext"
+Cohesion: 0.17
+Nodes (10): ICurrentUserContext, IsAuthenticated, Role, UserId, Username, CurrentUserStub, IsAuthenticated, Role (+2 more)
 
 ### Community 302 - "DashboardStats"
 Cohesion: 0.18
@@ -1662,8 +1665,8 @@ Cohesion: 0.20
 Nodes (10): PdfLineItem, Category, ImagePath, IsSectionHeader, Level, Name, ProductCode, Quantity (+2 more)
 
 ### Community 305 - "AppSettings Subsystem"
-Cohesion: 0.20
-Nodes (10): AppSettings, ActiveConnectionString, CompanyName, Configuration, CurrentTheme, DatabaseType, PostgreSqlConnectionString, SqliteConnectionString (+2 more)
+Cohesion: 0.13
+Nodes (11): NetworkDiscoveryService, AppSettings, ActiveConnectionString, CompanyName, Configuration, CurrentTheme, DatabaseType, PostgreSqlConnectionString (+3 more)
 
 ### Community 306 - "QuoteItem"
 Cohesion: 0.20
@@ -1677,33 +1680,25 @@ Nodes (10): DashboardStatsDto, AverageCompletionTime, CompletedTasks, CompletedT
 Cohesion: 0.20
 Nodes (10): InstallationItem, Address, CompletedDate, CustomerId, CustomerName, Id, InstallationType, Name (+2 more)
 
-### Community 309 - ".ApplyAsync"
-Cohesion: 0.21
-Nodes (5): ApplyStockCountCommand, StockCountLineCommand, StockCountResult, StockCountCommandService, StockCountServiceTests
+### Community 309 - "Task"
+Cohesion: 0.06
+Nodes (9): ApplyStockCountCommand, StockCountLineCommand, StockCountResult, ICustomerInteractionCommandService, CustomerInteractionCommandService, StockCountCommandService, WpfDialogService, ServiceJobReadServiceTests (+1 more)
 
 ### Community 310 - "StubsEnum Subsystem"
 Cohesion: 0.20
 Nodes (10): PipelineStage, Lead, Lost, Negotiating, Negotiation, New, Proposal, Qualification (+2 more)
-
-### Community 311 - "CameraSpecs"
-Cohesion: 0.20
-Nodes (10): CameraSpecs, CameraType, Compression, HasAudio, HasColorVu, IpRating, IRDistance, IsPoE (+2 more)
 
 ### Community 312 - "MiscModels Subsystem"
 Cohesion: 0.20
 Nodes (10): MaintenanceContract, Customer, CustomerId, FrequencyInMonths, Id, IsActive, JobDescriptionTemplate, NextDueDate (+2 more)
 
 ### Community 313 - "QuickAddModal"
-Cohesion: 0.22
-Nodes (6): SearchQuery, SearchBox, Window, CloseCommand, QuickAddModal, TextBox
+Cohesion: 0.15
+Nodes (7): SearchQuery, SearchBox, Window, CloseCommand, QuickAddModal, TextBox, ServiceJobsView
 
-### Community 314 - "ExpiringStock"
-Cohesion: 0.06
-Nodes (29): ExpiringStock, DaysUntilExpiry, ExpiryDate, ProductId, ProductName, Quantity, SerialNumber, WarehouseName (+21 more)
-
-### Community 315 - "UI ViewModels (PaginationViewModel)"
-Cohesion: 0.20
-Nodes (7): PaginationViewModel, CurrentPage, HasNextPage, HasPreviousPage, PageSize, TotalCount, TotalPages
+### Community 314 - "GetTechnicianTasksQuery"
+Cohesion: 0.04
+Nodes (42): GetTechnicianTasksQuery, EndDate, StartDate, Status, TechnicianId, ServerDiscoveryMessage, ApiUrl, DatabaseHost (+34 more)
 
 ### Community 316 - "Domain adapter: devops and infrastructure"
 Cohesion: 0.22
@@ -1714,8 +1709,8 @@ Cohesion: 0.20
 Nodes (9): background_color, description, display, icons, name, orientation, short_name, start_url (+1 more)
 
 ### Community 319 - ".CalculateMultiLine"
-Cohesion: 0.44
-Nodes (4): CalculatedLine, FinancialCalculator, LineCalculationInput, MultiLineCalculationResult
+Cohesion: 0.27
+Nodes (5): CalculatedLine, FinancialCalculator, LineCalculationInput, MultiLineCalculationResult, FinancialCalculationTests
 
 ### Community 320 - "Customer Operations & Interactions"
 Cohesion: 0.22
@@ -1729,21 +1724,21 @@ Nodes (9): AuditActionType, Create, Delete, Login, Logout, PasswordChange, Passw
 Cohesion: 0.25
 Nodes (7): BusyMessage, SpinnerRotate, UserControl, BooleanToVisibilityConverter, IsBusy, LoadingOverlay, RotateTransform
 
-### Community 323 - "PurchaseStatus"
-Cohesion: 0.22
-Nodes (9): PurchaseStatus, Cancelled, Completed, Ordered, PartiallyReturned, Pending, Received, Returned (+1 more)
+### Community 323 - "RepairStatusHelper"
+Cohesion: 0.17
+Nodes (11): RepairStatusHelper, Delivered, Diagnosing, InRepair, ReadyForPickup, Registered, ReturnedFromFactory, SentToFactory (+3 more)
 
 ### Community 324 - "StubsEnum Subsystem"
 Cohesion: 0.22
 Nodes (9): AssetStatus, Active, Inactive, Lost, Maintenance, NeedsRepair, Repair, Scrapped (+1 more)
 
-### Community 326 - "LowStockProduct"
-Cohesion: 0.25
-Nodes (8): LowStockProduct, CurrentStock, Deficiency, MinStockLevel, ProductId, ProductName, WarehouseId, WarehouseName
+### Community 326 - "StockCountDraftData"
+Cohesion: 0.17
+Nodes (10): StockCountDraftData, CountDate, Items, SavedAt, WarehouseId, WarehouseName, StockCountDraftLine, CountedQuantity (+2 more)
 
-### Community 327 - "SplitButtonItem"
-Cohesion: 0.29
-Nodes (6): SplitButtonItem, Command, CommandParameter, Icon, IsSeparator, Text
+### Community 327 - "SaleItemRequest"
+Cohesion: 0.20
+Nodes (9): SaleItemRequest, DiscountAmount, DiscountPercent, LineTotal, ProductId, ProductName, Quantity, TaxRate (+1 more)
 
 ### Community 328 - "Customer Operations & Interactions"
 Cohesion: 0.25
@@ -1752,6 +1747,10 @@ Nodes (8): CustomerInteractionSummaryDto, DiscoveryRequestsCount, FollowUpRequir
 ### Community 329 - "JobType"
 Cohesion: 0.25
 Nodes (8): JobType, Emergency, Maintenance, Project, SatelliteSystem, SecurityCamera, Standard, VideoIntercom
+
+### Community 330 - "CancellationToken"
+Cohesion: 0.06
+Nodes (12): LegacyLedgerIssueDto, LegacyLedgerPreviewDto, ReturnableSaleDto, ReturnableSaleLineDto, SaleSearchQuery, SaleSummaryDto, SaleTransactionResult, IRetailTransactionService (+4 more)
 
 ### Community 331 - "The Fable Loop"
 Cohesion: 0.25
@@ -1765,13 +1764,13 @@ Nodes (8): StockTransactionQuery, EndDate, PageNumber, PageSize, ProductId, Star
 Cohesion: 0.25
 Nodes (7): CustomerSegment, AtRisk, New, None, Passive, Potential, VIP
 
-### Community 334 - "UpdateCustomerInteractionStatusDto"
-Cohesion: 0.29
-Nodes (7): UpdateCustomerInteractionStatusDto, InteractionId, NewAssignedToUserId, NewAssignedToUsername, NewStatus, Reason, ResolutionNotes
+### Community 334 - "ApplicationError"
+Cohesion: 0.20
+Nodes (8): ResultErrorExtensions, ApplicationError, Category, Code, CorrelationId, IsCancellation, UserMessage, ValidationErrors
 
-### Community 335 - "QuotationStatus Subsystem"
-Cohesion: 0.18
-Nodes (11): ServiceJobCustomerLookupDto, ServiceJobProductLookupDto, ServiceJobTechnicianLookupDto, ServiceJobWorkspaceDto, QuotationStatus, Accepted, Cancelled, Draft (+3 more)
+### Community 335 - "ProjectQuoteEditorLauncher"
+Cohesion: 0.25
+Nodes (3): IProjectQuoteEditorLauncher, ProjectQuoteEditorLauncher, ProjectQuoteEditorWindow
 
 ### Community 336 - "Domain adapter: business and operations"
 Cohesion: 0.25
@@ -1784,6 +1783,10 @@ Nodes (7): Authority order, Domain adapter: data analysis, Done, by example, Evi
 ### Community 338 - "SmsServiceTests Subsystem"
 Cohesion: 0.29
 Nodes (5): SmsService, ResolvedApiKey, ResolvedApiSecret, ResolvedSenderTitle, SmsServiceTests
+
+### Community 339 - "BalanceColorConverter Subsystem"
+Cohesion: 0.20
+Nodes (3): BalanceColorConverter, IntToVisibilityConverter, CompleteMarkConverter
 
 ### Community 340 - "Domain adapter: design and UX"
 Cohesion: 0.25
@@ -1798,8 +1801,8 @@ Cohesion: 0.25
 Nodes (7): Authority order, Domain adapter: finance, Done, by example, Evidence and primary sources, Fraud table (for fable-judge), Minimum evidence set (binding, before any figure is presented), Verification by observation
 
 ### Community 344 - ".OnStartup"
-Cohesion: 0.17
-Nodes (8): LoggingConfiguration, FluentWindow, LoadingControl, ToastControl, CurrentView, MainWindow, LoadingOverlay, ToastNotificationControl
+Cohesion: 0.13
+Nodes (10): LoggingConfiguration, FluentWindow, LoadingControl, ToastControl, CurrentView, MainWindow, ConnectionHeartbeatService, DatabaseConnectionLostEvent (+2 more)
 
 ### Community 345 - "Domain adapter: legal and compliance"
 Cohesion: 0.25
@@ -1817,10 +1820,6 @@ Nodes (7): Authority order, Domain adapter: research and reporting, Done, by exa
 Cohesion: 0.29
 Nodes (7): CustomerListItem, CompanyName, ContactName, Id, Phone, Status, StatusColor
 
-### Community 350 - "PagedResult"
-Cohesion: 0.25
-Nodes (8): PagedResult, HasNextPage, HasPreviousPage, Items, PageNumber, PageSize, TotalCount, TotalPages
-
 ### Community 351 - "DashboardModels Subsystem"
 Cohesion: 0.29
 Nodes (7): DashboardFinancialDto, ActiveJobsCount, DailyExpense, DailyIncome, MonthlyJobsCompleted, MonthlySalesCount, MonthlySalesTotal
@@ -1837,9 +1836,9 @@ Nodes (7): LowStockItemDto, CurrentStock, MinStockLevel, ProductId, ProductName,
 Cohesion: 0.29
 Nodes (7): TodayJobItemDto, Address, Category, CustomerName, JobId, Priority, ScheduledTime
 
-### Community 356 - "ProductSerial"
+### Community 356 - "DomainException"
 Cohesion: 0.29
-Nodes (7): ProductSerial, ExpiryDate, Id, Location, ManufactureDate, ProductId, SerialNumber
+Nodes (8): DomainException, Category, Code, ExternalServiceException, NotFoundException, PrintingException, ValidationException, Errors
 
 ### Community 357 - "Stock & Inventory Control"
 Cohesion: 0.29
@@ -1849,9 +1848,9 @@ Nodes (6): StockCountFilter, All, DifferencesOnly, ShortagesOnly, SurplusesOnly,
 Cohesion: 0.33
 Nodes (5): 1. Trivial (gate, no loop), 2. Question / assessment, 3. Task, 4. Plan-first, Worked examples: one per ask shape
 
-### Community 359 - "SaleCompletedEvent Subsystem"
-Cohesion: 0.33
-Nodes (6): SaleCompletedEvent, CompletedAt, ItemCount, OrderNumber, TotalAmount, WarehouseId
+### Community 359 - "CustomerStatistics"
+Cohesion: 0.22
+Nodes (8): CustomerStatistics, AveragePurchase, DaysSinceLastPurchase, LastPurchaseDate, LoyaltyLevel, LoyaltyPoints, TotalPurchases, TotalSpent
 
 ### Community 360 - "JobListItem"
 Cohesion: 0.33
@@ -1861,9 +1860,9 @@ Nodes (6): JobListItem, CustomerName, Date, Id, Status, Title
 Cohesion: 0.33
 Nodes (5): border, PART_ContentHost, ResourceDictionary, Border, ScrollViewer
 
-### Community 362 - "GetTechnicianTasksQuery"
+### Community 362 - "IPersonalDataProtectionService"
 Cohesion: 0.40
-Nodes (5): GetTechnicianTasksQuery, EndDate, StartDate, Status, TechnicianId
+Nodes (3): IPersonalDataProtectionService, ISearchService, SearchService
 
 ### Community 363 - "ProductListItem"
 Cohesion: 0.33
@@ -1874,8 +1873,12 @@ Cohesion: 0.33
 Nodes (6): ConnectedClientModel, ClientAddress, IsActive, QueryStart, QueryStartDisplay, State
 
 ### Community 365 - "DashboardModels Subsystem"
-Cohesion: 0.20
-Nodes (10): DashboardChartDataDto, JobCategoryDistribution, WeeklyTrend, JobCategoryItemDto, Category, Count, WeeklyTrendItemDto, CompletedJobs (+2 more)
+Cohesion: 0.22
+Nodes (6): DashboardChartDataDto, JobCategoryDistribution, WeeklyTrend, JobCategoryItemDto, Category, Count
+
+### Community 366 - "CustomerPurchaseHistory"
+Cohesion: 0.25
+Nodes (7): CustomerPurchaseHistory, Date, ItemCount, OrderNumber, PaymentMethod, TotalAmount, TransactionId
 
 ### Community 367 - "ServiceResponse Subsystem"
 Cohesion: 0.33
@@ -1897,17 +1900,25 @@ Nodes (5): activeBar, bg, border, profileBg, Border
 Cohesion: 0.50
 Nodes (3): Default mode: judge the work, fable-judge, suite mode: judge a skill or a model
 
+### Community 372 - "CustomerDto"
+Cohesion: 0.22
+Nodes (9): CustomerDto, Address, City, District, Id, Latitude, Longitude, Name (+1 more)
+
 ### Community 373 - "Field Technician Tasks & Dispatch"
 Cohesion: 0.33
 Nodes (5): DashboardStats, ActiveJobs, CompletedJobs, PendingJobs, SiteVisits
 
-### Community 374 - "system"
-Cohesion: 0.06
-Nodes (7): KamatekCrm.Converters, KamatekCrm.Services.Update, KamatekCrm.Events, KamatekCrm.Helpers, PhoneNormalizationHelper, ShowManualConnectionWizardEvent, Program
+### Community 374 - "WorkOrderType"
+Cohesion: 0.22
+Nodes (7): WorkOrderType, Discovery, Inspection, Installation, Maintenance, Repair, Replacement
 
 ### Community 376 - "Service Job & Work Order Management"
 Cohesion: 0.50
 Nodes (4): IsQuickAddCustomer, RbExisting, RbNew, RadioButton
+
+### Community 380 - "PosParkedCart"
+Cohesion: 0.22
+Nodes (9): PosParkedCart, CartItems, Customer, GlobalDiscountPercent, GrandTotal, Id, ItemCount, Label (+1 more)
 
 ### Community 382 - "Direct Sales & POS Operations"
 Cohesion: 0.67
@@ -1917,45 +1928,101 @@ Nodes (3): BarcodeText, BarcodeTextBox, TextBox
 Cohesion: 0.67
 Nodes (3): SearchViewModel.SearchQuery, GlobalSearchBox, TextBox
 
+### Community 385 - "CultureInfo"
+Cohesion: 0.17
+Nodes (5): GreaterThanZeroConverter, InverseBooleanConverter, SegmentToColorConverter, RoleDisplayConverter, InverseBooleanConverter
+
+### Community 389 - "JobPriority"
+Cohesion: 0.25
+Nodes (7): JobPriority, Critical, High, Low, Medium, Normal, Urgent
+
+### Community 395 - "DiscoveryMaterial"
+Cohesion: 0.25
+Nodes (8): DiscoveryMaterial, DiscoveryReport, DiscoveryReportId, Id, Notes, ProductId, ProductName, Quantity
+
+### Community 398 - "CustomerAgingSummary"
+Cohesion: 0.25
+Nodes (8): CustomerAgingSummary, CustomerId, CustomerName, Days0To30, Days31To60, Days61To90, Days90Plus, TotalBalance
+
+### Community 399 - "ReadyRepairItemDto"
+Cohesion: 0.29
+Nodes (7): ReadyRepairItemDto, CustomerName, CustomerPhone, DaysWaiting, DeviceInfo, JobId, TicketNo
+
 ### Community 400 - "WPF Desktop Views (FaultTicketWindow)"
 Cohesion: 0.67
 Nodes (3): border, chipBorder, Border
+
+### Community 401 - "SaleRequest"
+Cohesion: 0.29
+Nodes (7): SaleRequest, CreatedBy, CustomerId, CustomerName, Items, PaymentMethod, WarehouseId
 
 ### Community 402 - "WPF Desktop Views (RepairListView)"
 Cohesion: 0.67
 Nodes (3): ChipBorder, ItemBorder, Border
 
-### Community 429 - "PosTransactionStatus"
+### Community 420 - "TestUserContext"
+Cohesion: 0.22
+Nodes (6): AppDbContextIntegrationTests, TestUserContext, IsAuthenticated, Role, UserId, Username
+
+### Community 421 - "Window"
+Cohesion: 0.07
+Nodes (9): WindowControlHelper, AddUserView, DiscoveryEditorWindow, FaultTicketWindow, InstallationEditorWindow, QuickCustomerAddWindow, QuickNewProductForPurchaseWindow, WorkOrderQuotationWindow (+1 more)
+
+### Community 424 - "ProjectProfitItem"
+Cohesion: 0.29
+Nodes (7): ProjectProfitItem, Cost, CustomerName, MarginPercent, Profit, ProjectName, Revenue
+
+### Community 425 - "AttachmentEntityType"
+Cohesion: 0.33
+Nodes (6): AttachmentEntityType, Customer, Invoice, Product, Quote, ServiceJob
+
+### Community 426 - "CategorySelectItem"
+Cohesion: 0.33
+Nodes (6): CategorySelectItem, Category, DisplayName, Id, IsSelected, Name
+
+### Community 427 - "TestCurrentUserContext"
+Cohesion: 0.33
+Nodes (5): TestCurrentUserContext, IsAuthenticated, Role, UserId, Username
+
+### Community 428 - "RepairStatusOption"
+Cohesion: 0.33
+Nodes (5): RepairStatusOption, DisplayName, FullDisplay, Icon, Status
+
+### Community 430 - "UserRegisterDto"
+Cohesion: 0.40
+Nodes (5): UserRegisterDto, ConfirmPassword, FullName, Password, Username
+
+### Community 431 - "ReferentialIntegrityException"
+Cohesion: 0.40
+Nodes (5): ReferentialIntegrityException, DependentCount, DependentEntityType, EntityId, EntityType
+
+### Community 432 - "NotFoundException"
 Cohesion: 0.50
-Nodes (4): PosTransactionStatus, Cancelled, Completed, Refunded
+Nodes (3): NotFoundException, EntityId, EntityName
 
-### Community 430 - "RouteReorderRequest"
+### Community 435 - "UpdateStatusRequest"
 Cohesion: 0.67
-Nodes (3): RouteReorderRequest, NewIndex, PointId
-
-### Community 431 - "PaymentRequest"
-Cohesion: 0.67
-Nodes (3): PaymentRequest, Amount, Notes
+Nodes (3): UpdateStatusRequest, Notes, Status
 
 ## Knowledge Gaps
-- **5999 isolated node(s):** `ServiceProvider`, `CurrentUser`, `FullName`, `ImageSource`, `Size` (+5994 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 6444 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **68 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **6009 isolated node(s):** `ServiceProvider`, `CurrentUser`, `FullName`, `ImageSource`, `Size` (+6004 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 6491 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **59 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AppDbContext` connect `Database Migrations & Persistence` to `IActionResult`, `Stock & Inventory Control`, `Customer Operations & Interactions`, `DirectSalesViewModel`, `.ShowError`, `Service Job & Work Order Management`, `Service Job & Work Order Management`, `Project Quotes & Cost Estimation`, `UI ViewModels (RepairListViewModel)`, `Customer Operations & Interactions`, `system_threading`, `UI ViewModels (ProductViewModel)`, `TransactionReadService`, `UI ViewModels (FaultTicketViewModel)`, `PurchaseOrderItem`, `PasswordResetViewModel`, `ExceptionMapperTests Subsystem`, `SpecsAndJobDetails Subsystem`, `UI ViewModels (AddProductViewModel)`, `Service Job & Work Order Management`, `Task`, `IInstallationPdfService Subsystem`, `UI ViewModels (DashboardViewModel)`, `PurchaseOrder`, `ReturnModels Subsystem`, `ApiResponse Subsystem`, `IDbContextFactory`, `Stock & Inventory Control`, `Direct Sales & POS Operations`, `PurchaseInvoice`, `GetDashboardStatsQuery Subsystem`, `Authentication & User Management`, `Customer Operations & Interactions`, `IAuthService`, `Project Quotes & Cost Estimation`, `Customer Operations & Interactions`, `ProjectQuoteReadService`, `DiscoveryVisit`, `RelayCommand`, `Service Job & Work Order Management`, `Service Job & Work Order Management`, `UI ViewModels (NetworkSettingsViewModel)`, `IDatabaseConnectionProvider`, `Customer Operations & Interactions`, `ProjectModels Subsystem`, `Quote`, `.SetupPlannedInstallationAsync`, `Field Technician Tasks & Dispatch`, `UI ViewModels (FinanceViewModel)`, `MiscModels Subsystem`, `Stock & Inventory Control`, `ReturnModels Subsystem`, `UI ViewModels (RoutePlanningViewModel)`, `Stock & Inventory Control`, `MiscModels Subsystem`, `InstallationMaterial`, `ServiceJobItem`, `Customer Operations & Interactions`, `.SaveChangesAsync`, `Direct Sales & POS Operations`, `.CreateServiceAsync`, `Service Job & Work Order Management`, `UI ViewModels (QuickNewProductForPurchaseViewModel`, `Direct Sales & POS Operations`, `Project Quotes & Cost Estimation`, `Auditing, Reporting & Analytics`, `Direct Sales & POS Operations`, `ILogger`, `ServiceJobPdfData`, `PersonalDataKind Subsystem`, `CacheService`, `MiscModels Subsystem`, `UI ViewModels (FinancialHealthViewModel)`, `Service Job & Work Order Management`, `DiscoveryV2Tests Subsystem`, `Customer Operations & Interactions`, `Field Technician Tasks & Dispatch`, `StockTransferViewModel`, `DatabaseConnectionProvider`, `QuotationItem`, `Field Technician Tasks & Dispatch`, `Service Job & Work Order Management`, `Supplier`, `AnalyticsViewModel`, `Stock & Inventory Control`, `SalesReturnItem`, `.Upload`, `Stock & Inventory Control`, `Category`, `AuditTrailService`, `.ApplyAsync`, `MiscModels Subsystem`, `NotificationService`, `Repository`, `InstallationTask`, `ProductSerial`, `.InsertAndRetrieve_ServiceJob_ShouldSaveAndRetrieveFlawlessly`?**
-  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+- **Why does `AppDbContext` connect `Database Migrations & Persistence` to `IActionResult`, `Stock & Inventory Control`, `Customer Operations & Interactions`, `DirectSalesViewModel`, `RelayCommand`, `.ShowError`, `Service Job & Work Order Management`, `Service Job & Work Order Management`, `Project Quotes & Cost Estimation`, `Customer Operations & Interactions`, `UI ViewModels (RepairListViewModel)`, `Customer Operations & Interactions`, `UI ViewModels (ProductViewModel)`, `PurchaseOrderViewModel`, `UI ViewModels (FaultTicketViewModel)`, `PasswordResetViewModel`, `ExceptionMapperTests Subsystem`, `SpecsAndJobDetails Subsystem`, `UI ViewModels (AddProductViewModel)`, `Service Job & Work Order Management`, `Task`, `IInstallationPdfService Subsystem`, `UI ViewModels (DashboardViewModel)`, `PurchaseOrder`, `ReturnModels Subsystem`, `ApiResponse Subsystem`, `IDbContextFactory`, `Stock & Inventory Control`, `Direct Sales & POS Operations`, `PurchaseInvoice`, `GetDashboardStatsQuery Subsystem`, `Authentication & User Management`, `Customer Operations & Interactions`, `Project Quotes & Cost Estimation`, `Customer Operations & Interactions`, `ProjectQuoteReadService`, `DiscoveryVisit`, `Service Job & Work Order Management`, `Service Job & Work Order Management`, `UI ViewModels (NetworkSettingsViewModel)`, `Customer Operations & Interactions`, `ProjectModels Subsystem`, `Quote`, `AuthService`, `Field Technician Tasks & Dispatch`, `UI ViewModels (FinanceViewModel)`, `MiscModels Subsystem`, `Stock & Inventory Control`, `ReturnModels Subsystem`, `StockTransferViewModel`, `UI ViewModels (RoutePlanningViewModel)`, `Stock & Inventory Control`, `MiscModels Subsystem`, `InstallationMaterial`, `ServiceJobItem`, `Customer Operations & Interactions`, `.SaveChangesAsync`, `Direct Sales & POS Operations`, `.CreateServiceAsync`, `Service Job & Work Order Management`, `UI ViewModels (QuickNewProductForPurchaseViewModel`, `Direct Sales & POS Operations`, `Project Quotes & Cost Estimation`, `Auditing, Reporting & Analytics`, `Direct Sales & POS Operations`, `ServiceJobPdfData`, `TimeSpan`, `MiscModels Subsystem`, `UI ViewModels (FinancialHealthViewModel)`, `Service Job & Work Order Management`, `DiscoveryV2Tests Subsystem`, `Customer Operations & Interactions`, `Field Technician Tasks & Dispatch`, `DatabaseConnectionProvider`, `QuotationItem`, `Field Technician Tasks & Dispatch`, `Service Job & Work Order Management`, `AnalyticsViewModel`, `Stock & Inventory Control`, `SalesReturnItem`, `.Upload`, `.CreateAsync`, `Stock & Inventory Control`, `Category`, `ICurrentUserContext`, `Task`, `MiscModels Subsystem`, `NotificationService`, `CancellationToken`, `.OnStartup`, `InstallationTask`, `IPersonalDataProtectionService`, `DiscoveryMaterial`, `TestUserContext`, `SalesDomainService`?**
+  _High betweenness centrality (0.099) - this node is a cross-community bridge._
 - **Are the 16 inferred relationships involving `AppDbContext` (e.g. with `.TestConnectionAsync()` and `.InfrastructureAssembly_OwnsTheCompleteOrderedMigrationChain()`) actually correct?**
   _`AppDbContext` has 16 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `ServiceProvider`, `CurrentUser`, `FullName` to the rest of the system?**
-  _5999 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _6009 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `IActionResult` be split into smaller, more focused modules?**
-  _Cohesion score 0.06001984126984127 - nodes in this community are weakly interconnected._
-- **Why does `KamatekCrm.Views` connect `KamatekCrm.Views` to `UI ViewModels (AddProductViewModel)`, `system`, `microsoft_aspnetcore_mvc`, `Customer Operations & Interactions`?**
-  _High betweenness centrality (0.038) - this node is a cross-community bridge._
+  _Cohesion score 0.06960385042576823 - nodes in this community are weakly interconnected._
+- **Why does `KamatekCrm.Views` connect `KamatekCrm.Views` to `UI ViewModels (AddProductViewModel)`, `microsoft_aspnetcore_mvc`?**
+  _High betweenness centrality (0.051) - this node is a cross-community bridge._
 - **Should `Stock & Inventory Control` be split into smaller, more focused modules?**
-  _Cohesion score 0.026845637583892617 - nodes in this community are weakly interconnected._
-- **Why does `ViewModelBase` connect `MainViewModel` to `LoginViewModel`, `Service Job & Work Order Management`, `UI ViewModels (AddProductViewModel)`, `SystemLogsViewModel`, `DirectSalesViewModel`, `Authentication & User Management`, `WorkOrderWorkspaceDto`, `UI ViewModels (RoutePlanningViewModel)`, `AnalyticsViewModel`, `IDialogService`, `Authentication & User Management`, `Project Quotes & Cost Estimation`, `WPF Desktop Views (PurchaseOrderView)`, `UI ViewModels (MainContentViewModel)`, `UI ViewModels (DeliveryEditorViewModel)`, `UI ViewModels (RepairListViewModel)`, `Service Job & Work Order Management`, `UI ViewModels (DiscoveryEditorViewModel)`, `Service Job & Work Order Management`, `Customer Operations & Interactions`, `MiscModels Subsystem`, `UI ViewModels (InstallationEditorViewModel)`, `UI ViewModels (SettingsViewModel)`, `Authentication & User Management`, `Stock & Inventory Control`, `UI ViewModels (ProductViewModel)`, `UI ViewModels (FaultTicketViewModel)`, `Customer Operations & Interactions`, `UI ViewModels (QuickInteractionAddViewModel)`, `PasswordResetViewModel`, `UI ViewModels (AddProductViewModel)`, `UI ViewModels (GlobalSearchViewModel)`, `UI ViewModels (PaginationViewModel)`, `UI ViewModels (RepairViewModel)`, `UI ViewModels (QuickNewProductForPurchaseViewModel`, `UI ViewModels (QuotationViewModel)`, `UI ViewModels (DashboardViewModel)`, `UI ViewModels (PurchasingViewModel)`, `Direct Sales & POS Operations`, `Project Quotes & Cost Estimation`, `UI ViewModels (RoutePlanningViewModel)`, `UI ViewModels (SuppliersViewModel)`, `Service Job & Work Order Management`, `UI ViewModels (FinancialHealthViewModel)`, `RelayCommand`, `UI ViewModels (NetworkSettingsViewModel)`, `Customer Operations & Interactions`, `StockTransferViewModel`, `UI ViewModels (QuotationViewModel)`, `Customer Operations & Interactions`, `UI ViewModels (FinanceViewModel)`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+  _Cohesion score 0.022523420370739487 - nodes in this community are weakly interconnected._
+- **Why does `WorkOrderWorkspaceViewModel` connect `Service Job & Work Order Management` to `Service Job & Work Order Management`, `UI ViewModels (AddProductViewModel)`, `Service Job & Work Order Management`, `Window`, `UI ViewModels (PurchasingViewModel)`, `Authentication & User Management`, `WorkspaceOverviewViewModel`, `Service Job & Work Order Management`, `.ShowError`, `WorkspaceDiscoveryViewModel`, `Service Job & Work Order Management`, `Service Job & Work Order Management`, `WorkOrderWorkflowDtos.cs`, `Task`, `Service Job & Work Order Management`, `Task`?**
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
