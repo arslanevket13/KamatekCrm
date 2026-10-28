@@ -125,10 +125,18 @@
 
                 <!-- Telefon Mükerrer Kayıt Uyarısı -->
                 <Border Background="{DynamicResource StatusWarningBg}" BorderBrush="{DynamicResource StatusWarningFg}"
-                        BorderThickness="1" CornerRadius="6" Padding="8,6" Margin="0,4,0,4"
+                        BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,4,0,6"
                         Visibility="{Binding HasDuplicatePhoneWarning, Converter={StaticResource BoolVis}}">
-                    <TextBlock Text="{Binding DuplicatePhoneWarning}" Foreground="{DynamicResource StatusWarningFg}" 
-                               FontSize="11" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <StackPanel>
+                        <TextBlock Text="{Binding DuplicatePhoneWarning}" Foreground="{DynamicResource StatusWarningFg}" 
+                                   FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                        <Button Content="✅ Mevcut Müşteriyi Seç ve Kullan"
+                                Command="{Binding SelectExistingCustomerCommand}"
+                                Visibility="{Binding HasExistingCustomer, Converter={StaticResource BoolVis}}"
+                                Height="32" Margin="0,6,0,0" Cursor="Hand"
+                                Background="{DynamicResource StatusSuccessBg}" Foreground="{DynamicResource ThemeSuccess}"
+                                FontWeight="Bold" BorderThickness="1" BorderBrush="{DynamicResource ThemeSuccess}"/>
+                    </StackPanel>
                 </Border>
 
                 <Grid Margin="0,0,0,0">

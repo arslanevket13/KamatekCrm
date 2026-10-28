@@ -116,6 +116,15 @@
 
                     <!-- Actions Toolbar -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16" HorizontalAlignment="Right">
+                        <Button Content="📄 Cari Ekstre (PDF)" Command="{Binding ExportAccountStatementPdfCommand}"
+                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" BorderThickness="0"
+                                Padding="16,8" FontSize="14" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,16,0">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="6"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
                         <Button Content="➕ Tahsilat Al" Command="{Binding AddPaymentCommand}"
                                 Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}" BorderThickness="0"
                                 Padding="16,8" FontSize="14" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,16,0">
@@ -327,7 +336,51 @@
                 </Grid>
             </TabItem>
 
-            <!-- TAB 4: PROFILE INFO -->
+            <!-- TAB 4: 360° TIMELINE -->
+            <TabItem Header="⏱️ 360° Zaman Çizelgesi">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="12" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource ModernTextBox}" Margin="0,0,12,0"/>
+                            <Button Grid.Column="1" Content="➕ Not Ekle" Command="{Binding AddNoteCommand}"
+                                    Style="{StaticResource ModernButton}" Padding="16,8"/>
+                        </Grid>
+                    </Border>
+
+                    <DataGrid Grid.Row="1"
+                              AutoGenerateColumns="False"
+                              ItemsSource="{Binding Activities}"
+                              Style="{StaticResource ModernDataGrid}"
+                              ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                              CanUserAddRows="False"
+                              IsReadOnly="True"
+                              RowHeight="44"
+                              AlternatingRowBackground="{DynamicResource ApplicationBackgroundBrush}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Tarih" Binding="{Binding CreatedDate, StringFormat=dd.MM.yyyy HH:mm}" Width="140" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                            <DataGridTextColumn Header="İşlem Türü" Binding="{Binding Type}" Width="150" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="Açıklama" Binding="{Binding Description}" Width="*" Foreground="{DynamicResource TextBodyBrush}"/>
+                            <DataGridTextColumn Header="Ekleyen" Binding="{Binding CreatedBy}" Width="130" Foreground="{DynamicResource ThemeTextSecondary}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Text="Henüz aktivite veya hareket kaydı bulunmamaktadır." 
+                               Visibility="{Binding Activities.Count, Converter={StaticResource IntToVis}, ConverterParameter=Inverse}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="16"/>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 5: PROFILE INFO -->
             <TabItem Header="📋 Genel Bilgiler">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
                     <Grid>
@@ -458,15 +511,15 @@
 
                                     <StackPanel Grid.Row="0" Grid.Column="0">
                                         <Label Content="Şehir *" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding City, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                        <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding SelectedCity}" Text="{Binding City, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name" IsEditable="True" Style="{StaticResource ModernComboBox}" Height="38"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="0" Grid.Column="2">
                                         <Label Content="İlçe" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding District, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                        <ComboBox ItemsSource="{Binding Districts}" SelectedItem="{Binding SelectedDistrict}" Text="{Binding District, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name" IsEditable="True" Style="{StaticResource ModernComboBox}" Height="38"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="0" Grid.Column="4">
                                         <Label Content="Mahalle" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding Neighborhood, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                        <ComboBox ItemsSource="{Binding Neighborhoods}" SelectedItem="{Binding SelectedNeighborhood}" Text="{Binding Neighborhood, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name" IsEditable="True" Style="{StaticResource ModernComboBox}" Height="38"/>
                                     </StackPanel>
 
                                     <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,16,0,0">

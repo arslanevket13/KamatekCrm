@@ -1,3 +1,4 @@
+using KamatekCrm.Events;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -32,6 +33,7 @@ namespace KamatekCrm.ViewModels
         private readonly IProductImageService _imageService;
         private Product? _selectedProduct;
         private string _searchText = string.Empty;
+        private System.Threading.CancellationTokenSource? _stockUpdateDebounceCts;
         private System.Threading.CancellationTokenSource? _searchCts;
         private ICollectionView? _productsView;
         private string _statusMessage = string.Empty;
@@ -215,6 +217,9 @@ namespace KamatekCrm.ViewModels
             // Filtreleme görünümünü oluştur
             _productsView = CollectionViewSource.GetDefaultView(Products);
             _productsView.Filter = FilterProducts;
+
+            // Stok güncellemelerine abone ol (Debounced UI refresh)
+            EventAggregator.Instance.Subscribe<StockUpdatedEvent>(OnStockUpdated);
         }
 
         /// <summary>
@@ -222,6 +227,7 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void LoadProducts()
         {
+            _context.ChangeTracker.Clear();
             Products.Clear();
             var products = _context.Products
                 .Include(p => p.Category)      // Kategori bilgisi için
@@ -242,6 +248,35 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Ürün filtreleme mantığı
         /// </summary>
+        private void OnStockUpdated(StockUpdatedEvent e)
+        {
+            _stockUpdateDebounceCts?.Cancel();
+            _stockUpdateDebounceCts = new System.Threading.CancellationTokenSource();
+            var token = _stockUpdateDebounceCts.Token;
+            _ = DebouncedReloadProductsAsync(token);
+        }
+
+        private async Task DebouncedReloadProductsAsync(System.Threading.CancellationToken token)
+        {
+            try
+            {
+                await Task.Delay(250, token);
+                if (token.IsCancellationRequested) return;
+
+                if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
+                {
+                    await Application.Current.Dispatcher.InvokeAsync(LoadProducts);
+                }
+                else
+                {
+                    LoadProducts();
+                }
+            }
+            catch (System.OperationCanceledException)
+            {
+            }
+        }
+
         private bool FilterProducts(object obj)
         {
             if (obj is not Product product) return false;

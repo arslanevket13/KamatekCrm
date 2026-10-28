@@ -148,6 +148,17 @@
             <converters:DateDisplayConverter x:Key="DateDisplay"/>
             <converters:SensitiveDataConverter x:Key="SensitiveData"/>
             <converters:InverseBooleanConverter x:Key="InverseBoolConverter"/>
+
+            <!-- TSF / IME Layout Hatası (0x80040206 - TS_E_NOLAYOUT) Önleyici Global Stiller -->
+            <Style TargetType="{x:Type TextBox}">
+                <Setter Property="InputMethod.IsInputMethodEnabled" Value="False"/>
+            </Style>
+            <Style TargetType="{x:Type PasswordBox}">
+                <Setter Property="InputMethod.IsInputMethodEnabled" Value="False"/>
+            </Style>
+            <Style TargetType="{x:Type RichTextBox}">
+                <Setter Property="InputMethod.IsInputMethodEnabled" Value="False"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

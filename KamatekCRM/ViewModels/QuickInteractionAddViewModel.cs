@@ -287,8 +287,8 @@ namespace KamatekCrm.ViewModels
                     Priority = SelectedPriority,
                     AssignedToUserId = SelectedUser?.Id,
                     AssignedToUsername = SelectedUser?.AdSoyad,
-                    RequiresFollowUp = RequiresFollowUp,
-                    FollowUpDate = RequiresFollowUp ? FollowUpDate?.ToUniversalTime() : null,
+                    RequiresFollowUp = RequiresFollowUp || FollowUpDate.HasValue,
+                    FollowUpDate = (RequiresFollowUp || FollowUpDate.HasValue) ? FollowUpDate?.ToUniversalTime() : null,
                     RequiresManagerAttention = RequiresManagerAttention,
                     ManagerNotes = ManagerNotes
                 };

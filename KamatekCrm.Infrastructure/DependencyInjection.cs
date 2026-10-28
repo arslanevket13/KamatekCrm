@@ -46,6 +46,8 @@ namespace KamatekCrm.Infrastructure
                         maxRetryDelay: TimeSpan.FromSeconds(10),
                         errorCodesToAdd: null);
                 });
+
+                options.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             });
 
             services.AddTransient<IUnitOfWork, UnitOfWork>();

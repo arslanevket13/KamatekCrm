@@ -45,13 +45,23 @@ namespace KamatekCrm.Services
 
         private void AuditSensitiveDocumentAccess(string documentType, int? customerId)
         {
-            var result = _auditTrail.WriteAsync(
-                AuditActionType.View,
-                "CustomerDocument",
-                customerId?.ToString(),
-                $"{documentType} oluşturma sırasında müşteri iletişim verilerine erişildi.").GetAwaiter().GetResult();
-            if (result.IsFailure)
-                System.Diagnostics.Debug.WriteLine(result.Error);
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var result = await _auditTrail.WriteAsync(
+                        AuditActionType.View,
+                        "CustomerDocument",
+                        customerId?.ToString(),
+                        $"{documentType} oluşturma sırasında müşteri iletişim verilerine erişildi.").ConfigureAwait(false);
+                    if (result.IsFailure)
+                        System.Diagnostics.Debug.WriteLine(result.Error);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Audit log yazımı başarısız: {ex.Message}");
+                }
+            });
         }
 
         private static class BrandColors
@@ -68,28 +78,42 @@ namespace KamatekCrm.Services
             public static string Danger = "#F44336";
         }
 
+        private static byte[]? _cachedLogoBytes;
+        private static readonly object _logoLock = new();
+
         private byte[]? GetLogoBytes()
         {
-            try
+            if (_cachedLogoBytes != null) return _cachedLogoBytes;
+
+            lock (_logoLock)
             {
-                var uri = new Uri("pack://application:,,,/Assets/Images/KamatekLogo.png");
-                var streamInfo = System.Windows.Application.GetResourceStream(uri);
-                if (streamInfo != null)
+                if (_cachedLogoBytes != null) return _cachedLogoBytes;
+
+                try
                 {
-                    using var ms = new MemoryStream();
-                    streamInfo.Stream.CopyTo(ms);
-                    return ms.ToArray();
+                    if (System.Windows.Application.Current != null)
+                    {
+                        var uri = new Uri("pack://application:,,,/Assets/Images/KamatekLogo.png");
+                        var streamInfo = System.Windows.Application.GetResourceStream(uri);
+                        if (streamInfo != null)
+                        {
+                            using var ms = new MemoryStream();
+                            streamInfo.Stream.CopyTo(ms);
+                            _cachedLogoBytes = ms.ToArray();
+                            return _cachedLogoBytes;
+                        }
+                    }
                 }
+                catch { }
+
+                var pngPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "KamatekLogo.png");
+                var jpgPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "KamatekLogo.jpg");
+
+                if (File.Exists(pngPath)) _cachedLogoBytes = File.ReadAllBytes(pngPath);
+                else if (File.Exists(jpgPath)) _cachedLogoBytes = File.ReadAllBytes(jpgPath);
+
+                return _cachedLogoBytes;
             }
-            catch { }
-
-            var pngPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "KamatekLogo.png");
-            var jpgPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "KamatekLogo.jpg");
-
-            if (File.Exists(pngPath)) return File.ReadAllBytes(pngPath);
-            if (File.Exists(jpgPath)) return File.ReadAllBytes(jpgPath);
-            
-            return null;
         }
 
         public void GenerateProjectQuote(ServiceProject project, List<ScopeNode> rootNodes, string filePath)
@@ -98,8 +122,9 @@ namespace KamatekCrm.Services
             var logoBytes = GetLogoBytes();
 
             var flattenedItems = FlattenScopeNodesWithImages(rootNodes);
-            var subTotal = FinancialCalculator.RoundMoney(flattenedItems.Where(i => !i.IsSectionHeader).Sum(i => i.TotalPrice)); var netTotal = FinancialCalculator.RoundMoney(subTotal - FinancialCalculator.RoundMoney(subTotal * (project?.DiscountPercent ?? 0m) / 100m)); var totalAmount = FinancialCalculator.RoundMoney(netTotal + FinancialCalculator.RoundMoney(netTotal * (project?.KdvRate ?? 20m) / 100m));
-            var totalItems = flattenedItems.Where(i => !i.IsSectionHeader).Sum(i => i.Quantity);
+            var bom = ProjectScopeService.GenerateConsolidatedBom(rootNodes, project?.DiscountPercent ?? 0m, project?.KdvRate ?? 20m);
+            var totalAmount = bom.GrandTotal;
+            var totalItems = bom.TotalItemCount;
 
             Document.Create(container =>
             {
@@ -110,7 +135,7 @@ namespace KamatekCrm.Services
                     page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
 
                     page.Header().Element(c => ComposeProfessionalHeader(c, project, logoBytes, totalAmount));
-                    page.Content().Element(c => ComposeProfessionalContent(c, project, flattenedItems, totalAmount, totalItems));
+                    page.Content().Element(c => ComposeProfessionalContent(c, project, flattenedItems, rootNodes, totalAmount, totalItems));
                     page.Footer().Element(c => ComposeProfessionalFooter(c));
                 });
             })
@@ -173,7 +198,7 @@ namespace KamatekCrm.Services
 
         #region Professional Content
 
-        private void ComposeProfessionalContent(IContainer container, ServiceProject project, List<PdfLineItem> items, decimal totalAmount, int totalItems)
+        private void ComposeProfessionalContent(IContainer container, ServiceProject project, List<PdfLineItem> items, List<ScopeNode> rootNodes, decimal totalAmount, int totalItems)
         {
             container.Padding(20).Column(col =>
             {
@@ -191,16 +216,19 @@ namespace KamatekCrm.Services
                 // 4. Ödeme Planı
                 col.Item().Element(c => ComposePaymentPlan(c, totalAmount));
 
-                // 5. Malzeme Listesi (Fotoğraflı)
+                // 5. Mahal Ağacı Malzeme Listesi (WBS)
                 col.Item().Element(c => ComposeProductTable(c, items));
 
-                // 6. Finansal Özet
+                // 6. Konsolide Malzeme İcmali (BOM)
+                col.Item().Element(c => ComposeConsolidatedBomTable(c, project, rootNodes));
+
+                // 7. Finansal Özet
                 col.Item().Element(c => ComposeFinancialSummary(c, items, project));
 
-                // 7. Ticari Şartlar
+                // 8. Ticari Şartlar
                 col.Item().Element(c => ComposeCommercialTerms(c));
 
-                // 8. İmza Bloğu
+                // 9. İmza Bloğu
                 col.Item().Element(c => ComposeSignatures(c));
             });
         }
@@ -307,7 +335,11 @@ namespace KamatekCrm.Services
                         table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(8).AlignRight().Text($"{group.Total:N0} ₺");
                         table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Padding(5).Row(r =>
                         {
-                            r.ConstantItem((int)barWidth).Background(BrandColors.Secondary).Height(15);
+                            int width = (int)barWidth;
+                            if (width > 0)
+                            {
+                                r.ConstantItem(width).Background(BrandColors.Secondary).Height(15);
+                            }
                             r.RelativeItem().Text($" %{percentage:N1}").FontSize(8).FontColor(BrandColors.TextSecondary).AlignRight();
                         });
                     }
@@ -359,7 +391,7 @@ namespace KamatekCrm.Services
         {
             container.Column(c =>
             {
-                c.Item().Text("MALZEME VE HİZMET LİSTESİ").FontSize(12).Bold().FontColor(BrandColors.Primary);
+                c.Item().Text("YAPI AĞACI & MAHAL MALZEME LİSTESİ (WBS)").FontSize(12).Bold().FontColor(BrandColors.Primary);
 
                 c.Item().PaddingTop(8).Table(table =>
                 {
@@ -377,17 +409,22 @@ namespace KamatekCrm.Services
                     {
                         header.Cell().Background(BrandColors.Primary).Padding(5).Text("#").FontColor(Colors.White).FontSize(8);
                         header.Cell().Background(BrandColors.Primary).Padding(5).Text("Fotoğraf").FontColor(Colors.White).FontSize(8);
-                        header.Cell().Background(BrandColors.Primary).Padding(5).Text("Ürün / Açıklama").FontColor(Colors.White).FontSize(8);
+                        header.Cell().Background(BrandColors.Primary).Padding(5).Text("Ürün / Mahal").FontColor(Colors.White).FontSize(8);
                         header.Cell().Background(BrandColors.Primary).Padding(5).AlignRight().Text("Miktar").FontColor(Colors.White).FontSize(8);
                         header.Cell().Background(BrandColors.Primary).Padding(5).AlignRight().Text("B.Fiyat").FontColor(Colors.White).FontSize(8);
                         header.Cell().Background(BrandColors.Primary).Padding(5).AlignRight().Text("Toplam").FontColor(Colors.White).FontSize(8);
                     });
 
                     int index = 1;
-                    var productItems = items.Where(i => !i.IsSectionHeader).ToList();
-
-                    foreach (var item in productItems)
+                    foreach (var item in items)
                     {
+                        if (item.IsSectionHeader)
+                        {
+                            table.Cell().ColumnSpan(6).Background("#ECEFF1").BorderBottom(1).BorderColor("#CFD8DC").Padding(4)
+                                .PaddingLeft(Math.Max(5, item.Level * 10)).Text(item.Name).FontSize(9).Bold().FontColor(BrandColors.Primary);
+                            continue;
+                        }
+
                         var bgColor = index % 2 == 0 ? "#FAFAFA" : "#FFFFFF";
 
                         table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Background(bgColor).Padding(5).AlignCenter()
@@ -419,6 +456,53 @@ namespace KamatekCrm.Services
             });
         }
 
+        private void ComposeConsolidatedBomTable(IContainer container, ServiceProject project, List<ScopeNode> rootNodes)
+        {
+            var bom = ProjectScopeService.GenerateConsolidatedBom(rootNodes, project?.DiscountPercent ?? 0m, project?.KdvRate ?? 20m);
+            if (!bom.Items.Any()) return;
+
+            container.Column(c =>
+            {
+                c.Item().Text("KONSOLİDE MALZEME İCMALİ (ÖZET BOM)").FontSize(12).Bold().FontColor(BrandColors.Primary);
+
+                c.Item().PaddingTop(8).Table(table =>
+                {
+                    table.ColumnsDefinition(cols =>
+                    {
+                        cols.ConstantColumn(25);
+                        cols.RelativeColumn(3);
+                        cols.RelativeColumn(2);
+                        cols.ConstantColumn(45);
+                        cols.ConstantColumn(60);
+                        cols.ConstantColumn(70);
+                    });
+
+                    table.Header(header =>
+                    {
+                        header.Cell().Background(BrandColors.Primary).Padding(5).Text("#").FontColor(Colors.White).FontSize(8);
+                        header.Cell().Background(BrandColors.Primary).Padding(5).Text("Malzeme / Ürün Adı").FontColor(Colors.White).FontSize(8);
+                        header.Cell().Background(BrandColors.Primary).Padding(5).Text("Kullanım Mahalli").FontColor(Colors.White).FontSize(8);
+                        header.Cell().Background(BrandColors.Primary).Padding(5).AlignRight().Text("Toplam").FontColor(Colors.White).FontSize(8);
+                        header.Cell().Background(BrandColors.Primary).Padding(5).AlignRight().Text("B.Fiyat").FontColor(Colors.White).FontSize(8);
+                        header.Cell().Background(BrandColors.Primary).Padding(5).AlignRight().Text("Tutar").FontColor(Colors.White).FontSize(8);
+                    });
+
+                    int idx = 1;
+                    foreach (var item in bom.Items)
+                    {
+                        var bg = idx % 2 == 0 ? "#FAFAFA" : "#FFFFFF";
+                        table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Background(bg).Padding(5).AlignCenter().Text(idx.ToString()).FontSize(8);
+                        table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Background(bg).Padding(5).Text(item.ProductName).FontSize(9).Bold();
+                        table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Background(bg).Padding(5).Text(item.LocationsSummary).FontSize(8).FontColor(BrandColors.TextSecondary);
+                        table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Background(bg).Padding(5).AlignRight().Text($"{item.TotalQuantity} Ad.").FontSize(9).Bold();
+                        table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Background(bg).Padding(5).AlignRight().Text($"{item.UnitPrice:N2} ₺").FontSize(8);
+                        table.Cell().BorderBottom(1).BorderColor("#EEEEEE").Background(bg).Padding(5).AlignRight().Text($"{item.GrossRevenue:N2} ₺").FontSize(9).Bold().FontColor(BrandColors.Primary);
+                        idx++;
+                    }
+                });
+            });
+        }
+
         private void ComposeProductImage(IContainer container, string? imagePath)
         {
             if (!string.IsNullOrEmpty(imagePath) && File.Exists(imagePath))
@@ -426,7 +510,7 @@ namespace KamatekCrm.Services
                 try
                 {
                     var bytes = File.ReadAllBytes(imagePath);
-                    container.Image(bytes).FitArea();
+                    container.Width(40).Height(40).Image(bytes).FitArea();
                 }
                 catch
                 {
@@ -2047,6 +2131,165 @@ namespace KamatekCrm.Services
                 });
             });
         }
+
+        #region Customer Account Statement (Cari Ekstre)
+
+        public void GenerateCustomerStatement(Customer customer, IEnumerable<Transaction> transactions, decimal currentBalance, string filePath)
+        {
+            AuditSensitiveDocumentAccess("Cari Hesap Ekstresi", customer?.Id);
+            var logoBytes = GetLogoBytes();
+
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(30);
+                    page.PageColor(Colors.White);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
+
+                    page.Header().Column(col =>
+                    {
+                        col.Item().Row(row =>
+                        {
+                            if (logoBytes != null)
+                            {
+                                row.ConstantItem(120).Height(50).Image(logoBytes).FitArea();
+                            }
+                            else
+                            {
+                                row.RelativeItem().Text("KAMATEK GÜVENLİK VE BİLİŞİM").FontSize(16).Bold().FontColor(BrandColors.Primary);
+                            }
+
+                            row.RelativeItem().Column(rCol =>
+                            {
+                                rCol.Item().AlignRight().Text("MÜŞTERİ CARİ HESAP EKSTRESİ").FontSize(14).Bold().FontColor(BrandColors.Primary);
+                                rCol.Item().AlignRight().Text($"Tarih: {DateTime.Now:dd.MM.yyyy HH:mm}").FontSize(9).FontColor(BrandColors.TextSecondary);
+                            });
+                        });
+
+                        col.Item().PaddingVertical(10).LineHorizontal(1.5f).LineColor(BrandColors.Primary);
+
+                        // Müşteri Bilgileri
+                        col.Item().Border(1).BorderColor("#E0E0E0").Background(BrandColors.LightGray).Padding(10).Row(r =>
+                        {
+                            r.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text($"Müşteri: {customer.FullName}").Bold().FontSize(11).FontColor(BrandColors.Primary);
+                                c.Item().Text($"Müşteri Kodu: {customer.CustomerCode}").FontSize(9);
+                                if (!string.IsNullOrWhiteSpace(customer.CompanyName))
+                                    c.Item().Text($"Firma: {customer.CompanyName}").FontSize(9);
+                                if (!string.IsNullOrWhiteSpace(customer.TaxNumber))
+                                    c.Item().Text($"Vergi No / Daire: {Protect(customer.TaxNumber, PersonalDataKind.TaxNumber)} / {customer.TaxOffice}").FontSize(9);
+                            });
+
+                            r.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text($"Telefon: {Protect(customer.PhoneNumber, PersonalDataKind.Phone)}").FontSize(9);
+                                c.Item().Text($"E-posta: {Protect(customer.Email, PersonalDataKind.Email)}").FontSize(9);
+                                c.Item().Text($"Adres: {Protect(customer.FullAddress, PersonalDataKind.Address)}").FontSize(9);
+                            });
+                        });
+
+                        col.Item().PaddingVertical(10);
+                    });
+
+                    page.Content().Column(col =>
+                    {
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.ConstantColumn(80);  // Tarih
+                                columns.ConstantColumn(90);  // İşlem Tipi
+                                columns.RelativeColumn();    // Açıklama
+                                columns.ConstantColumn(85);  // Borç (+)
+                                columns.ConstantColumn(85);  // Alacak (-)
+                            });
+
+                            table.Header(header =>
+                            {
+                                header.Cell().Background(BrandColors.TableHeader).Padding(5).Text("Tarih").Bold().FontSize(9);
+                                header.Cell().Background(BrandColors.TableHeader).Padding(5).Text("İşlem Tipi").Bold().FontSize(9);
+                                header.Cell().Background(BrandColors.TableHeader).Padding(5).Text("Açıklama").Bold().FontSize(9);
+                                header.Cell().Background(BrandColors.TableHeader).Padding(5).AlignRight().Text("Borç").Bold().FontSize(9);
+                                header.Cell().Background(BrandColors.TableHeader).Padding(5).AlignRight().Text("Tahsilat").Bold().FontSize(9);
+                            });
+
+                            decimal totalDebt = 0;
+                            decimal totalCredit = 0;
+
+                            foreach (var item in transactions.OrderBy(t => t.Date))
+                            {
+                                bool isDebt = item.Type == TransactionType.Debt || item.Type == TransactionType.Refund;
+                                decimal debtAmount = isDebt ? item.Amount : 0;
+                                decimal creditAmount = !isDebt ? item.Amount : 0;
+                                totalDebt += debtAmount;
+                                totalCredit += creditAmount;
+
+                                string typeName = item.Type switch
+                                {
+                                    TransactionType.Payment => "Tahsilat",
+                                    TransactionType.Debt => "Borç",
+                                    TransactionType.Refund => "İade",
+                                    TransactionType.CreditNote => "Alacak Dekontu",
+                                    _ => item.Type.ToString()
+                                };
+
+                                table.Cell().BorderBottom(0.5f).BorderColor("#E0E0E0").Padding(4).Text($"{item.Date:dd.MM.yyyy}").FontSize(8.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#E0E0E0").Padding(4).Text(typeName).FontSize(8.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#E0E0E0").Padding(4).Text(item.Description ?? "-").FontSize(8.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#E0E0E0").Padding(4).AlignRight().Text(debtAmount > 0 ? $"{debtAmount:C2}" : "-").FontSize(8.5f);
+                                table.Cell().BorderBottom(0.5f).BorderColor("#E0E0E0").Padding(4).AlignRight().Text(creditAmount > 0 ? $"{creditAmount:C2}" : "-").FontSize(8.5f);
+                            }
+
+                            // Toplam Satırı
+                            table.Cell().ColumnSpan(3).Background(BrandColors.LightGray).Padding(6).AlignRight().Text("TOPLAMLAR:").Bold().FontSize(9);
+                            table.Cell().Background(BrandColors.LightGray).Padding(6).AlignRight().Text($"{totalDebt:C2}").Bold().FontSize(9);
+                            table.Cell().Background(BrandColors.LightGray).Padding(6).AlignRight().Text($"{totalCredit:C2}").Bold().FontSize(9);
+                        });
+
+                        col.Item().PaddingTop(15).AlignRight().Column(bCol =>
+                        {
+                            bCol.Item().Row(r =>
+                            {
+                                r.ConstantItem(120).Text("Toplam Borç:").FontSize(9);
+                                r.ConstantItem(100).AlignRight().Text($"{transactions.Where(t => t.Type == TransactionType.Debt || t.Type == TransactionType.Refund).Sum(t => t.Amount):C2}").FontSize(9);
+                            });
+                            bCol.Item().Row(r =>
+                            {
+                                r.ConstantItem(120).Text("Toplam Tahsilat:").FontSize(9);
+                                r.ConstantItem(100).AlignRight().Text($"{transactions.Where(t => t.Type == TransactionType.Payment || t.Type == TransactionType.CreditNote).Sum(t => t.Amount):C2}").FontSize(9);
+                            });
+                            bCol.Item().PaddingTop(4).BorderTop(1).BorderColor(BrandColors.Primary).Row(r =>
+                            {
+                                r.ConstantItem(120).Text("GÜNCEL BAKİYE:").Bold().FontSize(11).FontColor(BrandColors.Primary);
+                                string balanceSign = currentBalance > 0 ? "(Borçlu)" : (currentBalance < 0 ? "(Alacaklı)" : "(Sıfır)");
+                                r.ConstantItem(140).AlignRight().Text($"{Math.Abs(currentBalance):C2} {balanceSign}").Bold().FontSize(11).FontColor(currentBalance > 0 ? BrandColors.Danger : (currentBalance < 0 ? BrandColors.Success : BrandColors.TextSecondary));
+                            });
+                        });
+                    });
+
+                    page.Footer().Column(col =>
+                    {
+                        col.Item().LineHorizontal(1).LineColor("#E0E0E0");
+                        col.Item().PaddingTop(4).Row(r =>
+                        {
+                            r.RelativeItem().Text("Kamatek CRM Finans Yönetim Sistemi").FontSize(8).FontColor("#9E9E9E");
+                            r.RelativeItem().AlignRight().Text(x =>
+                            {
+                                x.Span("Sayfa ");
+                                x.CurrentPageNumber();
+                                x.Span(" / ");
+                                x.TotalPages();
+                            });
+                        });
+                    });
+                });
+            }).GeneratePdf(filePath);
+        }
+
+        #endregion
 
         #endregion
 

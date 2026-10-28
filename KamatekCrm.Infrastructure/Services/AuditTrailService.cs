@@ -30,25 +30,28 @@ public sealed class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-            context.ActivityLogs.Add(new ActivityLog
+            var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+            await using (context.ConfigureAwait(false))
             {
-                UserId = _currentUser.UserId,
-                Username = _currentUser.IsAuthenticated ? _currentUser.Username : "System/Anonymous",
-                ActionType = actionType.ToString(),
-                Action = actionType.ToString(),
-                EntityName = entityName,
-                RecordId = recordId,
-                ReferenceId = recordId,
-                Description = description,
-                AdditionalData = additionalData,
-                Timestamp = DateTime.UtcNow,
-                DurationMs = 0,
-                IpAddress = "127.0.0.1",
-                UserAgent = "WPF Client"
-            });
-            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return Result.Success();
+                context.ActivityLogs.Add(new ActivityLog
+                {
+                    UserId = _currentUser.UserId,
+                    Username = _currentUser.IsAuthenticated ? _currentUser.Username : "System/Anonymous",
+                    ActionType = actionType.ToString(),
+                    Action = actionType.ToString(),
+                    EntityName = entityName,
+                    RecordId = recordId,
+                    ReferenceId = recordId,
+                    Description = description,
+                    AdditionalData = additionalData,
+                    Timestamp = DateTime.UtcNow,
+                    DurationMs = 0,
+                    IpAddress = "127.0.0.1",
+                    UserAgent = "WPF Client"
+                });
+                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                return Result.Success();
+            }
         }
         catch (Exception exception)
         {

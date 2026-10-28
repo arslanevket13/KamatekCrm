@@ -36,8 +36,14 @@ namespace KamatekCrm.ApplicationCore.Interfaces
 
         /// <summary>
         /// Müşteriyi mantıksal olarak siler (Soft Delete).
-        /// Bağlı iş emirleri varsa ReferentialIntegrityException fırlatır.
         /// </summary>
         Task<Result> DeleteAsync(int id, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Mükerrer açılmış bir müşteri kartını (kaynak) ana müşteri kartına (hedef) aktarır.
+        /// Tüm bağlı iş emirleri, satışlar, teklifler, cihazlar ve finansal hareketler aktarılır;
+        /// ardından kaynak kart soft-delete ile arşivlenir.
+        /// </summary>
+        Task<Result> MergeCustomersAsync(int sourceCustomerId, int targetCustomerId, CancellationToken cancellationToken = default);
     }
 }

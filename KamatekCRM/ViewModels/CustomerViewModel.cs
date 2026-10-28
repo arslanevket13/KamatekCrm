@@ -63,6 +63,7 @@ namespace KamatekCrm.ViewModels
         private City? _selectedCity;
         private District? _selectedDistrict;
         private Neighborhood? _selectedNeighborhood;
+        private bool _isAddressLoading;
 
         // D�ZELTME 2: Ba�lang�� de�eri bo� sayfa atandı
         private string _mapUrl = "about:blank";
@@ -151,30 +152,27 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedCustomer, value))
                 {
                     OnPropertyChanged(nameof(HasSelectedCustomer));
+                    OpenCustomerProfileCommand?.NotifyCanExecuteChanged();
+                    DeleteCustomerCommand?.NotifyCanExecuteChanged();
+                    CreateQuoteForCustomerCommand?.NotifyCanExecuteChanged();
+                    MergeWithTargetCustomerCommand?.NotifyCanExecuteChanged();
+                    ViewProfileCommand?.NotifyCanExecuteChanged();
+
                     if (value != null)
                     {
-                        // Seili mteriyi forma ykle
+                        // Seçili müşteriyi forma yükle
                         FullName = value.FullName;
                         PhoneNumber = value.PhoneNumber;
                         Email = value.Email;
 
-                        // ehir seimini ykle
-                        if (!string.IsNullOrWhiteSpace(value.City))
-                            SelectedCity = Cities.FirstOrDefault(c => c.Name == value.City);
-
-                        // le seimini ykle
-                        if (!string.IsNullOrWhiteSpace(value.District) && SelectedCity != null)
-                            SelectedDistrict = Districts.FirstOrDefault(d => d.Name == value.District);
-
-                        // Mahalle seimini ykle
-                        if (!string.IsNullOrWhiteSpace(value.Neighborhood) && SelectedDistrict != null)
-                            SelectedNeighborhood = Neighborhoods.FirstOrDefault(n => n.Name == value.Neighborhood);
+                        // Adres hiyerarşisini yarış durumu (race condition) olmadan yükle
+                        SetAddress(value.City, value.District, value.Neighborhood);
 
                         Street = value.Street;
                         BuildingNo = value.BuildingNo;
                         ApartmentNo = value.ApartmentNo;
 
-                        // Haritay gncelle (Mevcut mteri yklendiinde)
+                        // Haritayı güncelle (Mevcut müşteri yüklendiğinde)
                         UpdateMapUrl();
                     }
                 }
@@ -202,6 +200,77 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        public void SetAddress(string? cityName, string? districtName, string? neighborhoodName)
+        {
+            _isAddressLoading = true;
+            try
+            {
+                Districts.Clear();
+                Neighborhoods.Clear();
+
+                if (string.IsNullOrWhiteSpace(cityName))
+                {
+                    _selectedCity = null;
+                    _selectedDistrict = null;
+                    _selectedNeighborhood = null;
+                    City = string.Empty;
+                    District = null;
+                    Neighborhood = null;
+                    OnPropertyChanged(nameof(SelectedCity));
+                    OnPropertyChanged(nameof(SelectedDistrict));
+                    OnPropertyChanged(nameof(SelectedNeighborhood));
+                    return;
+                }
+
+                var city = Cities.FirstOrDefault(c => AddressService.TurkishEquals(c.Name, cityName)) ?? AddressService.FindCity(cityName);
+                _selectedCity = city;
+                City = city?.Name ?? cityName;
+                OnPropertyChanged(nameof(SelectedCity));
+
+                if (city != null)
+                {
+                    var districts = AddressService.GetDistricts(city.Name);
+                    foreach (var d in districts) Districts.Add(d);
+
+                    var district = Districts.FirstOrDefault(d => AddressService.TurkishEquals(d.Name, districtName));
+                    _selectedDistrict = district;
+                    District = district?.Name ?? districtName;
+                    OnPropertyChanged(nameof(SelectedDistrict));
+
+                    if (district != null)
+                    {
+                        var neighborhoods = AddressService.GetNeighborhoods(city.Name, district.Name);
+                        foreach (var n in neighborhoods) Neighborhoods.Add(n);
+
+                        var neighborhood = Neighborhoods.FirstOrDefault(n => AddressService.TurkishEquals(n.Name, neighborhoodName));
+                        _selectedNeighborhood = neighborhood;
+                        Neighborhood = neighborhood?.Name ?? neighborhoodName;
+                        OnPropertyChanged(nameof(SelectedNeighborhood));
+                    }
+                    else
+                    {
+                        _selectedNeighborhood = null;
+                        Neighborhood = neighborhoodName;
+                        OnPropertyChanged(nameof(SelectedNeighborhood));
+                    }
+                }
+                else
+                {
+                    _selectedDistrict = null;
+                    _selectedNeighborhood = null;
+                    District = districtName;
+                    Neighborhood = neighborhoodName;
+                    OnPropertyChanged(nameof(SelectedDistrict));
+                    OnPropertyChanged(nameof(SelectedNeighborhood));
+                }
+            }
+            finally
+            {
+                _isAddressLoading = false;
+                UpdateMapUrl();
+            }
+        }
+
         public City? SelectedCity
         {
             get => _selectedCity;
@@ -209,6 +278,8 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedCity, value))
                 {
+                    if (_isAddressLoading) return;
+
                     Districts.Clear();
                     Neighborhoods.Clear();
                     SelectedDistrict = null;
@@ -234,6 +305,8 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedDistrict, value))
                 {
+                    if (_isAddressLoading) return;
+
                     Neighborhoods.Clear();
                     SelectedNeighborhood = null;
 
@@ -393,8 +466,12 @@ namespace KamatekCrm.ViewModels
                             FullName = item.FullName,
                             CompanyName = item.CompanyName,
                             PhoneNumber = item.PhoneNumber,
+                            Email = item.Email,
                             City = item.City,
+                            District = item.District,
                             Type = item.Type,
+                            Segment = item.Segment,
+                            TotalSpent = item.TotalSpent,
                             CreatedDate = item.CreatedDate
                         });
                     }
@@ -486,25 +563,39 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(IsCustomerSelected))]
-        private async Task DeleteCustomer()
+        [RelayCommand]
+        private async Task DeleteCustomer(object? parameter = null)
         {
-            if (SelectedCustomer == null) return;
+            var customer = parameter switch
+            {
+                Customer c => c,
+                CustomerListItemDto dto => Customers.FirstOrDefault(c => c.Id == dto.Id),
+                _ => SelectedCustomer
+            };
 
-            var result = MessageBox.Show($"{SelectedCustomer.FullName} adlı müşteriyi silmek istediğinize emin misiniz?",
-                "Onay", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (customer == null)
+            {
+                _toastService?.ShowWarning("Lütfen silmek istediğiniz müşteriyi seçin.");
+                return;
+            }
+
+            var result = MessageBox.Show($"{customer.FullName} adlı müşteriyi silmek / arşive almak istediğinize emin misiniz?",
+                "Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
                 try
                 {
-                    _loadingService.Show("Müşteri siliniyor...");
-                    var res = await _customerAppService.DeleteAsync(SelectedCustomer.Id);
+                    _loadingService.Show("Müşteri siliniyor / arşive alınıyor...");
+                    var res = await _customerAppService.DeleteAsync(customer.Id);
                     if (res.IsSuccess)
                     {
-                        _ = RefreshDataAsync();
-                        ClearForm();
-                        _toastService.ShowSuccess("Müşteri başarıyla silindi!");
+                        if (SelectedCustomer?.Id == customer.Id)
+                        {
+                            ClearForm();
+                        }
+                        await RefreshDataAsync();
+                        _toastService.ShowSuccess("Müşteri başarıyla silindi / arşive alındı!");
                     }
                     else
                     {
@@ -617,10 +708,10 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(IsCustomerSelected))]
-        private void ViewProfile()
+        private async Task ViewProfile()
         {
             if (SelectedCustomer == null) return;
-            OpenCustomerProfile();
+            await OpenCustomerProfile(SelectedCustomer);
         }
 
         [RelayCommand]
@@ -641,13 +732,44 @@ namespace KamatekCrm.ViewModels
             window.ShowDialog();
         }
 
-        [RelayCommand(CanExecute = nameof(IsCustomerSelected))]
-        private void OpenCustomerProfile()
+        [RelayCommand]
+        private async Task OpenCustomerProfile(object? parameter = null)
         {
-            if (SelectedCustomer == null) return;
+            var customer = parameter switch
+            {
+                Customer c => c,
+                CustomerListItemDto dto => Customers.FirstOrDefault(c => c.Id == dto.Id),
+                _ => SelectedCustomer
+            };
 
-            var detailVm = _navigationService.NavigateTo<CustomerDetailViewModel>();
-            detailVm.Initialize(SelectedCustomer.Id);
+            if (customer == null)
+            {
+                _toastService?.ShowWarning("Lütfen profilini açmak istediğiniz müşteriyi seçin.");
+                return;
+            }
+
+            try
+            {
+                var detailVm = _navigationService.NavigateTo<CustomerDetailViewModel>();
+                await detailVm.InitializeAsync(customer.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Müşteri detayına geçilirken hata oluştu");
+                try
+                {
+                    var window = new Views.CustomerDetailWindow();
+                    var vm = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<CustomerDetailViewModel>(App.ServiceProvider);
+                    await vm.InitializeAsync(customer.Id);
+                    window.DetailView.DataContext = vm;
+                    window.Owner = System.Windows.Application.Current?.MainWindow;
+                    window.ShowDialog();
+                }
+                catch (Exception winEx)
+                {
+                    _toastService?.ShowError($"Müşteri profili açılamadı: {winEx.Message}");
+                }
+            }
         }
 
         [RelayCommand]
@@ -673,6 +795,52 @@ namespace KamatekCrm.ViewModels
             catch (Exception ex)
             {
                 _toastService?.ShowError($"Teklif penceresi açılamadı: {ex.Message}");
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(IsCustomerSelected))]
+        private async Task MergeWithTargetCustomerAsync(object? targetCustomerIdParam)
+        {
+            if (SelectedCustomer == null) return;
+
+            int targetCustomerId = 0;
+            if (targetCustomerIdParam is int intId)
+            {
+                targetCustomerId = intId;
+            }
+            else if (targetCustomerIdParam is string strId && int.TryParse(strId, out int parsed))
+            {
+                targetCustomerId = parsed;
+            }
+            else if (targetCustomerIdParam is Customer targetCust)
+            {
+                targetCustomerId = targetCust.Id;
+            }
+
+            if (targetCustomerId <= 0 || targetCustomerId == SelectedCustomer.Id)
+            {
+                _toastService.ShowWarning("Lütfen birleştirilecek geçerli bir hedef müşteri seçin.");
+                return;
+            }
+
+            try
+            {
+                _loadingService.Show("Müşteri kayıtları birleştiriliyor...");
+                var result = await _customerAppService.MergeCustomersAsync(SelectedCustomer.Id, targetCustomerId);
+                if (result.IsSuccess)
+                {
+                    _toastService.ShowSuccess("Müşteri kayıtları başarıyla birleştirildi.");
+                    SelectedCustomer = null;
+                    await RefreshDataAsync();
+                }
+                else
+                {
+                    _toastService.ShowError("Birleştirme Hatası", result.Error ?? "İşlem tamamlanamadı.");
+                }
+            }
+            finally
+            {
+                _loadingService.Hide();
             }
         }
     }

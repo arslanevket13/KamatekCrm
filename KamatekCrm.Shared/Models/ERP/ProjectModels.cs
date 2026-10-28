@@ -69,13 +69,59 @@ namespace KamatekCrm.Shared.Models
     {
         private bool _isExpanded = true;
         private bool _isSelected;
+        private int _multiplier = 1;
 
         public int Id { get; set; }
         public string Name { get; set; } = "";
         public NodeType Type { get; set; }
+
+        /// <summary>
+        /// Düğüm çarpanı (ör. 10 adet tip daire, veya 3 blok). Varsayılan 1'dir.
+        /// Altındaki tüm kalem ve düğümlerin toplamını çarpar.
+        /// </summary>
+        public int Multiplier
+        {
+            get => _multiplier;
+            set
+            {
+                _multiplier = Math.Max(1, value);
+                OnPropertyChanged(nameof(Multiplier));
+                NotifyTotalsChanged();
+            }
+        }
+
         public decimal RecursiveTotal { get; set; }
         public decimal RecursiveTotalCost { get; set; }
         public decimal SubTotal { get; set; }
+        public decimal SubTotalCost { get; set; }
+
+        public decimal NodeSubTotal => RecursiveTotal;
+        public decimal NodeCost => RecursiveTotalCost;
+        public decimal NodeProfit => FinancialCalculator.RoundMoney(NodeSubTotal - NodeCost);
+        public string NodeMarginDisplay => NodeSubTotal > 0
+            ? $"%{FinancialCalculator.RoundMoney(NodeProfit / NodeSubTotal * 100m):N1}"
+            : "%0";
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public static bool IsBatchUpdating { get; set; }
+
+        public static IDisposable BeginBatchUpdate() => new BatchUpdateScope();
+
+        private sealed class BatchUpdateScope : IDisposable
+        {
+            public BatchUpdateScope() => IsBatchUpdating = true;
+            public void Dispose() => IsBatchUpdating = false;
+        }
+
+        public static void RecalculateTreeTotals(ScopeNode root)
+        {
+            if (root == null) return;
+            foreach (var child in root.Children)
+            {
+                RecalculateTreeTotals(child);
+            }
+            root.NotifyTotalsChanged();
+        }
 
         public bool IsExpanded
         {
@@ -149,18 +195,27 @@ namespace KamatekCrm.Shared.Models
             return child;
         }
 
-        public decimal SubTotalCost { get; set; }
-
         public void NotifyTotalsChanged()
         {
+            if (IsBatchUpdating) return;
+
             SubTotal = FinancialCalculator.RoundMoney(Items.Where(i => !i.IsOptional).Sum(i => i.TotalPrice));
             SubTotalCost = FinancialCalculator.RoundMoney(Items.Where(i => !i.IsOptional).Sum(i => i.TotalItemCost));
-            RecursiveTotalCost = FinancialCalculator.RoundMoney(SubTotalCost + Children.Sum(c => c.RecursiveTotalCost));
-            RecursiveTotal = FinancialCalculator.RoundMoney(SubTotal + Children.Sum(c => c.RecursiveTotal));
+            decimal childrenTotal = FinancialCalculator.RoundMoney(Children.Sum(c => c.RecursiveTotal));
+            decimal childrenCost = FinancialCalculator.RoundMoney(Children.Sum(c => c.RecursiveTotalCost));
+
+            // Multiplier ile özyinelemeli çarpanlı toplam (ToEven kesinliğinde)
+            RecursiveTotal = FinancialCalculator.RoundMoney((SubTotal + childrenTotal) * Multiplier);
+            RecursiveTotalCost = FinancialCalculator.RoundMoney((SubTotalCost + childrenCost) * Multiplier);
+
             OnPropertyChanged(nameof(SubTotal));
             OnPropertyChanged(nameof(SubTotalCost));
             OnPropertyChanged(nameof(RecursiveTotal));
             OnPropertyChanged(nameof(RecursiveTotalCost));
+            OnPropertyChanged(nameof(NodeSubTotal));
+            OnPropertyChanged(nameof(NodeCost));
+            OnPropertyChanged(nameof(NodeProfit));
+            OnPropertyChanged(nameof(NodeMarginDisplay));
             Parent?.NotifyTotalsChanged();
         }
 
@@ -199,6 +254,7 @@ namespace KamatekCrm.Shared.Models
                 Id = _idCounter++,
                 Name = newName,
                 Type = Type,
+                Multiplier = Multiplier,
                 IsExpanded = IsExpanded
             };
 
@@ -229,6 +285,21 @@ namespace KamatekCrm.Shared.Models
 
             clone.NotifyTotalsChanged();
             return clone;
+        }
+
+        /// <summary>
+        /// Kendisini ve tüm alt düğümlerini özyinelemeli olarak döndürür.
+        /// </summary>
+        public IEnumerable<ScopeNode> GetAllDescendantsOrSelf()
+        {
+            yield return this;
+            foreach (var child in Children)
+            {
+                foreach (var desc in child.GetAllDescendantsOrSelf())
+                {
+                    yield return desc;
+                }
+            }
         }
 
         public string HeaderDisplay => Type switch
@@ -356,4 +427,51 @@ namespace KamatekCrm.Shared.Models
         }
     }
 
+    /// <summary>
+    /// Proje yapı ağacından çıkarılan konsolide malzeme icmali (Consolidated BOM).
+    /// Hiyerarşik ağaçtaki tüm tekrarlayan ürünleri tekilleştirip kümülatif çarpanlarla toplar.
+    /// Kuruş farkları Largest Remainder Method ile genel toplama eşitlenir.
+    /// </summary>
+    public class ConsolidatedBomItem
+    {
+        public int? ProductId { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public string? Sku { get; set; }
+        public int TotalQuantity { get; set; }
+        public decimal UnitCost { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal TotalCost { get; set; }
+        public decimal GrossRevenue { get; set; }
+        public decimal AllocatedDiscount { get; set; }
+        public decimal NetRevenue { get; set; }
+        public decimal VatAmount { get; set; }
+        public decimal GrandTotal { get; set; }
+        public decimal Profit => FinancialCalculator.RoundMoney(NetRevenue - TotalCost);
+        public string MarginDisplay => NetRevenue > 0
+            ? $"%{FinancialCalculator.RoundMoney(Profit / NetRevenue * 100m):N1}"
+            : "%0";
+        public List<string> Locations { get; set; } = new();
+        public string LocationsSummary => Locations.Count <= 3
+            ? string.Join(", ", Locations)
+            : $"{string.Join(", ", Locations.Take(3))} ve +{Locations.Count - 3} mahal";
+    }
+
+    /// <summary>
+    /// Konsolide Malzeme İcmali toplam ve özet sonucu
+    /// </summary>
+    public class ConsolidatedBomResult
+    {
+        public List<ConsolidatedBomItem> Items { get; set; } = new();
+        public decimal TotalGrossRevenue => FinancialCalculator.RoundMoney(Items.Sum(i => i.GrossRevenue));
+        public decimal TotalCost => FinancialCalculator.RoundMoney(Items.Sum(i => i.TotalCost));
+        public decimal TotalDiscount => FinancialCalculator.RoundMoney(Items.Sum(i => i.AllocatedDiscount));
+        public decimal TotalNetRevenue => FinancialCalculator.RoundMoney(Items.Sum(i => i.NetRevenue));
+        public decimal TotalVat => FinancialCalculator.RoundMoney(Items.Sum(i => i.VatAmount));
+        public decimal GrandTotal => FinancialCalculator.RoundMoney(Items.Sum(i => i.GrandTotal));
+        public decimal TotalProfit => FinancialCalculator.RoundMoney(TotalNetRevenue - TotalCost);
+        public decimal OverallMargin => TotalNetRevenue > 0
+            ? Math.Round(TotalProfit / TotalNetRevenue * 100m, 2, MidpointRounding.AwayFromZero)
+            : 0m;
+        public int TotalItemCount => Items.Sum(i => i.TotalQuantity);
+    }
 }

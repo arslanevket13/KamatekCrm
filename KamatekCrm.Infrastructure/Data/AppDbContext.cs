@@ -126,6 +126,7 @@ namespace KamatekCrm.Infrastructure.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
             if (!optionsBuilder.IsConfigured)
             {
@@ -382,8 +383,8 @@ namespace KamatekCrm.Infrastructure.Data
                 entity.Property(e => e.Specifications)
                       .HasColumnType("jsonb")
                       .HasConversion(
-                          v => JsonSerializer.Serialize(v, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }),
-                          v => JsonSerializer.Deserialize<ProductSpecBase>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new GeneralSpecs()
+                          v => ProductSpecHelper.SerializeSpecs(v),
+                          v => ProductSpecHelper.DeserializeSpecs(v)
                       );
             });
 

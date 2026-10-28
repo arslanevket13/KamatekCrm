@@ -1,3 +1,5 @@
+using KamatekCrm.Events;
+using KamatekCrm.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -513,6 +515,14 @@ namespace KamatekCrm.ViewModels
                     : $"Sayım kaydedildi ({result.Value.ReferenceNumber}). {result.Value.ProductCount} ürün güncellendi.";
                 IsActionSuccessful = true;
                 _ = _draftStorageService.ClearDraftAsync(GetDraftKey());
+                if (!result.Value.WasAlreadyApplied)
+                {
+                    var affectedIds = itemsWithDifference.Select(i => i.ProductId).Distinct().ToList();
+                    EventAggregator.Instance.Publish(new StockUpdatedEvent(
+                        affectedIds,
+                        SelectedWarehouse.Id,
+                        $"Stok sayımı uygulandı ({result.Value.ReferenceNumber})"));
+                }
 
                 await RefreshCoreAsync();
             }
@@ -936,6 +946,14 @@ namespace KamatekCrm.ViewModels
                     : $"Manuel sayım kaydedildi ({result.Value.ReferenceNumber}). {result.Value.ProductCount} ürün güncellendi.";
                 IsActionSuccessful = true;
                 _ = _draftStorageService.ClearDraftAsync($"stock_count_manual_{ManualSelectedWarehouse.Id}");
+                if (!result.Value.WasAlreadyApplied)
+                {
+                    var affectedIds = itemsWithDifference.Select(i => i.ProductId).Distinct().ToList();
+                    EventAggregator.Instance.Publish(new StockUpdatedEvent(
+                        affectedIds,
+                        ManualSelectedWarehouse.Id,
+                        $"Manuel sayım uygulandı ({result.Value.ReferenceNumber})"));
+                }
 
                 ManualCountItems.Clear();
                 _manualCountIdempotencyKey = Guid.NewGuid();

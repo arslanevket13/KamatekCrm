@@ -24,6 +24,7 @@ namespace KamatekCrm.Infrastructure.Data
 
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             optionsBuilder.UseNpgsql(connectionString);
+            optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
             return new AppDbContext(optionsBuilder.Options);
         }

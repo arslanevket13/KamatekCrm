@@ -9,6 +9,7 @@ using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Helpers;
 using KamatekCrm.Views;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,6 +44,15 @@ namespace KamatekCrm.ViewModels
         private string? _taxNumber;
         private string? _taxOffice;
 
+        private City? _selectedCity;
+        private District? _selectedDistrict;
+        private Neighborhood? _selectedNeighborhood;
+        private bool _isAddressLoading;
+
+        public ObservableCollection<City> Cities { get; set; }
+        public ObservableCollection<District> Districts { get; set; }
+        public ObservableCollection<Neighborhood> Neighborhoods { get; set; }
+
         // Collections
         public ObservableCollection<ServiceJob> ServiceJobs { get; set; }
         public ObservableCollection<ServiceJob> ActiveJobs { get; set; }
@@ -60,6 +70,9 @@ namespace KamatekCrm.ViewModels
         // Calculated Properties
         private decimal _totalSpent;
         private decimal _totalBalance;
+        private decimal _totalDebt;
+        private decimal _totalCredit;
+        private decimal _netBalance;
 
         private readonly NavigationService _navigationService;
         private readonly IToastService _toastService;
@@ -67,6 +80,7 @@ namespace KamatekCrm.ViewModels
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IPersonalDataProtectionService _personalDataProtection;
         private readonly IAuditTrailService _auditTrail;
+        private readonly PdfService? _pdfService;
 
         private int _customerId;
 
@@ -76,7 +90,8 @@ namespace KamatekCrm.ViewModels
             ILoadingService loadingService,
             IDbContextFactory<AppDbContext> dbContextFactory,
             IPersonalDataProtectionService personalDataProtection,
-            IAuditTrailService auditTrail)
+            IAuditTrailService auditTrail,
+            PdfService? pdfService = null)
         {
             _navigationService = navigationService;
             _toastService = toastService;
@@ -84,7 +99,12 @@ namespace KamatekCrm.ViewModels
             _dbContextFactory = dbContextFactory;
             _personalDataProtection = personalDataProtection;
             _auditTrail = auditTrail;
+            _pdfService = pdfService;
             
+            Cities = new ObservableCollection<City>(AddressService.GetCities());
+            Districts = new ObservableCollection<District>();
+            Neighborhoods = new ObservableCollection<Neighborhood>();
+
             ServiceJobs = new ObservableCollection<ServiceJob>();
             ActiveJobs = new ObservableCollection<ServiceJob>();
             PastJobs = new ObservableCollection<ServiceJob>();
@@ -95,8 +115,13 @@ namespace KamatekCrm.ViewModels
 
         public void Initialize(int customerId)
         {
+            _ = InitializeAsync(customerId);
+        }
+
+        public async Task InitializeAsync(int customerId)
+        {
             _customerId = customerId;
-            LoadCustomerData();
+            await LoadCustomerDataAsync();
         }
 
 
@@ -180,6 +205,159 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        public City? SelectedCity
+        {
+            get => _selectedCity;
+            set
+            {
+                if (SetProperty(ref _selectedCity, value))
+                {
+                    if (_isAddressLoading) return;
+
+                    Districts.Clear();
+                    Neighborhoods.Clear();
+                    SelectedDistrict = null;
+                    SelectedNeighborhood = null;
+
+                    if (value != null)
+                    {
+                        _city = value.Name;
+                        OnPropertyChanged(nameof(City));
+                        var districts = AddressService.GetDistricts(value.Name);
+                        foreach (var d in districts) Districts.Add(d);
+                    }
+                    else
+                    {
+                        _city = string.Empty;
+                        OnPropertyChanged(nameof(City));
+                    }
+                }
+            }
+        }
+
+        public District? SelectedDistrict
+        {
+            get => _selectedDistrict;
+            set
+            {
+                if (SetProperty(ref _selectedDistrict, value))
+                {
+                    if (_isAddressLoading) return;
+
+                    Neighborhoods.Clear();
+                    SelectedNeighborhood = null;
+
+                    if (value != null && SelectedCity != null)
+                    {
+                        _district = value.Name;
+                        OnPropertyChanged(nameof(District));
+                        var neighborhoods = AddressService.GetNeighborhoods(SelectedCity.Name, value.Name);
+                        foreach (var n in neighborhoods) Neighborhoods.Add(n);
+                    }
+                    else
+                    {
+                        _district = null;
+                        OnPropertyChanged(nameof(District));
+                    }
+                }
+            }
+        }
+
+        public Neighborhood? SelectedNeighborhood
+        {
+            get => _selectedNeighborhood;
+            set
+            {
+                if (SetProperty(ref _selectedNeighborhood, value))
+                {
+                    if (value != null)
+                    {
+                        _neighborhood = value.Name;
+                        OnPropertyChanged(nameof(Neighborhood));
+                    }
+                }
+            }
+        }
+
+        public void SetAddress(string? cityName, string? districtName, string? neighborhoodName)
+        {
+            _isAddressLoading = true;
+            try
+            {
+                Districts.Clear();
+                Neighborhoods.Clear();
+
+                if (string.IsNullOrWhiteSpace(cityName))
+                {
+                    _selectedCity = null;
+                    _selectedDistrict = null;
+                    _selectedNeighborhood = null;
+                    _city = string.Empty;
+                    _district = null;
+                    _neighborhood = null;
+                    OnPropertyChanged(nameof(SelectedCity));
+                    OnPropertyChanged(nameof(SelectedDistrict));
+                    OnPropertyChanged(nameof(SelectedNeighborhood));
+                    OnPropertyChanged(nameof(City));
+                    OnPropertyChanged(nameof(District));
+                    OnPropertyChanged(nameof(Neighborhood));
+                    return;
+                }
+
+                var city = Cities.FirstOrDefault(c => AddressService.TurkishEquals(c.Name, cityName)) ?? AddressService.FindCity(cityName);
+                _selectedCity = city;
+                _city = city?.Name ?? cityName;
+                OnPropertyChanged(nameof(SelectedCity));
+                OnPropertyChanged(nameof(City));
+
+                if (city != null)
+                {
+                    var districts = AddressService.GetDistricts(city.Name);
+                    foreach (var d in districts) Districts.Add(d);
+
+                    var district = Districts.FirstOrDefault(d => AddressService.TurkishEquals(d.Name, districtName));
+                    _selectedDistrict = district;
+                    _district = district?.Name ?? districtName;
+                    OnPropertyChanged(nameof(SelectedDistrict));
+                    OnPropertyChanged(nameof(District));
+
+                    if (district != null)
+                    {
+                        var neighborhoods = AddressService.GetNeighborhoods(city.Name, district.Name);
+                        foreach (var n in neighborhoods) Neighborhoods.Add(n);
+
+                        var neighborhood = Neighborhoods.FirstOrDefault(n => AddressService.TurkishEquals(n.Name, neighborhoodName));
+                        _selectedNeighborhood = neighborhood;
+                        _neighborhood = neighborhood?.Name ?? neighborhoodName;
+                        OnPropertyChanged(nameof(SelectedNeighborhood));
+                        OnPropertyChanged(nameof(Neighborhood));
+                    }
+                    else
+                    {
+                        _selectedNeighborhood = null;
+                        _neighborhood = neighborhoodName;
+                        OnPropertyChanged(nameof(SelectedNeighborhood));
+                        OnPropertyChanged(nameof(Neighborhood));
+                    }
+                }
+                else
+                {
+                    _selectedDistrict = null;
+                    _selectedNeighborhood = null;
+                    _district = districtName;
+                    _neighborhood = neighborhoodName;
+                    OnPropertyChanged(nameof(SelectedDistrict));
+                    OnPropertyChanged(nameof(SelectedNeighborhood));
+                    OnPropertyChanged(nameof(District));
+                    OnPropertyChanged(nameof(Neighborhood));
+                }
+            }
+            finally
+            {
+                _isAddressLoading = false;
+            }
+        }
+
         public string? Notes
         {
             get => _notes;
@@ -252,6 +430,24 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        public decimal TotalDebt
+        {
+            get => _totalDebt;
+            private set => SetProperty(ref _totalDebt, value);
+        }
+
+        public decimal TotalCredit
+        {
+            get => _totalCredit;
+            private set => SetProperty(ref _totalCredit, value);
+        }
+
+        public decimal NetBalance
+        {
+            get => _netBalance;
+            private set => SetProperty(ref _netBalance, value);
+        }
+
         public string BalanceColor => TotalBalance > 0 ? "#F44336" : (TotalBalance < 0 ? "#2E7D32" : "#757575");
         
         /// <summary>
@@ -311,126 +507,231 @@ namespace KamatekCrm.ViewModels
 
         #region Methods
 
-        private void LoadCustomerData()
+        public async Task LoadCustomerDataAsync()
         {
             try
             {
-                using var context = _dbContextFactory.CreateDbContext();
-                // EF Core Include ile ilişkili verileri yükle
-                _customer = context.Customers.AsNoTracking()
-                    .Include(c => c.ServiceJobs)
-                    .Include(c => c.Transactions)
-                    .AsSplitQuery()
-                    .FirstOrDefault(c => c.Id == _customerId);
+                _loadingService.Show("Müşteri profili yükleniyor...");
 
-                if (_customer == null)
+                Customer? customer = null;
+                List<SalesOrder> salesOrders = new();
+                List<CustomerActivity> manualActivities = new();
+                List<CustomerInteraction> interactions = new();
+                List<Quote> quotes = new();
+
+                var context = await _dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+                await using (context.ConfigureAwait(false))
                 {
-                    MessageBox.Show("Müşteri bulunamadı!", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+                    // EF Core AsSplitQuery ile ilişkili verileri thread-safe asenkron yükle
+                    customer = await context.Customers.AsNoTracking()
+                        .Include(c => c.ServiceJobs)
+                        .Include(c => c.Transactions)
+                        .AsSplitQuery()
+                        .FirstOrDefaultAsync(c => c.Id == _customerId).ConfigureAwait(false);
 
-                if (CanViewContactData || CanViewIdentityData)
-                {
-                    var auditResult = _auditTrail.WriteAsync(
-                        AuditActionType.View,
-                        "CustomerPersonalData",
-                        _customerId.ToString(),
-                        "Müşteri kişisel veri detayları görüntülendi.").GetAwaiter().GetResult();
-                    if (auditResult.IsFailure)
-                        System.Diagnostics.Debug.WriteLine(auditResult.Error);
-                }
-
-                // Customer modelinde SalesOrders koleksiyonu yoksa manuel yükle
-                var salesOrders = context.SalesOrders.AsNoTracking().Where(s => s.CustomerId == _customerId).ToList();
-
-                // Editable alanları doldur
-                FullName = _customer.FullName;
-                _phoneNumber = _customer.PhoneNumber;
-                _email = _customer.Email;
-                _city = _customer.City;
-                _district = _customer.District;
-                _neighborhood = _customer.Neighborhood;
-                _street = _customer.Street;
-                _buildingNo = _customer.BuildingNo;
-                _apartmentNo = _customer.ApartmentNo;
-                OnPropertyChanged(nameof(PhoneNumber));
-                OnPropertyChanged(nameof(Email));
-                OnPropertyChanged(nameof(City));
-                OnPropertyChanged(nameof(District));
-                OnPropertyChanged(nameof(Neighborhood));
-                OnPropertyChanged(nameof(Street));
-                OnPropertyChanged(nameof(BuildingNo));
-                OnPropertyChanged(nameof(ApartmentNo));
-                Notes = _customer.Notes;
-                CustomerType = _customer.Type;
-                CustomerCode = _customer.CustomerCode;
-                _tcKimlikNo = _customer.TcKimlikNo;
-                OnPropertyChanged(nameof(TcKimlikNo));
-                CompanyName = _customer.CompanyName;
-                _taxNumber = _customer.TaxNumber;
-                OnPropertyChanged(nameof(TaxNumber));
-                TaxOffice = _customer.TaxOffice;
-
-                // Yeni alanları doldur
-                Tags = _customer.Tags;
-                Segment = _customer.Segment;
-                BirthDate = _customer.BirthDate;
-                LoyaltyLevel = _customer.LoyaltyLevel;
-
-                // ServiceJobs koleksiyonlarını doldur
-                ServiceJobs.Clear();
-                ActiveJobs.Clear();
-                PastJobs.Clear();
-
-                foreach (var job in _customer.ServiceJobs.OrderByDescending(j => j.CreatedDate))
-                {
-                    ServiceJobs.Add(job);
-
-                    // Aktif mi tamamlanmış mı ayır
-                    if (job.Status == JobStatus.Completed)
+                    if (customer == null)
                     {
-                        PastJobs.Add(job);
+                        await Application.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            MessageBox.Show("Müşteri bulunamadı!", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                        });
+                        return;
                     }
-                    else
+
+                    if (CanViewContactData || CanViewIdentityData)
                     {
-                        ActiveJobs.Add(job);
+                        var auditResult = await _auditTrail.WriteAsync(
+                            AuditActionType.View,
+                            "CustomerPersonalData",
+                            _customerId.ToString(),
+                            "Müşteri kişisel veri detayları görüntülendi.").ConfigureAwait(false);
+                        if (auditResult.IsFailure)
+                            System.Diagnostics.Debug.WriteLine(auditResult.Error);
                     }
+
+                    salesOrders = await context.SalesOrders.AsNoTracking()
+                        .Where(s => s.CustomerId == _customerId)
+                        .ToListAsync().ConfigureAwait(false);
+
+                    manualActivities = await context.CustomerActivities.AsNoTracking()
+                        .Where(a => a.CustomerId == _customerId)
+                        .OrderByDescending(a => a.CreatedDate)
+                        .Take(50)
+                        .ToListAsync().ConfigureAwait(false);
+
+                    interactions = await context.CustomerInteractions.AsNoTracking()
+                        .Where(i => i.CustomerId == _customerId)
+                        .OrderByDescending(i => i.InteractionDate)
+                        .Take(50)
+                        .ToListAsync().ConfigureAwait(false);
+
+                    quotes = await context.Quotes.AsNoTracking()
+                        .Where(q => q.CustomerId == _customerId)
+                        .OrderByDescending(q => q.Date)
+                        .Take(50)
+                        .ToListAsync().ConfigureAwait(false);
                 }
 
-                OnPropertyChanged(nameof(ActiveJobCount));
-
-                // Transactions koleksiyonunu doldur
-                Transactions.Clear();
-                foreach (var transaction in _customer.Transactions.OrderByDescending(t => t.Date))
+                // UI koleksiyonlarını Dispatcher üzerinde sorunsuz doldur
+                await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    Transactions.Add(transaction);
-                }
+                    _customer = customer;
 
-                // SalesOrders koleksiyonunu doldur
-                SalesOrders.Clear();
-                foreach(var order in salesOrders.OrderByDescending(o => o.Date))
-                {
-                    SalesOrders.Add(order);
-                }
+                    // Editable alanları doldur
+                    FullName = _customer.FullName;
+                    _phoneNumber = _customer.PhoneNumber;
+                    _email = _customer.Email;
+                    SetAddress(_customer.City, _customer.District, _customer.Neighborhood);
+                    _street = _customer.Street;
+                    _buildingNo = _customer.BuildingNo;
+                    _apartmentNo = _customer.ApartmentNo;
+                    OnPropertyChanged(nameof(PhoneNumber));
+                    OnPropertyChanged(nameof(Email));
+                    OnPropertyChanged(nameof(Street));
+                    OnPropertyChanged(nameof(BuildingNo));
+                    OnPropertyChanged(nameof(ApartmentNo));
+                    Notes = _customer.Notes;
+                    CustomerType = _customer.Type;
+                    CustomerCode = _customer.CustomerCode;
+                    _tcKimlikNo = _customer.TcKimlikNo;
+                    OnPropertyChanged(nameof(TcKimlikNo));
+                    CompanyName = _customer.CompanyName;
+                    _taxNumber = _customer.TaxNumber;
+                    OnPropertyChanged(nameof(TaxNumber));
+                    TaxOffice = _customer.TaxOffice;
 
-                // Customer Activities (Timeline) yükle
-                Activities.Clear();
-                var activities = context.CustomerActivities.AsNoTracking()
-                    .Where(a => a.CustomerId == _customerId)
-                    .OrderByDescending(a => a.CreatedDate)
-                    .Take(50)
-                    .ToList();
-                foreach (var activity in activities)
-                {
-                    Activities.Add(activity);
-                }
+                    // Yeni alanları doldur
+                    Tags = _customer.Tags;
+                    Segment = _customer.Segment;
+                    BirthDate = _customer.BirthDate;
+                    LoyaltyLevel = _customer.LoyaltyLevel;
 
-                // Hesaplamaları yap
-                CalculateTotals();
+                    // ServiceJobs koleksiyonlarını doldur
+                    ServiceJobs.Clear();
+                    ActiveJobs.Clear();
+                    PastJobs.Clear();
+
+                    if (_customer.ServiceJobs != null)
+                    {
+                        foreach (var job in _customer.ServiceJobs.OrderByDescending(j => j.CreatedDate))
+                        {
+                            ServiceJobs.Add(job);
+                            if (job.Status == JobStatus.Completed)
+                            {
+                                PastJobs.Add(job);
+                            }
+                            else
+                            {
+                                ActiveJobs.Add(job);
+                            }
+                        }
+                    }
+
+                    OnPropertyChanged(nameof(ActiveJobCount));
+
+                    // Transactions koleksiyonunu doldur
+                    Transactions.Clear();
+                    if (_customer.Transactions != null)
+                    {
+                        foreach (var transaction in _customer.Transactions.OrderByDescending(t => t.Date))
+                        {
+                            Transactions.Add(transaction);
+                        }
+                    }
+
+                    // SalesOrders koleksiyonunu doldur
+                    SalesOrders.Clear();
+                    foreach (var order in salesOrders.OrderByDescending(o => o.Date))
+                    {
+                        SalesOrders.Add(order);
+                    }
+
+                    // 360° Müşteri Zaman Çizelgesi (Timeline)
+                    var allActivities = new System.Collections.Generic.List<CustomerActivity>();
+                    allActivities.AddRange(manualActivities);
+
+                    foreach (var i in interactions)
+                    {
+                        allActivities.Add(new CustomerActivity
+                        {
+                            CustomerId = _customerId,
+                            Type = i.Channel == InteractionChannel.Email ? ActivityType.EmailSent : (i.Channel == InteractionChannel.InPerson ? ActivityType.VisitMade : ActivityType.CallMade),
+                            Description = $"Görüşme ({i.Channel}): {i.Subject} - {i.Summary}",
+                            CreatedDate = i.InteractionDate,
+                            CreatedBy = string.IsNullOrWhiteSpace(i.CreatedByUserId) ? "İletişim Merkezi" : i.CreatedByUserId,
+                            RelatedId = i.Id,
+                            RelatedType = "CustomerInteraction"
+                        });
+                    }
+
+                    if (_customer.ServiceJobs != null)
+                    {
+                        foreach (var job in _customer.ServiceJobs)
+                        {
+                            allActivities.Add(new CustomerActivity
+                            {
+                                CustomerId = _customerId,
+                                Type = job.Status == JobStatus.Completed ? ActivityType.ServiceJobCompleted : ActivityType.ServiceJobCreated,
+                                Description = $"Servis İşi #{job.Id} ({job.JobCategory}): {job.Description} - {job.Price:C2} [{job.Status}]",
+                                CreatedDate = job.CreatedDate,
+                                CreatedBy = "Teknik Servis",
+                                RelatedId = job.Id,
+                                RelatedType = "ServiceJob"
+                            });
+                        }
+                    }
+
+                    foreach (var order in salesOrders)
+                    {
+                        allActivities.Add(new CustomerActivity
+                        {
+                            CustomerId = _customerId,
+                            Type = ActivityType.Sale,
+                            Description = $"Satış #{order.OrderNumber}: {order.TotalAmount:C2} ({order.PaymentMethod}) [{order.Status}]",
+                            CreatedDate = order.Date,
+                            CreatedBy = "Satış",
+                            RelatedId = order.Id,
+                            RelatedType = "SalesOrder"
+                        });
+                    }
+
+                    foreach (var quote in quotes)
+                    {
+                        allActivities.Add(new CustomerActivity
+                        {
+                            CustomerId = _customerId,
+                            Type = ActivityType.Created,
+                            Description = $"Teklif #{quote.QuoteNumber} ({quote.QuoteTitle}): {quote.GrandTotal:C2} [{quote.Status}]",
+                            CreatedDate = quote.Date,
+                            CreatedBy = "Teklif",
+                            RelatedId = quote.Id,
+                            RelatedType = "Quote"
+                        });
+                    }
+
+                    Activities.Clear();
+                    foreach (var activity in allActivities.OrderByDescending(a => a.CreatedDate).Take(100))
+                    {
+                        Activities.Add(activity);
+                    }
+
+                    // Hesaplamaları yap
+                    CalculateTotals();
+                });
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Veri yükleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    MessageBox.Show($"Veri yükleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+            }
+            finally
+            {
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _loadingService.Hide();
+                });
             }
         }
 
@@ -441,26 +742,33 @@ namespace KamatekCrm.ViewModels
 
             // Pozitif bakiye = Müşteri Borçlu (Kırmızı)
             // Negatif bakiye = Müşteri Alacaklı (Yeşil)
-            TotalBalance = FinancialTransactionPolicy.CalculateCustomerBalance(Transactions);
+            // Reconcile TotalSpent: sum of completed sales + completed service jobs
+            decimal salesTotal = SalesOrders?.Where(s => s.Status != SalesOrderStatus.Cancelled).Sum(s => s.TotalAmount) ?? 0m;
+            decimal jobsTotal = ServiceJobs?.Where(j => j.Status == JobStatus.Completed).Sum(j => j.TotalAmount) ?? 0m;
+            decimal calculatedSpent = salesTotal + jobsTotal;
+            if (calculatedSpent > 0) TotalSpent = calculatedSpent;
+
+            // Reconcile Ledger: TotalDebt, TotalCredit, NetBalance
+            TotalDebt = Transactions.Where(t => t.Type == TransactionType.Debt || t.Type == TransactionType.Refund).Sum(t => t.Amount);
+            TotalCredit = Transactions.Where(t => t.Type == TransactionType.Payment || t.Type == TransactionType.CreditNote).Sum(t => t.Amount);
+            NetBalance = TotalDebt - TotalCredit;
+            TotalBalance = NetBalance;
         }
 
         [RelayCommand]
-        private void AddPayment() => AddTransaction(TransactionType.Payment);
+        private async Task AddPayment() => await AddTransactionAsync(TransactionType.Payment);
 
         [RelayCommand]
-        private void AddDebt() => AddTransaction(TransactionType.Debt);
+        private async Task AddDebt() => await AddTransactionAsync(TransactionType.Debt);
 
-        private void AddTransaction(TransactionType type)
+        private async Task AddTransactionAsync(TransactionType type)
         {
-            // Safety check for empty or invalid input without using legacy VisualBasic InputBox
             var input = "0";
-
             if (string.IsNullOrWhiteSpace(input)) return;
 
             decimal amount = 0;
             string description = type == TransactionType.Payment ? "Tahsilat" : "Borç Yansıtma";
 
-            // Parse input format "Amount - Description"
             if (input.Contains("-"))
             {
                 var parts = input.Split('-', 2);
@@ -483,7 +791,7 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                using var context = _dbContextFactory.CreateDbContext();
+                var context = await _dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
                 var transaction = new Transaction
                 {
                     CustomerId = _customerId,
@@ -493,15 +801,24 @@ namespace KamatekCrm.ViewModels
                     Description = description
                 };
 
-                context.Transactions.Add(transaction);
-                context.SaveChanges();
+                await using (context.ConfigureAwait(false))
+                {
+                    context.Transactions.Add(transaction);
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+                }
 
-                Transactions.Insert(0, transaction);
-                CalculateTotals();
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    Transactions.Insert(0, transaction);
+                    CalculateTotals();
+                });
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"İşlem eklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    MessageBox.Show($"İşlem eklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
             }
         }
 
@@ -520,12 +837,51 @@ namespace KamatekCrm.ViewModels
             try
             {
                 using var context = await _dbContextFactory.CreateDbContextAsync();
+
+                // Kanonik Telefon Normalizasyonu
+                string normPhone = CustomerValidationHelper.NormalizePhoneNumber(_phoneNumber);
+                if (!string.IsNullOrWhiteSpace(_phoneNumber) && !CustomerValidationHelper.IsValidPhoneNumber(_phoneNumber))
+                {
+                    _toastService.ShowError("Hata", "Geçerli bir telefon numarası giriniz.");
+                    return;
+                }
+
+                string? cleanTc = CustomerType == CustomerType.Individual && !string.IsNullOrWhiteSpace(_tcKimlikNo) ? _tcKimlikNo.Trim() : null;
+                string? cleanTax = CustomerType == CustomerType.Corporate && !string.IsNullOrWhiteSpace(_taxNumber) ? _taxNumber.Trim() : null;
+
+                if (!string.IsNullOrEmpty(cleanTc) && !CustomerValidationHelper.IsValidTcKimlikNo(cleanTc))
+                {
+                    _toastService.ShowError("Hata", "Geçersiz T.C. Kimlik Numarası (11 haneli ve algoritmayı sağlamalıdır).");
+                    return;
+                }
+
+                if (!string.IsNullOrEmpty(cleanTax) && !CustomerValidationHelper.IsValidTaxNumber(cleanTax))
+                {
+                    _toastService.ShowError("Hata", "Geçersiz Vergi Kimlik Numarası (10 haneli ve algoritmayı sağlamalıdır).");
+                    return;
+                }
+
+                // Mükerrer Kontrolü (Başka müşteri ile çakışma olmamalı)
+                string phoneLast10 = normPhone.Length >= 10 ? normPhone.Substring(normPhone.Length - 10) : normPhone;
+                var duplicate = await context.Customers.AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id != _customerId && !c.IsDeleted && (
+                        (!string.IsNullOrEmpty(normPhone) && (c.PhoneNumber == normPhone || (phoneLast10.Length >= 10 && c.PhoneNumber != null && c.PhoneNumber.Contains(phoneLast10)))) ||
+                        (!string.IsNullOrEmpty(cleanTc) && c.TcKimlikNo == cleanTc) ||
+                        (!string.IsNullOrEmpty(cleanTax) && c.TaxNumber == cleanTax)
+                    ));
+
+                if (duplicate != null)
+                {
+                    _toastService.ShowError("Mükerrer Kayıt", $"Bu telefon veya kimlik numarası başka bir müşteride ({duplicate.FullName} - {duplicate.CustomerCode}) kayıtlıdır!");
+                    return;
+                }
                 var existingCustomer = await context.Customers.FindAsync(_customerId);
 
                 if (existingCustomer != null)
                 {
                     existingCustomer.FullName = FullName;
-                    existingCustomer.PhoneNumber = _phoneNumber;
+                    existingCustomer.PhoneNumber = normPhone;
+                    _phoneNumber = normPhone;
                     existingCustomer.Email = _email;
                     existingCustomer.City = _city;
                     existingCustomer.District = _district;
@@ -535,9 +891,9 @@ namespace KamatekCrm.ViewModels
                     existingCustomer.ApartmentNo = _apartmentNo;
                     existingCustomer.Notes = Notes;
                     existingCustomer.Type = CustomerType;
-                    existingCustomer.TcKimlikNo = _tcKimlikNo;
+                    existingCustomer.TcKimlikNo = cleanTc;
                     existingCustomer.CompanyName = CompanyName;
-                    existingCustomer.TaxNumber = _taxNumber;
+                    existingCustomer.TaxNumber = cleanTax;
                     existingCustomer.TaxOffice = TaxOffice;
 
                     await context.SaveChangesAsync();
@@ -591,12 +947,12 @@ namespace KamatekCrm.ViewModels
             var result = window.ShowDialog();
             if (result == true)
             {
-                LoadCustomerData();
+                await LoadCustomerDataAsync();
             }
         }
 
         [RelayCommand]
-        private void AddNote()
+        private async Task AddNote()
         {
             var note = Notes;
             if (string.IsNullOrWhiteSpace(note))
@@ -607,7 +963,7 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                using var context = _dbContextFactory.CreateDbContext();
+                var context = await _dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
                 var activity = new CustomerActivity
                 {
                     CustomerId = _customerId,
@@ -617,44 +973,46 @@ namespace KamatekCrm.ViewModels
                     CreatedBy = "Kullanıcı"
                 };
 
-                context.CustomerActivities.Add(activity);
-
-                var customerInDb = context.Customers.Find(_customerId);
-                if (customerInDb != null)
+                await using (context.ConfigureAwait(false))
                 {
-                    customerInDb.Notes = string.IsNullOrEmpty(customerInDb.Notes) 
-                        ? note 
-                        : customerInDb.Notes + "\n" + DateTime.UtcNow.ToString("dd.MM.yyyy") + ": " + note;
-                    customerInDb.LastInteractionDate = DateTime.UtcNow;
+                    context.CustomerActivities.Add(activity);
+
+                    var customerInDb = await context.Customers.FindAsync(_customerId).ConfigureAwait(false);
+                    if (customerInDb != null)
+                    {
+                        customerInDb.Notes = string.IsNullOrEmpty(customerInDb.Notes) 
+                            ? note 
+                            : customerInDb.Notes + "\n" + DateTime.UtcNow.ToString("dd.MM.yyyy") + ": " + note;
+                        customerInDb.LastInteractionDate = DateTime.UtcNow;
+                    }
+
+                    await context.SaveChangesAsync().ConfigureAwait(false);
                 }
 
-                context.SaveChanges();
-
-                Activities.Insert(0, activity);
-                Notes = string.Empty;
-                _toastService.ShowSuccess("Not başarıyla eklendi!");
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    Activities.Insert(0, activity);
+                    Notes = string.Empty;
+                    _toastService.ShowSuccess("Not başarıyla eklendi!");
+                });
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Not ekleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    MessageBox.Show($"Not ekleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
             }
         }
 
         [RelayCommand(CanExecute = nameof(CanSaveTags))]
-        private void SaveTags()
+        private async Task SaveTags()
         {
             if (_customerId <= 0) return;
 
             try
             {
-                using var context = _dbContextFactory.CreateDbContext();
-                var customerInDb = context.Customers.Find(_customerId);
-                if (customerInDb != null)
-                {
-                    customerInDb.Tags = Tags;
-                    customerInDb.LastInteractionDate = DateTime.UtcNow;
-                }
-
+                var context = await _dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
                 var activity = new CustomerActivity
                 {
                     CustomerId = _customerId,
@@ -663,39 +1021,115 @@ namespace KamatekCrm.ViewModels
                     CreatedDate = DateTime.UtcNow,
                     CreatedBy = "Kullanıcı"
                 };
-                context.CustomerActivities.Add(activity);
-                context.SaveChanges();
 
-                Activities.Insert(0, activity);
-                _toastService.ShowSuccess("Etiketler kaydedildi!");
+                await using (context.ConfigureAwait(false))
+                {
+                    var customerInDb = await context.Customers.FindAsync(_customerId).ConfigureAwait(false);
+                    if (customerInDb != null)
+                    {
+                        customerInDb.Tags = Tags;
+                        customerInDb.LastInteractionDate = DateTime.UtcNow;
+                    }
+
+                    context.CustomerActivities.Add(activity);
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+                }
+
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    Activities.Insert(0, activity);
+                    _toastService.ShowSuccess("Etiketler kaydedildi!");
+                });
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Etiket kaydetme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    MessageBox.Show($"Etiket kaydetme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
             }
         }
 
         [RelayCommand(CanExecute = nameof(CanSaveSegment))]
-        private void SaveSegment()
+        private async Task SaveSegment()
         {
             if (_customerId <= 0) return;
 
             try
             {
-                using var context = _dbContextFactory.CreateDbContext();
-                var customerInDb = context.Customers.Find(_customerId);
-                if (customerInDb != null)
+                var context = await _dbContextFactory.CreateDbContextAsync().ConfigureAwait(false);
+                await using (context.ConfigureAwait(false))
                 {
-                    customerInDb.Segment = Segment;
-                    customerInDb.LastInteractionDate = DateTime.UtcNow;
-                    context.SaveChanges();
+                    var customerInDb = await context.Customers.FindAsync(_customerId).ConfigureAwait(false);
+                    if (customerInDb != null)
+                    {
+                        customerInDb.Segment = Segment;
+                        customerInDb.LastInteractionDate = DateTime.UtcNow;
+                        await context.SaveChangesAsync().ConfigureAwait(false);
+                    }
                 }
 
-                _toastService.ShowSuccess($"Müşteri segmenti '{Segment}' olarak güncellendi!");
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _toastService.ShowSuccess($"Müşteri segmenti '{Segment}' olarak güncellendi!");
+                });
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Segment güncelleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    MessageBox.Show($"Segment güncelleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+            }
+        }
+
+        [RelayCommand]
+        private async Task ExportAccountStatementPdfAsync()
+        {
+            if (_customer == null)
+            {
+                _toastService.ShowError("Hata", "Müşteri verisi bulunamadı.");
+                return;
+            }
+
+            if (_pdfService == null)
+            {
+                _toastService.ShowError("Hata", "PDF servisi başlatılamadı.");
+                return;
+            }
+
+            try
+            {
+                var cleanName = string.Join("_", _customer.FullName.Split(System.IO.Path.GetInvalidFileNameChars()));
+                var saveDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Cari Hesap Ekstresini Kaydet",
+                    Filter = "PDF Dosyası (*.pdf)|*.pdf",
+                    FileName = $"CariEkstre_{cleanName}_{DateTime.Now:yyyyMMdd}.pdf"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    await Task.Run(() =>
+                    {
+                        _pdfService.GenerateCustomerStatement(_customer, Transactions.ToList(), TotalBalance, saveDialog.FileName);
+                    });
+
+                    _toastService.ShowSuccess("Cari ekstre PDF olarak oluşturuldu.");
+
+                    try
+                    {
+                        new System.Diagnostics.Process
+                        {
+                            StartInfo = new System.Diagnostics.ProcessStartInfo(saveDialog.FileName) { UseShellExecute = true }
+                        }.Start();
+                    }
+                    catch { }
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError("PDF Hatası", $"Ekstre oluşturulurken hata: {ex.Message}");
             }
         }
 

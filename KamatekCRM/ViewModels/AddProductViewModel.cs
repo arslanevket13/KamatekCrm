@@ -12,6 +12,8 @@ using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Models.Specs;
 using KamatekCrm.Services;
+using KamatekCrm.Shared.Helpers;
+using KamatekCrm.Events;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
@@ -27,6 +29,7 @@ namespace KamatekCrm.ViewModels
         private ProductSpecBase _currentSpecs = new GeneralSpecs();
         private Product _newProduct = new Product();
         private bool _isEditMode;
+        private int _originalStock;
         private int _initialStock;
         private int _stockAdjustment;
         private string? _pendingImagePath; // Source file path before compression
@@ -66,6 +69,7 @@ namespace KamatekCrm.ViewModels
                 if (existingProduct != null)
                 {
                     _newProduct = existingProduct;
+                    _originalStock = existingProduct.TotalStockQuantity;
                     _selectedCategory = existingProduct.ProductCategoryType;
 
                     if (existingProduct.Specifications != null)
@@ -245,21 +249,110 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Kategoriye göre uygun Specs sınıfını oluşturur
         /// </summary>
+        /// <summary>
+        /// Kategoriye uygun standart teknik özellik şablonunu varsayılan değerlerle oluşturur
+        /// </summary>
         private ProductSpecBase CreateSpecsForCategory(ProductCategoryType category)
-
         {
             return category switch
             {
-                ProductCategoryType.Camera => new CameraSpecs(),
-                ProductCategoryType.Intercom => new IntercomSpecs(),
-                ProductCategoryType.FireAlarm => new FireAlarmSpecs(),
-                ProductCategoryType.BurglarAlarm => new BurglarAlarmSpecs(),
-                ProductCategoryType.SmartHome => new SmartHomeSpecs(),
-                ProductCategoryType.AccessControl => new AccessControlSpecs(),
-                ProductCategoryType.Satellite => new SatelliteSpecs(),
-                ProductCategoryType.FiberOptic => new FiberSpecs(),
-                _ => new GeneralSpecs()
+                ProductCategoryType.Camera => new CameraSpecs
+                {
+                    Resolution = "4 MP (2560x1440)",
+                    LensType = "2.8mm Sabit Lens",
+                    CameraType = "Dome IP Kamera",
+                    IRDistance = "30 Metre Smart IR",
+                    IpRating = "IP67",
+                    Compression = "H.265+",
+                    IsPoE = true,
+                    HasAudio = true,
+                    HasColorVu = false,
+                    Notes = "Standart güvenlik kamerası konfigürasyonu"
+                },
+                ProductCategoryType.Intercom => new IntercomSpecs
+                {
+                    ScreenSize = "7 inç Dokunmatik TFT LCD",
+                    ConnectionType = "IP / PoE",
+                    MountingType = "Sıva Üstü",
+                    HasWiFi = true,
+                    HasMobileApp = true,
+                    HasMemory = true,
+                    Notes = "Görüntülü diafon iç/dış ünite"
+                },
+                ProductCategoryType.FireAlarm => new FireAlarmSpecs
+                {
+                    DetectorType = "Optik Duman Dedektörü",
+                    SystemType = "Adresli Yangın Algılama",
+                    ComponentType = "Dedektör & Taban",
+                    IsWireless = false,
+                    HasRelay = true,
+                    Notes = "EN54-7 sertifikalı yangın dedektörü"
+                },
+                ProductCategoryType.BurglarAlarm => new BurglarAlarmSpecs
+                {
+                    ConnectionType = "Kablosuz (868 MHz)",
+                    ComponentType = "PIR Hareket Dedektörü",
+                    DetectionType = "12m 85.9° Algılama Açısı",
+                    HasGSM = true,
+                    HasWiFi = true,
+                    IsPetImmune = true,
+                    Notes = "Evcil hayvan bağışıklıklı hırsız alarm sensörü"
+                },
+                ProductCategoryType.SmartHome => new SmartHomeSpecs
+                {
+                    Protocol = "Zigbee 3.0 / Wi-Fi",
+                    ModuleType = "Röle / Anahtar Modülü",
+                    LoadType = "16A Rezistif Yük",
+                    RequiresHub = true,
+                    HasSceneSupport = true,
+                    Notes = "Akıllı ev otomasyon modülü"
+                },
+                ProductCategoryType.AccessControl => new AccessControlSpecs
+                {
+                    ReaderFrequency = "13.56 MHz Mifare / 125 KHz EM",
+                    ComponentType = "Kartlı ve Şifreli Geçiş Terminali",
+                    CommunicationType = "TCP/IP, Wiegand 26/34",
+                    IsWaterproof = true,
+                    HasFingerprint = true,
+                    HasFaceRecognition = false,
+                    Notes = "Geçiş kontrol ve PDKS terminali"
+                },
+                ProductCategoryType.Satellite => new SatelliteSpecs
+                {
+                    ComponentType = "Merkezi Uydu Multiswitch",
+                    DishDiameter = "90 cm Ofset Çanak",
+                    LnbOutputs = "Quattro LNB",
+                    Material = "Galvaniz Sac / Alüminyum",
+                    IsMotorized = false,
+                    HasCardSlot = false,
+                    Notes = "Merkezi TV dağıtım sistemi bileşeni"
+                },
+                ProductCategoryType.FiberOptic => new FiberSpecs
+                {
+                    FiberMode = "Singlemode (OS2) 9/125",
+                    CoreCount = "4 Core / 8 Core",
+                    CableType = "Zırhlı Dış Ortam (Loose Tube)",
+                    ConnectorType = "SC/APC - LC/UPC",
+                    IsArmored = true,
+                    Notes = "Düşük kayıplı fiber optik omurga kablosu"
+                },
+                _ => new GeneralSpecs
+                {
+                    Material = "Metal / ABS Plastik",
+                    Color = "Beyaz / Siyah",
+                    Warranty = "2 Yıl Üretici Garantisi",
+                    Notes = "Genel sarf ve donanım ürünü"
+                }
             };
+        }
+
+        /// <summary>
+        /// Seçili kategoriye ait standart özellikleri form alanlarına şablon olarak yükler
+        /// </summary>
+        [RelayCommand]
+        public void LoadCategoryTemplate()
+        {
+            CurrentSpecs = CreateSpecsForCategory(SelectedCategory);
         }
 
 
@@ -303,7 +396,7 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private string GenerateSKU()
         {
-            return $"PRD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}";
+            return ProductCodeHelper.GenerateSku(SelectedCategory);
         }
 
         /// <summary>
@@ -322,8 +415,8 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void GenerateBarcode()
         {
-            var random = new Random();
-            NewProduct.Barcode = $"869{DateTime.UtcNow:yyMMdd}{random.Next(1000, 9999)}";
+
+            NewProduct.Barcode = ProductCodeHelper.GenerateBarcode();
             OnPropertyChanged(nameof(NewProduct));
         }
 
@@ -344,57 +437,198 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                // Teknik özellikleri ata (EF Core ToJson mapping)
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+
+                // 1. Normalizasyon: SKU ve Barcode alanları
+                var normalizedSku = ProductCodeHelper.Normalize(NewProduct.SKU);
+                if (string.IsNullOrWhiteSpace(normalizedSku))
+                {
+                    normalizedSku = ProductCodeHelper.GenerateSku(SelectedCategory);
+                }
+                var normalizedBarcode = ProductCodeHelper.Normalize(NewProduct.Barcode);
+
+                NewProduct.SKU = normalizedSku;
+                NewProduct.Barcode = normalizedBarcode;
+
+                // 2. Mükerrer SKU Kontrolü
+                var existingWithSku = await context.Products.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id != NewProduct.Id && !p.IsDeleted && p.SKU.ToUpper() == normalizedSku);
+                if (existingWithSku != null)
+                {
+                    MessageBox.Show($"Bu Stok Kodu (SKU) başka bir üründe ('{existingWithSku.ProductName}') zaten kayıtlı.\nLütfen farklı bir stok kodu belirleyin veya otomatik üretin.",
+                        "Mükerrer Stok Kodu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 3. Mükerrer Barkod Kontrolü
+                if (!string.IsNullOrEmpty(normalizedBarcode))
+                {
+                    var existingWithBarcode = await context.Products.AsNoTracking()
+                        .FirstOrDefaultAsync(p => p.Id != NewProduct.Id && !p.IsDeleted && p.Barcode.ToUpper() == normalizedBarcode);
+                    if (existingWithBarcode != null)
+                    {
+                        MessageBox.Show($"Bu Barkod başka bir üründe ('{existingWithBarcode.ProductName}') zaten kayıtlı.\nLütfen farklı bir barkod giriniz.",
+                            "Mükerrer Barkod", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+
+                // 4. Teknik özellikleri ata
                 NewProduct.Specifications = CurrentSpecs;
 
-                using var context = _dbContextFactory.CreateDbContext();
-
-                if (_isEditMode)
+                // 5. Resim işleme (varsa)
+                if (!string.IsNullOrEmpty(_pendingImagePath))
                 {
-                    // Resim işleme (varsa)
-                    if (!string.IsNullOrEmpty(_pendingImagePath))
+                    if (_isEditMode)
                     {
-                        // Eski resmi sil
                         _imageService.DeleteProductImage(NewProduct.ImagePath);
-                        NewProduct.ImagePath = await _imageService.SaveProductImageAsync(_pendingImagePath);
                     }
-
-                    // UPDATE: Mevcut ürünü güncelle
-                    context.Products.Update(NewProduct);
-                    context.SaveChanges();
-
-                    // Stok düzeltme varsa işle
-                    if (StockAdjustment != 0)
-                    {
-                        AdjustStock();
-                    }
-
-                    MessageBox.Show("Ürün başarıyla güncellendi!", "Başarılı",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    NewProduct.ImagePath = await _imageService.SaveProductImageAsync(_pendingImagePath);
+                    _pendingImagePath = null;
                 }
-                else
+
+                // 6. Tek ACID Transaction içinde Ürün ve Stok Hareketi Yönetimi
+                await using var transaction = await context.Database.BeginTransactionAsync();
+                try
                 {
-                    // Resim işleme (varsa)
-                    if (!string.IsNullOrEmpty(_pendingImagePath))
+                    // Varsayılan depoyu bul veya oluştur
+                    var defaultWarehouse = await context.Warehouses.FirstOrDefaultAsync(w => w.IsActive);
+                    if (defaultWarehouse == null)
                     {
-                        NewProduct.ImagePath = await _imageService.SaveProductImageAsync(_pendingImagePath);
+                        defaultWarehouse = new Warehouse
+                        {
+                            Name = "Ana Depo",
+                            Type = WarehouseType.MainWarehouse,
+                            IsActive = true
+                        };
+                        context.Warehouses.Add(defaultWarehouse);
+                        await context.SaveChangesAsync();
                     }
 
-                    // ADD: Yeni ürün ekle
-                    context.Products.Add(NewProduct);
-                    context.SaveChanges();
-
-                    // Açılış stoğu varsa Inventory ve Transaction oluştur
-                    if (InitialStock > 0)
+                    if (_isEditMode)
                     {
-                        CreateInitialStock();
+                        // UPDATE: Stok mutasyonunu hareket olmadan ezme!
+                        int stockDelta = 0;
+                        if (StockAdjustment != 0)
+                        {
+                            stockDelta = StockAdjustment;
+                        }
+                        else if (NewProduct.TotalStockQuantity != _originalStock)
+                        {
+                            stockDelta = NewProduct.TotalStockQuantity - _originalStock;
+                        }
+
+                        if (stockDelta != 0)
+                        {
+                            var inventory = await context.Inventories
+                                .FirstOrDefaultAsync(i => i.ProductId == NewProduct.Id && i.WarehouseId == defaultWarehouse.Id);
+
+                            if (inventory == null)
+                            {
+                                inventory = new Inventory
+                                {
+                                    ProductId = NewProduct.Id,
+                                    WarehouseId = defaultWarehouse.Id,
+                                    Quantity = 0,
+                                    AverageCost = NewProduct.PurchasePrice
+                                };
+                                context.Inventories.Add(inventory);
+                            }
+
+                            if (stockDelta < 0 && inventory.Quantity + stockDelta < 0)
+                            {
+                                MessageBox.Show($"Yetersiz stok! Ana depodaki mevcut stok: {inventory.Quantity}, düşülmek istenen: {Math.Abs(stockDelta)}.",
+                                    "Yetersiz Stok", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                await transaction.RollbackAsync();
+                                return;
+                            }
+
+                            int oldQty = inventory.Quantity;
+                            inventory.Quantity += stockDelta;
+
+                            var st = new StockTransaction
+                            {
+                                ProductId = NewProduct.Id,
+                                SourceWarehouseId = stockDelta < 0 ? defaultWarehouse.Id : null,
+                                TargetWarehouseId = stockDelta > 0 ? defaultWarehouse.Id : null,
+                                Quantity = Math.Abs(stockDelta),
+                                TransactionType = stockDelta > 0 ? StockTransactionType.AdjustmentPlus : StockTransactionType.AdjustmentMinus,
+                                UnitCost = NewProduct.PurchasePrice,
+                                Date = DateTime.UtcNow,
+                                Description = $"Stok Düzeltme ({(stockDelta > 0 ? "+" : "")}{stockDelta})",
+                                ReferenceId = $"ADJ-{DateTime.UtcNow:yyyyMMddHHmmss}"
+                            };
+                            context.StockTransactions.Add(st);
+
+                            NewProduct.TotalStockQuantity = _originalStock + stockDelta;
+                        }
+
+                        context.Products.Update(NewProduct);
+                        await context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        if (stockDelta != 0)
+                        {
+                            EventAggregator.Instance.Publish(new StockUpdatedEvent(
+                                NewProduct.Id, defaultWarehouse.Id, _originalStock, NewProduct.TotalStockQuantity, "Ürün Düzenleme Stok Düzeltmesi"));
+                        }
+
+                        MessageBox.Show("Ürün başarıyla güncellendi!", "Başarılı",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        // ADD: Yeni ürün ekle
+                        NewProduct.TotalStockQuantity = InitialStock > 0 ? InitialStock : 0;
+                        context.Products.Add(NewProduct);
+                        await context.SaveChangesAsync();
+
+                        // Açılış stoğu varsa aynı transaction içinde Inventory ve StockTransaction oluştur
+                        if (InitialStock > 0)
+                        {
+                            var inventory = new Inventory
+                            {
+                                ProductId = NewProduct.Id,
+                                WarehouseId = defaultWarehouse.Id,
+                                Quantity = InitialStock,
+                                AverageCost = NewProduct.PurchasePrice
+                            };
+                            context.Inventories.Add(inventory);
+
+                            var st = new StockTransaction
+                            {
+                                ProductId = NewProduct.Id,
+                                TargetWarehouseId = defaultWarehouse.Id,
+                                Quantity = InitialStock,
+                                TransactionType = StockTransactionType.OpeningStock,
+                                UnitCost = NewProduct.PurchasePrice,
+                                Date = DateTime.UtcNow,
+                                Description = "Açılış / Devir Stoğu",
+                                ReferenceId = $"OPEN-{DateTime.UtcNow:yyyyMMddHHmmss}"
+                            };
+                            context.StockTransactions.Add(st);
+                            await context.SaveChangesAsync();
+                        }
+
+                        await transaction.CommitAsync();
+
+                        if (InitialStock > 0)
+                        {
+                            EventAggregator.Instance.Publish(new StockUpdatedEvent(
+                                NewProduct.Id, defaultWarehouse.Id, 0, InitialStock, "Açılış / Devir Stoğu"));
+                        }
+
+                        MessageBox.Show("Ürün başarıyla kaydedildi!", "Başarılı",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
                     }
 
-                    MessageBox.Show("Ürün başarıyla kaydedildi!", "Başarılı",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    RequestClose?.Invoke(true);
                 }
-
-                RequestClose?.Invoke(true);
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
             catch (Exception ex)
             {

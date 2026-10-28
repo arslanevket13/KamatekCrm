@@ -8,6 +8,7 @@ using KamatekCrm.ApplicationCore.Services;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Models.WorkOrders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -50,8 +51,6 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
         if (pricingResult.IsFailure || pricingResult.Value is null)
             return Result.Failure<ProjectQuoteSaveResult>(pricingResult.Error);
         var pricing = pricingResult.Value;
-        if (pricing.IncludedLineCount == 0)
-            return Result.Failure<ProjectQuoteSaveResult>("Teklifte en az bir zorunlu kalem bulunmalıdır.");
 
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await context.ExecuteInTransactionAsync(async transaction =>
@@ -335,7 +334,7 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
 
                 var pricingResult = ProjectQuotePricingPolicy.Calculate(
                     source.ProjectScopeJson, source.DiscountPercent, source.KdvRate);
-                if (pricingResult.IsFailure || pricingResult.Value is null || pricingResult.Value.IncludedLineCount == 0)
+                if (pricingResult.IsFailure || pricingResult.Value is null)
                     throw new ProjectQuoteValidationException(
                         "Eski teklif kapsamı doğrulanamadı. Teklifi editörde açıp kaydettikten sonra kopyalayın.");
 
@@ -508,6 +507,102 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
                 context.ServiceJobs.Add(job);
                 project.Status = ProjectStatus.Active;
                 await context.SaveChangesAsync(cancellationToken);
+
+                // Scope ağacını hiyerarşik olarak çözümle ve ServiceJobItems / InstallationMaterials oluştur
+                List<ScopeNode>? scopeNodes = null;
+                if (!string.IsNullOrWhiteSpace(project.ProjectScopeJson))
+                {
+                    try
+                    {
+                        var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        scopeNodes = JsonSerializer.Deserialize<List<ScopeNode>>(project.ProjectScopeJson, jsonOptions);
+                    }
+                    catch
+                    {
+                        // JSON çözümleme hatasında devam et
+                    }
+                }
+
+                if (scopeNodes is { Count: > 0 })
+                {
+                    var installation = new InstallationOrder
+                    {
+                        ServiceJobId = job.Id,
+                        CreatedDate = now,
+                        Notes = $"Proje Teklifi: {project.QuoteNumber}"
+                    };
+                    context.InstallationOrders.Add(installation);
+                    await context.SaveChangesAsync(cancellationToken);
+
+                    var technicianNotesBuilder = new System.Text.StringBuilder();
+                    technicianNotesBuilder.AppendLine($"[Proje Mahal & Montaj Dökümü - {project.QuoteNumber}]");
+
+                    void TraverseHierarchy(ScopeNode node, string currentPath, int cumulativeMultiplier)
+                    {
+                        var nodeMultiplier = Math.Max(1, node.Multiplier);
+                        var effectiveMultiplier = cumulativeMultiplier * nodeMultiplier;
+                        var nodePath = string.IsNullOrWhiteSpace(currentPath) ? node.Name : $"{currentPath} > {node.Name}";
+                        if (nodeMultiplier > 1)
+                        {
+                            nodePath += $" (x{nodeMultiplier})";
+                        }
+
+                        if (node.Items.Count > 0)
+                        {
+                            technicianNotesBuilder.AppendLine($"• {nodePath}:");
+                            foreach (var item in node.Items)
+                            {
+                                var totalQty = (decimal)item.Quantity * effectiveMultiplier;
+                                if (item.ProductId.HasValue && item.ProductId.Value > 0)
+                                {
+                                    context.ServiceJobItems.Add(new ServiceJobItem
+                                    {
+                                        ServiceJobId = job.Id,
+                                        ProductId = item.ProductId.Value,
+                                        QuantityUsed = (int)Math.Round(totalQty, MidpointRounding.AwayFromZero),
+                                        UnitPrice = item.UnitPrice,
+                                        UnitCost = item.UnitCost
+                                    });
+                                }
+
+                                context.InstallationMaterials.Add(new InstallationMaterial
+                                {
+                                    InstallationOrderId = installation.Id,
+                                    ProductId = item.ProductId,
+                                    ProductName = string.IsNullOrWhiteSpace(item.ProductName) 
+                                        ? (string.IsNullOrWhiteSpace(item.Name) ? "Malzeme" : item.Name) 
+                                        : item.ProductName,
+                                    Quantity = totalQty,
+                                    UnitPrice = item.UnitPrice,
+                                    Notes = nodePath.Length > 500 ? nodePath[..500] : nodePath
+                                });
+
+                                technicianNotesBuilder.AppendLine($"  - {item.Name} x {totalQty:G29} adet");
+                            }
+                        }
+
+                        foreach (var child in node.Children)
+                        {
+                            TraverseHierarchy(child, nodePath, effectiveMultiplier);
+                        }
+                    }
+
+                    foreach (var rootNode in scopeNodes)
+                    {
+                        TraverseHierarchy(rootNode, string.Empty, 1);
+                    }
+
+                    var fullNotes = technicianNotesBuilder.ToString();
+                    job.TechnicianNotes = fullNotes.Length > 1950 ? fullNotes[..1950] + "..." : fullNotes;
+
+                    context.InstallationTasks.Add(new InstallationTask
+                    {
+                        InstallationOrderId = installation.Id,
+                        Title = "Saha Keşif ve Montaj Kontrolü",
+                        Description = $"{project.Title} kapsamında tüm blok ve mahallerin montaj planı kontrolü."
+                    });
+                }
+
                 context.ServiceJobHistories.Add(new ServiceJobHistory
                 {
                     ServiceJobId = job.Id,

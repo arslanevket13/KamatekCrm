@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Windows;
 using Microsoft.Win32;
 using KamatekCrm.Shared.Services;
@@ -6,11 +7,21 @@ namespace KamatekCrm.Services
 {
     public class WpfDialogService : IDialogService
     {
+        private static Window? GetActiveOwnerWindow()
+        {
+            return Application.Current?.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive)
+                ?? Application.Current?.MainWindow;
+        }
+
         public Task ShowMessageAsync(string message, string title = "Bilgi")
         {
             Application.Current?.Dispatcher.Invoke(() =>
             {
-                MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+                var owner = GetActiveOwnerWindow();
+                if (owner != null)
+                    MessageBox.Show(owner, message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+                else
+                    MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
             });
             return Task.CompletedTask;
         }
@@ -19,7 +30,11 @@ namespace KamatekCrm.Services
         {
             Application.Current?.Dispatcher.Invoke(() =>
             {
-                MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                var owner = GetActiveOwnerWindow();
+                if (owner != null)
+                    MessageBox.Show(owner, message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                else
+                    MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
             });
             return Task.CompletedTask;
         }
@@ -28,7 +43,11 @@ namespace KamatekCrm.Services
         {
             Application.Current?.Dispatcher.Invoke(() =>
             {
-                MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error);
+                var owner = GetActiveOwnerWindow();
+                if (owner != null)
+                    MessageBox.Show(owner, message, title, MessageBoxButton.OK, MessageBoxImage.Error);
+                else
+                    MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error);
             });
             return Task.CompletedTask;
         }
@@ -38,7 +57,10 @@ namespace KamatekCrm.Services
             bool result = false;
             Application.Current?.Dispatcher.Invoke(() =>
             {
-                var dialogResult = MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var owner = GetActiveOwnerWindow();
+                var dialogResult = owner != null
+                    ? MessageBox.Show(owner, message, title, MessageBoxButton.YesNo, MessageBoxImage.Question)
+                    : MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
                 result = dialogResult == MessageBoxResult.Yes;
             });
             return Task.FromResult(result);
@@ -63,12 +85,13 @@ namespace KamatekCrm.Services
             string? filePath = null;
             Application.Current?.Dispatcher.Invoke(() =>
             {
+                var owner = GetActiveOwnerWindow();
                 var dialog = new OpenFileDialog
                 {
                     Title = title,
                     Filter = filter
                 };
-                if (dialog.ShowDialog() == true)
+                if ((owner != null ? dialog.ShowDialog(owner) : dialog.ShowDialog()) == true)
                 {
                     filePath = dialog.FileName;
                 }
@@ -81,13 +104,14 @@ namespace KamatekCrm.Services
             IReadOnlyList<string> filePaths = Array.Empty<string>();
             Application.Current?.Dispatcher.Invoke(() =>
             {
+                var owner = GetActiveOwnerWindow();
                 var dialog = new OpenFileDialog
                 {
                     Title = title,
                     Filter = filter,
                     Multiselect = true
                 };
-                if (dialog.ShowDialog() == true)
+                if ((owner != null ? dialog.ShowDialog(owner) : dialog.ShowDialog()) == true)
                 {
                     filePaths = dialog.FileNames;
                 }
@@ -100,13 +124,14 @@ namespace KamatekCrm.Services
             string? filePath = null;
             Application.Current?.Dispatcher.Invoke(() =>
             {
+                var owner = GetActiveOwnerWindow();
                 var dialog = new SaveFileDialog
                 {
                     Title = title,
                     Filter = filter,
                     FileName = defaultFileName ?? string.Empty
                 };
-                if (dialog.ShowDialog() == true)
+                if ((owner != null ? dialog.ShowDialog(owner) : dialog.ShowDialog()) == true)
                 {
                     filePath = dialog.FileName;
                 }

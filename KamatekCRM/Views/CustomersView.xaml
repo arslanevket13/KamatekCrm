@@ -1,4 +1,5 @@
 <UserControl x:Class="KamatekCrm.Views.CustomersView"
+             x:Name="RootCustomersView"
               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -153,8 +154,27 @@
                             </Style>
                         </DataGrid.Resources>
                         <DataGrid.InputBindings>
-                            <MouseBinding Gesture="LeftDoubleClick" Command="{Binding OpenCustomerProfileCommand}"/>
+                            <MouseBinding Gesture="LeftDoubleClick" 
+                                          Command="{Binding OpenCustomerProfileCommand}"
+                                          CommandParameter="{Binding SelectedCustomer}"/>
                         </DataGrid.InputBindings>
+                        <DataGrid.ContextMenu>
+                            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                                <MenuItem Header="Detaylı Müşteri Profilini Aç" 
+                                          Command="{Binding OpenCustomerProfileCommand}"
+                                          CommandParameter="{Binding SelectedCustomer}"
+                                          Icon="{ui:SymbolIcon Open24}"/>
+                                <MenuItem Header="Yeni Fiyat Teklifi Hazırla" 
+                                          Command="{Binding CreateQuoteForCustomerCommand}"
+                                          CommandParameter="{Binding SelectedCustomer}"
+                                          Icon="{ui:SymbolIcon DocumentAdd24}"/>
+                                <Separator/>
+                                <MenuItem Header="Müşteriyi Sil / Arşive Al" 
+                                          Command="{Binding DeleteCustomerCommand}"
+                                          CommandParameter="{Binding SelectedCustomer}"
+                                          Icon="{ui:SymbolIcon Delete24}"/>
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
 
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
@@ -284,9 +304,9 @@
                     <!-- Customer Detail Content -->
                     <ScrollViewer VerticalScrollBarVisibility="Auto"
                                   Visibility="{Binding HasSelectedCustomer, Converter={StaticResource BoolToVis}}">
-                        <StackPanel DataContext="{Binding SelectedCustomer}">
+                        <StackPanel>
                             <!-- Header Avatar & Name -->
-                            <StackPanel HorizontalAlignment="Center" Margin="0,0,0,16">
+                            <StackPanel HorizontalAlignment="Center" Margin="0,0,0,16" DataContext="{Binding SelectedCustomer}">
                                 <components:KmAvatar FullName="{Binding FullName}" Size="Large" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                                 <TextBlock Text="{Binding FullName}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" HorizontalAlignment="Center" TextAlignment="Center"/>
                                 <TextBlock Text="{Binding CustomerCode}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
@@ -295,7 +315,7 @@
                             <Separator Margin="0,0,0,16" Background="{DynamicResource BorderSubtleBrush}"/>
 
                             <!-- Contact Info List -->
-                            <StackPanel Margin="0,0,0,16">
+                            <StackPanel Margin="0,0,0,16" DataContext="{Binding SelectedCustomer}">
                                 <TextBlock Text="TELEFON" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                 <TextBlock Text="{Binding PhoneNumber, Converter={StaticResource SensitiveData}, ConverterParameter=Phone}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,12"/>
 
@@ -311,15 +331,22 @@
 
                             <Separator Margin="0,0,0,16" Background="{DynamicResource BorderSubtleBrush}"/>
 
-                            <!-- Actions for Selected Customer -->
+                            <!-- Actions for Selected Customer (Directly in CustomersViewModel DataContext) -->
                             <StackPanel>
                                 <ui:Button Content="Detaylı Müşteri Profilini Aç" Icon="{ui:SymbolIcon Open24}"
-                                           Command="{Binding DataContext.OpenCustomerProfileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           Command="{Binding OpenCustomerProfileCommand}"
+                                           CommandParameter="{Binding SelectedCustomer}"
                                            Appearance="Primary" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
 
                                 <ui:Button Content="Yeni Fiyat Teklifi Hazırla" Icon="{ui:SymbolIcon DocumentAdd24}"
-                                           Command="{Binding DataContext.CreateQuoteForCustomerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           Command="{Binding CreateQuoteForCustomerCommand}"
+                                           CommandParameter="{Binding SelectedCustomer}"
                                            Appearance="Secondary" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
+                                <ui:Button Content="Müşteriyi Sil / Arşive Al" Icon="{ui:SymbolIcon Delete24}"
+                                           Command="{Binding DeleteCustomerCommand}"
+                                           CommandParameter="{Binding SelectedCustomer}"
+                                           Appearance="Danger" Height="36" HorizontalAlignment="Stretch" Cursor="Hand"/>
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>

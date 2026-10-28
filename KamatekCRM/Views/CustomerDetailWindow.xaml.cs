@@ -17,7 +17,7 @@ namespace KamatekCrm.Views
         {
             if (DetailView.DataContext is ViewModels.CustomerDetailViewModel vm)
             {
-                vm.Initialize(customerId);
+                _ = vm.InitializeAsync(customerId);
             }
         }
 

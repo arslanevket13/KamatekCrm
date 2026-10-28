@@ -138,6 +138,13 @@ namespace KamatekCrm.ViewModels
         {
             if (SourceWarehouse == null || TargetWarehouse == null || SelectedProduct == null) return;
             
+            if (SourceWarehouse.Id == TargetWarehouse.Id)
+            {
+                StatusMessage = "Kaynak ve hedef depo aynı olamaz.";
+                IsActionSuccessful = false;
+                return;
+            }
+
             if (Quantity <= 0)
             {
                 StatusMessage = "Transfer miktarı sıfırdan büyük olmalıdır.";
@@ -182,5 +189,3 @@ namespace KamatekCrm.ViewModels
         }
     }
 }
-
-

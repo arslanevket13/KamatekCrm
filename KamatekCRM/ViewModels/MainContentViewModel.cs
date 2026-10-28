@@ -499,7 +499,7 @@ namespace KamatekCrm.ViewModels
         public void NavigateToCustomerDetail(int customerId)
         {
             var vm = _serviceProvider.GetRequiredService<CustomerDetailViewModel>();
-            vm.Initialize(customerId);
+            _ = vm.InitializeAsync(customerId);
             CurrentView = vm;
         }
 

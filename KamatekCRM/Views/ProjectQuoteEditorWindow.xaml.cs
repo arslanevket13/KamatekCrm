@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using KamatekCrm.Shared.Models;
@@ -14,6 +15,15 @@ namespace KamatekCrm.Views
         {
             InitializeComponent();
             DataContext = viewModel;
+            Closing += OnWindowClosing;
+            Closed += (_, _) => (DataContext as IDisposable)?.Dispose();
+        }
+
+        private void OnWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // Pencere kapanırken odak bir TextBox üzerindeyse TSF TextStore.GetVisualInfo
+            // PresentationSource null olduğu için 0x80040206 (TS_E_NOLAYOUT) fırlatabilir.
+            System.Windows.Input.Keyboard.ClearFocus();
         }
 
         /// <summary>

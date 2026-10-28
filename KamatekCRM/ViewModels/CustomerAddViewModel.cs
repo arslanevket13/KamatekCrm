@@ -10,6 +10,8 @@ using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Validation;
+using KamatekCrm.Shared.Helpers;
+using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
@@ -34,6 +36,7 @@ namespace KamatekCrm.ViewModels
         private string? _newTaxOffice;
         
         private City? _selectedCity;
+        private bool _isAddressLoading;
         private District? _selectedDistrict;
         private Neighborhood? _selectedNeighborhood;
         
@@ -59,7 +62,7 @@ namespace KamatekCrm.ViewModels
         }
 
         [Required(ErrorMessage = "Telefon numarası zorunludur.")]
-        [RegularExpression(@"^\+?[0-9\s()\-]{10,20}$", ErrorMessage = "Geçerli bir telefon numarası girin.")]
+        [TurkishPhone(ErrorMessage = "Geçerli bir telefon numarası girin (Örn: 05XX XXX XX XX).")]
         public string PhoneNumber
         {
             get => _phoneNumber;
@@ -148,7 +151,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        [RegularExpression(@"^\d{11}$", ErrorMessage = "T.C. Kimlik No 11 rakam olmalıdır.")]
+        [TcKimlikNo(ErrorMessage = "Geçerli bir T.C. Kimlik No giriniz.")]
         public string? NewTcKimlikNo
         {
             get => _newTcKimlikNo;
@@ -175,7 +178,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "Vergi numarası 10 rakam olmalıdır.")]
+        [TaxNumber(ErrorMessage = "Geçerli bir Vergi Kimlik No giriniz.")]
         public string? NewTaxNumber
         {
             get => _newTaxNumber;
@@ -194,6 +197,77 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _newTaxOffice, value);
         }
 
+        public void SetAddress(string? cityName, string? districtName, string? neighborhoodName)
+        {
+            _isAddressLoading = true;
+            try
+            {
+                Districts.Clear();
+                Neighborhoods.Clear();
+
+                if (string.IsNullOrWhiteSpace(cityName))
+                {
+                    _selectedCity = null;
+                    _selectedDistrict = null;
+                    _selectedNeighborhood = null;
+                    City = string.Empty;
+                    District = null;
+                    Neighborhood = null;
+                    OnPropertyChanged(nameof(SelectedCity));
+                    OnPropertyChanged(nameof(SelectedDistrict));
+                    OnPropertyChanged(nameof(SelectedNeighborhood));
+                    return;
+                }
+
+                var city = Cities.FirstOrDefault(c => AddressService.TurkishEquals(c.Name, cityName)) ?? AddressService.FindCity(cityName);
+                _selectedCity = city;
+                City = city?.Name ?? cityName;
+                OnPropertyChanged(nameof(SelectedCity));
+
+                if (city != null)
+                {
+                    var districts = AddressService.GetDistricts(city.Name);
+                    foreach (var d in districts) Districts.Add(d);
+
+                    var district = Districts.FirstOrDefault(d => AddressService.TurkishEquals(d.Name, districtName));
+                    _selectedDistrict = district;
+                    District = district?.Name ?? districtName;
+                    OnPropertyChanged(nameof(SelectedDistrict));
+
+                    if (district != null)
+                    {
+                        var neighborhoods = AddressService.GetNeighborhoods(city.Name, district.Name);
+                        foreach (var n in neighborhoods) Neighborhoods.Add(n);
+
+                        var neighborhood = Neighborhoods.FirstOrDefault(n => AddressService.TurkishEquals(n.Name, neighborhoodName));
+                        _selectedNeighborhood = neighborhood;
+                        Neighborhood = neighborhood?.Name ?? neighborhoodName;
+                        OnPropertyChanged(nameof(SelectedNeighborhood));
+                    }
+                    else
+                    {
+                        _selectedNeighborhood = null;
+                        Neighborhood = neighborhoodName;
+                        OnPropertyChanged(nameof(SelectedNeighborhood));
+                    }
+                }
+                else
+                {
+                    _selectedDistrict = null;
+                    _selectedNeighborhood = null;
+                    District = districtName;
+                    Neighborhood = neighborhoodName;
+                    OnPropertyChanged(nameof(SelectedDistrict));
+                    OnPropertyChanged(nameof(SelectedNeighborhood));
+                }
+            }
+            finally
+            {
+                _isAddressLoading = false;
+                SaveCommand.NotifyCanExecuteChanged();
+            }
+        }
+
         public City? SelectedCity
         {
             get => _selectedCity;
@@ -201,6 +275,8 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedCity, value))
                 {
+                    if (_isAddressLoading) return;
+
                     Districts.Clear();
                     Neighborhoods.Clear();
                     SelectedDistrict = null;
@@ -228,6 +304,8 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedDistrict, value))
                 {
+                    if (_isAddressLoading) return;
+
                     Neighborhoods.Clear();
                     SelectedNeighborhood = null;
 
@@ -283,6 +361,30 @@ namespace KamatekCrm.ViewModels
 
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
+        private Customer? _existingCustomer;
+        public Customer? ExistingCustomer
+        {
+            get => _existingCustomer;
+            set
+            {
+                if (SetProperty(ref _existingCustomer, value))
+                {
+                    OnPropertyChanged(nameof(HasDuplicateCustomer));
+                }
+            }
+        }
+
+        public bool HasDuplicateCustomer => ExistingCustomer != null;
+
+        [RelayCommand]
+        private void SelectExistingCustomer()
+        {
+            if (ExistingCustomer != null)
+            {
+                RequestClose?.Invoke(true);
+            }
+        }
+
         public IRelayCommand SaveCustomerCommand => SaveCommand;
 
         public event Action<bool>? RequestClose;
@@ -326,6 +428,31 @@ namespace KamatekCrm.ViewModels
             try
             {
                 using var context = await _dbContextFactory.CreateDbContextAsync();
+
+                // Kanonik Telefon Normalizasyonu
+                string normPhone = CustomerValidationHelper.NormalizePhoneNumber(PhoneNumber);
+                string? normTc = NewCustomerType == CustomerType.Individual && !string.IsNullOrWhiteSpace(NewTcKimlikNo)
+                    ? NewTcKimlikNo.Trim()
+                    : null;
+                string? normTax = NewCustomerType == CustomerType.Corporate && !string.IsNullOrWhiteSpace(NewTaxNumber)
+                    ? NewTaxNumber.Trim()
+                    : null;
+
+                // Split-Brain ve Mükerrer Müşteri Engeli (Duplicate Shield)
+                string phoneLast10 = normPhone.Length >= 10 ? normPhone.Substring(normPhone.Length - 10) : normPhone;
+                var duplicate = await context.Customers.AsNoTracking()
+                    .FirstOrDefaultAsync(c => !c.IsDeleted && (
+                        (!string.IsNullOrEmpty(normPhone) && (c.PhoneNumber == normPhone || (phoneLast10.Length >= 10 && c.PhoneNumber != null && c.PhoneNumber.Contains(phoneLast10)))) ||
+                        (!string.IsNullOrEmpty(normTc) && c.TcKimlikNo == normTc) ||
+                        (!string.IsNullOrEmpty(normTax) && c.TaxNumber == normTax)
+                    ));
+
+                if (duplicate != null)
+                {
+                    ExistingCustomer = duplicate;
+                    ErrorMessage = $"Bu müşteri zaten sistemde kayıtlıdır: {duplicate.FullName} ({duplicate.CustomerCode}). Mükerrer kart açılamaz.";
+                    return;
+                }
                 string customerCode = GenerateCustomerCode(context);
 
                 var customer = new Customer
@@ -333,7 +460,7 @@ namespace KamatekCrm.ViewModels
                     CustomerCode = customerCode,
                     Type = NewCustomerType,
                     FullName = FullName.Trim(),
-                    PhoneNumber = PhoneNumber.Trim(),
+                    PhoneNumber = normPhone,
                     Email = string.IsNullOrWhiteSpace(Email) ? null : Email.Trim(),
                     City = City,
                     District = District,
@@ -344,9 +471,9 @@ namespace KamatekCrm.ViewModels
                     BirthDate = BirthDate,
                     CreatedDate = DateTime.UtcNow,
 
-                    TcKimlikNo = NewCustomerType == CustomerType.Individual ? NewTcKimlikNo : null,
+                    TcKimlikNo = NewCustomerType == CustomerType.Individual ? normTc : null,
                     CompanyName = NewCustomerType == CustomerType.Corporate ? NewCompanyName : null,
-                    TaxNumber = NewCustomerType == CustomerType.Corporate ? NewTaxNumber : null,
+                    TaxNumber = NewCustomerType == CustomerType.Corporate ? normTax : null,
                     TaxOffice = NewCustomerType == CustomerType.Corporate ? NewTaxOffice : null
                 };
 
@@ -385,6 +512,7 @@ namespace KamatekCrm.ViewModels
             NewCompanyName = null;
             NewTaxNumber = null;
             NewTaxOffice = null;
+            ExistingCustomer = null;
             ErrorMessage = string.Empty;
             ClearErrors();
         }

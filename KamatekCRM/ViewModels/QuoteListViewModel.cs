@@ -280,10 +280,8 @@ public partial class QuoteListViewModel : ViewModelBase
         try
         {
             var project = ToProject(export.Value);
-            _pdfService.GenerateProjectQuote(
-                project,
-                ProjectScopeService.Deserialize(project.ProjectScopeJson),
-                filePath);
+            var nodes = ProjectScopeService.Deserialize(project.ProjectScopeJson);
+            await Task.Run(() => _pdfService.GenerateProjectQuote(project, nodes, filePath));
             if (await _dialogService.ShowConfirmationAsync(
                     "PDF oluşturuldu. Şimdi açmak ister misiniz?", "Teklif PDF'i Hazır"))
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath)

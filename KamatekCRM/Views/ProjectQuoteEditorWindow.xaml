@@ -14,6 +14,13 @@
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource PremiumWindowStyle}">
 
+    <Window.InputBindings>
+        <KeyBinding Modifiers="Control" Key="S" Command="{Binding SaveCommand}"/>
+        <KeyBinding Modifiers="Control" Key="Z" Command="{Binding UndoCommand}"/>
+        <KeyBinding Modifiers="Control" Key="Y" Command="{Binding RedoCommand}"/>
+        <KeyBinding Modifiers="Control" Key="P" Command="{Binding ExportPdfCommand}"/>
+    </Window.InputBindings>
+
     <Window.Resources>
         <!-- TreeView Item Template -->
         <HierarchicalDataTemplate x:Key="TreeNodeTemplate" ItemsSource="{Binding Children}">
@@ -122,11 +129,14 @@
                         <TextBlock Text="Daire/Kat" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         <TextBox Text="{Binding FlatsPerFloor}" Width="48" Height="30" TextAlignment="Center" Padding="2,3"/>
                     </StackPanel>
-                    <Button Command="{Binding GenerateStructureCommand}" Style="{StaticResource ModernButton}" Height="34" Padding="12,0">
+                    <Button Command="{Binding GenerateStructureCommand}" Style="{StaticResource ModernButton}" Height="34" Padding="12,0" Margin="0,0,4,0" ToolTip="Yapıyı Güncelle (Mevcut kalemleri korur)">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="AddSquare24" Margin="0,0,4,0"/>
-                            <TextBlock Text="Yapı Oluştur" FontSize="11" VerticalAlignment="Center"/>
+                            <TextBlock Text="Yapı Güncelle" FontSize="11" VerticalAlignment="Center"/>
                         </StackPanel>
+                    </Button>
+                    <Button Command="{Binding ResetStructureCommand}" Style="{StaticResource SecondaryButton}" Height="34" Padding="8,0" ToolTip="Ağacı Sıfırla (Tümünü silip baştan oluşturur)">
+                        <ui:SymbolIcon Symbol="Delete24" Foreground="{DynamicResource StatusErrorFg}"/>
                     </Button>
                 </StackPanel>
             </Grid>
@@ -168,6 +178,9 @@
                     <TreeView Grid.Row="2" ItemsSource="{Binding RootNodes}"
                                ItemTemplate="{StaticResource TreeNodeTemplate}"
                                BorderThickness="0" Padding="6"
+                               VirtualizingPanel.IsVirtualizing="True"
+                               VirtualizingPanel.VirtualizationMode="Standard"
+                               ScrollViewer.CanContentScroll="True"
                                SelectedItemChanged="TreeView_SelectedItemChanged">
                         <TreeView.ItemContainerStyle>
                             <Style TargetType="TreeViewItem">
@@ -186,8 +199,10 @@
                                 <MenuItem Header="🏭 Bölge Ekle" Command="{Binding PlacementTarget.DataContext.AddZoneCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 <Separator/>
                                 <MenuItem Header="📑 Kopyala (Duplicate)" Command="{Binding PlacementTarget.DataContext.DuplicateNodeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <MenuItem Header="🌿 Yapıyı Klonla (Derin Klon)" Command="{Binding PlacementTarget.DataContext.CloneNodeStructureCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 <MenuItem Header="📝 Yeniden Adlandır" Command="{Binding PlacementTarget.DataContext.RenameNodeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 <MenuItem Header="📋 Kardeşlere Uygula" Command="{Binding PlacementTarget.DataContext.ApplyToSiblingsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                <MenuItem Header="🚀 Tüm Benzer Düğümlere Çoğalt" Command="{Binding PlacementTarget.DataContext.CopyNodeItemsToSimilarNodesCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 <Separator/>
                                 <MenuItem Header="🗑️ Sil" Command="{Binding PlacementTarget.DataContext.RemoveNodeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Foreground="{DynamicResource StatusErrorFg}"/>
                             </ContextMenu>
@@ -246,7 +261,10 @@
                                GridLinesVisibility="Horizontal"
                                HeadersVisibility="Column"
                                RowHeight="36"
-                               SelectionMode="Single">
+                               SelectionMode="Single"
+                               VirtualizingPanel.IsVirtualizing="True"
+                               VirtualizingPanel.VirtualizationMode="Recycling"
+                               ScrollViewer.CanContentScroll="True">
                         <DataGrid.Columns>
                             <!-- Product Name -->
                             <DataGridTextColumn Header="Ürün / Hizmet" Binding="{Binding ProductName}" Width="*" IsReadOnly="True"/>
@@ -265,13 +283,13 @@
                             </DataGridTemplateColumn>
 
                             <!-- Unit Cost -->
-                            <DataGridTextColumn Header="Alış ₺" Binding="{Binding UnitCost, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N0}'}" Width="75"/>
+                            <DataGridTextColumn Header="Alış ₺" Binding="{Binding UnitCost, StringFormat='{}{0:N0}'}" Width="75"/>
 
                             <!-- Labor Cost -->
-                            <DataGridTextColumn Header="İşçilik ₺" Binding="{Binding LaborCost, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N0}'}" Width="75"/>
+                            <DataGridTextColumn Header="İşçilik ₺" Binding="{Binding LaborCost, StringFormat='{}{0:N0}'}" Width="75"/>
 
                             <!-- Unit Price -->
-                            <DataGridTextColumn Header="Satış ₺" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N0}'}" Width="80"/>
+                            <DataGridTextColumn Header="Satış ₺" Binding="{Binding UnitPrice, StringFormat='{}{0:N0}'}" Width="80"/>
 
                             <!-- Total Price -->
                             <DataGridTextColumn Header="Toplam ₺" Binding="{Binding TotalPrice, StringFormat='{}{0:N0}'}" Width="85" IsReadOnly="True">
@@ -307,14 +325,24 @@
                     <Border Grid.Row="2" Background="{DynamicResource SurfacePageBrush}" Padding="10,6" 
                             BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,1,0,0">
                         <Grid>
-                            <Button Content="🗑️ Kalemi Sil" Command="{Binding RemoveItemCommand}"
-                                    Style="{StaticResource SecondaryButton}" 
-                                    Foreground="{DynamicResource StatusErrorFg}" 
-                                    Height="32" Padding="14,0" HorizontalAlignment="Left"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                <Button Content="🗑️ Kalemi Sil" Command="{Binding RemoveItemCommand}"
+                                        Style="{StaticResource SecondaryButton}" 
+                                        Foreground="{DynamicResource StatusErrorFg}" 
+                                        Height="32" Padding="12,0" Margin="0,0,6,0"/>
+                                <Button Command="{Binding SyncCurrentItemPriceToAllNodesCommand}"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Height="32" Padding="10,0" ToolTip="Bu ürünün birim fiyatını projedeki tüm benzer kalemlere eşitler">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="ArrowSync24" FontSize="13" Margin="0,0,4,0"/>
+                                        <TextBlock Text="Fiyatı Ağaca Eşitle" FontSize="11" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
                             
                             <TextBlock Text="💡 Sağ panelden ürün sürükleyip bırakabilirsiniz" 
                                        FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" 
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         </Grid>
                     </Border>
                 </Grid>
@@ -354,6 +382,9 @@
                              SelectedItem="{Binding SelectedProduct}"
                              ItemTemplate="{StaticResource ProductTemplate}"
                              BorderThickness="0" Padding="6"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.VirtualizationMode="Recycling"
+                             ScrollViewer.CanContentScroll="True"
                              dd:DragDrop.IsDragSource="True"
                              dd:DragDrop.DragAdornerTemplate="{StaticResource ProductTemplate}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -381,6 +412,7 @@
                 BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -437,10 +469,19 @@
                     
                     <!-- Genel Toplam -->
                     <Border Grid.Column="4" Background="{DynamicResource StatusInfoBgLight}" CornerRadius="6" Padding="12,6" Margin="0,0,6,0" BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1.5">
-                        <StackPanel>
-                            <TextBlock Text="GENEL TOPLAM" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
-                            <TextBlock Text="{Binding GrandTotalDisplay}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
-                        </StackPanel>
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="GENEL TOPLAM" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                                <TextBlock Text="{Binding GrandTotalDisplay}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                            </StackPanel>
+                            <Button Command="{Binding ApplyTargetTotalDiscountCommand}" Style="{StaticResource SecondaryButton}" 
+                                    Height="24" Padding="6,0" HorizontalAlignment="Right" VerticalAlignment="Top" ToolTip="Hedef Fiyat Çözücü (Goal-Seek)">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:SymbolIcon Symbol="Target24" FontSize="12" Margin="0,0,2,0"/>
+                                    <TextBlock Text="Hedef" FontSize="10" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
                     </Border>
                     
                     <!-- Kar -->
@@ -460,8 +501,17 @@
                     </Border>
                 </Grid>
 
+                <!-- Negatif Marj Uyarısı -->
+                <Border Grid.Row="1" Background="#FFEBEE" BorderBrush="#EF5350" BorderThickness="1" CornerRadius="4" Padding="10,5" Margin="0,0,0,8"
+                        Visibility="{Binding HasNegativeMarginItems, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <ui:SymbolIcon Symbol="Warning24" Foreground="#D32F2F" FontSize="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding NegativeMarginWarning}" Foreground="#D32F2F" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Durum ve Butonlar -->
-                <Grid Grid.Row="1">
+                <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
@@ -495,7 +545,9 @@
                             </StackPanel>
                         </Button>
 
-                        <Button Command="{Binding SaveCommand}" Style="{StaticResource ModernButton}" Height="38" Padding="24,0">
+                        <Button Command="{Binding SaveCommand}"
+                                CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
+                                Style="{StaticResource ModernButton}" Height="38" Padding="24,0">
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="Save24" Margin="0,0,6,0"/>
                                 <TextBlock Text="KAYDET VE ONAYLA" VerticalAlignment="Center"/>

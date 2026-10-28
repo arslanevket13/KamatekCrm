@@ -157,14 +157,8 @@ namespace KamatekCrm.ApplicationCore.Services
                 if (entity is null || entity.IsDeleted)
                     return Result.Failure($"Silinecek müşteri bulunamadı (ID: {id})");
 
-                // İş kuralı: Bağlı iş emirleri varsa silme
-                var relatedJobs = await _unitOfWork.Repository<ServiceJob>()
-                    .FindAsync(j => j.CustomerId == id, cancellationToken);
-
-                if (relatedJobs.Any())
-                    throw new ReferentialIntegrityException("Müşteri", id, "İş Emri", relatedJobs.Count);
-
-                // Soft Delete
+                // İlişkili kayıt kontrolü: Geçmiş iş emri, satış, cari hareket veya varlık varsa
+                // fiziksel silme yapmayıp veritabanı bütünlüğünü korumak için güvenli soft-delete uygulanır.
                 entity.IsDeleted = true;
                 entity.DeletedAt = DateTime.UtcNow;
                 entity.ModifiedDate = DateTime.UtcNow;
@@ -174,13 +168,112 @@ namespace KamatekCrm.ApplicationCore.Services
 
                 return Result.Success();
             }
-            catch (ReferentialIntegrityException)
-            {
-                throw; // Domain istisnalarını yukarı fırlat — Global Exception Handler yakalar
-            }
             catch (Exception ex)
             {
                 return Result.Failure($"Müşteri silinirken hata oluştu: {ex.Message}");
+            }
+        }
+
+        public async Task<Result> MergeCustomersAsync(int sourceCustomerId, int targetCustomerId, CancellationToken cancellationToken = default)
+        {
+            if (sourceCustomerId == targetCustomerId)
+                return Result.Failure("Kaynak ve hedef müşteri aynı olamaz.");
+
+            try
+            {
+                var sourceCustomer = await _unitOfWork.Repository<Customer>().GetByIdAsync(sourceCustomerId, cancellationToken);
+                if (sourceCustomer is null || sourceCustomer.IsDeleted)
+                    return Result.Failure($"Kaynak müşteri bulunamadı veya silinmiş (ID: {sourceCustomerId})");
+
+                var targetCustomer = await _unitOfWork.Repository<Customer>().GetByIdAsync(targetCustomerId, cancellationToken);
+                if (targetCustomer is null || targetCustomer.IsDeleted)
+                    return Result.Failure($"Hedef müşteri bulunamadı veya silinmiş (ID: {targetCustomerId})");
+
+                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+
+                // 1. İş Emirlerini Aktar
+                var jobs = await _unitOfWork.Repository<ServiceJob>().FindAsync(j => j.CustomerId == sourceCustomerId, cancellationToken);
+                foreach (var job in jobs)
+                {
+                    job.CustomerId = targetCustomerId;
+                    _unitOfWork.Repository<ServiceJob>().Update(job);
+                }
+
+                // 2. Finansal Hareketleri (Transactions) Aktar
+                var transactions = await _unitOfWork.Repository<Transaction>().FindAsync(t => t.CustomerId == sourceCustomerId, cancellationToken);
+                foreach (var tr in transactions)
+                {
+                    tr.CustomerId = targetCustomerId;
+                    _unitOfWork.Repository<Transaction>().Update(tr);
+                }
+
+                // 3. Satış Emirlerini (SalesOrders) Aktar
+                var sales = await _unitOfWork.Repository<SalesOrder>().FindAsync(s => s.CustomerId == sourceCustomerId, cancellationToken);
+                foreach (var s in sales)
+                {
+                    s.CustomerId = targetCustomerId;
+                    _unitOfWork.Repository<SalesOrder>().Update(s);
+                }
+
+                // 4. Teklifleri (Quotes) Aktar
+                var quotes = await _unitOfWork.Repository<Quote>().FindAsync(q => q.CustomerId == sourceCustomerId, cancellationToken);
+                foreach (var q in quotes)
+                {
+                    q.CustomerId = targetCustomerId;
+                    _unitOfWork.Repository<Quote>().Update(q);
+                }
+
+                // 5. Müşteri Cihazlarını/Varlıklarını (Assets) Aktar
+                var assets = await _unitOfWork.Repository<CustomerAsset>().FindAsync(a => a.CustomerId == sourceCustomerId, cancellationToken);
+                foreach (var a in assets)
+                {
+                    a.CustomerId = targetCustomerId;
+                    _unitOfWork.Repository<CustomerAsset>().Update(a);
+                }
+
+                // 6. Müşteri Etkileşimlerini (Interactions) Aktar
+                var interactions = await _unitOfWork.Repository<CustomerInteraction>().FindAsync(i => i.CustomerId == sourceCustomerId, cancellationToken);
+                foreach (var i in interactions)
+                {
+                    i.CustomerId = targetCustomerId;
+                    _unitOfWork.Repository<CustomerInteraction>().Update(i);
+                }
+
+                // 7. Müşteri Aktivitelerini (Activities) Aktar
+                var activities = await _unitOfWork.Repository<CustomerActivity>().FindAsync(a => a.CustomerId == sourceCustomerId, cancellationToken);
+                foreach (var a in activities)
+                {
+                    a.CustomerId = targetCustomerId;
+                    _unitOfWork.Repository<CustomerActivity>().Update(a);
+                }
+
+                // 8. Hedef Müşteri Toplamlarını ve Birleştirme Notunu Güncelle
+                targetCustomer.TotalSpent += sourceCustomer.TotalSpent;
+                targetCustomer.TotalPurchaseCount += sourceCustomer.TotalPurchaseCount;
+                targetCustomer.LoyaltyPoints += sourceCustomer.LoyaltyPoints;
+                string mergeNote = $"[BİRLEŞTİRME: {DateTime.UtcNow:dd.MM.yyyy HH:mm}] {sourceCustomer.FullName} ({sourceCustomer.CustomerCode}) kartı bu hesaba aktarıldı.";
+                targetCustomer.Notes = string.IsNullOrWhiteSpace(targetCustomer.Notes) ? mergeNote : $"{targetCustomer.Notes}\n{mergeNote}";
+                targetCustomer.ModifiedDate = DateTime.UtcNow;
+                _unitOfWork.Repository<Customer>().Update(targetCustomer);
+
+                // 9. Kaynak Müşteriyi Arşivle (Soft Delete)
+                sourceCustomer.IsDeleted = true;
+                sourceCustomer.DeletedAt = DateTime.UtcNow;
+                sourceCustomer.ModifiedDate = DateTime.UtcNow;
+                string sourceNote = $"[BİRLEŞTİRİLDİ: {DateTime.UtcNow:dd.MM.yyyy HH:mm}] Bu kart {targetCustomer.FullName} ({targetCustomer.CustomerCode}) ile birleştirilerek arşivlendi.";
+                sourceCustomer.Notes = string.IsNullOrWhiteSpace(sourceCustomer.Notes) ? sourceNote : $"{sourceCustomer.Notes}\n{sourceNote}";
+                _unitOfWork.Repository<Customer>().Update(sourceCustomer);
+
+                // 10. Kaydet ve Transaction Commit
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CommitAsync(cancellationToken);
+
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync(cancellationToken);
+                return Result.Failure($"Müşteri birleştirme işlemi başarısız: {ex.Message}");
             }
         }
     }

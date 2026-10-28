@@ -61,12 +61,15 @@ public static class ProjectQuotePricingPolicy
         var includedLineCount = 0;
         var totalQuantity = 0;
 
-        var stack = new Stack<ScopeNode>(roots.Reverse());
+        var stack = new Stack<(ScopeNode node, int cumulativeMultiplier)>(
+            roots.Reverse().Select(r => (r, 1)));
         while (stack.Count > 0)
         {
-            var node = stack.Pop();
+            var (node, cumulativeMultiplier) = stack.Pop();
             if (++nodeCount > MaximumNodeCount)
                 return Result.Failure<ProjectQuotePricingResult>("Teklif kapsamı izin verilen düğüm sınırını aşıyor.");
+
+            var currentMultiplier = checked(cumulativeMultiplier * Math.Max(1, node.Multiplier));
 
             foreach (var item in node.Items ?? [])
             {
@@ -79,9 +82,10 @@ public static class ProjectQuotePricingPolicy
 
                 try
                 {
-                    revenue = checked(revenue + checked(item.UnitPrice * item.Quantity));
-                    cost = checked(cost + checked((item.UnitCost + item.LaborCost) * item.Quantity));
-                    totalQuantity = checked(totalQuantity + item.Quantity);
+                    var effectiveQty = checked(item.Quantity * currentMultiplier);
+                    revenue = checked(revenue + checked(item.UnitPrice * effectiveQty));
+                    cost = checked(cost + checked((item.UnitCost + item.LaborCost) * effectiveQty));
+                    totalQuantity = checked(totalQuantity + effectiveQty);
                 }
                 catch (OverflowException)
                 {
@@ -89,7 +93,8 @@ public static class ProjectQuotePricingPolicy
                 }
             }
 
-            foreach (var child in (node.Children ?? []).Reverse()) stack.Push(child);
+            foreach (var child in (node.Children ?? []).Reverse())
+                stack.Push((child, currentMultiplier));
         }
 
         revenue = Money(revenue);

@@ -14,6 +14,7 @@ using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Services;
 using KamatekCrm.Services;
+using Serilog;
 
 namespace KamatekCrm.ViewModels
 {
@@ -21,7 +22,7 @@ namespace KamatekCrm.ViewModels
     /// Proje Teklif Editörü ViewModel - Yenilenmiş 3 Panelli Workbench
     /// Drag & Drop, Tree Yönetimi, Finansal Hesaplamalar, Undo/Redo, Toplu Marj
     /// </summary>
-    public partial class ProjectQuoteEditorViewModel : ViewModelBase, IDropTarget
+    public partial class ProjectQuoteEditorViewModel : ViewModelBase, IDropTarget, IDisposable
     {
         private readonly IProjectQuoteReadService _readService;
         private readonly IProjectQuoteCommandService _commandService;
@@ -33,6 +34,7 @@ namespace KamatekCrm.ViewModels
         private readonly Task _workspaceLoadTask;
         private Guid _saveOperationId = Guid.NewGuid();
         private ProjectQuotePricingResult _pricing = EmptyPricing();
+        private long _autoSaveVersion;
 
         // Undo / Redo Yığınları
         private readonly Stack<string> _undoStack = new();
@@ -367,8 +369,33 @@ namespace KamatekCrm.ViewModels
                 SelectedCustomer = Customers.FirstOrDefault(c => c.Id == project.CustomerId);
 
                 _discountPercent = project.DiscountPercent;
-                OnPropertyChanged(nameof(DiscountPercent));
                 _kdvRate = project.KdvRate;
+
+                var draftKey = GetDraftKey();
+                if (_draftStorageService.HasDraft(draftKey))
+                {
+                    try
+                    {
+                        var draft = await _draftStorageService.LoadDraftAsync<ProjectQuoteDraft>(draftKey);
+                        if (draft != null && !string.IsNullOrWhiteSpace(draft.ScopeJson))
+                        {
+                            var draftNodes = ProjectScopeService.Deserialize(draft.ScopeJson);
+                            if (draftNodes.Count > 0)
+                            {
+                                nodes = draftNodes;
+                                _discountPercent = draft.DiscountPercent;
+                                _kdvRate = draft.KdvRate;
+                                _toastService.ShowInfo("Kaydedilmemiş taslak bulundu ve geri yüklendi.");
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Taslak yükleme hatası projeyi bozmamalı
+                    }
+                }
+
+                OnPropertyChanged(nameof(DiscountPercent));
                 OnPropertyChanged(nameof(KdvRate));
 
                 RootNodes.Clear();
@@ -464,17 +491,34 @@ namespace KamatekCrm.ViewModels
 
         private void AutoSaveDraft(string scopeJson)
         {
-            var draft = new ProjectQuoteDraft
+            var version = Interlocked.Increment(ref _autoSaveVersion);
+            _ = DebouncedAutoSaveAsync(scopeJson, version);
+        }
+
+        private async Task DebouncedAutoSaveAsync(string scopeJson, long expectedVersion)
+        {
+            try
             {
-                ProjectId = CurrentProject.Id,
-                CustomerId = SelectedCustomer?.Id,
-                ProjectName = ProjectName,
-                DiscountPercent = DiscountPercent,
-                KdvRate = KdvRate,
-                ScopeJson = scopeJson,
-                SavedAt = DateTime.UtcNow
-            };
-            _ = _draftStorageService.SaveDraftAsync(GetDraftKey(), draft);
+                // İstisna fırlatmayan sürüm kontrolü tabanlı debounce (TaskCanceledException üretmez)
+                await Task.Delay(400);
+                if (Interlocked.Read(ref _autoSaveVersion) != expectedVersion) return;
+
+                var draft = new ProjectQuoteDraft
+                {
+                    ProjectId = CurrentProject.Id,
+                    CustomerId = SelectedCustomer?.Id,
+                    ProjectName = ProjectName,
+                    DiscountPercent = DiscountPercent,
+                    KdvRate = KdvRate,
+                    ScopeJson = scopeJson,
+                    SavedAt = DateTime.UtcNow
+                };
+                await _draftStorageService.SaveDraftAsync(GetDraftKey(), draft);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Taslak otomatik kaydedilemedi: {DraftKey}", GetDraftKey());
+            }
         }
 
         [RelayCommand]
@@ -545,28 +589,134 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            var confirmed = await _dialogService.ShowConfirmationAsync(
-                $"Yapı oluşturulacak:\n\n" +
-                $"Blok: {BlockCount}\n" +
-                $"Kat: {FloorCount}\n" +
-                $"Daire/Kat: {FlatsPerFloor}\n\n" +
-                $"Toplam: {BlockCount * FloorCount * FlatsPerFloor} daire\n\n" +
-                "Mevcut yapı yeniden oluşturulacak. Devam edilsin mi?",
-                "Yapı Oluştur");
+            var hasExistingItems = RootNodes.Any(r => r.GetAllDescendantsOrSelf().Any(n => n.Items.Any() || n.Children.Any()));
+            var prompt = hasExistingItems
+                ? $"Yapı ağacı güncellenecek:\n\n" +
+                  $"Blok: {BlockCount}\nKat: {FloorCount}\nDaire/Kat: {FlatsPerFloor}\n\n" +
+                  "Mevcut düğümlerdeki malzeme kalemleri KORUNARAK yalnızca yeni eklenen blok/kat/daireler ağaca eklenecektir.\n\nDevam edilsin mi?"
+                : $"Yapı oluşturulacak:\n\n" +
+                  $"Blok: {BlockCount}\nKat: {FloorCount}\nDaire/Kat: {FlatsPerFloor}\n\n" +
+                  $"Toplam: {BlockCount * FloorCount * FlatsPerFloor} daire\n\nDevam edilsin mi?";
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(prompt, "Yapı Ağacını Güncelle");
 
             if (!confirmed) return;
 
             SaveSnapshot();
 
-            var projectNode = ProjectScopeService.CreateSampleApartmentStructure(
-                ProjectName, BlockCount, FloorCount, FlatsPerFloor);
+            var root = RootNodes.FirstOrDefault() ?? ProjectScopeService.CreateEmptyProjectTree(ProjectName);
+            ProjectScopeService.MergeApartmentStructure(root, ProjectName, BlockCount, FloorCount, FlatsPerFloor);
+
+            if (!RootNodes.Contains(root))
+            {
+                RootNodes.Add(root);
+            }
+
+            SelectedNode = root;
+            NotifyFinancialsChanged();
+            SaveSnapshot();
+            _toastService.ShowSuccess("Yapı ağacı başarıyla güncellendi (mevcut kalemler korundu).");
+        }
+
+        [RelayCommand]
+        private async Task ResetStructure()
+        {
+            if (string.IsNullOrWhiteSpace(ProjectName))
+            {
+                _toastService.ShowWarning("Lütfen proje adı girin.");
+                return;
+            }
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "DİKKAT: Mevcut tüm yapı ağacı ve içine eklenmiş tüm malzemeler KALICI OLARAK SİLİNECEKTİR!\n\n" +
+                $"Blok: {BlockCount}, Kat: {FloorCount}, Daire/Kat: {FlatsPerFloor}\n\n" +
+                "Sıfırdan yeni bir ağaç oluşturmak istediğinize emin misiniz?",
+                "Ağacı Sıfırla");
+
+            if (!confirmed) return;
+
+            SaveSnapshot();
 
             RootNodes.Clear();
+            var projectNode = ProjectScopeService.CreateSampleApartmentStructure(
+                ProjectName, BlockCount, FloorCount, FlatsPerFloor);
             RootNodes.Add(projectNode);
 
             SelectedNode = projectNode;
             NotifyFinancialsChanged();
             SaveSnapshot();
+            _toastService.ShowInfo("Yapı ağacı sıfırlandı.");
+        }
+
+        [RelayCommand]
+        private async Task CopyNodeItemsToSimilarNodes()
+        {
+            if (SelectedNode == null)
+            {
+                _toastService.ShowWarning("Lütfen önce malzeme içeren bir düğüm seçin.");
+                return;
+            }
+
+            if (!SelectedNode.Items.Any())
+            {
+                _toastService.ShowWarning($"'{SelectedNode.Name}' düğümünde kopyalanacak malzeme kalemi yok.");
+                return;
+            }
+
+            // Projedeki aynı tipteki tüm diğer düğümleri bul (kendisi hariç)
+            var targets = RootNodes.SelectMany(r => r.GetAllDescendantsOrSelf())
+                .Where(n => n.Type == SelectedNode.Type && n.Id != SelectedNode.Id)
+                .ToList();
+
+            if (!targets.Any())
+            {
+                _toastService.ShowInfo($"Projede '{SelectedNode.Type}' tipinde başka hedef düğüm bulunamadı.");
+                return;
+            }
+
+            var targetTypeDisplay = SelectedNode.Type switch
+            {
+                NodeType.Flat => "daireye",
+                NodeType.Floor => "kata",
+                NodeType.Block => "bloğa",
+                NodeType.Zone => "bölgeye",
+                _ => "düğüme"
+            };
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                $"'{SelectedNode.Name}' içindeki {SelectedNode.Items.Count} adet malzeme kalemi, " +
+                $"projedeki diğer {targets.Count} {targetTypeDisplay} kopyalanacak.\n\n" +
+                "Hedef düğümlerdeki mevcut kalemlerin üzerine yazılsın mı?",
+                "Malzemeleri Benzer Düğümlere Çoğalt");
+
+            if (!confirmed) return;
+
+            SaveSnapshot();
+            int updatedCount = ProjectScopeService.BroadcastItemsToTargets(SelectedNode, targets, clearTargetFirst: true);
+            NotifyFinancialsChanged();
+            SaveSnapshot();
+            _toastService.ShowSuccess($"{updatedCount} adet {targetTypeDisplay} malzemeler başarıyla çoğaltıldı.");
+        }
+
+        [RelayCommand]
+        private void CloneNodeStructure()
+        {
+            if (SelectedNode == null || SelectedNode.Parent == null)
+            {
+                _toastService.ShowWarning("Kök proje düğümü doğrudan klonlanamaz; bir blok, kat veya daire seçin.");
+                return;
+            }
+
+            SaveSnapshot();
+            var clone = SelectedNode.Clone($"{SelectedNode.Name} (Klon)");
+            clone.Parent = SelectedNode.Parent;
+            SelectedNode.Parent.Children.Add(clone);
+            SelectedNode.Parent.NotifyTotalsChanged();
+
+            SelectedNode = clone;
+            NotifyFinancialsChanged();
+            SaveSnapshot();
+            _toastService.ShowSuccess($"'{SelectedNode.Name}' yapısı başarıyla klonlandı.");
         }
 
         [RelayCommand]
@@ -891,6 +1041,121 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        public ObservableCollection<ConsolidatedBomItem> ConsolidatedBomItems { get; } = new();
+
+        public bool HasNegativeMarginItems => RootNodes
+            .SelectMany(r => r.GetAllDescendantsOrSelf())
+            .SelectMany(n => n.Items)
+            .Any(i => !i.IsOptional && i.UnitPrice < (i.UnitCost + i.LaborCost));
+
+        public string NegativeMarginWarning => HasNegativeMarginItems
+            ? "⚠️ Dikkat: Maliyetinin altında satılan zarar kalem(ler) var!"
+            : string.Empty;
+
+        [RelayCommand]
+        private async Task SyncCurrentItemPriceToAllNodes()
+        {
+            if (SelectedItem == null)
+            {
+                _toastService.ShowWarning("Lütfen fiyatı senkronize edilecek bir kalem seçin.");
+                return;
+            }
+
+            var targetName = SelectedItem.ProductName;
+            var newPrice = SelectedItem.UnitPrice;
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                $"'{targetName}' ürününün birim fiyatı ({newPrice:N2} ₺), ağaçtaki tüm benzer ürün kalemlerine eşitlensin mi?",
+                "Ürün Fiyatını Ağaca Eşitle");
+
+            if (!confirmed) return;
+
+            SaveSnapshot();
+            int updatedCount = 0;
+            using (ScopeNode.BeginBatchUpdate())
+            {
+                foreach (var root in RootNodes)
+                {
+                    foreach (var node in root.GetAllDescendantsOrSelf())
+                    {
+                        foreach (var item in node.Items)
+                        {
+                            bool match = (SelectedItem.ProductId.HasValue && item.ProductId.HasValue && item.ProductId == SelectedItem.ProductId)
+                                         || string.Equals(item.ProductName, targetName, StringComparison.OrdinalIgnoreCase);
+                            if (match && item != SelectedItem)
+                            {
+                                item.UnitPrice = newPrice;
+                                item.NotifyChanged();
+                                updatedCount++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (var root in RootNodes)
+            {
+                ScopeNode.RecalculateTreeTotals(root);
+            }
+
+            NotifyFinancialsChanged();
+            SaveSnapshot();
+            _toastService.ShowSuccess($"{updatedCount} adet '{targetName}' kaleminin fiyatı senkronize edildi.");
+        }
+
+        [RelayCommand]
+        private async Task ApplyTargetTotalDiscount()
+        {
+            if (TotalRevenue <= 0)
+            {
+                _toastService.ShowWarning("Hedef fiyat belirlemek için önce ağaca malzeme ekleyin.");
+                return;
+            }
+
+            var input = await _dialogService.ShowInputAsync(
+                $"Hedeflenen GENEL TOPLAM (KDV Dahil) tutarını girin (Şu anki: {GrandTotal:N2} ₺):",
+                "Hedef Fiyat Çözücü (Goal-Seek)",
+                $"{Math.Round(GrandTotal, 0):N0}");
+
+            if (string.IsNullOrWhiteSpace(input)) return;
+
+            // Türkçe para formatını temizle
+            var cleanInput = input.Replace("₺", "").Replace(" ", "").Replace(".", "").Replace(",", ".");
+            if (!decimal.TryParse(cleanInput, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal targetTotal))
+            {
+                _toastService.ShowWarning("Geçerli bir hedef tutar girin.");
+                return;
+            }
+
+            if (targetTotal <= 0)
+            {
+                _toastService.ShowWarning("Hedef tutar sıfırdan büyük olmalıdır.");
+                return;
+            }
+
+            decimal grossTotal = TotalRevenue;
+            decimal vatFactor = 1m + (KdvRate / 100m);
+            decimal targetNet = FinancialCalculator.RoundMoney(targetTotal / vatFactor);
+
+            if (targetNet >= grossTotal)
+            {
+                DiscountPercent = 0;
+                _toastService.ShowInfo("Hedef tutar brüt toplamdan büyük veya eşit olduğundan iskonto %0 olarak ayarlandı.");
+                return;
+            }
+
+            SaveSnapshot();
+
+            decimal neededDiscountAmount = grossTotal - targetNet;
+            decimal calculatedPercent = Math.Clamp(Math.Round((neededDiscountAmount / grossTotal) * 100m, 4, MidpointRounding.AwayFromZero), 0m, 100m);
+
+            DiscountPercent = calculatedPercent;
+            NotifyFinancialsChanged();
+            SaveSnapshot();
+
+            _toastService.ShowSuccess($"Hedef {targetTotal:N2} ₺ için iskonto %{calculatedPercent:N2} uygulandı (Yeni Toplam: {GrandTotal:N2} ₺).");
+        }
+
         #endregion
 
         #region Finansal Güncellemeler
@@ -899,6 +1164,14 @@ namespace KamatekCrm.ViewModels
         {
             var pricing = ProjectQuotePricingPolicy.Calculate(RootNodes, DiscountPercent, KdvRate);
             _pricing = pricing.Value ?? EmptyPricing();
+
+            var bom = ProjectScopeService.GenerateConsolidatedBom(RootNodes, DiscountPercent, KdvRate);
+            ConsolidatedBomItems.Clear();
+            foreach (var item in bom.Items)
+            {
+                ConsolidatedBomItems.Add(item);
+            }
+
             OnPropertyChanged(nameof(TotalRevenue));
             OnPropertyChanged(nameof(TotalCost));
             OnPropertyChanged(nameof(DiscountAmount));
@@ -907,6 +1180,8 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(GrandTotal));
             OnPropertyChanged(nameof(TotalProfit));
             OnPropertyChanged(nameof(OverallMargin));
+            OnPropertyChanged(nameof(HasNegativeMarginItems));
+            OnPropertyChanged(nameof(NegativeMarginWarning));
             OnPropertyChanged(nameof(TotalRevenueDisplay));
             OnPropertyChanged(nameof(TotalCostDisplay));
             OnPropertyChanged(nameof(DiscountAmountDisplay));
@@ -931,17 +1206,23 @@ namespace KamatekCrm.ViewModels
         #region Kaydetme, PDF & E-Posta
 
         [RelayCommand]
-        private async Task Save()
+        private async Task Save(Window? window = null)
         {
             if (SelectedCustomer == null)
             {
-                _toastService.ShowWarning("Projeyi kaydetmeden önce bir müşteri seçin.");
+                await _dialogService.ShowWarningAsync("Projeyi kaydetmeden önce bir müşteri seçin.", "Müşteri Seçilmedi");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(ProjectName))
             {
-                _toastService.ShowWarning("Projeyi kaydetmeden önce proje adı girin.");
+                await _dialogService.ShowWarningAsync("Projeyi kaydetmeden önce proje adı girin.", "Proje Adı Eksik");
+                return;
+            }
+
+            if (!RootNodes.Any())
+            {
+                await _dialogService.ShowWarningAsync("Projeyi kaydetmeden önce yapı ağacını oluşturun.", "Yapı Ağacı Eksik");
                 return;
             }
 
@@ -958,7 +1239,7 @@ namespace KamatekCrm.ViewModels
                     KdvRate));
                 if (result.IsFailure || result.Value is null)
                 {
-                    _toastService.ShowError(result.Error);
+                    await _dialogService.ShowErrorAsync(result.Error, "Kayıt Başarısız");
                     return;
                 }
 
@@ -987,11 +1268,14 @@ namespace KamatekCrm.ViewModels
                         : $"Teklif kaydedildi: {saved.QuoteNumber} / R{saved.RevisionNumber} — {GrandTotalDisplay}";
                 _toastService.ShowSuccess(message);
 
-                _ = _draftStorageService.ClearDraftAsync(GetDraftKey());
+                Interlocked.Increment(ref _autoSaveVersion);
+                await _draftStorageService.ClearDraftAsync(GetDraftKey());
+
+                window?.Close();
             }
             catch (Exception ex)
             {
-                _toastService.ShowError($"Teklif kaydı tamamlanamadı: {ex.Message}");
+                await _dialogService.ShowErrorAsync($"Teklif kaydı tamamlanamadı: {ex.Message}", "Hata");
             }
         }
 
@@ -1016,8 +1300,10 @@ namespace KamatekCrm.ViewModels
             try
             {
                 var exportProject = CloneForExport();
+                var snapshotNodes = ProjectScopeService.Deserialize(exportProject.ProjectScopeJson);
 
-                _pdfService.GenerateProjectQuote(exportProject, RootNodes.ToList(), filePath);
+                _toastService.ShowInfo("PDF oluşturuluyor, lütfen bekleyin...");
+                await Task.Run(() => _pdfService.GenerateProjectQuote(exportProject, snapshotNodes, filePath));
 
                 if (openAfter)
                 {
@@ -1179,6 +1465,11 @@ namespace KamatekCrm.ViewModels
         {
             if (parameter is Window window)
                 window.Close();
+        }
+
+        public void Dispose()
+        {
+            Interlocked.Increment(ref _autoSaveVersion);
         }
 
         #endregion

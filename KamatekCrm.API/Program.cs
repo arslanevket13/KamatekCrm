@@ -29,10 +29,13 @@ try
         ?? "Host=localhost;Port=5432;Database=kamatekcrm;Username=postgres;Password=123456";
     
     builder.Services.AddDbContext<AppDbContext>(options =>
+    {
         options.UseNpgsql(connectionString, npgsqlOptions =>
         {
             npgsqlOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
-        }));
+        });
+        options.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+    });
 
     // MediatR - CQRS için
     builder.Services.AddMediatR(cfg => 

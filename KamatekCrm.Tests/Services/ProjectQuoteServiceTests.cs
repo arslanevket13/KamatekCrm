@@ -85,6 +85,28 @@ public sealed class ProjectQuoteServiceTests
     }
 
     [Fact]
+    public async Task SaveAsync_WithStructureNodesOnlyAndZeroLineItems_SucceedsAsDraft()
+    {
+        await using var fixture = await ProjectQuoteFixture.CreateAsync();
+        var emptyStructure = new List<ScopeNode>
+        {
+            new() { Name = "A Blok", Type = NodeType.Block }
+        };
+        var command = fixture.NewCommand(Guid.NewGuid(), emptyStructure, 0, 20);
+
+        var result = await fixture.Command.SaveAsync(command);
+
+        result.IsSuccess.Should().BeTrue(result.Error);
+        result.Value!.Pricing.IncludedLineCount.Should().Be(0);
+        result.Value.Pricing.GrandTotal.Should().Be(0);
+
+        await using var verify = fixture.CreateContext();
+        var saved = await verify.ServiceProjects.SingleAsync(p => p.Id == result.Value.ProjectId);
+        saved.QuoteStatus.Should().Be(QuoteStatus.Draft);
+        saved.ProjectScopeJson.Should().Contain("A Blok");
+    }
+
+    [Fact]
     public async Task SaveAsync_UpdateArchivesPreviousRevisionAndDoesNotArchiveUiOnlyChanges()
     {
         await using var fixture = await ProjectQuoteFixture.CreateAsync();

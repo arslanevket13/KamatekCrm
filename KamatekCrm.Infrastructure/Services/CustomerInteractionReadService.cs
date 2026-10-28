@@ -193,11 +193,14 @@ namespace KamatekCrm.Infrastructure.Services
             var items = await context.CustomerInteractions
                 .AsNoTracking()
                 .Where(i => i.IsActive &&
-                            (i.RequiresManagerAttention || i.RequestType == InteractionRequestType.ManagerAgenda || i.Priority == InteractionPriority.Critical) &&
+                            (i.RequiresManagerAttention || 
+                             i.RequestType == InteractionRequestType.ManagerAgenda || 
+                             i.Priority == InteractionPriority.Critical ||
+                             (i.RequiresFollowUp && i.FollowUpDate.HasValue)) &&
                             i.Status != InteractionStatus.Completed &&
                             i.Status != InteractionStatus.Cancelled)
                 .OrderByDescending(i => i.Priority)
-                .ThenByDescending(i => i.InteractionDate)
+                .ThenBy(i => i.FollowUpDate ?? i.InteractionDate)
                 .ToListAsync(cancellationToken);
 
             return Result.Success(items.Select(MapToDto).ToList());

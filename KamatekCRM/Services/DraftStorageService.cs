@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
 
@@ -9,6 +11,7 @@ namespace KamatekCrm.Services
     /// <summary>
     /// Çevrimdışı otomatik taslak (Auto-Save Draft) saklama ve kurtarma servisi.
     /// %LocalAppData%\KamatekCrm\Drafts\ altında güvenli JSON formatında taslak tutar.
+    /// Thread-safe ve atomik dosya yazma desteği içerir.
     /// </summary>
     public interface IDraftStorageService
     {
@@ -20,10 +23,7 @@ namespace KamatekCrm.Services
 
     public class DraftStorageService : IDraftStorageService
     {
-        private static readonly string DraftsDirectory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "KamatekCrm",
-            "Drafts");
+        private readonly string _draftsDirectory;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -31,53 +31,84 @@ namespace KamatekCrm.Services
             PropertyNameCaseInsensitive = true
         };
 
-        public DraftStorageService()
+        private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new(StringComparer.OrdinalIgnoreCase);
+
+        public DraftStorageService(string? customDraftsDirectory = null)
         {
+            _draftsDirectory = !string.IsNullOrWhiteSpace(customDraftsDirectory)
+                ? customDraftsDirectory
+                : Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "KamatekCrm",
+                    "Drafts");
+
             try
             {
-                if (!Directory.Exists(DraftsDirectory))
+                if (!Directory.Exists(_draftsDirectory))
                 {
-                    Directory.CreateDirectory(DraftsDirectory);
+                    Directory.CreateDirectory(_draftsDirectory);
+                }
+                else
+                {
+                    var oldTemps = Directory.GetFiles(_draftsDirectory, "*.tmp");
+                    foreach (var temp in oldTemps)
+                    {
+                        try { File.Delete(temp); } catch { }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "Drafts dizini oluşturulamadı: {Directory}", DraftsDirectory);
+                Log.Warning(ex, "Drafts dizini hazırlanırken uyarı: {Directory}", _draftsDirectory);
             }
         }
 
-        private static string GetFilePath(string draftKey)
+        private SemaphoreSlim GetGate(string draftKey) =>
+            _locks.GetOrAdd(draftKey, _ => new SemaphoreSlim(1, 1));
+
+        private string GetFilePath(string draftKey)
         {
             var safeName = string.Join("_", draftKey.Split(Path.GetInvalidFileNameChars()));
-            return Path.Combine(DraftsDirectory, $"{safeName}.json");
+            return Path.Combine(_draftsDirectory, $"{safeName}.json");
         }
 
         public async Task SaveDraftAsync<T>(string draftKey, T data)
         {
             if (string.IsNullOrWhiteSpace(draftKey) || data == null) return;
 
+            var gate = GetGate(draftKey);
+            await gate.WaitAsync();
+
+            string? tempPath = null;
             try
             {
-                if (!Directory.Exists(DraftsDirectory))
+                if (!Directory.Exists(_draftsDirectory))
                 {
-                    Directory.CreateDirectory(DraftsDirectory);
+                    Directory.CreateDirectory(_draftsDirectory);
                 }
 
                 var targetPath = GetFilePath(draftKey);
-                var tempPath = targetPath + ".tmp";
+                var safeName = Path.GetFileNameWithoutExtension(targetPath);
+                tempPath = Path.Combine(_draftsDirectory, $"{safeName}_{Guid.NewGuid():N}.tmp");
 
                 var json = JsonSerializer.Serialize(data, JsonOptions);
                 await File.WriteAllTextAsync(tempPath, json);
 
-                if (File.Exists(targetPath))
-                {
-                    File.Delete(targetPath);
-                }
-                File.Move(tempPath, targetPath);
+                // .NET 9 atomik ve üzerine yazılabilir dosya taşıma
+                File.Move(tempPath, targetPath, overwrite: true);
+                tempPath = null;
             }
             catch (Exception ex)
             {
                 Log.Warning(ex, "Taslak kaydedilemedi: {DraftKey}", draftKey);
+            }
+            finally
+            {
+                if (tempPath != null && File.Exists(tempPath))
+                {
+                    try { File.Delete(tempPath); } catch { }
+                }
+                gate.Release();
             }
         }
 
@@ -88,8 +119,13 @@ namespace KamatekCrm.Services
             var targetPath = GetFilePath(draftKey);
             if (!File.Exists(targetPath)) return default;
 
+            var gate = GetGate(draftKey);
+            await gate.WaitAsync();
+
             try
             {
+                if (!File.Exists(targetPath)) return default;
+
                 var json = await File.ReadAllTextAsync(targetPath);
                 if (string.IsNullOrWhiteSpace(json)) return default;
 
@@ -100,11 +136,18 @@ namespace KamatekCrm.Services
                 Log.Warning(ex, "Taslak yüklenemedi: {DraftKey}", draftKey);
                 return default;
             }
+            finally
+            {
+                gate.Release();
+            }
         }
 
-        public Task ClearDraftAsync(string draftKey)
+        public async Task ClearDraftAsync(string draftKey)
         {
-            if (string.IsNullOrWhiteSpace(draftKey)) return Task.CompletedTask;
+            if (string.IsNullOrWhiteSpace(draftKey)) return;
+
+            var gate = GetGate(draftKey);
+            await gate.WaitAsync();
 
             try
             {
@@ -114,18 +157,24 @@ namespace KamatekCrm.Services
                     File.Delete(targetPath);
                 }
 
-                var tempPath = targetPath + ".tmp";
-                if (File.Exists(tempPath))
+                var safeName = Path.GetFileNameWithoutExtension(targetPath);
+                if (Directory.Exists(_draftsDirectory))
                 {
-                    File.Delete(tempPath);
+                    var strayTemps = Directory.GetFiles(_draftsDirectory, $"{safeName}*.tmp");
+                    foreach (var stray in strayTemps)
+                    {
+                        try { File.Delete(stray); } catch { }
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Log.Warning(ex, "Taslak silinemedi: {DraftKey}", draftKey);
             }
-
-            return Task.CompletedTask;
+            finally
+            {
+                gate.Release();
+            }
         }
 
         public bool HasDraft(string draftKey)

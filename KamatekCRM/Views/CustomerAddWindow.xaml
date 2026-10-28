@@ -238,8 +238,14 @@
                 <!-- Error Message Overlay -->
                 <Border CornerRadius="8" Padding="14,10" Margin="0,0,0,16" Background="{DynamicResource StatusErrorBg}"
                         Visibility="{Binding HasError, Converter={StaticResource BoolVis}}">
-                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"
-                               AutomationProperties.LiveSetting="Assertive" AutomationProperties.Name="Form hata özeti"/>
+                    <StackPanel>
+                        <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource StatusErrorFg}" FontSize="12" TextWrapping="Wrap"
+                                   AutomationProperties.LiveSetting="Assertive" AutomationProperties.Name="Form hata özeti"/>
+                        <ui:Button Content="Mevcut Müşteri Kaydını Kullan"
+                                   Command="{Binding SelectExistingCustomerCommand}"
+                                   Visibility="{Binding HasDuplicateCustomer, Converter={StaticResource BoolVis}}"
+                                   Appearance="Success" Height="34" Margin="0,8,0,0" HorizontalAlignment="Left" Cursor="Hand"/>
+                    </StackPanel>
                 </Border>
             </StackPanel>
         </ScrollViewer>

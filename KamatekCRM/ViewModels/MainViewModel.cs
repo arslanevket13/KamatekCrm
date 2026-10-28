@@ -150,7 +150,7 @@ namespace KamatekCrm.ViewModels
         public void NavigateToCustomerDetail(int customerId)
         {
              var vm = _navigationService.NavigateTo<CustomerDetailViewModel>();
-             vm.Initialize(customerId);
+             _ = vm.InitializeAsync(customerId);
         }
 
         /// <summary>

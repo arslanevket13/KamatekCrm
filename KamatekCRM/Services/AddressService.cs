@@ -33,6 +33,40 @@ namespace KamatekCrm.Services
             public Dictionary<string, List<string>>? Ilceler { get; set; }
         }
 
+        public static readonly CultureInfo TrCulture = new CultureInfo("tr-TR");
+        public static readonly StringComparer TrComparer = StringComparer.Create(TrCulture, true);
+
+        /// <summary>
+        /// Türkçe karakter duyarlı eşitlik kontrolü (İ/I, Ş/S, Ğ/G vs.)
+        /// </summary>
+        public static bool TurkishEquals(string? a, string? b)
+        {
+            if (string.IsNullOrWhiteSpace(a) && string.IsNullOrWhiteSpace(b)) return true;
+            if (string.IsNullOrWhiteSpace(a) || string.IsNullOrWhiteSpace(b)) return false;
+            return TrComparer.Equals(a.Trim(), b.Trim());
+        }
+
+        public static City? FindCity(string? cityName)
+        {
+            if (string.IsNullOrWhiteSpace(cityName)) return null;
+            EnsureDataLoaded();
+            return _cities?.FirstOrDefault(c => TurkishEquals(c.Name, cityName));
+        }
+
+        public static District? FindDistrict(string? cityName, string? districtName)
+        {
+            if (string.IsNullOrWhiteSpace(cityName) || string.IsNullOrWhiteSpace(districtName)) return null;
+            var city = FindCity(cityName);
+            return city?.Districts?.FirstOrDefault(d => TurkishEquals(d.Name, districtName));
+        }
+
+        public static Neighborhood? FindNeighborhood(string? cityName, string? districtName, string? neighborhoodName)
+        {
+            if (string.IsNullOrWhiteSpace(cityName) || string.IsNullOrWhiteSpace(districtName) || string.IsNullOrWhiteSpace(neighborhoodName)) return null;
+            var district = FindDistrict(cityName, districtName);
+            return district?.Neighborhoods?.FirstOrDefault(n => TurkishEquals(n.Name, neighborhoodName));
+        }
+
         /// <summary>
         /// Tüm şehirleri alfabetik sıralı olarak getirir (Cached)
         /// </summary>
@@ -46,12 +80,12 @@ namespace KamatekCrm.Services
                 {
                     entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
                     EnsureDataLoaded();
-                    return _cities!.OrderBy(c => c.Name).ToList();
+                    return _cities!.OrderBy(c => c.Name, TrComparer).ToList();
                 }) ?? new List<City>();
             }
 
             EnsureDataLoaded();
-            return _cities!.OrderBy(c => c.Name).ToList();
+            return _cities!.OrderBy(c => c.Name, TrComparer).ToList();
         }
 
         /// <summary>
@@ -62,21 +96,21 @@ namespace KamatekCrm.Services
             if (string.IsNullOrWhiteSpace(cityName)) return new List<District>();
             EnsureCacheInitialized();
 
-            string cacheKey = $"Address_Districts_{cityName.ToLowerInvariant()}";
+            string cacheKey = $"Address_Districts_{cityName.Trim().ToLower(TrCulture)}";
             if (_cache != null)
             {
                 return _cache.GetOrCreate(cacheKey, entry =>
                 {
                     entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
                     EnsureDataLoaded();
-                    var city = _cities!.FirstOrDefault(c => string.Equals(c.Name, cityName, StringComparison.OrdinalIgnoreCase));
-                    return city?.Districts.OrderBy(d => d.Name).ToList() ?? new List<District>();
+                    var city = FindCity(cityName);
+                    return city?.Districts.OrderBy(d => d.Name, TrComparer).ToList() ?? new List<District>();
                 }) ?? new List<District>();
             }
 
             EnsureDataLoaded();
-            var targetCity = _cities!.FirstOrDefault(c => string.Equals(c.Name, cityName, StringComparison.OrdinalIgnoreCase));
-            return targetCity?.Districts.OrderBy(d => d.Name).ToList() ?? new List<District>();
+            var targetCity = FindCity(cityName);
+            return targetCity?.Districts.OrderBy(d => d.Name, TrComparer).ToList() ?? new List<District>();
         }
 
         /// <summary>
@@ -87,25 +121,21 @@ namespace KamatekCrm.Services
             if (string.IsNullOrWhiteSpace(cityName) || string.IsNullOrWhiteSpace(districtName)) return new List<Neighborhood>();
             EnsureCacheInitialized();
 
-            string cacheKey = $"Address_Neighborhoods_{cityName.ToLowerInvariant()}_{districtName.ToLowerInvariant()}";
+            string cacheKey = $"Address_Neighborhoods_{cityName.Trim().ToLower(TrCulture)}_{districtName.Trim().ToLower(TrCulture)}";
             if (_cache != null)
             {
                 return _cache.GetOrCreate(cacheKey, entry =>
                 {
                     entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
                     EnsureDataLoaded();
-                    var city = _cities!.FirstOrDefault(c => string.Equals(c.Name, cityName, StringComparison.OrdinalIgnoreCase));
-                    if (city == null) return new List<Neighborhood>();
-                    var district = city.Districts.FirstOrDefault(d => string.Equals(d.Name, districtName, StringComparison.OrdinalIgnoreCase));
-                    return district?.Neighborhoods.OrderBy(n => n.Name).ToList() ?? new List<Neighborhood>();
+                    var district = FindDistrict(cityName, districtName);
+                    return district?.Neighborhoods.OrderBy(n => n.Name, TrComparer).ToList() ?? new List<Neighborhood>();
                 }) ?? new List<Neighborhood>();
             }
 
             EnsureDataLoaded();
-            var targetCity2 = _cities!.FirstOrDefault(c => string.Equals(c.Name, cityName, StringComparison.OrdinalIgnoreCase));
-            if (targetCity2 == null) return new List<Neighborhood>();
-            var targetDistrict2 = targetCity2.Districts.FirstOrDefault(d => string.Equals(d.Name, districtName, StringComparison.OrdinalIgnoreCase));
-            return targetDistrict2?.Neighborhoods.OrderBy(n => n.Name).ToList() ?? new List<Neighborhood>();
+            var targetDistrict = FindDistrict(cityName, districtName);
+            return targetDistrict?.Neighborhoods.OrderBy(n => n.Name, TrComparer).ToList() ?? new List<Neighborhood>();
         }
 
         private static void EnsureCacheInitialized()
@@ -245,6 +275,9 @@ namespace KamatekCrm.Services
                 {
                     string candidate = Path.Combine(currentDir, fileName);
                     if (File.Exists(candidate)) return candidate;
+
+                    string candidateInKamatek = Path.Combine(currentDir, "KamatekCRM", fileName);
+                    if (File.Exists(candidateInKamatek)) return candidateInKamatek;
                 }
                 var parent = Directory.GetParent(currentDir);
                 if (parent == null) break;

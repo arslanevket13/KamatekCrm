@@ -114,6 +114,50 @@ namespace KamatekCrm.Shared.Models.Specs
         public string Color { get; set; } = "";
         public string Warranty { get; set; } = "";
     }
+
+    /// <summary>
+    /// JSONB Specs güvenli serileştirme ve hata izolasyon yardımcısı
+    /// </summary>
+    public static class ProductSpecHelper
+    {
+        private static readonly System.Text.Json.JsonSerializerOptions Options = new()
+        {
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+            PropertyNameCaseInsensitive = true
+        };
+
+        public static string SerializeSpecs(ProductSpecBase? specs)
+        {
+            if (specs == null) return "{}";
+            try
+            {
+                return System.Text.Json.JsonSerializer.Serialize(specs, Options);
+            }
+            catch
+            {
+                return "{}";
+            }
+        }
+
+        public static ProductSpecBase DeserializeSpecs(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return new GeneralSpecs();
+
+            try
+            {
+                return System.Text.Json.JsonSerializer.Deserialize<ProductSpecBase>(json, Options) ?? new GeneralSpecs();
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return new GeneralSpecs { Notes = "Bozuk JSON özellikleri varsayılana sıfırlandı." };
+            }
+            catch (System.Exception)
+            {
+                return new GeneralSpecs();
+            }
+        }
+    }
 }
 
 // NOT: Eski JobDetails namespace'i (CctvJobDetail, FireAlarmJobDetail, vb.) silindi.

@@ -646,8 +646,10 @@ public sealed class ServiceJobReadService : IServiceJobReadService
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         var normalized = term.ToLower();
         var products = await context.Products.AsNoTracking()
-            .Where(product => product.ProductName.ToLower().Contains(normalized) ||
-                              product.SKU.ToLower().Contains(normalized))
+            .Where(product => (product.ProductName != null && product.ProductName.ToLower().Contains(normalized)) ||
+                              (product.SKU != null && product.SKU.ToLower().Contains(normalized)) ||
+                              (product.Barcode != null && product.Barcode.ToLower().Contains(normalized)) ||
+                              (product.ModelName != null && product.ModelName.ToLower().Contains(normalized)))
             .OrderBy(product => product.ProductName)
             .Take(take)
             .Select(product => new QuotationProductLookupDto(

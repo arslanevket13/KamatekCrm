@@ -4,6 +4,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Helpers;
 using KamatekCrm.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -140,10 +141,33 @@ namespace KamatekCrm.ViewModels
 
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
-        /// <summary>
-        /// Başarılı kayıt sonrası oluşturulan müşteri — çağıran ViewModel bunu okur.
-        /// </summary>
         public Customer? SavedCustomer { get; private set; }
+
+        private Customer? _existingCustomer;
+        public Customer? ExistingCustomer
+        {
+            get => _existingCustomer;
+            set
+            {
+                if (SetProperty(ref _existingCustomer, value))
+                {
+                    OnPropertyChanged(nameof(HasExistingCustomer));
+                    SelectExistingCustomerCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        public bool HasExistingCustomer => ExistingCustomer != null;
+
+        [RelayCommand]
+        private void SelectExistingCustomer()
+        {
+            if (ExistingCustomer != null)
+            {
+                SavedCustomer = ExistingCustomer;
+                RequestClose?.Invoke(true);
+            }
+        }
 
         #endregion
 
@@ -164,24 +188,29 @@ namespace KamatekCrm.ViewModels
             if (string.IsNullOrWhiteSpace(phone) || phone.Trim().Length < 5)
             {
                 DuplicatePhoneWarning = string.Empty;
+                ExistingCustomer = null;
                 return;
             }
 
             try
             {
-                string cleaned = phone.Trim().Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
+                string norm = CustomerValidationHelper.NormalizePhoneNumber(phone);
+                string phoneLast10 = norm.Length >= 10 ? norm.Substring(norm.Length - 10) : norm;
                 using var context = await _dbContextFactory.CreateDbContextAsync();
-                var existing = await context.Customers
-                    .FirstOrDefaultAsync(c => c.PhoneNumber != null && c.PhoneNumber.Replace(" ", "").Replace("-", "").Contains(cleaned));
+                var existing = await context.Customers.AsNoTracking()
+                    .FirstOrDefaultAsync(c => !c.IsDeleted && c.PhoneNumber != null && 
+                        (c.PhoneNumber == norm || (phoneLast10.Length >= 10 && c.PhoneNumber.Contains(phoneLast10))));
 
                 Application.Current?.Dispatcher.Invoke(() =>
                 {
                     if (existing != null)
                     {
-                        DuplicatePhoneWarning = $"⚠️ UYARI: Bu telefon ({phone.Trim()}) ile kayıtlı müşteri bulundu: {existing.FullName}";
+                        ExistingCustomer = existing;
+                        DuplicatePhoneWarning = $"⚠️ Bu telefon ({phone.Trim()}) ile kayıtlı müşteri bulundu: {existing.FullName} ({existing.CustomerCode})";
                     }
                     else
                     {
+                        ExistingCustomer = null;
                         DuplicatePhoneWarning = string.Empty;
                     }
                 });
@@ -204,11 +233,71 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
+            // Telefon Normalizasyonu ve Format Kontrolü
+            string normPhone = CustomerValidationHelper.NormalizePhoneNumber(Phone);
+            if (!string.IsNullOrWhiteSpace(Phone) && !CustomerValidationHelper.IsValidPhoneNumber(Phone))
+            {
+                ErrorMessage = "Geçerli bir telefon numarası giriniz (Örn: 05XX XXX XX XX).";
+                return;
+            }
+
+            // TCKN / VKN Algoritma Doğrulaması
+            string? cleanId = !string.IsNullOrWhiteSpace(IdNumber) ? IdNumber.Trim() : null;
+            string? cleanTax = !string.IsNullOrWhiteSpace(TaxNumber) ? TaxNumber.Trim() : null;
+
+            if (!string.IsNullOrEmpty(cleanId))
+            {
+                if (IsCorporate)
+                {
+                    if (!CustomerValidationHelper.IsValidTaxNumber(cleanId))
+                    {
+                        ErrorMessage = "Geçersiz Vergi Kimlik Numarası (VKN 10 haneli olmalı ve resmi algoritmayı sağlamalıdır).";
+                        return;
+                    }
+                }
+                else
+                {
+                    if (!CustomerValidationHelper.IsValidTcKimlikNo(cleanId))
+                    {
+                        ErrorMessage = "Geçersiz T.C. Kimlik Numarası (11 haneli olmalı ve resmi algoritmayı sağlamalıdır).";
+                        return;
+                    }
+                }
+            }
+
+            if (IsCorporate && !string.IsNullOrEmpty(cleanTax))
+            {
+                if (!CustomerValidationHelper.IsValidTaxNumber(cleanTax))
+                {
+                    ErrorMessage = "Geçersiz Vergi Kimlik Numarası (VKN 10 haneli olmalı ve resmi algoritmayı sağlamalıdır).";
+                    return;
+                }
+            }
+
             IsBusy = true;
             ErrorMessage = string.Empty;
 
             try
             {
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+
+                // Split-Brain Ekleme ve Mükerrer Kayıt Engeli (Duplicate Shield)
+                string phoneLast10 = normPhone.Length >= 10 ? normPhone.Substring(normPhone.Length - 10) : normPhone;
+                var duplicate = await context.Customers.AsNoTracking()
+                    .FirstOrDefaultAsync(c => !c.IsDeleted && (
+                        (!string.IsNullOrEmpty(normPhone) && (c.PhoneNumber == normPhone || (phoneLast10.Length >= 10 && c.PhoneNumber != null && c.PhoneNumber.Contains(phoneLast10)))) ||
+                        (!string.IsNullOrEmpty(cleanId) && (c.TcKimlikNo == cleanId || c.TaxNumber == cleanId)) ||
+                        (!string.IsNullOrEmpty(cleanTax) && c.TaxNumber == cleanTax)
+                    ));
+
+                if (duplicate != null)
+                {
+                    ExistingCustomer = duplicate;
+                    ErrorMessage = $"Mükerrer kart açılamaz! Sistemde kayıtlı: {duplicate.FullName} ({duplicate.CustomerCode})";
+                    DuplicatePhoneWarning = $"⚠️ Bu müşteri ({duplicate.FullName}) zaten mevcut. 'Mevcut Müşteriyi Seç' butonunu kullanabilirsiniz.";
+                    return;
+                }
+
                 // Benzersiz Müşteri Kodu Üret
                 string timestamp = DateTime.UtcNow.ToString("yyMMddHHmmss");
                 string customerCode = $"MÜŞ-{timestamp}";
@@ -217,19 +306,18 @@ namespace KamatekCrm.ViewModels
                 {
                     CustomerCode = customerCode,
                     FullName = FullName.Trim(),
-                    PhoneNumber = Phone.Trim(),
-                    Email = Email.Trim(),
+                    PhoneNumber = normPhone,
+                    Email = Email?.Trim(),
                     Type = CustomerType,
-                    TcKimlikNo = !string.IsNullOrWhiteSpace(IdNumber) && !IsCorporate ? IdNumber.Trim() : null,
-                    TaxNumber = !string.IsNullOrWhiteSpace(TaxNumber) && IsCorporate ? TaxNumber.Trim() : (!string.IsNullOrWhiteSpace(IdNumber) ? IdNumber.Trim() : null),
+                    TcKimlikNo = !string.IsNullOrWhiteSpace(cleanId) && !IsCorporate ? cleanId : null,
+                    TaxNumber = IsCorporate ? (cleanTax ?? cleanId) : null,
                     TaxOffice = !string.IsNullOrWhiteSpace(TaxOffice) && IsCorporate ? TaxOffice.Trim() : null,
                     CompanyName = !string.IsNullOrWhiteSpace(CompanyName) && IsCorporate ? CompanyName.Trim() : null,
-                    Notes = IsCorporate ? $"Kurumsal Kayıt. Yetkili: {FullName.Trim()}" : (string.IsNullOrWhiteSpace(IdNumber) ? string.Empty : $"TC: {IdNumber.Trim()}"),
+                    Notes = IsCorporate ? $"Kurumsal Kayıt. Yetkili: {FullName.Trim()}" : (string.IsNullOrWhiteSpace(cleanId) ? string.Empty : $"TC: {cleanId}"),
                     CreatedDate = DateTime.UtcNow,
                     CreatedBy = App.CurrentUser?.Username ?? "POS-QuickAdd"
                 };
 
-                using var context = await _dbContextFactory.CreateDbContextAsync();
                 context.Customers.Add(customer);
                 await context.SaveChangesAsync();
 
