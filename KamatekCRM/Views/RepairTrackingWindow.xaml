@@ -368,7 +368,7 @@
 
         <!-- Empty State (No selection) -->
         <Border Grid.Column="1" Grid.ColumnSpan="2" Background="{DynamicResource ThemeSurface}" 
-                Visibility="{Binding IsJobSelected, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverted}">
+                Visibility="{Binding IsJobSelected, Converter={StaticResource InvertedBoolToVis}}">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="🔍" FontSize="60" HorizontalAlignment="Center" Foreground="{DynamicResource ThemeDivider}"/>
                 <TextBlock Text="Lütfen soldaki listeden bir iş seçin." FontSize="20" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,24,0,0"/>

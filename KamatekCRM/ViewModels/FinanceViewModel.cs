@@ -212,8 +212,8 @@ namespace KamatekCrm.ViewModels
 
                 // Devir Bakiye (startDate öncesindeki tüm kasa hareketlerinin net bakiyesi)
                 var pastTransactions = await context.CashTransactions
-                    .Where(t => t.Date < startDate)
-                    .ToListAsync();
+                    .Where(t => t.Date < startDate).Select(t => new { t.TransactionType, t.Amount })
+                    .AsNoTracking().ToListAsync();
 
                 var pastIncome = pastTransactions.Where(t => FinancialTransactionPolicy.IsCashIncome(t.TransactionType)).Sum(t => t.Amount);
 
@@ -225,7 +225,7 @@ namespace KamatekCrm.ViewModels
                     .Include(t => t.Customer)
                     .Where(t => t.Date >= startDate && t.Date <= endDate)
                     .OrderByDescending(t => t.Date)
-                    .ToListAsync();
+                    .AsNoTracking().ToListAsync();
 
                 foreach (var t in transactions)
                 {

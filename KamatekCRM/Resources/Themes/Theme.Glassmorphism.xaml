@@ -55,7 +55,7 @@
 
     <SolidColorBrush x:Key="TextInverseBrush" Color="#0F172A"/>
     <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="PrimaryForeground" Color="#0F172A"/>
+    <SolidColorBrush x:Key="PrimaryForeground" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TextLinkBrush" Color="#818CF8"/>
 
     <!-- ─────────── BORDERS & DIVIDERS (Subtle 1px White) ─────────── -->
@@ -203,5 +203,26 @@
     <SolidColorBrush x:Key="SystemAccentColorPrimaryBrush" Color="#818CF8"/>
     <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="#FFFFFF" Opacity="0.05"/>
     <SolidColorBrush x:Key="StatusNeutralBg" Color="#FFFFFF" Opacity="0.10"/>
+    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#FFFFFF" Opacity="0.12"/>
+    <SolidColorBrush x:Key="TextOnAccentBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#818CF8"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#CBD5E1"/>
+    <SolidColorBrush x:Key="StatusSuccessBrush" Color="#6EE7B7"/>
+    <SolidColorBrush x:Key="StatusErrorBrush" Color="#FCA5A5"/>
+    <SolidColorBrush x:Key="ThemeSuccessDark" Color="#059669"/>
+    <SolidColorBrush x:Key="ThemeErrorDark" Color="#DC2626"/>
+    <SolidColorBrush x:Key="StatusWarningBgDark" Color="#FBBF24" Opacity="0.20"/>
+    <SolidColorBrush x:Key="SystemFillColorCriticalBackgroundBrush" Color="#F87171" Opacity="0.20"/>
+    <SolidColorBrush x:Key="AccentOverlayBrush" Color="#818CF8" Opacity="0.20"/>
+    <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush" Color="#FFFFFF" Opacity="0.20"/>
+    <SolidColorBrush x:Key="StatusSuccessFgDark" Color="#6EE7B7"/>
+    <SolidColorBrush x:Key="StatusErrorFgDark" Color="#FCA5A5"/>
+    <SolidColorBrush x:Key="StatusInfoFgDark" Color="#93C5FD"/>
+    <Color x:Key="SurfaceSidebarColorValue">#111B3D</Color>
+    <Color x:Key="SurfaceCardColorValue">#171120</Color>
+    <Color x:Key="SurfacePageColorValue">#091428</Color>
+    <Color x:Key="KpiPurpleStartColor">#C084FC</Color>
+    <Color x:Key="KpiPurpleEndColor">#9333EA</Color>
 
 </ResourceDictionary>

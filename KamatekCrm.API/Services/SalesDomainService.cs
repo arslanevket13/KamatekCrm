@@ -34,7 +34,7 @@ namespace KamatekCrm.API.Services
             await _salesLock.WaitAsync();
             try
             {
-                using var transaction = await _context.Database.BeginTransactionAsync();
+                await using var transaction = await _context.Database.CreateExecutionStrategy().ExecuteAsync(async () => await _context.Database.BeginTransactionAsync());
                 try
                 {
                     var todayOrders = await _context.SalesOrders.CountAsync(o => o.Date.Date == DateTime.UtcNow.Date);
@@ -263,7 +263,7 @@ namespace KamatekCrm.API.Services
                 .ToList();
 
             report.TopProducts = topProducts;
-            report.TotalItemsSold = topProducts.Sum(p => p.Quantity);
+            report.TotalItemsSold = _context.SalesOrderItems.Where(i => i.SalesOrder.Date >= startOfDay && i.SalesOrder.Date < endOfDay).Sum(i => (int?)i.Quantity) ?? 0;
 
             return report;
         }

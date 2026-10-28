@@ -117,7 +117,7 @@ namespace KamatekCrm.ViewModels
 
             // Dashboard & durum değiştirme komutları
 
-            _ = Refresh();
+            if (_serviceJobReadService != null) _ = Refresh();
             UpdateDeviceTypeOptions();
         }
 
@@ -2312,8 +2312,8 @@ namespace KamatekCrm.ViewModels
                     SlaDeadline = SlaDeadline,
                     TechnicianNotes = TechnicianNotes,
                     PhotoPathsJson = JsonSerializer.Serialize(UploadedPhotos.ToList()),
-                    TotalAmount = GrandTotal,
-                    TaxAmount = KdvAmount
+                    Price = FinancialCalculator.RoundMoney(SubTotal), TotalAmount = FinancialCalculator.RoundMoney(GrandTotalWithKdv),
+                    TaxAmount = FinancialCalculator.RoundMoney(KdvAmount)
                 };
                 var materialItems = CurrentJobItems.Select(item => new ServiceJobItem
                 {

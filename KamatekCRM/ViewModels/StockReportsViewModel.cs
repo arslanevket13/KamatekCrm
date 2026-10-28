@@ -179,6 +179,7 @@ namespace KamatekCrm.ViewModels
         {
             return type switch
             {
+                StockTransactionType.OpeningStock => true,
                 StockTransactionType.Purchase => true,
                 StockTransactionType.AdjustmentPlus => true,
                 StockTransactionType.ReturnFromCustomer => true,

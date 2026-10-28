@@ -13,10 +13,10 @@ namespace KamatekCrm.Tests.Integration
 {
     public class AppDbContextIntegrationTests
     {
-        private static AppDbContext CreateInMemoryDbContext()
+        private static AppDbContext CreateInMemoryDbContext(string? dbName = null)
         {
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .UseInMemoryDatabase(databaseName: dbName ?? Guid.NewGuid().ToString())
                 .Options;
 
             return new AppDbContext(options);
@@ -26,7 +26,8 @@ namespace KamatekCrm.Tests.Integration
         public async Task InsertAndRetrieve_ServiceJob_ShouldSaveAndRetrieveFlawlessly()
         {
             // Arrange
-            using var context = CreateInMemoryDbContext();
+            var dbName = Guid.NewGuid().ToString();
+            using var context = CreateInMemoryDbContext(dbName);
 
             var customer = new Customer
             {
@@ -56,9 +57,9 @@ namespace KamatekCrm.Tests.Integration
             await context.SaveChangesAsync();
 
             // Assert
-            using var queryContext = CreateInMemoryDbContext();
-            // Verify in same database instance
-            var savedJob = await context.ServiceJobs
+            using var queryContext = CreateInMemoryDbContext(dbName);
+            // Verify in separate context instance against same database
+            var savedJob = await queryContext.ServiceJobs
                 .Include(j => j.Customer)
                 .FirstOrDefaultAsync(j => j.Id == serviceJob.Id);
 

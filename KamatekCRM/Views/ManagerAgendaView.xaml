@@ -112,7 +112,7 @@
                 <Grid>
                     <components:KmEmptyState Icon="&#xE7EF;" Title="Gündem Maddesi Seçilmedi"
                                              Message="Yönetici notlarını ve aksiyonları görmek için listeden bir kayıt seçin."
-                                             Visibility="{Binding HasSelectedItem, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
+                                             Visibility="{Binding HasSelectedItem, Converter={StaticResource InvertedBoolToVis}}"/>
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding HasSelectedItem, Converter={StaticResource BoolToVis}}">
                         <StackPanel DataContext="{Binding SelectedAgendaItem}">

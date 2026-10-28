@@ -24,7 +24,7 @@ namespace KamatekCrm.ViewModels
     /// appsettings.json NetworkDiscovery bölümünü iki yönlü (read/write) kontrol eder.
     /// Sunucu modundayken bağlı istemcileri PostgreSQL pg_stat_activity üzerinden izler.
     /// </summary>
-    public partial class NetworkSettingsViewModel : ViewModelBase
+    public partial class NetworkSettingsViewModel : ViewModelBase, IDisposable
     {
         #region Dependencies
 
@@ -36,6 +36,7 @@ namespace KamatekCrm.ViewModels
         private readonly ILogger<NetworkSettingsViewModel> _logger;
         private readonly IApplicationAuthorizationService _authorizationService;
         private readonly System.Windows.Threading.DispatcherTimer _refreshTimer;
+        public void Dispose() => _refreshTimer.Stop();
 
         #endregion
 

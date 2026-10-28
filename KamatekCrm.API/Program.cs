@@ -31,7 +31,7 @@ try
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(connectionString, npgsqlOptions =>
         {
-            npgsqlOptions.MigrationsAssembly("KamatekCrm.API");
+            npgsqlOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
         }));
 
     // MediatR - CQRS için

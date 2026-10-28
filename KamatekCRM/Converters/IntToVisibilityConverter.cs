@@ -9,11 +9,18 @@ namespace KamatekCrm.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is int count && count > 0)
+            bool hasItems = value is int count && count > 0;
+            bool invert = parameter is string paramStr &&
+                (paramStr.Equals("Inverse", StringComparison.OrdinalIgnoreCase) ||
+                 paramStr.Equals("Invert", StringComparison.OrdinalIgnoreCase) ||
+                 paramStr.Equals("Inverted", StringComparison.OrdinalIgnoreCase));
+
+            if (invert)
             {
-                return Visibility.Visible;
+                return hasItems ? Visibility.Collapsed : Visibility.Visible;
             }
-            return Visibility.Collapsed;
+
+            return hasItems ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

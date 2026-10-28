@@ -39,25 +39,37 @@ namespace KamatekCrm.Converters
     /// </summary>
     public class QuoteStatusColorConverter : IValueConverter
     {
+        private static readonly Brush DraftBrush = CreateFrozenBrush("#9E9E9E");
+        private static readonly Brush SentBrush = CreateFrozenBrush("#2196F3");
+        private static readonly Brush ApprovedBrush = CreateFrozenBrush("#4CAF50");
+        private static readonly Brush RejectedBrush = CreateFrozenBrush("#F44336");
+        private static readonly Brush ExpiredBrush = CreateFrozenBrush("#FF9800");
+        private static readonly Brush RevisedBrush = CreateFrozenBrush("#9C27B0");
+        private static readonly Brush DefaultBrush = CreateFrozenBrush("#757575");
+
+        private static Brush CreateFrozenBrush(string hex)
+        {
+            var brush = (SolidColorBrush)new BrushConverter().ConvertFromString(hex)!;
+            brush.Freeze();
+            return brush;
+        }
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is QuoteStatus status)
             {
-                var hex = status switch
+                return status switch
                 {
-                    QuoteStatus.Draft => "#9E9E9E",
-                    QuoteStatus.Sent => "#2196F3",
-                    QuoteStatus.Approved => "#4CAF50",
-                    QuoteStatus.Rejected => "#F44336",
-                    QuoteStatus.Expired => "#FF9800",
-                    QuoteStatus.Revised => "#9C27B0",
-                    _ => "#757575"
+                    QuoteStatus.Draft => DraftBrush,
+                    QuoteStatus.Sent => SentBrush,
+                    QuoteStatus.Approved => ApprovedBrush,
+                    QuoteStatus.Rejected => RejectedBrush,
+                    QuoteStatus.Expired => ExpiredBrush,
+                    QuoteStatus.Revised => RevisedBrush,
+                    _ => DefaultBrush
                 };
-
-                var converter = new BrushConverter();
-                return converter.ConvertFromString(hex) ?? Brushes.Gray;
             }
-            return Brushes.Gray;
+            return DefaultBrush;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -88,7 +100,13 @@ namespace KamatekCrm.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is bool b)
+            {
+                bool invert = parameter is string s &&
+                    (s.Equals("Inverse", StringComparison.OrdinalIgnoreCase) ||
+                     s.Equals("Invert", StringComparison.OrdinalIgnoreCase));
+                if (invert) b = !b;
                 return b ? Visibility.Visible : Visibility.Collapsed;
+            }
             return Visibility.Collapsed;
         }
 

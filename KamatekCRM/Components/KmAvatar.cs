@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -11,6 +12,25 @@ namespace KamatekCrm.Components
     /// </summary>
     public class KmAvatar : Control
     {
+        private static readonly Brush[] PaletteBrushes = CreateFrozenPalette();
+
+        private static Brush[] CreateFrozenPalette()
+        {
+            var colors = new[]
+            {
+                "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
+                "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1"
+            };
+            var brushes = new Brush[colors.Length];
+            for (int i = 0; i < colors.Length; i++)
+            {
+                var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colors[i]));
+                brush.Freeze();
+                brushes[i] = brush;
+            }
+            return brushes;
+        }
+
         static KmAvatar()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(KmAvatar),
@@ -137,18 +157,11 @@ namespace KamatekCrm.Components
 
         private void UpdateBackground()
         {
-            if (AvatarBackground != null) return; // User-set background takes priority
+            if (AvatarBackground != null && !Array.Exists(PaletteBrushes, b => ReferenceEquals(b, AvatarBackground)))
+                return; // User-set custom background takes priority
 
-            // Deterministic color based on name hash
-            var colors = new[]
-            {
-                "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
-                "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1"
-            };
-
-            var index = Math.Abs((FullName ?? "").GetHashCode()) % colors.Length;
-            AvatarBackground = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString(colors[index]));
+            var index = Math.Abs((FullName ?? "").GetHashCode()) % PaletteBrushes.Length;
+            AvatarBackground = PaletteBrushes[index];
         }
 
         private void UpdateSizeValues()

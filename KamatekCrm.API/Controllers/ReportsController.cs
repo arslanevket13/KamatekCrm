@@ -59,17 +59,17 @@ namespace KamatekCrm.API.Controllers
             var monthStart = new DateTime(targetYear, targetMonth, 1, 0, 0, 0, DateTimeKind.Utc);
             var monthEnd = monthStart.AddMonths(1);
 
-            var revenueTask = _context.SalesOrders
+            var revenueTask = Task.FromResult(await _context.SalesOrders
                 .Where(s => s.Date >= monthStart && s.Date < monthEnd && s.Status == SalesOrderStatus.Completed)
-                .SumAsync(s => s.TotalAmount);
+                .SumAsync(s => s.TotalAmount));
 
-            var expenseTask = _context.PurchaseInvoices
+            var expenseTask = Task.FromResult(await _context.PurchaseInvoices
                 .Where(p => p.Date >= monthStart && p.Date < monthEnd)
-                .SumAsync(p => p.GrandTotal);
+                .SumAsync(p => p.GrandTotal));
 
-            var serviceRevenueTask = _context.ServiceJobs
+            var serviceRevenueTask = Task.FromResult(await _context.ServiceJobs
                 .Where(j => j.CompletedDate >= monthStart && j.CompletedDate < monthEnd && j.Status == JobStatus.Completed)
-                .SumAsync(j => j.Price + j.LaborCost - j.DiscountAmount);
+                .SumAsync(j => j.Price + j.LaborCost - j.DiscountAmount));
 
             await Task.WhenAll(revenueTask, expenseTask, serviceRevenueTask);
 

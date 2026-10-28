@@ -48,8 +48,8 @@ namespace KamatekCrm.Infrastructure
                 });
             });
 
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
             return services;
         }

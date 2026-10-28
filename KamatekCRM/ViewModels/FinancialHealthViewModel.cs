@@ -82,7 +82,7 @@ namespace KamatekCrm.ViewModels
                 await using var context = await _dbContextFactory.CreateDbContextAsync();
                 var projects = await context.ServiceProjects
                     .Include(p => p.Customer)
-                    .Where(p => p.Status != ProjectStatus.Cancelled)
+                    .Where(p => p.Status == ProjectStatus.Active || p.Status == ProjectStatus.Completed)
                     .ToListAsync();
 
                 // Load Cash Transactions for expenses & income consolidation
@@ -90,7 +90,7 @@ namespace KamatekCrm.ViewModels
                     .Where(t => FinancialTransactionPolicy.CashExpenseTypes.Contains(t.TransactionType))
                     .ToListAsync();
 
-                var salesOrders = await context.SalesOrders.ToListAsync();
+                var salesOrders = await context.SalesOrders.Where(s => s.Status != SalesOrderStatus.Cancelled && s.Status != SalesOrderStatus.Draft).ToListAsync();
                 var salesReturns = await context.SalesReturns.AsNoTracking().ToListAsync();
 
                 // --- KPI Consolidation ---

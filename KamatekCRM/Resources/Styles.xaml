@@ -163,7 +163,7 @@
     <!-- ═══════════ 1. PRIMARY BUTTON (Save/Confirm) ═══════════ -->
     <Style x:Key="BtnPrimary" TargetType="Button">
         <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}"/>
         <Setter Property="FontFamily" Value="{StaticResource MainFont}"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
@@ -325,7 +325,7 @@
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{DynamicResource SelectedRowBrush}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}"/>
                         </Trigger>
                     </Style.Triggers>
                 </Style>
@@ -670,7 +670,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>

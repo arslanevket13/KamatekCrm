@@ -433,7 +433,7 @@ public sealed class PurchasingCommandService : IPurchasingCommandService
     private static decimal CalculateLineTotal(decimal unitPrice, int quantity, decimal discount, decimal taxRate)
     {
         var afterDiscount = unitPrice * quantity - discount;
-        return Math.Round(afterDiscount + (afterDiscount * taxRate / 100m), 2, MidpointRounding.AwayFromZero);
+        return Math.Round(afterDiscount + (afterDiscount * taxRate / 100m), 2, MidpointRounding.ToEven);
     }
 
     private static string CreateNumber(string prefix) => $"{prefix}-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}"[..48];

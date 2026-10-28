@@ -338,7 +338,7 @@ namespace KamatekCrm.ViewModels
                 var vm = _serviceProvider.GetRequiredService<TViewModel>();
                 if (!_isNavigatingHistory && CurrentView != null && CurrentView.GetType() != typeof(TViewModel))
                 {
-                    _backStack.Push(CurrentView);
+                    if (CurrentView is IDisposable disp) disp.Dispose(); if (_backStack.Count < 15) _backStack.Push(CurrentView);
                     _forwardStack.Clear();
                     OnPropertyChanged(nameof(CanGoBack));
                     OnPropertyChanged(nameof(CanGoForward));

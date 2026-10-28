@@ -530,7 +530,7 @@ namespace KamatekCrm.ViewModels
                 int customerId = SelectedCustomer.Id;
 
                 // Transaction ile tüm işlemleri atomik yap
-                await using var transaction = await ctx.Database.BeginTransactionAsync();
+                await using var transaction = await ctx.Database.CreateExecutionStrategy().ExecuteAsync(async () => await ctx.Database.BeginTransactionAsync());
                 try
                 {
                     int? assetId = null;

@@ -639,9 +639,9 @@ namespace KamatekCrm.Services.Domain
                 query = query.Where(i => i.WarehouseId == warehouseId.Value);
             }
 
-            var inventories = await query.ToListAsync(cancellationToken);
+            var totalVal = await query.AsNoTracking().SumAsync(i => (decimal?)(i.Quantity * i.AverageCost), cancellationToken) ?? 0m; var inventories = Array.Empty<Inventory>();
 
-            return inventories.Sum(i => i.Quantity * i.AverageCost);
+            return totalVal;
         }
 
         public async Task<IEnumerable<LowStockProduct>> GetLowStockProductsAsync(int? warehouseId = null, CancellationToken cancellationToken = default)

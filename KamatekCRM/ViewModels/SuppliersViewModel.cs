@@ -1,24 +1,24 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Repositories;
-using KamatekCrm.Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
 {
     public partial class SuppliersViewModel : ViewModelBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private CancellationTokenSource? _searchCts;
 
         public SuppliersViewModel(IUnitOfWork unitOfWork)
         {
-            _unitOfWork = unitOfWork;            // Immediate Load
+            _unitOfWork = unitOfWork;
             _ = Refresh();
         }
 
@@ -43,7 +43,7 @@ namespace KamatekCrm.ViewModels
         public Supplier? SelectedSupplier
         {
             get => _selectedSupplier;
-            set => SetProperty(ref _selectedSupplier, value); // Requery handled by CommandManager
+            set => SetProperty(ref _selectedSupplier, value);
         }
 
         private string _searchText = string.Empty;
@@ -54,7 +54,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    _ = Refresh();
+                    _ = DebouncedRefreshAsync();
                 }
             }
         }
@@ -85,24 +85,49 @@ namespace KamatekCrm.ViewModels
 
         #region Methods
 
+        private async Task DebouncedRefreshAsync()
+        {
+            _searchCts?.Cancel();
+            _searchCts?.Dispose();
+            var cts = _searchCts = new CancellationTokenSource();
+            try
+            {
+                await Task.Delay(200, cts.Token);
+                await LoadSuppliersAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
         [RelayCommand]
         private async Task Refresh()
         {
-            if (IsBusy) return;
+            _searchCts?.Cancel();
+            await LoadSuppliersAsync(CancellationToken.None);
+        }
+
+        private async Task LoadSuppliersAsync(CancellationToken cancellationToken)
+        {
             IsBusy = true;
             try
             {
-                var query = ((UnitOfWork)_unitOfWork).Context.Suppliers.AsQueryable();
+                var repo = _unitOfWork.Repository<Supplier>();
+                var search = SearchText?.Trim();
+                var list = string.IsNullOrWhiteSpace(search)
+                    ? await repo.GetAllAsync(cancellationToken)
+                    : await repo.FindAsync(
+                        x => x.CompanyName.ToLower().Contains(search.ToLower())
+                          || (x.ContactPerson != null && x.ContactPerson.ToLower().Contains(search.ToLower())),
+                        cancellationToken);
 
-                if (!string.IsNullOrWhiteSpace(SearchText))
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    string lower = SearchText.ToLower();
-                    query = query.Where(x => x.CompanyName.ToLower().Contains(lower) 
-                                          || (x.ContactPerson != null && x.ContactPerson.ToLower().Contains(lower)));
+                    Suppliers = new ObservableCollection<Supplier>(list.OrderBy(x => x.CompanyName));
                 }
-
-                var list = await query.OrderBy(x => x.CompanyName).ToListAsync();
-                Suppliers = new ObservableCollection<Supplier>(list);
+            }
+            catch (OperationCanceledException)
+            {
             }
             catch (Exception ex)
             {
@@ -128,8 +153,7 @@ namespace KamatekCrm.ViewModels
         private async Task SaveSupplier()
         {
             if (SelectedSupplier == null) return;
-            
-            // Validation
+
             if (string.IsNullOrWhiteSpace(SelectedSupplier.CompanyName))
             {
                 MessageBox.Show("Firma ünvanı boş olamaz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -139,18 +163,14 @@ namespace KamatekCrm.ViewModels
             IsBusy = true;
             try
             {
+                var repo = _unitOfWork.Repository<Supplier>();
                 if (SelectedSupplier.Id == 0)
                 {
-                    ((UnitOfWork)_unitOfWork).Context.Suppliers.Add(SelectedSupplier);
+                    await repo.AddAsync(SelectedSupplier);
                 }
                 else
                 {
-                     // Ensure attached if not tracked (simple approach for this task)
-                     if (((UnitOfWork)_unitOfWork).Context.Entry(SelectedSupplier).State == EntityState.Detached)
-                     {
-                        ((UnitOfWork)_unitOfWork).Context.Suppliers.Attach(SelectedSupplier);
-                        ((UnitOfWork)_unitOfWork).Context.Entry(SelectedSupplier).State = EntityState.Modified;
-                     }
+                    repo.Update(SelectedSupplier);
                 }
 
                 await _unitOfWork.SaveChangesAsync();
@@ -178,7 +198,7 @@ namespace KamatekCrm.ViewModels
                 IsBusy = true;
                 try
                 {
-                    ((UnitOfWork)_unitOfWork).Context.Suppliers.Remove(SelectedSupplier);
+                    _unitOfWork.Repository<Supplier>().Remove(SelectedSupplier);
                     await _unitOfWork.SaveChangesAsync();
                     SelectedSupplier = null;
                     await Refresh();

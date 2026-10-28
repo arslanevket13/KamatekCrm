@@ -133,7 +133,7 @@ namespace KamatekCrm.API.Controllers
         /// </summary>
         private static bool VerifyPassword(string password, string storedHash)
         {
-            byte[] hashBytes;
+            if (string.IsNullOrWhiteSpace(storedHash)) return false; if (storedHash.StartsWith("$2a$") || storedHash.StartsWith("$2b$") || storedHash.StartsWith("$2y$")) return BCrypt.Net.BCrypt.Verify(password, storedHash); byte[] hashBytes;
             try
             {
                 hashBytes = Convert.FromBase64String(storedHash);

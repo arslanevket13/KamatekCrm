@@ -14,7 +14,7 @@ namespace KamatekCrm.Services
         public static event EventHandler<string>? ThemeChanged;
 
         // Current loaded theme token
-        public static string CurrentThemeName { get; private set; } = "PremiumLight";
+        public static string CurrentThemeName { get; private set; } = string.Empty;
 
         // List of all valid themes
         public static readonly string[] AvailableThemes = { "PremiumLight", "MidnightDark", "Glassmorphism" };
@@ -50,31 +50,12 @@ namespace KamatekCrm.Services
                 // Fallback to PremiumLight if theme is invalid
                 if (!AvailableThemes.Contains(themeName))
                 {
-                    // Assuming Log is a static class available in the project
-                    // If not, this line will cause a compilation error and needs to be adapted
-                    // For example, System.Diagnostics.Debug.WriteLine($"ThemeService: Invalid theme '{themeName}' requested. Falling back to PremiumLight.");
-                    // Log.Warning("ThemeService: Invalid theme '{ThemeName}' requested. Falling back to PremiumLight.", themeName);
                     themeName = "PremiumLight";
                 }
-
-                if (CurrentThemeName == themeName) return;
-
-                // Assuming Log is a static class available in the project
-                // Log.Information("ThemeService: Switching theme to {ThemeName}", themeName);
 
                 var app = Application.Current;
                 if (app == null) return;
 
-                // Geçerli temayı kaydet
-                AppSettings.CurrentTheme = themeName; // Keep backward compatibility
-                Properties.Settings.Default.ThemePreference = themeName;
-                Properties.Settings.Default.Save();
-                
-                CurrentThemeName = themeName; // Update the internal current theme name
-                
-                // 1. Yeni tema sözlüğünün kaynağını hazırla
-                var newThemeUri = new Uri($"Resources/Themes/Theme.{themeName}.xaml", UriKind.Relative);
-                
                 // 2. Uygulamanın birleştirilmiş sözlüklerini (MergedDictionaries) al
                 var dictionaries = app.Resources.MergedDictionaries;
                 
@@ -85,21 +66,44 @@ namespace KamatekCrm.Services
                      d.Source.OriginalString.Contains("Resources/Themes/LightTheme.xaml") ||
                      d.Source.OriginalString.Contains("Resources/Themes/DarkTheme.xaml")));
 
-                // Aynı temaya geçilmek isteniyorsa işlemi atla
-                if (currentThemeDict != null && currentThemeDict.Source.OriginalString.EndsWith($"Theme.{themeName}.xaml"))
+                // Aynı temaya geçilmek isteniyorsa ve sözlük zaten yüklüyse işlemi atla
+                if (CurrentThemeName == themeName &&
+                    currentThemeDict != null &&
+                    currentThemeDict.Source.OriginalString.EndsWith($"Theme.{themeName}.xaml", StringComparison.OrdinalIgnoreCase))
                 {
                     return;
                 }
 
-                // 4. Yeni sözlüğü oluştur ve ekle
-                var newThemeDict = new ResourceDictionary { Source = newThemeUri };
+                // Geçerli temayı kaydet
+                AppSettings.CurrentTheme = themeName;
+                Properties.Settings.Default.ThemePreference = themeName;
+                Properties.Settings.Default.Save();
                 
-                // Kesin geçiş güvenliği: Önce ekle, sonra eskisini sil (flicker veya Dictionary KeyNotFound crash riskini önlemek için)
-                dictionaries.Add(newThemeDict);
+                CurrentThemeName = themeName;
+                
+                // 1. Yeni tema sözlüğünün kaynağını hazırla
+                var newThemeUri = new Uri($"Resources/Themes/Theme.{themeName}.xaml", UriKind.Relative);
+                
+                // 4. Yeni sözlüğü oluştur ve mevcut temanın konumuna (veya başa) ekle
+                var newThemeDict = new ResourceDictionary { Source = newThemeUri };
                 
                 if (currentThemeDict != null)
                 {
-                    dictionaries.Remove(currentThemeDict);
+                    int index = dictionaries.IndexOf(currentThemeDict);
+                    if (index >= 0)
+                    {
+                        dictionaries.Insert(index, newThemeDict);
+                        dictionaries.Remove(currentThemeDict);
+                    }
+                    else
+                    {
+                        dictionaries.Add(newThemeDict);
+                        dictionaries.Remove(currentThemeDict);
+                    }
+                }
+                else
+                {
+                    dictionaries.Add(newThemeDict);
                 }
 
                 // Ensure WPF UI Theme follows our logic

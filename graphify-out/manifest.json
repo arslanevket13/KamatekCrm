@@ -24,16 +24,16 @@
     "semantic_hash": "c278328f40a15d5443e9e4fad8b93f1e"
   },
   "KamatekCRM/Components/KmAvatar.cs": {
-    "mtime": 1772378975.167372,
-    "seen": 1793137640.6374733,
-    "ast_hash": "63255a1a679c1d6101638b87e207ba2e",
-    "semantic_hash": "63255a1a679c1d6101638b87e207ba2e"
+    "mtime": 1793143833.3526187,
+    "seen": 1793144984.8517082,
+    "ast_hash": "d19c1e44275c2501d6ec105f77df010f",
+    "semantic_hash": ""
   },
   "KamatekCRM/Components/KmBreadcrumb.cs": {
-    "mtime": 1772365486.7454395,
-    "seen": 1793137640.6374733,
-    "ast_hash": "c872ed83d8bee5c7f0022401c0333677",
-    "semantic_hash": "c872ed83d8bee5c7f0022401c0333677"
+    "mtime": 1793143834.8127215,
+    "seen": 1793144984.8517082,
+    "ast_hash": "ae032ef15b200b728402f628b9659293",
+    "semantic_hash": ""
   },
   "KamatekCRM/Components/KmEmptyState.cs": {
     "mtime": 1772364996.2692842,
@@ -96,9 +96,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Converters/BalanceColorConverter.cs": {
-    "mtime": 1793032661.1454523,
-    "seen": 1793137640.6374733,
-    "ast_hash": "419ceedfb3128de52f807be36fc9e3c3",
+    "mtime": 1793143741.4323082,
+    "seen": 1793144984.8517082,
+    "ast_hash": "5023950cbbd1a36d178f0274c109650f",
     "semantic_hash": ""
   },
   "KamatekCRM/Converters/BoolToStringConverter.cs": {
@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Converters/IntToVisibilityConverter.cs": {
-    "mtime": 1793032790.837012,
-    "seen": 1793137640.6374733,
-    "ast_hash": "9e396e21c4ff7355ad0b255246193362",
+    "mtime": 1793143995.6076472,
+    "seen": 1793144984.8517082,
+    "ast_hash": "59accfa2bdbfe641dc954baa774ffa56",
     "semantic_hash": ""
   },
   "KamatekCRM/Converters/InverseBooleanConverter.cs": {
@@ -138,15 +138,15 @@
     "semantic_hash": "37dfeec048024a01e2ac53afcfcfc7f0"
   },
   "KamatekCRM/Converters/NullToVisibilityConverter.cs": {
-    "mtime": 1793032811.860651,
-    "seen": 1793137640.6374733,
-    "ast_hash": "925034584992a033bde127089299bf8e",
+    "mtime": 1793143740.2433746,
+    "seen": 1793144984.8517082,
+    "ast_hash": "0da9d97e1e238610b305b762e6566ff6",
     "semantic_hash": ""
   },
   "KamatekCRM/Converters/QuoteStatusConverters.cs": {
-    "mtime": 1793032820.9009757,
-    "seen": 1793137640.6374733,
-    "ast_hash": "7f0da701b34e6da32cd0bb23995b7547",
+    "mtime": 1793143742.530603,
+    "seen": 1793144984.8517082,
+    "ast_hash": "7c1f7a6c61bdadddbc8875049029cc56",
     "semantic_hash": ""
   },
   "KamatekCRM/Converters/SensitiveDataConverter.cs": {
@@ -180,9 +180,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Extensions/ServiceCollectionExtensions.cs": {
-    "mtime": 1793048357.443282,
-    "seen": 1793137640.6374733,
-    "ast_hash": "f6d5301186e80db6b1d4e9e9e5a1dcb6",
+    "mtime": 1793143194.6779892,
+    "seen": 1793144984.8517082,
+    "ast_hash": "1647c5602ff93c1d2b5801ab422b02b5",
     "semantic_hash": ""
   },
   "KamatekCRM/Helpers/AnimationHelper.cs": {
@@ -258,9 +258,9 @@
     "semantic_hash": "a7a6aeb00061179ce9e70dd0f4e86d9f"
   },
   "KamatekCRM/KamatekCrm.csproj": {
-    "mtime": 1793049007.4126813,
-    "seen": 1793137640.6374733,
-    "ast_hash": "163ff71e4c312090e526f9f4f7578c8c",
+    "mtime": 1793144090.0427916,
+    "seen": 1793144984.8517082,
+    "ast_hash": "7abfa1fa78f8a1b26432dadd9bc6cd22",
     "semantic_hash": ""
   },
   "KamatekCRM/MainWindow.xaml": {
@@ -348,16 +348,16 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Resources/ComponentStyles.xaml": {
-    "mtime": 1785611953.4753218,
-    "seen": 1793137640.6374733,
-    "ast_hash": "cfa5449841a503d033291d8167aa7fc4",
+    "mtime": 1793143895.0927532,
+    "seen": 1793144984.8517082,
+    "ast_hash": "acb58a1228a759b1760266fc3f036feb",
     "semantic_hash": ""
   },
   "KamatekCRM/Resources/DesignTokens.xaml": {
-    "mtime": 1784847080.034708,
-    "seen": 1793137640.6374733,
-    "ast_hash": "612776e02731405f07e33441ee9cd649",
-    "semantic_hash": "612776e02731405f07e33441ee9cd649"
+    "mtime": 1793143839.346125,
+    "seen": 1793144984.8517082,
+    "ast_hash": "cceaee2553bdeaa0255d696cd60332ab",
+    "semantic_hash": ""
   },
   "KamatekCRM/Resources/FixedScrollBar.xaml": {
     "mtime": 1785698268.67245,
@@ -366,9 +366,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Resources/Styles.xaml": {
-    "mtime": 1785612321.58514,
-    "seen": 1793137640.6374733,
-    "ast_hash": "31c0cf7a4d98502873771d4187443d2d",
+    "mtime": 1793143837.7733479,
+    "seen": 1793144984.8517082,
+    "ast_hash": "eb5e20ce36f249eadddf4e017049466e",
     "semantic_hash": ""
   },
   "KamatekCRM/Resources/Themes/CustomTheme.xaml": {
@@ -384,21 +384,21 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Resources/Themes/Theme.Glassmorphism.xaml": {
-    "mtime": 1785191935.9101892,
-    "seen": 1793137640.6374733,
-    "ast_hash": "fe91da647b6f295ba291638e88aa1c0e",
+    "mtime": 1793143864.3523169,
+    "seen": 1793144984.8517082,
+    "ast_hash": "f23594d05bba43e082bc7a8a3e36577b",
     "semantic_hash": ""
   },
   "KamatekCRM/Resources/Themes/Theme.MidnightDark.xaml": {
-    "mtime": 1785191739.1819155,
-    "seen": 1793137640.6374733,
-    "ast_hash": "5252045b7347858658da463817319f88",
+    "mtime": 1793143861.444551,
+    "seen": 1793144984.8517082,
+    "ast_hash": "7c544eeff84ff4737bfdeb569fc490ed",
     "semantic_hash": ""
   },
   "KamatekCRM/Resources/Themes/Theme.PremiumLight.xaml": {
-    "mtime": 1793030905.1668382,
-    "seen": 1793137640.6374733,
-    "ast_hash": "9381bf57f4b64e618241d8f234c598f7",
+    "mtime": 1793143879.6743567,
+    "seen": 1793144984.8517082,
+    "ast_hash": "dd2a6023403ed315c495af47b369b4f1",
     "semantic_hash": ""
   },
   "KamatekCRM/Resources/UxFoundation.xaml": {
@@ -420,9 +420,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Services/AuthService.cs": {
-    "mtime": 1793028377.0651546,
-    "seen": 1793137640.6374733,
-    "ast_hash": "17be753d964e9d80dc568edcbab9ca3c",
+    "mtime": 1793143531.3504107,
+    "seen": 1793144984.8517082,
+    "ast_hash": "60681a8ded83d44ee0ac474d5d4fd7df",
     "semantic_hash": ""
   },
   "KamatekCRM/Services/BackupIntegrityService.cs": {
@@ -462,9 +462,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Services/Domain/InventoryDomainService.cs": {
-    "mtime": 1793029998.703975,
-    "seen": 1793137640.6374733,
-    "ast_hash": "527cf38e26216b35d3eb1182d7b5f65a",
+    "mtime": 1793143585.2296135,
+    "seen": 1793144984.8517082,
+    "ast_hash": "bb2fff01cb9538bceaee31e73bf27cd5",
     "semantic_hash": ""
   },
   "KamatekCRM/Services/EmailService.cs": {
@@ -570,9 +570,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Services/PdfService.cs": {
-    "mtime": 1793028377.0709047,
-    "seen": 1793137640.6374733,
-    "ast_hash": "1445edcc2890affe25f99bcac9ffafed",
+    "mtime": 1793143292.1302314,
+    "seen": 1793144984.8517082,
+    "ast_hash": "bc554b583f8979e7f84e9ddcf4c0d9ad",
     "semantic_hash": ""
   },
   "KamatekCRM/Services/ProductImageService.cs": {
@@ -630,10 +630,10 @@
     "semantic_hash": "16dc891cfbac3891721d31a63680a8a3"
   },
   "KamatekCRM/Services/ThemeService.cs": {
-    "mtime": 1785093289.2625935,
-    "seen": 1793137640.6374733,
-    "ast_hash": "f6d791134dd813132ca7b80600f26cd8",
-    "semantic_hash": "f6d791134dd813132ca7b80600f26cd8"
+    "mtime": 1793143836.4319167,
+    "seen": 1793144984.8517082,
+    "ast_hash": "0c85ebcf07da6bbdeeafb734039cf2db",
+    "semantic_hash": ""
   },
   "KamatekCRM/Services/ThermalReceiptPrintService.cs": {
     "mtime": 1793039362.360036,
@@ -702,9 +702,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/AnalyticsViewModel.cs": {
-    "mtime": 1793033997.0226674,
-    "seen": 1793137640.6374733,
-    "ast_hash": "f9879cd96fcdb746467ea474a0b48206",
+    "mtime": 1793143201.2449749,
+    "seen": 1793144984.8517082,
+    "ast_hash": "4715f1b38d27494d5789c810899e994e",
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/Common/PaginationViewModel.cs": {
@@ -750,9 +750,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/DirectSalesViewModel.cs": {
-    "mtime": 1793039402.6264055,
-    "seen": 1793137640.6374733,
-    "ast_hash": "95820d0be4cdd17781c79f0de8766a89",
+    "mtime": 1793144228.404497,
+    "seen": 1793144984.8517082,
+    "ast_hash": "26135750a84c7be209f7e1b0585438b2",
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/DiscoveryEditorViewModel.cs": {
@@ -768,10 +768,10 @@
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/FaultTicketViewModel.cs": {
-    "mtime": 1785875169.158295,
-    "seen": 1793137640.6374733,
-    "ast_hash": "d8f60d1398c8f6bd440f65b6c3622aa7",
-    "semantic_hash": "d8f60d1398c8f6bd440f65b6c3622aa7"
+    "mtime": 1793143397.4384084,
+    "seen": 1793144984.8517082,
+    "ast_hash": "fcc91103e0f8ff04700ebda6a5fcc831",
+    "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/FieldJobListViewModel.cs": {
     "mtime": 1793034184.268663,
@@ -780,15 +780,15 @@
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/FinanceViewModel.cs": {
-    "mtime": 1793028377.0719488,
-    "seen": 1793137640.6374733,
-    "ast_hash": "9566c0435ea987c8b92a2122d8a357e4",
+    "mtime": 1793143678.6675947,
+    "seen": 1793144984.8517082,
+    "ast_hash": "88c0c55b04b07d4c8ac2510416ffb951",
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/FinancialHealthViewModel.cs": {
-    "mtime": 1793039425.1733887,
-    "seen": 1793137640.6374733,
-    "ast_hash": "3ad3c8e1edc34fe86f1191d063851cfa",
+    "mtime": 1793143301.7409022,
+    "seen": 1793144984.8517082,
+    "ast_hash": "9e0afad58185f078643c2a125c0f4556",
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/GlobalSearchViewModel.cs": {
@@ -816,9 +816,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/MainContentViewModel.cs": {
-    "mtime": 1785773797.7552187,
-    "seen": 1793137640.6374733,
-    "ast_hash": "b53242a29ba628ac90ddf7cd4e8e728c",
+    "mtime": 1793143589.6986613,
+    "seen": 1793144984.8517082,
+    "ast_hash": "70228e77ce765c968a89e1646e45afc2",
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/MainViewModel.cs": {
@@ -840,9 +840,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/NetworkSettingsViewModel.cs": {
-    "mtime": 1793028377.0719488,
-    "seen": 1793137640.6374733,
-    "ast_hash": "86ec2100392e8cecaf7dfd51efc283d2",
+    "mtime": 1793143715.8212602,
+    "seen": 1793144984.8517082,
+    "ast_hash": "0d54612598156240ad666135fd9ff401",
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/PasswordResetViewModel.cs": {
@@ -936,9 +936,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/RepairViewModel.cs": {
-    "mtime": 1793030299.9158611,
-    "seen": 1793137640.6374733,
-    "ast_hash": "a4f417ee754d3821c4a4810c47fd4d68",
+    "mtime": 1793143399.27214,
+    "seen": 1793144984.8517082,
+    "ast_hash": "b41d3f21a4e53b884c00cfb13fd30196",
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/RoutePlanningViewModel.cs": {
@@ -954,10 +954,10 @@
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/ServiceJobViewModel.cs": {
-    "mtime": 1793028365.6462958,
-    "seen": 1793137640.6374733,
-    "ast_hash": "7864a84d305fc1a81442dbdb303f4ee0",
-    "semantic_hash": "7864a84d305fc1a81442dbdb303f4ee0"
+    "mtime": 1793143281.9415033,
+    "seen": 1793144984.8517082,
+    "ast_hash": "b792d59ea4ce1de1638eecdf1e8201e6",
+    "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/SettingsViewModel.cs": {
     "mtime": 1785782127.6828444,
@@ -972,9 +972,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/StockReportsViewModel.cs": {
-    "mtime": 1793034206.9425564,
-    "seen": 1793137640.6374733,
-    "ast_hash": "9bf8ff6608f4224eb9f13e6ae1c40800",
+    "mtime": 1793143298.8657036,
+    "seen": 1793144984.8517082,
+    "ast_hash": "a44e797d9c62c73dc952d6abbb1ec142",
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/StockTransferViewModel.cs": {
@@ -984,10 +984,10 @@
     "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/SuppliersViewModel.cs": {
-    "mtime": 1785273213.0985467,
-    "seen": 1793137640.6374733,
-    "ast_hash": "225b651035f27333a7fd4e2b9f93bb60",
-    "semantic_hash": "225b651035f27333a7fd4e2b9f93bb60"
+    "mtime": 1793143199.5160124,
+    "seen": 1793144984.8517082,
+    "ast_hash": "e376660609bb59453a7dba29c46d78ad",
+    "semantic_hash": ""
   },
   "KamatekCRM/ViewModels/SystemLogsViewModel.cs": {
     "mtime": 1785617526.277499,
@@ -1086,9 +1086,9 @@
     "semantic_hash": "c1bd6464ea4f5b723d3ba22cfa91dd08"
   },
   "KamatekCRM/Views/AddUserView.xaml": {
-    "mtime": 1785614906.1827734,
-    "seen": 1793137640.6374733,
-    "ast_hash": "e07686f9c23b2c9587381194a8107ab5",
+    "mtime": 1793144012.7387433,
+    "seen": 1793144984.8517082,
+    "ast_hash": "597137a414a70ec1a765f45785cdbdbe",
     "semantic_hash": ""
   },
   "KamatekCRM/Views/AddUserView.xaml.cs": {
@@ -1116,15 +1116,15 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Views/CustomerAddWindow.xaml.cs": {
-    "mtime": 1785195266.2473555,
-    "seen": 1793137640.6374733,
-    "ast_hash": "21312781207cb36931d1e7be52002b6f",
-    "semantic_hash": "21312781207cb36931d1e7be52002b6f"
+    "mtime": 1793143198.1483054,
+    "seen": 1793144984.8517082,
+    "ast_hash": "bb3612b7a91eeef8cbd1f91925d20c31",
+    "semantic_hash": ""
   },
   "KamatekCRM/Views/CustomerDetailView.xaml": {
-    "mtime": 1785617262.618395,
-    "seen": 1793137640.6374733,
-    "ast_hash": "da0d4ec6e909dae3ec9b852bad0f9195",
+    "mtime": 1793144008.6934206,
+    "seen": 1793144984.8517082,
+    "ast_hash": "b954abbe265f331cdc218c3619a659b2",
     "semantic_hash": ""
   },
   "KamatekCRM/Views/CustomerDetailView.xaml.cs": {
@@ -1194,9 +1194,9 @@
     "semantic_hash": "869527dc7dd32846b7fd49c5407fbb09"
   },
   "KamatekCRM/Views/DirectSalesWindow.xaml": {
-    "mtime": 1785619767.6137142,
-    "seen": 1793137640.6374733,
-    "ast_hash": "c9fea798ad4318cfc558f2769f75016f",
+    "mtime": 1793144000.8456182,
+    "seen": 1793144984.8517082,
+    "ast_hash": "8722ac03e43b4bb90ff4c46b5536380e",
     "semantic_hash": ""
   },
   "KamatekCRM/Views/DirectSalesWindow.xaml.cs": {
@@ -1260,10 +1260,10 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Views/FinanceView.xaml": {
-    "mtime": 1785258012.3663683,
-    "seen": 1793137640.6374733,
-    "ast_hash": "a95c1275831b874b2af645246411193e",
-    "semantic_hash": "a95c1275831b874b2af645246411193e"
+    "mtime": 1793144003.149465,
+    "seen": 1793144984.8517082,
+    "ast_hash": "10803e5a34c3075f0dcb91b1c4745ea8",
+    "semantic_hash": ""
   },
   "KamatekCRM/Views/FinanceView.xaml.cs": {
     "mtime": 1770230181.4638958,
@@ -1326,9 +1326,9 @@
     "semantic_hash": "1c52aa93950604bebb9037ec4944b8c1"
   },
   "KamatekCRM/Views/LoginView.xaml": {
-    "mtime": 1785365580.180009,
-    "seen": 1793137640.6374733,
-    "ast_hash": "954fe84a3ee00c5df8dff1a1b8ce5375",
+    "mtime": 1793144028.7078543,
+    "seen": 1793144984.8517082,
+    "ast_hash": "2ef273ecf347f75891f88a0a580d4cd8",
     "semantic_hash": ""
   },
   "KamatekCRM/Views/LoginView.xaml.cs": {
@@ -1350,9 +1350,9 @@
     "semantic_hash": "dc196fa8639b39cf2eb7641e0d658774"
   },
   "KamatekCRM/Views/ManagerAgendaView.xaml": {
-    "mtime": 1785761496.3072848,
-    "seen": 1793137640.6374733,
-    "ast_hash": "44c3854a30a0cb2b152a0fd439b9c8a3",
+    "mtime": 1793144009.9471848,
+    "seen": 1793144984.8517082,
+    "ast_hash": "e6cf19bb283e060cd405e57b27d53f53",
     "semantic_hash": ""
   },
   "KamatekCRM/Views/ManagerAgendaView.xaml.cs": {
@@ -1362,9 +1362,9 @@
     "semantic_hash": ""
   },
   "KamatekCRM/Views/NetworkSettingsView.xaml": {
-    "mtime": 1785699604.7021217,
-    "seen": 1793137640.6374733,
-    "ast_hash": "b494b865ed2fd35576cc8d8986ad23cf",
+    "mtime": 1793144011.1602132,
+    "seen": 1793144984.8517082,
+    "ast_hash": "e10117facd4e2295ce9326dd8da11f87",
     "semantic_hash": ""
   },
   "KamatekCRM/Views/NetworkSettingsView.xaml.cs": {
@@ -1572,9 +1572,9 @@
     "semantic_hash": "2a123289305759935edf71c5d796e819"
   },
   "KamatekCRM/Views/RepairListView.xaml": {
-    "mtime": 1793032023.5006835,
-    "seen": 1793137640.6374733,
-    "ast_hash": "2e12c9765949a3913de1ad931f2c5677",
+    "mtime": 1793144007.6026099,
+    "seen": 1793144984.8517082,
+    "ast_hash": "da168185769e0029c8c25abaeadf7d8c",
     "semantic_hash": ""
   },
   "KamatekCRM/Views/RepairListView.xaml.cs": {
@@ -1584,10 +1584,10 @@
     "semantic_hash": "475c844dfd64d4ac345321ba7e89b998"
   },
   "KamatekCRM/Views/RepairTrackingWindow.xaml": {
-    "mtime": 1785193324.8043787,
-    "seen": 1793137640.6374733,
-    "ast_hash": "e85f735ccf18e193e9e399e7efcca02f",
-    "semantic_hash": "e85f735ccf18e193e9e399e7efcca02f"
+    "mtime": 1793144014.2828362,
+    "seen": 1793144984.8517082,
+    "ast_hash": "6727d22c5fdb3cd783abfc4b60d13eca",
+    "semantic_hash": ""
   },
   "KamatekCRM/Views/RepairTrackingWindow.xaml.cs": {
     "mtime": 1785195179.1247551,
@@ -1632,9 +1632,9 @@
     "semantic_hash": "a4bdd9fd42d1195e5c59205fd6022116"
   },
   "KamatekCRM/Views/SettingsView.xaml": {
-    "mtime": 1785781720.1094642,
-    "seen": 1793137640.6374733,
-    "ast_hash": "89904e9d8ce33470107d7b66e747f6f3",
+    "mtime": 1793144005.9322977,
+    "seen": 1793144984.8517082,
+    "ast_hash": "cbded7d7c951aa8c11c0e5d48ee2340d",
     "semantic_hash": ""
   },
   "KamatekCRM/Views/SettingsView.xaml.cs": {
@@ -1764,9 +1764,9 @@
     "semantic_hash": "aa0a69ebd7dd2b59f59c19d1a2e3d0a0"
   },
   "KamatekCRM/appsettings.json": {
-    "mtime": 1784401914.1055062,
-    "seen": 1793137640.6374733,
-    "ast_hash": "f551e7326d7d676d8736c5148950d10e",
+    "mtime": 1793143536.4596596,
+    "seen": 1793144984.8517082,
+    "ast_hash": "589feb3add2151546c68ac1268aecc60",
     "semantic_hash": ""
   },
   "KamatekCRM/appsettings.template.json": {
@@ -1818,10 +1818,10 @@
     "semantic_hash": "683587be8f23ff39ce7e38b14c0108d9"
   },
   "KamatekCrm.API/Controllers/AuthController.cs": {
-    "mtime": 1785606728.6754475,
-    "seen": 1793137640.6374733,
-    "ast_hash": "0bf6fdc7140f74d023ea28ef9c8ea92a",
-    "semantic_hash": "0bf6fdc7140f74d023ea28ef9c8ea92a"
+    "mtime": 1793143523.0905392,
+    "seen": 1793144984.8517082,
+    "ast_hash": "a167e603c93388c7d5e3395371956b86",
+    "semantic_hash": ""
   },
   "KamatekCrm.API/Controllers/CategoriesController.cs": {
     "mtime": 1785606720.0898137,
@@ -1836,9 +1836,9 @@
     "semantic_hash": ""
   },
   "KamatekCrm.API/Controllers/DashboardController.cs": {
-    "mtime": 1785606699.6369493,
-    "seen": 1793137640.6374733,
-    "ast_hash": "fbb2b1053301b7738dd5a7d387d933c2",
+    "mtime": 1793143461.4207947,
+    "seen": 1793144984.8517082,
+    "ast_hash": "d9f1625e6c4349418f611f6ec69fcf9b",
     "semantic_hash": ""
   },
   "KamatekCrm.API/Controllers/ExportController.cs": {
@@ -1848,10 +1848,10 @@
     "semantic_hash": "abacccbe0c2d7d1f468c63dfb4bca35c"
   },
   "KamatekCrm.API/Controllers/FinanceController.cs": {
-    "mtime": 1785606680.6072752,
-    "seen": 1793137640.6374733,
-    "ast_hash": "c76e3ec0115d9ff27f905570f10241fa",
-    "semantic_hash": "c76e3ec0115d9ff27f905570f10241fa"
+    "mtime": 1793143586.1237893,
+    "seen": 1793144984.8517082,
+    "ast_hash": "2528a53bf3771cab0f1a7b2be2b82d34",
+    "semantic_hash": ""
   },
   "KamatekCrm.API/Controllers/InventoryController.cs": {
     "mtime": 1785606670.6365082,
@@ -1890,9 +1890,9 @@
     "semantic_hash": "680a4b47beb562dd389edb0660e99548"
   },
   "KamatekCrm.API/Controllers/ReportsController.cs": {
-    "mtime": 1785606571.0356176,
-    "seen": 1793137640.6374733,
-    "ast_hash": "7e3523c494dc49a44548ba57857da12c",
+    "mtime": 1793143419.7439573,
+    "seen": 1793144984.8517082,
+    "ast_hash": "998c4311fddfa9e0012b73c2452d5718",
     "semantic_hash": ""
   },
   "KamatekCrm.API/Controllers/SalesController.cs": {
@@ -1920,15 +1920,15 @@
     "semantic_hash": "a843901445faedc1d2bbe7eff86d05b3"
   },
   "KamatekCrm.API/Controllers/UsersController.cs": {
-    "mtime": 1785606561.6232748,
-    "seen": 1793137640.6374733,
-    "ast_hash": "eebdd78d9d353b0b1f63ced28bf05a36",
-    "semantic_hash": "eebdd78d9d353b0b1f63ced28bf05a36"
+    "mtime": 1793143520.924867,
+    "seen": 1793144984.8517082,
+    "ast_hash": "ab005de37b4ec850f508c24a9a53ad62",
+    "semantic_hash": ""
   },
   "KamatekCrm.API/Data/DbInitializer.cs": {
-    "mtime": 1785606551.4399974,
-    "seen": 1793137640.6374733,
-    "ast_hash": "28c1d4869c2e5f839a3ff406a189638d",
+    "mtime": 1793143533.0849283,
+    "seen": 1793144984.8517082,
+    "ast_hash": "4e0bc62e51f38852f562c5fd8a040725",
     "semantic_hash": ""
   },
   "KamatekCrm.API/Hubs/NotificationHub.cs": {
@@ -1938,10 +1938,10 @@
     "semantic_hash": "4501020fe8ca709855629906008554eb"
   },
   "KamatekCrm.API/KamatekCrm.API.csproj": {
-    "mtime": 1785606507.3379128,
-    "seen": 1793137640.6374733,
-    "ast_hash": "ab4f9b1d7285da9ece297e2bac20d0ae",
-    "semantic_hash": "ab4f9b1d7285da9ece297e2bac20d0ae"
+    "mtime": 1793143197.0094814,
+    "seen": 1793144984.8517082,
+    "ast_hash": "942bda228aabe206fb9f1f33fc1af83a",
+    "semantic_hash": ""
   },
   "KamatekCrm.API/Middleware/ActionFilters.cs": {
     "mtime": 1772369867.9703915,
@@ -2046,9 +2046,9 @@
     "semantic_hash": "4a507c18b2ed7680d6cf1ce7c9dddc58"
   },
   "KamatekCrm.API/Program.cs": {
-    "mtime": 1785606536.953729,
-    "seen": 1793137640.6374733,
-    "ast_hash": "9c51a4b102cb80ff9ccf572288425458",
+    "mtime": 1793143195.8314095,
+    "seen": 1793144984.8517082,
+    "ast_hash": "ebcc42759c74fc12fdf676f5ca610668",
     "semantic_hash": ""
   },
   "KamatekCrm.API/Properties/launchSettings.json": {
@@ -2088,16 +2088,16 @@
     "semantic_hash": ""
   },
   "KamatekCrm.API/Services/PhotoStorageService.cs": {
-    "mtime": 1770551316.4502087,
-    "seen": 1793137640.6374733,
-    "ast_hash": "1a4dd02235cdc2c754c2940bdfa09ed6",
-    "semantic_hash": "1a4dd02235cdc2c754c2940bdfa09ed6"
+    "mtime": 1793143535.0919745,
+    "seen": 1793144984.8517082,
+    "ast_hash": "01b59a55f4c033f1703c3bc6f6005d15",
+    "semantic_hash": ""
   },
   "KamatekCrm.API/Services/SalesDomainService.cs": {
-    "mtime": 1785606581.2623794,
-    "seen": 1793137640.6374733,
-    "ast_hash": "afd27a50b332bbc3f0a931b89a3f35fc",
-    "semantic_hash": "afd27a50b332bbc3f0a931b89a3f35fc"
+    "mtime": 1793143401.0085402,
+    "seen": 1793144984.8517082,
+    "ast_hash": "22e7bec2414af3eedabfefe44828b3af",
+    "semantic_hash": ""
   },
   "KamatekCrm.API/appsettings.json": {
     "mtime": 1776088066.058626,
@@ -2238,9 +2238,9 @@
     "semantic_hash": ""
   },
   "KamatekCrm.Application/DependencyInjection.cs": {
-    "mtime": 1785952139.9413645,
-    "seen": 1793137640.6374733,
-    "ast_hash": "ac7fba3a9fe76598af6747c0e49b7c9f",
+    "mtime": 1793143139.081425,
+    "seen": 1793144984.8517082,
+    "ast_hash": "356e1a85eec44b6d691aec0296893834",
     "semantic_hash": ""
   },
   "KamatekCrm.Application/ErrorHandling/ApplicationError.cs": {
@@ -2400,10 +2400,10 @@
     "semantic_hash": "3910bc6dc44c757da48a4da0ce604883"
   },
   "KamatekCrm.Application/KamatekCrm.Application.csproj": {
-    "mtime": 1785092852.4521441,
-    "seen": 1793137640.6374733,
-    "ast_hash": "d18894e78159401f5be45956e432a897",
-    "semantic_hash": "d18894e78159401f5be45956e432a897"
+    "mtime": 1793144091.0112753,
+    "seen": 1793144984.8527074,
+    "ast_hash": "d9ccad7bd5bc5110a05060252a582c12",
+    "semantic_hash": ""
   },
   "KamatekCrm.Application/Security/ApplicationPermission.cs": {
     "mtime": 1785630227.2491312,
@@ -2502,9 +2502,9 @@
     "semantic_hash": ""
   },
   "KamatekCrm.Infrastructure/Data/AppDbContext.cs": {
-    "mtime": 1793051728.5000274,
-    "seen": 1793137640.6374733,
-    "ast_hash": "f02f0affc7407c376146b18eebd670aa",
+    "mtime": 1793144865.6491919,
+    "seen": 1793144984.8527074,
+    "ast_hash": "4bbe075fd28a92797e4002107de87bac",
     "semantic_hash": ""
   },
   "KamatekCrm.Infrastructure/Data/AppDbContextFactory.cs": {
@@ -2526,9 +2526,9 @@
     "semantic_hash": ""
   },
   "KamatekCrm.Infrastructure/DependencyInjection.cs": {
-    "mtime": 1785761229.35498,
-    "seen": 1793137640.6374733,
-    "ast_hash": "bcb27818d9e114cae45e913faa4245d8",
+    "mtime": 1793143137.8795114,
+    "seen": 1793144984.8527074,
+    "ast_hash": "28b739a3bad7e83e608c931e0745c95d",
     "semantic_hash": ""
   },
   "KamatekCrm.Infrastructure/ErrorHandling/ExceptionMapper.cs": {
@@ -2706,9 +2706,9 @@
     "semantic_hash": ""
   },
   "KamatekCrm.Infrastructure/Services/AuditTrailService.cs": {
-    "mtime": 1785621344.020682,
-    "seen": 1793137640.6374733,
-    "ast_hash": "9caef20f739df15933cd605d846031e7",
+    "mtime": 1793143286.2043278,
+    "seen": 1793144984.8527074,
+    "ast_hash": "68a937a80644627c68badf333138cd21",
     "semantic_hash": ""
   },
   "KamatekCrm.Infrastructure/Services/CustomerInteractionCommandService.cs": {
@@ -2754,21 +2754,21 @@
     "semantic_hash": ""
   },
   "KamatekCrm.Infrastructure/Services/PurchasingCommandService.cs": {
-    "mtime": 1793030018.4332561,
-    "seen": 1793137640.6374733,
-    "ast_hash": "48586968db580706102c281cdbfbdcd3",
+    "mtime": 1793143297.5970895,
+    "seen": 1793144984.8527074,
+    "ast_hash": "352330c4ea0ce22df2937810a1f6e592",
     "semantic_hash": ""
   },
   "KamatekCrm.Infrastructure/Services/RetailTransactionService.cs": {
-    "mtime": 1793028377.0780149,
-    "seen": 1793137640.6374733,
-    "ast_hash": "19cf37527c16abcf49ad217389a15c09",
+    "mtime": 1793144850.800286,
+    "seen": 1793144984.8527074,
+    "ast_hash": "63d6988aa1381b3c0770c3a3126a8f13",
     "semantic_hash": ""
   },
   "KamatekCrm.Infrastructure/Services/ServiceJobCommandService.cs": {
-    "mtime": 1793028377.0780149,
-    "seen": 1793137640.6374733,
-    "ast_hash": "e5a15c45ba8498944b3580378406360b",
+    "mtime": 1793144852.1940508,
+    "seen": 1793144984.8527074,
+    "ast_hash": "c89e92755a1a2fafaae8a3aa20411f3b",
     "semantic_hash": ""
   },
   "KamatekCrm.Infrastructure/Services/ServiceJobReadService.cs": {
@@ -3246,9 +3246,9 @@
     "semantic_hash": ""
   },
   "KamatekCrm.Tests/Integration/AppDbContextIntegrationTests.cs": {
-    "mtime": 1793051807.718752,
-    "seen": 1793137640.6374733,
-    "ast_hash": "e6f1f6c3b6a0696f36b331572ab986b2",
+    "mtime": 1793143689.0659182,
+    "seen": 1793144984.8527074,
+    "ast_hash": "28104c95e06b9dbbc2f61ef5eba8f7e9",
     "semantic_hash": ""
   },
   "KamatekCrm.Tests/KamatekCrm.Tests.csproj": {
@@ -3420,10 +3420,10 @@
     "semantic_hash": ""
   },
   "KamatekCrm.Tests/UnitTest1.cs": {
-    "mtime": 1785754840.5582192,
-    "seen": 1793137640.6374733,
-    "ast_hash": "a01687790c30afbb5e5b0132dd58f7ae",
-    "semantic_hash": "a01687790c30afbb5e5b0132dd58f7ae"
+    "mtime": 1793143690.03784,
+    "seen": 1793144984.8527074,
+    "ast_hash": "1cc83b28648db7c5d7bfea652585e813",
+    "semantic_hash": ""
   },
   "KamatekCrm.Tests/ViewModels/AddProductViewModelTests.cs": {
     "mtime": 1785010707.205233,
@@ -3849,6 +3849,12 @@
     "mtime": 1770560301.8898573,
     "seen": 1793137640.6374733,
     "ast_hash": "804b473502a4c415cf75db61c56c32aa",
+    "semantic_hash": ""
+  },
+  "KamatekCrm_Denetim_Raporu.md": {
+    "mtime": 1793142373.666476,
+    "seen": 1793144984.8527074,
+    "ast_hash": "797f31d1d5a8a792a067a81a9fd42721",
     "semantic_hash": ""
   }
 }

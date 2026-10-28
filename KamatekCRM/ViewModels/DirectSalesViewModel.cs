@@ -110,6 +110,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _customerSearch, value))
                     FilterCustomers();
+                    OnPropertyChanged(nameof(IsCustomerSearchOpen));
             }
         }
 
@@ -119,7 +120,9 @@ namespace KamatekCrm.ViewModels
                 : "Perakende Müşteri";
 
         public ObservableCollection<Customer> RecentCustomers { get; } = new();
+        private bool _isCompletingSale;
         public ObservableCollection<Customer> FilteredCustomers { get; } = new();
+        public bool IsCustomerSearchOpen => !string.IsNullOrWhiteSpace(CustomerSearch) && FilteredCustomers.Count > 0;
 
         public decimal GlobalDiscountPercent
         {
@@ -288,6 +291,7 @@ namespace KamatekCrm.ViewModels
             }
             finally
             {
+                _isCompletingSale = false;
                 _loadingService?.Hide();
             }
         }
@@ -336,6 +340,7 @@ namespace KamatekCrm.ViewModels
             }
             finally
             {
+                _isCompletingSale = false;
                 _loadingService?.Hide();
             }
         }
@@ -408,6 +413,7 @@ namespace KamatekCrm.ViewModels
                 {
                     RecentCustomers.Insert(0, vm.SavedCustomer);
                     FilterCustomers();
+                    OnPropertyChanged(nameof(IsCustomerSearchOpen));
                     SelectedCustomer = vm.SavedCustomer;
                     StatusMessage = $"✅ Müşteri eklendi: {vm.SavedCustomer.FullName}";
                     IsActionSuccessful = true;
@@ -859,7 +865,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task CompleteSale()
         {
-            if (!CanCompleteSale || SelectedWarehouse == null) return;
+            if (!CanCompleteSale || SelectedWarehouse == null || _isCompletingSale) return;
 
             var paymentDesc = string.Join(", ", Payments.Select(p =>
                 $"{GetPaymentMethodName(p.PaymentMethod)}: {p.Amount:C}"));
@@ -878,6 +884,7 @@ namespace KamatekCrm.ViewModels
             
             try
             {
+                _isCompletingSale = true;
                 _loadingService?.Show();
 
                 var currentUserName = _authService?.CurrentUser?.Username ?? "Kasiyer";
@@ -915,6 +922,7 @@ namespace KamatekCrm.ViewModels
             }
             finally
             {
+                _isCompletingSale = false;
                 _loadingService?.Hide();
             }
         }

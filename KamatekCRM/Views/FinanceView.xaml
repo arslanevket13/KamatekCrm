@@ -243,14 +243,14 @@
                           HeadersVisibility="Column"
                           RowHeight="40"
                           VerticalScrollBarVisibility="Auto"
-                          ScrollViewer.CanContentScroll="False"
+                          ScrollViewer.CanContentScroll="True"
                           VirtualizingPanel.ScrollUnit="Pixel"
                           CanUserAddRows="False">
 
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader">
                             <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimaryLight}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
                             <Setter Property="Padding" Value="12,10"/>
                             <Setter Property="BorderThickness" Value="0,0,0,1"/>

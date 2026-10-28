@@ -322,7 +322,7 @@
                     </DataGrid>
 
                     <TextBlock Text="Henüz satış kaydı bulunmamaktadır." 
-                               Visibility="{Binding SalesOrders.Count, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverse}"
+                               Visibility="{Binding SalesOrders.Count, Converter={StaticResource IntToVis}, ConverterParameter=Inverse}"
                                HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="16"/>
                 </Grid>
             </TabItem>

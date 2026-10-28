@@ -139,7 +139,7 @@
                         </Button.Style>
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Print24" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Yazıcı &amp; Uyarılardır" VerticalAlignment="Center"/>
+                            <TextBlock Text="Yazıcı &amp; Bildirimler" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 

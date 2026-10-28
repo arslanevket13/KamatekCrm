@@ -30,7 +30,7 @@ public sealed class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
             context.ActivityLogs.Add(new ActivityLog
             {
                 UserId = _currentUser.UserId,
@@ -47,7 +47,7 @@ public sealed class AuditTrailService : IAuditTrailService
                 IpAddress = "127.0.0.1",
                 UserAgent = "WPF Client"
             });
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return Result.Success();
         }
         catch (Exception exception)

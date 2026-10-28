@@ -65,17 +65,17 @@ namespace KamatekCrm.Extensions
 
             services.AddTransient<AddressService>();
             services.AddTransient<ISearchService, SearchService>();
-            services.AddScoped<IDirectSalesService, DirectSalesService>();
+            services.AddTransient<IDirectSalesService, DirectSalesService>();
             services.AddTransient<IThermalReceiptPrintService, ThermalReceiptPrintService>();
             services.AddSingleton<IDraftStorageService, DraftStorageService>();
 
             // Domain Services
-            services.AddScoped<IInventoryDomainService, InventoryDomainService>();
+            services.AddTransient<IInventoryDomainService, InventoryDomainService>();
             services.AddSingleton<IProductImageService, ProductImageService>();
 
             // Background & System Services
-            services.AddScoped<ISlaService, SlaService>();
-            services.AddScoped<IBackupService, BackupService>();
+            services.AddTransient<ISlaService, SlaService>();
+            services.AddTransient<IBackupService, BackupService>();
             services.AddSingleton<IBackupIntegrityService, BackupIntegrityService>();
             services.AddSingleton<Services.Update.IUpdateService, Services.Update.VelopackUpdateService>();
 

@@ -195,5 +195,26 @@
     <SolidColorBrush x:Key="SystemAccentColorPrimaryBrush" Color="#3B82F6"/>
     <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="#0F172A"/>
     <SolidColorBrush x:Key="StatusNeutralBg" Color="#1E293B"/>
+    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#1E293B"/>
+    <SolidColorBrush x:Key="TextOnAccentBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#3B82F6"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F1F5F9"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#94A3B8"/>
+    <SolidColorBrush x:Key="StatusSuccessBrush" Color="#34D399"/>
+    <SolidColorBrush x:Key="StatusErrorBrush" Color="#F87171"/>
+    <SolidColorBrush x:Key="ThemeSuccessDark" Color="#059669"/>
+    <SolidColorBrush x:Key="ThemeErrorDark" Color="#DC2626"/>
+    <SolidColorBrush x:Key="StatusWarningBgDark" Color="#F59E0B" Opacity="0.20"/>
+    <SolidColorBrush x:Key="SystemFillColorCriticalBackgroundBrush" Color="#EF4444" Opacity="0.20"/>
+    <SolidColorBrush x:Key="AccentOverlayBrush" Color="#3B82F6" Opacity="0.20"/>
+    <SolidColorBrush x:Key="SurfaceStrokeColorDefaultBrush" Color="#334155"/>
+    <SolidColorBrush x:Key="StatusSuccessFgDark" Color="#34D399"/>
+    <SolidColorBrush x:Key="StatusErrorFgDark" Color="#F87171"/>
+    <SolidColorBrush x:Key="StatusInfoFgDark" Color="#60A5FA"/>
+    <Color x:Key="SurfaceSidebarColorValue">#141821</Color>
+    <Color x:Key="SurfaceCardColorValue">#141821</Color>
+    <Color x:Key="SurfacePageColorValue">#0B0E14</Color>
+    <Color x:Key="KpiPurpleStartColor">#A78BFA</Color>
+    <Color x:Key="KpiPurpleEndColor">#7C3AED</Color>
 
 </ResourceDictionary>

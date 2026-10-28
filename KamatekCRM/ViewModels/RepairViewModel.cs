@@ -523,7 +523,7 @@ namespace KamatekCrm.ViewModels
             {
                 _loadingService?.Show();
                 using var context = await _dbContextFactory.CreateDbContextAsync();
-                using var transaction = await context.Database.BeginTransactionAsync();
+                await using var transaction = await context.Database.CreateExecutionStrategy().ExecuteAsync(async () => await context.Database.BeginTransactionAsync());
                 
                 var existingJob = await context.ServiceJobs.FindAsync(SelectedJob.Id);
                 if (existingJob != null)

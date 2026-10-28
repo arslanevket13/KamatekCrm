@@ -98,7 +98,7 @@ namespace KamatekCrm.Services
             var logoBytes = GetLogoBytes();
 
             var flattenedItems = FlattenScopeNodesWithImages(rootNodes);
-            var totalAmount = flattenedItems.Where(i => !i.IsSectionHeader).Sum(i => i.TotalPrice);
+            var subTotal = FinancialCalculator.RoundMoney(flattenedItems.Where(i => !i.IsSectionHeader).Sum(i => i.TotalPrice)); var netTotal = FinancialCalculator.RoundMoney(subTotal - FinancialCalculator.RoundMoney(subTotal * (project?.DiscountPercent ?? 0m) / 100m)); var totalAmount = FinancialCalculator.RoundMoney(netTotal + FinancialCalculator.RoundMoney(netTotal * (project?.KdvRate ?? 20m) / 100m));
             var totalItems = flattenedItems.Where(i => !i.IsSectionHeader).Sum(i => i.Quantity);
 
             Document.Create(container =>
@@ -321,8 +321,8 @@ namespace KamatekCrm.Services
             {
                 c.Item().Text("ÖDEME PLANI").FontSize(12).Bold().FontColor(BrandColors.Primary);
 
-                var installment1 = totalAmount * 0.50m;
-                var installment2 = totalAmount * 0.50m;
+                var installment1 = FinancialCalculator.RoundMoney(totalAmount * 0.50m);
+                var installment2 = FinancialCalculator.RoundMoney(totalAmount - installment1);
 
                 c.Item().PaddingTop(8).Table(table =>
                 {

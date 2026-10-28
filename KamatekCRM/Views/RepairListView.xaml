@@ -639,7 +639,7 @@
                                                                Foreground="{DynamicResource ThemeForeground}">
                                                         <TextBlock.Text>
                                                             <MultiBinding StringFormat="{}{0:N2} ₺">
-                                                                <Binding Path="UnitPrice"/>
+                                                                <Binding Path="TotalPrice"/>
                                                             </MultiBinding>
                                                         </TextBlock.Text>
                                                     </TextBlock>

@@ -29,7 +29,7 @@ namespace KamatekCrm.API.Controllers
         {
             var result = await _cache.GetOrCreateAsync("dashboard:cashposition", async () =>
             {
-                var transactions = await _context.CashTransactions.ToListAsync();
+                var transactions = await _context.CashTransactions.AsNoTracking().Select(t => new { t.PaymentMethod, t.TransactionType, t.Amount, t.Date }).ToListAsync();
 
                 var cash = transactions.Where(t => t.PaymentMethod == PaymentMethod.Cash)
                     .Sum(t => t.TransactionType == CashTransactionType.Income ? t.Amount : -t.Amount);

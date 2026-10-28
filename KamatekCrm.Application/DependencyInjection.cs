@@ -12,10 +12,10 @@ namespace KamatekCrm.ApplicationCore
     {
         public static IServiceCollection AddApplicationLayerServices(this IServiceCollection services)
         {
-            // Application Services (Scoped — her UnitOfWork ömrüyle eşleşir)
-            services.AddScoped<ICustomerAppService, CustomerAppService>();
-            services.AddScoped<IUserAppService, UserAppService>();
-            services.AddScoped<IServiceJobAppService, ServiceJobAppService>();
+            // Application Services (Transient — masaüstü ve web ortamlarında captive dependency riskini önler)
+            services.AddTransient<ICustomerAppService, CustomerAppService>();
+            services.AddTransient<IUserAppService, UserAppService>();
+            services.AddTransient<IServiceJobAppService, ServiceJobAppService>();
             services.AddSingleton<IServiceJobStatusPolicy, ServiceJobStatusPolicy>();
             services.AddSingleton<IWorkOrderNextActionResolver, WorkOrderNextActionResolver>();
             services.AddSingleton<IApplicationAuthorizationService, ApplicationAuthorizationService>();

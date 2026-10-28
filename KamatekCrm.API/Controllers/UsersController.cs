@@ -110,7 +110,7 @@ namespace KamatekCrm.API.Controllers
         /// <summary>
         /// Kullanıcı güncelle (şifre hariç)
         /// </summary>
-        [HttpPut("{id}")]
+        [HttpPut("{id}"), Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest request)
         {
             var user = await _context.Users.FindAsync(id);
@@ -141,7 +141,7 @@ namespace KamatekCrm.API.Controllers
         /// <summary>
         /// Kullanıcıyı deaktif et (soft delete)
         /// </summary>
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}"), Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeactivateUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -156,7 +156,7 @@ namespace KamatekCrm.API.Controllers
         /// <summary>
         /// Yeni kullanıcı oluştur
         /// </summary>
-        [HttpPost]
+        [HttpPost, Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
         {
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
@@ -192,7 +192,7 @@ namespace KamatekCrm.API.Controllers
         /// <summary>
         /// Şifre değiştir / sıfırla
         /// </summary>
-        [HttpPost("{id}/change-password")]
+        [HttpPost("{id}/change-password"), Authorize(Roles = "Admin")]
         public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordRequest request)
         {
             var user = await _context.Users.FindAsync(id);
@@ -218,7 +218,7 @@ namespace KamatekCrm.API.Controllers
             byte[] hashBytes = new byte[48];
             Array.Copy(salt, 0, hashBytes, 0, 16);
             Array.Copy(hash, 0, hashBytes, 16, 32);
-            return Convert.ToBase64String(hashBytes);
+            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 11);
         }
         #endregion
     }

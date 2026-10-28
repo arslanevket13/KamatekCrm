@@ -34,29 +34,24 @@ namespace KamatekCrm.API.Controllers
                 var weekAgo = today.AddDays(-7);
                 var monthStart = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-                // Paralel sorgulama
-                var todaysJobsTask = _context.ServiceJobs.CountAsync(j => j.CreatedDate >= today);
-                var activeJobsTask = _context.ServiceJobs.CountAsync(j =>
+                // EF Core DbContext thread-safe olmadığı için sıralı sorgulama
+                var todaysJobsCount = await _context.ServiceJobs.CountAsync(j => j.CreatedDate >= today);
+                var activeJobsCount = await _context.ServiceJobs.CountAsync(j =>
                     j.Status != JobStatus.Completed && j.Status != JobStatus.Cancelled);
-                var readyRepairsTask = _context.ServiceJobs.CountAsync(j => j.Status == JobStatus.Completed && j.CompletedDate >= weekAgo);
-                var totalCustomersTask = _context.Customers.CountAsync();
-                var totalJobsTask = _context.ServiceJobs.CountAsync();
-                var monthlyCompletedTask = _context.ServiceJobs.CountAsync(j =>
+                var readyRepairsCount = await _context.ServiceJobs.CountAsync(j => j.Status == JobStatus.Completed && j.CompletedDate >= weekAgo);
+                var totalCustomersCount = await _context.Customers.CountAsync();
+                var totalJobsCount = await _context.ServiceJobs.CountAsync();
+                var monthlyCompletedCount = await _context.ServiceJobs.CountAsync(j =>
                     j.Status == JobStatus.Completed && j.CompletedDate >= monthStart);
-
-                await Task.WhenAll(
-                    todaysJobsTask, activeJobsTask, readyRepairsTask,
-                    totalCustomersTask, totalJobsTask, monthlyCompletedTask
-                );
 
                 return new
                 {
-                    TodaysJobs = todaysJobsTask.Result,
-                    ActiveJobs = activeJobsTask.Result,
-                    ReadyRepairs = readyRepairsTask.Result,
-                    MonthlyCompleted = monthlyCompletedTask.Result,
-                    TotalCustomers = totalCustomersTask.Result,
-                    TotalJobs = totalJobsTask.Result,
+                    TodaysJobs = todaysJobsCount,
+                    ActiveJobs = activeJobsCount,
+                    ReadyRepairs = readyRepairsCount,
+                    MonthlyCompleted = monthlyCompletedCount,
+                    TotalCustomers = totalCustomersCount,
+                    TotalJobs = totalJobsCount,
                     GeneratedAt = DateTime.UtcNow
                 };
             }, CacheService.DashboardTtl);
@@ -176,7 +171,7 @@ namespace KamatekCrm.API.Controllers
                     {
                         if (!c.BirthDate.HasValue) return false;
                         var bday = c.BirthDate.Value;
-                        var thisYearBirthday = new DateTime(today.Year, bday.Month, bday.Day, 0, 0, 0, DateTimeKind.Utc);
+                        var thisYearBirthday = new DateTime(today.Year, bday.Month, (bday.Month == 2 && bday.Day == 29 && !DateTime.IsLeapYear(today.Year)) ? 28 : bday.Day, 0, 0, 0, DateTimeKind.Utc);
                         var daysUntil = (thisYearBirthday - today).Days;
                         if (daysUntil < 0) daysUntil += 365; // Next year's birthday if passed
                         return daysUntil >= 0 && daysUntil <= 30;
@@ -184,7 +179,7 @@ namespace KamatekCrm.API.Controllers
                     .OrderBy(c => {
                         if (!c.BirthDate.HasValue) return 999;
                         var bday = c.BirthDate.Value;
-                        var thisYear = new DateTime(today.Year, bday.Month, bday.Day, 0, 0, 0, DateTimeKind.Utc);
+                        var thisYear = new DateTime(today.Year, bday.Month, (bday.Month == 2 && bday.Day == 29 && !DateTime.IsLeapYear(today.Year)) ? 28 : bday.Day, 0, 0, 0, DateTimeKind.Utc);
                         var days = (thisYear - today).Days;
                         return days < 0 ? days + 365 : days;
                     })

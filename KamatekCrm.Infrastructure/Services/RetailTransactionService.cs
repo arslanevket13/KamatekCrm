@@ -531,7 +531,7 @@ public sealed class RetailTransactionService : IRetailTransactionService
     private static decimal CalculateLineTotal(decimal unitPrice, int quantity, decimal discount, decimal taxRate)
     {
         var afterDiscount = unitPrice * quantity - discount;
-        return Math.Round(afterDiscount + (afterDiscount * taxRate / 100m), 2, MidpointRounding.AwayFromZero);
+        return Math.Round(afterDiscount + (afterDiscount * taxRate / 100m), 2, MidpointRounding.ToEven);
     }
 
     private static async Task<Result<ReturnableSaleDto>> BuildReturnableSaleAsync(AppDbContext context, int salesOrderId, CancellationToken cancellationToken)
@@ -552,7 +552,7 @@ public sealed class RetailTransactionService : IRetailTransactionService
     }
 
     private static decimal Allocate(decimal original, int originalQuantity, int requestedQuantity, decimal previouslyAllocated, bool isFinal) =>
-        isFinal ? original - previouslyAllocated : Math.Round(original * requestedQuantity / originalQuantity, 2, MidpointRounding.AwayFromZero);
+        isFinal ? original - previouslyAllocated : Math.Round(original * requestedQuantity / originalQuantity, 2, MidpointRounding.ToEven);
 
     private static async Task<Warehouse> GetOrCreateQuarantineAsync(AppDbContext context, CancellationToken cancellationToken)
     {

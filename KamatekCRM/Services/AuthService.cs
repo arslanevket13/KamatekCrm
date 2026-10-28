@@ -142,7 +142,7 @@ namespace KamatekCrm.Services
                     isPasswordValid = true;
                     needsMigration = true;
                 }
-                else if (user.PasswordHash == password)
+                else if (false && user.PasswordHash == password)
                 {
                     // Eski düz metin (plain text) kontrolü & şeffaf geçiş
                     isPasswordValid = true;

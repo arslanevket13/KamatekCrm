@@ -126,7 +126,7 @@ namespace KamatekCrm.Infrastructure.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
             if (!optionsBuilder.IsConfigured)
             {
                 throw new InvalidOperationException("DbContext must be configured with a valid connection string. Fallback configuration is strictly prohibited to prevent split-brain risks.");
@@ -658,15 +658,7 @@ namespace KamatekCrm.Infrastructure.Data
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
             PrepareChanges();
-            try
-            {
-                return base.SaveChanges(acceptAllChangesOnSuccess);
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                ResolveConcurrencyConflicts(ex);
-                return base.SaveChanges(acceptAllChangesOnSuccess);
-            }
+            return base.SaveChanges(acceptAllChangesOnSuccess);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
@@ -677,15 +669,7 @@ namespace KamatekCrm.Infrastructure.Data
             CancellationToken cancellationToken = default)
         {
             PrepareChanges();
-            try
-            {
-                return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-            }
-            catch (DbUpdateConcurrencyException ex)
-            {
-                ResolveConcurrencyConflicts(ex);
-                return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-            }
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
 
         private void PrepareChanges()
@@ -779,7 +763,7 @@ namespace KamatekCrm.Infrastructure.Data
 
             try
             {
-                var wpfUser = typeof(AppDbContext).Assembly.GetType("KamatekCrm.App")?.GetProperty("CurrentUser")?.GetValue(null) as User;
+                var wpfUser = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType("KamatekCrm.App", false)).FirstOrDefault(t => t != null)?.GetProperty("CurrentUser")?.GetValue(null) as User;
                 if (wpfUser != null)
                 {
                     return (wpfUser.Id, wpfUser.Username ?? "Sistem");
@@ -921,7 +905,7 @@ namespace KamatekCrm.Infrastructure.Data
 
                         foreach (var navigation in entry.Metadata.GetNavigations())
                         {
-                            if (navigation.IsCollection)
+                            if (navigation.IsCollection && typeof(ISoftDeletable).IsAssignableFrom(navigation.TargetEntityType.ClrType))
                             {
                                 var collection = entry.Collection(navigation.Name);
                                 if (!collection.IsLoaded)

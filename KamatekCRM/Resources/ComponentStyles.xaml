@@ -246,7 +246,7 @@
                             <Button x:Name="PART_ActionButton"
                                     Content="{TemplateBinding ActionText}"
                                     Command="{TemplateBinding ActionCommand}"
-                                    Style="{DynamicResource FluentButton}"
+                                    Style="{DynamicResource BtnPrimary}"
                                     HorizontalAlignment="Center"
                                     Padding="24,10"
                                     Visibility="{TemplateBinding ActionVisibility}"/>
@@ -387,7 +387,7 @@
                                             </Style>
                                         </TextBlock.Style>
                                     </TextBlock>
-                                    <TextBlock Text="{Binding}"
+                                    <Button Content="{Binding}" Command="{Binding NavigateCommand, RelativeSource={RelativeSource AncestorType={x:Type km:KmBreadcrumb}}}" CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Padding="2,0"
                                                Foreground="{DynamicResource TextBodyBrush}"
                                                FontSize="13"
                                                FontWeight="Normal"
@@ -514,7 +514,7 @@
                             <!-- Apply button -->
                             <Button Content="Filtrele"
                                     Command="{TemplateBinding ApplyCommand}"
-                                    Style="{DynamicResource FluentButton}"
+                                    Style="{DynamicResource BtnPrimary}"
                                     Padding="16,6"
                                     FontSize="12"
                                     VerticalAlignment="Bottom"
@@ -532,6 +532,48 @@
                                     Padding="8,6"/>
                         </StackPanel>
                     </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ─────────── KmAvatar ─────────── -->
+    <Style TargetType="{x:Type km:KmAvatar}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type km:KmAvatar}">
+                    <Grid Width="{TemplateBinding AvatarDiameter}"
+                          Height="{TemplateBinding AvatarDiameter}">
+                        <Ellipse Fill="{TemplateBinding AvatarBackground}"/>
+                        <TextBlock Text="{TemplateBinding Initials}"
+                                   FontSize="{TemplateBinding AvatarFontSize}"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                        <Ellipse>
+                            <Ellipse.Fill>
+                                <ImageBrush ImageSource="{TemplateBinding ImageSource}" Stretch="UniformToFill"/>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                        <Ellipse x:Name="OnlineDot"
+                                 Width="10" Height="10"
+                                 HorizontalAlignment="Right"
+                                 VerticalAlignment="Bottom"
+                                 Stroke="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                 StrokeThickness="1.5"
+                                 Visibility="Collapsed"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsOnline" Value="True">
+                            <Setter TargetName="OnlineDot" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="OnlineDot" Property="Fill" Value="{DynamicResource ThemeSuccess}"/>
+                        </Trigger>
+                        <Trigger Property="IsOnline" Value="False">
+                            <Setter TargetName="OnlineDot" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="OnlineDot" Property="Fill" Value="{DynamicResource ThemeError}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

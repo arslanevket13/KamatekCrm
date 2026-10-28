@@ -18,9 +18,14 @@ namespace KamatekCrm.Components
                 new FrameworkPropertyMetadata(typeof(KmBreadcrumb)));
         }
 
+        public KmBreadcrumb()
+        {
+            SetCurrentValue(ItemsProperty, new ObservableCollection<string>());
+        }
+
         public static readonly DependencyProperty ItemsProperty =
             DependencyProperty.Register(nameof(Items), typeof(ObservableCollection<string>), typeof(KmBreadcrumb),
-                new PropertyMetadata(new ObservableCollection<string>()));
+                new PropertyMetadata(null));
 
         public static readonly DependencyProperty NavigateCommandProperty =
             DependencyProperty.Register(nameof(NavigateCommand), typeof(ICommand), typeof(KmBreadcrumb));

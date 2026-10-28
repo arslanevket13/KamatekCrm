@@ -12,7 +12,7 @@ public class UnitTest1
         var viewsDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "KamatekCRM", "Views");
         if (!System.IO.Directory.Exists(viewsDir))
         {
-            viewsDir = @"C:\Antigravity\KamatekCRM\Views";
+            viewsDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "KamatekCRM", "Views"));
         }
 
         var xamlFiles = System.IO.Directory.GetFiles(viewsDir, "*.xaml", System.IO.SearchOption.AllDirectories);

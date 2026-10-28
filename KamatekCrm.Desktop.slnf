@@ -2,7 +2,9 @@
   "solution": {
     "path": "KamatekCRM.sln",
     "projects": [
-      "KamatekCrm\\KamatekCrm.csproj",
+      "KamatekCRM\\KamatekCRM.csproj",
+      "KamatekCrm.Application\\KamatekCrm.Application.csproj",
+      "KamatekCrm.Infrastructure\\KamatekCrm.Infrastructure.csproj",
       "KamatekCrm.Shared\\KamatekCrm.Shared.csproj"
     ]
   }

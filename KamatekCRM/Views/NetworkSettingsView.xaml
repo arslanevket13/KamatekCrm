@@ -187,7 +187,7 @@
                             <!-- Manual IP Input -->
                             <Border CornerRadius="8" Padding="14" Margin="0,4,0,0"
                                     Background="{DynamicResource SurfacePageBrush}"
-                                    Visibility="{Binding IsAutoDiscoveryEnabled, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
+                                    Visibility="{Binding IsAutoDiscoveryEnabled, Converter={StaticResource InvertedBoolToVis}}">
                                 <StackPanel>
                                     <TextBlock Text="MANUEL SUNUCU IP ADRESİ" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
                                     <Grid>
