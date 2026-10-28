@@ -10,6 +10,7 @@ namespace KamatekCrm.Views
         public DeliveryEditorWindow(DeliveryEditorViewModel viewModel)
         {
             InitializeComponent();
+            KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
             _viewModel = viewModel;
             DataContext = viewModel;
             viewModel.OwnerWindow = this;

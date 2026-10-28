@@ -53,4 +53,54 @@ namespace KamatekCrm.ViewModels
             return Binding.DoNothing;
         }
     }
+
+    /// <summary>
+    /// true → Collapsed, false → Visible dönüşümü.
+    /// </summary>
+    public class InverseBooleanToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool boolValue)
+            {
+                return boolValue ? Visibility.Collapsed : Visibility.Visible;
+            }
+            return Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is Visibility vis)
+            {
+                return vis != Visibility.Visible;
+            }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// RadioButton'ların IsMainServer boolean özelliğine bağlanması için iki yönlü dönüştürücü.
+    /// ConverterParameter="Server" veya "Client"
+    /// </summary>
+    public class ServerModeToBooleanConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            bool isMainServer = value is true;
+            string param = parameter?.ToString() ?? "Server";
+
+            return param.Equals("Server", StringComparison.OrdinalIgnoreCase)
+                ? isMainServer
+                : !isMainServer;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            bool isChecked = value is true;
+            if (!isChecked) return Binding.DoNothing;
+
+            string param = parameter?.ToString() ?? "Server";
+            return param.Equals("Server", StringComparison.OrdinalIgnoreCase);
+        }
+    }
 }

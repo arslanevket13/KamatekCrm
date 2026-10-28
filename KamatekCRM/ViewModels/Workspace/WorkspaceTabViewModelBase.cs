@@ -83,6 +83,12 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(HasActions));
         }
 
+        /// <summary>Sekme seçildiğinde / aktifleştiğinde çağrılır.</summary>
+        public virtual Task OnTabActivatedAsync() => Task.CompletedTask;
+
+        /// <summary>Sekme içeriğini en güncel iş emri verileriyle yeniler.</summary>
+        public virtual Task RefreshAsync() => Task.CompletedTask;
+
         /// <summary>Sekmenin göstereceği işlem kümesi (uygulama listesinden filtre).</summary>
         protected abstract bool IsRelevantAction(WorkOrderAction action);
     }

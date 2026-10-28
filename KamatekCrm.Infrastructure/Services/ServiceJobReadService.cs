@@ -493,7 +493,49 @@ public sealed class ServiceJobReadService : IServiceJobReadService
         var stage = _nextActionResolver.ResolveStage(input);
         var nextAction = _nextActionResolver.ResolveNextAction(input);
         var allowedActions = _nextActionResolver.ResolveAllowedActions(input);
-        var warnings = _nextActionResolver.ResolveWarnings(input);
+        var warnings = _nextActionResolver.ResolveWarnings(input).ToList();
+
+        // ── Malzeme Stok Hazırlık Radarı (Readiness Check) ──
+        if (job.Status != JobStatus.Completed && job.Status != JobStatus.Delivered && job.Status != JobStatus.Cancelled)
+        {
+            var requiredMaterials = new List<(int? ProductId, string ProductName, decimal Quantity)>();
+            if (installation is not null && installation.Materials.Count > 0)
+            {
+                requiredMaterials.AddRange(installation.Materials.Select(m => (m.ProductId, m.ProductName, m.Quantity)));
+            }
+            else if (quotation is not null && quotation.Items.Count > 0)
+            {
+                requiredMaterials.AddRange(quotation.Items.Select(q => (q.ProductId, q.ProductName, q.Quantity)));
+            }
+            else if (discovery is not null && discovery.Materials.Count > 0)
+            {
+                requiredMaterials.AddRange(discovery.Materials.Select(d => (d.ProductId, d.ProductName, (decimal)d.Quantity)));
+            }
+
+            if (requiredMaterials.Count > 0)
+            {
+                var productIds = requiredMaterials.Where(m => m.ProductId.HasValue).Select(m => m.ProductId!.Value).Distinct().ToList();
+                if (productIds.Count > 0)
+                {
+                    var products = await context.Products.AsNoTracking()
+                        .Where(p => productIds.Contains(p.Id))
+                        .Select(p => new { p.Id, p.ProductName, p.TotalStockQuantity })
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var mat in requiredMaterials.Where(m => m.ProductId.HasValue))
+                    {
+                        var prod = products.FirstOrDefault(p => p.Id == mat.ProductId!.Value);
+                        if (prod is not null && prod.TotalStockQuantity < (int)Math.Ceiling(mat.Quantity))
+                        {
+                            warnings.Add(new WorkOrderWarning(
+                                "MaterialStockShortage",
+                                $"Yetersiz Stok: {mat.ProductName} (Gereken: {mat.Quantity:N0}, Depoda: {prod.TotalStockQuantity})",
+                                WorkOrderSeverity.Warning));
+                        }
+                    }
+                }
+            }
+        }
 
         return Result.Success(new WorkOrderWorkspaceDto(
             job.Id,
@@ -716,5 +758,62 @@ public sealed class ServiceJobReadService : IServiceJobReadService
         if (!string.IsNullOrWhiteSpace(district)) parts.Add(district);
         if (!string.IsNullOrWhiteSpace(city)) parts.Add(city);
         return string.Join(", ", parts);
+    }
+
+    public async Task<Result<IReadOnlyList<ServiceJobRowDto>>> CheckTechnicianConflictAsync(
+        int technicianId,
+        DateTime scheduledDate,
+        int? excludeJobId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = AuthorizeRead();
+        if (authorization.IsFailure) return Result.Failure<IReadOnlyList<ServiceJobRowDto>>(authorization.Error);
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        DateTime windowStart = scheduledDate.AddHours(-2);
+        DateTime windowEnd = scheduledDate.AddHours(2);
+
+        var query = context.ServiceJobs.AsNoTracking()
+            .Where(j => j.AssignedTechnicianId == technicianId
+                     && (!excludeJobId.HasValue || j.Id != excludeJobId.Value)
+                     && j.ScheduledDate.HasValue
+                     && j.ScheduledDate.Value >= windowStart
+                     && j.ScheduledDate.Value <= windowEnd
+                     && j.Status != JobStatus.Completed
+                     && j.Status != JobStatus.Delivered
+                     && j.Status != JobStatus.Cancelled);
+
+        var rows = await query
+            .OrderBy(item => item.ScheduledDate)
+            .Select(item => new ServiceJobRowDto
+            {
+                Id = item.Id,
+                CustomerId = item.CustomerId,
+                CustomerAssetId = item.CustomerAssetId,
+                CustomerFullName = item.Customer != null ? item.Customer.FullName : string.Empty,
+                CustomerPhone = item.Customer != null ? item.Customer.PhoneNumber : string.Empty,
+                Description = item.Description,
+                Status = item.Status,
+                Priority = item.Priority,
+                WorkOrderType = item.WorkOrderType,
+                JobCategory = item.JobCategory,
+                CategoriesJson = item.CategoriesJson,
+                CreatedDate = item.CreatedDate,
+                CompletedDate = item.CompletedDate,
+                ScheduledDate = item.ScheduledDate,
+                AssignedTechnicianId = item.AssignedTechnicianId,
+                AssignedTechnician = item.AssignedTechnician,
+                LaborCost = item.LaborCost,
+                DiscountAmount = item.DiscountAmount,
+                TaxAmount = item.TaxAmount,
+                TotalAmount = item.TotalAmount,
+                EstimatedDuration = item.EstimatedDuration,
+                SlaDeadline = item.SlaDeadline,
+                TechnicianNotes = item.TechnicianNotes,
+                PhotoPathsJson = item.PhotoPathsJson
+            })
+            .ToListAsync(cancellationToken);
+
+        return Result.Success<IReadOnlyList<ServiceJobRowDto>>(rows);
     }
 }

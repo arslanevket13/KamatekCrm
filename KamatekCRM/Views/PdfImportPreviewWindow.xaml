@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="PDF Fatura Önizleme ve Düzenleme" Height="500" Width="800"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Style="{DynamicResource PremiumWindowStyle}"
+        Background="{DynamicResource SurfacePageBrush}">
     
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -29,7 +31,7 @@
                         <DataTemplate>
                             <Button Command="{Binding DataContext.RemoveItemCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
                                     CommandParameter="{Binding}"
-                                    Content="SİL" Style="{StaticResource PremiumWindowStyle}" Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}" Padding="4,0" BorderThickness="0"/>
+                                    Content="SİL" Style="{StaticResource SecondaryButton}" Foreground="{DynamicResource StatusErrorFg}" Padding="4,0" BorderThickness="0"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

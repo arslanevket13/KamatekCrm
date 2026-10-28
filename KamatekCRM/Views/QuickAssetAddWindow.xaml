@@ -5,7 +5,8 @@
         WindowStartupLocation="CenterOwner"
         MinWidth="420" MinHeight="360"
         ResizeMode="CanResizeWithGrip"
-        Style="{StaticResource PremiumWindowStyle}">
+        Style="{DynamicResource PremiumWindowStyle}"
+        Background="{DynamicResource SurfacePageBrush}">
 
     <Border Margin="24" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="24">
         <Border.Effect>

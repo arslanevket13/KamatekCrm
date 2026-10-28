@@ -31,7 +31,7 @@
     </Window.InputBindings>
 
     <!-- Kenarlık ve gölge -->
-    <Border Background="{DynamicResource ThemeSurface}" 
+    <Border Background="{DynamicResource SurfacePageBrush}" 
             CornerRadius="16" 
             BorderBrush="{DynamicResource ThemeBorder}"
             BorderThickness="1">

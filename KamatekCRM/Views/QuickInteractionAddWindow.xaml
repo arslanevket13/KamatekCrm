@@ -7,6 +7,7 @@
         MinWidth="520" MinHeight="620"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
+        Style="{DynamicResource PremiumWindowStyle}"
         Background="{DynamicResource SurfacePageBrush}">
 
     <Grid Margin="24">

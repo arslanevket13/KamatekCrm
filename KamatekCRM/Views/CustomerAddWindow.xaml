@@ -11,6 +11,7 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
         AutomationProperties.Name="Yeni müşteri oluşturma formu"
+        Style="{DynamicResource PremiumWindowStyle}"
         Background="{DynamicResource SurfacePageBrush}">
 
     <Window.Resources>

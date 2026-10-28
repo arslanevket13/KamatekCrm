@@ -62,6 +62,9 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(QuoteSummaryDisplay));
         }
 
+        public string StockShortageWarning { get; private set; } = string.Empty;
+        public bool HasStockShortage => !string.IsNullOrEmpty(StockShortageWarning);
+
         public async Task LoadMaterialsAsync()
         {
             try
@@ -71,6 +74,14 @@ namespace KamatekCrm.ViewModels
                 if (materials.IsSuccess && materials.Value is not null)
                 {
                     foreach (var item in materials.Value) Materials.Add(item);
+                }
+
+                // Malzeme stok hazırlık kontrolü
+                var ws = await _readService.GetWorkspaceAsync(_jobId);
+                if (ws.IsSuccess && ws.Value is not null)
+                {
+                    var shortages = ws.Value.Warnings.Where(w => w.Code == "MaterialStockShortage").Select(w => w.Message).ToList();
+                    StockShortageWarning = shortages.Count > 0 ? string.Join("\n", shortages) : string.Empty;
                 }
             }
             catch (Exception ex)
@@ -82,10 +93,19 @@ namespace KamatekCrm.ViewModels
             MaterialTotalDisplay = $"{Materials.Sum(m => m.UnitPrice * m.QuantityUsed):N2} ₺";
             OnPropertyChanged(nameof(MaterialSummary));
             OnPropertyChanged(nameof(MaterialTotalDisplay));
+            OnPropertyChanged(nameof(StockShortageWarning));
+            OnPropertyChanged(nameof(HasStockShortage));
         }
 
+        public override async Task OnTabActivatedAsync()
+        {
+            await LoadMaterialsAsync();
+        }
+
+        public override Task RefreshAsync() => _refresh();
+
         [RelayCommand]
-        private Task Refresh() => _refresh();
+        private Task Refresh() => RefreshAsync();
 
         [RelayCommand]
         private async Task OpenGeneralEditor()

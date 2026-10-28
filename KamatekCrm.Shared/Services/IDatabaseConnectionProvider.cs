@@ -12,5 +12,6 @@ namespace KamatekCrm.Shared.Services
         void SetConnectionState(bool isConnected);
         
         Task<bool> TestConnectionAsync(string serverIp);
+        void UpdateConnectionString(string newConnectionString);
     }
 }

@@ -49,4 +49,13 @@ public interface IServiceJobReadService
     Task<Result<WorkOrderQuotationDto>> GetQuotationByIdAsync(
         int quotationId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Teknisyenin belirtilen tarih/saatte (±2 saat içinde) tamamlanmamış aktif iş emri çakışmasını kontrol eder.
+    /// </summary>
+    Task<Result<IReadOnlyList<ServiceJobRowDto>>> CheckTechnicianConflictAsync(
+        int technicianId,
+        DateTime scheduledDate,
+        int? excludeJobId = null,
+        CancellationToken cancellationToken = default);
 }

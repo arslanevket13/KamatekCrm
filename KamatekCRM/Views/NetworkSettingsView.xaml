@@ -12,6 +12,8 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <vm:InverseBooleanConverter x:Key="InverseBool"/>
+        <vm:InverseBooleanToVisibilityConverter x:Key="InvertedBoolToVis"/>
+        <vm:ServerModeToBooleanConverter x:Key="ServerModeConverter"/>
         <vm:ConnectionStatusColorConverter x:Key="StatusColorConverter"/>
     </UserControl.Resources>
 
@@ -64,8 +66,8 @@
         <!-- ═══════════════ MAIN CONTENT: 2-COLUMN LAYOUT ═══════════════ -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.1*"/>
-                <ColumnDefinition Width="1.3*"/>
+                <ColumnDefinition Width="1.15*"/>
+                <ColumnDefinition Width="1.25*"/>
             </Grid.ColumnDefinitions>
 
             <!-- LEFT COLUMN: CONFIGURATION CARDS -->
@@ -119,6 +121,18 @@
 
                             <Separator Margin="0,0,0,16" Background="{DynamicResource BorderSubtleBrush}"/>
 
+                            <!-- RadioButton Seçimi -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                <RadioButton Content="🖥️ Sunucu (Ana Bilgisayar)" 
+                                             IsChecked="{Binding IsMainServer, Converter={StaticResource ServerModeConverter}, ConverterParameter=Server}"
+                                             GroupName="ServerRoleRadioGroup" 
+                                             Margin="0,0,20,0" FontWeight="SemiBold" Cursor="Hand"/>
+                                <RadioButton Content="💻 İstemci (Terminal)" 
+                                             IsChecked="{Binding IsMainServer, Converter={StaticResource ServerModeConverter}, ConverterParameter=Client}"
+                                             GroupName="ServerRoleRadioGroup" 
+                                             FontWeight="SemiBold" Cursor="Hand"/>
+                            </StackPanel>
+
                             <!-- Main Server Toggle -->
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
@@ -138,14 +152,14 @@
                                     Visibility="{Binding HasUnsavedChanges, Converter={StaticResource BoolToVis}}" Margin="0,8,0,0">
                                 <StackPanel Orientation="Horizontal">
                                     <ui:SymbolIcon Symbol="Warning24" FontSize="16" Foreground="{DynamicResource StatusWarningFg}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Değişikliklerin etkili olması için 'Kaydet ve Yeniden Başlat' butonuna basın." 
+                                    <TextBlock Text="Değişikliklerin etkili olması için 'Kaydet' veya 'Kaydet ve Yeniden Başlat' butonuna basın." 
                                                FontSize="11" Foreground="{DynamicResource StatusWarningFg}" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
                     </Border>
 
-                    <!-- CARD 2: BAĞLANTI MODU & UDP KEŞFİ -->
+                    <!-- CARD 2: BAĞLANTI MODU & UDP KEŞFİ (Sadece İstemci Modunda) -->
                     <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12"
                             BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" 
                             Padding="20" Margin="0,0,0,16"
@@ -179,10 +193,47 @@
                                 <ui:ToggleSwitch Grid.Column="1" IsChecked="{Binding IsAutoDiscoveryEnabled}" VerticalAlignment="Top"/>
                             </Grid>
 
-                            <ui:Button Content="Ağ'ı Tara" Icon="{ui:SymbolIcon Search24}"
-                                       Command="{Binding ScanNetworkCommand}" Margin="0,4,0,12"
-                                       Visibility="{Binding IsAutoDiscoveryEnabled, Converter={StaticResource BoolToVis}}"
-                                       Appearance="Primary" Height="36" Padding="16,0" Cursor="Hand" HorizontalAlignment="Left"/>
+                            <!-- Ağ Tarama Butonu -->
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,12">
+                                <ui:Button Content="Ağ'ı Tara (Hızlı Keşif)" Icon="{ui:SymbolIcon Search24}"
+                                           Command="{Binding ScanNetworkCommand}"
+                                           Appearance="Primary" Height="36" Padding="16,0" Cursor="Hand"/>
+                            </StackPanel>
+
+                            <!-- Taranan Sunucular Listesi -->
+                            <Border CornerRadius="8" Padding="12" Margin="0,0,0,12"
+                                    Background="{DynamicResource SurfacePageBrush}"
+                                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
+                                    Visibility="{Binding DiscoveredServers.Count, Converter={StaticResource BoolToVis}}">
+                                <StackPanel>
+                                    <TextBlock Text="BULUNAN YEREL SUNUCULAR (Tıklayarak Seçin)" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+                                    <ItemsControl ItemsSource="{Binding DiscoveredServers}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
+                                                        CornerRadius="6" Padding="10,6" Margin="0,0,0,6"
+                                                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <ui:SymbolIcon Symbol="Server24" FontSize="16" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding HostName}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextHeadingBrush}"/>
+                                                            <TextBlock Text="{Binding IpAddress, StringFormat='{}IP: {0} • Port: 5432'}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                        </StackPanel>
+                                                        <ui:Button Grid.Column="2" Content="Seç" Appearance="Secondary" Height="28" Padding="10,0"
+                                                                   Command="{Binding DataContext.SelectDiscoveredServerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                   CommandParameter="{Binding}" Cursor="Hand"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
 
                             <!-- Manual IP Input -->
                             <Border CornerRadius="8" Padding="14" Margin="0,4,0,0"
@@ -238,11 +289,26 @@
                                 <ui:PasswordBox Password="{Binding DbPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="••••••••" Height="36" Icon="LockClosed24"/>
                             </StackPanel>
 
-                            <!-- Veritabanı Adı -->
-                            <StackPanel Margin="0,0,0,4">
-                                <Label Content="Veritabanı Adı" FontWeight="SemiBold" FontSize="12"/>
-                                <ui:TextBox Text="{Binding DbName, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="KamatekCrm" Height="36" Icon="Storage24"/>
-                            </StackPanel>
+                            <!-- Veritabanı Adı & Port -->
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <Label Content="Veritabanı Adı" FontWeight="SemiBold" FontSize="12"/>
+                                    <ui:TextBox Text="{Binding DbName, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="KamatekCrm" Height="36" Icon="Storage24"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                    <Label Content="DB Portu" FontWeight="SemiBold" FontSize="12"/>
+                                    <ui:TextBox Text="{Binding ConfiguredDbPort, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="5432" Height="36"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Connection Doctor Butonu -->
+                            <ui:Button Content="Bağlantıyı Test Et (Connection Doctor)" Icon="{ui:SymbolIcon PlugConnected24}"
+                                       Command="{Binding TestConnectionCommand}"
+                                       Appearance="Secondary" Height="38" HorizontalAlignment="Stretch" Cursor="Hand"/>
                         </StackPanel>
                     </Border>
 
@@ -373,11 +439,17 @@
 
         <!-- ═══════════════ BOTTOM ACTION BAR ═══════════════ -->
         <DockPanel Grid.Row="2" Margin="0,20,0,0">
-            <ui:Button DockPanel.Dock="Right" Content="Kapat" Width="100" Height="36" Click="CloseButton_Click" Appearance="Secondary" Cursor="Hand"/>
+            <ui:Button DockPanel.Dock="Right" Content="Kapat" Width="100" Height="38" Click="CloseButton_Click" Appearance="Secondary" Cursor="Hand"/>
 
-            <ui:Button Content="Kaydet ve Yeniden Başlat" Icon="{ui:SymbolIcon Save24}"
-                       Command="{Binding SaveAndRestartCommand}"
-                       Appearance="Primary" Height="38" Padding="20,0" Cursor="Hand"/>
+            <StackPanel Orientation="Horizontal">
+                <ui:Button Content="Kaydet (Hot-Swap)" Icon="{ui:SymbolIcon Checkmark24}"
+                           Command="{Binding SaveSettingsCommand}"
+                           Appearance="Secondary" Height="38" Padding="18,0" Margin="0,0,12,0" Cursor="Hand"/>
+
+                <ui:Button Content="Kaydet ve Yeniden Başlat" Icon="{ui:SymbolIcon Save24}"
+                           Command="{Binding SaveAndRestartCommand}"
+                           Appearance="Primary" Height="38" Padding="20,0" Cursor="Hand"/>
+            </StackPanel>
         </DockPanel>
     </Grid>
 </UserControl>

@@ -10,6 +10,7 @@ namespace KamatekCrm.Views
         public InstallationEditorWindow(InstallationEditorViewModel viewModel)
         {
             InitializeComponent();
+            KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
             _viewModel = viewModel;
             DataContext = viewModel;
             viewModel.OwnerWindow = this;

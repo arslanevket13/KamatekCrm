@@ -249,5 +249,7 @@
     <Color x:Key="SurfacePageColorValue">#F3F4F6</Color>
     <Color x:Key="KpiPurpleStartColor">#8B5CF6</Color>
     <Color x:Key="KpiPurpleEndColor">#6D28D9</Color>
+    <SolidColorBrush x:Key="KpiPurpleStartBrush" Color="{StaticResource KpiPurpleStartColor}"/>
+    <SolidColorBrush x:Key="KpiPurpleEndBrush" Color="{StaticResource KpiPurpleEndColor}"/>
 
 </ResourceDictionary>

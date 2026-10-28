@@ -42,7 +42,7 @@ namespace KamatekCrm.Infrastructure.Services
         private string _currentServerIp = "";
         private bool _isConnected;
         private bool _disposed;
-        private readonly string _configuredConnectionString;
+        private string _configuredConnectionString;
 
         private readonly ReaderWriterLockSlim _rwLock = new(LockRecursionPolicy.NoRecursion);
 
@@ -132,6 +132,21 @@ namespace KamatekCrm.Infrastructure.Services
             finally
             {
                 _rwLock.ExitReadLock();
+            }
+        }
+
+        public void UpdateConnectionString(string newConnectionString)
+        {
+            if (string.IsNullOrWhiteSpace(newConnectionString)) return;
+
+            _rwLock.EnterWriteLock();
+            try
+            {
+                _configuredConnectionString = newConnectionString;
+            }
+            finally
+            {
+                _rwLock.ExitWriteLock();
             }
         }
 

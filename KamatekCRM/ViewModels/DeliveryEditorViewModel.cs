@@ -36,6 +36,34 @@ namespace KamatekCrm.ViewModels
         }
     }
 
+    /// <summary>Teslimat varyans satırı: Planlanan (Teklif) vs Gerçekleşen (Montaj) miktar farkı.</summary>
+    public sealed class MaterialVarianceRow
+    {
+        public string ProductName { get; }
+        public decimal PlannedQuantity { get; }
+        public decimal ActualQuantity { get; }
+        public decimal Variance => ActualQuantity - PlannedQuantity;
+        public string VarianceDisplay => Variance switch
+        {
+            > 0 => $"+{Variance:G29} (Fazla)",
+            < 0 => $"{Variance:G29} (Eksik)",
+            _ => "Tam (0)"
+        };
+        public string StatusColor => Variance switch
+        {
+            > 0 => "#D32F2F",
+            < 0 => "#F57C00",
+            _ => "#388E3C"
+        };
+
+        public MaterialVarianceRow(string productName, decimal planned, decimal actual)
+        {
+            ProductName = productName;
+            PlannedQuantity = planned;
+            ActualQuantity = actual;
+        }
+    }
+
     /// <summary>
     /// Teslim V2 editörü (Paket 7): teslim eden, teslim notu, müşteri imzası ve ödeme bilgileri
     /// (durum, yöntem, tahsilat, fatura no) tek ekranda düzenlenir. "İşi Teslim Et" ödeme
@@ -57,6 +85,8 @@ namespace KamatekCrm.ViewModels
 
         public ObservableCollection<PaymentStatusOption> PaymentStatusOptions { get; } = new();
         public ObservableCollection<PaymentMethodOption> PaymentMethodOptions { get; } = new();
+        public ObservableCollection<MaterialVarianceRow> MaterialVariances { get; } = new();
+        public bool HasMaterialVariances => MaterialVariances.Count > 0;
 
         public string HeaderTitle { get; private set; } = "Teslim";
         public string HeaderSubtitle { get; private set; } = string.Empty;
@@ -167,6 +197,22 @@ namespace KamatekCrm.ViewModels
                     CustomerSignature = installation.CustomerSignature ?? string.Empty;
                 }
             }
+
+            MaterialVariances.Clear();
+            var quoteItems = workflow.Value.Quotation?.Items ?? (System.Collections.Generic.IReadOnlyList<QuotationItemDto>)Array.Empty<QuotationItemDto>();
+            var installItems = workflow.Value.Installation?.Materials ?? (System.Collections.Generic.IReadOnlyList<InstallationMaterialDto>)Array.Empty<InstallationMaterialDto>();
+
+            var allProductNames = quoteItems.Select(q => q.ProductName)
+                .Concat(installItems.Select(i => i.ProductName))
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var name in allProductNames)
+            {
+                decimal planned = quoteItems.Where(q => string.Equals(q.ProductName, name, StringComparison.OrdinalIgnoreCase)).Sum(q => q.Quantity);
+                decimal actual = installItems.Where(i => string.Equals(i.ProductName, name, StringComparison.OrdinalIgnoreCase)).Sum(i => i.Quantity);
+                MaterialVariances.Add(new MaterialVarianceRow(name, planned, actual));
+            }
+            OnPropertyChanged(nameof(HasMaterialVariances));
 
             OnPropertyChanged(nameof(HeaderTitle));
             OnPropertyChanged(nameof(HeaderSubtitle));

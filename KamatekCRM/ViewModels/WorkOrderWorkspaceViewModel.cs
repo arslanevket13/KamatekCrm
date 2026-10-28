@@ -76,6 +76,44 @@ namespace KamatekCrm.ViewModels
         [ObservableProperty]
         private int _activeTabIndex;
 
+        partial void OnActiveTabIndexChanged(int value)
+        {
+            _ = OnTabActivatedAsync(value);
+        }
+
+        private async Task OnTabActivatedAsync(int tabIndex)
+        {
+            try
+            {
+                var result = await _readService.GetWorkspaceAsync(_jobId);
+                if (result.IsSuccess && result.Value is not null)
+                {
+                    ApplyWorkspace(result.Value);
+                }
+
+                WorkspaceTabViewModelBase? tab = tabIndex switch
+                {
+                    0 => OverviewTab,
+                    1 => DiscoveryTab,
+                    2 => QuotationTab,
+                    3 => InstallationTab,
+                    4 => DeliveryTab,
+                    5 => DocumentsTab,
+                    6 => TimelineTab,
+                    _ => null
+                };
+
+                if (tab is not null)
+                {
+                    await tab.OnTabActivatedAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TabActivated] Error: {ex.Message}");
+            }
+        }
+
         // ── Başlık künyesi (GetWorkspaceAsync'ten tazelenir) ──
         public int JobId => _jobId;
         public string JobNumber { get; private set; }
@@ -411,6 +449,9 @@ namespace KamatekCrm.ViewModels
                     await CancelWorkOrderAsync();
                     break;
             }
+
+            // Sekme işlemi sonrası tüm sekmelerin güncel veriyi yansıtmasını garanti et
+            await InitializeAsync();
         }
 
         private async Task OpenGeneralEditorAsync()

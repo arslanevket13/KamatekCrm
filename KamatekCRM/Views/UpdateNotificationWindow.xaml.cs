@@ -11,6 +11,7 @@ namespace KamatekCrm.Views
         public UpdateNotificationWindow(IUpdateService updateService)
         {
             InitializeComponent();
+            KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
             _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
 
             PopulateUpdateInfo();

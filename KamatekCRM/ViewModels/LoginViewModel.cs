@@ -211,15 +211,26 @@ namespace KamatekCrm.ViewModels
         private void OpenConnectionSettings()
         {
             var networkViewModel = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<KamatekCrm.ViewModels.NetworkSettingsViewModel>(App.ServiceProvider);
+            networkViewModel.IsPreLoginMode = true; // Pre-login / Bootstrap modunu etkinleştir
+
+            var parentWindow = System.Windows.Application.Current?.MainWindow;
             var settingsWindow = new System.Windows.Window
             {
                 Title = "Ağ ve Bağlantı Ayarları",
                 Content = new KamatekCrm.Views.NetworkSettingsView { DataContext = networkViewModel },
-                Width = 1050,
-                Height = 720,
-                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
+                Width = 1100,
+                Height = 760,
+                Owner = parentWindow,
+                WindowStartupLocation = parentWindow != null ? System.Windows.WindowStartupLocation.CenterOwner : System.Windows.WindowStartupLocation.CenterScreen,
                 ResizeMode = System.Windows.ResizeMode.CanResize
             };
+
+            settingsWindow.Closed += (s, e) =>
+            {
+                networkViewModel.Dispose();
+                _ = InitializeDiscoveryAsync();
+            };
+
             settingsWindow.ShowDialog();
         }
 

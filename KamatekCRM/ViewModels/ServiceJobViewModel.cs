@@ -393,7 +393,13 @@ namespace KamatekCrm.ViewModels
         public int? SelectedTechnicianId
         {
             get => _selectedTechnicianId;
-            set => SetProperty(ref _selectedTechnicianId, value);
+            set
+            {
+                if (SetProperty(ref _selectedTechnicianId, value))
+                {
+                    _ = CheckScheduleConflictAsync();
+                }
+            }
         }
 
         public bool IsDetailPanelOpen
@@ -414,7 +420,38 @@ namespace KamatekCrm.ViewModels
         public DateTime? ScheduledDate
         {
             get => _scheduledDate;
-            set => SetProperty(ref _scheduledDate, value);
+            set
+            {
+                if (SetProperty(ref _scheduledDate, value))
+                {
+                    _ = CheckScheduleConflictAsync();
+                }
+            }
+        }
+
+        public async Task<bool> CheckScheduleConflictAsync()
+        {
+            if (!_selectedTechnicianId.HasValue || !_scheduledDate.HasValue) return false;
+            try
+            {
+                var result = await _serviceJobReadService.CheckTechnicianConflictAsync(
+                    _selectedTechnicianId.Value,
+                    _scheduledDate.Value,
+                    SelectedServiceJob?.Id);
+
+                if (result.IsSuccess && result.Value is not null && result.Value.Count > 0)
+                {
+                    var conflict = result.Value[0];
+                    string techName = Technicians?.FirstOrDefault(t => t.Id == _selectedTechnicianId.Value)?.FullName ?? "Teknisyen";
+                    _toastService?.ShowWarning($"⚠️ Teknisyen Çakışması: {techName} için {conflict.ScheduledDate:dd.MM HH:mm} zamanında #{conflict.Id} numaralı aktif bir iş emri bulunmaktadır.");
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ConflictCheck] Error: {ex.Message}");
+            }
+            return false;
         }
 
         /// <summary>
@@ -2256,6 +2293,10 @@ namespace KamatekCrm.ViewModels
             SaveServiceJobCommand.NotifyCanExecuteChanged();
             try
             {
+                if (SelectedTechnicianId.HasValue && ScheduledDate.HasValue)
+                {
+                    await CheckScheduleConflictAsync();
+                }
                 if (!IsQuickAddCustomer && SelectedCustomer == null)
                 {
                     _toastService?.ShowWarning("Lütfen müşteri seçin veya oluşturun.");
@@ -2433,6 +2474,26 @@ namespace KamatekCrm.ViewModels
         private async Task CompleteJob()
         {
             if (SelectedServiceJob == null) return;
+
+            // Eğer montaj tamamlandı durumundaysa, teslimat adımına yönlendir
+            if (SelectedServiceJob.Status == JobStatus.InstallationCompleted)
+            {
+                var vm = new DeliveryEditorViewModel(
+                    SelectedServiceJob.Id, _serviceJobReadService, _serviceJobCommandService, _toastService);
+                if (await vm.InitializeAsync())
+                {
+                    var window = new DeliveryEditorWindow(vm) { Owner = Application.Current.MainWindow };
+                    if (window.ShowDialog() == true)
+                    {
+                        await LoadServiceJobs();
+                        await LoadWorkspace();
+                        await LoadDashboardAsync();
+                        _toastService.ShowSuccess($"İş #{SelectedServiceJob.Id} başarıyla teslim edildi.");
+                        return;
+                    }
+                    return;
+                }
+            }
 
             try
             {
@@ -2780,6 +2841,24 @@ namespace KamatekCrm.ViewModels
             }
 
             int targetJobId = targetJob.Id;
+
+            if (newStatus == JobStatus.Delivered || (newStatus == JobStatus.Completed && targetJob.Status == JobStatus.InstallationCompleted))
+            {
+                var vm = new DeliveryEditorViewModel(
+                    targetJobId, _serviceJobReadService, _serviceJobCommandService, _toastService);
+                if (await vm.InitializeAsync())
+                {
+                    var window = new DeliveryEditorWindow(vm) { Owner = Application.Current.MainWindow };
+                    if (window.ShowDialog() == true)
+                    {
+                        await LoadServiceJobs();
+                        await LoadDashboardAsync();
+                        _toastService?.ShowSuccess($"İş #{targetJobId} başarıyla teslim edildi.");
+                        return;
+                    }
+                    return;
+                }
+            }
 
             try
             {

@@ -134,6 +134,14 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        public bool HasWarrantyInfo => SelectedAsset != null;
+        public bool IsWarrantyActive => SelectedAsset != null && DateTime.UtcNow <= SelectedAsset.CreatedDate.AddYears(2);
+        public string WarrantyStatusText => SelectedAsset == null
+            ? string.Empty
+            : IsWarrantyActive
+                ? $"🛡️ Garanti Kapsamında (Bitiş: {SelectedAsset.CreatedDate.AddYears(2):dd.MM.yyyy})"
+                : $"⚠️ Garanti Süresi Dolmuş (Bitiş: {SelectedAsset.CreatedDate.AddYears(2):dd.MM.yyyy})";
+
         public CustomerAsset? SelectedAsset
         {
             get => _selectedAsset;
@@ -141,10 +149,17 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedAsset, value))
                 {
+                    OnPropertyChanged(nameof(HasWarrantyInfo));
+                    OnPropertyChanged(nameof(IsWarrantyActive));
+                    OnPropertyChanged(nameof(WarrantyStatusText));
                     if (value != null)
                     {
                         SelectedCategory = value.Category;
                         _ = CheckSerialHistoryAsync(value.SerialNumber);
+                        if (IsWarrantyActive)
+                        {
+                            _toastService?.ShowInfo($"🛡️ Seçilen cihaz garanti kapsamında: {value.CreatedDate.AddYears(2):dd.MM.yyyy} tarihine kadar geçerlidir.");
+                        }
                     }
                     SaveFaultTicketCommand.NotifyCanExecuteChanged();
                 }

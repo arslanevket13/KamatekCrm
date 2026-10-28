@@ -19,6 +19,16 @@ namespace KamatekCrm.Services
     // The old code used EventAggregator.Instance.Publish(new DatabaseConnectionRestoredEvent());
     // I'll keep the same but we must ensure it compiles.
     public class DatabaseServiceFailedEvent { }
+
+    public class DiscoveredServerInfo
+    {
+        public string IpAddress { get; set; } = string.Empty;
+        public string HostName { get; set; } = string.Empty;
+        public int Port { get; set; } = 5432;
+        public string DisplayText => !string.IsNullOrWhiteSpace(HostName) && HostName != IpAddress
+            ? $"{HostName} ({IpAddress})"
+            : IpAddress;
+    }
     
     public class NetworkDiscoveryService : BackgroundService
     {
@@ -122,6 +132,93 @@ namespace KamatekCrm.Services
                 KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseConnectionLostEvent());
             }
             catch { }
+        }
+
+        /// <summary>
+        /// Aktif yerel ağ bağdaştırıcısının alt ağındaki (192.168.x.1-254) 5432 portu açık PostgreSQL sunucularını
+        /// SemaphoreSlim(32) ve 300ms zaman aşımı ile paralel tarar.
+        /// Her bulunan sunucuda UI güncellemeleri için onServerFound callback tetiklenir.
+        /// </summary>
+        public async Task<System.Collections.Generic.List<DiscoveredServerInfo>> ScanSubnetServersAsync(
+            Action<DiscoveredServerInfo>? onServerFound = null,
+            CancellationToken cancellationToken = default)
+        {
+            var discoveredServers = new System.Collections.Concurrent.ConcurrentBag<DiscoveredServerInfo>();
+            var subnetPrefix = GetLocalSubnetPrefix();
+            if (string.IsNullOrEmpty(subnetPrefix))
+            {
+                subnetPrefix = "192.168.1.";
+            }
+
+            using var semaphore = new SemaphoreSlim(32, 32);
+            var tasks = new System.Collections.Generic.List<Task>();
+
+            for (int i = 1; i <= 254; i++)
+            {
+                string targetIp = $"{subnetPrefix}{i}";
+                tasks.Add(Task.Run(async () =>
+                {
+                    if (cancellationToken.IsCancellationRequested) return;
+
+                    await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    try
+                    {
+                        if (cancellationToken.IsCancellationRequested) return;
+
+                        using var ipCts = new CancellationTokenSource(300); // 300ms kısa bağlantı zaman aşımı
+                        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, ipCts.Token);
+                        using var client = new TcpClient();
+
+                        await client.ConnectAsync(targetIp, 5432, linkedCts.Token).ConfigureAwait(false);
+                        if (client.Connected)
+                        {
+                            string hostName = targetIp;
+                            try
+                            {
+                                var hostEntryTask = Dns.GetHostEntryAsync(targetIp);
+                                if (await Task.WhenAny(hostEntryTask, Task.Delay(350, cancellationToken)).ConfigureAwait(false) == hostEntryTask)
+                                {
+                                    var hostEntry = await hostEntryTask.ConfigureAwait(false);
+                                    if (!string.IsNullOrWhiteSpace(hostEntry.HostName))
+                                    {
+                                        hostName = hostEntry.HostName;
+                                    }
+                                }
+                            }
+                            catch { }
+
+                            var serverInfo = new DiscoveredServerInfo
+                            {
+                                IpAddress = targetIp,
+                                HostName = hostName,
+                                Port = 5432
+                            };
+                            discoveredServers.Add(serverInfo);
+                            onServerFound?.Invoke(serverInfo);
+                        }
+                    }
+                    catch
+                    {
+                        // Port kapalı veya zaman aşımı, sessizce geç
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                }, cancellationToken));
+            }
+
+            try
+            {
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Alt ağ taraması sırasında beklenmeyen durum.");
+            }
+
+            return discoveredServers.OrderBy(s => s.IpAddress).ToList();
         }
 
         /// <summary>

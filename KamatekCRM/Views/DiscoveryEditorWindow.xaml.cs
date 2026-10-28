@@ -15,6 +15,7 @@ namespace KamatekCrm.Views
         public DiscoveryEditorWindow(DiscoveryEditorViewModel viewModel)
         {
             InitializeComponent();
+            KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
 
             _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             _viewModel.OwnerWindow = this;

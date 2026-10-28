@@ -67,6 +67,9 @@ namespace KamatekCrm.ViewModels
         public string InvoiceNumberDisplay { get; private set; } = "—";
         public string StatusLine { get; private set; } = "Teslim kaydı henüz oluşturulmadı.";
 
+        public ObservableCollection<MaterialVarianceRow> MaterialVariances { get; } = new();
+        public bool HasMaterialVariances => MaterialVariances.Count > 0;
+
         protected override bool IsRelevantAction(WorkOrderAction action) => action is
             WorkOrderAction.CompleteDelivery;
 
@@ -137,6 +140,22 @@ namespace KamatekCrm.ViewModels
             decimal total = quote?.TotalAmount ?? 0m;
             decimal paid = delivery?.PaidAmount ?? 0m;
             BalanceDisplay = $"{Math.Max(0m, total - paid):N2} ₺";
+
+            MaterialVariances.Clear();
+            var quoteItems = quote?.Items ?? (System.Collections.Generic.IReadOnlyList<QuotationItemDto>)Array.Empty<QuotationItemDto>();
+            var installItems = installation?.Materials ?? (System.Collections.Generic.IReadOnlyList<InstallationMaterialDto>)Array.Empty<InstallationMaterialDto>();
+
+            var allProductNames = quoteItems.Select(q => q.ProductName)
+                .Concat(installItems.Select(i => i.ProductName))
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var name in allProductNames)
+            {
+                decimal planned = quoteItems.Where(q => string.Equals(q.ProductName, name, StringComparison.OrdinalIgnoreCase)).Sum(q => q.Quantity);
+                decimal actual = installItems.Where(i => string.Equals(i.ProductName, name, StringComparison.OrdinalIgnoreCase)).Sum(i => i.Quantity);
+                MaterialVariances.Add(new MaterialVarianceRow(name, planned, actual));
+            }
+            OnPropertyChanged(nameof(HasMaterialVariances));
 
             OnPropertyChanged(nameof(HasDelivery));
             OnPropertyChanged(nameof(IsDelivered));

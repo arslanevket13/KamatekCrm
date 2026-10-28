@@ -27,6 +27,7 @@ namespace KamatekCrm.Views
         public ProductPickerWindow(Func<string, Task<IReadOnlyList<QuotationProductLookupDto>>> search)
         {
             InitializeComponent();
+            KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
 
             _search = search ?? throw new ArgumentNullException(nameof(search));
             ResultsGrid.ItemsSource = Results;

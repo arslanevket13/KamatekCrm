@@ -250,6 +250,10 @@ namespace KamatekCrm.ViewModels
             UpdateBanner();
 
             ApplyQuotation(_quotation);
+            if (Items.Count == 0 && IsEditable)
+            {
+                await ImportFromDiscovery();
+            }
             return true;
         }
 
@@ -699,6 +703,73 @@ namespace KamatekCrm.ViewModels
             {
                 _toastService.ShowError($"PDF oluşturulurken hata: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Keşif aşamasında girilen malzemeleri güncel ürün fiyatları ve KDV'leriyle teklif kalemlerine aktarır.
+        /// </summary>
+        [RelayCommand]
+        public async Task ImportFromDiscovery()
+        {
+            if (!IsEditable)
+            {
+                _toastService.ShowWarning("Bu teklif düzenleme modunda değil.");
+                return;
+            }
+
+            var workflow = await _readService.GetWorkOrderWorkflowAsync(_jobId);
+            if (workflow.IsFailure || workflow.Value?.Discovery is null)
+            {
+                _toastService.ShowWarning("İş emrine ait keşif raporu veya keşif malzemesi bulunamadı.");
+                return;
+            }
+
+            var discoveryMaterials = workflow.Value.Discovery.Materials;
+            if (discoveryMaterials.Count == 0)
+            {
+                _toastService.ShowWarning("Keşif raporunda aktarılacak malzeme kalemi yok.");
+                return;
+            }
+
+            int addedCount = 0;
+            foreach (var mat in discoveryMaterials)
+            {
+                var existing = Items.FirstOrDefault(i => (mat.ProductId.HasValue && i.ProductId == mat.ProductId)
+                                                         || string.Equals(i.ProductName, mat.ProductName, StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                {
+                    existing.Quantity += mat.Quantity;
+                    addedCount++;
+                    continue;
+                }
+
+                decimal unitPrice = 0m;
+                decimal tax = TaxRate;
+                if (mat.ProductId.HasValue)
+                {
+                    var productLookup = await _readService.SearchProductsAsync(mat.ProductName);
+                    var prod = productLookup.IsSuccess && productLookup.Value is not null
+                        ? productLookup.Value.FirstOrDefault(p => p.Id == mat.ProductId.Value)
+                        : null;
+                    if (prod != null)
+                    {
+                        unitPrice = prod.SalePrice;
+                    }
+                }
+
+                Items.Add(new QuotationItemRow(
+                    null,
+                    mat.ProductId,
+                    mat.ProductName,
+                    mat.Quantity,
+                    unitPrice,
+                    0m,
+                    tax));
+                addedCount++;
+            }
+
+            RecalculateTotals();
+            _toastService.ShowSuccess($"{addedCount} kalem keşiften teklife aktarıldı.");
         }
 
         [RelayCommand]

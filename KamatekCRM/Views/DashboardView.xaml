@@ -305,15 +305,15 @@
 
                             <!-- Header -->
                             <Border Grid.Row="0" CornerRadius="10" Padding="14,10" Margin="0,0,0,16"
-                                    Background="{DynamicResource KpiPurpleStartColor}">
+                                    Background="{DynamicResource KpiGradientPurple}">
                                 <StackPanel Orientation="Horizontal">
                                     <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="20" 
-                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
+                                                   Foreground="White" VerticalAlignment="Center"/>
                                     <StackPanel Margin="12,0,0,0">
                                         <TextBlock Text="Teslime Hazır Cihazlar" FontSize="14" FontWeight="Bold" 
-                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                   Foreground="White"/>
                                         <TextBlock Text="Müşteri teslimatı bekleyen tamirler" FontSize="11" 
-                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" Opacity="0.8"/>
+                                                   Foreground="White" Opacity="0.85"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

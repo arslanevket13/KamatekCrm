@@ -14,6 +14,7 @@ namespace KamatekCrm.Views
         public WorkOrderQuotationWindow(WorkOrderQuotationViewModel viewModel)
         {
             InitializeComponent();
+            KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
 
             _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             DataContext = _viewModel;

@@ -14,6 +14,7 @@ namespace KamatekCrm.Views
         public WorkOrderWorkspaceWindow(WorkOrderWorkspaceViewModel viewModel)
         {
             InitializeComponent();
+            KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
 
             _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             _viewModel.OwnerWindow = this;

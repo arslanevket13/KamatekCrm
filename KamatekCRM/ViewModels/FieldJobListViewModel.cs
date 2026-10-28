@@ -8,8 +8,10 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.Infrastructure.Data;
+using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Views;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamatekCrm.ViewModels
@@ -21,6 +23,8 @@ namespace KamatekCrm.ViewModels
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IServiceJobCommandService _serviceJobCommandService;
+        private readonly IServiceJobReadService? _readService;
+        private readonly IToastService? _toastService;
         private string _searchText = string.Empty;
         private DateTime? _startDate;
         private DateTime? _endDate;
@@ -65,10 +69,14 @@ namespace KamatekCrm.ViewModels
 
         public FieldJobListViewModel(
             IDbContextFactory<AppDbContext> dbContextFactory,
-            IServiceJobCommandService serviceJobCommandService)
+            IServiceJobCommandService serviceJobCommandService,
+            IServiceJobReadService? readService = null,
+            IToastService? toastService = null)
         {
             _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
             _serviceJobCommandService = serviceJobCommandService;
+            _readService = readService;
+            _toastService = toastService;
             AllFieldJobs = new ObservableCollection<FieldJobDisplayItem>();
             CategoryFilters = new ObservableCollection<CategoryFilterItem>();
 
@@ -234,6 +242,23 @@ namespace KamatekCrm.ViewModels
         {
             if (parameter is FieldJobDisplayItem job)
             {
+                // Eğer iş montaj tamamlandı aşamasındaysa, doğrudan teslimat formunu aç
+                if (job.Status == JobStatus.InstallationCompleted && _readService != null)
+                {
+                    var vm = new DeliveryEditorViewModel(job.Id, _readService, _serviceJobCommandService, _toastService ?? new ToastService());
+                    if (await vm.InitializeAsync())
+                    {
+                        var window = new DeliveryEditorWindow(vm) { Owner = Application.Current.MainWindow };
+                        if (window.ShowDialog() == true)
+                        {
+                            job.Status = JobStatus.Delivered;
+                            FilteredFieldJobs?.Refresh();
+                            return;
+                        }
+                        return;
+                    }
+                }
+
                 var result = MessageBox.Show(
                     $"İşi tamamlamak istiyor musunuz?\n\n{job.JobNo} - {job.CustomerName}",
                     "İşi Tamamla",

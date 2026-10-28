@@ -1025,6 +1025,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <!-- Teslim başlamadıysa empty-state -->
@@ -1108,12 +1109,31 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Malzeme Varyansı (Planlanan vs. Gerçekleşen) -->
                     <Border Grid.Row="3" CornerRadius="8" Padding="14" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,10"
+                            Visibility="{Binding HasMaterialVariances, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="📦 MALZEME VARYANSI (TEKLİF vs. SAHA GERÇEKLEŞEN)" Style="{StaticResource SectionTitleStyle}"/>
+                            <DataGrid ItemsSource="{Binding MaterialVariances}" AutoGenerateColumns="False"
+                                      CanUserAddRows="False" IsReadOnly="True" MaxHeight="140"
+                                      Background="Transparent" BorderThickness="0" HeadersVisibility="Column">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Malzeme Adı" Binding="{Binding ProductName}" Width="*"/>
+                                    <DataGridTextColumn Header="Planlanan (Teklif)" Binding="{Binding PlannedQuantity, StringFormat={}{0:N2}}" Width="120"/>
+                                    <DataGridTextColumn Header="Gerçekleşen (Saha)" Binding="{Binding ActualQuantity, StringFormat={}{0:N2}}" Width="120"/>
+                                    <DataGridTextColumn Header="Fark (Varyans)" Binding="{Binding VarianceDisplay}" Width="110"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="4" CornerRadius="8" Padding="14" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                             BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="📄 BELGELER" Style="{StaticResource SectionTitleStyle}"/>
                             <TextBlock Text="Fatura; kabul edilmiş teklif kalemleri, işçilik, nakliye ve KDV üzerinden üretilir. Servis raporu; iş künyesi, keşif, montaj ve teslim özetini birleştirir."
-                                       FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                        FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
                             <ItemsControl ItemsSource="{Binding DocumentActions}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -1134,7 +1154,7 @@
                     </Border>
 
                     <!-- Teslim işlemi (AllowedActions'tan) -->
-                    <Grid Grid.Row="4">
+                    <Grid Grid.Row="5">
                         <ItemsControl ItemsSource="{Binding Actions}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -1152,7 +1172,7 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </Grid>
-                    <TextBlock Grid.Row="5" Text="{Binding StatusLine}" FontSize="11"
+                    <TextBlock Grid.Row="6" Text="{Binding StatusLine}" FontSize="11"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
                 </Grid>
                 </ScrollViewer>
