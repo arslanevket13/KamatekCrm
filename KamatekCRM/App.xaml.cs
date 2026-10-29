@@ -24,6 +24,8 @@ using Microsoft.Extensions.Configuration;
 
 using KamatekCrm.Configuration;
 
+using KamatekCrm.Diagnostics.Core;
+
 using Serilog;
 
 using Wpf.Ui.Appearance;
@@ -172,6 +174,10 @@ namespace KamatekCrm
 
             LoggingConfiguration.ConfigureLogging();
 
+            // Oturum boyunca taşınacak korelasyon kimliği. UI işlemleri kendi kapsamlarını
+            // açtığında bu değer geçici olarak ezilir (CorrelationContext.BeginScope).
+            CorrelationContext.Set(CorrelationContext.NewId("APP"));
+
             
 
             try
@@ -206,7 +212,9 @@ namespace KamatekCrm
 
                 _host = Host.CreateDefaultBuilder()
 
-                    .UseSerilog()
+                    // dispose:false → logger'ı host değil, App.OnExit sonundaki Log.CloseAndFlush() kapatır.
+                    // Aksi halde _host.Dispose() sonrası yazılan kapanış logları kaybolur.
+                    .UseSerilog(dispose: false)
 
                     .ConfigureAppConfiguration((context, config) =>
 
@@ -292,13 +300,8 @@ namespace KamatekCrm
 
 
 
-                // Global WPF exception handler'ları kur
-
-                DispatcherUnhandledException += OnDispatcherUnhandledException;
-
-                AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-
-                TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+                // Exception handler'lar App() kurucusunda bir kez bağlanır.
+                // Burada tekrar bağlanırsa her hata iki kez loglanır ve iki kez bildirim gösterilir.
 
 
 
@@ -555,6 +558,13 @@ namespace KamatekCrm
             var exception = args.ExceptionObject as Exception;
 
             Log.Fatal(exception, "Unhandled domain exception - IsTerminating: {IsTerminating}", args.IsTerminating);
+
+            // Kapanmadan önce redakte edilmiş küçük bir çökme izi bırak (dump değil).
+            var crashArtifact = CrashArtifactWriter.Write(exception, "AppDomain.UnhandledException", args.IsTerminating);
+            if (crashArtifact != null)
+            {
+                Log.Debug("Crash artifact written: {Path}", crashArtifact);
+            }
 
 
 

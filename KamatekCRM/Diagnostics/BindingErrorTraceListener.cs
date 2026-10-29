@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
+using KamatekCrm.Diagnostics.Core;
 
 namespace KamatekCrm.Diagnostics
 {
@@ -37,6 +38,10 @@ namespace KamatekCrm.Diagnostics
 
             // Tüm bağlama hataları geliştirme çıktısına gider (VS Output → Debug).
             Debug.WriteLine($"[WPF Binding] {message}");
+
+            // Aşama 2: bağlama hataları yalnız Debug penceresinde kaybolmasın;
+            // sınırlı tanılama tamponuna da yazılır (Dev Center → XAML/Binding sekmesi).
+            PublishToDiagnosticStore(message);
 
             // Çökme sınıfı kullanıcıya görünür olmalı.
             if (!message.Contains(TwoWayReadOnlyMarker, StringComparison.Ordinal))
@@ -75,6 +80,38 @@ namespace KamatekCrm.Diagnostics
                     // Mesaj kutusu gösterilemezse sessizce geç — Debug çıktısı zaten yazıldı.
                 }
             }));
+        }
+
+        /// <summary>
+        /// Bağlama hatasını sınırlı tanılama tamponuna yazar. Tanılama kapalıysa veya
+        /// yazma başarısız olursa sessizce geçer; bağlama akışı etkilenmez.
+        /// </summary>
+        private static void PublishToDiagnosticStore(string message)
+        {
+            if (!DiagnosticRuntime.Options.CaptureBindingErrors)
+            {
+                return;
+            }
+
+            try
+            {
+                DiagnosticRuntime.Store?.Publish(new DiagnosticEvent
+                {
+                    Level = DiagnosticLevel.Warning,
+                    Module = "WPF.Binding",
+                    Message = LogRedactor.RedactAndTruncate(message, 2000),
+                    EventCode = message.Contains(TwoWayReadOnlyMarker, StringComparison.Ordinal)
+                        ? "WPF_BINDING_TWOWAY"
+                        : "WPF_BINDING",
+                    CorrelationId = CorrelationContext.Current,
+                    ThreadId = Environment.CurrentManagedThreadId,
+                    ProcessId = Environment.ProcessId
+                });
+            }
+            catch
+            {
+                // Tanılama hatası bağlama akışını etkilemez.
+            }
         }
     }
 }

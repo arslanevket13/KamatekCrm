@@ -148,6 +148,10 @@
             <converters:DateDisplayConverter x:Key="DateDisplay"/>
             <converters:SensitiveDataConverter x:Key="SensitiveData"/>
             <converters:InverseBooleanConverter x:Key="InverseBoolConverter"/>
+            <converters:SafeIntConverter x:Key="SafeIntConverter"/>
+            <converters:SafeNullableIntConverter x:Key="SafeNullableIntConverter"/>
+            <converters:SafeDecimalConverter x:Key="SafeDecimalConverter"/>
+            <converters:StructureTypeDisplayConverter x:Key="StructureTypeDisplayConverter"/>
 
             <!-- TSF / IME Layout Hatası (0x80040206 - TS_E_NOLAYOUT) Önleyici Global Stiller -->
             <Style TargetType="{x:Type TextBox}">

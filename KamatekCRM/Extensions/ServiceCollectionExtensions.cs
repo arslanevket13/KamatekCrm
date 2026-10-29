@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Infrastructure;
 using KamatekCrm.Infrastructure.Data;
+using KamatekCrm.Diagnostics.Core;
 using KamatekCrm.Services;
 using KamatekCrm.Settings;
 using KamatekCrm.ViewModels;
@@ -73,6 +74,18 @@ namespace KamatekCrm.Extensions
             services.AddTransient<IInventoryDomainService, InventoryDomainService>();
             services.AddSingleton<IProductImageService, ProductImageService>();
 
+            // Diagnostics (Geliştirici Merkezi altyapısı)
+            // ConfigureLogging() App.OnStartup başında çalıştığı için örnekler hazırdır.
+            // Tanılama kapalıysa NullDiagnosticSink devreye girer; tüketiciler null kontrolü yapmaz.
+            services.AddSingleton<Configuration.DiagnosticOptions>(_ => DiagnosticRuntime.Options);
+            services.AddSingleton<IDiagnosticStore>(_ =>
+                (IDiagnosticStore?)DiagnosticRuntime.Store ?? NullDiagnosticSink.Instance);
+            services.AddSingleton<IDiagnosticSink>(sp =>
+                (IDiagnosticSink)sp.GetRequiredService<IDiagnosticStore>());
+
+            services.AddSingleton<Diagnostics.Authorization.DiagnosticAccessGuard>();
+            services.AddSingleton<DiagnosticDataService>();
+
             // Background & System Services
             services.AddTransient<ISlaService, SlaService>();
             services.AddTransient<IBackupService, BackupService>();
@@ -130,6 +143,19 @@ namespace KamatekCrm.Extensions
             services.AddTransient<CustomerInteractionsViewModel>();
             services.AddTransient<ManagerAgendaViewModel>();
 
+            // Geliştirici Merkezi (Dev Center) — sekmeler her açılışta taze örnek
+            services.AddTransient<ViewModels.DevCenter.OverviewTabViewModel>();
+            services.AddTransient<ViewModels.DevCenter.LiveLogsTabViewModel>();
+            services.AddTransient<ViewModels.DevCenter.ErrorCenterTabViewModel>();
+            services.AddTransient<ViewModels.DevCenter.CrashReportsTabViewModel>();
+            services.AddTransient<ViewModels.DevCenter.PerformanceTabViewModel>();
+            services.AddTransient<ViewModels.DevCenter.BindingIssuesTabViewModel>();
+            services.AddTransient<ViewModels.DevCenter.BuildAnalysisTabViewModel>();
+            services.AddTransient<ViewModels.DevCenter.AutomatedTestsTabViewModel>();
+            services.AddTransient<ViewModels.DevCenter.HealthTabViewModel>();
+            services.AddTransient<ViewModels.DevCenter.DiagnosticPackageTabViewModel>();
+            services.AddTransient<ViewModels.DevCenter.DevCenterViewModel>();
+
             // Windows
             services.AddTransient<Views.RepairTrackingWindow>();
             services.AddTransient<Views.FaultTicketWindow>();
@@ -143,6 +169,8 @@ namespace KamatekCrm.Extensions
             services.AddTransient<Views.QuickInteractionAddWindow>();
             services.AddTransient<Views.CustomerInteractionsView>();
             services.AddTransient<Views.ManagerAgendaView>();
+            services.AddTransient<Views.DevCenter.DevCenterWindow>();
+
 
             return services;
         }

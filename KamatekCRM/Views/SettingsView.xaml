@@ -50,13 +50,29 @@
 
         <!-- Header -->
         <Border Grid.Row="0" Margin="0,0,0,20">
-            <StackPanel Orientation="Horizontal">
-                <ui:SymbolIcon Symbol="Settings24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="SİSTEM VE YAPILANDIRMA AYARLARI" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
-                    <TextBlock Text="Firma bilgileri, görünüm, veritabanı yedekleme ve ağ yönetimi" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="Settings24" FontSize="26" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="SİSTEM VE YAPILANDIRMA AYARLARI" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                        <TextBlock Text="Firma bilgileri, görünüm, veritabanı yedekleme ve ağ yönetimi" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+
+                <!-- Yalnızca yetkili geliştirici hesaplarına görünür; yetki servis katmanında da denetlenir. -->
+                <ui:Button Grid.Column="1"
+                           Content="Geliştirici Merkezi"
+                           Appearance="Secondary"
+                           VerticalAlignment="Center"
+                           Command="{Binding OpenDevCenterCommand}"
+                           Visibility="{Binding IsDevCenterAvailable, Converter={StaticResource BoolToVis}}"
+                           ToolTip="Canlı loglar, hata merkezi, performans ve sağlık kontrolleri"/>
+            </Grid>
         </Border>
 
         <!-- Main Content (Left Tabs, Right Content) -->

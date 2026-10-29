@@ -42,6 +42,7 @@ public sealed class ApplicationAuthorizationService : IApplicationAuthorizationS
         ApplicationPermission.ViewCustomerIdentityData => "Müşteri kimlik ve vergi bilgileri",
         ApplicationPermission.ProcessReturns => "Satış ve satın alma iadesi",
         ApplicationPermission.ManageQuotes => "Proje teklifi yönetimi",
+        ApplicationPermission.AccessDiagnostics => "Geliştirici tanılama merkezi",
         _ => permission.ToString()
     };
 }

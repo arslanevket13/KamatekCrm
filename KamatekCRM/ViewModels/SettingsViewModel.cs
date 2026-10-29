@@ -35,6 +35,7 @@ namespace KamatekCrm.ViewModels
         private readonly IApplicationAuthorizationService _authorizationService;
         private readonly IRetailTransactionService _retailTransactions;
         private readonly Services.Update.IUpdateService? _updateService;
+        private readonly Diagnostics.Authorization.DiagnosticAccessGuard? _diagnosticGuard;
         private LegacyLedgerPreviewDto? _legacyLedgerPreview;
 
         public SettingsViewModel(
@@ -42,13 +43,17 @@ namespace KamatekCrm.ViewModels
             IApplicationAuthorizationService authorizationService,
             IBackupService backupService,
             IRetailTransactionService retailTransactions,
-            Services.Update.IUpdateService? updateService = null)
+            Services.Update.IUpdateService? updateService = null,
+            Diagnostics.Authorization.DiagnosticAccessGuard? diagnosticGuard = null)
         {
             _toastService = toastService;
             _authorizationService = authorizationService;
             _backupService = backupService;
             _retailTransactions = retailTransactions;
             _updateService = updateService;
+            // Guard null ise (DI dışı kurulum) buton gizli kalır: fail-closed.
+            _diagnosticGuard = diagnosticGuard;
+
             
             // Ayarları Properties.Settings.Default'tan yükle
             string savedThemeId = Properties.Settings.Default.ThemePreference;
@@ -256,6 +261,48 @@ namespace KamatekCrm.ViewModels
         #region Commands
 
         private bool IsNotBusy() => !IsBusy;
+
+        /// <summary>
+        /// Geliştirici Merkezi butonunun görünürlüğü. Yetki <see cref="Diagnostics.Authorization.DiagnosticAccessGuard"/>
+        /// üzerinden hesaplanır; menü gizleme tek başına güvenlik sayılmaz, servisler de ayrıca denetler.
+        /// </summary>
+        public bool IsDevCenterAvailable => _diagnosticGuard?.IsAuthorized == true;
+
+        /// <summary>
+        /// Geliştirici Merkezi'ni ayrı pencerede açar. Yetkisizse pencere hiç oluşturulmaz.
+        /// </summary>
+        [RelayCommand]
+        private void OpenDevCenter()
+        {
+            if (_diagnosticGuard is null)
+            {
+                _toastService?.ShowError("Geliştirici Merkezi kullanılamıyor", "Tanılama altyapısı bu oturumda yüklenmedi.");
+                return;
+            }
+
+            if (!_diagnosticGuard.IsAuthorized)
+            {
+                _toastService?.ShowError("Yetkisiz işlem", _diagnosticGuard.DenialReason);
+                return;
+            }
+
+            KamatekCrm.ViewModels.DevCenter.DevCenterViewModel? viewModel = null;
+            try
+            {
+                viewModel = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
+                    .GetRequiredService<KamatekCrm.ViewModels.DevCenter.DevCenterViewModel>(App.ServiceProvider);
+                var window = new KamatekCrm.Views.DevCenter.DevCenterWindow(viewModel);
+                window.Owner = System.Windows.Application.Current?.MainWindow;
+                window.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                // Pencere/XAML yükleme hatası ana uygulamayı düşürmemeli.
+                viewModel?.Dispose();
+                _toastService?.ShowError("Geliştirici Merkezi açılamadı", ex.Message);
+                System.Diagnostics.Debug.WriteLine($"Dev Center modal error: {ex}");
+            }
+        }
 
         /// <summary>
         /// Ağ Yönetimi sayfasına navigasyon yapar. (Modal Pencere olarak)

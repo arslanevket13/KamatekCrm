@@ -1,5 +1,6 @@
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
+using KamatekCrm.Configuration;
 
 namespace KamatekCrm.Services;
 
@@ -9,10 +10,12 @@ namespace KamatekCrm.Services;
 public sealed class DesktopCurrentUserContext : ICurrentUserContext
 {
     private readonly IAuthService _authService;
+    private readonly DiagnosticOptions? _diagnosticOptions;
 
-    public DesktopCurrentUserContext(IAuthService authService)
+    public DesktopCurrentUserContext(IAuthService authService, DiagnosticOptions? diagnosticOptions = null)
     {
         _authService = authService;
+        _diagnosticOptions = diagnosticOptions;
     }
 
     public bool IsAuthenticated => _authService.IsLoggedIn;
@@ -38,8 +41,24 @@ public sealed class DesktopCurrentUserContext : ICurrentUserContext
             ApplicationPermission.ViewCustomerIdentityData => _authService.CanViewFinance,
             ApplicationPermission.ProcessReturns => _authService.CanDeleteRecords,
             ApplicationPermission.ManageQuotes => HasRole("Technician") || HasRole("Personel"),
+            // Geliştirici Merkezi yalnızca appsettings → Diagnostics:DeveloperAccounts listesindekilere açıktır.
+            // Admin rolü tek başına yeterli değildir; bu ayrım bilinçli olarak yapılmıştır.
+            ApplicationPermission.AccessDiagnostics => IsListedDeveloperAccount(),
             _ => false
         };
+    }
+
+    private bool IsListedDeveloperAccount()
+    {
+        var username = _authService.CurrentUser?.Username;
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return false;
+        }
+
+        var accounts = _diagnosticOptions?.DeveloperAccounts;
+        return accounts is { Count: > 0 } &&
+               accounts.Any(account => string.Equals(account, username, StringComparison.OrdinalIgnoreCase));
     }
 
     public bool HasRole(string role) =>

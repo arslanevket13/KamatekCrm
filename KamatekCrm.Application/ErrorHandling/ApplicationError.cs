@@ -26,7 +26,7 @@ public record ApplicationError
             ? GetDefaultUserMessage(category) 
             : userMessage.Trim();
         CorrelationId = string.IsNullOrWhiteSpace(correlationId)
-            ? $"ERR-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid():N}[..8]"
+            ? $"ERR-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8]}"
             : correlationId;
         Code = code ?? category.ToString().ToUpperInvariant();
         ValidationErrors = validationErrors;
