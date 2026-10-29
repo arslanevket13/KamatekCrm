@@ -10,6 +10,8 @@
     </UserControl.Resources>
     
     <Grid Background="{DynamicResource SurfaceOverlayBrush}" 
+          IsHitTestVisible="True"
+          Panel.ZIndex="1000"
           Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
           d:Visibility="Visible">
         
@@ -18,7 +20,7 @@
                 Padding="24" 
                 HorizontalAlignment="Center" 
                 VerticalAlignment="Center"
-                Effect="{DynamicResource DropShadow}">
+                Effect="{DynamicResource Elevation2}">
             <StackPanel>
                 <!-- Spinner (Simple rotating circle using Path) -->
                 <Viewbox Width="50" Height="50" HorizontalAlignment="Center">

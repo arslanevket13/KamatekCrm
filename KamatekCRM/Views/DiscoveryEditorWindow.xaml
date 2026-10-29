@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="Keşif Raporu"
         Width="1180" Height="780"
-        MinWidth="1000" MinHeight="660"
+        MinWidth="1000" MinHeight="580"
         WindowStartupLocation="CenterOwner"
         AutomationProperties.Name="Keşif raporu düzenleme"
         Style="{DynamicResource PremiumWindowStyle}"
@@ -110,7 +110,7 @@
                                       HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                                       HorizontalGridLinesBrush="{DynamicResource BorderSubtleBrush}"
                                       Background="Transparent" BorderThickness="0" RowHeaderWidth="0" MinRowHeight="34"
-                                      AlternatingRowBackground="#0A000000" MaxHeight="200">
+                                      AlternatingRowBackground="{DynamicResource AlternatingRowBrush}" MaxHeight="200">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Malzeme" Binding="{Binding ProductName, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
                                     <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
@@ -248,7 +248,7 @@
                     </Border>
 
                     <!-- ── Tamamlama doğrulaması ── -->
-                    <Border Background="#14C61F25" BorderBrush="#33C61F25" BorderThickness="1" CornerRadius="10" Padding="14">
+                    <Border Background="{DynamicResource StatusErrorBg}" BorderBrush="{DynamicResource StatusErrorBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="14">
                         <StackPanel>
                             <TextBlock Text="✅ KEŞİF TAMAMLAMA DOĞRULAMASI" FontSize="13" FontWeight="Bold"
                                        Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>

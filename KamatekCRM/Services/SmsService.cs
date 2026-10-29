@@ -5,6 +5,11 @@ using System.Threading.Tasks;
 using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using KamatekCrm.Infrastructure.Data;
+using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Events;
 
 namespace KamatekCrm.Services
 {
@@ -13,6 +18,7 @@ namespace KamatekCrm.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<SmsService>? _logger;
         private readonly Microsoft.Extensions.Configuration.IConfiguration? _configuration;
+        private readonly IServiceProvider? _serviceProvider;
         
         private const string ApiUrl = "https://api.netgsm.com.tr/sms/send/json";
         private const string ApiKey = "YOUR_API_KEY_HERE";
@@ -22,11 +28,13 @@ namespace KamatekCrm.Services
         public SmsService(
             IHttpClientFactory httpClientFactory, 
             ILogger<SmsService>? logger = null,
-            Microsoft.Extensions.Configuration.IConfiguration? configuration = null)
+            Microsoft.Extensions.Configuration.IConfiguration? configuration = null,
+            IServiceProvider? serviceProvider = null)
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _logger = logger;
             _configuration = configuration;
+            _serviceProvider = serviceProvider;
         }
 
         public string ResolvedApiKey
@@ -57,7 +65,7 @@ namespace KamatekCrm.Services
         /// </summary>
         /// <param name="phoneNumber">Alıcı telefon numarası (5xxxxxxxxx formatı)</param>
         /// <param name="message">Gönderilecek mesaj</param>
-        public async Task SendSmsAsync(string phoneNumber, string message)
+        public async Task SendSmsAsync(string phoneNumber, string message, int? customerId = null)
         {
             try
             {
@@ -97,6 +105,29 @@ namespace KamatekCrm.Services
                 {
                     await Task.Delay(300);
                     _logger?.LogInformation("[SMS DEMO] → {CleanNumber}: {Message}", cleanNumber, message);
+                    if (customerId.HasValue && customerId.Value > 0 && _serviceProvider != null)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                using var scope = _serviceProvider.CreateScope();
+                                var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                                ctx.CustomerActivities.Add(new CustomerActivity
+                                {
+                                    CustomerId = customerId.Value,
+                                    Type = ActivityType.SmsSent,
+                                    Description = $"SMS Gönderildi ({cleanNumber}): {message}",
+                                    CreatedBy = "Sistem",
+                                    CreatedDate = DateTime.UtcNow
+                                });
+                                await ctx.SaveChangesAsync();
+                                EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
+                                    0, "SMS", customerId.Value, InteractionChangeType.Created));
+                            }
+                            catch { }
+                        });
+                    }
                 }
                 else
                 {
@@ -135,6 +166,29 @@ namespace KamatekCrm.Services
                         response.EnsureSuccessStatusCode();
                         var responseBody = await response.Content.ReadAsStringAsync();
                         _logger?.LogInformation("[SMS SENT] → {CleanNumber} | Response: {ResponseBody}", cleanNumber, responseBody);
+                        if (customerId.HasValue && customerId.Value > 0 && _serviceProvider != null)
+                        {
+                            _ = Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    using var scope = _serviceProvider.CreateScope();
+                                    var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                                    ctx.CustomerActivities.Add(new CustomerActivity
+                                    {
+                                        CustomerId = customerId.Value,
+                                        Type = ActivityType.SmsSent,
+                                        Description = $"SMS Gönderildi ({cleanNumber}): {message}",
+                                        CreatedBy = "Sistem",
+                                        CreatedDate = DateTime.UtcNow
+                                    });
+                                    await ctx.SaveChangesAsync();
+                                    EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
+                                        0, "SMS", customerId.Value, InteractionChangeType.Created));
+                                }
+                                catch { }
+                            });
+                        }
                     }
                 }
             }

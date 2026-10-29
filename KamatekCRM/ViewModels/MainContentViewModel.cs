@@ -288,6 +288,7 @@ namespace KamatekCrm.ViewModels
 
             // Global arama başlat
             SearchViewModel = _serviceProvider.GetRequiredService<GlobalSearchViewModel>();
+            SearchViewModel.ResultSelected += OnSearchResultSelected;
             _notificationService = _serviceProvider.GetRequiredService<NotificationService>();
 
             // Kayıtlı tercihleri yükle
@@ -493,6 +494,26 @@ namespace KamatekCrm.ViewModels
             System.Windows.Application.Current.Shutdown();
         }
         
+        /// <summary>
+        /// Global arama sonucuna tıklandığında ilgili modüle yönlendirir.
+        /// EntityType değerleri SearchService tarafından üretilir: Customer / Product / ServiceJob.
+        /// </summary>
+        private void OnSearchResultSelected(string entityType, int id)
+        {
+            switch (entityType)
+            {
+                case "Customer":
+                    NavigateToCustomerDetail(id);
+                    break;
+                case "Product":
+                    NavigateTo<ProductViewModel>();
+                    break;
+                case "ServiceJob":
+                    NavigateTo<ServiceJobViewModel>();
+                    break;
+            }
+        }
+
         /// <summary>
         /// Müşteri detay sayfasına geçiş
         /// </summary>

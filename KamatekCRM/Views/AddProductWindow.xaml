@@ -137,7 +137,7 @@
         </DockPanel>
 
         <!-- ════════ ROW 1: TABBED FORM BODY ════════ -->
-        <TabControl Grid.Row="1" Style="{DynamicResource ModernTabControl}" Background="Transparent" BorderThickness="0">
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
             
             <!-- 📌 TAB 1: TEMEL BİLGİLER -->
             <TabItem Header="📋 Temel Bilgiler">

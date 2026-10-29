@@ -9,59 +9,143 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="20,16,20,16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>   <!-- ROW 0: HEADER & SAYAÇLAR -->
+            <RowDefinition Height="Auto"/>   <!-- ROW 1: ALERT BANNER & FİLTRELER -->
+            <RowDefinition Height="*"/>      <!-- ROW 2: DATAGRID & DETAY PANELİ -->
         </Grid.RowDefinitions>
 
-        <!-- ROW 0: HEADER -->
-        <Grid Grid.Row="0" Margin="0,0,0,20">
+        <!-- ROW 0: HEADER & KPI SAYAÇLARI -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0" Orientation="Horizontal">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                 <ui:SymbolIcon Symbol="PersonStar24" FontSize="26" Foreground="{DynamicResource ThemeWarning}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Yönetici Gündemi &amp; Patron Takibi" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
-                    <TextBlock Text="Yönetici ilgisi gerektiren talepler, kritik şikâyetler ve patron görüşmeleri" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="Yönetici Gündemi &amp; Patron Takibi" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
+                    <TextBlock Text="Gecikmiş görevler (Overdue), SLA ihlalleri, randevular ve yönetici takipleri" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                 </StackPanel>
             </StackPanel>
 
-            <ui:Button Grid.Column="2" Content="Yenile" Icon="{ui:SymbolIcon ArrowSync24}"
-                       Command="{Binding LoadAgendaCommand}" Appearance="Secondary" Height="38" Padding="16,0" Cursor="Hand"/>
+            <!-- KPI sayaçları -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <!-- Geciken / Overdue -->
+                <Border CornerRadius="8" Padding="12,6" Margin="0,0,8,0" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ThemeError}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="Overdue"/>
+                    </Border.InputBindings>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding OverdueCount}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ThemeError}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="GECİKEN" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemeError}"/>
+                            <TextBlock Text="Overdue" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Kritik / SLA -->
+                <Border CornerRadius="8" Padding="12,6" Margin="0,0,8,0" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource StatusWarningFg}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="Critical"/>
+                    </Border.InputBindings>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding CriticalCount}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="KRİTİK / SLA" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
+                            <TextBlock Text="Yüksek Aciliyet" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Bugün -->
+                <Border CornerRadius="8" Padding="12,6" Margin="0,0,8,0" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="Today"/>
+                    </Border.InputBindings>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding TodayCount}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="BUGÜN" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                            <TextBlock Text="Takip / Randevu" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Tümü -->
+                <Border CornerRadius="8" Padding="12,6" Cursor="Hand"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                    <Border.InputBindings>
+                        <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="All"/>
+                    </Border.InputBindings>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding TotalPendingCount}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="TÜMÜ" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="Aktif Gündem" FontSize="9" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:Button Content="Yenile" Icon="{ui:SymbolIcon ArrowSync24}"
+                           Command="{Binding LoadAgendaCommand}" Appearance="Secondary" Height="36" Padding="14,0" Cursor="Hand"/>
+            </StackPanel>
         </Grid>
 
-        <!-- ROW 1: ALERT BANNER -->
-        <Border Grid.Row="1" Background="{DynamicResource StatusWarningBg}" CornerRadius="10" Padding="14" Margin="0,0,0,16"
-                BorderBrush="{DynamicResource StatusWarningFg}" BorderThickness="1">
-            <StackPanel Orientation="Horizontal">
-                <ui:SymbolIcon Symbol="Warning24" FontSize="20" Foreground="{DynamicResource StatusWarningFg}" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                <TextBlock Text="Bu ekran yalnızca yüksek öncelikli, şikâyet bildiren veya özel patron görüşmesi talep eden müşterileri listeler."
-                           FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFg}" VerticalAlignment="Center"/>
+        <!-- ROW 1: ALERT BANNER & KULLANICI FİLTRESİ -->
+        <Grid Grid.Row="1" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="10,8" Margin="0,0,12,0"
+                    BorderBrush="{DynamicResource StatusWarningFg}" BorderThickness="1">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="Warning24" FontSize="18" Foreground="{DynamicResource StatusWarningFg}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Geçmişten kalan tamamlanmamış tüm takipler (Overdue Rollover) ve yaklaşan SLA süreleri otomatik önceliklendirilmiştir."
+                               FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource StatusWarningFg}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Personel Filtresi (Admin için) -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                        Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="Sorumlu:" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <ComboBox ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}" DisplayMemberPath="AdSoyad"
+                          Width="160" Height="34" VerticalAlignment="Center"/>
             </StackPanel>
-        </Border>
+        </Grid>
 
         <!-- ROW 2: DATAGRID & DETAIL PANEL -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="340"/>
+                <ColumnDefinition Width="360"/>
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" Margin="0,0,16,0" CornerRadius="12" Padding="0"
                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-                <DataGrid ItemsSource="{Binding AgendaItems}"
+                <DataGrid x:Name="AgendaDataGrid" ItemsSource="{Binding AgendaItems}"
                           SelectedItem="{Binding SelectedAgendaItem}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           SelectionMode="Single"
-                          RowHeight="54"
+                          RowHeight="50"
                           Background="Transparent" BorderThickness="0"
                           GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                           AlternatingRowBackground="{DynamicResource HoverOverlayBrush}">
@@ -72,7 +156,7 @@
                             <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                             <Setter Property="FontWeight" Value="Bold"/>
                             <Setter Property="FontSize" Value="11"/>
-                            <Setter Property="Padding" Value="12,8"/>
+                            <Setter Property="Padding" Value="10,6"/>
                             <Setter Property="BorderThickness" Value="0,0,0,1"/>
                             <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
                         </Style>
@@ -80,7 +164,8 @@
 
                     <DataGrid.CellStyle>
                         <Style TargetType="DataGridCell">
-                            <Setter Property="Padding" Value="12,0"/>
+                            <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
+                            <Setter Property="Padding" Value="10,0"/>
                             <Setter Property="BorderThickness" Value="0"/>
                             <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
                             <Setter Property="Template">
@@ -96,49 +181,115 @@
                     </DataGrid.CellStyle>
 
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="No" Binding="{Binding InteractionNumber}" Width="120"/>
-                        <DataGridTextColumn Header="Arayan / Müşteri" Binding="{Binding CallerName}" Width="160"/>
-                        <DataGridTextColumn Header="Konu" Binding="{Binding Subject}" Width="*" MinWidth="180"/>
-                        <DataGridTextColumn Header="Öncelik" Binding="{Binding Priority}" Width="90"/>
-                        <DataGridTextColumn Header="Durum" Binding="{Binding Status}" Width="100"/>
-                        <DataGridTextColumn Header="Tarih" Binding="{Binding InteractionDate, StringFormat={}{0:dd.MM.yyyy HH:mm}}" Width="120"/>
+                        <DataGridTextColumn Header="Kod / No" Binding="{Binding InteractionNumber}" Width="110"/>
+                        <DataGridTextColumn Header="Öncelik" Binding="{Binding PriorityLevel}" Width="85">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding PriorityLevel}" Value="Critical">
+                                            <Setter Property="Foreground" Value="{DynamicResource ThemeError}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding PriorityLevel}" Value="High">
+                                            <Setter Property="Foreground" Value="{DynamicResource StatusWarningFg}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding PriorityLevel}" Value="Normal">
+                                            <Setter Property="Foreground" Value="{DynamicResource ThemeSuccess}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Müşteri / İlgili" Binding="{Binding CallerName}" Width="150"/>
+                        <DataGridTextColumn Header="Konu &amp; Görev" Binding="{Binding Subject}" Width="*" MinWidth="180"/>
+                        <DataGridTextColumn Header="Gecikme / Durum" Binding="{Binding OverdueText, TargetNullValue='Zamanında'}" Width="110">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource ThemeError}"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Takip Tarihi" Binding="{Binding FollowUpDate, StringFormat={}{0:dd.MM.yyyy HH:mm}, TargetNullValue='—'}" Width="120"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
 
-            <Border Grid.Column="1" CornerRadius="12" Padding="20"
+            <components:KmEmptyState Grid.Column="0" Panel.ZIndex="1"
+                                     Icon="&#xE7EF;" Title="Gündem Maddesi Yok"
+                                     Message="Seçili filtrelerle eşleşen gündem maddesi yok."
+                                     AutomationProperties.Name="Gündem listesi boş"
+                                     Visibility="{Binding HasItems, ElementName=AgendaDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
+
+            <!-- SAĞ DETAY VE AKSİYON PANELİ -->
+            <Border Grid.Column="1" CornerRadius="12" Padding="18"
                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                 <Grid>
                     <components:KmEmptyState Icon="&#xE7EF;" Title="Gündem Maddesi Seçilmedi"
-                                             Message="Yönetici notlarını ve aksiyonları görmek için listeden bir kayıt seçin."
+                                             Message="Yönetici notlarını, SLA durumunu ve eylemleri görmek için listeden bir kayıt seçin."
                                              Visibility="{Binding HasSelectedItem, Converter={StaticResource InvertedBoolToVis}}"/>
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding HasSelectedItem, Converter={StaticResource BoolToVis}}">
                         <StackPanel DataContext="{Binding SelectedAgendaItem}">
-                            <TextBlock Text="{Binding InteractionNumber}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource ThemeWarning}"/>
-                            <TextBlock Text="{Binding Subject}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,2,0,4"/>
-                            <TextBlock Text="{Binding CallerName, StringFormat='Arayan: {0}'}" FontSize="13" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,14"/>
-
-                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,14"/>
-
-                            <TextBlock Text="GÖRÜŞME ÖZETİ" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            <TextBlock Text="{Binding Summary}" FontSize="13" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,4,0,14"/>
-
-                            <TextBlock Text="YÖNETİCİYE ÖZEL NOT" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
-                            <TextBlock Text="{Binding ManagerNotes, TargetNullValue='Özel not eklenmemiş'}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,4,0,14"/>
-
-                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,14"/>
-
-                            <StackPanel>
-                                <ui:Button Content="İncelendi Olarak İşaretle" Icon="{ui:SymbolIcon Eye24}"
-                                           Command="{Binding DataContext.MarkAsSeenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                           Appearance="Secondary" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
-
-                                <ui:Button Content="Sonuçlandır ve Kapat" Icon="{ui:SymbolIcon Checkmark24}"
-                                           Command="{Binding DataContext.ResolveAgendaCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                           Appearance="Success" Height="36" HorizontalAlignment="Stretch" Cursor="Hand"/>
+                            <!-- Üst Başlık -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="{Binding InteractionNumber}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center"/>
+                                <Border CornerRadius="4" Padding="6,2" Margin="8,0,0,0" Background="{DynamicResource SurfacePageBrush}" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding PriorityLevel}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
+                                </Border>
                             </StackPanel>
+
+                            <TextBlock Text="{Binding Subject}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,2,0,4"/>
+                            <TextBlock Text="{Binding CallerName, StringFormat='İlgili: {0}'}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                            <TextBlock Text="{Binding CallerPhone, StringFormat='Tel: {0}'}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
+
+                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,10"/>
+
+                            <!-- Özet -->
+                            <TextBlock Text="GÖREV / TALEP AÇIKLAMASI" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,4,0,10"/>
+
+                            <!-- Yönetici Notu -->
+                            <TextBlock Text="YÖNETİCİYE ÖZEL NOT" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
+                            <TextBlock Text="{Binding ManagerNotes, TargetNullValue='Özel not girilmemiş'}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" TextWrapping="Wrap" Margin="0,4,0,12"/>
+
+                            <Separator Background="{DynamicResource BorderSubtleBrush}" Margin="0,0,0,12"/>
+
+                            <!-- HIZLI EYLEMLER -->
+                            <TextBlock Text="EYLEMLER" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+
+                            <!-- Tamamla -->
+                            <ui:Button Content="Görevi Tamamla ve Kapat" Icon="{ui:SymbolIcon Checkmark24}"
+                                       Command="{Binding DataContext.CompleteItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                       Appearance="Success" Height="34" Margin="0,0,0,6" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
+                            <!-- Ertele (+1 Gün) -->
+                            <ui:Button Content="Yarına Ertele (+1 Gün)" Icon="{ui:SymbolIcon Clock24}"
+                                       Command="{Binding DataContext.SnoozeItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                       CommandParameter="1"
+                                       Appearance="Secondary" Height="32" Margin="0,0,0,6" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
+                            <!-- 1 Hafta Ertele (+7 Gün) -->
+                            <ui:Button Content="1 Hafta Ertele (+7 Gün)" Icon="{ui:SymbolIcon CalendarClock24}"
+                                       Command="{Binding DataContext.SnoozeItemCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                       CommandParameter="7"
+                                       Appearance="Secondary" Height="32" Margin="0,0,0,6" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
+                            <!-- Kayda Git / Detay Aç -->
+                            <ui:Button Content="Kayda Git / Müşteri Detayı Aç" Icon="{ui:SymbolIcon Open24}"
+                                       Command="{Binding DataContext.NavigateToSourceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                       Appearance="Primary" Height="32" Margin="0,0,0,6" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
+                            <!-- İncelendi Olarak İşaretle -->
+                            <ui:Button Content="İncelendi Olarak İşaretle" Icon="{ui:SymbolIcon Eye24}"
+                                       Command="{Binding DataContext.MarkAsSeenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                       Appearance="Secondary" Height="30" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>

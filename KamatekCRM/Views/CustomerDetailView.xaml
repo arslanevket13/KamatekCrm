@@ -66,19 +66,19 @@
                             <!-- Segment -->
                             <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0"
                                     Background="{Binding Segment, Converter={StaticResource SegmentToColorConverter}, FallbackValue=Transparent}">
-                                <TextBlock Text="{Binding Segment, FallbackValue='Segment Yok'}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextInverseBrush}"/>
+                                <TextBlock Text="{Binding Segment, FallbackValue='Segment Yok'}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}"/>
                             </Border>
 
                             <!-- Sadakat Seviyesi -->
                             <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0" Background="{DynamicResource ThemeWarning}"
                                     Visibility="{Binding LoyaltyLevel, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}">
-                                <TextBlock Text="{Binding LoyaltyLevel, FallbackValue=VIP}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextInverseBrush}"/>
+                                <TextBlock Text="{Binding LoyaltyLevel, FallbackValue=VIP}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}"/>
                             </Border>
 
                             <!-- Doğum Günü Yaklaşıyor -->
                             <Border CornerRadius="4" Padding="8,4" Background="{DynamicResource ThemeError}"
                                     Visibility="{Binding HasUpcomingBirthday, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <TextBlock Text="🎂 Doğum Günü Yaklaşıyor!" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextInverseBrush}"/>
+                                <TextBlock Text="🎂 Doğum Günü Yaklaşıyor!" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}"/>
                             </Border>
                         </StackPanel>
 
@@ -117,7 +117,7 @@
                     <!-- Actions Toolbar -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16" HorizontalAlignment="Right">
                         <Button Content="📄 Cari Ekstre (PDF)" Command="{Binding ExportAccountStatementPdfCommand}"
-                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" BorderThickness="0"
+                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}" BorderThickness="0"
                                 Padding="16,8" FontSize="14" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,16,0">
                             <Button.Resources>
                                 <Style TargetType="Border">
@@ -126,7 +126,7 @@
                             </Button.Resources>
                         </Button>
                         <Button Content="➕ Tahsilat Al" Command="{Binding AddPaymentCommand}"
-                                Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}" BorderThickness="0"
+                                Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextOnStatusBrush}" BorderThickness="0"
                                 Padding="16,8" FontSize="14" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,16,0">
                             <Button.Resources>
                                 <Style TargetType="Border">
@@ -135,7 +135,7 @@
                             </Button.Resources>
                         </Button>
                         <Button Content="➖ Borç Ekle" Command="{Binding AddDebtCommand}"
-                                Background="{DynamicResource StatusErrorFg}" Foreground="{DynamicResource TextInverseBrush}" BorderThickness="0"
+                                Background="{DynamicResource StatusErrorFg}" Foreground="{DynamicResource TextOnStatusBrush}" BorderThickness="0"
                                 Padding="16,8" FontSize="14" FontWeight="SemiBold" Cursor="Hand">
                             <Button.Resources>
                                 <Style TargetType="Border">

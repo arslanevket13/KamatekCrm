@@ -15,6 +15,12 @@ namespace KamatekCrm.ApplicationCore.Interfaces
             UpdateCustomerInteractionStatusDto dto,
             CancellationToken cancellationToken = default);
 
+        Task<Result> RescheduleAsync(
+            int interactionId,
+            DateTime newFollowUpDateUtc,
+            string? notes = null,
+            CancellationToken cancellationToken = default);
+
         Task<Result> AssignUserAsync(
             int interactionId,
             int userId,

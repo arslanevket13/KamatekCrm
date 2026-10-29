@@ -156,11 +156,13 @@
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                 <ui:Button Icon="{ui:SymbolIcon Subtract12}"
                                                            Command="{Binding DataContext.DecreaseLineQuantityCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                           CommandParameter="{Binding}" Height="26" Width="26" Padding="0" Appearance="Secondary" Cursor="Hand"/>
+                                                           CommandParameter="{Binding}" Height="26" Width="26" Padding="0" Appearance="Secondary" Cursor="Hand"
+                                                           AutomationProperties.Name="Miktarı azalt" ToolTip="Miktarı azalt"/>
                                                 <TextBlock Text="{Binding Quantity}" FontWeight="Bold" Margin="8,0" VerticalAlignment="Center"/>
                                                 <ui:Button Icon="{ui:SymbolIcon Add12}"
                                                            Command="{Binding DataContext.IncreaseLineQuantityCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                           CommandParameter="{Binding}" Height="26" Width="26" Padding="0" Appearance="Secondary" Cursor="Hand"/>
+                                                           CommandParameter="{Binding}" Height="26" Width="26" Padding="0" Appearance="Secondary" Cursor="Hand"
+                                                           AutomationProperties.Name="Miktarı artır" ToolTip="Miktarı artır"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -203,7 +205,7 @@
                                             <ui:Button Icon="{ui:SymbolIcon Delete24}"
                                                        Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                        CommandParameter="{Binding}"
-                                                       Appearance="Secondary" Height="28" Width="28" Padding="0" Foreground="#F44336" ToolTip="Listeden Çıkar" Cursor="Hand"/>
+                                                       Appearance="Secondary" Height="28" Width="28" Padding="0" Foreground="{DynamicResource ThemeError}" ToolTip="Listeden Çıkar" Cursor="Hand"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -219,7 +221,7 @@
                                 </DockPanel>
                                 <DockPanel Margin="0,0,0,6">
                                     <TextBlock Text="İskonto Toplamı:" Foreground="{DynamicResource ThemeTextSecondary}"/>
-                                    <TextBlock Text="{Binding TotalDiscount, StringFormat='{}-₺{0:N2}'}" HorizontalAlignment="Right" Foreground="#F44336"/>
+                                    <TextBlock Text="{Binding TotalDiscount, StringFormat='{}-₺{0:N2}'}" HorizontalAlignment="Right" Foreground="{DynamicResource ThemeError}"/>
                                 </DockPanel>
                                 <DockPanel Margin="0,0,0,8">
                                     <TextBlock Text="KDV Toplamı:" Foreground="{DynamicResource ThemeTextSecondary}"/>
@@ -240,7 +242,7 @@
         <!-- Product Search Drawer (Sidebar Popup when IsSidebarOpen = true) -->
         <Grid Visibility="{Binding IsSidebarOpen, Converter={StaticResource BooleanToVisibilityConverter}}" Panel.ZIndex="100">
             <!-- Dim Backdrop -->
-            <Border Background="#60000000">
+            <Border Background="{DynamicResource SurfaceOverlayBrush}">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding ToggleSidebarCommand}"/>
                 </Border.InputBindings>
@@ -261,7 +263,8 @@
 
                     <DockPanel Grid.Row="0" Margin="0,0,0,20">
                         <TextBlock Text="📦 Malzeme &amp; Hizmet Ekle" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}" VerticalAlignment="Center"/>
-                        <ui:Button Icon="{ui:SymbolIcon Dismiss24}" Command="{Binding ToggleSidebarCommand}" Appearance="Secondary" HorizontalAlignment="Right" Width="32" Height="32" Padding="0" Cursor="Hand"/>
+                        <ui:Button Icon="{ui:SymbolIcon Dismiss24}" Command="{Binding ToggleSidebarCommand}" Appearance="Secondary" HorizontalAlignment="Right" Width="32" Height="32" Padding="0" Cursor="Hand"
+                                   AutomationProperties.Name="Malzeme panelini kapat" ToolTip="Malzeme panelini kapat"/>
                     </DockPanel>
 
                     <!-- Search Input -->

@@ -190,7 +190,12 @@ namespace KamatekCrm.Infrastructure.Services
         public async Task<Result<List<CustomerInteractionDto>>> GetManagerAgendaAsync(CancellationToken cancellationToken = default)
         {
             await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-            var items = await context.CustomerInteractions
+            var nowUtc = DateTime.UtcNow;
+            var todayUtc = nowUtc.Date;
+            var agendaList = new List<CustomerInteractionDto>();
+
+            // 1. İletişim & Talep Kayıtları (Gecikmişler, Bugünküler, Yönetici İlgisi, Kritik Şikâyetler)
+            var interactions = await context.CustomerInteractions
                 .AsNoTracking()
                 .Where(i => i.IsActive &&
                             (i.RequiresManagerAttention || 
@@ -199,11 +204,173 @@ namespace KamatekCrm.Infrastructure.Services
                              (i.RequiresFollowUp && i.FollowUpDate.HasValue)) &&
                             i.Status != InteractionStatus.Completed &&
                             i.Status != InteractionStatus.Cancelled)
-                .OrderByDescending(i => i.Priority)
-                .ThenBy(i => i.FollowUpDate ?? i.InteractionDate)
                 .ToListAsync(cancellationToken);
 
-            return Result.Success(items.Select(MapToDto).ToList());
+            agendaList.AddRange(interactions.Select(MapToDto));
+
+            // 2. SLA Süresi Dolan veya İhlal Edilmiş Açık Servis İş Emirleri
+            var openJobs = await context.ServiceJobs
+                .AsNoTracking()
+                .Include(j => j.Customer)
+                .Where(j => j.Status != JobStatus.Completed && j.Status != JobStatus.Cancelled &&
+                            (j.SlaDeadline.HasValue || j.ScheduledDate.HasValue))
+                .ToListAsync(cancellationToken);
+
+            foreach (var job in openJobs)
+            {
+                // SLA Kontrolü (Duraklatılmış durumlar hariç)
+                if (job.SlaDeadline.HasValue)
+                {
+                    bool isPaused = job.Status == JobStatus.WaitingForParts || job.Status == JobStatus.WaitingForApproval;
+                    if (!isPaused)
+                    {
+                        if (job.SlaDeadline.Value < nowUtc)
+                        {
+                            var hours = (int)(nowUtc - job.SlaDeadline.Value).TotalHours;
+                            agendaList.Add(new CustomerInteractionDto
+                            {
+                                Id = -job.Id,
+                                SourceEntityId = job.Id,
+                                SourceType = "ServiceJob",
+                                InteractionNumber = $"SLA-{job.Id:D5}",
+                                CustomerId = job.CustomerId,
+                                CustomerName = job.Customer?.FullName ?? "Müşteri",
+                                CallerName = job.Customer?.FullName ?? "Müşteri",
+                                CallerPhone = job.Customer?.PhoneNumber ?? string.Empty,
+                                Subject = $"⚠️ SLA İHLALİ: {job.JobCategory} - {job.Description}",
+                                Summary = $"İş Emri #{job.Id}. Hedef SLA süresi {job.SlaDeadline:dd.MM.yyyy HH:mm} tarihinde aşıldı ({hours} saat gecikme).",
+                                ManagerNotes = "SLA ihlali yönetici müdahalesi gerektiriyor.",
+                                Priority = InteractionPriority.Critical,
+                                PriorityLevel = "Critical",
+                                PriorityScore = 250 + Math.Min(50, hours * 2),
+                                Status = InteractionStatus.New,
+                                IsOverdue = true,
+                                OverdueText = $"SLA İhlali ({hours} saat)",
+                                InteractionDate = job.CreatedDate,
+                                FollowUpDate = job.SlaDeadline
+                            });
+                        }
+                        else if ((job.SlaDeadline.Value - nowUtc).TotalHours <= 4)
+                        {
+                            var remainHours = Math.Max(1, (int)(job.SlaDeadline.Value - nowUtc).TotalHours);
+                            agendaList.Add(new CustomerInteractionDto
+                            {
+                                Id = -job.Id,
+                                SourceEntityId = job.Id,
+                                SourceType = "ServiceJob",
+                                InteractionNumber = $"SLA-RISK-{job.Id:D5}",
+                                CustomerId = job.CustomerId,
+                                CustomerName = job.Customer?.FullName ?? "Müşteri",
+                                CallerName = job.Customer?.FullName ?? "Müşteri",
+                                CallerPhone = job.Customer?.PhoneNumber ?? string.Empty,
+                                Subject = $"⏱️ SLA KRİTİK: {job.JobCategory} - {job.Description}",
+                                Summary = $"İş Emri #{job.Id} için SLA bitimine {remainHours} saat kaldı.",
+                                Priority = InteractionPriority.Critical,
+                                PriorityLevel = "Critical",
+                                PriorityScore = 180,
+                                Status = InteractionStatus.New,
+                                IsOverdue = false,
+                                InteractionDate = job.CreatedDate,
+                                FollowUpDate = job.SlaDeadline
+                            });
+                        }
+                    }
+                }
+
+                // Saha Randevusu Kontrolü
+                if (job.ScheduledDate.HasValue)
+                {
+                    if (job.ScheduledDate.Value.Date == todayUtc)
+                    {
+                        agendaList.Add(new CustomerInteractionDto
+                        {
+                            Id = -100000 - job.Id,
+                            SourceEntityId = job.Id,
+                            SourceType = "ServiceJob",
+                            InteractionNumber = $"RANDEVU-{job.Id:D5}",
+                            CustomerId = job.CustomerId,
+                            CustomerName = job.Customer?.FullName ?? "Müşteri",
+                            CallerName = job.Customer?.FullName ?? "Müşteri",
+                            CallerPhone = job.Customer?.PhoneNumber ?? string.Empty,
+                            Subject = $"📅 Bugünkü Saha Randevusu: {job.Customer?.FullName}",
+                            Summary = $"İş Emri #{job.Id}. Planlanan Saat: {job.ScheduledDate:HH:mm}. {job.Description}",
+                            Priority = InteractionPriority.High,
+                            PriorityLevel = "High",
+                            PriorityScore = 75,
+                            Status = InteractionStatus.Scheduled,
+                            IsOverdue = false,
+                            InteractionDate = job.CreatedDate,
+                            FollowUpDate = job.ScheduledDate
+                        });
+                    }
+                    else if (job.ScheduledDate.Value.Date < todayUtc)
+                    {
+                        var days = (int)(todayUtc - job.ScheduledDate.Value.Date).TotalDays;
+                        agendaList.Add(new CustomerInteractionDto
+                        {
+                            Id = -100000 - job.Id,
+                            SourceEntityId = job.Id,
+                            SourceType = "ServiceJob",
+                            InteractionNumber = $"GECIKEN-{job.Id:D5}",
+                            CustomerId = job.CustomerId,
+                            CustomerName = job.Customer?.FullName ?? "Müşteri",
+                            CallerName = job.Customer?.FullName ?? "Müşteri",
+                            CallerPhone = job.Customer?.PhoneNumber ?? string.Empty,
+                            Subject = $"⚠️ Gecikmiş Saha Randevusu: {job.Customer?.FullName}",
+                            Summary = $"İş Emri #{job.Id}. Planlanan tarih: {job.ScheduledDate:dd.MM.yyyy}. Randevu gerçekleştirilemedi.",
+                            Priority = InteractionPriority.Critical,
+                            PriorityLevel = "Critical",
+                            PriorityScore = 150 + Math.Min(30, days * 5),
+                            Status = InteractionStatus.Scheduled,
+                            IsOverdue = true,
+                            OverdueText = $"{days} gün gecikti",
+                            InteractionDate = job.CreatedDate,
+                            FollowUpDate = job.ScheduledDate
+                        });
+                    }
+                }
+            }
+
+            // 3. Uzun Süredir Onay Bekleyen Teklifler (7+ Gün)
+            var staleDate = nowUtc.AddDays(-7);
+            var staleProjects = await context.ServiceProjects
+                .AsNoTracking()
+                .Include(p => p.Customer)
+                .Where(p => p.PipelineStage == PipelineStage.Quoted && p.CreatedDate <= staleDate)
+                .Take(10)
+                .ToListAsync(cancellationToken);
+
+            foreach (var sp in staleProjects)
+            {
+                var days = (int)(nowUtc - sp.CreatedDate).TotalDays;
+                agendaList.Add(new CustomerInteractionDto
+                {
+                    Id = -200000 - sp.Id,
+                    SourceEntityId = sp.Id,
+                    SourceType = "QuoteApproval",
+                    InteractionNumber = $"TEKLIF-{sp.Id:D5}",
+                    CustomerId = sp.CustomerId,
+                    CustomerName = sp.Customer?.FullName ?? "Müşteri",
+                    CallerName = sp.Customer?.FullName ?? "Müşteri",
+                    CallerPhone = sp.Customer?.PhoneNumber ?? string.Empty,
+                    Subject = $"📄 Onay Bekleyen Fırsat: {sp.Title}",
+                    Summary = $"{sp.Customer?.FullName} için {sp.CreatedDate:dd.MM.yyyy} tarihinde oluşturulan teklif {days} gündür onay bekliyor.",
+                    Priority = InteractionPriority.Normal,
+                    PriorityLevel = "Normal",
+                    PriorityScore = 40 + Math.Min(20, days),
+                    Status = InteractionStatus.New,
+                    IsOverdue = false,
+                    InteractionDate = sp.CreatedDate
+                });
+            }
+
+            // Öncelik puanına ve ardından takip/etkileşim saatine göre sırala
+            var sortedList = agendaList
+                .OrderByDescending(x => x.PriorityScore)
+                .ThenBy(x => x.FollowUpDate ?? x.InteractionDate)
+                .ToList();
+
+            return Result.Success(sortedList);
         }
 
         public async Task<Result<List<CustomerInteractionDto>>> GetOverdueFollowUpsAsync(CancellationToken cancellationToken = default)
@@ -227,9 +394,49 @@ namespace KamatekCrm.Infrastructure.Services
 
         private static CustomerInteractionDto MapToDto(CustomerInteraction entity)
         {
+            var nowUtc = DateTime.UtcNow;
+            bool isOverdue = entity.RequiresFollowUp &&
+                             entity.FollowUpDate.HasValue &&
+                             entity.FollowUpDate.Value < nowUtc &&
+                             entity.Status != InteractionStatus.Completed &&
+                             entity.Status != InteractionStatus.Cancelled;
+
+            string? overdueText = null;
+            if (isOverdue)
+            {
+                var diff = nowUtc - entity.FollowUpDate!.Value;
+                if (diff.TotalDays >= 1)
+                    overdueText = $"{(int)diff.TotalDays} gün gecikti";
+                else
+                    overdueText = $"{(int)Math.Max(1, diff.TotalHours)} saat gecikti";
+            }
+
+            int score = 0;
+            if (entity.Priority == InteractionPriority.Critical) score += 100;
+            else if (entity.Priority == InteractionPriority.High) score += 60;
+            else score += 20;
+
+            if (isOverdue)
+            {
+                score += 100;
+                var hours = (int)(nowUtc - entity.FollowUpDate!.Value).TotalHours;
+                score += Math.Min(50, hours * 2);
+            }
+            else if (entity.FollowUpDate.HasValue && entity.FollowUpDate.Value.Date == nowUtc.Date)
+            {
+                score += 40;
+            }
+
+            if (entity.RequiresManagerAttention) score += 50;
+            if (entity.RequestType == InteractionRequestType.Complaint) score += 40;
+
+            string priorityLevel = score >= 120 ? "Critical" : (score >= 60 ? "High" : "Normal");
+
             return new CustomerInteractionDto
             {
                 Id = entity.Id,
+                SourceEntityId = entity.Id,
+                SourceType = "Interaction",
                 InteractionNumber = entity.InteractionNumber,
                 CustomerId = entity.CustomerId,
                 CustomerName = entity.CustomerName,
@@ -242,7 +449,11 @@ namespace KamatekCrm.Infrastructure.Services
                 Summary = entity.Summary,
                 DetailedNotes = entity.DetailedNotes,
                 Priority = entity.Priority,
-                Status = entity.Status,
+                PriorityScore = score,
+                PriorityLevel = priorityLevel,
+                Status = isOverdue ? InteractionStatus.Scheduled : entity.Status,
+                IsOverdue = isOverdue,
+                OverdueText = overdueText,
                 InteractionDate = entity.InteractionDate,
                 CreatedByUserId = entity.CreatedByUserId,
                 CreatedByUsername = entity.CreatedByUsername,

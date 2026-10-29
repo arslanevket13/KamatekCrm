@@ -69,7 +69,6 @@
     <SolidColorBrush x:Key="ThemeHover" Color="#111827" Opacity="0.04"/>
     <SolidColorBrush x:Key="ThemeHoverLight" Color="#111827" Opacity="0.06"/>
 
-    <SolidColorBrush x:Key="TextInverseBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="PrimaryForeground" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TextLinkBrush" Color="#2563EB"/>
@@ -128,6 +127,7 @@
 
     <SolidColorBrush x:Key="StatusErrorBg" Color="#EF4444" Opacity="0.10"/>
     <SolidColorBrush x:Key="StatusErrorFg" Color="#DC2626"/>
+    <SolidColorBrush x:Key="StatusErrorBorderBrush" Color="#C61F25" Opacity="0.20"/>
     <SolidColorBrush x:Key="StatusErrorBgLight" Color="#FEE2E2"/>
     <SolidColorBrush x:Key="StatusErrorFgLight" Color="#991B1B"/>
 
@@ -251,5 +251,19 @@
     <Color x:Key="KpiPurpleEndColor">#6D28D9</Color>
     <SolidColorBrush x:Key="KpiPurpleStartBrush" Color="{StaticResource KpiPurpleStartColor}"/>
     <SolidColorBrush x:Key="KpiPurpleEndBrush" Color="{StaticResource KpiPurpleEndColor}"/>
+
+    <!-- ─────────── SEMANTIC SUPPORT TOKENS ─────────── -->
+    <Color x:Key="ThemePrimaryLightColor">#DBEAFE</Color>
+    <Color x:Key="BorderDefaultColorValue">#E5E7EB</Color>
+    <Color x:Key="CardShadowColor">#0F172A</Color>
+    <SolidColorBrush x:Key="SurfaceOverlayBrush" Color="#0F172A" Opacity="0.35"/>
+    <SolidColorBrush x:Key="ThemeSuccessLight" Color="#D1FAE5"/>
+    <SolidColorBrush x:Key="ThemeWarningLight" Color="#FEF3C7"/>
+    <SolidColorBrush x:Key="ThemeErrorLight" Color="#FEE2E2"/>
+    <SolidColorBrush x:Key="ThemeInfoLight" Color="#DBEAFE"/>
+    <!-- Satır vurgusu: koyu temada 4% siyah görünmez olduğu için tema bazlı token -->
+    <SolidColorBrush x:Key="AlternatingRowBrush" Color="#0A000000"/>
+    <!-- Parlak durum zeminleri (yeşil/kırmızı/amber) üzerindeki metin: koyu -->
+    <SolidColorBrush x:Key="TextOnStatusBrush" Color="#0B1220"/>
 
 </ResourceDictionary>

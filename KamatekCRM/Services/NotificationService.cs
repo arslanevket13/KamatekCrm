@@ -75,6 +75,66 @@ namespace KamatekCrm.Services
                         });
                     }
                 }
+
+                // 3. Gecikmiş Müşteri Geri Dönüş ve Takipleri (Overdue Rollover)
+                var nowUtc = DateTime.UtcNow;
+                var overdueInteractions = await context.CustomerInteractions
+                    .AsNoTracking()
+                    .Where(i => i.IsActive &&
+                               i.RequiresFollowUp &&
+                               i.FollowUpDate.HasValue &&
+                               i.FollowUpDate.Value < nowUtc &&
+                               i.Status != InteractionStatus.Completed &&
+                               i.Status != InteractionStatus.Cancelled)
+                    .OrderBy(i => i.FollowUpDate)
+                    .Take(5)
+                    .ToListAsync();
+
+                foreach (var item in overdueInteractions)
+                {
+                    var key = $"INTERACTION_OVERDUE_{item.Id}_{nowUtc:yyyyMMdd}";
+                    if (!_readNotifications.Contains(key))
+                    {
+                        var diff = nowUtc - item.FollowUpDate!.Value;
+                        string timeStr = diff.TotalDays >= 1 ? $"{(int)diff.TotalDays} gündür" : $"{(int)Math.Max(1, diff.TotalHours)} saattir";
+                        notifications.Add(new NotificationItem
+                        {
+                            Id = key,
+                            Title = "Gecikmiş Müşteri Talebi",
+                            Message = $"{item.CallerName} - {item.Subject} ({timeStr} gecikmiş).",
+                            Type = NotificationType.Error,
+                            ActionLabel = "Gündeme Git"
+                        });
+                    }
+                }
+
+                // 4. SLA Süresi Aşılan Açık Servis İş Emirleri
+                var slaBreachedJobs = await context.ServiceJobs
+                    .AsNoTracking()
+                    .Include(j => j.Customer)
+                    .Where(j => j.Status != JobStatus.Completed && j.Status != JobStatus.Cancelled &&
+                                j.Status != JobStatus.WaitingForParts && j.Status != JobStatus.WaitingForApproval &&
+                                j.SlaDeadline.HasValue && j.SlaDeadline.Value < nowUtc)
+                    .OrderBy(j => j.SlaDeadline)
+                    .Take(5)
+                    .ToListAsync();
+
+                foreach (var job in slaBreachedJobs)
+                {
+                    var key = $"SLA_BREACH_{job.Id}_{nowUtc:yyyyMMdd}";
+                    if (!_readNotifications.Contains(key))
+                    {
+                        var hours = (int)(nowUtc - job.SlaDeadline!.Value).TotalHours;
+                        notifications.Add(new NotificationItem
+                        {
+                            Id = key,
+                            Title = "SLA Süresi Aşıldı!",
+                            Message = $"İş No: #{job.Id} ({job.Customer?.FullName ?? "Müşteri"}) SLA süresi {hours} saat aşıldı.",
+                            Type = NotificationType.Error,
+                            ActionLabel = "İncele"
+                        });
+                    }
+                }
             }
             catch (PostgresException pgEx)
             {

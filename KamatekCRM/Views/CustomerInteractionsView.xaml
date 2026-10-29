@@ -131,11 +131,11 @@
         <!-- ============================================================ -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MinWidth="310" MaxWidth="420"/>    <!-- Sol: Form -->
+                <ColumnDefinition Width="*" MinWidth="190" MaxWidth="420"/>    <!-- Sol: Form -->
                 <ColumnDefinition Width="Auto"/>                               <!-- Splitter -->
-                <ColumnDefinition Width="2*" MinWidth="380"/>                  <!-- Orta: Liste -->
+                <ColumnDefinition Width="2*" MinWidth="230"/>                  <!-- Orta: Liste -->
                 <ColumnDefinition Width="Auto"/>                               <!-- Splitter -->
-                <ColumnDefinition Width="*" MinWidth="250" MaxWidth="380"/>    <!-- Sağ: Bağlam -->
+                <ColumnDefinition Width="*" MinWidth="150" MaxWidth="380"/>    <!-- Sağ: Bağlam -->
             </Grid.ColumnDefinitions>
 
             <!-- ======================================================== -->
@@ -286,7 +286,7 @@
                     </StackPanel>
 
                     <!-- Ana DataGrid -->
-                    <DataGrid ItemsSource="{Binding Interactions}"
+                    <DataGrid x:Name="InteractionsDataGrid" ItemsSource="{Binding Interactions}"
                               SelectedItem="{Binding SelectedInteraction}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
@@ -312,6 +312,7 @@
 
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
+                                <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
                                 <Setter Property="Padding" Value="8,0"/>
                                 <Setter Property="BorderThickness" Value="0"/>
                                 <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
@@ -359,6 +360,12 @@
 
                 </DockPanel>
             </Border>
+
+            <components:KmEmptyState Grid.Column="2" Panel.ZIndex="1"
+                                     Icon="&#xE8A5;" Title="Görüşme Bulunamadı"
+                                     Message="Seçili filtrelerle eşleşen görüşme kaydı yok."
+                                     AutomationProperties.Name="Görüşme listesi boş"
+                                     Visibility="{Binding HasItems, ElementName=InteractionsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
 
             <!-- Orta-Sağ Splitter -->
             <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"
@@ -478,6 +485,11 @@
 
                             <ui:Button Content="Servis İşe Dönüştür" Icon="{ui:SymbolIcon Wrench24}"
                                        Command="{Binding ConvertToServiceJobCommand}"
+                                       Appearance="Secondary" Height="30" HorizontalAlignment="Stretch"
+                                       Cursor="Hand" Margin="0,0,0,4" FontSize="12"/>
+
+                            <ui:Button Content="Arıza Kaydına Dönüştür" Icon="{ui:SymbolIcon Warning24}"
+                                       Command="{Binding ConvertToFaultTicketCommand}"
                                        Appearance="Secondary" Height="30" HorizontalAlignment="Stretch"
                                        Cursor="Hand" FontSize="12"/>
 

@@ -215,6 +215,48 @@ namespace KamatekCrm.Infrastructure.Services
             }, cancellationToken: cancellationToken);
         }
 
+        public async Task<Result> RescheduleAsync(
+            int interactionId,
+            DateTime newFollowUpDateUtc,
+            string? notes = null,
+            CancellationToken cancellationToken = default)
+        {
+            var auth = _authorization.Authorize(ApplicationPermission.ViewCustomerContactData);
+            if (auth.IsFailure) return auth;
+
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            return await context.ExecuteInTransactionAsync(async transaction =>
+            {
+                var interaction = await context.CustomerInteractions
+                    .SingleOrDefaultAsync(i => i.Id == interactionId, cancellationToken);
+
+                if (interaction is null)
+                    return Result.Failure($"Görüşme kaydı bulunamadı (ID: {interactionId}).");
+
+                var oldFollowUp = interaction.FollowUpDate;
+                interaction.RequiresFollowUp = true;
+                interaction.FollowUpDate = DateTime.SpecifyKind(newFollowUpDateUtc, DateTimeKind.Utc);
+                interaction.Status = InteractionStatus.Scheduled;
+                interaction.ModifiedDate = DateTime.UtcNow;
+
+                context.CustomerInteractionHistories.Add(new CustomerInteractionHistory
+                {
+                    CustomerInteractionId = interaction.Id,
+                    PreviousStatus = interaction.Status,
+                    NewStatus = InteractionStatus.Scheduled,
+                    PreviousAssignedToUsername = interaction.AssignedToUsername,
+                    NewAssignedToUsername = interaction.AssignedToUsername,
+                    ChangedByUsername = _currentUser.Username,
+                    ChangedAt = DateTime.UtcNow,
+                    Reason = notes ?? $"Takip tarihi ertelendi: {newFollowUpDateUtc:dd.MM.yyyy HH:mm} (Önceki: {oldFollowUp:dd.MM.yyyy HH:mm})",
+                    Notes = notes
+                });
+
+                await context.SaveChangesAsync(cancellationToken);
+                return Result.Success();
+            }, cancellationToken: cancellationToken);
+        }
+
         public async Task<Result> AssignUserAsync(
             int interactionId,
             int userId,

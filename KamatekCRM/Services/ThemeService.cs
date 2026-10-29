@@ -60,11 +60,9 @@ namespace KamatekCrm.Services
                 var dictionaries = app.Resources.MergedDictionaries;
                 
                 // 3. Mevcut aktif temayı bul
-                var currentThemeDict = dictionaries.FirstOrDefault(d => 
-                    d.Source != null && 
-                    (d.Source.OriginalString.Contains("Resources/Themes/Theme.") || 
-                     d.Source.OriginalString.Contains("Resources/Themes/LightTheme.xaml") ||
-                     d.Source.OriginalString.Contains("Resources/Themes/DarkTheme.xaml")));
+                var currentThemeDict = dictionaries.FirstOrDefault(d =>
+                    d.Source != null &&
+                    d.Source.OriginalString.Contains("Resources/Themes/Theme."));
 
                 // Aynı temaya geçilmek isteniyorsa ve sözlük zaten yüklüyse işlemi atla
                 if (CurrentThemeName == themeName &&

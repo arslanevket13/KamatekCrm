@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:components="clr-namespace:KamatekCrm.Components"
              mc:Ignorable="d"
              Background="{DynamicResource ApplicationBackgroundBrush}"
              d:DesignHeight="600" d:DesignWidth="900">
@@ -118,7 +119,7 @@
                 <DropShadowEffect BlurRadius="10" Opacity="0.08" ShadowDepth="2"/>
             </Border.Effect>
             
-            <DataGrid ItemsSource="{Binding FilteredFieldJobs}"
+            <DataGrid x:Name="FieldJobsDataGrid" ItemsSource="{Binding FilteredFieldJobs}"
                       Style="{StaticResource ModernDataGrid}"
                       RowHeight="56"
                       BorderThickness="0"
@@ -275,6 +276,12 @@
                 </DataGrid.Columns>
             </DataGrid>
         </Border>
+
+        <components:KmEmptyState Grid.Row="3" Panel.ZIndex="1"
+                                 Icon="&#xE787;" Title="Saha İşi Bulunamadı"
+                                 Message="Seçili kategori ve filtrelerle eşleşen saha işi yok."
+                                 AutomationProperties.Name="Saha işleri listesi boş"
+                                 Visibility="{Binding HasItems, ElementName=FieldJobsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
 
         <!-- ===== FOOTER ===== -->
         <Border Grid.Row="4" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,8" Margin="0,16,0,0">

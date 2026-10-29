@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:components="clr-namespace:KamatekCrm.Components"
              Background="{DynamicResource ApplicationBackgroundBrush}">
 
     <UserControl.Resources>
@@ -43,12 +44,12 @@
 
         <!-- HEADER -->
         <Grid Grid.Row="0" Margin="0,0,0,24">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-            <StackPanel>
+            <StackPanel Grid.Row="0">
                 <StackPanel Orientation="Horizontal">
                     <ui:SymbolIcon Symbol="Money24" FontSize="28" Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,16,0"/>
                     <TextBlock Text="KASA / FİNANS" 
@@ -58,30 +59,30 @@
                            FontSize="14" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
             </StackPanel>
 
-            <!-- Tarih Kontrolleri -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+            <!-- Tarih Kontrolleri (dar pencerede sarılır) -->
+            <WrapPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,12,0,0">
                 <Button Content="◀" Command="{Binding PreviousDayCommand}"
                         Width="32" Height="32" FontSize="14"
                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
-                        Margin="0,0,4,0" Cursor="Hand"/>
+                        Margin="0,0,4,4" Cursor="Hand"/>
                 
                 <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}" 
-                            Width="140" VerticalAlignment="Center"
+                            Width="140" VerticalAlignment="Center" Margin="0,0,4,4"
                             Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"/>
                 
                 <Button Content="▶" Command="{Binding NextDayCommand}"
                         Width="32" Height="32" FontSize="14"
-                        Background="{DynamicResource ThemePrimaryDark}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
-                        Margin="4,0,16,0" Cursor="Hand"/>
+                        Background="{DynamicResource ThemePrimaryDark}" Foreground="{DynamicResource TextOnPrimaryBrush}" BorderThickness="0"
+                        Margin="0,0,16,4" Cursor="Hand"/>
 
                 <Button Content="📅 Bugün" Command="{Binding GoToTodayCommand}"
-                        Padding="16,4" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                        BorderThickness="0" Cursor="Hand" Margin="0,0,16,0"/>
+                        Padding="16,4" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}"
+                        BorderThickness="0" Cursor="Hand" Margin="0,0,16,4"/>
 
                 <CheckBox Content="Aylık Görünüm" 
                           IsChecked="{Binding ShowMonthly}" 
-                          Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-            </StackPanel>
+                          Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,0,4"/>
+            </WrapPanel>
         </Grid>
 
         <!-- SUMMARY CARDS -->
@@ -172,7 +173,7 @@
                 <Button Grid.Column="4" Content="💾 KAYDET" 
                         Command="{Binding AddExpenseCommand}"
                         Padding="24,14" FontSize="14" FontWeight="Bold"
-                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}" BorderThickness="0"
+                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}" BorderThickness="0"
                         VerticalAlignment="Bottom" Cursor="Hand">
                     <Button.Style>
                         <Style TargetType="Button">
@@ -229,7 +230,8 @@
                 </Grid>
 
                 <!-- DataGrid -->
-                <DataGrid Grid.Row="1" 
+                <DataGrid Grid.Row="1"
+                          x:Name="TransactionsDataGrid"
                           ItemsSource="{Binding FilteredTransactions}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
@@ -260,6 +262,7 @@
 
                     <DataGrid.CellStyle>
                         <Style TargetType="DataGridCell">
+                            <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
                             <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <Setter Property="BorderThickness" Value="0"/>
                             <Setter Property="Padding" Value="12,0"/>
@@ -365,6 +368,12 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <components:KmEmptyState Grid.Row="1" Panel.ZIndex="1"
+                                         Icon="&#xE8A5;" Title="Hareket Bulunamadı"
+                                         Message="Seçili dönem ve filtrelerle eşleşen kasa hareketi yok."
+                                         AutomationProperties.Name="Kasa hareketleri listesi boş"
+                                         Visibility="{Binding HasItems, ElementName=TransactionsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
             </Grid>
         </Border>
     </Grid>

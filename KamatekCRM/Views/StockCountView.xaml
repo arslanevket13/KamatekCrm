@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:KamatekCrm.Views"
              xmlns:converters="clr-namespace:KamatekCrm.Converters"
              xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
+             xmlns:components="clr-namespace:KamatekCrm.Components"
              mc:Ignorable="d"
              d:DesignHeight="750" d:DesignWidth="1100"
              d:DataContext="{d:DesignInstance Type=viewmodels:StockCountViewModel, IsDesignTimeCreatable=False}"
@@ -41,7 +42,7 @@
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{DynamicResource ThemePrimary}"/>
                                 <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
@@ -203,7 +204,7 @@
 
                             <!-- Filtreleme Sekmeleri (Fark Butonları) -->
                             <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,12,0,0"
-                                        Visibility="{Binding IsBarcodeScanMode, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Inverse}">
+                                        Visibility="{Binding IsBarcodeScanMode, Converter={StaticResource InvertedBoolToVis}}">
                                 <TextBlock Text="Hızlı Filtre:" VerticalAlignment="Center" FontWeight="Medium" Margin="0,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                 
                                 <Button Content="Tümü" Command="{Binding SetFilterModeCommand}" CommandParameter="All" Style="{StaticResource SecondaryButton}" Height="28" Margin="0,0,6,0" Padding="10,0"/>
@@ -217,7 +218,7 @@
 
                     <!-- Main DataGrid -->
                     <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="0">
-                        <DataGrid ItemsSource="{Binding CountItemsView}"
+                        <DataGrid x:Name="CountItemsDataGrid" ItemsSource="{Binding CountItemsView}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
                                   CanUserDeleteRows="False"
@@ -247,6 +248,7 @@
 
                             <DataGrid.CellStyle>
                                 <Style TargetType="DataGridCell">
+                                    <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
                                     <Setter Property="Padding" Value="8,6"/>
                                     <Setter Property="BorderThickness" Value="0"/>
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -399,6 +401,12 @@
                         </DataGrid>
                     </Border>
 
+                    <components:KmEmptyState Grid.Row="1" Panel.ZIndex="1"
+                                             Icon="&#xE8A5;" Title="Sayım Kalemi Yok"
+                                             Message="Bu sayıma ait ürün bulunamadı veya seçili filtreyle eşleşen kayıt yok."
+                                             AutomationProperties.Name="Sayım kalemleri listesi boş"
+                                             Visibility="{Binding HasItems, ElementName=CountItemsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
+
                     <!-- Summary Cards -->
                     <Grid Grid.Row="2" Margin="0,14,0,0">
                         <Grid.ColumnDefinitions>
@@ -535,7 +543,7 @@
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding ProductCode}" FontWeight="Bold" Width="100"/>
+                                                <TextBlock Text="{Binding ProductCode}" FontWeight="Bold" Width="100" TextTrimming="CharacterEllipsis" ToolTip="{Binding ProductCode}"/>
                                                 <TextBlock Text=" - "/>
                                                 <TextBlock Text="{Binding ProductName}"/>
                                             </StackPanel>
@@ -670,7 +678,7 @@
         </TabControl>
 
         <!-- History Modal Overlay -->
-        <Border Grid.RowSpan="2" Background="#80000000" Visibility="{Binding IsHistoryVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Border Grid.RowSpan="2" Background="{DynamicResource SurfaceOverlayBrush}" Visibility="{Binding IsHistoryVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" MaxWidth="750" MaxHeight="550" Margin="30" Padding="20">
                 <Grid>
                     <Grid.RowDefinitions>

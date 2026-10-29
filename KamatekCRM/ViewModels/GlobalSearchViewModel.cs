@@ -164,6 +164,25 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
+        /// Listeden sonuç seçildiğinde çağrılır (tıklama / klavye).
+        /// </summary>
+        [RelayCommand]
+        private void SelectResult(SearchResult? result)
+        {
+            if (result is null) return;
+
+            // Aynı sonuç nesnesi tekrar seçilirse SetProperty false döner ve
+            // navigasyon atlanır; bu durumda doğrudan yönlendiriyoruz.
+            if (ReferenceEquals(_selectedResult, result))
+            {
+                NavigateToResult(result);
+                return;
+            }
+
+            SelectedResult = result; // setter -> NavigateToResult
+        }
+
+        /// <summary>
         /// Sonuca git
         /// </summary>
         private void NavigateToResult(SearchResult result)

@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         Title="İş Emri &amp; Keşif Formu" 
         Width="1240" Height="820"
-        MinWidth="1040" MinHeight="680"
+        MinWidth="960" MinHeight="580"
         WindowStartupLocation="CenterOwner"
         AutomationProperties.Name="İş emri ve keşif formu"
         Style="{DynamicResource PremiumWindowStyle}"

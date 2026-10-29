@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
 using KamatekCrm.ApplicationCore.Services;
+using KamatekCrm.Events;
 
 namespace KamatekCrm.ViewModels
 {
@@ -111,6 +112,19 @@ namespace KamatekCrm.ViewModels
             Transactions = new ObservableCollection<Transaction>();
             SalesOrders = new ObservableCollection<SalesOrder>();
             Activities = new ObservableCollection<CustomerActivity>();
+
+            EventAggregator.Instance.Subscribe<CustomerInteractionChangedEvent>(OnInteractionChanged);
+        }
+
+        private void OnInteractionChanged(CustomerInteractionChangedEvent evt)
+        {
+            if (_customerId > 0 && evt.CustomerId == _customerId)
+            {
+                Application.Current?.Dispatcher.InvokeAsync(async () =>
+                {
+                    await LoadCustomerDataAsync();
+                });
+            }
         }
 
         public void Initialize(int customerId)

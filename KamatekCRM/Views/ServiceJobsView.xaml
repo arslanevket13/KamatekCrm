@@ -159,60 +159,67 @@
                 Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MinWidth="240"/>
+                    <ColumnDefinition Width="*" MinWidth="200"/>
                     <ColumnDefinition Width="8"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="8"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="8"/>
-                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="180"/>
                     <ColumnDefinition Width="8"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Serbest Arama -->
-                <ui:TextBox Grid.Column="0"
+                <ui:TextBox Grid.Row="0" Grid.Column="0"
                             PlaceholderText="İş Emri No, Müşteri Adı veya Açıklama Arayın..." 
                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
                             Icon="{ui:SymbolIcon Search24}" 
                             Height="32" VerticalAlignment="Center"/>
 
                 <!-- Durum Filtresi -->
-                <ComboBox Grid.Column="2" 
+                <ComboBox Grid.Row="0" Grid.Column="2" 
                           ItemsSource="{Binding StatusFilters}"
                           DisplayMemberPath="Label"
                           SelectedValuePath="Value" SelectedValue="{Binding SelectedStatusFilter}"
                           Height="32" VerticalAlignment="Center"/>
 
-                <!-- Başlangıç Tarihi -->
-                <DatePicker Grid.Column="4" SelectedDate="{Binding FilterStartDate}"
-                            Height="32" VerticalAlignment="Center" ToolTip="Başlangıç Tarihi"/>
-
-                <!-- Bitiş Tarihi -->
-                <DatePicker Grid.Column="6" SelectedDate="{Binding FilterEndDate}"
-                            Height="32" VerticalAlignment="Center" ToolTip="Bitiş Tarihi"/>
-
                 <!-- Filtreleri Temizle -->
-                <ui:Button Grid.Column="8" Content="Temizle" Icon="{ui:SymbolIcon Dismiss24}"
+                <ui:Button Grid.Row="0" Grid.Column="4" Content="Temizle" Icon="{ui:SymbolIcon Dismiss24}"
                            Command="{Binding ClearFiltersCommand}"
                            Appearance="Secondary" Height="32" Padding="10,0" VerticalAlignment="Center"/>
+
+                <!-- Tarih Aralığı (dar pencerede alt satıra alınır) -->
+                <Grid Grid.Row="1" Grid.ColumnSpan="5" Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <DatePicker Grid.Column="0" SelectedDate="{Binding FilterStartDate}"
+                                Height="32" VerticalAlignment="Center" ToolTip="Başlangıç Tarihi"/>
+
+                    <DatePicker Grid.Column="2" SelectedDate="{Binding FilterEndDate}"
+                                Height="32" VerticalAlignment="Center" ToolTip="Bitiş Tarihi"/>
+                </Grid>
             </Grid>
         </Border>
 
         <!-- ════════ ROW 2: 2-COLUMN SPLIT WORKSPACE ════════ -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2.5*" MinWidth="480"/> <!-- Sol: DataGrid (%72) -->
+                <ColumnDefinition Width="2.5*" MinWidth="280"/> <!-- Sol: DataGrid (%72) -->
                 <ColumnDefinition Width="Auto"/>               <!-- Splitter -->
-                <ColumnDefinition Width="*" MinWidth="300" MaxWidth="420"/> <!-- Sağ: Bağlam Paneli (%28) -->
+                <ColumnDefinition Width="*" MinWidth="220" MaxWidth="420"/> <!-- Sağ: Bağlam Paneli (%28) -->
             </Grid.ColumnDefinitions>
 
             <!-- ════════ SOL PANEL: İŞ EMİRİ LİSTESİ ════════ -->
             <Border Grid.Column="0" CornerRadius="8" Padding="0"
                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-                <DataGrid ItemsSource="{Binding ServiceJobsView}"
+                <DataGrid x:Name="ServiceJobsDataGrid" ItemsSource="{Binding ServiceJobsView}"
                           SelectedItem="{Binding SelectedServiceJob}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
@@ -366,6 +373,12 @@
                 </DataGrid>
             </Border>
 
+            <components:KmEmptyState Grid.Column="0" Panel.ZIndex="1"
+                                     Icon="&#xE8A5;" Title="İş Emri Bulunamadı"
+                                     Message="Arama ve filtre kriterlerine uygun iş emri yok. Filtreleri temizleyip yeniden deneyin."
+                                     AutomationProperties.Name="İş emirleri listesi boş"
+                                     Visibility="{Binding HasItems, ElementName=ServiceJobsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
+
             <!-- Splitter -->
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch"
                           Background="Transparent" Cursor="SizeWE"/>
@@ -376,7 +389,7 @@
                     BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                 <Grid>
                     <!-- Seçili İş Yoksa -->
-                    <components:KmEmptyState Icon="📋" Title="İş Emri Seçilmedi"
+                    <components:KmEmptyState Icon="&#xE8A5;" Title="İş Emri Seçilmedi"
                                              Message="Detaylarını incelemek ve işlem yapmak için sol listeden bir iş seçin."
                                              Visibility="{Binding SelectedServiceJob, Converter={StaticResource NullToVis}, ConverterParameter=Inverse}"/>
 

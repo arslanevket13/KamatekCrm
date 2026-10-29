@@ -7,6 +7,7 @@
              xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:converters="clr-namespace:KamatekCrm.Converters"
+             xmlns:components="clr-namespace:KamatekCrm.Components"
              mc:Ignorable="d" 
              d:DataContext="{d:DesignInstance Type=viewmodels:ProductViewModel, IsDesignTimeCreatable=False}"
              d:DesignHeight="750" d:DesignWidth="1100"
@@ -179,7 +180,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <DataGrid Grid.Row="0" ItemsSource="{Binding ProductsView}"
+                <DataGrid Grid.Row="0" x:Name="ProductsDataGrid" ItemsSource="{Binding ProductsView}"
                           SelectedItem="{Binding SelectedProduct}"
                           Style="{StaticResource AccessibleDataGrid}"
                           ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
@@ -248,25 +249,25 @@
                                     <Border CornerRadius="10" Padding="10,4" HorizontalAlignment="Center">
                                         <Border.Style>
                                             <Style TargetType="Border">
-                                                <Setter Property="Background" Value="#264CAF50"/>
+                                                <Setter Property="Background" Value="{DynamicResource ThemeSuccessLight}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding TotalStockQuantity}" Value="0">
-                                                        <Setter Property="Background" Value="#26F44336"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeErrorLight}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding TotalStockQuantity}" Value="1">
-                                                        <Setter Property="Background" Value="#26FF9800"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeWarningLight}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding TotalStockQuantity}" Value="2">
-                                                        <Setter Property="Background" Value="#26FF9800"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeWarningLight}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding TotalStockQuantity}" Value="3">
-                                                        <Setter Property="Background" Value="#26FF9800"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeWarningLight}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding TotalStockQuantity}" Value="4">
-                                                        <Setter Property="Background" Value="#26FF9800"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeWarningLight}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding TotalStockQuantity}" Value="5">
-                                                        <Setter Property="Background" Value="#26FF9800"/>
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeWarningLight}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -326,6 +327,12 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <components:KmEmptyState Grid.Row="0" Panel.ZIndex="1"
+                                         Icon="&#xE7B8;" Title="Ürün Bulunamadı"
+                                         Message="Arama veya filtre kriterlerinize uygun ürün yok. Filtreleri temizleyip yeniden deneyin."
+                                         AutomationProperties.Name="Ürün listesi boş"
+                                         Visibility="{Binding HasItems, ElementName=ProductsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
 
                 <!-- Status Message -->
                 <TextBlock Grid.Row="1" Text="{Binding StatusMessage}" Margin="0,12,0,0" FontWeight="Medium">

@@ -4,7 +4,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         Title="Hızlı Müşteri Görüşmesi &amp; Talep Kaydı"
         Width="580" Height="720"
-        MinWidth="520" MinHeight="620"
+        MinWidth="520" MinHeight="560"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
         Style="{DynamicResource PremiumWindowStyle}"

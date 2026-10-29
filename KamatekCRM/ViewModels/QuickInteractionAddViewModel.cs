@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.ApplicationCore.DTOs.CustomerInteractions;
 using KamatekCrm.ApplicationCore.DTOs.Users;
 using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.Events;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
@@ -272,32 +273,51 @@ namespace KamatekCrm.ViewModels
             _loadingService.Show();
             try
             {
+                DateTime? followUpUtc = null;
+                if (RequiresFollowUp || FollowUpDate.HasValue)
+                {
+                    var d = FollowUpDate ?? DateTime.Now.AddDays(1);
+                    followUpUtc = d.Kind switch
+                    {
+                        DateTimeKind.Utc => d,
+                        DateTimeKind.Local => d.ToUniversalTime(),
+                        _ => DateTime.SpecifyKind(d, DateTimeKind.Local).ToUniversalTime()
+                    };
+                }
+
                 var dto = new CreateCustomerInteractionDto
                 {
                     IdempotencyKey = Guid.NewGuid(),
                     CustomerId = _selectedCustomerId,
                     CustomerName = _selectedCustomerName,
-                    CallerName = CallerName,
-                    CallerPhone = CallerPhone,
+                    CallerName = CallerName.Trim(),
+                    CallerPhone = CallerPhone.Trim(),
                     Channel = SelectedChannel,
                     RequestType = SelectedRequestType,
-                    Subject = Subject,
-                    Summary = Summary,
-                    DetailedNotes = DetailedNotes,
+                    Subject = Subject.Trim(),
+                    Summary = Summary.Trim(),
+                    DetailedNotes = DetailedNotes?.Trim(),
                     Priority = SelectedPriority,
                     AssignedToUserId = SelectedUser?.Id,
                     AssignedToUsername = SelectedUser?.AdSoyad,
                     RequiresFollowUp = RequiresFollowUp || FollowUpDate.HasValue,
-                    FollowUpDate = (RequiresFollowUp || FollowUpDate.HasValue) ? FollowUpDate?.ToUniversalTime() : null,
+                    FollowUpDate = followUpUtc,
                     RequiresManagerAttention = RequiresManagerAttention,
-                    ManagerNotes = ManagerNotes
+                    ManagerNotes = ManagerNotes?.Trim()
                 };
 
                 var res = await _commandService.CreateAsync(dto);
-                if (res.IsSuccess)
+                if (res.IsSuccess && res.Value != null)
                 {
-                    _toastService.ShowSuccess("Başarılı", $"{res.Value?.InteractionNumber} numaralı görüşme kaydı oluşturuldu.");
+                    _toastService.ShowSuccess("Başarılı", $"{res.Value.InteractionNumber} numaralı görüşme kaydı oluşturuldu.");
                     await _commandService.ClearDraftAsync();
+
+                    // Diğer açık ViewModel'leri senkronize et
+                    EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
+                        res.Value.Id,
+                        res.Value.InteractionNumber,
+                        res.Value.CustomerId,
+                        InteractionChangeType.Created));
 
                     if (window != null)
                     {

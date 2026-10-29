@@ -112,7 +112,7 @@
             <Border Grid.Column="0" Margin="0,0,16,0" CornerRadius="12" Padding="0"
                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-                <DataGrid ItemsSource="{Binding Users}"
+                <DataGrid x:Name="UsersDataGrid" ItemsSource="{Binding Users}"
                           SelectedItem="{Binding SelectedUser}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
@@ -136,6 +136,7 @@
 
                     <DataGrid.CellStyle>
                         <Style TargetType="DataGridCell">
+                            <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
                             <Setter Property="Padding" Value="12,0"/>
                             <Setter Property="BorderThickness" Value="0"/>
                             <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
@@ -241,6 +242,12 @@
                 </DataGrid>
             </Border>
 
+            <components:KmEmptyState Grid.Column="0" Panel.ZIndex="1"
+                                     Icon="&#xE77B;" Title="Kullanıcı Bulunamadı"
+                                     Message="Arama kriterlerine uygun kullanıcı yok."
+                                     AutomationProperties.Name="Kullanıcı listesi boş"
+                                     Visibility="{Binding HasItems, ElementName=UsersDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
+
             <!-- RIGHT: SELECTED USER PROFILE PREVIEW CARD -->
             <Border Grid.Column="1" CornerRadius="12" Padding="20"
                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
@@ -249,7 +256,7 @@
                     <!-- Empty State when no user is selected -->
                     <components:KmEmptyState Icon="&#xE77B;" Title="Kullanıcı Seçilmedi"
                                              Message="Detaylarını görüntülemek ve işlem yapmak için listeden bir kullanıcı seçin."
-                                             Visibility="{Binding HasSelectedUser, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}"/>
+                                             Visibility="{Binding HasSelectedUser, Converter={StaticResource InvertedBoolToVis}}"/>
 
                     <!-- User Detail Content -->
                     <ScrollViewer VerticalScrollBarVisibility="Auto"

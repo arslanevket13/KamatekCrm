@@ -47,10 +47,10 @@
                         <Ellipse Width="10" Height="10" Margin="0,0,8,0">
                             <Ellipse.Style>
                                 <Style TargetType="Ellipse">
-                                    <Setter Property="Fill" Value="#EF4444"/>
+                                    <Setter Property="Fill" Value="{DynamicResource ThemeError}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsConnectionHealthy}" Value="True">
-                                            <Setter Property="Fill" Value="#22C55E"/>
+                                            <Setter Property="Fill" Value="{DynamicResource ThemeSuccess}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -392,6 +392,7 @@
 
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
+                                <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
                                 <Setter Property="Padding" Value="12,8"/>
                                 <Setter Property="BorderThickness" Value="0"/>
                                 <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
@@ -415,10 +416,10 @@
                                         <Ellipse Width="8" Height="8" HorizontalAlignment="Center">
                                             <Ellipse.Style>
                                                 <Style TargetType="Ellipse">
-                                                    <Setter Property="Fill" Value="#9CA3AF"/>
+                                                    <Setter Property="Fill" Value="{DynamicResource TextFillColorTertiaryBrush}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                            <Setter Property="Fill" Value="#22C55E"/>
+                                                            <Setter Property="Fill" Value="{DynamicResource ThemeSuccess}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>

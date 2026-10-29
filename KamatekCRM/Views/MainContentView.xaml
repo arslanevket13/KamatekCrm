@@ -11,7 +11,8 @@
     <!-- Keyboard Shortcuts -->
     <UserControl.InputBindings>
         <KeyBinding Modifiers="Ctrl" Key="K" Command="{Binding OpenQuickAddCommand}"/>
-        <KeyBinding Modifiers="Ctrl" Key="F" Command="{Binding OpenQuickAddCommand}"/>
+        <!-- Ctrl+F artık global aramaya odaklanır (code-behind: OnPreviewKeyDown).
+             Hızlı ekleme Ctrl+K ile erişilebilir kalır. -->
         <KeyBinding Modifiers="Ctrl" Key="B" Command="{Binding ToggleSidebarCommand}"/>
         <KeyBinding Modifiers="Ctrl" Key="D" Command="{Binding ToggleDarkModeCommand}"/>
         <KeyBinding Modifiers="Alt" Key="Left" Command="{Binding GoBackCommand}"/>
@@ -119,6 +120,32 @@
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Global Search Result Row (keyboard + mouse erişilebilir) -->
+        <Style x:Key="SearchResultItemStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="rowBg" Background="{TemplateBinding Background}" CornerRadius="6" Padding="10,8">
+                            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="rowBg" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="rowBg" Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -611,7 +638,6 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Left: Navigation Controls & Breadcrumb -->
@@ -629,11 +655,13 @@
                         <Path Data="{StaticResource HomeIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"/>
                         <TextBlock Text=" / " Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="6,0" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding CurrentViewTitle, TargetNullValue='Çalışma Alanı'}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"
+                                   MaxWidth="220" TextTrimming="CharacterEllipsis" ToolTip="{Binding CurrentViewTitle}"
                                    AutomationProperties.HeadingLevel="Level2"/>
                     </StackPanel>
 
                     <!-- Center / Right Status & Search & User Profile -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- WrapPanel: dar pencerede kontroller kırpılmak yerine alt satıra geçer -->
+                    <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         
                         <!-- Server Connection Status Pill -->
                         <Border CornerRadius="12" Padding="10,4" Margin="0,0,12,0" Background="{DynamicResource SurfacePageBrush}">
@@ -676,7 +704,7 @@
                         </Button>
 
                         <!-- Search Box - Spotlight Style -->
-                        <Border Width="260" CornerRadius="8" Background="{DynamicResource SurfacePageBrush}" Margin="0,0,12,0" Padding="8,0">
+                        <Border x:Name="SearchHost" Width="260" CornerRadius="8" Background="{DynamicResource SurfacePageBrush}" Margin="0,0,12,0" Padding="8,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -690,13 +718,96 @@
                                          Text="{Binding SearchViewModel.SearchQuery, UpdateSourceTrigger=PropertyChanged}"
                                          Background="Transparent" BorderThickness="0"
                                          VerticalAlignment="Center" Height="36" FontSize="13" Padding="0,6"
-                                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                         ToolTip="Global arama (Ctrl+F)"
+                                         AutomationProperties.Name="Global arama"
+                                         Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Escape" Command="{Binding SearchViewModel.ClearCommand}"/>
+                                    </TextBox.InputBindings>
+                                </TextBox>
                                 
                                 <Button Grid.Column="2" Command="{Binding SearchViewModel.ClearCommand}"
                                         Visibility="{Binding SearchViewModel.HasResults, Converter={StaticResource BoolToVis}}"
+                                        AutomationProperties.Name="Aramayı temizle"
                                         Background="Transparent" BorderThickness="0" Width="28" Height="28" Cursor="Hand">
                                     <Path Data="{StaticResource CloseIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="10" Height="10" Stretch="Uniform"/>
                                 </Button>
+
+                                <!-- Global Search Results -->
+                                <Popup x:Name="SearchResultsPopup"
+                                       IsOpen="{Binding SearchViewModel.ShowResults, Mode=TwoWay}"
+                                       StaysOpen="False"
+                                       Placement="Bottom"
+                                       PlacementTarget="{Binding ElementName=SearchHost}"
+                                       HorizontalOffset="-80"
+                                       VerticalOffset="6"
+                                       AllowsTransparency="True"
+                                       PopupAnimation="Fade">
+                                    <Border Width="420" MaxHeight="420" CornerRadius="12"
+                                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                            BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="24" Opacity="0.28" ShadowDepth="6"/>
+                                        </Border.Effect>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <Border Padding="14,10" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,0,0,1">
+                                                <DockPanel>
+                                                    <ui:ProgressRing DockPanel.Dock="Right" IsIndeterminate="True" Width="16" Height="16" Margin="8,0,0,0"
+                                                                     Visibility="{Binding SearchViewModel.IsSearching, Converter={StaticResource BoolToVis}}"/>
+                                                    <TextBlock Text="Arama Sonuçları" FontWeight="SemiBold" FontSize="12"
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                </DockPanel>
+                                            </Border>
+
+                                            <Grid Grid.Row="1">
+                                                <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                                    <ItemsControl ItemsSource="{Binding SearchViewModel.Results}" Margin="6">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Button Style="{StaticResource SearchResultItemStyle}"
+                                                                        Command="{Binding DataContext.SearchViewModel.SelectResultCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                        CommandParameter="{Binding}"
+                                                                        AutomationProperties.Name="{Binding Title}">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="Auto"/>
+                                                                            <ColumnDefinition Width="*"/>
+                                                                            <ColumnDefinition Width="Auto"/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13"
+                                                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                                                       TextTrimming="CharacterEllipsis"/>
+                                                                            <TextBlock Text="{Binding Subtitle}" FontSize="11"
+                                                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                                                       TextTrimming="CharacterEllipsis"/>
+                                                                        </StackPanel>
+                                                                        <Border Grid.Column="2" Background="{Binding CategoryColor}" CornerRadius="8"
+                                                                                Padding="8,3" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                                            <TextBlock Text="{Binding Category}" FontSize="10" FontWeight="SemiBold"
+                                                                                       Foreground="{DynamicResource TextOnPrimaryBrush}"/>
+                                                                        </Border>
+                                                                    </Grid>
+                                                                </Button>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </ScrollViewer>
+
+                                                <TextBlock Text="Sonuç bulunamadı. Farklı bir anahtar kelime deneyin."
+                                                           Margin="24,20" TextWrapping="Wrap" TextAlignment="Center"
+                                                           FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                           Visibility="{Binding SearchViewModel.ShowNoResults, Converter={StaticResource BoolToVis}}"/>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </Popup>
                             </Grid>
                         </Border>
 
@@ -711,7 +822,7 @@
                                                 <Border Background="{DynamicResource ThemeError}" CornerRadius="9" Width="16" Height="16" 
                                                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-4,-4,0"
                                                         Visibility="{Binding NotificationCount, Converter={StaticResource IntToVis}}">
-                                                    <TextBlock Text="{Binding NotificationCount}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="9" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding NotificationCount}" Foreground="{DynamicResource TextOnPrimaryBrush}" FontSize="9" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                             </Grid>
                                         </Border>
@@ -737,7 +848,8 @@
                                         <Border Padding="16,12" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,0,0,1">
                                             <DockPanel>
                                                 <TextBlock Text="Bildirimler" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                                                <Button Command="{Binding RefreshNotificationsCommand}" HorizontalAlignment="Right" Cursor="Hand" Style="{StaticResource GlassIconButton}" Width="28" Height="28">
+                                                <Button Command="{Binding RefreshNotificationsCommand}" HorizontalAlignment="Right" Cursor="Hand" Style="{StaticResource GlassIconButton}" Width="28" Height="28"
+                                                        AutomationProperties.Name="Bildirimleri yenile" ToolTip="Bildirimleri yenile">
                                                     <Path Data="{StaticResource RefreshIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="14" Height="14" Stretch="Uniform"/>
                                                 </Button>
                                             </DockPanel>
@@ -751,7 +863,7 @@
                                                                 <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                                 <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,4,0,8" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                                 <Button Content="{Binding ActionLabel}" Height="26" FontSize="11" HorizontalAlignment="Right" Padding="12,0"
-                                                                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
+                                                                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}" BorderThickness="0"
                                                                         Command="{Binding ActionCommand}"/>
                                                             </StackPanel>
                                                         </Border>
@@ -848,7 +960,7 @@
                                 </Border>
                             </Popup>
                         </Grid>
-                    </StackPanel>
+                    </WrapPanel>
                 </Grid>
             </Border>
 
@@ -870,7 +982,7 @@
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <ui:ProgressRing IsIndeterminate="True" Width="64" Height="64" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,24"/>
                 <TextBlock Text="Ana sunucu ile bağlantı kesildi. Yeniden bağlanılıyor..." 
-                           Foreground="{DynamicResource TextInverseBrush}" FontSize="20" FontWeight="SemiBold" 
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontSize="20" FontWeight="SemiBold" 
                            HorizontalAlignment="Center" Margin="0,0,0,8"/>
                 <TextBlock Text="Lütfen bekleyin, bağlantı sağlandığında ekran otomatik açılacaktır." 
                            Foreground="{DynamicResource ThemeForegroundMuted}" FontSize="14" 
@@ -880,7 +992,7 @@
                     <Button Content="Ayarları Aç"
                             Command="{Binding GoToSettingsCommand}"
                             Style="{DynamicResource ModernButton}"
-                            Foreground="{DynamicResource TextInverseBrush}"
+                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                             BorderBrush="{DynamicResource ThemeBorder}"
                             Background="{DynamicResource ThemeSurface}"
                             Padding="24,8" Margin="0,0,8,0"
@@ -890,7 +1002,7 @@
                             Command="{Binding ForceMainServerCommand}"
                             Visibility="{Binding IsForceServerButtonVisible, Converter={StaticResource BoolToVis}}"
                             Background="{DynamicResource StatusErrorFg}"
-                            Foreground="{DynamicResource TextInverseBrush}"
+                            Foreground="{DynamicResource TextOnStatusBrush}"
                             BorderThickness="0" Padding="24,8" FontWeight="SemiBold"
                             HorizontalAlignment="Center" Cursor="Hand"/>
                 </StackPanel>

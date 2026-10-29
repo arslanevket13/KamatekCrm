@@ -53,7 +53,6 @@
     <SolidColorBrush x:Key="ThemeForegroundMuted" Color="#CBD5E1"/>
     <SolidColorBrush x:Key="ThemeHover" Color="#FFFFFF" Opacity="0.08"/>
 
-    <SolidColorBrush x:Key="TextInverseBrush" Color="#0F172A"/>
     <SolidColorBrush x:Key="TextOnPrimaryBrush" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="PrimaryForeground" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TextLinkBrush" Color="#818CF8"/>
@@ -97,6 +96,7 @@
     <SolidColorBrush x:Key="StatusWarningFgDark" Color="#FCD34D"/>
     <SolidColorBrush x:Key="StatusErrorBg"   Color="#F87171" Opacity="0.15"/>
     <SolidColorBrush x:Key="StatusErrorFg"   Color="#FCA5A5"/>
+    <SolidColorBrush x:Key="StatusErrorBorderBrush" Color="#FCA5A5" Opacity="0.30"/>
     <SolidColorBrush x:Key="StatusInfoBg"    Color="#60A5FA" Opacity="0.15"/>
     <SolidColorBrush x:Key="StatusInfoFg"    Color="#93C5FD"/>
 
@@ -226,5 +226,18 @@
     <Color x:Key="KpiPurpleEndColor">#9333EA</Color>
     <SolidColorBrush x:Key="KpiPurpleStartBrush" Color="{StaticResource KpiPurpleStartColor}"/>
     <SolidColorBrush x:Key="KpiPurpleEndBrush" Color="{StaticResource KpiPurpleEndColor}"/>
+
+    <!-- ─────────── SEMANTIC SUPPORT TOKENS ─────────── -->
+    <Color x:Key="ThemePrimaryLightColor">#312E81</Color>
+    <Color x:Key="BorderDefaultColorValue">#3B4266</Color>
+    <Color x:Key="CardShadowColor">#000000</Color>
+    <SolidColorBrush x:Key="SurfaceOverlayBrush" Color="#050B18" Opacity="0.60"/>
+    <SolidColorBrush x:Key="ThemeSuccessLight" Color="#34D399" Opacity="0.18"/>
+    <SolidColorBrush x:Key="ThemeWarningLight" Color="#FBBF24" Opacity="0.18"/>
+    <SolidColorBrush x:Key="ThemeErrorLight" Color="#F87171" Opacity="0.18"/>
+    <SolidColorBrush x:Key="ThemeInfoLight" Color="#60A5FA" Opacity="0.18"/>
+    <!-- Satır vurgusu: koyu zeminde beyaz %8 (siyah %4 görünmez) -->
+    <SolidColorBrush x:Key="AlternatingRowBrush" Color="#14FFFFFF"/>
+    <SolidColorBrush x:Key="TextOnStatusBrush" Color="#0B1220"/>
 
 </ResourceDictionary>

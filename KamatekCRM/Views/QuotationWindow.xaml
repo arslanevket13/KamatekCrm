@@ -6,7 +6,7 @@
         xmlns:views="clr-namespace:KamatekCrm.Views"
         mc:Ignorable="d"
         Title="Fiyat Teklifi" Height="820" Width="1150"
-        MinHeight="650" MinWidth="900"
+        MinHeight="580" MinWidth="900"
         WindowStartupLocation="CenterOwner"
         Style="{DynamicResource PremiumWindowStyle}"
         Background="{DynamicResource SurfacePageBrush}">

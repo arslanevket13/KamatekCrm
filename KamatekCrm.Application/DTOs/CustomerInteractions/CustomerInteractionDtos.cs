@@ -36,6 +36,12 @@ namespace KamatekCrm.ApplicationCore.DTOs.CustomerInteractions
         public string? RelatedEntityNumber { get; set; }
         public bool IsDraft { get; set; }
         public DateTime CreatedDate { get; set; }
+        public bool IsOverdue { get; set; }
+        public string? OverdueText { get; set; }
+        public int PriorityScore { get; set; }
+        public string PriorityLevel { get; set; } = "Normal";
+        public string? SourceType { get; set; } = "Interaction";
+        public int? SourceEntityId { get; set; }
     }
 
     public class CreateCustomerInteractionDto

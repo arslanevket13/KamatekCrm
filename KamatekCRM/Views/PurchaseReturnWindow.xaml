@@ -1,6 +1,6 @@
 <Window x:Class="KamatekCrm.Views.PurchaseReturnWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Satın Alma Geçmişi ve İade" Width="1100" Height="720" MinWidth="900" MinHeight="620"
+        Title="Satın Alma Geçmişi ve İade" Width="1100" Height="720" MinWidth="900" MinHeight="580"
         WindowStartupLocation="CenterOwner" Style="{StaticResource PremiumWindowStyle}">
     <Grid Margin="20">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>

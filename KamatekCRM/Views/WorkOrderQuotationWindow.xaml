@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="Fiyat Teklifi" 
         Width="1180" Height="760"
-        MinWidth="980" MinHeight="640"
+        MinWidth="960" MinHeight="580"
         WindowStartupLocation="CenterOwner"
         AutomationProperties.Name="Fiyat teklifi düzenleme"
         Style="{DynamicResource PremiumWindowStyle}"
@@ -72,13 +72,13 @@
 
         <!-- ── Kilit rozeti (salt okunur mod) ── -->
         <Border Grid.Row="1" CornerRadius="8" Padding="12,9" Margin="0,0,0,10"
-                Background="#14C61F25" BorderBrush="#33C61F25" BorderThickness="1"
+                Background="{DynamicResource StatusErrorBg}" BorderBrush="{DynamicResource StatusErrorBorderBrush}" BorderThickness="1"
                 Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVis}}">
             <StackPanel>
                 <TextBlock Text="{Binding ViewModeBannerText}" FontSize="12.5" FontWeight="SemiBold"
-                           Foreground="#C61F25" TextWrapping="Wrap"/>
+                           Foreground="{DynamicResource StatusErrorFg}" TextWrapping="Wrap"/>
                 <TextBlock Text="{Binding ViewingRevisionDisplay}" FontSize="11.5"
-                           Foreground="#8A1E22" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                           Foreground="{DynamicResource StatusErrorFg}" TextWrapping="Wrap" Margin="0,2,0,0"/>
             </StackPanel>
         </Border>
 
@@ -119,7 +119,7 @@
                               HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                               HorizontalGridLinesBrush="{DynamicResource BorderSubtleBrush}"
                               Background="Transparent" BorderThickness="0" RowHeaderWidth="0" MinRowHeight="38"
-                              AlternatingRowBackground="#0A000000" SelectionMode="Single">
+                              AlternatingRowBackground="{DynamicResource AlternatingRowBrush}" SelectionMode="Single">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Malzeme / Hizmet" Binding="{Binding ProductName}" Width="*"/>
                             <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="55"/>
@@ -204,7 +204,7 @@
                                            FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Right" Margin="0,0,4,0"/>
                             </Grid>
 
-                            <Border Background="#14C61F25" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                            <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="12" Margin="0,10,0,0">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -213,7 +213,7 @@
                                     <TextBlock Text="GENEL TOPLAM" FontWeight="Bold" FontSize="14"
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                     <TextBlock Grid.Column="1" Text="{Binding TotalAmount, StringFormat={}{0:N2} ₺}"
-                                               FontWeight="Bold" FontSize="16" Foreground="#C61F25"/>
+                                               FontWeight="Bold" FontSize="16" Foreground="{DynamicResource StatusErrorFg}"/>
                                 </Grid>
                             </Border>
                         </StackPanel>
@@ -263,9 +263,9 @@
                                                                    Foreground="{DynamicResource TextHeadingBrush}"/>
                                                         <TextBlock Text="{Binding StatusDisplay}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                                    Margin="8,0,0,0" VerticalAlignment="Center"/>
-                                                        <Border CornerRadius="3" Padding="5,1" Background="#14C61F25" Margin="8,0,0,0"
+                                                        <Border CornerRadius="3" Padding="5,1" Background="{DynamicResource StatusErrorBg}" Margin="8,0,0,0"
                                                                 Visibility="{Binding IsCurrent, Converter={StaticResource BoolToVis}}">
-                                                            <TextBlock Text="GÜNCEL" FontSize="9" FontWeight="Bold" Foreground="#C61F25" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="GÜNCEL" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource StatusErrorFg}" VerticalAlignment="Center"/>
                                                         </Border>
                                                     </StackPanel>
                                                     <TextBlock Text="{Binding IssuedDate, StringFormat='{}{0:dd.MM.yyyy}'}" FontSize="10.5"

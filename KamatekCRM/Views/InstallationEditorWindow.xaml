@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Montaj Emri"
         Width="980" Height="760"
-        MinWidth="860" MinHeight="620"
+        MinWidth="860" MinHeight="580"
         WindowStartupLocation="CenterOwner"
         Style="{DynamicResource PremiumWindowStyle}"
         Background="{DynamicResource SurfacePageBrush}">
@@ -105,7 +105,7 @@
                                   IsReadOnly="{Binding IsCompleted}" Background="Transparent" BorderThickness="0"
                                   RowHeaderWidth="0" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                                   HorizontalGridLinesBrush="{DynamicResource BorderSubtleBrush}" MinRowHeight="32"
-                                  MaxHeight="200" AlternatingRowBackground="#0A000000">
+                                  MaxHeight="200" AlternatingRowBackground="{DynamicResource AlternatingRowBrush}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Malzeme" Binding="{Binding ProductName, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
                                 <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="70"/>

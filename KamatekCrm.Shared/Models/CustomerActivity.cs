@@ -98,6 +98,11 @@ namespace KamatekCrm.Shared.Models
         EmailSent = 32,
 
         /// <summary>
+        /// SMS gönderildi
+        /// </summary>
+        SmsSent = 33,
+
+        /// <summary>
         /// Not eklendi
         /// </summary>
         NoteAdded = 40,

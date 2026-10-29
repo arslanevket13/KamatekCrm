@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="Hızlı Kabul &amp; Arıza Kaydı" 
         Width="1200" Height="750"
-        MinWidth="1040" MinHeight="680"
+        MinWidth="960" MinHeight="580"
         WindowStartupLocation="CenterOwner"
         Style="{StaticResource PremiumWindowStyle}">
 
@@ -458,7 +458,7 @@
                             Height="44" Padding="20,0" FontSize="14" Margin="0,0,16,0"/>
                     
                     <Button Command="{Binding SaveFaultTicketCommand}"
-                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
+                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}"
                             Height="44" Padding="28,0" FontSize="15" FontWeight="SemiBold"
                             BorderThickness="0">
                         <Button.Content>

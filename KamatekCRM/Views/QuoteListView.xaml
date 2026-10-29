@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:converters="clr-namespace:KamatekCrm.Converters"
+             xmlns:components="clr-namespace:KamatekCrm.Components"
              Background="{DynamicResource SurfacePageBrush}">
 
     <UserControl.Resources>
@@ -218,7 +219,7 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <DataGrid Grid.Row="0"
+                <DataGrid Grid.Row="0" x:Name="QuotesDataGrid"
                           ItemsSource="{Binding QuotesView}"
                           SelectedItem="{Binding SelectedQuote}"
                           Style="{StaticResource AccessibleDataGrid}"
@@ -352,6 +353,12 @@
                         <DataGridTextColumn Header="Oluşturma" Binding="{Binding CreatedDate, Converter={StaticResource DateConverter}}" Width="100"/>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <components:KmEmptyState Grid.Row="0" Panel.ZIndex="1"
+                                         Icon="&#xE8A5;" Title="Teklif Bulunamadı"
+                                         Message="Henüz teklif oluşturulmamış veya seçili filtrelerle eşleşen teklif yok."
+                                         AutomationProperties.Name="Teklif listesi boş"
+                                         Visibility="{Binding HasItems, ElementName=QuotesDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
 
                 <!-- Durum Mesajı -->
                 <TextBlock Grid.Row="1" Text="{Binding StatusMessage}" FontSize="11"

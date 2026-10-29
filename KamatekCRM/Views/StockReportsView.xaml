@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:KamatekCrm.Views"
              xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
+             xmlns:components="clr-namespace:KamatekCrm.Components"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1100"
              d:DataContext="{d:DesignInstance Type=viewmodels:StockReportsViewModel, IsDesignTimeCreatable=False}"
@@ -119,7 +120,7 @@
 
         <!-- DataGrid -->
         <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="0">
-            <DataGrid ItemsSource="{Binding Transactions}"
+            <DataGrid x:Name="TransactionsDataGrid" ItemsSource="{Binding Transactions}"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       CanUserAddRows="False"
@@ -145,6 +146,7 @@
 
                 <DataGrid.CellStyle>
                     <Style TargetType="DataGridCell">
+                        <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
                         <Setter Property="Padding" Value="10,6"/>
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -304,6 +306,12 @@
                 </DataGrid.Columns>
             </DataGrid>
         </Border>
+
+        <components:KmEmptyState Grid.Row="2" Panel.ZIndex="1"
+                                 Icon="&#xE8A5;" Title="Hareket Bulunamadı"
+                                 Message="Seçili kriterlerle eşleşen stok hareketi yok."
+                                 AutomationProperties.Name="Stok hareketleri listesi boş"
+                                 Visibility="{Binding HasItems, ElementName=TransactionsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
 
         <!-- Summary Cards -->
         <Grid Grid.Row="3" Margin="0,16,0,0">

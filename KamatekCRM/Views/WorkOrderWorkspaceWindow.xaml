@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="İş Emri Çalışma Alanı"
         Width="1150" Height="780"
-        MinWidth="980" MinHeight="640"
+        MinWidth="960" MinHeight="580"
         WindowStartupLocation="CenterOwner"
         AutomationProperties.Name="İş emri çalışma alanı"
         Style="{DynamicResource PremiumWindowStyle}"
@@ -126,7 +126,7 @@
             <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Severity}" Value="Critical">
-                    <Setter Property="Background" Value="#1AFF6B6B"/>
+                    <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Severity}" Value="Action">
                     <Setter Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
@@ -734,7 +734,7 @@
                                           MaxHeight="150" Background="Transparent" BorderThickness="0" RowHeaderWidth="0"
                                           HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                                           HorizontalGridLinesBrush="{DynamicResource BorderSubtleBrush}" MinRowHeight="30"
-                                          AlternatingRowBackground="#0A000000">
+                                          AlternatingRowBackground="{DynamicResource AlternatingRowBrush}">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Malzeme / Hizmet" Binding="{Binding ProductName}" Width="*"/>
                                         <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity}" Width="60"/>
@@ -1202,9 +1202,9 @@
                                             <StackPanel>
                                                 <DockPanel Margin="0,0,0,6">
                                                     <TextBlock DockPanel.Dock="Left" Text="{Binding Glyph}" FontSize="16" VerticalAlignment="Center"/>
-                                                    <Border DockPanel.Dock="Right" CornerRadius="3" Padding="5,1" Background="#14C61F25"
+                                                    <Border DockPanel.Dock="Right" CornerRadius="3" Padding="5,1" Background="{DynamicResource StatusErrorBg}"
                                                             Visibility="{Binding IsAvailable, Converter={StaticResource BoolToVis}}">
-                                                        <TextBlock Text="✓ HAZIR" FontSize="9" FontWeight="Bold" Foreground="#C61F25" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="✓ HAZIR" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource StatusErrorFg}" VerticalAlignment="Center"/>
                                                     </Border>
                                                     <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="Bold"
                                                                Foreground="{DynamicResource TextHeadingBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
@@ -1352,7 +1352,7 @@
                                   Background="Transparent" BorderThickness="0" RowHeaderWidth="0"
                                   HeadersVisibility="Column" GridLinesVisibility="Horizontal"
                                   HorizontalGridLinesBrush="{DynamicResource BorderSubtleBrush}" MinRowHeight="34"
-                                  AlternatingRowBackground="#0A000000">
+                                  AlternatingRowBackground="{DynamicResource AlternatingRowBrush}">
                             <DataGrid.Style>
                                 <Style TargetType="DataGrid">
                                     <Setter Property="Visibility" Value="Visible"/>

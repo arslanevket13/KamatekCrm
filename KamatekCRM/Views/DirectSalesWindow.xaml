@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="🛍️ Perakende Satış Terminali (POS)" 
         Height="800" Width="1360"
-        MinHeight="700" MinWidth="1180"
+        MinHeight="580" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource PremiumWindowStyle}">
 
@@ -71,7 +71,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{DynamicResource ThemePrimary}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextInverseBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextOnPrimaryBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -99,21 +99,36 @@
                 </Grid.RowDefinitions>
 
                 <!-- Title & Header Bar -->
+                <!-- Dar pencerede (1000 px) başlık ile sağdaki aksiyonlar üst üste binmesin
+                     diye iki kolon: başlık * (kısaltılabilir), aksiyonlar Auto. -->
                 <Grid Grid.Row="0" Margin="0,0,0,14">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
                         <TextBlock Text="📦" FontSize="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBlock Text="Ürün Kataloğu" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    
+                        <TextBlock Grid.Column="1" Text="Ürün Kataloğu" FontSize="20" FontWeight="Bold"
+                                   Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
                     <!-- Warehouse Selection -->
-                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="↩ İşlem Geçmişi / İade" Command="{Binding OpenReturnsCommand}"
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center"
+                                Margin="12,0,0,0">
+                        <Button Content="↩ İade" Command="{Binding OpenReturnsCommand}"
+                                ToolTip="İşlem Geçmişi / İade"
                                 Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,12,0" Padding="10,0"/>
                         <TextBlock Text="Depo:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" FontWeight="SemiBold"/>
                         <ComboBox ItemsSource="{Binding Warehouses}"
                                   SelectedItem="{Binding SelectedWarehouse}"
                                   DisplayMemberPath="Name"
-                                  Height="32" Width="140" TabIndex="2"/>
+                                  Height="32" Width="130"/>
                     </StackPanel>
                 </Grid>
 
@@ -131,14 +146,14 @@
                         <TextBox Grid.Column="1" x:Name="BarcodeTextBox"
                                  Text="{Binding BarcodeText, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="15" FontWeight="SemiBold" BorderThickness="0" Background="Transparent"
-                                 VerticalAlignment="Center" TabIndex="0">
+                                 VerticalAlignment="Center">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding BarcodeScanCommand}"/>
                             </TextBox.InputBindings>
                         </TextBox>
                         <Button Grid.Column="2" Content="Ekle (Enter) →"
                                 Command="{Binding BarcodeScanCommand}"
-                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
+                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}"
                                 FontSize="12" FontWeight="Bold"
                                 Padding="12,6" BorderThickness="0" Cursor="Hand">
                             <Button.Template>
@@ -164,7 +179,7 @@
                         <TextBox Grid.Column="1"
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="13" BorderThickness="0" Background="Transparent"
-                                 VerticalAlignment="Center" TabIndex="1"/>
+                                 VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="Ürün adı, model veya barkod ile hızlı arama..."
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" IsHitTestVisible="False" FontSize="13">
                             <TextBlock.Style>
@@ -241,6 +256,8 @@
                                     <Setter Property="Margin" Value="8,0"/>
                                     <Setter Property="FontWeight" Value="SemiBold"/>
                                     <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    <Setter Property="ToolTip" Value="{Binding ProductName}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
@@ -308,7 +325,7 @@
                                     <Button Content="➕"
                                             Command="{Binding DataContext.AddToCartCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}"
-                                            Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}"
+                                            Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextOnStatusBrush}"
                                             FontSize="14" Width="42" Height="34"
                                             BorderThickness="0" Cursor="Hand" ToolTip="Sepete Ekle">
                                         <Button.Template>
@@ -342,15 +359,21 @@
             <Border.Effect><DropShadowEffect BlurRadius="14" Opacity="0.08" ShadowDepth="2"/></Border.Effect>
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>  <!-- 0: Header & Receipt Button -->
-                    <RowDefinition Height="Auto"/>  <!-- 1: Parked Carts Bar -->
-                    <RowDefinition Height="Auto"/>  <!-- 2: Customer Selection Panel -->
-                    <RowDefinition Height="*"/>     <!-- 3: CART DATAGRID (Gets maximum star height!) -->
-                    <RowDefinition Height="Auto"/>  <!-- 4: Global Discount & Change Calculator -->
-                    <RowDefinition Height="Auto"/>  <!-- 5: Grand Totals Box -->
-                    <RowDefinition Height="Auto"/>  <!-- 6: Payment Actions Grid -->
-                    <RowDefinition Height="Auto"/>  <!-- 7: Status & Warnings -->
+                    <RowDefinition Height="*"/>     <!-- 0: Kaydırılabilir üst bölge -->
+                    <RowDefinition Height="Auto"/>  <!-- 1: Ödeme + durum (her zaman görünür) -->
                 </Grid.RowDefinitions>
+
+                <!-- Dar pencerede (1000×580) başlık, müşteri, sepet, indirim ve toplamlar
+                     kaydırılır; ödeme butonları ve durum satırı ekranda sabit kalır. -->
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>  <!-- 0: Header & Receipt Button -->
+                            <RowDefinition Height="Auto"/>  <!-- 1: Parked Carts Bar -->
+                            <RowDefinition Height="Auto"/>  <!-- 2: Customer Selection Panel -->
+                            <RowDefinition Height="Auto"/>  <!-- 3: CART DATAGRID -->
+                            <RowDefinition Height="Auto"/>  <!-- 4: Global Discount & Change Calculator -->
+                        </Grid.RowDefinitions>
 
                 <!-- Row 0: Header Bar -->
                 <Grid Grid.Row="0" Margin="0,0,0,12">
@@ -396,7 +419,7 @@
                                 <DataTemplate>
                                     <Button Command="{Binding DataContext.RestoreParkedCartCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}"
-                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
+                                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}"
                                             Margin="3,0" Padding="8,3" FontSize="11" FontWeight="Bold" Cursor="Hand">
                                         <Button.Template>
                                             <ControlTemplate TargetType="Button">
@@ -453,7 +476,7 @@
                             </Button>
                             <Button Grid.Column="3" Content="➕ Müşteri (F7)"
                                     Command="{Binding QuickAddCustomerCommand}"
-                                    Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
+                                    Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}"
                                     FontSize="11" FontWeight="Bold"
                                     BorderThickness="0" Cursor="Hand"
                                     Padding="8,4">
@@ -472,7 +495,7 @@
                             <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}"
                                      FontSize="12" Padding="8,4"
                                      BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1"
-                                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" TabIndex="3">
+                                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
                                 <TextBox.Template>
                                     <ControlTemplate TargetType="TextBox">
                                         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
@@ -519,6 +542,8 @@
                                GridLinesVisibility="None"
                                BorderThickness="0"
                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                               MinHeight="140"
+                               MaxHeight="330"
                                RowHeight="44">
 
                         <DataGrid.ColumnHeaderStyle>
@@ -540,6 +565,7 @@
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="Margin" Value="6,0"/>
                                         <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                        <Setter Property="ToolTip" Value="{Binding ProductName}"/>
                                         <Setter Property="FontSize" Value="12"/>
                                         <Setter Property="FontWeight" Value="SemiBold"/>
                                     </Style>
@@ -547,7 +573,7 @@
                             </DataGridTextColumn>
 
                             <!-- Quantity with +/- Buttons -->
-                            <DataGridTemplateColumn Header="Adet" Width="82">
+                            <DataGridTemplateColumn Header="Adet" Width="78">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -583,7 +609,7 @@
                             </DataGridTemplateColumn>
 
                             <!-- Instant Price Edit (PropertyChanged!) -->
-                            <DataGridTemplateColumn Header="B.Fiyat" Width="76">
+                            <DataGridTemplateColumn Header="B.Fiyat" Width="70">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBox Text="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}"
@@ -597,7 +623,7 @@
                             </DataGridTemplateColumn>
 
                             <!-- Instant Discount Edit (PropertyChanged!) -->
-                            <DataGridTemplateColumn Header="İnd.%" Width="52">
+                            <DataGridTemplateColumn Header="İnd.%" Width="46">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBox Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged, StringFormat='N0'}"
@@ -610,7 +636,7 @@
                             </DataGridTemplateColumn>
 
                             <!-- Line Total -->
-                            <DataGridTextColumn Header="Tutar" Binding="{Binding LineTotal, StringFormat='{}{0:N2} ₺'}" Width="80" IsReadOnly="True">
+                            <DataGridTextColumn Header="Tutar" Binding="{Binding LineTotal, StringFormat='{}{0:N2} ₺'}" Width="86" IsReadOnly="True">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -623,7 +649,7 @@
                             </DataGridTextColumn>
 
                             <!-- Remove Button -->
-                            <DataGridTemplateColumn Header="" Width="28">
+                            <DataGridTemplateColumn Header="" Width="26">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="✕"
@@ -658,7 +684,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="🎯 Genel İndirim (%)" VerticalAlignment="Center" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}"/>
                             <TextBlock Grid.Column="1" Text="Tüm Ürünler:" VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,6,0"/>
-                            <TextBox Grid.Column="2" TabIndex="4"
+                            <TextBox Grid.Column="2"
                                      Text="{Binding GlobalDiscountPercent, UpdateSourceTrigger=PropertyChanged, StringFormat='N0'}"
                                      FontSize="13" FontWeight="Bold" TextAlignment="Center"
                                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1"
@@ -675,12 +701,17 @@
                         </Grid>
 
                         <!-- Cash Change Calculator (Alınan Nakit / Para Üstü) -->
+                        <!-- Dar pencerede (1000 px) tek satır taşıyordu: preset butonlar
+                             WrapPanel ile sarılır, "Para Üstü" kendi satırına alınır. -->
                         <Grid Grid.Row="1" Margin="0,6,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="💵 Alınan:" VerticalAlignment="Center" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,6,0"/>
                             <TextBox Grid.Column="1" Width="70"
@@ -688,18 +719,19 @@
                                      FontSize="13" FontWeight="Bold" TextAlignment="Right"
                                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1"
                                      Padding="4,2"/>
-                            
+
                             <!-- Presets -->
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="6,0">
+                            <WrapPanel Grid.Column="2" Orientation="Horizontal" Margin="6,0">
                                 <Button Style="{StaticResource PillPresetBtn}" Content="Tam" Command="{Binding SetTenderedExactCommand}"/>
                                 <Button Style="{StaticResource PillPresetBtn}" Content="50₺" Command="{Binding SetTenderedPresetCommand}" CommandParameter="50"/>
                                 <Button Style="{StaticResource PillPresetBtn}" Content="100₺" Command="{Binding SetTenderedPresetCommand}" CommandParameter="100"/>
                                 <Button Style="{StaticResource PillPresetBtn}" Content="200₺" Command="{Binding SetTenderedPresetCommand}" CommandParameter="200"/>
                                 <Button Style="{StaticResource PillPresetBtn}" Content="500₺" Command="{Binding SetTenderedPresetCommand}" CommandParameter="500"/>
-                            </StackPanel>
+                            </WrapPanel>
 
                             <!-- Para Üstü Display -->
-                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right"
+                                        VerticalAlignment="Center" Margin="0,4,0,0">
                                 <TextBlock Text="Para Üstü:" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,4,0"/>
                                 <TextBlock Text="{Binding ChangeAmount, StringFormat='{}{0:N2} ₺'}"
                                            FontSize="14" FontWeight="Bold" Foreground="{DynamicResource ThemeSuccess}" VerticalAlignment="Center"/>
@@ -707,49 +739,60 @@
                         </Grid>
                     </Grid>
                 </Border>
-
-                <!-- Row 5: Grand Totals Summary Box -->
-                <Border Grid.Row="5" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="14,8" Margin="0,0,0,8">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="2"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        
-                        <Grid Grid.Row="0">
-                            <TextBlock Text="Ara Toplam" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding SubTotal, StringFormat='{}{0:N2} ₺'}"
-                                       HorizontalAlignment="Right" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"/>
-                        </Grid>
-                        <Grid Grid.Row="1" Margin="0,2,0,0">
-                            <TextBlock Text="İndirim" Foreground="{DynamicResource ThemePrimary}" FontSize="11" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding DiscountTotal, StringFormat='- {0:N2} ₺'}"
-                                       HorizontalAlignment="Right" Foreground="{DynamicResource ThemePrimary}" FontSize="11"/>
-                        </Grid>
-                        <Grid Grid.Row="2" Margin="0,2,0,0">
-                            <TextBlock Text="KDV" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding TaxTotal, StringFormat='{}{0:N2} ₺'}"
-                                       HorizontalAlignment="Right" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"/>
-                        </Grid>
-                        
-                        <Separator Grid.Row="3" Background="{DynamicResource BorderDefaultBrush}" Margin="0,4"/>
-                        
-                        <!-- TOPLAM GRAND TOTAL -->
-                        <Grid Grid.Row="4">
-                            <TextBlock Text="GENEL TOPLAM" FontSize="15" FontWeight="Bold"
-                                       Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding GrandTotal, StringFormat='{}{0:N2} ₺'}"
-                                       HorizontalAlignment="Right" FontSize="24" FontWeight="Bold"
-                                       Foreground="{DynamicResource ThemePrimaryDark}"/>
-                        </Grid>
                     </Grid>
-                </Border>
+                </ScrollViewer>
 
-                <!-- Row 6: Payment Actions Grid -->
-                <Grid Grid.Row="6">
+                <!-- Sabit alt bölge: toplamlar + ödeme aksiyonları + durum.
+                     Genel toplam ve ödeme butonları dar pencerede de ekranda kalır. -->
+                <Grid Grid.Row="1" Margin="0,8,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Row 5: Grand Totals Summary Box -->
+                    <Border Grid.Row="0" Background="{DynamicResource ApplicationBackgroundBrush}" CornerRadius="8" Padding="14,8" Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="2"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <TextBlock Text="Ara Toplam" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding SubTotal, StringFormat='{}{0:N2} ₺'}"
+                                           HorizontalAlignment="Right" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"/>
+                            </Grid>
+                            <Grid Grid.Row="1" Margin="0,2,0,0">
+                                <TextBlock Text="İndirim" Foreground="{DynamicResource ThemePrimary}" FontSize="11" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding DiscountTotal, StringFormat='- {0:N2} ₺'}"
+                                           HorizontalAlignment="Right" Foreground="{DynamicResource ThemePrimary}" FontSize="11"/>
+                            </Grid>
+                            <Grid Grid.Row="2" Margin="0,2,0,0">
+                                <TextBlock Text="KDV" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding TaxTotal, StringFormat='{}{0:N2} ₺'}"
+                                           HorizontalAlignment="Right" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11"/>
+                            </Grid>
+
+                            <Separator Grid.Row="3" Background="{DynamicResource BorderDefaultBrush}" Margin="0,4"/>
+
+                            <!-- TOPLAM GRAND TOTAL -->
+                            <Grid Grid.Row="4">
+                                <TextBlock Text="GENEL TOPLAM" FontSize="15" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding GrandTotal, StringFormat='{}{0:N2} ₺'}"
+                                           HorizontalAlignment="Right" FontSize="24" FontWeight="Bold"
+                                           Foreground="{DynamicResource ThemePrimaryDark}"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- Row 6: Payment Actions Grid -->
+                    <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
@@ -763,7 +806,7 @@
                     <!-- NAKİT F8 -->
                     <Button Grid.Column="0" Grid.Row="0" Style="{StaticResource PosActionBtn}"
                             Command="{Binding PayFullCashCommand}"
-                            Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextInverseBrush}"
+                            Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextOnStatusBrush}"
                             ToolTip="F8 Kısayolu">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💵" FontSize="18" Margin="0,0,6,0"/>
@@ -774,7 +817,7 @@
                     <!-- KREDİ KARTI F9 -->
                     <Button Grid.Column="1" Grid.Row="0" Style="{StaticResource PosActionBtn}"
                             Command="{Binding PayFullCardCommand}"
-                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
+                            Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}"
                             ToolTip="F9 Kısayolu">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="💳" FontSize="18" Margin="0,0,6,0"/>
@@ -785,7 +828,7 @@
                     <!-- CARİ / VERESİYE F10 -->
                     <Button Grid.Column="2" Grid.Row="0" Style="{StaticResource PosActionBtn}"
                             Command="{Binding PayFullOnAccountCommand}"
-                            Background="{DynamicResource StatusWarningBgDark}" Foreground="{DynamicResource TextInverseBrush}"
+                            Background="{DynamicResource StatusWarningBgDark}" Foreground="{DynamicResource StatusWarningFg}"
                             ToolTip="F10 Kısayolu — Kayıtlı müşteri gerektirir">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="📋" FontSize="18" Margin="0,0,6,0"/>
@@ -831,7 +874,7 @@
                 </Grid>
 
                 <!-- Row 7: Status & Warnings -->
-                <StackPanel Grid.Row="7" Margin="0,6,0,0">
+                <StackPanel Grid.Row="2" Margin="0,6,0,0">
                     <Border Background="{DynamicResource StatusWarningBgLight}" CornerRadius="6" Padding="6,4" Margin="0,0,0,4"
                             Visibility="{Binding HasStockWarning, Converter={StaticResource BoolVis}}">
                         <TextBlock Text="{Binding StockWarningMessage}" FontSize="11" Foreground="{DynamicResource StatusWarningFgDark}" FontWeight="Bold"/>
@@ -850,6 +893,7 @@
                         </TextBlock.Style>
                     </TextBlock>
                 </StackPanel>
+                </Grid>
             </Grid>
         </Border>
     </Grid>

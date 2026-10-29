@@ -36,7 +36,8 @@
                                     PlaceholderText="Tedarikçi veya yetkili ara..." 
                                     Icon="{ui:SymbolIcon Search24}"
                                     Height="40" FontSize="13"/>
-                        <ui:Button Grid.Column="1" Command="{Binding ClearSearchCommand}" Margin="8,0,0,0" Height="40" Padding="12,0" Appearance="Secondary">
+                        <ui:Button Grid.Column="1" Command="{Binding ClearSearchCommand}" Margin="8,0,0,0" Height="40" Padding="12,0" Appearance="Secondary"
+                                   AutomationProperties.Name="Aramayı temizle" ToolTip="Aramayı temizle">
                             <ui:SymbolIcon Symbol="Dismiss24"/>
                         </ui:Button>
                     </Grid>

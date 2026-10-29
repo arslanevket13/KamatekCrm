@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header Card -->
-        <Border Grid.Row="0" Margin="0,0,0,16" Padding="16" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource SubtleShadow}">
+        <Border Grid.Row="0" Margin="0,0,0,16" Padding="16" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource Elevation2}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -26,7 +26,7 @@
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
-                    <Border Background="{DynamicResource PrimaryLightBrush}" CornerRadius="50" Width="40" Height="40" Margin="0,0,12,0">
+                    <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="50" Width="40" Height="40" Margin="0,0,12,0">
                         <ui:SymbolIcon Symbol="Cart24" Foreground="{DynamicResource PrimaryBrush}" FontSize="24"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
@@ -59,7 +59,7 @@
         </Border>
 
         <!-- Manual Entry Panel -->
-        <Border Grid.Row="1" Margin="0,0,0,16" Padding="16" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource SubtleShadow}">
+        <Border Grid.Row="1" Margin="0,0,0,16" Padding="16" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource Elevation2}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -92,7 +92,7 @@
         </Border>
 
         <!-- Items List -->
-        <Border Grid.Row="2" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource SubtleShadow}" VerticalAlignment="Stretch">
+        <Border Grid.Row="2" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Effect="{DynamicResource Elevation2}" VerticalAlignment="Stretch">
             <DataGrid ItemsSource="{Binding CurrentOrderItems}" AutoGenerateColumns="False" 
                       CanUserAddRows="False" 
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal">
@@ -101,7 +101,7 @@
                         <Setter Property="FontWeight" Value="Bold"/>
                         <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                         <Setter Property="Padding" Value="12,8"/>
-                        <Setter Property="Background" Value="{DynamicResource BackgroundSecondaryBrush}"/>
+                        <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
                     </Style>
                 </DataGrid.Resources>
                 <DataGrid.Columns>

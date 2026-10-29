@@ -2,6 +2,12 @@ using System;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using KamatekCrm.Infrastructure.Data;
+using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Enums;
+using KamatekCrm.Events;
+using Attachment = System.Net.Mail.Attachment;
 
 namespace KamatekCrm.Services
 {
@@ -38,10 +44,12 @@ namespace KamatekCrm.Services
         private const bool EnableSsl = true; // Güvenli bağlantı, DEĞİŞTİRMEYİN
 
         private readonly Microsoft.Extensions.Configuration.IConfiguration? _configuration;
+        private readonly IServiceProvider? _serviceProvider;
 
-        public EmailService(Microsoft.Extensions.Configuration.IConfiguration? configuration = null)
+        public EmailService(Microsoft.Extensions.Configuration.IConfiguration? configuration = null, IServiceProvider? serviceProvider = null)
         {
             _configuration = configuration;
+            _serviceProvider = serviceProvider;
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -81,7 +89,7 @@ namespace KamatekCrm.Services
         /// <param name="subject">E-posta konusu</param>
         /// <param name="body">E-posta içeriği (HTML destekler)</param>
         /// <param name="attachmentPath">Ek dosya yolu (opsiyonel)</param>
-        public async Task SendQuoteEmailAsync(string toEmail, string subject, string body, string? attachmentPath = null)
+        public async Task SendQuoteEmailAsync(string toEmail, string subject, string body, string? attachmentPath = null, int? customerId = null)
         {
             // Placeholder kontrolü
             if (ResolvedSenderEmail.Contains("your-email") || ResolvedSenderPassword == "xxxx xxxx xxxx xxxx")
@@ -125,6 +133,29 @@ namespace KamatekCrm.Services
                             smtp.Timeout = 15000; // 15 saniye timeout
 
                             await smtp.SendMailAsync(mail);
+                            if (customerId.HasValue && customerId.Value > 0 && _serviceProvider != null)
+                            {
+                                _ = Task.Run(async () =>
+                                {
+                                    try
+                                    {
+                                        using var scope = _serviceProvider.CreateScope();
+                                        var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                                        ctx.CustomerActivities.Add(new CustomerActivity
+                                        {
+                                            CustomerId = customerId.Value,
+                                            Type = ActivityType.EmailSent,
+                                            Description = $"E-Posta Gönderildi ({toEmail}): {subject}",
+                                            CreatedBy = "Sistem",
+                                            CreatedDate = DateTime.UtcNow
+                                        });
+                                        await ctx.SaveChangesAsync();
+                                        EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
+                                            0, "EMAIL", customerId.Value, InteractionChangeType.Created));
+                                    }
+                                    catch { }
+                                });
+                            }
                             break; // Başarılı, döngüden çık
                         }
                         catch (SmtpException ex) when (ex.Message.Contains("authentication") || ex.Message.Contains("535"))

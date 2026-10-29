@@ -273,6 +273,21 @@
     </Style>
 
     <!-- ═══════════ 4. PREMIUM DATAGRID ═══════════ -->
+    <!-- Klavye odak göstergesi (WCAG 2.4.7 — Focus Visible).
+         Hücre şablonları özel olduğu için varsayılan odak çerçevesi çizilmiyordu. -->
+    <Style x:Key="KmFocusVisual">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border BorderBrush="{DynamicResource ThemePrimary}"
+                            BorderThickness="2"
+                            CornerRadius="4"
+                            SnapsToDevicePixels="True"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="PremiumDataGrid" TargetType="DataGrid">
         <Setter Property="Background" Value="{DynamicResource SurfaceCardBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
@@ -300,6 +315,7 @@
                     <Setter Property="Padding" Value="16,0"/>
                     <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
                     <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="DataGridCell">

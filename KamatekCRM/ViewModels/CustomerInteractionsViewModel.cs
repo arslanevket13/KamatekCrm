@@ -7,6 +7,8 @@ using System.Windows;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.ApplicationCore.DTOs.CustomerInteractions;
 using KamatekCrm.ApplicationCore.Interfaces;
+using KamatekCrm.Events;
+using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Views;
@@ -67,6 +69,7 @@ namespace KamatekCrm.ViewModels
                     CompleteInteractionCommand.NotifyCanExecuteChanged();
                     ConvertToQuoteCommand.NotifyCanExecuteChanged();
                     ConvertToServiceJobCommand.NotifyCanExecuteChanged();
+                    ConvertToFaultTicketCommand.NotifyCanExecuteChanged();
                     _ = LoadCustomerContextAsync();
                 }
             }
@@ -159,7 +162,18 @@ namespace KamatekCrm.ViewModels
             InlineFormViewModel = _serviceProvider.GetRequiredService<QuickInteractionAddViewModel>();
             InlineFormViewModel.OnSaved += OnInlineFormSaved;
 
+            // Olay senkronizasyonu aboneliği
+            EventAggregator.Instance.Subscribe<CustomerInteractionChangedEvent>(OnInteractionChanged);
+
             _ = LoadInteractionsAsync();
+        }
+
+        private void OnInteractionChanged(CustomerInteractionChangedEvent evt)
+        {
+            Application.Current?.Dispatcher.InvokeAsync(async () =>
+            {
+                await LoadInteractionsAsync();
+            });
         }
 
         /// <summary>
@@ -371,6 +385,11 @@ namespace KamatekCrm.ViewModels
                 if (res.IsSuccess)
                 {
                     _toastService.ShowSuccess("Tamamlandı", $"{SelectedInteraction.InteractionNumber} tamamlandı.");
+                    EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
+                        SelectedInteraction.Id,
+                        SelectedInteraction.InteractionNumber,
+                        SelectedInteraction.CustomerId,
+                        InteractionChangeType.StatusChanged));
                     await LoadInteractionsAsync();
                 }
                 else
@@ -392,10 +411,109 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanActOnSelected))]
-        private void ConvertToServiceJob()
+        private async Task ConvertToServiceJobAsync()
         {
             if (SelectedInteraction == null) return;
-            _toastService.ShowInfo("Servis İşe Dönüştür", $"{SelectedInteraction.InteractionNumber} servis iş emri ekranına aktarılıyor.");
+            try
+            {
+                var serviceJobVm = _serviceProvider.GetRequiredService<ServiceJobViewModel>();
+                if (SelectedInteraction.CustomerId.HasValue && SelectedInteraction.CustomerId.Value > 0)
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var cust = await ctx.Customers.FindAsync(SelectedInteraction.CustomerId.Value);
+                    if (cust != null)
+                    {
+                        serviceJobVm.SetInitialCustomer(cust);
+                    }
+                }
+                else
+                {
+                    serviceJobVm.QuickCustomerName = SelectedInteraction.CallerName;
+                    serviceJobVm.QuickCustomerPhone = SelectedInteraction.CallerPhone;
+                    serviceJobVm.IsQuickAddCustomer = true;
+                }
+
+                serviceJobVm.Description = $"[Talep: {SelectedInteraction.InteractionNumber}] {SelectedInteraction.Subject}\n{SelectedInteraction.Summary}\n{SelectedInteraction.DetailedNotes}".Trim();
+
+                var window = new NewServiceJobWindow(serviceJobVm)
+                {
+                    Owner = Application.Current?.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+
+                if (window.ShowDialog() == true)
+                {
+                    var dto = new UpdateCustomerInteractionStatusDto
+                    {
+                        InteractionId = SelectedInteraction.Id,
+                        NewStatus = InteractionStatus.InProgress,
+                        Reason = "Servis iş emrine aktarıldı.",
+                        ResolutionNotes = $"İş emri oluşturuldu. Tarih: {DateTime.UtcNow:dd.MM.yyyy HH:mm}"
+                    };
+                    await _commandService.UpdateStatusAsync(dto);
+
+                    EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
+                        SelectedInteraction.Id,
+                        SelectedInteraction.InteractionNumber,
+                        SelectedInteraction.CustomerId,
+                        InteractionChangeType.Converted));
+
+                    _toastService.ShowSuccess("Dönüştürüldü", $"{SelectedInteraction.InteractionNumber} iş emrine dönüştürüldü.");
+                    await LoadInteractionsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError("Hata", $"İş emrine dönüştürülemedi: {ex.Message}");
+            }
+        }
+
+        [RelayCommand(CanExecute = nameof(CanActOnSelected))]
+        private async Task ConvertToFaultTicketAsync()
+        {
+            if (SelectedInteraction == null) return;
+            try
+            {
+                var faultVm = _serviceProvider.GetRequiredService<FaultTicketViewModel>();
+                faultVm.SetInitialData(
+                    SelectedInteraction.CustomerId,
+                    SelectedInteraction.CustomerName,
+                    SelectedInteraction.CallerPhone,
+                    SelectedInteraction.Subject,
+                    $"{SelectedInteraction.Summary}\n{SelectedInteraction.DetailedNotes}".Trim());
+
+                var window = new Views.FaultTicketWindow(faultVm)
+                {
+                    Owner = Application.Current?.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
+
+                if (window.ShowDialog() == true)
+                {
+                    var dto = new UpdateCustomerInteractionStatusDto
+                    {
+                        InteractionId = SelectedInteraction.Id,
+                        NewStatus = InteractionStatus.InProgress,
+                        Reason = "Arıza kaydına aktarıldı.",
+                        ResolutionNotes = $"Arıza kaydı oluşturuldu. Tarih: {DateTime.UtcNow:dd.MM.yyyy HH:mm}"
+                    };
+                    await _commandService.UpdateStatusAsync(dto);
+
+                    EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
+                        SelectedInteraction.Id,
+                        SelectedInteraction.InteractionNumber,
+                        SelectedInteraction.CustomerId,
+                        InteractionChangeType.Converted));
+
+                    _toastService.ShowSuccess("Dönüştürüldü", $"{SelectedInteraction.InteractionNumber} arıza kaydına dönüştürüldü.");
+                    await LoadInteractionsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError("Hata", $"Arıza kaydına dönüştürülemedi: {ex.Message}");
+            }
         }
     }
 }

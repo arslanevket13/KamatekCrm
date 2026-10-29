@@ -346,6 +346,55 @@ namespace KamatekCrm.ViewModels
             UpdateDeviceTypeOptions();
         }
 
+        /// <summary>
+        /// Müşteri iletişim / talep ekranından aktarılan verileri önceden doldurur.
+        /// </summary>
+        public void SetInitialData(int? customerId, string? customerName, string? callerPhone, string? subject, string? description)
+        {
+            if (customerId.HasValue && customerId.Value > 0)
+            {
+                var existing = Customers.FirstOrDefault(c => c.Id == customerId.Value);
+                if (existing != null)
+                {
+                    SelectedCustomer = existing;
+                }
+                else
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            using var scope = _serviceProvider.CreateScope();
+                            var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                            var cust = await ctx.Customers.FindAsync(customerId.Value);
+                            if (cust != null)
+                            {
+                                await Application.Current.Dispatcher.InvokeAsync(() =>
+                                {
+                                    if (!Customers.Any(c => c.Id == cust.Id)) Customers.Add(cust);
+                                    SelectedCustomer = cust;
+                                });
+                            }
+                        }
+                        catch { }
+                    });
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(customerName))
+            {
+                IsNewAsset = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(subject))
+            {
+                FaultSymptom = subject.Trim();
+            }
+            if (!string.IsNullOrWhiteSpace(description))
+            {
+                Description = description.Trim();
+            }
+        }
+
         #endregion
 
         #region Private Methods

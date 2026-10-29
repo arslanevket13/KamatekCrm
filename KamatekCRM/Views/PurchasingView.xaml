@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
+             xmlns:components="clr-namespace:KamatekCrm.Components"
              mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="1200"
              ClipToBounds="True"
              d:DataContext="{d:DesignInstance vm:PurchasingViewModel}">
@@ -93,7 +94,7 @@
                             <TextBlock Text="Geçmiş İşlemler"/>
                         </StackPanel>
                     </Button>
-                    <Button Command="{Binding OpenSidebarCommand}" Height="40" Padding="16,0" Style="{StaticResource ModernButton}" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}">
+                    <Button Command="{Binding OpenSidebarCommand}" Height="40" Padding="16,0" Style="{StaticResource ModernButton}" Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Add24" Margin="0,0,8,0"/>
                             <TextBlock Text="Yeni Ürün Ekle" FontWeight="SemiBold"/>
@@ -151,7 +152,7 @@
 
                 <!-- Premium DataGrid -->
                 <Border Grid.Row="1" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
-                    <DataGrid ItemsSource="{Binding OrderItems}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="0" Background="Transparent" RowHeight="48">
+                    <DataGrid x:Name="PurchaseItemsDataGrid" ItemsSource="{Binding OrderItems}" AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="0" Background="Transparent" RowHeight="48">
                         <DataGrid.Resources>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="SemiBold"/>
@@ -165,7 +166,7 @@
                                 <Setter Property="Padding" Value="12,8"/>
                                 <Setter Property="VerticalContentAlignment" Value="Center"/>
                                 <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
                             </Style>
                         </DataGrid.Resources>
                         <DataGrid.Columns>
@@ -237,10 +238,16 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
+
+                <components:KmEmptyState Grid.Row="1" Panel.ZIndex="1"
+                                         Icon="&#xE7B8;" Title="Liste Boş"
+                                         Message="Satın alma listesine henüz ürün eklenmedi. Sağdaki panelden ürün ekleyebilirsiniz."
+                                         AutomationProperties.Name="Satın alma listesi boş"
+                                         Visibility="{Binding HasItems, ElementName=PurchaseItemsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
             </Grid>
 
             <!-- En Alt Footer Aksiyon Alanı -->
-            <Border Grid.Row="3" Padding="24" CornerRadius="12" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Effect="{DynamicResource SubtleShadow}">
+            <Border Grid.Row="3" Padding="24" CornerRadius="12" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" Effect="{DynamicResource Elevation2}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -258,7 +265,7 @@
                         <TextBlock Text="{Binding GrandTotal, StringFormat=C2}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <Button Grid.Column="2" Command="{Binding SaveAndReceiveCommand}" IsEnabled="{Binding IsNotBusy}" Height="48" Padding="32,0" Style="{StaticResource ModernButton}" Background="{DynamicResource PrimaryBrush}" Foreground="{DynamicResource TextFillColorPrimaryInverseBrush}">
+                    <Button Grid.Column="2" Command="{Binding SaveAndReceiveCommand}" IsEnabled="{Binding IsNotBusy}" Height="48" Padding="32,0" Style="{StaticResource ModernButton}" Background="{DynamicResource PrimaryBrush}" Foreground="{DynamicResource TextOnPrimaryBrush}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Checkmark24" Margin="0,0,12,0" FontSize="20"/>
                             <TextBlock Text="ONAYLA VE STOKLARA İŞLE" FontWeight="Bold" FontSize="14"/>
@@ -284,7 +291,8 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Yeni Ürün Ekle" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" VerticalAlignment="Center"/>
-                        <Button Grid.Column="1" Command="{Binding CloseSidebarCommand}" Style="{StaticResource ModernButton}" Background="Transparent" Padding="8">
+                        <Button Grid.Column="1" Command="{Binding CloseSidebarCommand}" Style="{StaticResource ModernButton}" Background="Transparent" Padding="8"
+                                AutomationProperties.Name="Paneli kapat" ToolTip="Paneli kapat">
                             <ui:SymbolIcon Symbol="Dismiss24"/>
                         </Button>
                     </Grid>
@@ -406,7 +414,7 @@
 
                 <!-- Drawer Alt Butonu -->
                 <Border Grid.Row="2" Padding="24" Background="{DynamicResource ControlFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
-                    <Button Command="{Binding AddLineItemCommand}" Content="Listeye Ekle" Height="48" HorizontalAlignment="Stretch" Style="{StaticResource ModernButton}" Background="{DynamicResource PrimaryBrush}" Foreground="{DynamicResource TextFillColorPrimaryInverseBrush}" FontWeight="Bold" FontSize="14"/>
+                    <Button Command="{Binding AddLineItemCommand}" Content="Listeye Ekle" Height="48" HorizontalAlignment="Stretch" Style="{StaticResource ModernButton}" Background="{DynamicResource PrimaryBrush}" Foreground="{DynamicResource TextOnPrimaryBrush}" FontWeight="Bold" FontSize="14"/>
                 </Border>
             </Grid>
         </Border>

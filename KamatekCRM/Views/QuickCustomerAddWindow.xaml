@@ -197,7 +197,7 @@
                     Command="{Binding SaveCustomerCommand}"
                     IsDefault="True"
                     Style="{StaticResource ModernButton}"
-                    Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextInverseBrush}"
+                    Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}"
                     Height="40" FontSize="14" FontWeight="SemiBold"
                     BorderThickness="0"
                     Cursor="Hand">

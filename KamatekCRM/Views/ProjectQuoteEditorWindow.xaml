@@ -10,7 +10,7 @@
         d:DataContext="{d:DesignInstance Type=viewmodels:ProjectQuoteEditorViewModel, IsDesignTimeCreatable=False}"
         Title="🏗️ PROJE TEKLİF EDİTÖRÜ WORKBENCH" 
         Height="850" Width="1450"
-        MinHeight="650" MinWidth="1100"
+        MinHeight="580" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource PremiumWindowStyle}">
 
@@ -147,7 +147,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="290" MinWidth="220"/>
                 <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="*" MinWidth="350"/>
+                <ColumnDefinition Width="*" MinWidth="330"/>
                 <ColumnDefinition Width="5"/>
                 <ColumnDefinition Width="320" MinWidth="250"/>
             </Grid.ColumnDefinitions>
@@ -502,11 +502,11 @@
                 </Grid>
 
                 <!-- Negatif Marj Uyarısı -->
-                <Border Grid.Row="1" Background="#FFEBEE" BorderBrush="#EF5350" BorderThickness="1" CornerRadius="4" Padding="10,5" Margin="0,0,0,8"
-                        Visibility="{Binding HasNegativeMarginItems, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Border Grid.Row="1" Background="{DynamicResource ThemeErrorLight}" BorderBrush="{DynamicResource ThemeError}" BorderThickness="1" CornerRadius="4" Padding="10,5" Margin="0,0,0,8"
+                        Visibility="{Binding HasNegativeMarginItems, Converter={StaticResource BoolToVis}}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <ui:SymbolIcon Symbol="Warning24" Foreground="#D32F2F" FontSize="16" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding NegativeMarginWarning}" Foreground="#D32F2F" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
+                        <ui:SymbolIcon Symbol="Warning24" Foreground="{DynamicResource StatusErrorFg}" FontSize="16" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding NegativeMarginWarning}" Foreground="{DynamicResource StatusErrorFg}" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
