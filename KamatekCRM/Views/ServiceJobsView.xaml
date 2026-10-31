@@ -224,7 +224,7 @@
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           SelectionMode="Single"
-                          RowHeight="46"
+                          RowHeight="44"
                           Background="Transparent" BorderThickness="0"
                           GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                           AlternatingRowBackground="{DynamicResource HoverOverlayBrush}"

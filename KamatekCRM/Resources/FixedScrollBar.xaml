@@ -2,20 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ============================================================ -->
-    <!-- ARROW GEOMETRIES — defined as proper Geometry resources       -->
-    <!-- Binding a string Content to Path.Data does NOT work because   -->
-    <!-- WPF Binding does not invoke the TypeConverter (string→Geometry)-->
-    <!-- So we define them as actual Geometry objects here.            -->
-    <!-- ============================================================ -->
-    <StreamGeometry x:Key="ScrollBarUpArrow">M 0,4 L 4,0 L 8,4 Z</StreamGeometry>
-    <StreamGeometry x:Key="ScrollBarDownArrow">M 0,0 L 4,4 L 8,0 Z</StreamGeometry>
-    <StreamGeometry x:Key="ScrollBarLeftArrow">M 4,0 L 0,4 L 4,8 Z</StreamGeometry>
-    <StreamGeometry x:Key="ScrollBarRightArrow">M 0,0 L 4,4 L 0,8 Z</StreamGeometry>
-
-    <!-- ============================================================ -->
     <!-- Page RepeatButton Style (Track background click areas)       -->
     <!-- These are INVISIBLE hit-test areas in the track region.      -->
-    <!-- They must NOT render any Path or visual content.             -->
     <!-- ============================================================ -->
     <Style x:Key="ScrollBarPageButton" TargetType="{x:Type RepeatButton}">
         <Setter Property="OverridesDefaultStyle" Value="true"/>
@@ -31,7 +19,7 @@
     </Style>
 
     <!-- ============================================================ -->
-    <!-- ScrollBar Thumb Style                                        -->
+    <!-- Modern Slim ScrollBar Thumb Style                            -->
     <!-- ============================================================ -->
     <Style x:Key="ScrollBarThumb" TargetType="{x:Type Thumb}">
         <Setter Property="OverridesDefaultStyle" Value="true"/>
@@ -40,13 +28,16 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Thumb}">
                     <Border x:Name="ThumbBorder" CornerRadius="3" 
-                            Background="{DynamicResource TextMutedBrush}" 
-                            Margin="2" Opacity="0.5"/>
+                            Background="#334155" 
+                            Margin="0" Opacity="0.8"
+                            SnapsToDevicePixels="True"/>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="ThumbBorder" Property="Opacity" Value="0.8"/>
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="#64748B"/>
+                            <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
                         </Trigger>
                         <Trigger Property="IsDragging" Value="true">
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="#94A3B8"/>
                             <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -56,50 +47,11 @@
     </Style>
 
     <!-- ============================================================ -->
-    <!-- Vertical ScrollBar ControlTemplate                           -->
-    <!-- Arrow buttons use StaticResource geometry, NOT Content bind  -->
+    <!-- Vertical ScrollBar ControlTemplate (Slim 6px, No Arrow Box)  -->
     <!-- ============================================================ -->
     <ControlTemplate x:Key="VerticalScrollBarTemplate" TargetType="{x:Type ScrollBar}">
-        <Grid Width="14" Background="Transparent">
-            <Grid.RowDefinitions>
-                <RowDefinition MaxHeight="14"/>
-                <RowDefinition Height="0.00001*"/>
-                <RowDefinition MaxHeight="14"/>
-            </Grid.RowDefinitions>
-
-            <!-- Up arrow button -->
-            <RepeatButton Grid.Row="0"
-                          OverridesDefaultStyle="True"
-                          Focusable="False"
-                          IsTabStop="False"
-                          Command="{x:Static ScrollBar.LineUpCommand}"
-                          CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
-                          Height="14">
-                <RepeatButton.Template>
-                    <ControlTemplate TargetType="{x:Type RepeatButton}">
-                        <Border x:Name="border" Background="Transparent" SnapsToDevicePixels="True">
-                            <Path x:Name="arrow"
-                                  HorizontalAlignment="Center" VerticalAlignment="Center"
-                                  Fill="{DynamicResource TextMutedBrush}"
-                                  Data="{StaticResource ScrollBarUpArrow}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="arrow" Property="Fill" Value="{DynamicResource ThemeTextPrimary}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="arrow" Property="Fill" Value="{DynamicResource ThemePrimary}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="arrow" Property="Opacity" Value="0.3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </RepeatButton.Template>
-            </RepeatButton>
-
-            <!-- Track: Thumb + Page areas -->
-            <Track x:Name="PART_Track" Grid.Row="1" IsDirectionReversed="True">
+        <Grid Width="6" Background="Transparent" SnapsToDevicePixels="True">
+            <Track x:Name="PART_Track" IsDirectionReversed="True">
                 <Track.DecreaseRepeatButton>
                     <RepeatButton Style="{StaticResource ScrollBarPageButton}"
                                   Command="{x:Static ScrollBar.PageUpCommand}"
@@ -114,84 +66,15 @@
                                   CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"/>
                 </Track.IncreaseRepeatButton>
             </Track>
-
-            <!-- Down arrow button -->
-            <RepeatButton Grid.Row="2"
-                          OverridesDefaultStyle="True"
-                          Focusable="False"
-                          IsTabStop="False"
-                          Command="{x:Static ScrollBar.LineDownCommand}"
-                          CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
-                          Height="14">
-                <RepeatButton.Template>
-                    <ControlTemplate TargetType="{x:Type RepeatButton}">
-                        <Border x:Name="border" Background="Transparent" SnapsToDevicePixels="True">
-                            <Path x:Name="arrow"
-                                  HorizontalAlignment="Center" VerticalAlignment="Center"
-                                  Fill="{DynamicResource TextMutedBrush}"
-                                  Data="{StaticResource ScrollBarDownArrow}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="arrow" Property="Fill" Value="{DynamicResource ThemeTextPrimary}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="arrow" Property="Fill" Value="{DynamicResource ThemePrimary}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="arrow" Property="Opacity" Value="0.3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </RepeatButton.Template>
-            </RepeatButton>
         </Grid>
     </ControlTemplate>
 
     <!-- ============================================================ -->
-    <!-- Horizontal ScrollBar ControlTemplate                         -->
+    <!-- Horizontal ScrollBar ControlTemplate (Slim 6px, No Arrow Box)-->
     <!-- ============================================================ -->
     <ControlTemplate x:Key="HorizontalScrollBarTemplate" TargetType="{x:Type ScrollBar}">
-        <Grid Height="14" Background="Transparent">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition MaxWidth="14"/>
-                <ColumnDefinition Width="0.00001*"/>
-                <ColumnDefinition MaxWidth="14"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Left arrow button -->
-            <RepeatButton Grid.Column="0"
-                          OverridesDefaultStyle="True"
-                          Focusable="False"
-                          IsTabStop="False"
-                          Command="{x:Static ScrollBar.LineLeftCommand}"
-                          CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
-                          Width="14">
-                <RepeatButton.Template>
-                    <ControlTemplate TargetType="{x:Type RepeatButton}">
-                        <Border x:Name="border" Background="Transparent" SnapsToDevicePixels="True">
-                            <Path x:Name="arrow"
-                                  HorizontalAlignment="Center" VerticalAlignment="Center"
-                                  Fill="{DynamicResource TextMutedBrush}"
-                                  Data="{StaticResource ScrollBarLeftArrow}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="arrow" Property="Fill" Value="{DynamicResource ThemeTextPrimary}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="arrow" Property="Fill" Value="{DynamicResource ThemePrimary}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="arrow" Property="Opacity" Value="0.3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </RepeatButton.Template>
-            </RepeatButton>
-
-            <!-- Track: Thumb + Page areas -->
-            <Track x:Name="PART_Track" Grid.Column="1" IsDirectionReversed="False">
+        <Grid Height="6" Background="Transparent" SnapsToDevicePixels="True">
+            <Track x:Name="PART_Track" IsDirectionReversed="False">
                 <Track.DecreaseRepeatButton>
                     <RepeatButton Style="{StaticResource ScrollBarPageButton}"
                                   Command="{x:Static ScrollBar.PageLeftCommand}"
@@ -206,37 +89,6 @@
                                   CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"/>
                 </Track.IncreaseRepeatButton>
             </Track>
-
-            <!-- Right arrow button -->
-            <RepeatButton Grid.Column="2"
-                          OverridesDefaultStyle="True"
-                          Focusable="False"
-                          IsTabStop="False"
-                          Command="{x:Static ScrollBar.LineRightCommand}"
-                          CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
-                          Width="14">
-                <RepeatButton.Template>
-                    <ControlTemplate TargetType="{x:Type RepeatButton}">
-                        <Border x:Name="border" Background="Transparent" SnapsToDevicePixels="True">
-                            <Path x:Name="arrow"
-                                  HorizontalAlignment="Center" VerticalAlignment="Center"
-                                  Fill="{DynamicResource TextMutedBrush}"
-                                  Data="{StaticResource ScrollBarRightArrow}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="arrow" Property="Fill" Value="{DynamicResource ThemeTextPrimary}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="arrow" Property="Fill" Value="{DynamicResource ThemePrimary}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="arrow" Property="Opacity" Value="0.3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </RepeatButton.Template>
-            </RepeatButton>
         </Grid>
     </ControlTemplate>
 
@@ -248,13 +100,13 @@
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Style.Triggers>
             <Trigger Property="Orientation" Value="Vertical">
-                <Setter Property="Width" Value="14"/>
-                <Setter Property="MinWidth" Value="14"/>
+                <Setter Property="Width" Value="6"/>
+                <Setter Property="MinWidth" Value="6"/>
                 <Setter Property="Template" Value="{StaticResource VerticalScrollBarTemplate}"/>
             </Trigger>
             <Trigger Property="Orientation" Value="Horizontal">
-                <Setter Property="Height" Value="14"/>
-                <Setter Property="MinHeight" Value="14"/>
+                <Setter Property="Height" Value="6"/>
+                <Setter Property="MinHeight" Value="6"/>
                 <Setter Property="Template" Value="{StaticResource HorizontalScrollBarTemplate}"/>
             </Trigger>
         </Style.Triggers>

@@ -131,7 +131,7 @@
         <!-- ============================================================ -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MinWidth="190" MaxWidth="420"/>    <!-- Sol: Form -->
+                <ColumnDefinition Width="320" MinWidth="290" MaxWidth="360"/>    <!-- Sol: Form -->
                 <ColumnDefinition Width="Auto"/>                               <!-- Splitter -->
                 <ColumnDefinition Width="2*" MinWidth="230"/>                  <!-- Orta: Liste -->
                 <ColumnDefinition Width="Auto"/>                               <!-- Splitter -->
@@ -150,11 +150,11 @@
                     <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
                         <ui:Button Content="Kaydet" Icon="{ui:SymbolIcon Save24}"
                                    Command="{Binding SaveCommand}" CommandParameter="{x:Null}"
-                                   Appearance="Primary" Height="34" HorizontalAlignment="Stretch"
-                                   Cursor="Hand" Margin="0,0,0,4"/>
+                                   Appearance="Primary" Height="38" HorizontalAlignment="Stretch"
+                                   Cursor="Hand" Margin="0,0,0,6"/>
                         <ui:Button Content="Kaydet ve Görev Oluştur" Icon="{ui:SymbolIcon TaskListAdd24}"
                                    Command="{Binding SaveCommand}" CommandParameter="{x:Null}"
-                                   Appearance="Secondary" Height="30" HorizontalAlignment="Stretch"
+                                   Appearance="Secondary" Height="36" HorizontalAlignment="Stretch"
                                    Cursor="Hand"/>
                     </StackPanel>
 
@@ -166,21 +166,21 @@
                             <TextBlock Text="YENİ GÖRÜŞME" FontSize="11" FontWeight="Bold"
                                        Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,8"/>
 
-                            <!-- Hızlı Talep Türleri — Kompakt Chip -->
-                            <WrapPanel Margin="0,0,0,8">
+                            <!-- Hızlı Talep Türleri — Kompakt Chip Grid (3x2) -->
+                            <UniformGrid Columns="3" Margin="0,0,0,8">
                                 <ui:Button Content="💰 Fiyat" Command="{Binding SelectQuickTypeCommand}" CommandParameter="PriceQuote"
-                                           Height="26" Padding="8,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                                           Height="30" Padding="4,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                                 <ui:Button Content="📐 Keşif" Command="{Binding SelectQuickTypeCommand}" CommandParameter="Discovery"
-                                           Height="26" Padding="8,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                                           Height="30" Padding="4,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                                 <ui:Button Content="🔧 Servis" Command="{Binding SelectQuickTypeCommand}" CommandParameter="ServiceStatus"
-                                           Height="26" Padding="8,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                                           Height="30" Padding="4,0" Margin="0,0,0,4" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                                 <ui:Button Content="👑 Patron" Command="{Binding SelectQuickTypeCommand}" CommandParameter="ManagerAgenda"
-                                           Height="26" Padding="8,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                                           Height="30" Padding="4,0" Margin="0,0,4,0" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                                 <ui:Button Content="⚠️ Şikâyet" Command="{Binding SelectQuickTypeCommand}" CommandParameter="Complaint"
-                                           Height="26" Padding="8,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
+                                           Height="30" Padding="4,0" Margin="0,0,4,0" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                                 <ui:Button Content="📞 Geri Ara" Command="{Binding SelectQuickTypeCommand}" CommandParameter="CallBack"
-                                           Height="26" Padding="8,0" Margin="0,0,0,4" Appearance="Secondary" FontSize="11" Cursor="Hand"/>
-                            </WrapPanel>
+                                           Height="30" Padding="4,0" Margin="0,0,0,0" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
+                            </UniformGrid>
 
                             <!-- Telefon -->
                             <TextBlock Text="Telefon *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
@@ -330,9 +330,9 @@
                         </DataGrid.CellStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Saat" Binding="{Binding InteractionDate, StringFormat={}{0:HH:mm}}" Width="50"/>
+                            <DataGridTextColumn Header="Saat" Binding="{Binding InteractionDate, StringFormat={}{0:HH:mm}}" Width="65"/>
 
-                            <DataGridTemplateColumn Header="Müşteri" Width="*" MinWidth="120">
+                            <DataGridTemplateColumn Header="Müşteri" Width="*" MinWidth="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel VerticalAlignment="Center">
@@ -343,7 +343,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Konu" Binding="{Binding Subject}" Width="120">
+                            <DataGridTextColumn Header="Konu" Binding="{Binding Subject}" Width="130">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
@@ -351,10 +351,10 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
-                            <DataGridTextColumn Header="Tür" Binding="{Binding RequestType}" Width="80"/>
-                            <DataGridTextColumn Header="Sorumlu" Binding="{Binding AssignedToUsername, TargetNullValue='—'}" Width="80"/>
-                            <DataGridTextColumn Header="Takip" Binding="{Binding FollowUpDate, StringFormat={}{0:dd.MM HH:mm}, TargetNullValue='—'}" Width="85"/>
-                            <DataGridTextColumn Header="Durum" Binding="{Binding Status}" Width="70"/>
+                            <DataGridTextColumn Header="Tür" Binding="{Binding RequestType}" Width="85"/>
+                            <DataGridTextColumn Header="Sorumlu" Binding="{Binding AssignedToUsername, TargetNullValue='—'}" Width="85"/>
+                            <DataGridTextColumn Header="Takip" Binding="{Binding FollowUpDate, StringFormat={}{0:dd.MM HH:mm}, TargetNullValue='—'}" Width="90"/>
+                            <DataGridTextColumn Header="Durum" Binding="{Binding Status}" Width="85"/>
                         </DataGrid.Columns>
                     </DataGrid>
 

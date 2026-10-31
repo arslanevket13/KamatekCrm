@@ -242,6 +242,13 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public bool IsAdmin => _authService.IsAdmin;
 
+        /// <summary>
+        /// Geliştirici Tanılama Merkezi butonunun görünürlüğü.
+        /// </summary>
+        public bool IsDevCenterAvailable =>
+            _authService.IsAdmin ||
+            _serviceProvider.GetService<Diagnostics.Authorization.DiagnosticAccessGuard>()?.IsAuthorized == true;
+
         // Navigation History Stack
         private readonly System.Collections.Generic.Stack<object> _backStack = new();
         private readonly System.Collections.Generic.Stack<object> _forwardStack = new();
@@ -438,6 +445,41 @@ namespace KamatekCrm.ViewModels
         {
             if (!IsAdmin) { _toastService.ShowError("Sistem kayıtları için yönetici yetkisi gerekir."); return; }
             NavigateTo<SystemLogsViewModel>();
+        }
+
+        /// <summary>
+        /// Geliştirici Tanılama Merkezi'ni ayrı pencerede açar.
+        /// </summary>
+        [RelayCommand]
+        private void OpenDevCenter()
+        {
+            var guard = _serviceProvider.GetService<Diagnostics.Authorization.DiagnosticAccessGuard>();
+            if (guard is null)
+            {
+                _toastService.ShowError("Geliştirici Merkezi kullanılamıyor", "Tanılama altyapısı bu oturumda yüklenmedi.");
+                return;
+            }
+
+            if (!guard.IsAuthorized)
+            {
+                _toastService.ShowError("Yetkisiz işlem", guard.DenialReason);
+                return;
+            }
+
+            KamatekCrm.ViewModels.DevCenter.DevCenterViewModel? viewModel = null;
+            try
+            {
+                viewModel = _serviceProvider.GetRequiredService<KamatekCrm.ViewModels.DevCenter.DevCenterViewModel>();
+                var window = new KamatekCrm.Views.DevCenter.DevCenterWindow(viewModel);
+                window.Owner = System.Windows.Application.Current?.MainWindow;
+                window.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                viewModel?.Dispose();
+                _toastService.ShowError("Geliştirici Tanılama Merkezi açılamadı", ex.Message);
+                System.Diagnostics.Debug.WriteLine($"Dev Center modal error: {ex}");
+            }
         }
         
         [RelayCommand]

@@ -8,7 +8,7 @@
              Background="{DynamicResource ApplicationBackgroundBrush}"
              d:DesignHeight="600" d:DesignWidth="900">
 
-    <Grid Margin="24">
+    <Grid Margin="20,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>  <!-- Başlık -->
             <RowDefinition Height="Auto"/>  <!-- Kategori Toggles -->
@@ -28,7 +28,7 @@
             </StackPanel>
             
             <Button Content="🔄 Yenile" 
-                    Style="{StaticResource SecondaryButton}"
+                    Style="{StaticResource BtnSecondary}" Height="36"
                     Command="{Binding RefreshCommand}"
                     Margin="32,0,0,0"
                     VerticalAlignment="Center"/>
@@ -74,7 +74,7 @@
                 <StackPanel Grid.Column="0" Margin="0,0,16,0">
                     <TextBlock Text="Başlangıç" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
                     <DatePicker SelectedDate="{Binding StartDate}"
-                                Width="130"
+                                Width="145"
                                 Style="{StaticResource ModernDatePicker}"/>
                 </StackPanel>
 
@@ -82,7 +82,7 @@
                 <StackPanel Grid.Column="1" Margin="0,0,24,0">
                     <TextBlock Text="Bitiş" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
                     <DatePicker SelectedDate="{Binding EndDate}"
-                                Width="130"
+                                Width="145"
                                 Style="{StaticResource ModernDatePicker}"/>
                 </StackPanel>
 
@@ -107,7 +107,7 @@
 
                 <!-- Temizle -->
                 <Button Grid.Column="3" Content="✕ Temizle"
-                        Style="{StaticResource SecondaryButton}"
+                        Style="{StaticResource BtnSecondary}" Height="36"
                         Command="{Binding ClearFiltersCommand}"
                         VerticalAlignment="Bottom"/>
             </Grid>
@@ -121,7 +121,7 @@
             
             <DataGrid x:Name="FieldJobsDataGrid" ItemsSource="{Binding FilteredFieldJobs}"
                       Style="{StaticResource ModernDataGrid}"
-                      RowHeight="56"
+                      RowHeight="44"
                       BorderThickness="0"
                       IsReadOnly="True"
                       EnableRowVirtualization="True"
@@ -200,7 +200,7 @@
                     </DataGridTemplateColumn>
 
                     <!-- Tarih/Saat -->
-                    <DataGridTemplateColumn Header="Planlanan" Width="130">
+                    <DataGridTemplateColumn Header="Planlanan" Width="145">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding ScheduleDisplay}" 

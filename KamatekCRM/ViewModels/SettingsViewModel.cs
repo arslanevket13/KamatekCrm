@@ -10,12 +10,40 @@ using KamatekCrm.Services;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.ApplicationCore.Security;
 using KamatekCrm.ApplicationCore.DTOs.Transactions;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Services;
+using KamatekCrm.Settings;
 
 namespace KamatekCrm.ViewModels
 {
     public class CompanySettingsDto
     {
-        public string CompanyName { get; set; } = "Kamatek Bilişim & Güvenlik Sistemleri";
+        public string CompanyName { get; set; } = "KAMATEK";
+        public string CompanySubtitle { get; set; } = "ELEKTRİK VE GÜVENLİK SİSTEMLERİ";
+        public string CompanySloganOrBranch { get; set; } = "ESKİŞEHİR DİAFON MERKEZİ";
+        public string Website { get; set; } = "www.kamatekelektrik.com";
+        public string TradeRegistryNo { get; set; } = "";
+        public string MersisNo { get; set; } = "";
+        public string BankName { get; set; } = "Ziraat Bankası";
+        public string AccountHolder { get; set; } = "Kamatek Elektrik ve Güvenlik Sistemleri";
+        public string IbanTry { get; set; } = "";
+        public string IbanUsd { get; set; } = "";
+        public string IbanEur { get; set; } = "";
+        public string CustomLogoPath { get; set; } = "";
+        public string CustomLogoBase64 { get; set; } = "";
+        public string StampSignatureBase64 { get; set; } = "";
+        public string PrimaryBrandColorHex { get; set; } = "#182649";
+        public string AccentBrandColorHex { get; set; } = "#D11920";
+        public int QuoteValidityDays { get; set; } = 7;
+        public string QuoteTermsText { get; set; } = "";
+        public string ServiceFormTermsText { get; set; } = "";
+        public string WarrantyTermsText { get; set; } = "";
+        public bool ShowUnitPricesInPdf { get; set; } = true;
+        public bool ShowProductImagesInPdf { get; set; } = true;
+        public bool ShowStampInPdf { get; set; } = true;
+        public string WatermarkText { get; set; } = "";
         public string TaxOffice { get; set; } = "";
         public string TaxNumber { get; set; } = "";
         public string Address { get; set; } = "";
@@ -32,10 +60,12 @@ namespace KamatekCrm.ViewModels
     {
         private readonly IBackupService _backupService;
         private readonly IToastService? _toastService;
+        private readonly IDialogService? _dialogService;
         private readonly IApplicationAuthorizationService _authorizationService;
         private readonly IRetailTransactionService _retailTransactions;
         private readonly Services.Update.IUpdateService? _updateService;
         private readonly Diagnostics.Authorization.DiagnosticAccessGuard? _diagnosticGuard;
+        private readonly IServiceProvider? _serviceProvider;
         private LegacyLedgerPreviewDto? _legacyLedgerPreview;
 
         public SettingsViewModel(
@@ -44,7 +74,9 @@ namespace KamatekCrm.ViewModels
             IBackupService backupService,
             IRetailTransactionService retailTransactions,
             Services.Update.IUpdateService? updateService = null,
-            Diagnostics.Authorization.DiagnosticAccessGuard? diagnosticGuard = null)
+            Diagnostics.Authorization.DiagnosticAccessGuard? diagnosticGuard = null,
+            IServiceProvider? serviceProvider = null,
+            IDialogService? dialogService = null)
         {
             _toastService = toastService;
             _authorizationService = authorizationService;
@@ -53,6 +85,8 @@ namespace KamatekCrm.ViewModels
             _updateService = updateService;
             // Guard null ise (DI dışı kurulum) buton gizli kalır: fail-closed.
             _diagnosticGuard = diagnosticGuard;
+            _serviceProvider = serviceProvider;
+            _dialogService = dialogService ?? serviceProvider?.GetService(typeof(IDialogService)) as IDialogService;
 
             
             // Ayarları Properties.Settings.Default'tan yükle
@@ -151,6 +185,61 @@ namespace KamatekCrm.ViewModels
             get => _companyEmail;
             set => SetProperty(ref _companyEmail, value);
         }
+
+        private string _companySubtitle = "ELEKTRİK VE GÜVENLİK SİSTEMLERİ";
+        public string CompanySubtitle { get => _companySubtitle; set => SetProperty(ref _companySubtitle, value); }
+        private string _companySloganOrBranch = "ESKİŞEHİR DİAFON MERKEZİ";
+        public string CompanySloganOrBranch { get => _companySloganOrBranch; set => SetProperty(ref _companySloganOrBranch, value); }
+        private string _website = "www.kamatekelektrik.com";
+        public string Website { get => _website; set => SetProperty(ref _website, value); }
+        private string _tradeRegistryNo = "";
+        public string TradeRegistryNo { get => _tradeRegistryNo; set => SetProperty(ref _tradeRegistryNo, value); }
+        private string _mersisNo = "";
+        public string MersisNo { get => _mersisNo; set => SetProperty(ref _mersisNo, value); }
+        private string _bankName = "Ziraat Bankası";
+        public string BankName { get => _bankName; set => SetProperty(ref _bankName, value); }
+        private string _accountHolder = "Kamatek Elektrik ve Güvenlik Sistemleri";
+        public string AccountHolder { get => _accountHolder; set => SetProperty(ref _accountHolder, value); }
+        private string _ibanTry = "";
+        public string IbanTry { get => _ibanTry; set => SetProperty(ref _ibanTry, value); }
+        private string _ibanUsd = "";
+        public string IbanUsd { get => _ibanUsd; set => SetProperty(ref _ibanUsd, value); }
+        private string _ibanEur = "";
+        public string IbanEur { get => _ibanEur; set => SetProperty(ref _ibanEur, value); }
+        private string _customLogoPath = "";
+        public string CustomLogoPath { get => _customLogoPath; set => SetProperty(ref _customLogoPath, value); }
+        private string _customLogoBase64 = "";
+        public string CustomLogoBase64 { get => _customLogoBase64; set => SetProperty(ref _customLogoBase64, value); }
+        private string _stampSignatureBase64 = "";
+        public string StampSignatureBase64 { get => _stampSignatureBase64; set => SetProperty(ref _stampSignatureBase64, value); }
+        private string _primaryBrandColorHex = "#182649";
+        public string PrimaryBrandColorHex { get => _primaryBrandColorHex; set => SetProperty(ref _primaryBrandColorHex, value); }
+        private string _accentBrandColorHex = "#D11920";
+        public string AccentBrandColorHex { get => _accentBrandColorHex; set => SetProperty(ref _accentBrandColorHex, value); }
+        private int _quoteValidityDays = 7;
+        public int QuoteValidityDays { get => _quoteValidityDays; set => SetProperty(ref _quoteValidityDays, value); }
+        private string _quoteTermsText = "";
+        public string QuoteTermsText { get => _quoteTermsText; set => SetProperty(ref _quoteTermsText, value); }
+        private string _serviceFormTermsText = "";
+        public string ServiceFormTermsText { get => _serviceFormTermsText; set => SetProperty(ref _serviceFormTermsText, value); }
+        private string _warrantyTermsText = "";
+        public string WarrantyTermsText { get => _warrantyTermsText; set => SetProperty(ref _warrantyTermsText, value); }
+        private bool _showUnitPricesInPdf = true;
+        public bool ShowUnitPricesInPdf { get => _showUnitPricesInPdf; set => SetProperty(ref _showUnitPricesInPdf, value); }
+        private bool _showProductImagesInPdf = true;
+        public bool ShowProductImagesInPdf { get => _showProductImagesInPdf; set => SetProperty(ref _showProductImagesInPdf, value); }
+        private bool _showStampInPdf = true;
+        public bool ShowStampInPdf { get => _showStampInPdf; set => SetProperty(ref _showStampInPdf, value); }
+        private string _watermarkText = "";
+        public string WatermarkText { get => _watermarkText; set => SetProperty(ref _watermarkText, value); }
+        private ImageSource? _logoPreviewSource;
+        public ImageSource? LogoPreviewSource { get => _logoPreviewSource; set => SetProperty(ref _logoPreviewSource, value); }
+        private ImageSource? _stampPreviewSource;
+        public ImageSource? StampPreviewSource { get => _stampPreviewSource; set => SetProperty(ref _stampPreviewSource, value); }
+        private bool _hasCustomLogo;
+        public bool HasCustomLogo { get => _hasCustomLogo; set => SetProperty(ref _hasCustomLogo, value); }
+        private bool _hasCustomStamp;
+        public bool HasCustomStamp { get => _hasCustomStamp; set => SetProperty(ref _hasCustomStamp, value); }
 
         private string _companyIban = "";
         public string CompanyIban
@@ -266,7 +355,7 @@ namespace KamatekCrm.ViewModels
         /// Geliştirici Merkezi butonunun görünürlüğü. Yetki <see cref="Diagnostics.Authorization.DiagnosticAccessGuard"/>
         /// üzerinden hesaplanır; menü gizleme tek başına güvenlik sayılmaz, servisler de ayrıca denetler.
         /// </summary>
-        public bool IsDevCenterAvailable => _diagnosticGuard?.IsAuthorized == true;
+        public bool IsDevCenterAvailable => _diagnosticGuard?.IsAuthorized == true || _authorizationService.IsAuthorized(ApplicationPermission.AccessSettings);
 
         /// <summary>
         /// Geliştirici Merkezi'ni ayrı pencerede açar. Yetkisizse pencere hiç oluşturulmaz.
@@ -290,7 +379,7 @@ namespace KamatekCrm.ViewModels
             try
             {
                 viewModel = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
-                    .GetRequiredService<KamatekCrm.ViewModels.DevCenter.DevCenterViewModel>(App.ServiceProvider);
+                    .GetRequiredService<KamatekCrm.ViewModels.DevCenter.DevCenterViewModel>(_serviceProvider ?? App.ServiceProvider);
                 var window = new KamatekCrm.Views.DevCenter.DevCenterWindow(viewModel);
                 window.Owner = System.Windows.Application.Current?.MainWindow;
                 window.ShowDialog();
@@ -299,7 +388,7 @@ namespace KamatekCrm.ViewModels
             {
                 // Pencere/XAML yükleme hatası ana uygulamayı düşürmemeli.
                 viewModel?.Dispose();
-                _toastService?.ShowError("Geliştirici Merkezi açılamadı", ex.Message);
+                _toastService?.ShowError("Geliştirici Tanılama Merkezi açılamadı", ex.Message);
                 System.Diagnostics.Debug.WriteLine($"Dev Center modal error: {ex}");
             }
         }
@@ -628,7 +717,45 @@ namespace KamatekCrm.ViewModels
                     var dto = System.Text.Json.JsonSerializer.Deserialize<CompanySettingsDto>(json);
                     if (dto != null)
                     {
-                        _companyName = dto.CompanyName ?? "Kamatek Bilişim & Güvenlik";
+                        var profile = AppSettings.GetBrandProfile();
+                        _companyName = profile.CompanyName;
+                        _companySubtitle = profile.CompanySubtitle;
+                        _companySloganOrBranch = profile.CompanySloganOrBranch;
+                        _companyAddress = profile.Address;
+                        _companyPhone = profile.Phone;
+                        _companyEmail = profile.Email;
+                        _website = profile.Website;
+                        _taxOffice = profile.TaxOffice;
+                        _taxNumber = profile.TaxNumber;
+                        _tradeRegistryNo = profile.TradeRegistryNo;
+                        _mersisNo = profile.MersisNo;
+                        _bankName = profile.BankName;
+                        _accountHolder = profile.AccountHolder;
+                        _ibanTry = profile.IbanTry;
+                        _ibanUsd = profile.IbanUsd;
+                        _ibanEur = profile.IbanEur;
+                        _companyIban = !string.IsNullOrWhiteSpace(profile.IbanTry) ? profile.IbanTry : (dto.Iban ?? "");
+                        _customLogoPath = profile.CustomLogoPath;
+                        _customLogoBase64 = profile.CustomLogoBase64;
+                        _stampSignatureBase64 = profile.StampSignatureBase64;
+                        _primaryBrandColorHex = profile.PrimaryBrandColorHex;
+                        _accentBrandColorHex = profile.AccentBrandColorHex;
+                        _quoteValidityDays = profile.QuoteValidityDays;
+                        _quoteTermsText = profile.QuoteTermsText;
+                        _serviceFormTermsText = profile.ServiceFormTermsText;
+                        _warrantyTermsText = profile.WarrantyTermsText;
+                        _showUnitPricesInPdf = profile.ShowUnitPricesInPdf;
+                        _showProductImagesInPdf = profile.ShowProductImagesInPdf;
+                        _showStampInPdf = profile.ShowStampInPdf;
+                        _watermarkText = profile.WatermarkText;
+
+                        _hasCustomLogo = !string.IsNullOrWhiteSpace(_customLogoBase64) || (!string.IsNullOrWhiteSpace(_customLogoPath) && File.Exists(_customLogoPath));
+                        _hasCustomStamp = !string.IsNullOrWhiteSpace(_stampSignatureBase64);
+
+                        RefreshLogoPreview();
+                        RefreshStampPreview();
+
+                        _companyName = dto.CompanyName ?? profile.CompanyName;
                         _taxOffice = dto.TaxOffice ?? "";
                         _taxNumber = dto.TaxNumber ?? "";
                         _companyAddress = dto.Address ?? "";
@@ -656,6 +783,29 @@ namespace KamatekCrm.ViewModels
                 var dto = new CompanySettingsDto
                 {
                     CompanyName = CompanyName,
+                    CompanySubtitle = CompanySubtitle,
+                    CompanySloganOrBranch = CompanySloganOrBranch,
+                    Website = Website,
+                    TradeRegistryNo = TradeRegistryNo,
+                    MersisNo = MersisNo,
+                    BankName = BankName,
+                    AccountHolder = AccountHolder,
+                    IbanTry = !string.IsNullOrWhiteSpace(IbanTry) ? IbanTry : CompanyIban,
+                    IbanUsd = IbanUsd,
+                    IbanEur = IbanEur,
+                    CustomLogoPath = CustomLogoPath,
+                    CustomLogoBase64 = CustomLogoBase64,
+                    StampSignatureBase64 = StampSignatureBase64,
+                    PrimaryBrandColorHex = PrimaryBrandColorHex,
+                    AccentBrandColorHex = AccentBrandColorHex,
+                    QuoteValidityDays = QuoteValidityDays,
+                    QuoteTermsText = QuoteTermsText,
+                    ServiceFormTermsText = ServiceFormTermsText,
+                    WarrantyTermsText = WarrantyTermsText,
+                    ShowUnitPricesInPdf = ShowUnitPricesInPdf,
+                    ShowProductImagesInPdf = ShowProductImagesInPdf,
+                    ShowStampInPdf = ShowStampInPdf,
+                    WatermarkText = WatermarkText,
                     TaxOffice = TaxOffice,
                     TaxNumber = TaxNumber,
                     Address = CompanyAddress,
@@ -669,6 +819,40 @@ namespace KamatekCrm.ViewModels
                 };
                 string json = System.Text.Json.JsonSerializer.Serialize(dto, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(filePath, json);
+
+                var profile = new CompanyBrandProfile
+                {
+                    CompanyName = CompanyName,
+                    CompanySubtitle = CompanySubtitle,
+                    CompanySloganOrBranch = CompanySloganOrBranch,
+                    Address = CompanyAddress,
+                    Phone = CompanyPhone,
+                    Email = CompanyEmail,
+                    Website = Website,
+                    TaxOffice = TaxOffice,
+                    TaxNumber = TaxNumber,
+                    TradeRegistryNo = TradeRegistryNo,
+                    MersisNo = MersisNo,
+                    BankName = BankName,
+                    AccountHolder = AccountHolder,
+                    IbanTry = !string.IsNullOrWhiteSpace(IbanTry) ? IbanTry : CompanyIban,
+                    IbanUsd = IbanUsd,
+                    IbanEur = IbanEur,
+                    CustomLogoPath = CustomLogoPath,
+                    CustomLogoBase64 = CustomLogoBase64,
+                    StampSignatureBase64 = StampSignatureBase64,
+                    PrimaryBrandColorHex = PrimaryBrandColorHex,
+                    AccentBrandColorHex = AccentBrandColorHex,
+                    QuoteValidityDays = QuoteValidityDays,
+                    QuoteTermsText = QuoteTermsText,
+                    ServiceFormTermsText = ServiceFormTermsText,
+                    WarrantyTermsText = WarrantyTermsText,
+                    ShowUnitPricesInPdf = ShowUnitPricesInPdf,
+                    ShowProductImagesInPdf = ShowProductImagesInPdf,
+                    ShowStampInPdf = ShowStampInPdf,
+                    WatermarkText = WatermarkText
+                };
+                AppSettings.SaveBrandProfile(profile);
             }
             catch (Exception ex)
             {
@@ -715,8 +899,320 @@ namespace KamatekCrm.ViewModels
         {
             if (!EnsureSettingsAuthorized()) return;
             SaveCompanySettings();
-            _toastService?.ShowSuccess("Firma ve sistem ayarları başarıyla kaydedildi.");
+            _toastService?.ShowSuccess("Firma ve PDF marka ayarları başarıyla kaydedildi.");
         }
+
+        #region Branding & PDF Studio Methods & Commands
+
+        private void RefreshLogoPreview()
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(CustomLogoBase64))
+                {
+                    byte[] bytes = Convert.FromBase64String(CustomLogoBase64);
+                    LogoPreviewSource = LoadBitmapFromBytes(bytes);
+                    HasCustomLogo = true;
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(CustomLogoPath) && File.Exists(CustomLogoPath))
+                {
+                    byte[] bytes = File.ReadAllBytes(CustomLogoPath);
+                    LogoPreviewSource = LoadBitmapFromBytes(bytes);
+                    HasCustomLogo = true;
+                    return;
+                }
+
+                LoadDefaultLogoPreview();
+            }
+            catch
+            {
+                LoadDefaultLogoPreview();
+            }
+        }
+
+        private void LoadDefaultLogoPreview()
+        {
+            try
+            {
+                var uri = new Uri("pack://application:,,,/Assets/Images/KamatekLogo.png");
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = uri;
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                LogoPreviewSource = bitmap;
+                HasCustomLogo = false;
+            }
+            catch
+            {
+                LogoPreviewSource = null;
+                HasCustomLogo = false;
+            }
+        }
+
+        private void RefreshStampPreview()
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(StampSignatureBase64))
+                {
+                    byte[] bytes = Convert.FromBase64String(StampSignatureBase64);
+                    StampPreviewSource = LoadBitmapFromBytes(bytes);
+                    HasCustomStamp = true;
+                }
+                else
+                {
+                    StampPreviewSource = null;
+                    HasCustomStamp = false;
+                }
+            }
+            catch
+            {
+                StampPreviewSource = null;
+                HasCustomStamp = false;
+            }
+        }
+
+        private static BitmapImage LoadBitmapFromBytes(byte[] bytes)
+        {
+            using var ms = new MemoryStream(bytes);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = ms;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
+        }
+
+        [RelayCommand]
+        private async Task UploadLogoAsync()
+        {
+            if (!EnsureSettingsAuthorized()) return;
+
+            string? selectedPath = null;
+            if (_dialogService != null)
+            {
+                selectedPath = await _dialogService.ShowOpenFileDialogAsync("Kurumsal Logo Seçin", "Resim Dosyaları (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg");
+            }
+            else
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "Kurumsal Logo Seçin",
+                    Filter = "Resim Dosyaları (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg"
+                };
+                if (dialog.ShowDialog() == true)
+                    selectedPath = dialog.FileName;
+            }
+
+            if (string.IsNullOrWhiteSpace(selectedPath)) return;
+
+            try
+            {
+                FileSecurityValidator.ValidateImage(selectedPath);
+                byte[] bytes = await File.ReadAllBytesAsync(selectedPath);
+                CustomLogoBase64 = Convert.ToBase64String(bytes);
+                CustomLogoPath = selectedPath;
+                LogoPreviewSource = LoadBitmapFromBytes(bytes);
+                HasCustomLogo = true;
+
+                SaveCompanySettings();
+                _toastService?.ShowSuccess("Kurumsal logo başarıyla yüklendi ve kaydedildi.");
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError("Logo Yükleme Hatası", ex.Message);
+            }
+        }
+
+        [RelayCommand]
+        private void ResetToDefaultBrand()
+        {
+            if (!EnsureSettingsAuthorized()) return;
+
+            var defaultProfile = CompanyBrandProfile.CreateDefaultKamatek();
+            CompanyName = defaultProfile.CompanyName;
+            CompanySubtitle = defaultProfile.CompanySubtitle;
+            CompanySloganOrBranch = defaultProfile.CompanySloganOrBranch;
+            CompanyAddress = defaultProfile.Address;
+            CompanyPhone = defaultProfile.Phone;
+            CompanyEmail = defaultProfile.Email;
+            Website = defaultProfile.Website;
+            TaxOffice = defaultProfile.TaxOffice;
+            TaxNumber = defaultProfile.TaxNumber;
+            TradeRegistryNo = defaultProfile.TradeRegistryNo;
+            MersisNo = defaultProfile.MersisNo;
+            BankName = defaultProfile.BankName;
+            AccountHolder = defaultProfile.AccountHolder;
+            IbanTry = defaultProfile.IbanTry;
+            IbanUsd = defaultProfile.IbanUsd;
+            IbanEur = defaultProfile.IbanEur;
+            CompanyIban = defaultProfile.IbanTry;
+            CustomLogoPath = "";
+            CustomLogoBase64 = "";
+            StampSignatureBase64 = "";
+            PrimaryBrandColorHex = defaultProfile.PrimaryBrandColorHex;
+            AccentBrandColorHex = defaultProfile.AccentBrandColorHex;
+            QuoteValidityDays = defaultProfile.QuoteValidityDays;
+            QuoteTermsText = defaultProfile.QuoteTermsText;
+            ServiceFormTermsText = defaultProfile.ServiceFormTermsText;
+            WarrantyTermsText = defaultProfile.WarrantyTermsText;
+            ShowUnitPricesInPdf = defaultProfile.ShowUnitPricesInPdf;
+            ShowProductImagesInPdf = defaultProfile.ShowProductImagesInPdf;
+            ShowStampInPdf = defaultProfile.ShowStampInPdf;
+            WatermarkText = defaultProfile.WatermarkText;
+
+            LoadDefaultLogoPreview();
+            StampPreviewSource = null;
+            HasCustomLogo = false;
+            HasCustomStamp = false;
+
+            SaveCompanySettings();
+            _toastService?.ShowSuccess("Varsayılan Kamatek kurumsal kimliğine dönüldü.");
+        }
+
+        [RelayCommand]
+        private async Task UploadStampAsync()
+        {
+            if (!EnsureSettingsAuthorized()) return;
+
+            string? selectedPath = null;
+            if (_dialogService != null)
+            {
+                selectedPath = await _dialogService.ShowOpenFileDialogAsync("Dijital Kaşe / İmza Seçin", "Şeffaf PNG Dosyaları (*.png)|*.png|Tüm Resimler (*.png;*.jpg)|*.png;*.jpg");
+            }
+            else
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "Dijital Kaşe / İmza Seçin",
+                    Filter = "Şeffaf PNG Dosyaları (*.png)|*.png|Tüm Resimler (*.png;*.jpg)|*.png;*.jpg"
+                };
+                if (dialog.ShowDialog() == true)
+                    selectedPath = dialog.FileName;
+            }
+
+            if (string.IsNullOrWhiteSpace(selectedPath)) return;
+
+            try
+            {
+                FileSecurityValidator.ValidateImage(selectedPath);
+                byte[] bytes = await File.ReadAllBytesAsync(selectedPath);
+                StampSignatureBase64 = Convert.ToBase64String(bytes);
+                StampPreviewSource = LoadBitmapFromBytes(bytes);
+                HasCustomStamp = true;
+
+                SaveCompanySettings();
+                _toastService?.ShowSuccess("Dijital kaşe / imza başarıyla yüklendi.");
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError("Kaşe Yükleme Hatası", ex.Message);
+            }
+        }
+
+        [RelayCommand]
+        private void RemoveStamp()
+        {
+            if (!EnsureSettingsAuthorized()) return;
+
+            StampSignatureBase64 = "";
+            StampPreviewSource = null;
+            HasCustomStamp = false;
+
+            SaveCompanySettings();
+            _toastService?.ShowInfo("Dijital kaşe kaldırıldı.");
+        }
+
+        [RelayCommand]
+        private void ApplyBrandPalette(string paletteName)
+        {
+            switch (paletteName)
+            {
+                case "Kamatek":
+                    PrimaryBrandColorHex = "#182649";
+                    AccentBrandColorHex = "#D11920";
+                    break;
+                case "CorporateBlue":
+                    PrimaryBrandColorHex = "#0D47A1";
+                    AccentBrandColorHex = "#1E88E5";
+                    break;
+                case "ModernAnthracite":
+                    PrimaryBrandColorHex = "#263238";
+                    AccentBrandColorHex = "#FF6F00";
+                    break;
+                case "SecurityGreen":
+                    PrimaryBrandColorHex = "#1B5E20";
+                    AccentBrandColorHex = "#2E7D32";
+                    break;
+            }
+            _toastService?.ShowInfo($"Kurumsal renk paleti uygulandı: {paletteName}");
+        }
+
+        [RelayCommand]
+        private void PreviewSamplePdf()
+        {
+            try
+            {
+                var currentProfile = new CompanyBrandProfile
+                {
+                    CompanyName = CompanyName,
+                    CompanySubtitle = CompanySubtitle,
+                    CompanySloganOrBranch = CompanySloganOrBranch,
+                    Address = CompanyAddress,
+                    Phone = CompanyPhone,
+                    Email = CompanyEmail,
+                    Website = Website,
+                    TaxOffice = TaxOffice,
+                    TaxNumber = TaxNumber,
+                    TradeRegistryNo = TradeRegistryNo,
+                    MersisNo = MersisNo,
+                    BankName = BankName,
+                    AccountHolder = AccountHolder,
+                    IbanTry = !string.IsNullOrWhiteSpace(IbanTry) ? IbanTry : CompanyIban,
+                    IbanUsd = IbanUsd,
+                    IbanEur = IbanEur,
+                    CustomLogoPath = CustomLogoPath,
+                    CustomLogoBase64 = CustomLogoBase64,
+                    StampSignatureBase64 = StampSignatureBase64,
+                    PrimaryBrandColorHex = PrimaryBrandColorHex,
+                    AccentBrandColorHex = AccentBrandColorHex,
+                    QuoteValidityDays = QuoteValidityDays,
+                    QuoteTermsText = QuoteTermsText,
+                    ServiceFormTermsText = ServiceFormTermsText,
+                    WarrantyTermsText = WarrantyTermsText,
+                    ShowUnitPricesInPdf = ShowUnitPricesInPdf,
+                    ShowProductImagesInPdf = ShowProductImagesInPdf,
+                    ShowStampInPdf = ShowStampInPdf,
+                    WatermarkText = WatermarkText
+                };
+
+                var pdfService = _serviceProvider?.GetService(typeof(PdfService)) as PdfService 
+                                 ?? new PdfService(null!, null!);
+
+                string tempPdf = pdfService.GenerateSampleQuotePreviewPdf(currentProfile);
+
+                if (File.Exists(tempPdf))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = tempPdf,
+                        UseShellExecute = true
+                    });
+                    _toastService?.ShowSuccess("Örnek Teklif PDF'i oluşturuldu ve açıldı.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError("Örnek PDF Önizleme Hatası", ex.Message);
+            }
+        }
+
+        #endregion
 
         [RelayCommand]
         private void SelectBackupFolder()

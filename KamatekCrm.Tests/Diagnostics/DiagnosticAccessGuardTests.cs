@@ -133,6 +133,32 @@ public sealed class DiagnosticAccessGuardTests
         context.HasPermission(ApplicationPermission.AccessDiagnostics).Should().BeFalse();
     }
 
+    [Fact]
+    public void DesktopContext_AdminWithIsAdminTrueAndAllowlistEntry_HasDiagnosticsPermission()
+    {
+        var auth = new Mock<IAuthService>();
+        auth.SetupGet(item => item.IsLoggedIn).Returns(true);
+        auth.SetupGet(item => item.IsAdmin).Returns(true);
+        auth.SetupGet(item => item.CurrentUser).Returns(new User { Id = 1, Username = "admin", Role = "Admin" });
+
+        var context = new DesktopCurrentUserContext(auth.Object, EnabledOptions("admin"));
+
+        context.HasPermission(ApplicationPermission.AccessDiagnostics).Should().BeTrue();
+    }
+
+    [Fact]
+    public void DesktopContext_AdminWithIsAdminTrueWithoutAllowlistEntry_HasNoDiagnosticsPermission()
+    {
+        var auth = new Mock<IAuthService>();
+        auth.SetupGet(item => item.IsLoggedIn).Returns(true);
+        auth.SetupGet(item => item.IsAdmin).Returns(true);
+        auth.SetupGet(item => item.CurrentUser).Returns(new User { Id = 1, Username = "admin", Role = "Admin" });
+
+        var context = new DesktopCurrentUserContext(auth.Object, EnabledOptions("otherdev"));
+
+        context.HasPermission(ApplicationPermission.AccessDiagnostics).Should().BeFalse();
+    }
+
     private static DesktopCurrentUserContext CreateDesktopContext(string username, string role, DiagnosticOptions? options)
     {
         var auth = new Mock<IAuthService>();

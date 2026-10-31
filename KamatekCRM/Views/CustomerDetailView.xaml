@@ -19,22 +19,22 @@
         <helpers:SegmentToColorConverter x:Key="SegmentToColorConverter"/>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="20,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,16">
+        <Grid Grid.Row="0" Margin="0,0,0,10">
             <Button Content="← Geri" Command="{Binding NavigateBackCommand}" 
-                    Style="{StaticResource SecondaryButton}" Padding="16,4" HorizontalAlignment="Left"/>
+                    Style="{StaticResource BtnSecondary}" Height="36" Padding="14,4" HorizontalAlignment="Left"/>
         </Grid>
 
         <!-- ========== HEADER DASHBOARD ========== -->
-        <Border Grid.Row="1" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" CornerRadius="12" Padding="24" Margin="0,0,0,24">
+        <Border Grid.Row="1" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" CornerRadius="10" Padding="16,12" Margin="0,0,0,14">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.08" Color="Black"/>
+                <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="Black"/>
             </Border.Effect>
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -46,58 +46,58 @@
                 <!-- Avatar & Basic Info -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Avatar Placeholder -->
-                    <Border Width="64" Height="64" CornerRadius="32" Background="{DynamicResource StatusInfoBg}" BorderBrush="{DynamicResource StatusInfoFg}" BorderThickness="2" Margin="0,0,16,0">
-                        <TextBlock Text="👤" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="52" Height="52" CornerRadius="26" Background="{DynamicResource StatusInfoBg}" BorderBrush="{DynamicResource StatusInfoFg}" BorderThickness="1.5" Margin="0,0,14,0">
+                        <TextBlock Text="👤" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
 
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding FullName}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding CompanyName}" FontSize="14" Foreground="{DynamicResource ThemeTextSecondary}"
+                        <TextBlock Text="{Binding FullName}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                            <TextBlock Text="{Binding CompanyName}" FontSize="13" Foreground="{DynamicResource ThemeTextSecondary}"
                                        Visibility="{Binding CustomerType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Corporate}"/>
-                            <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="4" Padding="4,0" Margin="8,0,0,0">
+                            <Border Background="{DynamicResource StatusInfoBgLight}" CornerRadius="4" Padding="6,1" Margin="8,0,0,0">
                                 <TextBlock Text="{Binding CustomerCode}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource StatusInfoFgDark}"/>
                             </Border>
                         </StackPanel>
-                        <TextBlock Text="{Binding City}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+                        <TextBlock Text="{Binding City}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
 
                         <!-- Alanlar: Segment, Etiketler, Doğum Günü -->
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                             <!-- Segment -->
-                            <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0"
+                            <Border CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
                                     Background="{Binding Segment, Converter={StaticResource SegmentToColorConverter}, FallbackValue=Transparent}">
-                                <TextBlock Text="{Binding Segment, FallbackValue='Segment Yok'}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}"/>
+                                <TextBlock Text="{Binding Segment, FallbackValue='Standart'}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}"/>
                             </Border>
 
                             <!-- Sadakat Seviyesi -->
-                            <Border CornerRadius="4" Padding="8,4" Margin="0,0,8,0" Background="{DynamicResource ThemeWarning}"
+                            <Border CornerRadius="4" Padding="6,2" Margin="0,0,8,0" Background="{DynamicResource ThemeWarning}"
                                     Visibility="{Binding LoyaltyLevel, Converter={StaticResource NullToVisibilityConverter}, FallbackValue=Collapsed}">
                                 <TextBlock Text="{Binding LoyaltyLevel, FallbackValue=VIP}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}"/>
                             </Border>
 
                             <!-- Doğum Günü Yaklaşıyor -->
-                            <Border CornerRadius="4" Padding="8,4" Background="{DynamicResource ThemeError}"
+                            <Border CornerRadius="4" Padding="6,2" Background="{DynamicResource ThemeError}"
                                     Visibility="{Binding HasUpcomingBirthday, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <TextBlock Text="🎂 Doğum Günü Yaklaşıyor!" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}"/>
+                                <TextBlock Text="🎂 Doğum Günü Yaklaşıyor!" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}"/>
                             </Border>
                         </StackPanel>
 
                         <!-- Etiketler -->
-                        <TextBlock Text="{Binding Tags}" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,4,0,0"
+                        <TextBlock Text="{Binding Tags}" FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,3,0,0"
                                    Visibility="{Binding Tags, Converter={StaticResource NullToVisibilityConverter}}"/>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- Balance Widget -->
-                <Border Grid.Column="2" Background="{DynamicResource ThemeSidebarHover}" CornerRadius="8" Padding="24,8" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
+                <Border Grid.Column="2" Background="{DynamicResource ThemeSidebarHover}" CornerRadius="8" Padding="18,8" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                     <StackPanel HorizontalAlignment="Right">
-                        <TextBlock Text="GÜNCEL BAKİYE" FontSize="14" Foreground="{DynamicResource ThemeTextSecondary}" FontWeight="Bold" HorizontalAlignment="Right"/>
+                        <TextBlock Text="GÜNCEL BAKİYE" FontSize="12" Foreground="{DynamicResource ThemeTextSecondary}" FontWeight="Bold" HorizontalAlignment="Right"/>
                         <TextBlock Text="{Binding TotalBalance, StringFormat=c2}" 
-                                   FontSize="28" FontWeight="Bold" 
+                                   FontSize="22" FontWeight="Bold" 
                                    Foreground="{Binding BalanceColor}" 
                                    HorizontalAlignment="Right"/>
                         <TextBlock Text="{Binding TotalSpent, StringFormat='Toplam Harcama: {0:c2}'}" 
-                                   FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" HorizontalAlignment="Right" Margin="0,4,0,0"/>
+                                   FontSize="11" Foreground="{DynamicResource ThemeTextSecondary}" HorizontalAlignment="Right" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -108,41 +108,23 @@
 
             <!-- TAB 1: FINANCIALS (Cari Hesap) -->
             <TabItem Header="💰 Finans (Cari)">
-                <Grid Margin="16">
+                <Grid Margin="14,10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <!-- Actions Toolbar -->
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16" HorizontalAlignment="Right">
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12" HorizontalAlignment="Right">
                         <Button Content="📄 Cari Ekstre (PDF)" Command="{Binding ExportAccountStatementPdfCommand}"
-                                Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}" BorderThickness="0"
-                                Padding="16,8" FontSize="14" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,16,0">
-                            <Button.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="6"/>
-                                </Style>
-                            </Button.Resources>
-                        </Button>
+                                Style="{StaticResource BtnSecondary}"
+                                Height="38" Padding="14,0" Margin="0,0,10,0"/>
                         <Button Content="➕ Tahsilat Al" Command="{Binding AddPaymentCommand}"
-                                Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextOnStatusBrush}" BorderThickness="0"
-                                Padding="16,8" FontSize="14" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,16,0">
-                            <Button.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="6"/>
-                                </Style>
-                            </Button.Resources>
-                        </Button>
+                                Style="{StaticResource SuccessButton}"
+                                Height="38" Padding="14,0" Margin="0,0,10,0"/>
                         <Button Content="➖ Borç Ekle" Command="{Binding AddDebtCommand}"
-                                Background="{DynamicResource StatusErrorFg}" Foreground="{DynamicResource TextOnStatusBrush}" BorderThickness="0"
-                                Padding="16,8" FontSize="14" FontWeight="SemiBold" Cursor="Hand">
-                            <Button.Resources>
-                                <Style TargetType="Border">
-                                    <Setter Property="CornerRadius" Value="6"/>
-                                </Style>
-                            </Button.Resources>
-                        </Button>
+                                Style="{StaticResource DangerButton}"
+                                Height="38" Padding="14,0"/>
                     </StackPanel>
 
                     <!-- Transactions Grid -->
@@ -222,7 +204,7 @@
 
             <!-- TAB 2: SERVICE HISTORY -->
             <TabItem Header="🔧 Servis Geçmişi">
-                <Grid Margin="16">
+                <Grid Margin="14,10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
@@ -230,7 +212,7 @@
 
                     <Button Grid.Row="0" Content="🛠️ Yeni Servis Kaydı Aç" 
                             Command="{Binding CreateNewServiceJobCommand}"
-                            Style="{StaticResource ModernButton}" HorizontalAlignment="Right" Margin="0,0,0,16"/>
+                            Style="{StaticResource BtnPrimary}" Height="38" Padding="14,0" HorizontalAlignment="Right" Margin="0,0,0,12"/>
 
                     <DataGrid Grid.Row="1"
                               AutoGenerateColumns="False"
@@ -239,7 +221,7 @@
                               ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
                               CanUserAddRows="False"
                               IsReadOnly="True"
-                              RowHeight="50"
+                              RowHeight="44"
                               AlternatingRowBackground="{DynamicResource ApplicationBackgroundBrush}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="50"/>
@@ -338,22 +320,22 @@
 
             <!-- TAB 4: 360° TIMELINE -->
             <TabItem Header="⏱️ 360° Zaman Çizelgesi">
-                <Grid Margin="16">
+                <Grid Margin="14,10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="12" Margin="0,0,0,16">
+                    <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="10" Margin="0,0,0,12">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource ModernTextBox}" Margin="0,0,12,0"/>
+                                     Style="{StaticResource ModernTextBox}" Height="38" Margin="0,0,10,0"/>
                             <Button Grid.Column="1" Content="➕ Not Ekle" Command="{Binding AddNoteCommand}"
-                                    Style="{StaticResource ModernButton}" Padding="16,8"/>
+                                    Style="{StaticResource BtnPrimary}" Height="38" Padding="16,0"/>
                         </Grid>
                     </Border>
 

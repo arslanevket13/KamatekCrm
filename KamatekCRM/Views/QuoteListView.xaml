@@ -23,7 +23,7 @@
         </Grid.RowDefinitions>
 
         <!-- ═══════════════ ROW 0: HEADER ═══════════════ -->
-        <Grid Grid.Row="0" Margin="0,0,0,20">
+        <Grid Grid.Row="0" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -45,11 +45,11 @@
                        Icon="{ui:SymbolIcon Add24}"
                        Command="{Binding NewQuoteCommand}"
                        Appearance="Primary"
-                       Height="40" Padding="20,0" Cursor="Hand" VerticalAlignment="Center"/>
+                       Height="38" Padding="16,0" Cursor="Hand" VerticalAlignment="Center"/>
         </Grid>
 
         <!-- ═══════════════ ROW 1: KPI CARDS ═══════════════ -->
-        <Grid Grid.Row="1" Margin="0,0,0,20">
+        <Grid Grid.Row="1" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="16"/>
@@ -63,7 +63,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Toplam -->
-            <Border Grid.Column="0" Style="{StaticResource CardPanel}" Padding="16" Cursor="Hand">
+            <Border Grid.Column="0" Style="{StaticResource CardPanel}" Padding="12,8" Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding FilterAllCommand}"/>
                 </Border.InputBindings>
@@ -84,7 +84,7 @@
             </Border>
 
             <!-- Taslak -->
-            <Border Grid.Column="2" Style="{StaticResource CardPanel}" Padding="16" Cursor="Hand">
+            <Border Grid.Column="2" Style="{StaticResource CardPanel}" Padding="12,8" Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding FilterDraftCommand}"/>
                 </Border.InputBindings>
@@ -105,7 +105,7 @@
             </Border>
 
             <!-- Gönderildi -->
-            <Border Grid.Column="4" Style="{StaticResource CardPanel}" Padding="16" Cursor="Hand">
+            <Border Grid.Column="4" Style="{StaticResource CardPanel}" Padding="12,8" Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding FilterSentCommand}"/>
                 </Border.InputBindings>
@@ -128,7 +128,7 @@
             </Border>
 
             <!-- Onaylandı -->
-            <Border Grid.Column="6" Style="{StaticResource CardPanel}" Padding="16" Cursor="Hand">
+            <Border Grid.Column="6" Style="{StaticResource CardPanel}" Padding="12,8" Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding FilterApprovedCommand}"/>
                 </Border.InputBindings>
@@ -151,7 +151,7 @@
             </Border>
 
             <!-- Reddedildi -->
-            <Border Grid.Column="8" Style="{StaticResource CardPanel}" Padding="16" Cursor="Hand">
+            <Border Grid.Column="8" Style="{StaticResource CardPanel}" Padding="12,8" Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding FilterRejectedCommand}"/>
                 </Border.InputBindings>

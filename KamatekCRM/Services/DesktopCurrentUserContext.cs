@@ -25,6 +25,11 @@ public sealed class DesktopCurrentUserContext : ICurrentUserContext
 
     public bool HasPermission(ApplicationPermission permission)
     {
+        if (permission == ApplicationPermission.AccessDiagnostics)
+        {
+            return IsListedDeveloperAccount();
+        }
+
         if (_authService.IsAdmin) return true;
 
         return permission switch

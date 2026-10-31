@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Microsoft.Extensions.Configuration;
+using KamatekCrm.Shared.Models;
 
 namespace KamatekCrm.Settings
 {
@@ -12,6 +13,9 @@ namespace KamatekCrm.Settings
     {
         private static IConfiguration? _configuration;
         private static readonly object _lock = new();
+
+        private static CompanyBrandProfile? _cachedBrandProfile;
+        private static readonly object _brandLock = new();
 
         /// <summary>
         /// Yapılandırma nesnesi (lazy initialization)
@@ -82,18 +86,94 @@ namespace KamatekCrm.Settings
         /// </summary>
         public static bool UsePostgreSql => true;
 
-
         /// <summary>
-        /// Şirket adı
+        /// Şirket adı (Aktif marka profilinden, yoksa yapılandırmadan)
         /// </summary>
         public static string CompanyName => 
-            Configuration["AppSettings:CompanyName"] ?? "Kamatek";
+            GetBrandProfile().CompanyName ?? Configuration["AppSettings:CompanyName"] ?? "Kamatek";
 
         /// <summary>
         /// Uygulama sürümü
         /// </summary>
         public static string Version => 
             Configuration["AppSettings:Version"] ?? "1.0.0";
+
+        /// <summary>
+        /// Kurumsal marka kimliği ve PDF şablon profilini getirir.
+        /// Yerel JSON dosyası varsa oradan okur; yoksa varsayılan Kamatek profilini döner.
+        /// </summary>
+        public static CompanyBrandProfile GetBrandProfile()
+        {
+            if (_cachedBrandProfile != null) return _cachedBrandProfile;
+
+            lock (_brandLock)
+            {
+                if (_cachedBrandProfile != null) return _cachedBrandProfile;
+
+                try
+                {
+                    string filePath = GetCompanySettingsFilePath();
+                    if (File.Exists(filePath))
+                    {
+                        string json = File.ReadAllText(filePath);
+                        var profile = System.Text.Json.JsonSerializer.Deserialize<CompanyBrandProfile>(json);
+                        if (profile != null)
+                        {
+                            _cachedBrandProfile = profile;
+                            return _cachedBrandProfile;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Brand profile load warning: {ex.Message}");
+                }
+
+                _cachedBrandProfile = CompanyBrandProfile.CreateDefaultKamatek();
+                return _cachedBrandProfile;
+            }
+        }
+
+        /// <summary>
+        /// Kurumsal marka profilini kaydeder ve bellek içi önbelleği günceller.
+        /// </summary>
+        public static void SaveBrandProfile(CompanyBrandProfile profile)
+        {
+            ArgumentNullException.ThrowIfNull(profile);
+            lock (_brandLock)
+            {
+                try
+                {
+                    string filePath = GetCompanySettingsFilePath();
+                    string json = System.Text.Json.JsonSerializer.Serialize(profile, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(filePath, json);
+                    _cachedBrandProfile = profile;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Brand profile save error: {ex.Message}");
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Marka profili bellek önbelleğini temizler.
+        /// </summary>
+        public static void ClearBrandProfileCache()
+        {
+            lock (_brandLock)
+            {
+                _cachedBrandProfile = null;
+            }
+        }
+
+        public static string GetCompanySettingsFilePath()
+        {
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "KamatekCRM");
+            Directory.CreateDirectory(folder);
+            return Path.Combine(folder, "company_settings.json");
+        }
 
         /// <summary>
         /// Dinamik tema yönetimi için geçerli temanın kaydedilmesi (PremiumLight, MidnightDark, Glassmorphism)

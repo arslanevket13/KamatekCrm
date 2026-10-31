@@ -63,7 +63,7 @@
                     <Border x:Name="CardRoot"
                             Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                             CornerRadius="8"
-                            Padding="24"
+                            Padding="16,10"
                             MinWidth="{DynamicResource KpiCardMinWidth}"
                             MinHeight="{DynamicResource KpiCardHeight}"
                             BorderThickness="1"

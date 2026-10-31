@@ -66,12 +66,14 @@
 
                 <!-- Yalnızca yetkili geliştirici hesaplarına görünür; yetki servis katmanında da denetlenir. -->
                 <ui:Button Grid.Column="1"
-                           Content="Geliştirici Merkezi"
+                           Content="Geliştirici Tanılama Merkezi"
                            Appearance="Secondary"
                            VerticalAlignment="Center"
+                           Icon="{ui:SymbolIcon Wrench24}"
                            Command="{Binding OpenDevCenterCommand}"
                            Visibility="{Binding IsDevCenterAvailable, Converter={StaticResource BoolToVis}}"
-                           ToolTip="Canlı loglar, hata merkezi, performans ve sağlık kontrolleri"/>
+                           ToolTip="Geliştirici Tanılama Merkezi: Canlı loglar, hata merkezi, performans ve sağlık kontrolleri"
+                           Cursor="Hand"/>
             </Grid>
         </Border>
 
@@ -101,7 +103,7 @@
                         </Button.Style>
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Building24" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="Firma Bilgileri" VerticalAlignment="Center"/>
+                            <TextBlock Text="Firma &amp; PDF Kimliği" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
 
@@ -216,68 +218,293 @@
                                 </Style>
                             </StackPanel.Style>
 
-                            <TextBlock Text="🏢 Firma ve Şirket Bilgileri" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,4"/>
-                            <TextBlock Text="PDF Fiyat Teklifleri ve Fatura çıktılarında görünecek resmi şirket bilgileri" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20"/>
+                            <TextBlock Text="🏢 Firma Kimliği &amp; Kurumsal PDF Tasarım Stüdyosu" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Fiyat Teklifi, Servis/İş Emri Formu, Ekstre ve Fiş çıktılarında firmanızın kurumsal kimliğini, logosunu, renklerini, banka hesaplarını ve şartnamelerini özelleştirin." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20"/>
 
-                            <Grid Margin="0,0,0,16">
+                            <!-- İKİ SÜTUNLU ANA DÜZEN (Sol: Logo, Kaşe ve Renkler | Sağ: Resmi Bilgiler & Bankalar) -->
+                            <Grid Margin="0,0,0,20">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="320"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <Label Content="Firma Unvanı / Adı" FontWeight="SemiBold"/>
-                                    <ui:TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
-                                </StackPanel>
+                                <!-- SOL SÜTUN: GÖRSEL VE RENK KİMLİĞİ KARTI -->
+                                <Border Grid.Column="0" Margin="0,0,16,0" Padding="16" CornerRadius="10"
+                                        Background="{DynamicResource SurfacePageBrush}"
+                                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock Text="🎨 Görsel &amp; Renk Kimliği" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,12"/>
 
-                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                    <Label Content="E-Posta Adresi" FontWeight="SemiBold"/>
-                                    <ui:TextBox Text="{Binding CompanyEmail, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                        <!-- LOGO ÖNİZLEME VE İŞLEMLERİ -->
+                                        <Label Content="Firma Logosu (PDF Başlığı İçin)" FontWeight="SemiBold" FontSize="12"/>
+                                        <Border Height="95" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                                BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,4,0,8" Padding="6">
+                                            <Grid>
+                                                <Image Source="{Binding LogoPreviewSource}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Özel Logo Yok&#x0a;(Orijinal Kamatek Logosu Aktif)"
+                                                           FontSize="11" TextAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding LogoPreviewSource}" Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                        </Border>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                            <ui:Button Content="Logo Seç" Icon="{ui:SymbolIcon Image24}" Command="{Binding UploadLogoCommand}" Height="34" Margin="0,0,6,0" Cursor="Hand"/>
+                                            <ui:Button Content="Kamatek'e Sıfırla" Icon="{ui:SymbolIcon ArrowSync24}" Command="{Binding ResetToDefaultBrandCommand}" Appearance="Secondary" Height="34" Cursor="Hand" ToolTip="Özel logoyu kaldırıp orijinal Kamatek logosuna döner"/>
+                                        </StackPanel>
+
+                                        <!-- KAŞE & İMZA ÖNİZLEME -->
+                                        <Label Content="Yetkili Kaşe &amp; İmza (PDF Onay Bloğu)" FontWeight="SemiBold" FontSize="12"/>
+                                        <Border Height="75" CornerRadius="8" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                                BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,4,0,8" Padding="6">
+                                            <Grid>
+                                                <Image Source="{Binding StampPreviewSource}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Kaşe / İmza Yüklenmedi"
+                                                           FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding StampPreviewSource}" Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                        </Border>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                            <ui:Button Content="Kaşe Seç" Icon="{ui:SymbolIcon Image24}" Command="{Binding UploadStampCommand}" Height="34" Margin="0,0,6,0" Cursor="Hand"/>
+                                            <ui:Button Content="Kaldır" Icon="{ui:SymbolIcon Delete24}" Command="{Binding RemoveStampCommand}" Appearance="Danger" Height="34" Cursor="Hand"
+                                                       IsEnabled="{Binding HasCustomStamp}"/>
+                                        </StackPanel>
+
+                                        <!-- RENKLER -->
+                                        <TextBlock Text="PDF Kurumsal Renkleri (HEX)" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,6"/>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                                <Label Content="Ana Renk" FontSize="11"/>
+                                                <ui:TextBox Text="{Binding PrimaryBrandColorHex, UpdateSourceTrigger=PropertyChanged}" Height="32" FontSize="12"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                                <Label Content="Vurgu Rengi" FontSize="11"/>
+                                                <ui:TextBox Text="{Binding AccentBrandColorHex, UpdateSourceTrigger=PropertyChanged}" Height="32" FontSize="12"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Label Content="Hazır Renk Paletleri:" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        <WrapPanel Margin="0,2,0,0">
+                                            <ui:Button Content="Kamatek" Command="{Binding ApplyBrandPaletteCommand}" CommandParameter="Kamatek" Margin="0,0,4,4" Height="26" FontSize="11" Cursor="Hand"/>
+                                            <ui:Button Content="Kurumsal Mavi" Command="{Binding ApplyBrandPaletteCommand}" CommandParameter="CorporateBlue" Margin="0,0,4,4" Height="26" FontSize="11" Cursor="Hand"/>
+                                            <ui:Button Content="Modern Antrasit" Command="{Binding ApplyBrandPaletteCommand}" CommandParameter="ModernAnthracite" Margin="0,0,4,4" Height="26" FontSize="11" Cursor="Hand"/>
+                                            <ui:Button Content="Güvenlik Yeşili" Command="{Binding ApplyBrandPaletteCommand}" CommandParameter="SecurityGreen" Margin="0,0,4,4" Height="26" FontSize="11" Cursor="Hand"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- SAĞ SÜTUN: RESMİ ŞİRKET BİLGİLERİ VE BANKA HESAPLARI -->
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="🏛️ Resmi Firma ve İletişim Bilgileri" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,12"/>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                            <Label Content="Firma Unvanı (Marka Adı)" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <Label Content="Alt Başlık (Sektör/Açıklama)" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding CompanySubtitle, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                            <Label Content="Şube / Bölge / Slogan" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding CompanySloganOrBranch, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <Label Content="Web Sitesi" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding Website, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                            <Label Content="Vergi Dairesi" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding TaxOffice, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="6,0,6,0">
+                                            <Label Content="Vergi / TC No" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Margin="6,0,6,0">
+                                            <Label Content="Ticaret Sicil No" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding TradeRegistryNo, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="3" Margin="6,0,0,0">
+                                            <Label Content="MERSİS No" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding MersisNo, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                            <Label Content="Telefon Numarası" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding CompanyPhone, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <Label Content="E-Posta Adresi" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding CompanyEmail, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Margin="0,0,0,14">
+                                        <Label Content="Resmi Tebligat &amp; Firma Adresi" FontWeight="SemiBold"/>
+                                        <ui:TextBox Text="{Binding CompanyAddress, UpdateSourceTrigger=PropertyChanged}" Height="50" AcceptsReturn="True" TextWrapping="Wrap"/>
+                                    </StackPanel>
+
+                                    <TextBlock Text="💳 Banka &amp; IBAN Hesapları" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,10"/>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                            <Label Content="Banka Adı" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding BankName, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <Label Content="Hesap Sahibi" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding AccountHolder, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Margin="0,0,0,10">
+                                        <Label Content="IBAN (Türk Lirası - TRY)" FontWeight="SemiBold"/>
+                                        <ui:TextBox Text="{Binding IbanTry, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                    </StackPanel>
+
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                            <Label Content="IBAN (USD - Opsiyonel)" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding IbanUsd, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <Label Content="IBAN (EUR - Opsiyonel)" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding IbanEur, UpdateSourceTrigger=PropertyChanged}" Height="36"/>
+                                        </StackPanel>
+                                    </Grid>
                                 </StackPanel>
                             </Grid>
 
-                            <Grid Margin="0,0,0,16">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+                            <!-- ALT BÖLÜM: PDF BELGE TERCİHLERİ VE ŞARTNAME METİNLERİ -->
+                            <Border Padding="16" CornerRadius="10" Background="{DynamicResource SurfacePageBrush}"
+                                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,20">
+                                <StackPanel>
+                                    <TextBlock Text="📄 PDF Belge Tercihleri ve Hukuki Şartnameler" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,12"/>
 
-                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <Label Content="Vergi Dairesi" FontWeight="SemiBold"/>
-                                    <ui:TextBox Text="{Binding TaxOffice, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
+                                    <WrapPanel Margin="0,0,0,12">
+                                        <CheckBox Content="Birim Fiyatları Göster (İşaretsizse Paket Teklif Modu)" IsChecked="{Binding ShowUnitPricesInPdf}" VerticalAlignment="Center" Margin="0,0,20,8"/>
+                                        <CheckBox Content="Ürün Görsellerini Dahil Et" IsChecked="{Binding ShowProductImagesInPdf}" VerticalAlignment="Center" Margin="0,0,20,8"/>
+                                        <CheckBox Content="Yetkili Kaşe &amp; İmzayı Bas" IsChecked="{Binding ShowStampInPdf}" VerticalAlignment="Center" Margin="0,0,20,8"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,20,8">
+                                            <Label Content="Teklif Geçerlilik (Gün):" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <ui:TextBox Text="{Binding QuoteValidityDays, UpdateSourceTrigger=PropertyChanged}" Width="60" Height="32"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <Label Content="Filigran Metni:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <ui:TextBox Text="{Binding WatermarkText, UpdateSourceTrigger=PropertyChanged}" Width="150" Height="32"/>
+                                        </StackPanel>
+                                    </WrapPanel>
+
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                            <Label Content="Fiyat Teklifi Şartnamesi (Madde Madde)" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding QuoteTermsText, UpdateSourceTrigger=PropertyChanged}" Height="70" AcceptsReturn="True" TextWrapping="Wrap"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <Label Content="Servis &amp; İş Emri Şartnamesi" FontWeight="SemiBold"/>
+                                            <ui:TextBox Text="{Binding ServiceFormTermsText, UpdateSourceTrigger=PropertyChanged}" Height="70" AcceptsReturn="True" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Margin="0,0,0,4">
+                                        <Label Content="Garanti Belgesi Şartnamesi" FontWeight="SemiBold"/>
+                                        <ui:TextBox Text="{Binding WarrantyTermsText, UpdateSourceTrigger=PropertyChanged}" Height="54" AcceptsReturn="True" TextWrapping="Wrap"/>
+                                    </StackPanel>
                                 </StackPanel>
+                            </Border>
 
-                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                    <Label Content="Vergi Numarası" FontWeight="SemiBold"/>
-                                    <ui:TextBox Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
-                                </StackPanel>
-                            </Grid>
+                            <!-- AKSİYON BUTONLARI -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <ui:Button Content="Firma &amp; PDF Ayarlarını Kaydet" Icon="{ui:SymbolIcon Save24}"
+                                           Command="{Binding SaveCompanyInfoCommand}"
+                                           Appearance="Primary" Height="42" Padding="24,0" Cursor="Hand" Margin="0,0,12,0"/>
 
-                            <Grid Margin="0,0,0,16">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <StackPanel Grid.Column="0" Margin="0,0,12,0">
-                                    <Label Content="Telefon Numarası" FontWeight="SemiBold"/>
-                                    <ui:TextBox Text="{Binding CompanyPhone, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                    <Label Content="Banka IBAN Numarası" FontWeight="SemiBold"/>
-                                    <ui:TextBox Text="{Binding CompanyIban, UpdateSourceTrigger=PropertyChanged}" Height="38"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <StackPanel Margin="0,0,0,24">
-                                <Label Content="Firma Adresi" FontWeight="SemiBold"/>
-                                <ui:TextBox Text="{Binding CompanyAddress, UpdateSourceTrigger=PropertyChanged}" Height="60" AcceptsReturn="True" TextWrapping="Wrap"/>
+                                <ui:Button Content="Örnek Teklif PDF'ini Canlı Önizle" Icon="{ui:SymbolIcon DocumentPdf24}"
+                                           Command="{Binding PreviewSamplePdfCommand}"
+                                           Appearance="Secondary" Height="42" Padding="20,0" Cursor="Hand"/>
                             </StackPanel>
-
-                            <ui:Button Content="Firma Bilgilerini Kaydet" Icon="{ui:SymbolIcon Save24}"
-                                       Command="{Binding SaveCompanyInfoCommand}"
-                                       Appearance="Primary" Height="40" Padding="20,0" HorizontalAlignment="Left" Cursor="Hand"/>
                         </StackPanel>
 
                         <!-- TAB 1: GORUNUM & TEMA -->
@@ -578,6 +805,31 @@
                                                    Text="Stable: Kararlı genel yayın sürümleri. Beta: Test ve ön izleme (prerelease) sürümleri. Kanal değişimi yetkili yönetici izni gerektirir."/>
                                     </Grid>
                                 </StackPanel>
+                            </Border>
+
+                            <!-- Geliştirici & Tanılama Merkezi Kartı -->
+                            <Border Padding="18" CornerRadius="10" Margin="0,0,0,20" Background="{DynamicResource SurfacePageBrush}"
+                                    Visibility="{Binding IsDevCenterAvailable, Converter={StaticResource BoolToVis}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                            <ui:SymbolIcon Symbol="Wrench24" FontSize="20" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="GELİŞTİRİCİ TANILAMA MERKEZİ" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="Sistem performansı, bellek tüketimi, canlı log akışı, hata ve çökme raporları, XAML/Binding analizleri ve API/DB sağlık durumu izleme merkezi."
+                                                   FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" MaxWidth="600"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
+                                        <ui:Button Content="Geliştirici Tanılama Merkezini Aç"
+                                                   Icon="{ui:SymbolIcon Open24}"
+                                                   Command="{Binding OpenDevCenterCommand}"
+                                                   Appearance="Secondary" Height="38" Padding="16,0" Cursor="Hand"/>
+                                    </StackPanel>
+                                </Grid>
                             </Border>
                         </StackPanel>
                     </Grid>

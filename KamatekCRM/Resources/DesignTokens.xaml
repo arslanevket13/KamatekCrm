@@ -24,6 +24,6 @@
 
     <!-- ─────────── COMPONENT DIMENSIONS ─────────── -->
     <sys:Double x:Key="KpiCardMinWidth">240</sys:Double>
-    <sys:Double x:Key="KpiCardHeight">120</sys:Double>
+    <sys:Double x:Key="KpiCardHeight">68</sys:Double>
 
 </ResourceDictionary>

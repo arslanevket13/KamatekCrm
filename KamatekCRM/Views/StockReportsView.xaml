@@ -11,75 +11,75 @@
              d:DataContext="{d:DesignInstance Type=viewmodels:StockReportsViewModel, IsDesignTimeCreatable=False}"
              Background="{DynamicResource SurfacePageBrush}">
 
-    <Grid Margin="24">
+    <Grid Margin="20,16">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Header -->
-            <RowDefinition Height="Auto"/> <!-- Filters -->
-            <RowDefinition Height="*"/>    <!-- DataGrid -->
-            <RowDefinition Height="Auto"/> <!-- Summary -->
-            <RowDefinition Height="Auto"/> <!-- Footer -->
+            <RowDefinition Height="Auto"/> <!-- Row 0: Header -->
+            <RowDefinition Height="Auto"/> <!-- Row 1: Filters -->
+            <RowDefinition Height="Auto"/> <!-- Row 2: Summary Cards -->
+            <RowDefinition Height="*"/>    <!-- Row 3: DataGrid -->
+            <RowDefinition Height="Auto"/> <!-- Row 4: Footer -->
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
-            <TextBlock Text="📊" FontSize="28" VerticalAlignment="Center" Margin="0,0,16,0"/>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,12">
+            <TextBlock Text="📊" FontSize="24" VerticalAlignment="Center" Margin="0,0,12,0"/>
             <TextBlock Text="Stok Hareketleri Raporu" 
-                       FontSize="24" FontWeight="Bold"
+                       FontSize="22" FontWeight="Bold"
                        Foreground="{DynamicResource TextHeadingBrush}"
                        VerticalAlignment="Center"/>
         </StackPanel>
 
         <!-- Filters -->
-        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
+        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="14,10" Margin="0,0,0,12">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="8"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="15"/>
+                    <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="15"/>
+                    <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="15"/>
+                    <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="15"/>
+                    <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Start Date -->
                 <StackPanel Grid.Row="0" Grid.Column="0">
-                    <Label Content="Başlangıç Tarihi" Style="{StaticResource ModernLabel}"/>
-                    <DatePicker SelectedDate="{Binding StartDate}"
-                                Style="{StaticResource {x:Type DatePicker}}"/>
+                    <Label Content="Başlangıç Tarihi" Style="{StaticResource ModernLabel}" Margin="0,0,0,3"/>
+                    <DatePicker SelectedDate="{Binding StartDate}" MinWidth="130" Height="38"/>
                 </StackPanel>
 
                 <!-- End Date -->
                 <StackPanel Grid.Row="0" Grid.Column="2">
-                    <Label Content="Bitiş Tarihi" Style="{StaticResource ModernLabel}"/>
-                    <DatePicker SelectedDate="{Binding EndDate}"
-                                Style="{StaticResource {x:Type DatePicker}}"/>
+                    <Label Content="Bitiş Tarihi" Style="{StaticResource ModernLabel}" Margin="0,0,0,3"/>
+                    <DatePicker SelectedDate="{Binding EndDate}" MinWidth="130" Height="38"/>
                 </StackPanel>
 
                 <!-- Transaction Type -->
                 <StackPanel Grid.Row="0" Grid.Column="4">
-                    <Label Content="İşlem Tipi" Style="{StaticResource ModernLabel}"/>
+                    <Label Content="İşlem Tipi" Style="{StaticResource ModernLabel}" Margin="0,0,0,3"/>
                     <ComboBox ItemsSource="{Binding TransactionTypes}"
                               SelectedValue="{Binding SelectedTransactionType}"
                               SelectedValuePath="Type"
                               DisplayMemberPath="DisplayName"
-                              Style="{StaticResource ModernComboBox}"/>
+                              Style="{StaticResource ModernComboBox}"
+                              Height="38"/>
                 </StackPanel>
 
                 <!-- Warehouse -->
                 <StackPanel Grid.Row="0" Grid.Column="6">
-                    <Label Content="Depo" Style="{StaticResource ModernLabel}"/>
+                    <Label Content="Depo" Style="{StaticResource ModernLabel}" Margin="0,0,0,3"/>
                     <ComboBox ItemsSource="{Binding Warehouses}"
                               SelectedItem="{Binding SelectedWarehouse}"
                               DisplayMemberPath="Name"
-                              Style="{StaticResource ModernComboBox}">
+                              Style="{StaticResource ModernComboBox}"
+                              Height="38">
                         <ComboBox.ItemContainerStyle>
                             <Style TargetType="ComboBoxItem">
                                 <Setter Property="Padding" Value="8,5"/>
@@ -90,13 +90,14 @@
 
                 <!-- Product -->
                 <StackPanel Grid.Row="0" Grid.Column="8">
-                    <Label Content="Ürün" Style="{StaticResource ModernLabel}"/>
+                    <Label Content="Ürün" Style="{StaticResource ModernLabel}" Margin="0,0,0,3"/>
                     <ComboBox ItemsSource="{Binding Products}"
                               SelectedItem="{Binding SelectedProduct}"
                               DisplayMemberPath="ProductName"
                               IsEditable="True"
                               IsTextSearchEnabled="True"
-                              Style="{StaticResource ModernComboBox}"/>
+                              Style="{StaticResource ModernComboBox}"
+                              Height="38"/>
                 </StackPanel>
 
                 <!-- Buttons Row -->
@@ -104,217 +105,22 @@
                             Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="🗑️ Filtreleri Temizle" 
                             Command="{Binding ClearFiltersCommand}"
-                            Style="{StaticResource SecondaryButton}" 
-                            Height="35" Margin="0,0,16,0" Padding="16,0"/>
+                            Style="{StaticResource BtnSecondary}" 
+                            Height="38" Margin="0,0,10,0" Padding="14,0"/>
                     <Button Content="📋 Kopyala" 
                             Command="{Binding ExportCommand}"
-                            Style="{StaticResource SecondaryButton}" 
-                            Height="35" Margin="0,0,16,0" Padding="16,0"/>
+                            Style="{StaticResource BtnSecondary}" 
+                            Height="38" Margin="0,0,10,0" Padding="14,0"/>
                     <Button Content="🔍 Ara" 
                             Command="{Binding SearchCommand}"
-                            Style="{StaticResource ModernButton}" 
-                            Height="35" Width="120"/>
+                            Style="{StaticResource BtnPrimary}" 
+                            Height="38" Width="110"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- DataGrid -->
-        <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="0">
-            <DataGrid x:Name="TransactionsDataGrid" ItemsSource="{Binding Transactions}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      SelectionMode="Single"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="Horizontal"
-                      BorderThickness="0"
-                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                      RowHeight="38"
-                      ColumnHeaderHeight="40">
-
-                <DataGrid.ColumnHeaderStyle>
-                    <Style TargetType="DataGridColumnHeader">
-                        <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}"/>
-                        <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="Padding" Value="10,8"/>
-                        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                    </Style>
-                </DataGrid.ColumnHeaderStyle>
-
-                <DataGrid.CellStyle>
-                    <Style TargetType="DataGridCell">
-                        <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
-                        <Setter Property="Padding" Value="10,6"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="VerticalAlignment" Value="Center"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.CellStyle>
-
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsIncoming}" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource StatusSuccessBgLight}"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding IsIncoming}" Value="False">
-                                <Setter Property="Background" Value="{DynamicResource StatusErrorBgLight}"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </DataGrid.RowStyle>
-
-                <DataGrid.Columns>
-                    <!-- Date -->
-                    <DataGridTextColumn Header="Tarih" 
-                                        Binding="{Binding Date, StringFormat='dd.MM.yyyy'}" 
-                                        Width="90">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="10,0"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-
-                    <!-- Transaction Type -->
-                    <DataGridTemplateColumn Header="İşlem Tipi" Width="130">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Border Padding="4,4" CornerRadius="4" HorizontalAlignment="Left" Margin="8,0">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{DynamicResource ThemeBorder}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsIncoming}" Value="True">
-                                                    <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding IsIncoming}" Value="False">
-                                                    <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock Text="{Binding TransactionTypeName}" FontWeight="Medium" FontSize="11">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsIncoming}" Value="True">
-                                                        <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsIncoming}" Value="False">
-                                                        <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-
-                    <!-- Product Code -->
-                    <DataGridTextColumn Header="Ürün Kodu" 
-                                        Binding="{Binding ProductCode}" 
-                                        Width="100">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="FontFamily" Value="Consolas"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="10,0"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-
-                    <!-- Product Name -->
-                    <DataGridTextColumn Header="Ürün Adı" 
-                                        Binding="{Binding ProductName}" 
-                                        Width="*">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="10,0"/>
-                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-
-                    <!-- Source Warehouse -->
-                    <DataGridTextColumn Header="Kaynak" 
-                                        Binding="{Binding SourceWarehouseName}" 
-                                        Width="100">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-
-                    <!-- Target Warehouse -->
-                    <DataGridTextColumn Header="Hedef" 
-                                        Binding="{Binding TargetWarehouseName}" 
-                                        Width="100">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                                <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-
-                    <!-- Quantity -->
-                    <DataGridTextColumn Header="Miktar" 
-                                        Binding="{Binding Quantity}" 
-                                        Width="70">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-
-                    <!-- Reference -->
-                    <DataGridTextColumn Header="Referans" 
-                                        Binding="{Binding ReferenceId}" 
-                                        Width="120">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="FontFamily" Value="Consolas"/>
-                                <Setter Property="FontSize" Value="10"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="10,0"/>
-                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Border>
-
-        <components:KmEmptyState Grid.Row="2" Panel.ZIndex="1"
-                                 Icon="&#xE8A5;" Title="Hareket Bulunamadı"
-                                 Message="Seçili kriterlerle eşleşen stok hareketi yok."
-                                 AutomationProperties.Name="Stok hareketleri listesi boş"
-                                 Visibility="{Binding HasItems, ElementName=TransactionsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
-
-        <!-- Summary Cards -->
-        <Grid Grid.Row="3" Margin="0,16,0,0">
+        <!-- Summary Cards (Moved above DataGrid for ergonomic compact overview) -->
+        <Grid Grid.Row="2" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -323,25 +129,25 @@
             </Grid.ColumnDefinitions>
 
             <!-- Total In -->
-            <Border Grid.Column="0" Background="{DynamicResource StatusSuccessBg}" CornerRadius="8" Padding="16" Margin="0,0,8,0">
+            <Border Grid.Column="0" Background="{DynamicResource StatusSuccessBg}" CornerRadius="8" Padding="12,8" Margin="0,0,6,0">
                 <StackPanel>
-                    <TextBlock Text="📈 Toplam Giren" Foreground="{DynamicResource StatusSuccessFgDark}" FontWeight="Medium"/>
+                    <TextBlock Text="📈 Toplam Giren" Foreground="{DynamicResource StatusSuccessFgDark}" FontWeight="Medium" FontSize="11"/>
                     <TextBlock Text="{Binding TotalIn, StringFormat='{}{0:N0} adet'}" 
-                               FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
+                               FontSize="17" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
                 </StackPanel>
             </Border>
 
             <!-- Total Out -->
-            <Border Grid.Column="1" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="16" Margin="8,0,8,0">
+            <Border Grid.Column="1" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="12,8" Margin="6,0,6,0">
                 <StackPanel>
-                    <TextBlock Text="📉 Toplam Çıkan" Foreground="{DynamicResource StatusErrorFgDark}" FontWeight="Medium"/>
+                    <TextBlock Text="📉 Toplam Çıkan" Foreground="{DynamicResource StatusErrorFgDark}" FontWeight="Medium" FontSize="11"/>
                     <TextBlock Text="{Binding TotalOut, StringFormat='{}{0:N0} adet'}" 
-                               FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusErrorFg}"/>
+                               FontSize="17" FontWeight="Bold" Foreground="{DynamicResource StatusErrorFg}"/>
                 </StackPanel>
             </Border>
 
             <!-- Net Change -->
-            <Border Grid.Column="2" CornerRadius="8" Padding="16" Margin="8,0,8,0">
+            <Border Grid.Column="2" CornerRadius="8" Padding="12,8" Margin="6,0,6,0">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
@@ -356,8 +162,8 @@
                     </Style>
                 </Border.Style>
                 <StackPanel>
-                    <TextBlock Text="📊 Net Değişim" Foreground="{DynamicResource StatusInfoFg}" FontWeight="Medium"/>
-                    <TextBlock Text="{Binding NetChange, StringFormat='{}{0:+#,##0;-#,##0;0} adet'}" FontSize="20" FontWeight="Bold">
+                    <TextBlock Text="📊 Net Değişim" Foreground="{DynamicResource StatusInfoFg}" FontWeight="Medium" FontSize="11"/>
+                    <TextBlock Text="{Binding NetChange, StringFormat='{}{0:+#,##0;-#,##0;0} adet'}" FontSize="17" FontWeight="Bold">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
@@ -376,17 +182,214 @@
             </Border>
 
             <!-- Transaction Count -->
-            <Border Grid.Column="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="16" Margin="8,0,0,0">
+            <Border Grid.Column="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="12,8" Margin="6,0,0,0">
                 <StackPanel>
-                    <TextBlock Text="📝 Toplam Hareket" Foreground="{DynamicResource StatusWarningFgDark}" FontWeight="Medium"/>
+                    <TextBlock Text="📝 Toplam Hareket" Foreground="{DynamicResource StatusWarningFgDark}" FontWeight="Medium" FontSize="11"/>
                     <TextBlock Text="{Binding TransactionCount, StringFormat='{}{0:N0} kayıt'}" 
-                               FontSize="20" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
+                               FontSize="17" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
                 </StackPanel>
             </Border>
         </Grid>
 
+        <!-- DataGrid & Empty State Area -->
+        <Border Grid.Row="3" Style="{StaticResource CardPanel}" Padding="0" MinHeight="320">
+            <Grid>
+                <DataGrid x:Name="TransactionsDataGrid" ItemsSource="{Binding Transactions}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          SelectionMode="Single"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
+                          BorderThickness="0"
+                          Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                          RowHeight="40"
+                          ColumnHeaderHeight="40">
+
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="10,8"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
+                            <Setter Property="Padding" Value="10,6"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.CellStyle>
+
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsIncoming}" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource StatusSuccessBgLight}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsIncoming}" Value="False">
+                                    <Setter Property="Background" Value="{DynamicResource StatusErrorBgLight}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+
+                    <DataGrid.Columns>
+                        <!-- Date -->
+                        <DataGridTextColumn Header="Tarih" 
+                                            Binding="{Binding Date, StringFormat='dd.MM.yyyy'}" 
+                                            Width="90">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Margin" Value="10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Transaction Type -->
+                        <DataGridTemplateColumn Header="İşlem Tipi" Width="130">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Padding="6,3" CornerRadius="4" HorizontalAlignment="Left" Margin="8,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource ThemeBorder}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsIncoming}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsIncoming}" Value="False">
+                                                        <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding TransactionTypeName}" FontWeight="Medium" FontSize="11">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsIncoming}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsIncoming}" Value="False">
+                                                            <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Product Code -->
+                        <DataGridTextColumn Header="Ürün Kodu" 
+                                            Binding="{Binding ProductCode}" 
+                                            Width="100">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontFamily" Value="Consolas"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Margin" Value="10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Product Name -->
+                        <DataGridTextColumn Header="Ürün Adı" 
+                                            Binding="{Binding ProductName}" 
+                                            Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Margin" Value="10,0"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Source Warehouse -->
+                        <DataGridTextColumn Header="Kaynak" 
+                                            Binding="{Binding SourceWarehouseName}" 
+                                            Width="100">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Target Warehouse -->
+                        <DataGridTextColumn Header="Hedef" 
+                                            Binding="{Binding TargetWarehouseName}" 
+                                            Width="100">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Quantity -->
+                        <DataGridTextColumn Header="Miktar" 
+                                            Binding="{Binding Quantity}" 
+                                            Width="70">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Reference -->
+                        <DataGridTextColumn Header="Referans" 
+                                            Binding="{Binding ReferenceId}" 
+                                            Width="120">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontFamily" Value="Consolas"/>
+                                    <Setter Property="FontSize" Value="10"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Margin" Value="10,0"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <components:KmEmptyState Panel.ZIndex="1"
+                                         Icon="&#xE8A5;" Title="Hareket Bulunamadı"
+                                         Message="Seçili kriterlerle eşleşen stok hareketi yok."
+                                         AutomationProperties.Name="Stok hareketleri listesi boş"
+                                         Visibility="{Binding HasItems, ElementName=TransactionsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
+            </Grid>
+        </Border>
+
         <!-- Footer -->
-        <Grid Grid.Row="4" Margin="0,16,0,0">
+        <Grid Grid.Row="4" Margin="0,12,0,0">
             <!-- Status Message -->
             <TextBlock Text="{Binding StatusMessage}" 
                        VerticalAlignment="Center"
@@ -394,4 +397,3 @@
         </Grid>
     </Grid>
 </UserControl>
-

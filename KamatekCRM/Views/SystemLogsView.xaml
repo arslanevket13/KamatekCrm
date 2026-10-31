@@ -4,7 +4,7 @@
              xmlns:components="clr-namespace:KamatekCrm.Components"
              Background="{DynamicResource ApplicationBackgroundBrush}">
 
-    <Grid Margin="24">
+    <Grid Margin="20,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -12,18 +12,18 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Grid Grid.Row="0" Margin="0,0,0,24">
+        <Grid Grid.Row="0" Margin="0,0,0,12">
             <StackPanel>
                 <TextBlock Text="📋 Sistem Logları"
-                           FontSize="28" FontWeight="Bold"
+                           FontSize="24" FontWeight="Bold"
                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                 <TextBlock Text="Tüm kullanıcı işlemlerini görüntüle ve denetle"
-                           FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+                           FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
             </StackPanel>
             <Border HorizontalAlignment="Right" VerticalAlignment="Center"
                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource BorderDefaultBrush}"
-                    BorderThickness="1" CornerRadius="12" Padding="14,8">
+                    BorderThickness="1" CornerRadius="8" Padding="12,6">
                 <TextBlock Text="{Binding IntegritySummary}"
                            FontSize="11" FontWeight="SemiBold"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -31,7 +31,7 @@
         </Grid>
 
         <!-- Filters -->
-        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,16">
+        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="14,10" Margin="0,0,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -43,181 +43,184 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Search -->
-                <Grid Grid.Column="0" Margin="0,0,16,0">
+                <Grid Grid.Column="0" Margin="0,0,12,0">
                     <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource ModernTextBox}"
-                             Height="36" Padding="40,8,16,8"/>
-                    <TextBlock Text="🔍" FontSize="14" VerticalAlignment="Center" 
-                               Margin="16,0,0,0" IsHitTestVisible="False"/>
+                             Height="38" Padding="38,8,12,8"/>
+                    <TextBlock Text="🔍" FontSize="13" VerticalAlignment="Center" 
+                               Margin="12,0,0,0" IsHitTestVisible="False"/>
                 </Grid>
 
                 <!-- Action Filter -->
-                <StackPanel Grid.Column="1" Margin="0,0,16,0">
-                    <TextBlock Text="İşlem Tipi" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,0"/>
+                <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                    <TextBlock Text="İşlem Tipi" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                     <ComboBox ItemsSource="{Binding ActionTypes}"
                               SelectedItem="{Binding SelectedActionFilter}"
-                              Width="120" Height="36"/>
+                              Style="{StaticResource ModernComboBox}"
+                              Width="125" Height="38"/>
                 </StackPanel>
 
                 <!-- Entity Filter -->
-                <StackPanel Grid.Column="2" Margin="0,0,16,0">
-                    <TextBlock Text="Entity" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,0"/>
+                <StackPanel Grid.Column="2" Margin="0,0,12,0">
+                    <TextBlock Text="Entity" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                     <ComboBox ItemsSource="{Binding EntityTypes}"
                               SelectedItem="{Binding SelectedEntityFilter}"
-                              Width="120" Height="36"/>
+                              Style="{StaticResource ModernComboBox}"
+                              Width="125" Height="38"/>
                 </StackPanel>
 
                 <!-- Date Range -->
-                <StackPanel Grid.Column="3" Margin="0,0,16,0">
-                    <TextBlock Text="Başlangıç" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,0"/>
-                    <DatePicker SelectedDate="{Binding StartDate}" Width="120" Height="36"/>
+                <StackPanel Grid.Column="3" Margin="0,0,12,0">
+                    <TextBlock Text="Başlangıç" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                    <DatePicker SelectedDate="{Binding StartDate}" MinWidth="145" Width="145" Height="38"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="4" Margin="0,0,16,0">
-                    <TextBlock Text="Bitiş" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,0"/>
-                    <DatePicker SelectedDate="{Binding EndDate}" Width="120" Height="36"/>
+                <StackPanel Grid.Column="4" Margin="0,0,12,0">
+                    <TextBlock Text="Bitiş" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
+                    <DatePicker SelectedDate="{Binding EndDate}" MinWidth="145" Width="145" Height="38"/>
                 </StackPanel>
 
                 <!-- Buttons -->
                 <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Bottom">
                     <Button Content="🗑️ Temizle"
-                            Style="{StaticResource SecondaryButton}"
+                            Style="{StaticResource BtnSecondary}"
                             Command="{Binding ClearFiltersCommand}"
-                            Height="36" Padding="16,0" Margin="0,0,8,0"/>
+                            Height="38" Padding="14,0" Margin="0,0,8,0"/>
                     <Button Content="🔄 Yenile"
-                            Style="{StaticResource ModernButton}"
+                            Style="{StaticResource BtnPrimary}"
                             Command="{Binding RefreshCommand}"
-                            Height="36" Padding="16,0"/>
+                            Height="38" Padding="14,0"/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Logs Grid -->
         <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="0">
-            <DataGrid x:Name="LogsDataGrid" ItemsSource="{Binding Logs}"
-                      Style="{StaticResource ModernDataGrid}"
-                      ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      SelectionMode="Single"
-                      RowHeight="40">
-                
-                <DataGrid.Columns>
-                    <!-- Timestamp -->
-                    <DataGridTextColumn Header="Tarih/Saat" 
-                                        Binding="{Binding Timestamp, StringFormat=dd.MM.yyyy HH:mm:ss}" 
-                                        Width="150">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="12,0"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                <Setter Property="FontFamily" Value="Consolas"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+            <Grid>
+                <DataGrid x:Name="LogsDataGrid" ItemsSource="{Binding Logs}"
+                          Style="{StaticResource ModernDataGrid}"
+                          ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          RowHeight="42">
+                    
+                    <DataGrid.Columns>
+                        <!-- Timestamp -->
+                        <DataGridTextColumn Header="Tarih/Saat" 
+                                            Binding="{Binding Timestamp, StringFormat=dd.MM.yyyy HH:mm:ss}" 
+                                            Width="155">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Margin" Value="12,0"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <Setter Property="FontFamily" Value="Consolas"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
 
-                    <!-- User -->
-                    <DataGridTextColumn Header="Kullanıcı" 
-                                        Binding="{Binding Username}" 
-                                        Width="120">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="12,0"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        <!-- User -->
+                        <DataGridTextColumn Header="Kullanıcı" 
+                                            Binding="{Binding Username}" 
+                                            Width="120">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Margin" Value="12,0"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
 
-                    <!-- Action Type -->
-                    <DataGridTemplateColumn Header="İşlem" Width="130">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Border CornerRadius="12" Padding="8,4" HorizontalAlignment="Left" Margin="16,0">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{DynamicResource BorderDefaultBrush}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ActionType}" Value="Login">
-                                                    <Setter Property="Background" Value="{DynamicResource ThemeSuccessLight}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ActionType}" Value="Logout">
-                                                    <Setter Property="Background" Value="{DynamicResource ThemeWarningLight}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ActionType}" Value="Create">
-                                                    <Setter Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ActionType}" Value="Delete">
-                                                    <Setter Property="Background" Value="{DynamicResource ThemeErrorLight}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ActionType}" Value="PasswordChange">
-                                                    <Setter Property="Background" Value="{DynamicResource ThemeInfoLight}"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ActionType}" Value="PasswordReset">
-                                                    <Setter Property="Background" Value="{DynamicResource ThemeErrorLight}"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <TextBlock FontSize="11" FontWeight="SemiBold">
-                                        <Run Text="{Binding ActionIcon, Mode=OneWay}"/>
-                                        <Run Text=" "/>
-                                        <Run Text="{Binding ActionTypeDisplay, Mode=OneWay}"/>
-                                    </TextBlock>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                        <!-- Action Type -->
+                        <DataGridTemplateColumn Header="İşlem" Width="135">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="8" Padding="8,4" HorizontalAlignment="Left" Margin="12,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource BorderDefaultBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ActionType}" Value="Login">
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeSuccessLight}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionType}" Value="Logout">
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeWarningLight}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionType}" Value="Create">
+                                                        <Setter Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionType}" Value="Delete">
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeErrorLight}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionType}" Value="PasswordChange">
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeInfoLight}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding ActionType}" Value="PasswordReset">
+                                                        <Setter Property="Background" Value="{DynamicResource ThemeErrorLight}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#FFFFFF">
+                                            <Run Text="{Binding ActionIcon, Mode=OneWay}"/>
+                                            <Run Text=" "/>
+                                            <Run Text="{Binding ActionTypeDisplay, Mode=OneWay}"/>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
-                    <!-- Entity -->
-                    <DataGridTextColumn Header="Entity" 
-                                        Binding="{Binding EntityName}" 
-                                        Width="100">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="12,0"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        <!-- Entity -->
+                        <DataGridTextColumn Header="Entity" 
+                                            Binding="{Binding EntityName}" 
+                                            Width="125">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Margin" Value="12,0"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
 
-                    <!-- Record ID -->
-                    <DataGridTextColumn Header="ID" 
-                                        Binding="{Binding RecordId}" 
-                                        Width="60">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="12,0"/>
-                                <Setter Property="FontFamily" Value="Consolas"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                        <!-- Record ID -->
+                        <DataGridTextColumn Header="ID" 
+                                            Binding="{Binding RecordId}" 
+                                            Width="70">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Margin" Value="12,0"/>
+                                    <Setter Property="FontFamily" Value="Consolas"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
 
-                    <!-- Description -->
-                    <DataGridTextColumn Header="Açıklama" 
-                                        Binding="{Binding Description}" 
-                                        Width="*" MinWidth="250">
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Margin" Value="12,0"/>
-                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                </DataGrid.Columns>
-            </DataGrid>
+                        <!-- Description -->
+                        <DataGridTextColumn Header="Açıklama" 
+                                            Binding="{Binding Description}" 
+                                            Width="*" MinWidth="250">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Margin" Value="12,0"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <components:KmEmptyState Panel.ZIndex="1"
+                                         Icon="&#xE8A5;" Title="Kayıt Bulunamadı"
+                                         Message="Seçili filtrelerle eşleşen sistem kaydı yok."
+                                         AutomationProperties.Name="Sistem logları listesi boş"
+                                         Visibility="{Binding HasItems, ElementName=LogsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
+            </Grid>
         </Border>
-
-        <components:KmEmptyState Grid.Row="2" Panel.ZIndex="1"
-                                 Icon="&#xE8A5;" Title="Kayıt Bulunamadı"
-                                 Message="Seçili filtrelerle eşleşen sistem kaydı yok."
-                                 AutomationProperties.Name="Sistem logları listesi boş"
-                                 Visibility="{Binding HasItems, ElementName=LogsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
     </Grid>
 </UserControl>
-
