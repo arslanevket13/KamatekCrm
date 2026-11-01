@@ -179,8 +179,8 @@
                 </Grid.RowDefinitions>
 
                 <!-- Logo Header - Corporate Sleek -->
-                <Border Grid.Row="0" Padding="12,14" Background="{DynamicResource SurfaceSidebarBrush}"
-                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1">
+                <Border Grid.Row="0" Padding="12,10" Background="#0B1120"
+                        BorderBrush="#1E293B" BorderThickness="0,0,0,1">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -207,8 +207,8 @@
                         
                         <!-- Logo -->
                         <Image Grid.Column="1" Source="/Assets/Images/KamatekLogo.png" 
-                               MaxHeight="42" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Center"
-                               Margin="12,0,0,0"
+                               MaxHeight="38" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Margin="8,0,0,0"
                                Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                     </Grid>
                 </Border>
@@ -637,7 +637,7 @@
             </Border>
             
             <!-- Glass Header Bar -->
-            <Border Grid.Row="0" Height="60" Padding="16,0" CornerRadius="14" Margin="12,12,12,6" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
+            <Border Grid.Row="0" Height="58" Padding="16,0" CornerRadius="14" Margin="12,12,12,6" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -659,7 +659,7 @@
                         <Path Data="{StaticResource HomeIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"/>
                         <TextBlock Text=" / " Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="6,0" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding CurrentViewTitle, TargetNullValue='Çalışma Alanı'}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"
-                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding CurrentViewTitle}"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="320" ToolTip="{Binding CurrentViewTitle}"
                                    AutomationProperties.HeadingLevel="Level2"/>
                     </StackPanel>
 
@@ -700,7 +700,7 @@
                         </Border>
 
                         <!-- Quick Interaction Add Button -->
-                        <ui:Button Command="{Binding OpenQuickInteractionAddCommand}" Content="Görüşme Kaydet" Icon="{ui:SymbolIcon CallAdd24}" ToolTip="Hızlı Görüşme / Talep Kaydı" Margin="0,0,8,0" Appearance="Primary" Height="34" Padding="12,0"/>
+                        <ui:Button Command="{Binding OpenQuickInteractionAddCommand}" Content="Görüşme Kaydet" Icon="{ui:SymbolIcon CallAdd24}" ToolTip="Hızlı Görüşme / Talep Kaydı" Margin="0,0,8,0" Height="34" Padding="12,0" Background="#2563EB" Foreground="#FFFFFF" FontWeight="SemiBold"/>
 
                         <!-- Quick Add Button -->
                         <Button Command="{Binding OpenQuickAddCommand}" Style="{StaticResource GlassIconButton}" ToolTip="Hızlı Ekle (Ctrl+K)" Margin="0,0,12,0">

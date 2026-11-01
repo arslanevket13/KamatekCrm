@@ -150,11 +150,13 @@
                     <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
                         <ui:Button Content="Kaydet" Icon="{ui:SymbolIcon Save24}"
                                    Command="{Binding SaveCommand}" CommandParameter="{x:Null}"
-                                   Appearance="Primary" Height="38" HorizontalAlignment="Stretch"
+                                   Background="#2563EB" Foreground="#FFFFFF" FontWeight="SemiBold"
+                                   Height="38" HorizontalAlignment="Stretch"
                                    Cursor="Hand" Margin="0,0,0,6"/>
                         <ui:Button Content="Kaydet ve Görev Oluştur" Icon="{ui:SymbolIcon TaskListAdd24}"
                                    Command="{Binding SaveCommand}" CommandParameter="{x:Null}"
-                                   Appearance="Secondary" Height="36" HorizontalAlignment="Stretch"
+                                   Background="#1E293B" Foreground="#F8FAFC" BorderBrush="#475569" BorderThickness="1"
+                                   Height="38" HorizontalAlignment="Stretch"
                                    Cursor="Hand"/>
                     </StackPanel>
 
@@ -169,44 +171,44 @@
                             <!-- Hızlı Talep Türleri — Kompakt Chip Grid (3x2) -->
                             <UniformGrid Columns="3" Margin="0,0,0,8">
                                 <ui:Button Content="💰 Fiyat" Command="{Binding SelectQuickTypeCommand}" CommandParameter="PriceQuote"
-                                           Height="30" Padding="4,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
+                                           Height="34" Padding="4,0" Margin="3" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                                 <ui:Button Content="📐 Keşif" Command="{Binding SelectQuickTypeCommand}" CommandParameter="Discovery"
-                                           Height="30" Padding="4,0" Margin="0,0,4,4" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
+                                           Height="34" Padding="4,0" Margin="3" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                                 <ui:Button Content="🔧 Servis" Command="{Binding SelectQuickTypeCommand}" CommandParameter="ServiceStatus"
-                                           Height="30" Padding="4,0" Margin="0,0,0,4" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
+                                           Height="34" Padding="4,0" Margin="3" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                                 <ui:Button Content="👑 Patron" Command="{Binding SelectQuickTypeCommand}" CommandParameter="ManagerAgenda"
-                                           Height="30" Padding="4,0" Margin="0,0,4,0" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
+                                           Height="34" Padding="4,0" Margin="3" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                                 <ui:Button Content="⚠️ Şikâyet" Command="{Binding SelectQuickTypeCommand}" CommandParameter="Complaint"
-                                           Height="30" Padding="4,0" Margin="0,0,4,0" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
+                                           Height="34" Padding="4,0" Margin="3" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                                 <ui:Button Content="📞 Geri Ara" Command="{Binding SelectQuickTypeCommand}" CommandParameter="CallBack"
-                                           Height="30" Padding="4,0" Margin="0,0,0,0" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
+                                           Height="34" Padding="4,0" Margin="3" Appearance="Secondary" FontSize="11" Cursor="Hand" HorizontalAlignment="Stretch"/>
                             </UniformGrid>
 
                             <!-- Telefon -->
                             <TextBlock Text="Telefon *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                             <ui:TextBox Text="{Binding CallerPhone, UpdateSourceTrigger=PropertyChanged}"
-                                        PlaceholderText="05XX XXX XX XX" Height="32" Margin="0,0,0,6"/>
+                                        PlaceholderText="05XX XXX XX XX" Height="38" Margin="0,0,0,6"/>
 
                             <!-- Eşleşen Müşteri -->
                             <ComboBox ItemsSource="{Binding PhoneMatches}" SelectedItem="{Binding SelectedCustomerMatch}"
-                                      DisplayMemberPath="FullName" Height="30" Margin="0,0,0,6"
+                                      DisplayMemberPath="FullName" Height="38" Margin="0,0,0,6"
                                       Visibility="{Binding PhoneMatches.Count, Converter={StaticResource IntToVis}}"/>
 
                             <!-- Müşteri / Arayan -->
                             <TextBlock Text="Müşteri / Arayan *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                             <ui:TextBox Text="{Binding CallerName, UpdateSourceTrigger=PropertyChanged}"
-                                        PlaceholderText="Ad Soyad veya Firma" Height="32" Margin="0,0,0,6"/>
+                                        PlaceholderText="Ad Soyad veya Firma" Height="38" Margin="0,0,0,6"/>
 
                             <!-- Konu -->
                             <TextBlock Text="Konu *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                             <ui:TextBox Text="{Binding Subject, UpdateSourceTrigger=PropertyChanged}"
-                                        PlaceholderText="Görüşme konusu" Height="32" Margin="0,0,0,6"/>
+                                        PlaceholderText="Görüşme konusu" Height="38" Margin="0,0,0,6"/>
 
                             <!-- Kısa Not -->
                             <TextBlock Text="Kısa Not *" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
                             <ui:TextBox Text="{Binding Summary, UpdateSourceTrigger=PropertyChanged}"
-                                        PlaceholderText="Müşterinin talebi..." Height="50" TextWrapping="Wrap"
-                                        AcceptsReturn="True" Margin="0,0,0,6"/>
+                                        PlaceholderText="Müşterinin talebi..." Height="80" TextWrapping="Wrap"
+                                        AcceptsReturn="True" VerticalContentAlignment="Top" Margin="0,0,0,6"/>
 
                             <!-- Sorumlu ve Öncelik — Yan yana -->
                             <Grid Margin="0,0,0,6">
@@ -330,7 +332,7 @@
                         </DataGrid.CellStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Saat" Binding="{Binding InteractionDate, StringFormat={}{0:HH:mm}}" Width="65"/>
+                            <DataGridTextColumn Header="Saat" Binding="{Binding InteractionDate, StringFormat={}{0:HH:mm}}" Width="75"/>
 
                             <DataGridTemplateColumn Header="Müşteri" Width="*" MinWidth="130">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -354,7 +356,7 @@
                             <DataGridTextColumn Header="Tür" Binding="{Binding RequestType}" Width="85"/>
                             <DataGridTextColumn Header="Sorumlu" Binding="{Binding AssignedToUsername, TargetNullValue='—'}" Width="85"/>
                             <DataGridTextColumn Header="Takip" Binding="{Binding FollowUpDate, StringFormat={}{0:dd.MM HH:mm}, TargetNullValue='—'}" Width="90"/>
-                            <DataGridTextColumn Header="Durum" Binding="{Binding Status}" Width="85"/>
+                            <DataGridTextColumn Header="Durum" Binding="{Binding Status}" Width="95"/>
                         </DataGrid.Columns>
                     </DataGrid>
 

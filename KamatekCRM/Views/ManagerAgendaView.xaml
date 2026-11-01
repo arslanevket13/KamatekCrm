@@ -148,7 +148,9 @@
                           RowHeight="44"
                           Background="Transparent" BorderThickness="0"
                           GridLinesVisibility="Horizontal" HeadersVisibility="Column"
-                          AlternatingRowBackground="{DynamicResource HoverOverlayBrush}">
+                          AlternatingRowBackground="{DynamicResource HoverOverlayBrush}"
+                          VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.CanContentScroll="True">
 
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader">

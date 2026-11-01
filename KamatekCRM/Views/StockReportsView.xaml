@@ -192,7 +192,7 @@
         </Grid>
 
         <!-- DataGrid & Empty State Area -->
-        <Border Grid.Row="3" Style="{StaticResource CardPanel}" Padding="0" MinHeight="320">
+        <Border Grid.Row="3" CornerRadius="8" Background="{DynamicResource SurfaceCardBrush}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="0" Margin="0" MinHeight="260">
             <Grid>
                 <DataGrid x:Name="TransactionsDataGrid" ItemsSource="{Binding Transactions}"
                           AutoGenerateColumns="False"

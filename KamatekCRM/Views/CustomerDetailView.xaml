@@ -66,7 +66,18 @@
                             <!-- Segment -->
                             <Border CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
                                     Background="{Binding Segment, Converter={StaticResource SegmentToColorConverter}, FallbackValue=Transparent}">
-                                <TextBlock Text="{Binding Segment, FallbackValue='Standart'}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}"/>
+                                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="{Binding Segment, FallbackValue='Standart'}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Segment}" Value="None">
+                                                    <Setter Property="Text" Value="Standart"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </Border>
 
                             <!-- Sadakat Seviyesi -->

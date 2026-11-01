@@ -27,7 +27,7 @@
         </Grid.RowDefinitions>
 
         <!-- ════════ ROW 0: HEADER & MAIN ACTIONS ════════ -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,12">
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="Ürünler ve Stok" Style="{StaticResource PageTitle}"/>
                 <TextBlock Text="Ürün envanterinizi izleyin, stok seviyelerini ve fiyatları yönetin" 
@@ -50,13 +50,13 @@
                 <ui:Button Content="Yeni Ürün Ekle" 
                            Icon="{ui:SymbolIcon Add24}"
                            Command="{Binding AddNewProductCommand}"
-                           Appearance="Primary"
+                           Background="#2563EB" Foreground="#FFFFFF" FontWeight="SemiBold"
                            Height="38" Padding="18,0"/>
             </StackPanel>
         </DockPanel>
 
         <!-- ════════ ROW 1: KPI SUMMARY CARDS PANEL ════════ -->
-        <Grid Grid.Row="1" Margin="0,0,0,12">
+        <Grid Grid.Row="1" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="12"/>
@@ -131,14 +131,14 @@
         </Grid>
 
         <!-- ════════ ROW 2: FILTER TOOLBAR ════════ -->
-        <Border Grid.Row="2" Style="{StaticResource FilterToolbarCard}" Margin="0,0,0,12" Padding="12,8">
+        <Border Grid.Row="2" Style="{StaticResource FilterToolbarCard}" Margin="0,0,0,10" Padding="12,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="165"/>
                     <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="165"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Search Input -->
@@ -155,7 +155,7 @@
                     <ComboBox ItemsSource="{Binding CategoryFilterItems}"
                               SelectedItem="{Binding SelectedCategoryFilter}"
                               Style="{StaticResource AccessibleComboBox}"
-                              Height="38"
+                              Height="38" Width="165"
                               AutomationProperties.Name="Kategori filtresi"/>
                 </StackPanel>
 
@@ -163,7 +163,7 @@
                 <StackPanel Grid.Column="4">
                     <ComboBox SelectedValuePath="Content" SelectedValue="{Binding StockStatusFilter}"
                               Style="{StaticResource AccessibleComboBox}"
-                              Height="38"
+                              Height="38" Width="165"
                               AutomationProperties.Name="Stok durumu filtresi">
                         <ComboBoxItem Content="Tümü"/>
                         <ComboBoxItem Content="Stokta Var"/>
@@ -175,7 +175,7 @@
         </Border>
 
         <!-- ════════ ROW 3: PRODUCT DATAGRID ════════ -->
-        <Border Grid.Row="3" Style="{StaticResource CardPanel}" Padding="0">
+        <Border Grid.Row="3" CornerRadius="8" Background="{DynamicResource SurfaceCardBrush}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="0" Margin="0">
             <Grid Margin="12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>

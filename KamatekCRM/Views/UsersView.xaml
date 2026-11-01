@@ -51,16 +51,19 @@
             <components:KmKpiCard Title="Toplam Kullanıcı"
                                    Value="{Binding TotalUsersCount}"
                                    Icon="&#xE716;"
+                                   MaxHeight="76"
                                    AccentBrush="{DynamicResource ThemePrimary}"
                                    Margin="0,0,10,0"/>
             <components:KmKpiCard Title="Aktif Personel"
                                    Value="{Binding ActiveTechniciansCount}"
                                    Icon="&#xE90F;"
+                                   MaxHeight="76"
                                    AccentBrush="{DynamicResource ThemeSuccess}"
                                    Margin="0,0,10,0"/>
             <components:KmKpiCard Title="Yöneticiler"
                                    Value="{Binding AdminCount}"
                                    Icon="&#xE7EF;"
+                                   MaxHeight="76"
                                    AccentBrush="{DynamicResource ThemeWarning}"
                                    Margin="0,0,0,0"/>
         </UniformGrid>
@@ -95,7 +98,8 @@
                                Height="38" Padding="14,0" Margin="0,0,8,0" Cursor="Hand"/>
                     
                     <ui:Button Content="Yeni Kullanıcı Ekle" Icon="{ui:SymbolIcon PersonAdd24}"
-                               Command="{Binding AddUserCommand}" Appearance="Primary"
+                               Command="{Binding AddUserCommand}"
+                               Background="#2563EB" Foreground="#FFFFFF" FontWeight="SemiBold"
                                Height="38" Padding="16,0" IsEnabled="{Binding IsAdmin}" Cursor="Hand"/>
                 </StackPanel>
             </Grid>

@@ -62,7 +62,8 @@
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                         <ui:Button Content="Yeni Arıza / Cihaz Kaydı" Icon="{ui:SymbolIcon Wrench24}"
                                    Command="{Binding OpenFaultTicketCommand}"
-                                   Appearance="Primary" Margin="0,0,8,0" Height="36" Padding="14,0" Cursor="Hand"/>
+                                   Background="#2563EB" Foreground="#FFFFFF" FontWeight="SemiBold"
+                                   Margin="0,0,8,0" Height="36" Padding="14,0" Cursor="Hand"/>
 
                         <ui:Button Content="Hızlı Satış (POS)" Icon="{ui:SymbolIcon Cart24}"
                                    Command="{Binding OpenDirectSalesCommand}"
@@ -76,33 +77,37 @@
             </Border>
 
             <!-- ═══════════════ ROW 2: PRIMARY KPI'LAR (MAX 4) ═══════════════ -->
-            <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,12">
+            <UniformGrid Grid.Row="2" Columns="4" Margin="0,0,0,10">
                 <km:KmKpiCard Title="Bugünkü Satış"
                                Value="{Binding TodaySalesTotal}"
                                Prefix="₺" Format="N0"
                                Icon="&#xEAFD;"
+                               MaxHeight="76"
                                Subtitle="{Binding TodaySalesCountText}"
                                AccentBrush="{DynamicResource KpiGradientPurple}"
-                               Margin="0,0,12,0"/>
+                               Margin="0,0,10,0"/>
 
                 <km:KmKpiCard Title="Aylık Satış"
                                Value="{Binding MonthlySalesTotal}"
                                Prefix="₺" Format="N0"
                                Icon="&#xE9D2;"
+                               MaxHeight="76"
                                Subtitle="{Binding CurrentMonthName}"
                                AccentBrush="{DynamicResource KpiGradientGreen}"
-                               Margin="0,0,12,0"/>
+                               Margin="0,0,10,0"/>
 
                 <km:KmKpiCard Title="Aktif İşler" 
                                Value="{Binding ActiveJobsCount}" 
                                Icon="&#xE90F;"
+                               MaxHeight="76"
                                Subtitle="devam ediyor"
                                AccentBrush="{DynamicResource KpiGradientOrange}"
-                               Margin="0,0,12,0"/>
+                               Margin="0,0,10,0"/>
 
                 <km:KmKpiCard Title="Teslime Hazır" 
                                Value="{Binding ReadyRepairsCount}" 
                                Icon="&#xE73E;"
+                               MaxHeight="76"
                                Subtitle="cihaz bekliyor"
                                AccentBrush="{DynamicResource KpiGradientCyan}"
                                Margin="0,0,0,0"/>

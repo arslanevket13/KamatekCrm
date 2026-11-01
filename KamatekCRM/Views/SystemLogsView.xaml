@@ -72,12 +72,12 @@
                 <!-- Date Range -->
                 <StackPanel Grid.Column="3" Margin="0,0,12,0">
                     <TextBlock Text="Başlangıç" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
-                    <DatePicker SelectedDate="{Binding StartDate}" MinWidth="145" Width="145" Height="38"/>
+                    <DatePicker SelectedDate="{Binding StartDate}" MinWidth="155" Width="155" Height="38"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="4" Margin="0,0,12,0">
                     <TextBlock Text="Bitiş" FontSize="10" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,2"/>
-                    <DatePicker SelectedDate="{Binding EndDate}" MinWidth="145" Width="145" Height="38"/>
+                    <DatePicker SelectedDate="{Binding EndDate}" MinWidth="155" Width="155" Height="38"/>
                 </StackPanel>
 
                 <!-- Buttons -->
@@ -109,7 +109,7 @@
                         <!-- Timestamp -->
                         <DataGridTextColumn Header="Tarih/Saat" 
                                             Binding="{Binding Timestamp, StringFormat=dd.MM.yyyy HH:mm:ss}" 
-                                            Width="155">
+                                            Width="145">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -123,7 +123,7 @@
                         <!-- User -->
                         <DataGridTextColumn Header="Kullanıcı" 
                                             Binding="{Binding Username}" 
-                                            Width="120">
+                                            Width="105">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -134,7 +134,7 @@
                         </DataGridTextColumn>
 
                         <!-- Action Type -->
-                        <DataGridTemplateColumn Header="İşlem" Width="135">
+                        <DataGridTemplateColumn Header="İşlem" Width="110">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="8" Padding="8,4" HorizontalAlignment="Left" Margin="12,0">
@@ -176,7 +176,7 @@
                         <!-- Entity -->
                         <DataGridTextColumn Header="Entity" 
                                             Binding="{Binding EntityName}" 
-                                            Width="125">
+                                            Width="130">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -189,7 +189,7 @@
                         <!-- Record ID -->
                         <DataGridTextColumn Header="ID" 
                                             Binding="{Binding RecordId}" 
-                                            Width="70">
+                                            Width="65">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -203,7 +203,7 @@
                         <!-- Description -->
                         <DataGridTextColumn Header="Açıklama" 
                                             Binding="{Binding Description}" 
-                                            Width="*" MinWidth="250">
+                                            Width="*">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
