@@ -319,7 +319,7 @@
                                             CornerRadius="10" Padding="10,4" HorizontalAlignment="Center"
                                             Margin="4,4">
                                         <TextBlock Text="{Binding QuoteStatus, Converter={StaticResource StatusTextConverter}}"
-                                                   Foreground="White" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryTextBrush}" FontSize="11" FontWeight="SemiBold"
                                                    HorizontalAlignment="Center"/>
                                     </Border>
                                 </DataTemplate>

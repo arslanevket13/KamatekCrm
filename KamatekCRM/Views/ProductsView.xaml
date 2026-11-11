@@ -50,7 +50,7 @@
                 <ui:Button Content="Yeni Ürün Ekle" 
                            Icon="{ui:SymbolIcon Add24}"
                            Command="{Binding AddNewProductCommand}"
-                           Background="#2563EB" Foreground="#FFFFFF" FontWeight="SemiBold"
+                           Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource TextOnPrimaryBrush}" FontWeight="SemiBold"
                            Height="38" Padding="18,0"/>
             </StackPanel>
         </DockPanel>

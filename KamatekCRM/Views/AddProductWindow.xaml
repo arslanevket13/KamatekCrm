@@ -11,8 +11,8 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewmodels:AddProductViewModel, IsDesignTimeCreatable=False}"
         Title="{Binding WindowTitle}" 
-        Height="720" Width="920"
-        MinWidth="850" MinHeight="600"
+        Height="640" Width="880"
+        MinWidth="680" MinHeight="480"
         WindowStartupLocation="CenterOwner"
         Style="{DynamicResource PremiumWindowStyle}"
         Background="{DynamicResource SurfacePageBrush}">
@@ -127,7 +127,7 @@
         <DockPanel Grid.Row="0" Margin="0,0,0,20">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                 <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource ThemePrimary}" Margin="0,0,12,0">
-                    <ui:SymbolIcon Symbol="Box24" FontSize="20" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <ui:SymbolIcon Symbol="Box24" FontSize="20" Foreground="{DynamicResource TextOnPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="{Binding WindowTitle}" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ThemeTextPrimary}"/>
@@ -137,7 +137,7 @@
         </DockPanel>
 
         <!-- ════════ ROW 1: TABBED FORM BODY ════════ -->
-        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" MaxWidth="960">
             
             <!-- 📌 TAB 1: TEMEL BİLGİLER -->
             <TabItem Header="📋 Temel Bilgiler">
@@ -230,7 +230,7 @@
                                     <TextBlock Text="Fiyatlandırma &amp; Marj Analizi" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}"/>
                                     <!-- Dynamic Profit Badge -->
                                     <Border DockPanel.Dock="Right" Background="{Binding ProfitColor}" CornerRadius="12" Padding="12,4" HorizontalAlignment="Right">
-                                        <TextBlock Text="{Binding ProfitMarginDisplay}" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                                        <TextBlock Text="{Binding ProfitMarginDisplay}" Foreground="{DynamicResource TextOnPrimaryBrush}" FontWeight="Bold" FontSize="12"/>
                                     </Border>
                                 </DockPanel>
 

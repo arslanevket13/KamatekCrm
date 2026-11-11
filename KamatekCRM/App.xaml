@@ -10,22 +10,24 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- 1. BASE DESIGN TOKENS (Sadece Yapısal ve Düzen) -->
+                <!-- 1. BASE DESIGN TOKENS (Yalnızca Yapısal Değerler) -->
                 <ResourceDictionary Source="Resources/DesignTokens.xaml"/>
-                
-                <!-- 2. ACTIVE THEME COLORS (Varsayılan olarak Premium Light yüklenir, çalışma zamanında değişir) -->
-                <ResourceDictionary Source="Resources/Themes/Theme.PremiumLight.xaml"/>
-                
-                <!-- 3. WPF-UI COMPONENTS -->
+
+                <!-- 2. WPF-UI BASE (Varsayılan kontrol sözlükleri; aktif tema sözlüğü üzerine yazar) -->
                 <ui:ThemesDictionary Theme="Light" />
                 <ui:ControlsDictionary />
-                
-                <!-- 4. ANIMATIONS & PREMIUM STYLES -->
-                <ResourceDictionary Source="Resources/FixedScrollBar.xaml"/>
-                <ResourceDictionary Source="Resources/Animations.xaml"/>
-                <ResourceDictionary Source="Resources/Styles.xaml"/>
+
+                <!-- 3. ACTIVE THEME COLORS (Varsayılan: Premium Light; çalışma zamanında yalnızca bu sözlük değişir) -->
+                <ResourceDictionary Source="Resources/Themes/Theme.PremiumLight.xaml"/>
+
+                <!-- 4. UX FOUNDATION, STYLES & COMPONENT STYLES -->
                 <ResourceDictionary Source="Resources/UxFoundation.xaml"/>
+                <ResourceDictionary Source="Resources/Styles.xaml"/>
                 <ResourceDictionary Source="Resources/ComponentStyles.xaml"/>
+
+                <!-- 5. ANIMATIONS & SCROLLBAR -->
+                <ResourceDictionary Source="Resources/Animations.xaml"/>
+                <ResourceDictionary Source="Resources/FixedScrollBar.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Navigation Views -->

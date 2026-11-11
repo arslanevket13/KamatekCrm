@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
+             xmlns:converters="clr-namespace:KamatekCrm.Converters"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1100"
@@ -11,10 +12,10 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <vm:InverseBooleanConverter x:Key="InverseBool"/>
-        <vm:InverseBooleanToVisibilityConverter x:Key="InvertedBoolToVis"/>
-        <vm:ServerModeToBooleanConverter x:Key="ServerModeConverter"/>
-        <vm:ConnectionStatusColorConverter x:Key="StatusColorConverter"/>
+        <converters:InverseBooleanConverter x:Key="InverseBool"/>
+        <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBoolToVis"/>
+        <converters:ServerModeToBooleanConverter x:Key="ServerModeConverter"/>
+        <converters:ConnectionStatusColorConverter x:Key="StatusColorConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="24">
@@ -57,7 +58,7 @@
                             </Ellipse.Style>
                         </Ellipse>
                         <TextBlock Text="{Binding ConnectionStatus}" FontWeight="SemiBold" FontSize="12"
-                                   Foreground="White" VerticalAlignment="Center"/>
+                                   Foreground="{DynamicResource TextOnPrimaryBrush}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
             </Grid>

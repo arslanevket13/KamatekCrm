@@ -1,10 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- ============================================================ -->
-    <!-- Page RepeatButton Style (Track background click areas)       -->
-    <!-- These are INVISIBLE hit-test areas in the track region.      -->
-    <!-- ============================================================ -->
+    <!-- Page RepeatButton Style (Track background click areas) -->
     <Style x:Key="ScrollBarPageButton" TargetType="{x:Type RepeatButton}">
         <Setter Property="OverridesDefaultStyle" Value="true"/>
         <Setter Property="IsTabStop" Value="false"/>
@@ -18,26 +15,24 @@
         </Setter>
     </Style>
 
-    <!-- ============================================================ -->
-    <!-- Modern Slim ScrollBar Thumb Style                            -->
-    <!-- ============================================================ -->
+    <!-- Modern Slim ScrollBar Thumb Style -->
     <Style x:Key="ScrollBarThumb" TargetType="{x:Type Thumb}">
         <Setter Property="OverridesDefaultStyle" Value="true"/>
         <Setter Property="IsTabStop" Value="false"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Thumb}">
-                    <Border x:Name="ThumbBorder" CornerRadius="3" 
-                            Background="#334155" 
-                            Margin="0" Opacity="0.8"
+                    <Border x:Name="ThumbBorder" CornerRadius="3"
+                            Background="{DynamicResource ScrollbarThumbBrush}"
+                            Margin="0" Opacity="0.85"
                             SnapsToDevicePixels="True"/>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="ThumbBorder" Property="Background" Value="#64748B"/>
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="{DynamicResource ScrollbarThumbHoverBrush}"/>
                             <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
                         </Trigger>
                         <Trigger Property="IsDragging" Value="true">
-                            <Setter TargetName="ThumbBorder" Property="Background" Value="#94A3B8"/>
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="{DynamicResource ScrollbarThumbDragBrush}"/>
                             <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -46,9 +41,7 @@
         </Setter>
     </Style>
 
-    <!-- ============================================================ -->
-    <!-- Vertical ScrollBar ControlTemplate (Slim 6px, No Arrow Box)  -->
-    <!-- ============================================================ -->
+    <!-- Vertical ScrollBar ControlTemplate (Slim 6px) -->
     <ControlTemplate x:Key="VerticalScrollBarTemplate" TargetType="{x:Type ScrollBar}">
         <Grid Width="6" Background="Transparent" SnapsToDevicePixels="True">
             <Track x:Name="PART_Track" IsDirectionReversed="True">
@@ -69,9 +62,7 @@
         </Grid>
     </ControlTemplate>
 
-    <!-- ============================================================ -->
-    <!-- Horizontal ScrollBar ControlTemplate (Slim 6px, No Arrow Box)-->
-    <!-- ============================================================ -->
+    <!-- Horizontal ScrollBar ControlTemplate (Slim 6px) -->
     <ControlTemplate x:Key="HorizontalScrollBarTemplate" TargetType="{x:Type ScrollBar}">
         <Grid Height="6" Background="Transparent" SnapsToDevicePixels="True">
             <Track x:Name="PART_Track" IsDirectionReversed="False">
@@ -92,9 +83,7 @@
         </Grid>
     </ControlTemplate>
 
-    <!-- ============================================================ -->
-    <!-- ScrollBar Style Override (applies to ALL ScrollBar controls) -->
-    <!-- ============================================================ -->
+    <!-- ScrollBar Style Override -->
     <Style TargetType="{x:Type ScrollBar}">
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -112,10 +101,7 @@
         </Style.Triggers>
     </Style>
 
-    <!-- ============================================================ -->
-    <!-- ScrollViewer Style Override                                   -->
-    <!-- Prevents WPF-UI from overriding our ScrollBar templates      -->
-    <!-- ============================================================ -->
+    <!-- ScrollViewer Style Override -->
     <Style TargetType="{x:Type ScrollViewer}">
         <Setter Property="OverridesDefaultStyle" Value="True"/>
         <Setter Property="Template">

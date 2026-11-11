@@ -62,7 +62,7 @@
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                         <ui:Button Content="Yeni Arıza / Cihaz Kaydı" Icon="{ui:SymbolIcon Wrench24}"
                                    Command="{Binding OpenFaultTicketCommand}"
-                                   Background="#2563EB" Foreground="#FFFFFF" FontWeight="SemiBold"
+                                   Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource TextOnPrimaryBrush}" FontWeight="SemiBold"
                                    Margin="0,0,8,0" Height="36" Padding="14,0" Cursor="Hand"/>
 
                         <ui:Button Content="Hızlı Satış (POS)" Icon="{ui:SymbolIcon Cart24}"
@@ -313,12 +313,12 @@
                                     Background="{DynamicResource KpiGradientPurple}">
                                 <StackPanel Orientation="Horizontal">
                                     <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="20" 
-                                                   Foreground="White" VerticalAlignment="Center"/>
+                                                   Foreground="{DynamicResource TextOnPrimaryBrush}" VerticalAlignment="Center"/>
                                     <StackPanel Margin="12,0,0,0">
                                         <TextBlock Text="Teslime Hazır Cihazlar" FontSize="14" FontWeight="Bold" 
-                                                   Foreground="White"/>
+                                                   Foreground="{DynamicResource TextOnPrimaryBrush}"/>
                                         <TextBlock Text="Müşteri teslimatı bekleyen tamirler" FontSize="11" 
-                                                   Foreground="White" Opacity="0.85"/>
+                                                   Foreground="{DynamicResource TextOnPrimaryBrush}" Opacity="0.85"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

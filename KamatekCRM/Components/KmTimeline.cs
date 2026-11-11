@@ -63,18 +63,20 @@ namespace KamatekCrm.Components
             }
         }
 
-        public Brush DotBrush
+        public Brush? DotBrush
         {
             get
             {
-                return Status switch
+                var resourceKey = Status switch
                 {
-                    BadgeStatus.Success => new SolidColorBrush(Color.FromRgb(16, 124, 16)),
-                    BadgeStatus.Warning => new SolidColorBrush(Color.FromRgb(255, 140, 0)),
-                    BadgeStatus.Error => new SolidColorBrush(Color.FromRgb(232, 17, 35)),
-                    BadgeStatus.Info => new SolidColorBrush(Color.FromRgb(0, 120, 212)),
-                    _ => new SolidColorBrush(Color.FromRgb(128, 128, 148))
+                    BadgeStatus.Success => "SuccessBrush",
+                    BadgeStatus.Warning => "WarningBrush",
+                    BadgeStatus.Error => "DangerBrush",
+                    BadgeStatus.Info => "InfoBrush",
+                    _ => "MutedTextBrush"
                 };
+
+                return Application.Current?.TryFindResource(resourceKey) as Brush;
             }
         }
     }

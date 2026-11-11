@@ -4,25 +4,29 @@
 
     <!-- ═══════════════════════════════════════════════════════════════════
          KAMATEK CRM — DESIGN TOKENS
-         Kural: yalnızca en az bir tüketicisi olan token burada tutulur.
-         Yeni token eklerken ilk kullanımıyla birlikte ekleyin; kullanılmayan
-         ölçekler (Space*, Icon*, Duration*, Ease*, Elevation0/3/4/5,
-         AvatarSize*, SidebarWidth*, DataGrid*Height) kaldırıldı.
-         STRICT RULE: NO COLORS OR BRUSHES ALLOWED IN THIS FILE.
+         YALNIZCA YAPISAL DEĞERLER (CornerRadius, Thickness, FontSize, Double, FontFamily).
+         RENK, FIRÇA VE GÖLGE TANIMLARI YALNIZCA Theme.*.xaml DOSYALARINDADIR.
     ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- ─────────── TYPOGRAPHY FAMILIES ─────────── -->
+    <FontFamily x:Key="MainFont">Segoe UI Variable, Segoe UI</FontFamily>
+    <FontFamily x:Key="FluentIconFont">Segoe Fluent Icons</FontFamily>
 
     <!-- ─────────── GEOMETRY (CORNER RADIUS) ─────────── -->
     <CornerRadius x:Key="RadiusSmall">8</CornerRadius>
     <CornerRadius x:Key="RadiusMedium">12</CornerRadius>
+    <CornerRadius x:Key="RadiusLarge">16</CornerRadius>
 
-    <!-- ─────────── ELEVATION ─────────── -->
-    <!-- Elevation 1: Buttons, Inputs — barely perceptible -->
-    <DropShadowEffect x:Key="Elevation1" BlurRadius="8" ShadowDepth="1" Direction="270" Color="Black" Opacity="0.03"/>
+    <!-- ─────────── SPACING & PADDING (THICKNESS) ─────────── -->
+    <Thickness x:Key="PagePadding">24</Thickness>
+    <Thickness x:Key="PageHeaderSpacing">0,0,0,20</Thickness>
+    <Thickness x:Key="SectionSpacing">0,0,0,16</Thickness>
+    <Thickness x:Key="CardPadding">16</Thickness>
 
-    <!-- Elevation 2: Main Cards — premium subtle -->
-    <DropShadowEffect x:Key="Elevation2" BlurRadius="15" ShadowDepth="2" Direction="270" Color="Black" Opacity="0.05"/>
-
-    <!-- ─────────── COMPONENT DIMENSIONS ─────────── -->
+    <!-- ─────────── FONT SIZES & CONTROL DIMENSIONS (DOUBLE) ─────────── -->
+    <sys:Double x:Key="PageTitleSize">26</sys:Double>
+    <sys:Double x:Key="PageSubtitleSize">13</sys:Double>
+    <sys:Double x:Key="ControlHeight">38</sys:Double>
     <sys:Double x:Key="KpiCardMinWidth">240</sys:Double>
     <sys:Double x:Key="KpiCardHeight">68</sys:Double>
 

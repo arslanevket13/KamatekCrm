@@ -63,46 +63,63 @@ namespace KamatekCrm.Components
             set => SetValue(DotColorProperty, value);
         }
 
+        public KmStatusBadge()
+        {
+            ApplyStatusBrushes();
+        }
+
         private static void OnStatusChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is KmStatusBadge badge)
                 badge.UpdateColors();
         }
 
-        private void UpdateColors()
+        private void ApplyStatusBrushes()
         {
             switch (Status)
             {
                 case BadgeStatus.Success:
-                    BadgeBackground = new SolidColorBrush(Color.FromArgb(30, 16, 124, 16));
-                    BadgeForeground = new SolidColorBrush(Color.FromRgb(92, 214, 92));
-                    DotColor = new SolidColorBrush(Color.FromRgb(16, 124, 16));
-                    if (string.IsNullOrEmpty(Text)) Text = "Aktif";
+                    SetResourceReference(BadgeBackgroundProperty, "StatusSuccessBg");
+                    SetResourceReference(BadgeForegroundProperty, "StatusSuccessFg");
+                    SetResourceReference(DotColorProperty, "SuccessBrush");
                     break;
                 case BadgeStatus.Warning:
-                    BadgeBackground = new SolidColorBrush(Color.FromArgb(30, 255, 140, 0));
-                    BadgeForeground = new SolidColorBrush(Color.FromRgb(255, 183, 77));
-                    DotColor = new SolidColorBrush(Color.FromRgb(255, 140, 0));
-                    if (string.IsNullOrEmpty(Text)) Text = "Beklemede";
+                    SetResourceReference(BadgeBackgroundProperty, "StatusWarningBg");
+                    SetResourceReference(BadgeForegroundProperty, "StatusWarningFg");
+                    SetResourceReference(DotColorProperty, "WarningBrush");
                     break;
                 case BadgeStatus.Error:
-                    BadgeBackground = new SolidColorBrush(Color.FromArgb(30, 232, 17, 35));
-                    BadgeForeground = new SolidColorBrush(Color.FromRgb(255, 107, 107));
-                    DotColor = new SolidColorBrush(Color.FromRgb(232, 17, 35));
-                    if (string.IsNullOrEmpty(Text)) Text = "Hata";
+                    SetResourceReference(BadgeBackgroundProperty, "StatusErrorBg");
+                    SetResourceReference(BadgeForegroundProperty, "StatusErrorFg");
+                    SetResourceReference(DotColorProperty, "DangerBrush");
                     break;
                 case BadgeStatus.Info:
-                    BadgeBackground = new SolidColorBrush(Color.FromArgb(30, 0, 120, 212));
-                    BadgeForeground = new SolidColorBrush(Color.FromRgb(100, 181, 246));
-                    DotColor = new SolidColorBrush(Color.FromRgb(0, 120, 212));
-                    if (string.IsNullOrEmpty(Text)) Text = "Bilgi";
+                    SetResourceReference(BadgeBackgroundProperty, "StatusInfoBg");
+                    SetResourceReference(BadgeForegroundProperty, "StatusInfoFg");
+                    SetResourceReference(DotColorProperty, "InfoBrush");
                     break;
                 default:
-                    BadgeBackground = new SolidColorBrush(Color.FromArgb(15, 255, 255, 255));
-                    BadgeForeground = new SolidColorBrush(Color.FromRgb(160, 160, 176));
-                    DotColor = new SolidColorBrush(Color.FromRgb(128, 128, 148));
-                    if (string.IsNullOrEmpty(Text)) Text = "—";
+                    SetResourceReference(BadgeBackgroundProperty, "StatusNeutralBg");
+                    SetResourceReference(BadgeForegroundProperty, "SecondaryTextBrush");
+                    SetResourceReference(DotColorProperty, "MutedTextBrush");
                     break;
+            }
+        }
+
+        private void UpdateColors()
+        {
+            ApplyStatusBrushes();
+
+            if (string.IsNullOrEmpty(Text))
+            {
+                Text = Status switch
+                {
+                    BadgeStatus.Success => "Aktif",
+                    BadgeStatus.Warning => "Beklemede",
+                    BadgeStatus.Error => "Hata",
+                    BadgeStatus.Info => "Bilgi",
+                    _ => "—"
+                };
             }
         }
 

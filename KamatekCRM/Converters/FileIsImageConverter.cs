@@ -3,7 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows.Data;
 
-namespace KamatekCrm.Views
+namespace KamatekCrm.Converters
 {
     /// <summary>
     /// Dosya yolu bir resim dosyası mı (jpg/png/bmp/webp/gif) döndürür.
@@ -24,3 +24,4 @@ namespace KamatekCrm.Views
             Binding.DoNothing;
     }
 }
+

@@ -80,10 +80,6 @@ namespace KamatekCrm
 
             TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
-            // Tüm pencereleri açıldıkları monitörün çalışma alanına sığdır
-            // (küçük ekran / yüksek DPI taşmalarını önler).
-            WindowFitHelper.Setup();
-
         }
 
 

@@ -63,19 +63,19 @@ namespace KamatekCrm.Helpers
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is CustomerSegment segment)
-            {
-                return segment switch
+            var resourceKey = value is CustomerSegment segment
+                ? segment switch
                 {
-                    CustomerSegment.VIP => new SolidColorBrush(Color.FromRgb(255, 193, 7)),     // Altın
-                    CustomerSegment.Potential => new SolidColorBrush(Color.FromRgb(76, 175, 80)), // Yeşil
-                    CustomerSegment.AtRisk => new SolidColorBrush(Color.FromRgb(244, 67, 54)),   // Kırmızı
-                    CustomerSegment.Passive => new SolidColorBrush(Color.FromRgb(158, 158, 158)), // Gri
-                    CustomerSegment.New => new SolidColorBrush(Color.FromRgb(33, 150, 243)),     // Mavi
-                    _ => new SolidColorBrush(Color.FromRgb(224, 224, 224))                     // Varsayılan Gri
-                };
-            }
-            return new SolidColorBrush(Color.FromRgb(224, 224, 224));
+                    CustomerSegment.VIP => "WarningBrush",
+                    CustomerSegment.Potential => "SuccessBrush",
+                    CustomerSegment.AtRisk => "DangerBrush",
+                    CustomerSegment.Passive => "StatusNeutralBg",
+                    CustomerSegment.New => "InfoBrush",
+                    _ => "StatusNeutralBg"
+                }
+                : "StatusNeutralBg";
+
+            return Application.Current?.TryFindResource(resourceKey) as Brush ?? DependencyProperty.UnsetValue;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

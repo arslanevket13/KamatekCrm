@@ -99,7 +99,7 @@
                     
                     <ui:Button Content="Yeni Kullanıcı Ekle" Icon="{ui:SymbolIcon PersonAdd24}"
                                Command="{Binding AddUserCommand}"
-                               Background="#2563EB" Foreground="#FFFFFF" FontWeight="SemiBold"
+                               Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource TextOnPrimaryBrush}" FontWeight="SemiBold"
                                Height="38" Padding="16,0" IsEnabled="{Binding IsAdmin}" Cursor="Hand"/>
                 </StackPanel>
             </Grid>

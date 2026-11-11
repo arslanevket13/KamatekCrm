@@ -2,17 +2,17 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- ==================== SAYFA GEÇİŞ ANİMASYONLARI ==================== -->
-    
+
     <!-- Fade In Animation -->
     <Storyboard x:Key="FadeInAnimation">
-        <DoubleAnimation Storyboard.TargetProperty="Opacity" 
+        <DoubleAnimation Storyboard.TargetProperty="Opacity"
                          From="0" To="1" Duration="0:0:0.3">
             <DoubleAnimation.EasingFunction>
                 <QuadraticEase EasingMode="EaseOut"/>
             </DoubleAnimation.EasingFunction>
         </DoubleAnimation>
     </Storyboard>
-    
+
     <!-- Slide In From Right -->
     <Storyboard x:Key="SlideInFromRight">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
@@ -21,10 +21,10 @@
                 <QuadraticEase EasingMode="EaseOut"/>
             </DoubleAnimation.EasingFunction>
         </DoubleAnimation>
-        <DoubleAnimation Storyboard.TargetProperty="Opacity" 
+        <DoubleAnimation Storyboard.TargetProperty="Opacity"
                          From="0" To="1" Duration="0:0:0.25"/>
     </Storyboard>
-    
+
     <!-- Slide In From Bottom -->
     <Storyboard x:Key="SlideInFromBottom">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
@@ -33,10 +33,10 @@
                 <QuadraticEase EasingMode="EaseOut"/>
             </DoubleAnimation.EasingFunction>
         </DoubleAnimation>
-        <DoubleAnimation Storyboard.TargetProperty="Opacity" 
+        <DoubleAnimation Storyboard.TargetProperty="Opacity"
                          From="0" To="1" Duration="0:0:0.25"/>
     </Storyboard>
-    
+
     <!-- Scale Pop In -->
     <Storyboard x:Key="PopInAnimation">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
@@ -51,26 +51,12 @@
                 <BackEase EasingMode="EaseOut" Amplitude="0.3"/>
             </DoubleAnimation.EasingFunction>
         </DoubleAnimation>
-        <DoubleAnimation Storyboard.TargetProperty="Opacity" 
+        <DoubleAnimation Storyboard.TargetProperty="Opacity"
                          From="0" To="1" Duration="0:0:0.2"/>
     </Storyboard>
 
     <!-- ==================== SKELETON LOADING STİLLERİ ==================== -->
-    
-    <!-- Shimmer Brush -->
-    <LinearGradientBrush x:Key="SkeletonBrush" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#E0E0E0" Offset="0"/>
-        <GradientStop Color="#F5F5F5" Offset="0.5"/>
-        <GradientStop Color="#E0E0E0" Offset="1"/>
-    </LinearGradientBrush>
-    
-    <!-- Dark Theme Skeleton Brush -->
-    <LinearGradientBrush x:Key="SkeletonBrushDark" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#2A3A4F" Offset="0"/>
-        <GradientStop Color="#3A4A5F" Offset="0.5"/>
-        <GradientStop Color="#2A3A4F" Offset="1"/>
-    </LinearGradientBrush>
-    
+
     <!-- Shimmer Animation -->
     <Storyboard x:Key="ShimmerAnimation" RepeatBehavior="Forever">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
@@ -79,7 +65,7 @@
 
     <!-- Skeleton Line Style -->
     <Style x:Key="SkeletonLine" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource SkeletonBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SkeletonBrush}"/>
         <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Height" Value="12"/>
         <Setter Property="Margin" Value="0,4"/>
@@ -89,28 +75,28 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <!-- Skeleton Circle Style -->
     <Style x:Key="SkeletonCircle" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource SkeletonBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SkeletonBrush}"/>
         <Setter Property="Width" Value="40"/>
         <Setter Property="Height" Value="40"/>
         <Setter Property="CornerRadius" Value="20"/>
     </Style>
-    
+
     <!-- Skeleton Card Style -->
     <Style x:Key="SkeletonCard" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource SkeletonBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SkeletonBrush}"/>
         <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Height" Value="100"/>
         <Setter Property="Margin" Value="0,8"/>
     </Style>
 
     <!-- ==================== HOVER EFEKTLERİ ==================== -->
-    
+
     <!-- Card Hover Effect (Subtle Lift) -->
     <Style x:Key="HoverCardPanel" TargetType="Border">
-        <Setter Property="Background" Value="{DynamicResource ThemeCard}"/>
+        <Setter Property="Background" Value="{DynamicResource CardBackgroundBrush}"/>
         <Setter Property="CornerRadius" Value="12"/>
         <Setter Property="Padding" Value="16"/>
         <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
@@ -133,11 +119,11 @@
                     <BeginStoryboard>
                         <Storyboard>
                             <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
-                                           To="20" Duration="0:0:0.2"/>
+                                             To="20" Duration="0:0:0.2"/>
                             <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
-                                           To="0.12" Duration="0:0:0.2"/>
+                                             To="0.12" Duration="0:0:0.2"/>
                             <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
-                                           To="-4" Duration="0:0:0.2"/>
+                                             To="-4" Duration="0:0:0.2"/>
                         </Storyboard>
                     </BeginStoryboard>
                 </Trigger.EnterActions>
@@ -145,11 +131,11 @@
                     <BeginStoryboard>
                         <Storyboard>
                             <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
-                                           To="8" Duration="0:0:0.2"/>
+                                             To="8" Duration="0:0:0.2"/>
                             <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
-                                           To="0.08" Duration="0:0:0.2"/>
+                                             To="0.08" Duration="0:0:0.2"/>
                             <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
-                                           To="0" Duration="0:0:0.2"/>
+                                             To="0" Duration="0:0:0.2"/>
                         </Storyboard>
                     </BeginStoryboard>
                 </Trigger.ExitActions>
@@ -166,8 +152,7 @@
     </Storyboard>
 
     <!-- ==================== BUTTON ANİMASYONLARI ==================== -->
-    
-    <!-- Button Press Animation -->
+
     <Storyboard x:Key="ButtonPressAnimation">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
                          To="0.95" Duration="0:0:0.1" AutoReverse="True"/>
@@ -176,8 +161,7 @@
     </Storyboard>
 
     <!-- ==================== STAGGERED LİST ANİMASYONLARI ==================== -->
-    
-    <!-- List Item Fade In (for DataGrids) -->
+
     <Storyboard x:Key="ListItemFadeIn">
         <DoubleAnimation Storyboard.TargetProperty="Opacity"
                          From="0" To="1" Duration="0:0:0.3">
@@ -188,8 +172,7 @@
     </Storyboard>
 
     <!-- ==================== SAYFA GEÇİŞ ANİMASYONLARI ==================== -->
-    
-    <!-- Fade Slide In From Right -->
+
     <Storyboard x:Key="FadeSlideInFromRight">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
                          From="50" To="0" Duration="0:0:0.35">
@@ -201,7 +184,6 @@
                          From="0" To="1" Duration="0:0:0.25"/>
     </Storyboard>
 
-    <!-- Fade Slide In From Left -->
     <Storyboard x:Key="FadeSlideInFromLeft">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
                          From="-50" To="0" Duration="0:0:0.35">
@@ -213,7 +195,6 @@
                          From="0" To="1" Duration="0:0:0.25"/>
     </Storyboard>
 
-    <!-- Fade Slide In From Bottom -->
     <Storyboard x:Key="FadeSlideInFromBottom">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
                          From="30" To="0" Duration="0:0:0.4">
@@ -225,7 +206,6 @@
                          From="0" To="1" Duration="0:0:0.3"/>
     </Storyboard>
 
-    <!-- Scale Pop In (for dialogs/modals) -->
     <Storyboard x:Key="ScalePopIn">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
                          From="0.8" To="1" Duration="0:0:0.3">
@@ -244,14 +224,12 @@
     </Storyboard>
 
     <!-- ==================== LOADING/LOAD MORE ==================== -->
-    
-    <!-- Loading Spinner Rotation -->
+
     <Storyboard x:Key="SpinnerRotation" RepeatBehavior="Forever">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
                          From="0" To="360" Duration="0:0:1"/>
     </Storyboard>
 
-    <!-- Bounce In Animation -->
     <Storyboard x:Key="BounceIn">
         <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
                          From="0" To="1" Duration="0:0:0.5">

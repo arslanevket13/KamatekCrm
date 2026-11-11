@@ -2,97 +2,105 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="➕ Hızlı Cihaz Kaydı"
+        Width="480" Height="540"
+        MinWidth="420" MinHeight="420"
         WindowStartupLocation="CenterOwner"
-        MinWidth="420" MinHeight="360"
         ResizeMode="CanResizeWithGrip"
         Style="{DynamicResource PremiumWindowStyle}"
         Background="{DynamicResource SurfacePageBrush}">
 
-    <Border Margin="24" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="24">
-        <Border.Effect>
-            <DropShadowEffect BlurRadius="10" Opacity="0.1" ShadowDepth="2"/>
-        </Border.Effect>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <StackPanel Width="350">
-            <!-- Header -->
-            <TextBlock Text="🔧 Yeni Cihaz Kaydı" 
-                       FontSize="18" FontWeight="SemiBold"
-                       Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,24"/>
+        <TextBlock Grid.Row="0" Text="🔧 Yeni Cihaz Kaydı"
+                   FontSize="18" FontWeight="SemiBold"
+                   Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,14"/>
 
-            <!-- Kategori -->
-            <TextBlock Text="Kategori *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
-            <ComboBox x:Name="CategoryCombo" 
-                      SelectedValuePath="Tag"
-                      SelectedValue="{Binding SelectedCategoryTag}"
-                      Style="{StaticResource ModernComboBox}"
-                      Height="40" Margin="0,0,0,16">
-                <ComboBoxItem Content="📹 Güvenlik Kamera" Tag="CCTV"/>
-                <ComboBoxItem Content="📞 Görüntülü Diafon" Tag="VideoIntercom"/>
-                <ComboBoxItem Content="🔥 Yangın Alarm" Tag="FireAlarm"/>
-                <ComboBoxItem Content="🚨 Hırsız Alarm" Tag="BurglarAlarm"/>
-                <ComboBoxItem Content="🏠 Akıllı Ev" Tag="SmartHome"/>
-                <ComboBoxItem Content="🔐 Kartlı Geçiş" Tag="AccessControl"/>
-                <ComboBoxItem Content="📡 Uydu Sistemleri" Tag="SatelliteSystem"/>
-                <ComboBoxItem Content="🔌 Fiber Optik" Tag="FiberOptic"/>
-            </ComboBox>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" MaxWidth="460"
+                    Effect="{DynamicResource Elevation1}">
+                <StackPanel>
+                    <!-- Kategori -->
+                    <TextBlock Text="Kategori *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
+                    <ComboBox x:Name="CategoryCombo" 
+                              SelectedValuePath="Tag"
+                              SelectedValue="{Binding SelectedCategoryTag}"
+                              Style="{StaticResource ModernComboBox}"
+                              Height="40" Margin="0,0,0,16">
+                        <ComboBoxItem Content="📹 Güvenlik Kamera" Tag="CCTV"/>
+                        <ComboBoxItem Content="📞 Görüntülü Diafon" Tag="VideoIntercom"/>
+                        <ComboBoxItem Content="🔥 Yangın Alarm" Tag="FireAlarm"/>
+                        <ComboBoxItem Content="🚨 Hırsız Alarm" Tag="BurglarAlarm"/>
+                        <ComboBoxItem Content="🏠 Akıllı Ev" Tag="SmartHome"/>
+                        <ComboBoxItem Content="🔐 Kartlı Geçiş" Tag="AccessControl"/>
+                        <ComboBoxItem Content="📡 Uydu Sistemleri" Tag="SatelliteSystem"/>
+                        <ComboBoxItem Content="🔌 Fiber Optik" Tag="FiberOptic"/>
+                    </ComboBox>
 
-            <!-- Marka -->
-            <TextBlock Text="Marka *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
-            <ComboBox x:Name="BrandCombo" 
-                      IsEditable="True"
-                      Text="{Binding Brand, UpdateSourceTrigger=PropertyChanged}"
-                      Style="{StaticResource ModernComboBox}"
-                      Height="40" Margin="0,0,0,16">
-                <ComboBoxItem Content="Hikvision"/>
-                <ComboBoxItem Content="Dahua"/>
-                <ComboBoxItem Content="Haikon"/>
-                <ComboBoxItem Content="Comelit"/>
-                <ComboBoxItem Content="Fermax"/>
-                <ComboBoxItem Content="Paradox"/>
-                <ComboBoxItem Content="Dsi"/>
-                <ComboBoxItem Content="Diğer"/>
-            </ComboBox>
+                    <!-- Marka -->
+                    <TextBlock Text="Marka *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
+                    <ComboBox x:Name="BrandCombo" 
+                              IsEditable="True"
+                              Text="{Binding Brand, UpdateSourceTrigger=PropertyChanged}"
+                              Style="{StaticResource ModernComboBox}"
+                              Height="40" Margin="0,0,0,16">
+                        <ComboBoxItem Content="Hikvision"/>
+                        <ComboBoxItem Content="Dahua"/>
+                        <ComboBoxItem Content="Haikon"/>
+                        <ComboBoxItem Content="Comelit"/>
+                        <ComboBoxItem Content="Fermax"/>
+                        <ComboBoxItem Content="Paradox"/>
+                        <ComboBoxItem Content="Dsi"/>
+                        <ComboBoxItem Content="Diğer"/>
+                    </ComboBox>
 
-            <!-- Model -->
-            <TextBlock Text="Model *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
-            <TextBox x:Name="ModelBox" 
-                     Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}"
-                     Style="{StaticResource ModernTextBox}"
-                     Height="40" Margin="0,0,0,16"/>
+                    <!-- Model -->
+                    <TextBlock Text="Model *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
+                    <TextBox x:Name="ModelBox" 
+                             Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"
+                             Height="40" Margin="0,0,0,16"/>
 
-            <!-- Seri No -->
-            <TextBlock Text="Seri Numarası" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
-            <TextBox x:Name="SerialBox" 
-                     Text="{Binding SerialNumber, UpdateSourceTrigger=PropertyChanged}"
-                     Style="{StaticResource ModernTextBox}"
-                     Height="40" Margin="0,0,0,16"/>
+                    <!-- Seri No -->
+                    <TextBlock Text="Seri Numarası" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
+                    <TextBox x:Name="SerialBox" 
+                             Text="{Binding SerialNumber, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"
+                             Height="40" Margin="0,0,0,16"/>
 
-            <!-- Konum -->
-            <TextBlock Text="Konum (Örn: Giriş Kapısı)" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
-            <TextBox x:Name="LocationBox" 
-                     Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"
-                     Style="{StaticResource ModernTextBox}"
-                     Height="40" Margin="0,0,0,24"/>
+                    <!-- Konum -->
+                    <TextBlock Text="Konum (Örn: Giriş Kapısı)" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
+                    <TextBox x:Name="LocationBox" 
+                             Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBox}"
+                             Height="40"/>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
 
-            <!-- Buttons -->
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+        <!-- Buttons -->
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0" Content="İptal"
-                        Style="{StaticResource SecondaryButton}"
-                        Height="44"
-                        Command="{Binding CancelCommand}"/>
+            <Button Grid.Column="0" Content="İptal"
+                    Style="{StaticResource SecondaryButton}"
+                    Height="44"
+                    Command="{Binding CancelCommand}"/>
 
-                <Button Grid.Column="2" Content="💾 Kaydet ve Seç"
-                        Style="{StaticResource ModernButton}"
-                        Height="44"
-                        Command="{Binding SaveCommand}"/>
-            </Grid>
-        </StackPanel>
-    </Border>
+            <Button Grid.Column="2" Content="💾 Kaydet ve Seç"
+                    Style="{StaticResource ModernButton}"
+                    Height="44"
+                    Command="{Binding SaveCommand}"/>
+        </Grid>
+    </Grid>
 </Window>
 

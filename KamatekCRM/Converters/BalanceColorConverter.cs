@@ -14,11 +14,10 @@ namespace KamatekCrm.Converters
             {
                 // Pozitif bakiye (Borç) => Kırmızı
                 // Sıfır veya negatif (Alacak/Yok) => Yeşil
-                return decimalValue > 0
-                    ? (Application.Current?.TryFindResource("StatusErrorBrush") as Brush ?? Brushes.IndianRed)
-                    : (Application.Current?.TryFindResource("StatusSuccessBrush") as Brush ?? Brushes.MediumSeaGreen);
+                var resourceKey = decimalValue > 0 ? "StatusErrorBrush" : "StatusSuccessBrush";
+                return Application.Current?.TryFindResource(resourceKey) as Brush ?? DependencyProperty.UnsetValue;
             }
-            return Application.Current?.TryFindResource("TextPrimaryBrush") as Brush ?? Brushes.Gray;
+            return Application.Current?.TryFindResource("PrimaryTextBrush") as Brush ?? DependencyProperty.UnsetValue;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -27,7 +27,7 @@
                 <DockPanel>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource ThemePrimary}" Margin="0,0,12,0">
-                            <ui:SymbolIcon Symbol="DocumentText24" FontSize="20" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ui:SymbolIcon Symbol="DocumentText24" FontSize="20" Foreground="{DynamicResource TextOnPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
@@ -43,7 +43,7 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right" VerticalAlignment="Center">
                         <!-- Dynamic Profit Margin Badge -->
                         <Border Background="{Binding ProfitColor}" CornerRadius="12" Padding="14,6" Margin="0,0,16,0" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding ProfitDisplay}" Foreground="White" FontWeight="Bold" FontSize="12"/>
+                            <TextBlock Text="{Binding ProfitDisplay}" Foreground="{DynamicResource TextOnPrimaryBrush}" FontWeight="Bold" FontSize="12"/>
                         </Border>
 
                         <ui:Button Command="{Binding SaveQuoteCommand}" 

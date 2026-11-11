@@ -6,8 +6,8 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
         Title="Teslim"
-        Width="860" Height="620"
-        MinWidth="760" MinHeight="540"
+        Width="840" Height="590"
+        MinWidth="640" MinHeight="480"
         WindowStartupLocation="CenterOwner"
         Style="{DynamicResource PremiumWindowStyle}"
         Background="{DynamicResource SurfacePageBrush}">
@@ -55,7 +55,7 @@
 
         <!-- ════════ İçerik ════════ -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
+            <StackPanel MaxWidth="920">
                 <!-- ── Teslim Bilgileri ── -->
                 <Border CornerRadius="8" Padding="14" Margin="0,0,0,10"
                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"

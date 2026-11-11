@@ -4,11 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:converters="clr-namespace:KamatekCrm.Converters"
         xmlns:views="clr-namespace:KamatekCrm.Views"
         mc:Ignorable="d"
         Title="İş Emri Çalışma Alanı"
-        Width="1150" Height="780"
-        MinWidth="960" MinHeight="580"
+        Width="1080" Height="660"
+        MinWidth="800" MinHeight="500"
         WindowStartupLocation="CenterOwner"
         AutomationProperties.Name="İş emri çalışma alanı"
         Style="{DynamicResource PremiumWindowStyle}"
@@ -16,9 +17,9 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <views:FileIsImageConverter x:Key="FileIsImage"/>
-        <views:CompleteMarkConverter x:Key="CompleteMarkConverter"/>
-        <views:StrikeConverter x:Key="StrikeConverter"/>
+        <converters:FileIsImageConverter x:Key="FileIsImage"/>
+        <converters:CompleteMarkConverter x:Key="CompleteMarkConverter"/>
+        <converters:StrikeConverter x:Key="StrikeConverter"/>
 
         <!-- Süreç göstergesi aşama stili -->
         <Style x:Key="StageCircleStyle" TargetType="Border">

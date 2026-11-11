@@ -63,7 +63,7 @@ namespace KamatekCrm.Components
 
         public static readonly DependencyProperty AccentBrushProperty =
             DependencyProperty.Register(nameof(AccentBrush), typeof(Brush), typeof(KmKpiCard),
-                new PropertyMetadata(new SolidColorBrush(Color.FromRgb(0, 120, 212))));
+                new PropertyMetadata(null));
 
         public static readonly DependencyProperty IconProperty =
             DependencyProperty.Register(nameof(Icon), typeof(string), typeof(KmKpiCard),
@@ -214,17 +214,17 @@ namespace KamatekCrm.Components
                 if (value > 0)
                 {
                     TrendArrow = "▲";
-                    TrendBrush = new SolidColorBrush(Color.FromRgb(92, 214, 92));
+                    SetResourceReference(TrendBrushProperty, "StatusSuccessFg");
                 }
                 else if (value < 0)
                 {
                     TrendArrow = "▼";
-                    TrendBrush = new SolidColorBrush(Color.FromRgb(255, 107, 107));
+                    SetResourceReference(TrendBrushProperty, "StatusErrorFg");
                 }
                 else
                 {
                     TrendArrow = "─";
-                    TrendBrush = new SolidColorBrush(Color.FromRgb(160, 160, 176));
+                    SetResourceReference(TrendBrushProperty, "SecondaryTextBrush");
                 }
             }
             else
@@ -262,6 +262,10 @@ namespace KamatekCrm.Components
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
+            if (DependencyPropertyHelper.GetValueSource(this, AccentBrushProperty).BaseValueSource == BaseValueSource.Default)
+            {
+                SetResourceReference(AccentBrushProperty, "AccentBrush");
+            }
             DisplayValue = Value.ToString(Format, CultureInfo.CurrentCulture);
             UpdateTrend();
         }

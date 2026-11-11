@@ -6,8 +6,8 @@
         xmlns:helpers="clr-namespace:KamatekCrm.Helpers"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
-        Title="Yeni Müşteri Ekle" Height="720" Width="640"
-        MinWidth="540" MinHeight="600"
+        Title="Yeni Müşteri Ekle" Height="640" Width="640"
+        MinWidth="480" MinHeight="480"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResizeWithGrip"
         AutomationProperties.Name="Yeni müşteri oluşturma formu"
@@ -40,7 +40,7 @@
 
         <!-- ═══════════════ FORM CONTENT ═══════════════ -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
+            <StackPanel MaxWidth="720">
                 <!-- SECTION 1: MÜŞTERİ TİPİ -->
                 <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12" 
                         Padding="20" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Margin="0,0,0,16">
@@ -50,17 +50,17 @@
                             <TextBlock Text="Müşteri Tipi Seçimi" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <StackPanel Orientation="Horizontal">
+                        <WrapPanel>
                             <RadioButton Content="Bireysel" 
                                          IsChecked="{Binding NewCustomerType, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Individual, Mode=TwoWay}"
-                                         GroupName="NewCustomerType" Margin="0,0,24,0" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                         GroupName="NewCustomerType" Margin="0,0,24,6" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <RadioButton Content="Kurumsal Şirket" 
                                          IsChecked="{Binding NewCustomerType, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Corporate, Mode=TwoWay}"
-                                         GroupName="NewCustomerType" Margin="0,0,24,0" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                         GroupName="NewCustomerType" Margin="0,0,24,6" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <RadioButton Content="Perakende / WalkIn" 
                                          IsChecked="{Binding NewCustomerType, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=WalkIn, Mode=TwoWay}"
-                                         GroupName="NewCustomerType" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                        </StackPanel>
+                                         GroupName="NewCustomerType" Margin="0,0,0,6" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        </WrapPanel>
                     </StackPanel>
                 </Border>
 

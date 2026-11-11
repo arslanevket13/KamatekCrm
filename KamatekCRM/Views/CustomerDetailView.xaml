@@ -32,10 +32,8 @@
         </Grid>
 
         <!-- ========== HEADER DASHBOARD ========== -->
-        <Border Grid.Row="1" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" CornerRadius="10" Padding="16,12" Margin="0,0,0,14">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.08" Color="Black"/>
-            </Border.Effect>
+        <Border Grid.Row="1" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" CornerRadius="10" Padding="16,12" Margin="0,0,0,14"
+                Effect="{DynamicResource Elevation1}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -66,13 +64,18 @@
                             <!-- Segment -->
                             <Border CornerRadius="4" Padding="6,2" Margin="0,0,8,0"
                                     Background="{Binding Segment, Converter={StaticResource SegmentToColorConverter}, FallbackValue=Transparent}">
-                                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextOnStatusBrush}">
+                                <TextBlock FontSize="11" FontWeight="SemiBold">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Text" Value="{Binding Segment, FallbackValue='Standart'}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextOnStatusBrush}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding Segment}" Value="None">
                                                     <Setter Property="Text" Value="Standart"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Segment}" Value="Passive">
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -376,7 +379,7 @@
             <!-- TAB 5: PROFILE INFO -->
             <TabItem Header="📋 Genel Bilgiler">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
-                    <Grid>
+                    <Grid MaxWidth="1400">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>

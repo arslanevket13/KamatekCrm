@@ -12,29 +12,31 @@ namespace KamatekCrm.Components
     /// </summary>
     public class KmAvatar : Control
     {
-        private static readonly Brush[] PaletteBrushes = CreateFrozenPalette();
-
-        private static Brush[] CreateFrozenPalette()
+        private static readonly string[] PaletteResourceKeys =
         {
-            var colors = new[]
-            {
-                "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
-                "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1"
-            };
-            var brushes = new Brush[colors.Length];
-            for (int i = 0; i < colors.Length; i++)
-            {
-                var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colors[i]));
-                brush.Freeze();
-                brushes[i] = brush;
-            }
-            return brushes;
-        }
+            "AccentBrush",
+            "ThemePrimaryDark",
+            "ThemeSuccessDark",
+            "ThemeErrorDark",
+            "KpiGradientPrimary",
+            "KpiGradientSuccess",
+            "KpiGradientError",
+            "KpiGradientPurple"
+        };
+
+        private bool _isUpdatingAutoBackground;
+        private bool _hasExplicitBackground;
+        private string? _appliedAutoBrushKey;
 
         static KmAvatar()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(KmAvatar),
                 new FrameworkPropertyMetadata(typeof(KmAvatar)));
+        }
+
+        public KmAvatar()
+        {
+            UpdateBackground();
         }
 
         #region Dependency Properties
@@ -57,7 +59,7 @@ namespace KamatekCrm.Components
 
         public static readonly DependencyProperty AvatarBackgroundProperty = DependencyProperty.Register(
             nameof(AvatarBackground), typeof(Brush), typeof(KmAvatar),
-            new PropertyMetadata(null));
+            new PropertyMetadata(null, OnAvatarBackgroundChanged));
 
         public static readonly DependencyProperty AvatarFontSizeProperty = DependencyProperty.Register(
             nameof(AvatarFontSize), typeof(double), typeof(KmAvatar),
@@ -155,13 +157,45 @@ namespace KamatekCrm.Components
                 : parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant();
         }
 
+        private static void OnAvatarBackgroundChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not KmAvatar avatar || avatar._isUpdatingAutoBackground)
+                return;
+
+            var valueSource = DependencyPropertyHelper.GetValueSource(avatar, AvatarBackgroundProperty);
+            if (valueSource.BaseValueSource == BaseValueSource.Default)
+            {
+                avatar._hasExplicitBackground = false;
+                return;
+            }
+
+            if (avatar._appliedAutoBrushKey != null &&
+                ReferenceEquals(e.NewValue, avatar.TryFindResource(avatar._appliedAutoBrushKey)))
+            {
+                return;
+            }
+
+            avatar._hasExplicitBackground = e.NewValue != null;
+        }
+
         private void UpdateBackground()
         {
-            if (AvatarBackground != null && !Array.Exists(PaletteBrushes, b => ReferenceEquals(b, AvatarBackground)))
+            if (_hasExplicitBackground)
                 return; // User-set custom background takes priority
 
-            var index = Math.Abs((FullName ?? "").GetHashCode()) % PaletteBrushes.Length;
-            AvatarBackground = PaletteBrushes[index];
+            var index = Math.Abs((FullName ?? "").GetHashCode()) % PaletteResourceKeys.Length;
+            var resourceKey = PaletteResourceKeys[index];
+
+            _isUpdatingAutoBackground = true;
+            try
+            {
+                _appliedAutoBrushKey = resourceKey;
+                SetResourceReference(AvatarBackgroundProperty, resourceKey);
+            }
+            finally
+            {
+                _isUpdatingAutoBackground = false;
+            }
         }
 
         private void UpdateSizeValues()

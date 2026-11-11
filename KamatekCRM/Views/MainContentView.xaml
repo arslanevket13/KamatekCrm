@@ -179,8 +179,8 @@
                 </Grid.RowDefinitions>
 
                 <!-- Logo Header - Corporate Sleek -->
-                <Border Grid.Row="0" Padding="12,10" Background="#0B1120"
-                        BorderBrush="#1E293B" BorderThickness="0,0,0,1">
+                <Border Grid.Row="0" Padding="12,10" Background="{DynamicResource ThemeSidebar}"
+                        BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,0,0,1">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -700,7 +700,7 @@
                         </Border>
 
                         <!-- Quick Interaction Add Button -->
-                        <ui:Button Command="{Binding OpenQuickInteractionAddCommand}" Content="Görüşme Kaydet" Icon="{ui:SymbolIcon CallAdd24}" ToolTip="Hızlı Görüşme / Talep Kaydı" Margin="0,0,8,0" Height="34" Padding="12,0" Background="#2563EB" Foreground="#FFFFFF" FontWeight="SemiBold"/>
+                        <ui:Button Command="{Binding OpenQuickInteractionAddCommand}" Content="Görüşme Kaydet" Icon="{ui:SymbolIcon CallAdd24}" ToolTip="Hızlı Görüşme / Talep Kaydı" Margin="0,0,8,0" Height="34" Padding="12,0" Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource TextOnPrimaryBrush}" FontWeight="SemiBold"/>
 
                         <!-- Quick Add Button -->
                         <Button Command="{Binding OpenQuickAddCommand}" Style="{StaticResource GlassIconButton}" ToolTip="Hızlı Ekle (Ctrl+K)" Margin="0,0,12,0">

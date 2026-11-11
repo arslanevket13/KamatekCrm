@@ -756,19 +756,7 @@ namespace KamatekCrm.ViewModels
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Müşteri detayına geçilirken hata oluştu");
-                try
-                {
-                    var window = new Views.CustomerDetailWindow();
-                    var vm = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<CustomerDetailViewModel>(App.ServiceProvider);
-                    await vm.InitializeAsync(customer.Id);
-                    window.DetailView.DataContext = vm;
-                    window.Owner = System.Windows.Application.Current?.MainWindow;
-                    window.ShowDialog();
-                }
-                catch (Exception winEx)
-                {
-                    _toastService?.ShowError($"Müşteri profili açılamadı: {winEx.Message}");
-                }
+                _toastService?.ShowError($"Müşteri profili açılamadı: {ex.Message}");
             }
         }
 

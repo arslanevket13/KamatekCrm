@@ -3,12 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:KamatekCrm.Views"
+        xmlns:converters="clr-namespace:KamatekCrm.Converters"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
         Title="Keşif Raporu"
-        Width="1180" Height="780"
-        MinWidth="1000" MinHeight="580"
+        Width="1060" Height="660"
+        MinWidth="800" MinHeight="500"
         WindowStartupLocation="CenterOwner"
         AutomationProperties.Name="Keşif raporu düzenleme"
         Style="{DynamicResource PremiumWindowStyle}"
@@ -21,7 +21,7 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <local:FileIsImageConverter x:Key="FileIsImage"/>
+        <converters:FileIsImageConverter x:Key="FileIsImage"/>
     </Window.Resources>
 
     <Grid Margin="22">
@@ -56,9 +56,9 @@
         <!-- ── İçerik ── -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*" MinWidth="400"/>
                 <ColumnDefinition Width="18"/>
-                <ColumnDefinition Width="360"/>
+                <ColumnDefinition Width="0.45*" MinWidth="280" MaxWidth="420"/>
             </Grid.ColumnDefinitions>
 
             <!-- Sol: Teknik rapor + malzemeler -->
@@ -180,7 +180,7 @@
                                                 <Button Content="✕" Command="{Binding DataContext.RemovePhotoCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                         CommandParameter="{Binding}" Width="22" Height="22" Padding="0" FontSize="10"
                                                         HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,2,0"
-                                                        Background="{DynamicResource ThemeError}" Foreground="White"
+                                                        Background="{DynamicResource ThemeError}" Foreground="{DynamicResource TextOnPrimaryBrush}"
                                                         BorderThickness="0" Cursor="Hand" ToolTip="Dosyayı Kaldır"/>
                                             </Grid>
                                         </Border>

@@ -25,9 +25,4 @@ namespace KamatekCrm.Views
             }
         }
     }
-
-    // Retain namespace aliases for XAML compatibility
-    public class IsPositiveConverter : KamatekCrm.Converters.IsPositiveConverter { }
-    public class IsNegativeConverter : KamatekCrm.Converters.IsNegativeConverter { }
-    public class IsZeroConverter : KamatekCrm.Converters.IsZeroConverter { }
 }

@@ -14,9 +14,9 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <local:IsPositiveConverter x:Key="IsPositiveConverter"/>
-        <local:IsNegativeConverter x:Key="IsNegativeConverter"/>
-        <local:IsZeroConverter x:Key="IsZeroConverter"/>
+        <converters:IsPositiveConverter x:Key="IsPositiveConverter"/>
+        <converters:IsNegativeConverter x:Key="IsNegativeConverter"/>
+        <converters:IsZeroConverter x:Key="IsZeroConverter"/>
 
         <!-- Custom ToggleButton style with TargetType="ToggleButton" -->
         <Style x:Key="SecondaryToggleButton" TargetType="ToggleButton">

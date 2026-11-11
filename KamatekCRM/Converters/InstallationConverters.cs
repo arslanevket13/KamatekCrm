@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Documents;
 
-namespace KamatekCrm.Views
+namespace KamatekCrm.Converters
 {
     /// <summary>Görev tamamlanma durumunu ✓ / ⬜ işaretine çevirir.</summary>
     public sealed class CompleteMarkConverter : IValueConverter
@@ -35,3 +35,4 @@ namespace KamatekCrm.Views
             => Binding.DoNothing;
     }
 }
+

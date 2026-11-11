@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:KamatekCrm.Views"
         mc:Ignorable="d"
-        Title="Fiyat Teklifi" Height="820" Width="1150"
-        MinHeight="580" MinWidth="900"
+        Title="Fiyat Teklifi" Height="660" Width="1060"
+        MinHeight="480" MinWidth="780"
         WindowStartupLocation="CenterOwner"
         Style="{DynamicResource PremiumWindowStyle}"
         Background="{DynamicResource SurfacePageBrush}">

@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:KamatekCrm.Views"
+             xmlns:converters="clr-namespace:KamatekCrm.Converters"
              xmlns:viewmodels="clr-namespace:KamatekCrm.ViewModels"
              xmlns:components="clr-namespace:KamatekCrm.Components"
              mc:Ignorable="d"
@@ -152,10 +153,10 @@
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding NetChange, Converter={x:Static local:IsPositiveConverter.Instance}}" Value="True">
+                            <DataTrigger Binding="{Binding NetChange, Converter={x:Static converters:IsPositiveConverter.Instance}}" Value="True">
                                 <Setter Property="Background" Value="{DynamicResource StatusSuccessBg}"/>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding NetChange, Converter={x:Static local:IsNegativeConverter.Instance}}" Value="True">
+                            <DataTrigger Binding="{Binding NetChange, Converter={x:Static converters:IsNegativeConverter.Instance}}" Value="True">
                                 <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
                             </DataTrigger>
                         </Style.Triggers>
@@ -168,10 +169,10 @@
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding NetChange, Converter={x:Static local:IsPositiveConverter.Instance}}" Value="True">
+                                    <DataTrigger Binding="{Binding NetChange, Converter={x:Static converters:IsPositiveConverter.Instance}}" Value="True">
                                         <Setter Property="Foreground" Value="{DynamicResource StatusSuccessFg}"/>
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding NetChange, Converter={x:Static local:IsNegativeConverter.Instance}}" Value="True">
+                                    <DataTrigger Binding="{Binding NetChange, Converter={x:Static converters:IsNegativeConverter.Instance}}" Value="True">
                                         <Setter Property="Foreground" Value="{DynamicResource StatusErrorFg}"/>
                                     </DataTrigger>
                                 </Style.Triggers>

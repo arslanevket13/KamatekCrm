@@ -9,10 +9,10 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=viewmodels:ProjectQuoteEditorViewModel, IsDesignTimeCreatable=False}"
         Title="🏗️ PROJE TEKLİF EDİTÖRÜ WORKBENCH" 
-        Height="850" Width="1450"
-        MinHeight="580" MinWidth="1000"
+        Height="680" Width="1160"
+        MinHeight="500" MinWidth="820"
         WindowStartupLocation="CenterScreen"
-        Style="{StaticResource PremiumWindowStyle}">
+        Style="{DynamicResource PremiumWindowStyle}">
 
     <Window.InputBindings>
         <KeyBinding Modifiers="Control" Key="S" Command="{Binding SaveCommand}"/>

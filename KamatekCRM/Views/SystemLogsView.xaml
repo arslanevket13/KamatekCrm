@@ -163,7 +163,7 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#FFFFFF">
+                                        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}">
                                             <Run Text="{Binding ActionIcon, Mode=OneWay}"/>
                                             <Run Text=" "/>
                                             <Run Text="{Binding ActionTypeDisplay, Mode=OneWay}"/>

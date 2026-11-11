@@ -6,10 +6,11 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         mc:Ignorable="d"
         Title="🛍️ Perakende Satış Terminali (POS)" 
-        Height="800" Width="1360"
-        MinHeight="580" MinWidth="1000"
+        Height="680" Width="1160"
+        MinHeight="500" MinWidth="840"
         WindowStartupLocation="CenterScreen"
-        Style="{StaticResource PremiumWindowStyle}">
+        Style="{DynamicResource PremiumWindowStyle}"
+        Background="{DynamicResource AppBackgroundBrush}">
 
     <Window.InputBindings>
         <KeyBinding Key="F5" Command="{Binding ClearCartCommand}"/>
@@ -82,14 +83,14 @@
 
     <Grid Margin="16">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="6*"/>
+            <ColumnDefinition Width="6*" MinWidth="380"/>
             <ColumnDefinition Width="14"/>
-            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="5*" MinWidth="380"/>
         </Grid.ColumnDefinitions>
 
         <!-- ========================= LEFT: CATALOG & BARCODE ========================= -->
-        <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
-            <Border.Effect><DropShadowEffect BlurRadius="14" Opacity="0.08" ShadowDepth="2"/></Border.Effect>
+        <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16"
+                Effect="{DynamicResource Elevation1}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -355,8 +356,8 @@
         </Border>
 
         <!-- ========================= RIGHT: CART & POS TERMINAL ========================= -->
-        <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16">
-            <Border.Effect><DropShadowEffect BlurRadius="14" Opacity="0.08" ShadowDepth="2"/></Border.Effect>
+        <Border Grid.Column="2" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="10" Padding="16"
+                Effect="{DynamicResource Elevation1}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>     <!-- 0: Kaydırılabilir üst bölge -->
@@ -377,6 +378,10 @@
 
                 <!-- Row 0: Header Bar -->
                 <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="🛒" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="Sepetim" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center"/>
@@ -388,7 +393,7 @@
                     </StackPanel>
 
                     <!-- Print Thermal Receipt Action -->
-                    <Button HorizontalAlignment="Right" Content="🖨️ Fiş Bas (F11)"
+                    <Button Grid.Column="1" HorizontalAlignment="Right" Content="🖨️ Fiş Bas (F11)"
                             Command="{Binding PrintLastReceiptCommand}"
                             IsEnabled="{Binding HasLastOrder}"
                             Background="{DynamicResource ApplicationBackgroundBrush}" Foreground="{DynamicResource ThemePrimaryDark}"
@@ -508,8 +513,8 @@
                             <!-- Popup Dropdown -->
                             <Popup IsOpen="{Binding IsCustomerSearchOpen, Mode=OneWay}"
                                    Placement="Bottom" AllowsTransparency="True" StaysOpen="False">
-                                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="4">
-                                    <Border.Effect><DropShadowEffect BlurRadius="10" Opacity="0.12"/></Border.Effect>
+                                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="4"
+                                        Effect="{DynamicResource Elevation2}">
                                     <ListBox ItemsSource="{Binding FilteredCustomers}" Width="260" BorderThickness="0" Background="Transparent">
                                         <ListBox.ItemTemplate>
                                             <DataTemplate>
