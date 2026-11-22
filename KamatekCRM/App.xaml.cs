@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using KamatekCrm.Services;
+using KamatekCrm.Settings;
 
 using KamatekCrm.Extensions;
 
@@ -35,6 +36,8 @@ using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Infrastructure.Data;
 
 using KamatekCrm.Infrastructure.Services;
+using KamatekCrm.Shared.Services;
+using KamatekCrm.Views;
 
 
 
@@ -142,11 +145,9 @@ namespace KamatekCrm
                 System.Windows.Input.InputMethod.IsInputMethodEnabledProperty.OverrideMetadata(
                     typeof(System.Windows.Controls.RichTextBox),
                     new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.Inherits));
-                System.Windows.Input.InputMethod.IsInputMethodEnabledProperty.OverrideMetadata(
-                    typeof(System.Windows.Controls.PasswordBox),
-                    new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.Inherits));
+                // Not: PasswordBox kendi statik kurucusunda IsInputMethodEnabledProperty=false metadata'sını zaten kaydeder.
             }
-            catch { }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "App.xaml.cs"); }
 
 
 
@@ -303,98 +304,238 @@ namespace KamatekCrm
 
                 await _host.StartAsync();
 
-
-
-                // Şema hazırlama Infrastructure katmanında yürütülür; UI sağlayıcıya özel DDL içermez.
-
-                try
-
-                {
-
-                    var databaseInitializer = ServiceProvider.GetRequiredService<IDatabaseInitializationService>();
-
-                    var initializationResult = await databaseInitializer.InitializeAsync();
-
-                    if (initializationResult.AdminCreated)
-
-                    {
-
-                        MessageBox.Show(
-
-                            $"İlk yönetici hesabı oluşturuldu.\n\nKullanıcı adı: admin\nGeçici şifre: {initializationResult.TemporaryAdminPassword}\n\nBu şifre yalnızca bir kez gösterilir. Giriş yaptıktan sonra hemen değiştirin.",
-
-                            "Güvenli İlk Kurulum",
-
-                            MessageBoxButton.OK,
-
-                            MessageBoxImage.Information);
-
-                    }
-
-                }
-
-                catch (Exception ex)
-
-                {
-
-                    Log.Error(ex, "Veritabanı otomatik kurulumu sırasında hata oluştu. Lütfen bağlantı ayarlarını kontrol edin.");
-
-                }
-
-
-
-
-
-                // MainWindow'u DI'dan al ve göster
-
+                // MainWindow açılış karar ağacı: ilk kurulum tamamlanmamışsa veya --first-run geçildiyse LoginView asla ilk ekran olmasın
                 var mainWindow = _host.Services.GetRequiredService<MainWindow>();
-
                 MainWindow = mainWindow;
 
-                
-
-                // Login ekranını aktif et
-
                 var navigationService = _host.Services.GetRequiredService<NavigationService>();
+                var connectionProvider = _host.Services.GetRequiredService<IDatabaseConnectionProvider>();
+                bool forceFirstRun = e.Args.Any(a => string.Equals(a, "--first-run", StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrWhiteSpace(AppSettings.PostgreSqlConnectionString) &&
+                    string.IsNullOrWhiteSpace(connectionProvider.GetConnectionString()))
+                {
+                    connectionProvider.UpdateConnectionString(AppSettings.PostgreSqlConnectionString);
+                }
+
+                bool hasConfiguredConnection = !string.IsNullOrWhiteSpace(connectionProvider.GetConnectionString());
+                Log.Information("Yerel kurulum ayar dosyası: {SettingsPath} (ForceFirstRun={Force})",
+                    AppSettings.LocalRuntimeSettingsFilePath, forceFirstRun);
+
+                if (forceFirstRun || (!AppSettings.IsFirstRunCompleted && !hasConfiguredConnection))
+                {
+                    navigationService.NavigateToFirstRunWizard(startStep: 1);
+                    Log.Information(
+                        "Startup route: {Route} (IsFirstRunCompleted={Flag}, HasConn={HasConn}, UserCount={Count})",
+                        "FirstRunWizardView(Step1)",
+                        AppSettings.IsFirstRunCompleted,
+                        hasConfiguredConnection,
+                        0);
+                    mainWindow.Show();
+                    await CheckStartupUpdatesAsync(_appCts.Token);
+                    return;
+                }
 
                 navigationService.NavigateToLogin();
 
-
-
                 mainWindow.Show();
+                Log.Information("Desktop application window opened; starting non-blocking database bootstrap.");
 
-                
-
-                Log.Information("Desktop application started successfully.");
-
-
+                var loginViewModel = navigationService.CurrentView as LoginViewModel;
+                await InitializeDatabaseOnStartupAsync(loginViewModel, mainWindow, _appCts.Token);
 
                 // Açılış sonrasında ana pencere ve login akışını bloklamadan güncelleme denetimi (5s gecikmeli, await edilebilir)
-
                 await CheckStartupUpdatesAsync(_appCts.Token);
-
             }
-
             catch (Exception ex)
-
             {
-
                 Log.Fatal(ex, "Uygulama başlatılırken kritik hata");
-
                 MessageBox.Show(
-
                     $"Uygulama başlatılırken hata oluştu:\n\n{ex.Message}\n\nDetay: {ex.InnerException?.Message}",
-
                     "Başlatma Hatası",
-
                     MessageBoxButton.OK,
-
                     MessageBoxImage.Error);
-
                 Shutdown();
+            }
+        }
 
+        /// <summary>
+        /// Açılışta veritabanı bağlantı ve şema kontrolünü UI'ı kilitlemeden, 5 saniyelik zaman aşımı ile yürütür.
+        /// Bağlantı yapılandırılmamışsa veya sunucu erişilemezse uygulamayı kapatmaz; kullanıcıyı Ağ Ayarları'na yönlendirir.
+        /// </summary>
+        private async Task InitializeDatabaseOnStartupAsync(LoginViewModel? loginViewModel, Window mainWindow, CancellationToken appCancellationToken)
+        {
+            var connectionProvider = ServiceProvider!.GetRequiredService<IDatabaseConnectionProvider>();
+            var navigationService = ServiceProvider!.GetRequiredService<NavigationService>();
+
+            // 1) Yerel yönetilen PostgreSQL modu aktifse veritabanını sessizce ayağa kaldır
+            if (AppSettings.IsManagedLocalPostgres)
+            {
+                loginViewModel?.SetStartupStatus("Yerel veritabanı motoru başlatılıyor...", isSearching: true, isFound: false, isNotFound: false);
+                var managedPg = ServiceProvider!.GetRequiredService<IManagedPostgresService>();
+                var progress = new Progress<string>(msg =>
+                    loginViewModel?.SetStartupStatus(msg, isSearching: true, isFound: false, isNotFound: false));
+
+                var pgResult = await managedPg.EnsureProvisionedAndRunningAsync(
+                    AppSettings.AllowLanAccess,
+                    progress,
+                    appCancellationToken);
+
+                if (pgResult.Success)
+                {
+                    connectionProvider.UpdateConnectionString(pgResult.ConnectionString);
+                    connectionProvider.SetServerIp("127.0.0.1");
+                }
+                else
+                {
+                    Log.Warning("Yönetilen yerel PostgreSQL başlatılamadı: {Error}", pgResult.ErrorMessage);
+                    loginViewModel?.SetStartupStatus(
+                        pgResult.ErrorMessage ?? "Yerel veritabanı başlatılamadı.",
+                        isSearching: false,
+                        isFound: false,
+                        isNotFound: true);
+                    return;
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(AppSettings.PostgreSqlConnectionString) &&
+                     string.IsNullOrWhiteSpace(connectionProvider.GetConnectionString()))
+            {
+                connectionProvider.UpdateConnectionString(AppSettings.PostgreSqlConnectionString);
             }
 
+            // 2) Kayıtlı geçerli bağlantı yoksa -> İlk Kurulum Sihirbazı (Adım 1)
+            if (string.IsNullOrWhiteSpace(connectionProvider.GetConnectionString()))
+            {
+                Log.Information(
+                    "Startup route: {Route} (IsFirstRunCompleted={Flag}, HasConn={HasConn}, UserCount={Count})",
+                    "FirstRunWizardView(Step1)",
+                    AppSettings.IsFirstRunCompleted,
+                    false,
+                    0);
+                navigationService.NavigateToFirstRunWizard(startStep: 1);
+                return;
+            }
+
+            loginViewModel?.SetStartupStatus("Sunucu aranıyor...", isSearching: true, isFound: false, isNotFound: false);
+
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(appCancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(10));
+
+            try
+            {
+                loginViewModel?.SetStartupStatus("Veritabanı kontrol ediliyor...", isSearching: true, isFound: false, isNotFound: false);
+
+                var databaseInitializer = ServiceProvider!.GetRequiredService<IDatabaseInitializationService>();
+                var initializationResult = await Task.Run(
+                    () => databaseInitializer.InitializeAsync(timeoutCts.Token, seedDefaultAdminIfEmpty: false),
+                    timeoutCts.Token);
+
+                connectionProvider.SetConnectionState(true);
+                var serverLabel = string.IsNullOrWhiteSpace(connectionProvider.CurrentServerIp)
+                    ? "Yerel Sunucu"
+                    : connectionProvider.CurrentServerIp;
+
+                loginViewModel?.SetStartupStatus(
+                    $"Veritabanı hazır ({serverLabel})",
+                    isSearching: false,
+                    isFound: true,
+                    isNotFound: false);
+
+                EventAggregator.Instance.Publish(new DatabaseConnectionRestoredEvent());
+
+                // 3) Bağlantı tamam ama Users tablosu boşsa -> İlk Kurulum Sihirbazı (Adım 2)
+                if (!initializationResult.HasAnyUsers)
+                {
+                    Log.Information(
+                        "Startup route: {Route} (IsFirstRunCompleted={Flag}, HasConn={HasConn}, UserCount={Count})",
+                        "FirstRunWizardView(Step2)",
+                        AppSettings.IsFirstRunCompleted,
+                        true,
+                        initializationResult.UserCount);
+                    navigationService.NavigateToFirstRunWizard(startStep: 2);
+                    return;
+                }
+
+                // 4) AutoLoginEnabled aktif ve DPAPI oturumu geçerliyse -> doğrudan MainContentView
+                if (AppSettings.TryReadAutoLoginSession(out int autoUserId, out string autoUsername))
+                {
+                    var authService = ServiceProvider!.GetRequiredService<IAuthService>();
+                    if (await authService.TryAutoLoginAsync(autoUserId, autoUsername))
+                    {
+                        Log.Information(
+                            "Startup route: {Route} (IsFirstRunCompleted={Flag}, HasConn={HasConn}, UserCount={Count})",
+                            "MainContentView(AutoLogin)",
+                            AppSettings.IsFirstRunCompleted,
+                            true,
+                            initializationResult.UserCount);
+                        navigationService.NavigateToMainContent();
+                        return;
+                    }
+                    AppSettings.ClearAutoLoginSession();
+                }
+
+                Log.Information(
+                    "Startup route: {Route} (IsFirstRunCompleted={Flag}, HasConn={HasConn}, UserCount={Count})",
+                    "LoginView",
+                    AppSettings.IsFirstRunCompleted,
+                    true,
+                    initializationResult.UserCount);
+
+                if (initializationResult.AdminCreated && !string.IsNullOrWhiteSpace(initializationResult.TemporaryAdminPassword))
+                {
+                    TemporaryPasswordDialog.ShowDialogSafe(
+                        username: "admin",
+                        temporaryPassword: initializationResult.TemporaryAdminPassword,
+                        title: "Güvenli İlk Kurulum",
+                        headerTitle: "İlk Yönetici Hesabı Oluşturuldu",
+                        subtitle: "Bu geçici şifre yalnızca bir kez gösterilir. Giriş yaptıktan sonra değiştirmeniz istenecektir.",
+                        owner: mainWindow);
+                }
+            }
+            catch (OperationCanceledException) when (!appCancellationToken.IsCancellationRequested)
+            {
+                Log.Warning("Veritabanı başlangıç kontrolü zaman aşımına ulaştı.");
+                connectionProvider.SetConnectionState(false);
+                if (!AppSettings.IsFirstRunCompleted)
+                {
+                    Log.Information(
+                        "Startup route: {Route} (IsFirstRunCompleted={Flag}, HasConn={HasConn}, UserCount={Count})",
+                        "FirstRunWizardView(Step1-TimeoutFallback)",
+                        AppSettings.IsFirstRunCompleted,
+                        true,
+                        0);
+                    navigationService.NavigateToFirstRunWizard(startStep: 1);
+                    return;
+                }
+
+                loginViewModel?.SetStartupStatus(
+                    "Sunucu yanıt vermedi. Ağ Ayarları'ndan bağlantıyı yapılandırabilirsiniz.",
+                    isSearching: false,
+                    isFound: false,
+                    isNotFound: true);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Veritabanı otomatik kurulumu sırasında hata oluştu. Lütfen bağlantı ayarlarını kontrol edin.");
+                connectionProvider.SetConnectionState(false);
+                if (!AppSettings.IsFirstRunCompleted)
+                {
+                    Log.Information(
+                        "Startup route: {Route} (IsFirstRunCompleted={Flag}, HasConn={HasConn}, UserCount={Count})",
+                        "FirstRunWizardView(Step1-ErrorFallback)",
+                        AppSettings.IsFirstRunCompleted,
+                        true,
+                        0);
+                    navigationService.NavigateToFirstRunWizard(startStep: 1);
+                    return;
+                }
+
+                loginViewModel?.SetStartupStatus(
+                    "Veritabanına bağlanılamadı. Lütfen Ağ Ayarları'nı kontrol edin.",
+                    isSearching: false,
+                    isFound: false,
+                    isNotFound: true);
+            }
         }
 
 
@@ -594,13 +735,7 @@ namespace KamatekCrm
 
                 }
 
-                catch
-
-                {
-
-                    // Dispatcher erişilemiyorsa sessizce geç — log zaten yazıldı
-
-                }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "App.xaml.cs"); }
 
             }
 
@@ -876,13 +1011,7 @@ namespace KamatekCrm
 
                 }
 
-                catch
-
-                {
-
-                    // CancellationTokenSource temizleme hatası yutulur
-
-                }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "App.xaml.cs"); }
 
                 
 
@@ -942,9 +1071,16 @@ namespace KamatekCrm
 
                     
 
+                    var managedPostgres = _host.Services.GetService<IManagedPostgresService>();
+
                     await _host.StopAsync();
 
                     _host.Dispose();
+
+                    if (managedPostgres is not null)
+                    {
+                        await managedPostgres.StopIfSinglePcModeAsync();
+                    }
 
                 }
 
@@ -988,7 +1124,7 @@ namespace KamatekCrm
 
             {
 
-                try { ProcessManager.StopServices(); } catch { }
+                try { ProcessManager.StopServices(); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "App.xaml.cs"); }
 
                 Log.CloseAndFlush();
 

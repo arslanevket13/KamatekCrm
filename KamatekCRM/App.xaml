@@ -31,6 +31,10 @@
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Navigation Views -->
+            <DataTemplate DataType="{x:Type vm:FirstRunWizardViewModel}">
+                <views:FirstRunWizardView/>
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type vm:LoginViewModel}">
                 <views:LoginView/>
             </DataTemplate>
@@ -116,9 +120,6 @@
             <DataTemplate DataType="{x:Type vm:PurchasingViewModel}">
                 <views:PurchasingView />
             </DataTemplate>
-            <DataTemplate DataType="{x:Type vm:PurchaseOrderViewModel}">
-                <views:PurchaseOrderView />
-            </DataTemplate>
 
             <DataTemplate DataType="{x:Type vm:SuppliersViewModel}">
                 <views:SuppliersView/>
@@ -141,6 +142,7 @@
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
             <converters:IntToVisibilityConverter x:Key="IntToVis"/>
             <converters:InvertedBooleanToVisibilityConverter x:Key="InvertedBoolToVis"/>
+            <converters:InvertedBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
             <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
             <converters:NullToVisibilityConverter x:Key="NullToVis"/>
             <converters:GreaterThanZeroConverter x:Key="GreaterThanZero"/>

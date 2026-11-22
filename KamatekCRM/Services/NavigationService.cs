@@ -28,6 +28,11 @@ namespace KamatekCrm.Services
             {
                 if (_currentView != value)
                 {
+                    if (_currentView is LoginViewModel oldLoginViewModel)
+                    {
+                        oldLoginViewModel.Dispose();
+                    }
+
                     _currentView = value;
                     OnPropertyChanged(nameof(CurrentView));
                 }
@@ -49,7 +54,7 @@ namespace KamatekCrm.Services
         /// </summary>
         public void NavigateTo(object viewModel)
         {
-            if (viewModel is LoginViewModel || viewModel is MainContentViewModel)
+            if (viewModel is LoginViewModel || viewModel is MainContentViewModel || viewModel is FirstRunWizardViewModel)
             {
                 CurrentView = viewModel;
             }
@@ -73,6 +78,17 @@ namespace KamatekCrm.Services
         public void NavigateToLogin()
         {
             NavigateTo<LoginViewModel>();
+        }
+
+        /// <summary>
+        /// İlk kurulum sihirbazına git
+        /// </summary>
+        public FirstRunWizardViewModel NavigateToFirstRunWizard(int startStep = 1)
+        {
+            var vm = _serviceProvider.GetRequiredService<FirstRunWizardViewModel>();
+            vm.Initialize(startStep);
+            CurrentView = vm;
+            return vm;
         }
 
         /// <summary>

@@ -87,12 +87,15 @@ namespace KamatekCrm.Extensions
             services.AddSingleton<DiagnosticDataService>();
 
             // Background & System Services
+            services.AddSingleton<IManagedPostgresService, ManagedPostgresService>();
+            services.AddSingleton<IRecoveryKeyService, RecoveryKeyService>();
             services.AddTransient<ISlaService, SlaService>();
             services.AddTransient<IBackupService, BackupService>();
             services.AddSingleton<IBackupIntegrityService, BackupIntegrityService>();
             services.AddSingleton<Services.Update.IUpdateService, Services.Update.VelopackUpdateService>();
 
             // ViewModels
+            services.AddTransient<FirstRunWizardViewModel>();
             services.AddTransient<MainViewModel>();
             services.AddTransient<LoginViewModel>();
             services.AddTransient<DashboardViewModel>();
@@ -112,7 +115,6 @@ namespace KamatekCrm.Extensions
             services.AddTransient<DirectSalesViewModel>();
             services.AddTransient<SalesReturnViewModel>();
             services.AddTransient<FinanceViewModel>();
-            services.AddTransient<RepairViewModel>();
             services.AddTransient<MainContentViewModel>();
             services.AddTransient<SuppliersViewModel>();
 
@@ -136,10 +138,10 @@ namespace KamatekCrm.Extensions
             services.AddTransient<QuickCustomerAddViewModel>();
             services.AddTransient<QuickNewProductForPurchaseViewModel>();
             
-            services.AddTransient<PurchaseOrderViewModel>();
             services.AddTransient<QuotationViewModel>();
             services.AddTransient<NetworkSettingsViewModel>();
             services.AddTransient<QuickInteractionAddViewModel>();
+            services.AddTransient<QuickAddViewModel>();
             services.AddTransient<CustomerInteractionsViewModel>();
             services.AddTransient<ManagerAgendaViewModel>();
 
@@ -157,7 +159,6 @@ namespace KamatekCrm.Extensions
             services.AddTransient<ViewModels.DevCenter.DevCenterViewModel>();
 
             // Windows
-            services.AddTransient<Views.RepairTrackingWindow>();
             services.AddTransient<Views.FaultTicketWindow>();
             services.AddTransient<Views.DirectSalesWindow>();
             services.AddTransient<Views.ProjectQuoteEditorWindow>();

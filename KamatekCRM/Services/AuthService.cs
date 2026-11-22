@@ -95,6 +95,24 @@ namespace KamatekCrm.Services
         }
 
         /// <summary>
+        /// Girilen parolanın saklanan BCrypt hash'i ile eşleşip eşleşmediğini doğrular.
+        /// </summary>
+        public static bool VerifyPassword(string password, string? storedHash)
+        {
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(storedHash))
+                return false;
+
+            if (storedHash.StartsWith("$2a$", StringComparison.Ordinal) ||
+                storedHash.StartsWith("$2b$", StringComparison.Ordinal) ||
+                storedHash.StartsWith("$2y$", StringComparison.Ordinal))
+            {
+                return BCrypt.Net.BCrypt.Verify(password, storedHash);
+            }
+
+            return VerifyLegacyPbkdf2(password, storedHash);
+        }
+
+        /// <summary>
         /// Veritabanı üzerinden doğrudan login (BCrypt Hash kontrolü, Brute-Force koruması ve şeffaf migration ile)
         /// </summary>
         public async Task<bool> LoginAsync(string username, string password)
@@ -186,6 +204,183 @@ namespace KamatekCrm.Services
 
             Log.Information("DB Login başarılı: {Username} (Role: {Role})", user.Username, user.Role);
             return true;
+        }
+
+        public async Task<bool> TryAutoLoginAsync(int userId, string username)
+        {
+            if (userId <= 0 || string.IsNullOrWhiteSpace(username))
+                return false;
+
+            try
+            {
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                var user = await context.Users.FirstOrDefaultAsync(
+                    u => u.Id == userId && u.Username == username && u.IsActive);
+
+                if (user is null)
+                    return false;
+
+                _currentUser = user;
+                user.LastLoginDate = DateTime.UtcNow;
+                await context.SaveChangesAsync();
+
+                Log.Information("Otomatik oturum açıldı: {Username} (Role: {Role})", user.Username, user.Role);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Otomatik oturum açma denemesi başarısız oldu: {Username}", username);
+                return false;
+            }
+        }
+
+        public async Task<(bool Success, string? ErrorMessage, User? CreatedUser)> CreateInitialAdminAsync(
+            string fullName,
+            string username,
+            string password)
+        {
+            if (string.IsNullOrWhiteSpace(fullName))
+                return (false, "Ad Soyad alanı zorunludur.", null);
+
+            if (string.IsNullOrWhiteSpace(username) || username.Trim().Length < 3)
+                return (false, "Kullanıcı adı en az 3 karakter olmalıdır.", null);
+
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
+                return (false, "Parola en az 6 karakter olmalıdır.", null);
+
+            var cleanUsername = username.Trim();
+            if (cleanUsername.Length > 50)
+                cleanUsername = cleanUsername[..50];
+            var normalized = cleanUsername.ToLowerInvariant();
+
+            var nameParts = fullName.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+            var firstName = nameParts.Length > 0 ? nameParts[0] : fullName.Trim();
+            var lastName = nameParts.Length > 1 ? nameParts[1] : "-";
+            if (firstName.Length > 50) firstName = firstName[..50];
+            if (lastName.Length > 50) lastName = lastName[..50];
+
+            try
+            {
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                var existingUser = await context.Users
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(u => u.Username.ToLower() == normalized);
+
+                User adminUser;
+                var nowUtc = DateTime.UtcNow;
+
+                if (existingUser is not null)
+                {
+                    if (KamatekCrm.Settings.AppSettings.IsFirstRunCompleted && !existingUser.IsDeleted)
+                    {
+                        return (false, $"'{cleanUsername}' kullanıcı adı zaten kayıtlı.", null);
+                    }
+
+                    existingUser.Ad = firstName;
+                    existingUser.Soyad = lastName;
+                    existingUser.PasswordHash = HashPassword(password);
+                    existingUser.Role = "Admin";
+                    existingUser.IsActive = true;
+                    existingUser.IsDeleted = false;
+                    existingUser.DeletedAt = null;
+                    existingUser.DeletedBy = null;
+                    existingUser.MustChangePassword = false;
+                    existingUser.CanViewFinance = true;
+                    existingUser.CanViewAnalytics = true;
+                    existingUser.CanDeleteRecords = true;
+                    existingUser.CanApprovePurchase = true;
+                    existingUser.CanAccessSettings = true;
+                    existingUser.LastLoginDate = nowUtc;
+                    existingUser.ModifiedDate = nowUtc;
+                    existingUser.ModifiedBy = "System";
+                    adminUser = existingUser;
+                }
+                else
+                {
+                    adminUser = new User
+                    {
+                        Ad = firstName,
+                        Soyad = lastName,
+                        Username = cleanUsername,
+                        PasswordHash = HashPassword(password),
+                        Role = "Admin",
+                        IsActive = true,
+                        IsDeleted = false,
+                        IsTechnician = false,
+                        IsOnDuty = false,
+                        TotalJobsCompleted = 0,
+                        MustChangePassword = false,
+                        CanViewFinance = true,
+                        CanViewAnalytics = true,
+                        CanDeleteRecords = true,
+                        CanApprovePurchase = true,
+                        CanAccessSettings = true,
+                        CreatedBy = "System",
+                        CreatedDate = nowUtc,
+                        LastLoginDate = nowUtc
+                    };
+
+                    context.Users.Add(adminUser);
+                }
+
+                await context.SaveChangesAsync();
+
+                _currentUser = adminUser;
+                Log.Information("İlk kurulum yönetici hesabı oluşturuldu ve oturum açıldı: {Username}", adminUser.Username);
+                return (true, null, adminUser);
+            }
+            catch (Exception ex)
+            {
+                var baseEx = ex.GetBaseException();
+                if (baseEx is Npgsql.PostgresException pgEx)
+                {
+                    Log.Error(
+                        ex,
+                        "İlk kurulum yönetici hesabı oluşturulamadı (SqlState={SqlState}, Column={Column}, Constraint={Constraint}, Detail={Detail})",
+                        pgEx.SqlState,
+                        pgEx.ColumnName,
+                        pgEx.ConstraintName,
+                        pgEx.Detail);
+
+                    var detailParts = new System.Collections.Generic.List<string> { $"Kod: {pgEx.SqlState}" };
+                    if (!string.IsNullOrWhiteSpace(pgEx.ColumnName)) detailParts.Add($"Sütun: {pgEx.ColumnName}");
+                    if (!string.IsNullOrWhiteSpace(pgEx.ConstraintName)) detailParts.Add($"Kısıt: {pgEx.ConstraintName}");
+                    return (false, $"Yönetici hesabı oluşturulamadı ({string.Join(", ", detailParts)}): {pgEx.MessageText}", null);
+                }
+
+                Log.Error(ex, "İlk kurulum yönetici hesabı oluşturulamadı: {BaseMessage}", baseEx.Message);
+                return (false, $"Yönetici hesabı oluşturulamadı: {baseEx.Message}", null);
+            }
+        }
+
+        public async Task<(bool Success, string? ErrorMessage)> ResetAdminPasswordAsync(string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+                return (false, "Yeni parola en az 6 karakter olmalıdır.");
+
+            try
+            {
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                var admin = await context.Users
+                    .OrderBy(u => u.Id)
+                    .FirstOrDefaultAsync(u => u.IsActive && u.Role.ToLower() == "admin");
+
+                if (admin is null)
+                    return (false, "Sistemde aktif bir yönetici hesabı bulunamadı.");
+
+                admin.PasswordHash = HashPassword(newPassword);
+                admin.MustChangePassword = false;
+                await context.SaveChangesAsync();
+
+                _lockoutTracker.TryRemove(admin.Username.ToLowerInvariant(), out _);
+                Log.Information("Yönetici parolası kurtarma anahtarı ile sıfırlandı: {Username}", admin.Username);
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Yönetici parolası sıfırlanırken hata oluştu.");
+                return (false, $"Parola sıfırlanamadı: {ex.Message}");
+            }
         }
 
         /// <summary>

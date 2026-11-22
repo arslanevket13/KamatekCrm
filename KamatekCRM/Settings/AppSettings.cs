@@ -72,9 +72,20 @@ namespace KamatekCrm.Settings
         /// <summary>
         /// PostgreSQL bağlantı dizesi (DPAPI çözümlenmiş)
         /// </summary>
-        public static string PostgreSqlConnectionString => 
-            Security.DataProtectionHelper.UnprotectConnectionString(
-                Configuration["DatabaseSettings:ConnectionStrings:PostgreSQL"] ?? "");
+        public static string PostgreSqlConnectionString
+        {
+            get
+            {
+                var localConn = GetLocalRuntimeSettings().EncryptedConnectionString;
+                if (!string.IsNullOrWhiteSpace(localConn))
+                {
+                    return Security.DataProtectionHelper.UnprotectConnectionString(localConn);
+                }
+
+                return Security.DataProtectionHelper.UnprotectConnectionString(
+                    Configuration["DatabaseSettings:ConnectionStrings:PostgreSQL"] ?? "");
+            }
+        }
 
         /// <summary>
         /// Aktif bağlantı dizesi (PostgreSQL enforced)
@@ -195,7 +206,7 @@ namespace KamatekCrm.Settings
                             return savedTheme;
                     }
                 }
-                catch { }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "AppSettings.cs"); }
 
                 return Configuration["AppSettings:CurrentTheme"] ?? "PremiumLight";
             }
@@ -209,8 +220,222 @@ namespace KamatekCrm.Settings
                     var themeFile = Path.Combine(folder, "theme.txt");
                     File.WriteAllText(themeFile, value);
                 }
-                catch { }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "AppSettings.cs"); }
             }
         }
+
+        #region Managed Local Postgres, First-Run, Auto-Login & Recovery Key
+
+        private static LocalRuntimeSettingsModel? _cachedLocalRuntime;
+        private static readonly object _localRuntimeLock = new();
+
+        public static bool IsManagedLocalPostgres
+        {
+            get => GetLocalRuntimeSettings().IsManagedLocalPostgres;
+            set => UpdateLocalRuntimeSettings(s => s.IsManagedLocalPostgres = value);
+        }
+
+        public static int ManagedPostgresPort
+        {
+            get => GetLocalRuntimeSettings().ManagedPostgresPort;
+            set => UpdateLocalRuntimeSettings(s => s.ManagedPostgresPort = value);
+        }
+
+        public static bool AllowLanAccess
+        {
+            get => GetLocalRuntimeSettings().AllowLanAccess;
+            set => UpdateLocalRuntimeSettings(s => s.AllowLanAccess = value);
+        }
+
+        public static bool IsFirstRunCompleted
+        {
+            get => GetLocalRuntimeSettings().IsFirstRunCompleted;
+            set => UpdateLocalRuntimeSettings(s => s.IsFirstRunCompleted = value);
+        }
+
+        public static bool AutoLoginEnabled
+        {
+            get => GetLocalRuntimeSettings().AutoLoginEnabled;
+            set => UpdateLocalRuntimeSettings(s => s.AutoLoginEnabled = value);
+        }
+
+        public static string? AutoLoginEncryptedToken
+        {
+            get => GetLocalRuntimeSettings().AutoLoginEncryptedToken;
+            set => UpdateLocalRuntimeSettings(s => s.AutoLoginEncryptedToken = value);
+        }
+
+        public static string? RecoveryKeyHash
+        {
+            get => GetLocalRuntimeSettings().RecoveryKeyHash;
+            set => UpdateLocalRuntimeSettings(s => s.RecoveryKeyHash = value);
+        }
+
+        public static void SaveManagedPostgresState(string plainConnectionString, int port, bool allowLanAccess)
+        {
+            var protectedConn = Security.DataProtectionHelper.ProtectConnectionStringPassword(plainConnectionString);
+            UpdateLocalRuntimeSettings(s =>
+            {
+                s.IsManagedLocalPostgres = true;
+                s.ManagedPostgresPort = port;
+                s.AllowLanAccess = allowLanAccess;
+                s.EncryptedConnectionString = protectedConn;
+            });
+            TrySyncAppSettingsConnectionString(protectedConn);
+        }
+
+        public static void SaveAutoLoginSession(int userId, string username)
+        {
+            var payload = $"{userId}|{username}";
+            var encrypted = Security.DataProtectionHelper.Protect(payload);
+            UpdateLocalRuntimeSettings(s =>
+            {
+                s.AutoLoginEnabled = true;
+                s.AutoLoginEncryptedToken = encrypted;
+            });
+        }
+
+        public static bool TryReadAutoLoginSession(out int userId, out string username)
+        {
+            userId = 0;
+            username = string.Empty;
+
+            var state = GetLocalRuntimeSettings();
+            if (!state.AutoLoginEnabled || string.IsNullOrWhiteSpace(state.AutoLoginEncryptedToken))
+                return false;
+
+            var plain = Security.DataProtectionHelper.Unprotect(state.AutoLoginEncryptedToken);
+            var sep = plain.IndexOf('|');
+            if (sep <= 0 || sep >= plain.Length - 1)
+                return false;
+
+            if (!int.TryParse(plain[..sep], out userId))
+                return false;
+
+            username = plain[(sep + 1)..];
+            return !string.IsNullOrWhiteSpace(username);
+        }
+
+        public static void ClearAutoLoginSession()
+        {
+            UpdateLocalRuntimeSettings(s =>
+            {
+                s.AutoLoginEnabled = false;
+                s.AutoLoginEncryptedToken = null;
+            });
+        }
+
+        public static string LocalRuntimeSettingsFilePath => GetLocalRuntimeSettingsPath();
+
+        private static string GetLocalRuntimeSettingsPath()
+        {
+            string folder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "KamatekCRM");
+            Directory.CreateDirectory(folder);
+            return Path.Combine(folder, "local_runtime_settings.json");
+        }
+
+        private static LocalRuntimeSettingsModel GetLocalRuntimeSettings()
+        {
+            if (_cachedLocalRuntime is not null) return _cachedLocalRuntime;
+
+            lock (_localRuntimeLock)
+            {
+                if (_cachedLocalRuntime is not null) return _cachedLocalRuntime;
+
+                try
+                {
+                    var path = GetLocalRuntimeSettingsPath();
+                    if (File.Exists(path))
+                    {
+                        var json = File.ReadAllText(path);
+                        var loaded = System.Text.Json.JsonSerializer.Deserialize<LocalRuntimeSettingsModel>(json);
+                        if (loaded is not null)
+                        {
+                            _cachedLocalRuntime = loaded;
+                            return _cachedLocalRuntime;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Warning(ex, "local_runtime_settings.json okunamadı; varsayılan değerler kullanılıyor.");
+                }
+
+                _cachedLocalRuntime = new LocalRuntimeSettingsModel();
+                return _cachedLocalRuntime;
+            }
+        }
+
+        private static void UpdateLocalRuntimeSettings(Action<LocalRuntimeSettingsModel> mutator)
+        {
+            lock (_localRuntimeLock)
+            {
+                var current = GetLocalRuntimeSettings();
+                mutator(current);
+                try
+                {
+                    var path = GetLocalRuntimeSettingsPath();
+                    var json = System.Text.Json.JsonSerializer.Serialize(
+                        current,
+                        new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(path, json);
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Warning(ex, "local_runtime_settings.json kaydedilemedi.");
+                }
+            }
+        }
+
+        private static void TrySyncAppSettingsConnectionString(string protectedConnectionString)
+        {
+            try
+            {
+                var appSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+                if (!File.Exists(appSettingsPath)) return;
+
+                var root = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(appSettingsPath))?.AsObject();
+                if (root is null) return;
+
+                var dbSettings = root["DatabaseSettings"]?.AsObject();
+                if (dbSettings is null)
+                {
+                    dbSettings = new System.Text.Json.Nodes.JsonObject();
+                    root["DatabaseSettings"] = dbSettings;
+                }
+
+                var connStrings = dbSettings["ConnectionStrings"]?.AsObject();
+                if (connStrings is null)
+                {
+                    connStrings = new System.Text.Json.Nodes.JsonObject();
+                    dbSettings["ConnectionStrings"] = connStrings;
+                }
+
+                connStrings["PostgreSQL"] = protectedConnectionString;
+                File.WriteAllText(
+                    appSettingsPath,
+                    root.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Debug(ex, "appsettings.json bağlantı dizesi senkronizasyonu atlandı.");
+            }
+        }
+
+        private sealed class LocalRuntimeSettingsModel
+        {
+            public bool IsManagedLocalPostgres { get; set; }
+            public int ManagedPostgresPort { get; set; } = 5439;
+            public bool AllowLanAccess { get; set; }
+            public bool IsFirstRunCompleted { get; set; }
+            public bool AutoLoginEnabled { get; set; }
+            public string? AutoLoginEncryptedToken { get; set; }
+            public string? RecoveryKeyHash { get; set; }
+            public string? EncryptedConnectionString { get; set; }
+        }
+
+        #endregion
     }
 }
