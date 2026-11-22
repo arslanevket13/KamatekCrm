@@ -1,4 +1,4 @@
-<Window x:Class="KamatekCrm.Views.DirectSalesWindow"
+﻿<Window x:Class="KamatekCrm.Views.DirectSalesWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -124,7 +124,7 @@
                                 Margin="12,0,0,0">
                         <Button Content="↩ İade" Command="{Binding OpenReturnsCommand}"
                                 ToolTip="İşlem Geçmişi / İade"
-                                Style="{StaticResource SecondaryButton}" Height="32" Margin="0,0,12,0" Padding="10,0"/>
+                                Style="{DynamicResource SecondaryButton}" Height="32" Margin="0,0,12,0" Padding="10,0"/>
                         <TextBlock Text="Depo:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="12" FontWeight="SemiBold"/>
                         <ComboBox ItemsSource="{Binding Warehouses}"
                                   SelectedItem="{Binding SelectedWarehouse}"
@@ -364,17 +364,15 @@
                     <RowDefinition Height="Auto"/>  <!-- 1: Ödeme + durum (her zaman görünür) -->
                 </Grid.RowDefinitions>
 
-                <!-- Dar pencerede (1000×580) başlık, müşteri, sepet, indirim ve toplamlar
-                     kaydırılır; ödeme butonları ve durum satırı ekranda sabit kalır. -->
-                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>  <!-- 0: Header & Receipt Button -->
-                            <RowDefinition Height="Auto"/>  <!-- 1: Parked Carts Bar -->
-                            <RowDefinition Height="Auto"/>  <!-- 2: Customer Selection Panel -->
-                            <RowDefinition Height="Auto"/>  <!-- 3: CART DATAGRID -->
-                            <RowDefinition Height="Auto"/>  <!-- 4: Global Discount & Change Calculator -->
-                        </Grid.RowDefinitions>
+                <!-- Dış ScrollViewer kaldırıldı; sepet DataGrid yıldız (*) yüksekliğiyle sanallaştırılmış olarak çalışır -->
+                <Grid Grid.Row="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>  <!-- 0: Header & Receipt Button -->
+                        <RowDefinition Height="Auto"/>  <!-- 1: Parked Carts Bar -->
+                        <RowDefinition Height="Auto"/>  <!-- 2: Customer Selection Panel -->
+                        <RowDefinition Height="*"/>     <!-- 3: CART DATAGRID (STAR HEIGHT) -->
+                        <RowDefinition Height="Auto"/>  <!-- 4: Global Discount & Change Calculator -->
+                    </Grid.RowDefinitions>
 
                 <!-- Row 0: Header Bar -->
                 <Grid Grid.Row="0" Margin="0,0,0,12">
@@ -386,7 +384,7 @@
                         <TextBlock Text="🛒" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="Sepetim" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center"/>
                         <Border Background="{DynamicResource ThemePrimaryLight}" CornerRadius="8" Padding="8,3" Margin="12,0,0,0"
-                                Visibility="{Binding CartItemCount, Converter={StaticResource BoolVis}}">
+                                Visibility="{Binding HasCartItems, Converter={StaticResource BoolVis}}">
                             <TextBlock Text="{Binding CartItemCount, StringFormat='{}{0} ürün'}"
                                        Foreground="{DynamicResource ThemePrimaryDark}" FontWeight="Bold" FontSize="12"/>
                         </Border>
@@ -547,9 +545,11 @@
                                GridLinesVisibility="None"
                                BorderThickness="0"
                                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                               MinHeight="140"
-                               MaxHeight="330"
-                               RowHeight="44">
+                               MinHeight="110"
+                               RowHeight="44"
+                               VirtualizingPanel.IsVirtualizing="True"
+                               VirtualizingPanel.VirtualizationMode="Recycling"
+                               ScrollViewer.CanContentScroll="True">
 
                         <DataGrid.ColumnHeaderStyle>
                             <Style TargetType="DataGridColumnHeader">
@@ -613,11 +613,11 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- Instant Price Edit (PropertyChanged!) -->
+                            <!-- Price Edit (LostFocus avoids swallowing decimal separator while typing) -->
                             <DataGridTemplateColumn Header="B.Fiyat" Width="70">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBox Text="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}"
+                                        <TextBox Text="{Binding UnitPrice, UpdateSourceTrigger=LostFocus, StringFormat='N2'}"
                                                  FontSize="12" FontWeight="Bold"
                                                  Foreground="{DynamicResource TextHeadingBrush}"
                                                  BorderThickness="0" Background="Transparent"
@@ -706,8 +706,6 @@
                         </Grid>
 
                         <!-- Cash Change Calculator (Alınan Nakit / Para Üstü) -->
-                        <!-- Dar pencerede (1000 px) tek satır taşıyordu: preset butonlar
-                             WrapPanel ile sarılır, "Para Üstü" kendi satırına alınır. -->
                         <Grid Grid.Row="1" Margin="0,6,0,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -720,7 +718,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="💵 Alınan:" VerticalAlignment="Center" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,6,0"/>
                             <TextBox Grid.Column="1" Width="70"
-                                     Text="{Binding TenderedAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='N2'}"
+                                     Text="{Binding TenderedAmount, UpdateSourceTrigger=LostFocus, StringFormat='N2'}"
                                      FontSize="13" FontWeight="Bold" TextAlignment="Right"
                                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1"
                                      Padding="4,2"/>
@@ -744,8 +742,7 @@
                         </Grid>
                     </Grid>
                 </Border>
-                    </Grid>
-                </ScrollViewer>
+                </Grid>
 
                 <!-- Sabit alt bölge: toplamlar + ödeme aksiyonları + durum.
                      Genel toplam ve ödeme butonları dar pencerede de ekranda kalır. -->

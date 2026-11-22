@@ -2,14 +2,17 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using KamatekCrm.ViewModels;
 
 namespace KamatekCrm.Views
 {
     /// <summary>
-    /// QuickAddModal - Universal action modal (Ctrl+K)
+    /// QuickAddModal - RBAC filtreli, aranabilir ve klavye destekli komut paleti (Ctrl+K)
     /// </summary>
     public partial class QuickAddModal : Window
     {
+        private QuickAddViewModel? _viewModel;
+
         /// <summary>
         /// Event raised when an action is selected
         /// </summary>
@@ -22,39 +25,70 @@ namespace KamatekCrm.Views
             {
                 Owner = Application.Current.MainWindow;
             }
-            Loaded += (s, e) => SearchBox.Focus();
-            
+
+            Loaded += (_, _) => SearchBox.Focus();
+            PreviewKeyDown += QuickAddModal_PreviewKeyDown;
+
             // Click outside to close
-            MouseDown += (s, e) =>
+            MouseDown += (_, e) =>
             {
                 if (e.OriginalSource == this)
                     Close();
             };
         }
 
-        /// <summary>
-        /// Handle action item click
-        /// </summary>
-        private void ActionItem_Click(object sender, MouseButtonEventArgs e)
+        public QuickAddModal(QuickAddViewModel viewModel) : this()
         {
-            if (sender is Border border && border.Tag is string actionName)
+            _viewModel = viewModel;
+            DataContext = viewModel;
+
+            viewModel.ActionChosen += actionId => ActionSelected?.Invoke(actionId);
+            viewModel.CloseRequested += Close;
+        }
+
+        private void ActionsListBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_viewModel?.SelectedItem != null && _viewModel.ExecuteSelectedCommand.CanExecute(null))
             {
-                ActionSelected?.Invoke(actionName);
-                Close();
+                _viewModel.ExecuteSelectedCommand.Execute(null);
             }
         }
 
-        /// <summary>
-        /// Handle keyboard navigation
-        /// </summary>
-        protected override void OnKeyDown(KeyEventArgs e)
+        private void QuickAddModal_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            base.OnKeyDown(e);
-            
-            if (e.Key == Key.Escape)
+            if (_viewModel == null)
             {
-                Close();
-                e.Handled = true;
+                if (e.Key == Key.Escape)
+                {
+                    Close();
+                    e.Handled = true;
+                }
+                return;
+            }
+
+            switch (e.Key)
+            {
+                case Key.Escape:
+                    _viewModel.CloseCommand.Execute(null);
+                    e.Handled = true;
+                    break;
+                case Key.Up:
+                    _viewModel.MoveSelectionUpCommand.Execute(null);
+                    if (_viewModel.SelectedItem != null) ActionsListBox.ScrollIntoView(_viewModel.SelectedItem);
+                    e.Handled = true;
+                    break;
+                case Key.Down:
+                    _viewModel.MoveSelectionDownCommand.Execute(null);
+                    if (_viewModel.SelectedItem != null) ActionsListBox.ScrollIntoView(_viewModel.SelectedItem);
+                    e.Handled = true;
+                    break;
+                case Key.Enter:
+                    if (_viewModel.ExecuteSelectedCommand.CanExecute(null))
+                    {
+                        _viewModel.ExecuteSelectedCommand.Execute(null);
+                    }
+                    e.Handled = true;
+                    break;
             }
         }
 

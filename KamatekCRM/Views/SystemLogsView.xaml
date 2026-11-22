@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.SystemLogsView"
+﻿<UserControl x:Class="KamatekCrm.Views.SystemLogsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:components="clr-namespace:KamatekCrm.Components"
@@ -31,7 +31,7 @@
         </Grid>
 
         <!-- Filters -->
-        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="14,10" Margin="0,0,0,12">
+        <Border Grid.Row="1" Style="{DynamicResource CardPanel}" Padding="14,10" Margin="0,0,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -45,7 +45,7 @@
                 <!-- Search -->
                 <Grid Grid.Column="0" Margin="0,0,12,0">
                     <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource ModernTextBox}"
+                             Style="{DynamicResource ModernTextBox}"
                              Height="38" Padding="38,8,12,8"/>
                     <TextBlock Text="🔍" FontSize="13" VerticalAlignment="Center" 
                                Margin="12,0,0,0" IsHitTestVisible="False"/>
@@ -83,11 +83,11 @@
                 <!-- Buttons -->
                 <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Bottom">
                     <Button Content="🗑️ Temizle"
-                            Style="{StaticResource BtnSecondary}"
+                            Style="{DynamicResource BtnSecondary}"
                             Command="{Binding ClearFiltersCommand}"
                             Height="38" Padding="14,0" Margin="0,0,8,0"/>
                     <Button Content="🔄 Yenile"
-                            Style="{StaticResource BtnPrimary}"
+                            Style="{DynamicResource BtnPrimary}"
                             Command="{Binding RefreshCommand}"
                             Height="38" Padding="14,0"/>
                 </StackPanel>
@@ -95,11 +95,11 @@
         </Border>
 
         <!-- Logs Grid -->
-        <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="0">
+        <Border Grid.Row="2" Style="{DynamicResource CardPanel}" Padding="0">
             <Grid>
                 <DataGrid x:Name="LogsDataGrid" ItemsSource="{Binding Logs}"
                           Style="{StaticResource ModernDataGrid}"
-                          ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                          ColumnHeaderStyle="{DynamicResource ModernDataGridColumnHeader}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           SelectionMode="Single"

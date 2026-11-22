@@ -204,16 +204,16 @@
                                            FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Right" Margin="0,0,4,0"/>
                             </Grid>
 
-                            <Border Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                            <Border Background="{DynamicResource AccentOverlayBrush}" BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,0">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="GENEL TOPLAM" FontWeight="Bold" FontSize="14"
-                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                               Foreground="{DynamicResource TextHeadingBrush}" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="{Binding TotalAmount, StringFormat={}{0:N2} ₺}"
-                                               FontWeight="Bold" FontSize="16" Foreground="{DynamicResource StatusErrorFg}"/>
+                                               FontWeight="Bold" FontSize="16" Foreground="{DynamicResource ThemePrimary}" VerticalAlignment="Center"/>
                                 </Grid>
                             </Border>
                         </StackPanel>

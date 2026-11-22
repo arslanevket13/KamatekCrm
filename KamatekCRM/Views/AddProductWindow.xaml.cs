@@ -30,8 +30,8 @@ namespace KamatekCrm.Views
 
         private void OnRequestClose(bool result)
         {
-            try { System.Windows.Input.Keyboard.ClearFocus(); } catch { }
-            try { DialogResult = result; } catch { }
+            try { System.Windows.Input.Keyboard.ClearFocus(); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "AddProductWindow.xaml.cs"); }
+            try { DialogResult = result; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "AddProductWindow.xaml.cs"); }
             Close();
         }
 
@@ -43,8 +43,8 @@ namespace KamatekCrm.Views
 
         private void CloseWindow_Click(object sender, RoutedEventArgs e)
         {
-            try { System.Windows.Input.Keyboard.ClearFocus(); } catch { }
-            try { DialogResult = false; } catch { }
+            try { System.Windows.Input.Keyboard.ClearFocus(); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "AddProductWindow.xaml.cs"); }
+            try { DialogResult = false; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "AddProductWindow.xaml.cs"); }
             Close();
         }
     }

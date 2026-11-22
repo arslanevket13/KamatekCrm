@@ -54,92 +54,92 @@
         <DataTemplate DataType="{x:Type vm:OverviewTabViewModel}">
             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4">
                 <StackPanel>
-                    <TextBlock Text="{Binding LastRefreshedText}" Style="{StaticResource LabelText}" Margin="0,0,0,10"/>
+                    <TextBlock Text="{Binding LastRefreshedText}" Style="{DynamicResource LabelText}" Margin="0,0,0,10"/>
                     <WrapPanel>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="UYGULAMA SÜRÜMÜ" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding AppVersion}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="UYGULAMA SÜRÜMÜ" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding AppVersion}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="MAKİNE" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding MachineName}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="MAKİNE" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding MachineName}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="İŞLETİM SİSTEMİ" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding OperatingSystem}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="İŞLETİM SİSTEMİ" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding OperatingSystem}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text=".NET SÜRÜMÜ" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding RuntimeVersion}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text=".NET SÜRÜMÜ" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding RuntimeVersion}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="SÜREÇ / THREAD" Style="{StaticResource LabelText}"/>
-                                <TextBlock Style="{StaticResource ValueText}">
+                                <TextBlock Text="SÜREÇ / THREAD" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Style="{DynamicResource ValueText}">
                                     <Run Text="{Binding ProcessId, Mode=OneWay}"/>
                                     <Run Text=" / "/>
                                     <Run Text="{Binding ThreadCount, Mode=OneWay}"/>
                                 </TextBlock>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="ÇALIŞMA KÜMESİ" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding WorkingSetText}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="ÇALIŞMA KÜMESİ" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding WorkingSetText}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="ÇALIŞMA SÜRESİ" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding UptimeText}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="ÇALIŞMA SÜRESİ" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding UptimeText}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="LOG SEVİYESİ" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding LevelName}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="LOG SEVİYESİ" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding LevelName}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="BELLEK TAMPONU" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding BufferSummary}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="BELLEK TAMPONU" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding BufferSummary}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="DÜŞÜRÜLEN OLAY" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding DroppedCount}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="DÜŞÜRÜLEN OLAY" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding DroppedCount}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="TANILAMA" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding IsDiagnosticsEnabled}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="TANILAMA" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding IsDiagnosticsEnabled}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="YETKİLİ GELİŞTİRİCİ" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding DeveloperAccountCount}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="YETKİLİ GELİŞTİRİCİ" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding DeveloperAccountCount}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
                     </WrapPanel>
 
-                    <Border Style="{StaticResource InfoCard}" Width="Auto" Margin="0,4,0,0">
+                    <Border Style="{DynamicResource InfoCard}" Width="Auto" Margin="0,4,0,0">
                         <StackPanel>
-                            <TextBlock Text="LOG DİZİNİ" Style="{StaticResource LabelText}"/>
-                            <TextBlock Text="{Binding LogDirectory}" Style="{StaticResource ValueText}"/>
-                            <TextBlock Text="TANILAMA DİZİNİ" Style="{StaticResource LabelText}" Margin="0,10,0,3"/>
-                            <TextBlock Text="{Binding DiagnosticsDirectory}" Style="{StaticResource ValueText}"/>
+                            <TextBlock Text="LOG DİZİNİ" Style="{DynamicResource LabelText}"/>
+                            <TextBlock Text="{Binding LogDirectory}" Style="{DynamicResource ValueText}"/>
+                            <TextBlock Text="TANILAMA DİZİNİ" Style="{DynamicResource LabelText}" Margin="0,10,0,3"/>
+                            <TextBlock Text="{Binding DiagnosticsDirectory}" Style="{DynamicResource ValueText}"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -186,7 +186,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="{Binding StatusText}" Style="{StaticResource LabelText}" Margin="0,0,0,8"/>
+                <TextBlock Grid.Row="0" Text="{Binding StatusText}" Style="{DynamicResource LabelText}" Margin="0,0,0,8"/>
                 <ListBox Grid.Row="1" ItemsSource="{Binding Groups}" Style="{StaticResource LogList}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -218,7 +218,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="{Binding StatusText}" Style="{StaticResource LabelText}" Margin="0,0,0,8"/>
+                <TextBlock Grid.Row="0" Text="{Binding StatusText}" Style="{DynamicResource LabelText}" Margin="0,0,0,8"/>
                 <ListBox Grid.Row="1" ItemsSource="{Binding Crashes}" Style="{StaticResource LogList}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -234,7 +234,7 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <TextBlock Grid.Row="2" Text="{Binding PolicyNote}" Style="{StaticResource NoteText}"/>
+                <TextBlock Grid.Row="2" Text="{Binding PolicyNote}" Style="{DynamicResource NoteText}"/>
             </Grid>
         </DataTemplate>
 
@@ -243,39 +243,39 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4">
                 <StackPanel>
                     <WrapPanel>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="ÇALIŞMA KÜMESİ" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding WorkingSetText}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="ÇALIŞMA KÜMESİ" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding WorkingSetText}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="ÖZEL BELLEK" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding PrivateMemoryText}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="ÖZEL BELLEK" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding PrivateMemoryText}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="THREAD SAYISI" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding ThreadCountText}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="THREAD SAYISI" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding ThreadCountText}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="YÖNETİLEN BELLEK" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding GcMemoryText}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="YÖNETİLEN BELLEK" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding GcMemoryText}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource InfoCard}">
+                        <Border Style="{DynamicResource InfoCard}">
                             <StackPanel>
-                                <TextBlock Text="ÇALIŞMA SÜRESİ" Style="{StaticResource LabelText}"/>
-                                <TextBlock Text="{Binding UptimeText}" Style="{StaticResource ValueText}"/>
+                                <TextBlock Text="ÇALIŞMA SÜRESİ" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding UptimeText}" Style="{DynamicResource ValueText}"/>
                             </StackPanel>
                         </Border>
                     </WrapPanel>
-                    <TextBlock Text="{Binding LastRefreshedText}" Style="{StaticResource LabelText}" Margin="0,4,0,0"/>
-                    <TextBlock Text="{Binding ScopeNote}" Style="{StaticResource NoteText}"/>
+                    <TextBlock Text="{Binding LastRefreshedText}" Style="{DynamicResource LabelText}" Margin="0,4,0,0"/>
+                    <TextBlock Text="{Binding ScopeNote}" Style="{DynamicResource NoteText}"/>
                 </StackPanel>
             </ScrollViewer>
         </DataTemplate>
@@ -288,7 +288,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="{Binding StatusText}" Style="{StaticResource LabelText}" Margin="0,0,0,8"/>
+                <TextBlock Grid.Row="0" Text="{Binding StatusText}" Style="{DynamicResource LabelText}" Margin="0,0,0,8"/>
                 <ListBox Grid.Row="1" ItemsSource="{Binding Issues}" Style="{StaticResource LogList}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -298,26 +298,26 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <TextBlock Grid.Row="2" Text="{Binding ScopeNote}" Style="{StaticResource NoteText}"/>
+                <TextBlock Grid.Row="2" Text="{Binding ScopeNote}" Style="{DynamicResource NoteText}"/>
             </Grid>
         </DataTemplate>
 
         <!-- DERLEME VE KOD ANALİZİ (hazır değil) -->
         <DataTemplate DataType="{x:Type vm:BuildAnalysisTabViewModel}">
-            <Border Style="{StaticResource InfoCard}" Width="Auto" Padding="20" Margin="0">
+            <Border Style="{DynamicResource InfoCard}" Width="Auto" Padding="20" Margin="0">
                 <StackPanel>
-                    <TextBlock Text="{Binding Title}" Style="{StaticResource ValueText}" FontSize="16"/>
-                    <TextBlock Text="{Binding AvailabilityNote}" Style="{StaticResource NoteText}"/>
+                    <TextBlock Text="{Binding Title}" Style="{DynamicResource ValueText}" FontSize="16"/>
+                    <TextBlock Text="{Binding AvailabilityNote}" Style="{DynamicResource NoteText}"/>
                 </StackPanel>
             </Border>
         </DataTemplate>
 
         <!-- OTOMATİK TESTLER (hazır değil) -->
         <DataTemplate DataType="{x:Type vm:AutomatedTestsTabViewModel}">
-            <Border Style="{StaticResource InfoCard}" Width="Auto" Padding="20" Margin="0">
+            <Border Style="{DynamicResource InfoCard}" Width="Auto" Padding="20" Margin="0">
                 <StackPanel>
-                    <TextBlock Text="{Binding Title}" Style="{StaticResource ValueText}" FontSize="16"/>
-                    <TextBlock Text="{Binding AvailabilityNote}" Style="{StaticResource NoteText}"/>
+                    <TextBlock Text="{Binding Title}" Style="{DynamicResource ValueText}" FontSize="16"/>
+                    <TextBlock Text="{Binding AvailabilityNote}" Style="{DynamicResource NoteText}"/>
                 </StackPanel>
             </Border>
         </DataTemplate>
@@ -357,7 +357,7 @@
                 </WrapPanel>
 
                 <StackPanel Grid.Row="1" Margin="0,0,0,8">
-                    <TextBlock Text="{Binding StatusText}" Style="{StaticResource LabelText}" Margin="0"/>
+                    <TextBlock Text="{Binding StatusText}" Style="{DynamicResource LabelText}" Margin="0"/>
                     <TextBox Text="{Binding LastPackagePath, Mode=OneWay}" IsReadOnly="True"
                              FontFamily="Consolas" FontSize="11" Margin="0,4,0,0"
                              Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
@@ -393,8 +393,8 @@
                 </ListBox>
 
                 <StackPanel Grid.Row="3">
-                    <TextBlock Text="{Binding ExportsDirectory}" Style="{StaticResource LabelText}" Margin="0,8,0,0"/>
-                    <TextBlock Text="{Binding ScopeNote}" Style="{StaticResource NoteText}"/>
+                    <TextBlock Text="{Binding ExportsDirectory}" Style="{DynamicResource LabelText}" Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding ScopeNote}" Style="{DynamicResource NoteText}"/>
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -403,16 +403,16 @@
         <DataTemplate DataType="{x:Type vm:HealthTabViewModel}">
             <StackPanel>
                 <WrapPanel>
-                    <Border Style="{StaticResource InfoCard}">
+                    <Border Style="{DynamicResource InfoCard}">
                         <StackPanel>
-                            <TextBlock Text="VERİTABANI" Style="{StaticResource LabelText}"/>
-                            <TextBlock Text="{Binding DatabaseStatus}" Style="{StaticResource ValueText}"/>
+                            <TextBlock Text="VERİTABANI" Style="{DynamicResource LabelText}"/>
+                            <TextBlock Text="{Binding DatabaseStatus}" Style="{DynamicResource ValueText}"/>
                         </StackPanel>
                     </Border>
-                    <Border Style="{StaticResource InfoCard}">
+                    <Border Style="{DynamicResource InfoCard}">
                         <StackPanel>
-                            <TextBlock Text="API" Style="{StaticResource LabelText}"/>
-                            <TextBlock Text="{Binding ApiStatus}" Style="{StaticResource ValueText}"/>
+                            <TextBlock Text="API" Style="{DynamicResource LabelText}"/>
+                            <TextBlock Text="{Binding ApiStatus}" Style="{DynamicResource ValueText}"/>
                         </StackPanel>
                     </Border>
                 </WrapPanel>
@@ -422,7 +422,7 @@
                                FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                 </StackPanel>
                 <TextBlock Text="Kontroller 5 saniye zaman aşımıyla arka planda çalışır; hata mesajı yerine yalnızca hata tipi gösterilir."
-                           Style="{StaticResource NoteText}"/>
+                           Style="{DynamicResource NoteText}"/>
             </StackPanel>
         </DataTemplate>
     </Window.Resources>
@@ -464,6 +464,11 @@
         <!-- SEKMELER -->
         <TabControl Grid.Row="1" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
                     Background="Transparent" BorderThickness="0" Padding="0">
+            <TabControl.ItemContainerStyle>
+                <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
+                    <Setter Property="Visibility" Value="{Binding IsAvailable, Converter={StaticResource BoolToVis}}"/>
+                </Style>
+            </TabControl.ItemContainerStyle>
             <TabControl.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">

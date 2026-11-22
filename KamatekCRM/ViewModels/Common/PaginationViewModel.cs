@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -25,7 +26,7 @@ namespace KamatekCrm.ViewModels.Common
                     OnPropertyChanged(nameof(HasPreviousPage));
                     if (!_suppressRefresh)
                     {
-                        _ = SafeRefreshDataAsync();
+                        SafeRefreshDataAsync().SafeFireAndForget("PaginationViewModel.SafeRefreshDataAsync");
                     }
                 }
             }
@@ -45,7 +46,7 @@ namespace KamatekCrm.ViewModels.Common
                     }
                     else
                     {
-                        _ = SafeRefreshDataAsync();
+                        SafeRefreshDataAsync().SafeFireAndForget("PaginationViewModel.SafeRefreshDataAsync");
                     }
                 }
             }

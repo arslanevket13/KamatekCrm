@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -51,14 +52,56 @@ namespace KamatekCrm.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // DEV BYPASS: Eğer Debug modundaysak ağ aramasını atla, direkt 127.0.0.1'e bağlan
+            // DEV BYPASS: Debug modunda doğrudan 127.0.0.1 doğrulanır; erişilemiyorsa Heartbeat recovery devralır
             if (System.Diagnostics.Debugger.IsAttached)
             {
-                _logger.LogInformation("DEVELOPER BYPASS: Debugger tespit edildi. UDP ve Cached araması atlanıyor, direkt 127.0.0.1 (Localhost) kullanılıyor.");
-                ConfirmConnection("127.0.0.1");
+                _logger.LogInformation("DEVELOPER BYPASS: Debugger tespit edildi. Yerel sunucu (127.0.0.1) test ediliyor...");
+                if (await _connectionProvider.TestConnectionAsync("127.0.0.1"))
+                {
+                    ConfirmConnection("127.0.0.1");
+                }
+                else
+                {
+                    _connectionProvider.SetServerIp("127.0.0.1");
+                    _connectionProvider.SetConnectionState(false);
+                    _logger.LogWarning("DEVELOPER BYPASS: 127.0.0.1 şu an erişilemiyor; ConnectionHeartbeatService otomatik yeniden bağlanmayı sürdürecek.");
+                }
                 return;
             }
 
+            var discoveredIp = await TryDiscoverServerAsync(isStartup: true, stoppingToken);
+            if (!string.IsNullOrWhiteSpace(discoveredIp))
+            {
+                ConfirmConnection(discoveredIp);
+
+                bool isMainServer = _configuration.GetValue<bool>("NetworkDiscovery:IsMainServer", false);
+                if (isMainServer && discoveredIp == "127.0.0.1")
+                {
+                    _logger.LogInformation("Bu cihaz Ana Sunucu. UDP Broadcast başlatılıyor.");
+                    BroadcastLoopAsync(stoppingToken).SafeFireAndForget("NetworkDiscoveryService.BroadcastLoopAsync");
+                }
+                return;
+            }
+
+            // Fallback to Connection Wizard (HeartbeatService arka planda yeniden bağlanmayı denemeye devam eder)
+            _logger.LogCritical("Zero-Configuration: Sunucu bulunamadı. Manuel bağlantı sihirbazı çağrılıyor.");
+            try
+            {
+                KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseConnectionLostEvent());
+            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "NetworkDiscoveryService.cs"); }
+        }
+
+        /// <summary>
+        /// Bağlantı koptuğunda veya başlangıçta sunucu IP adresini yeniden keşfetmeyi dener.
+        /// </summary>
+        public async Task<string?> TryRediscoverServerAsync(CancellationToken stoppingToken)
+        {
+            return await TryDiscoverServerAsync(isStartup: false, stoppingToken);
+        }
+
+        private async Task<string?> TryDiscoverServerAsync(bool isStartup, CancellationToken stoppingToken)
+        {
             // 1. Test Cached Server
             string savedAddress = KamatekCrm.Properties.Settings.Default.SavedServerAddress;
             if (!string.IsNullOrWhiteSpace(savedAddress))
@@ -66,33 +109,26 @@ namespace KamatekCrm.Services
                 _logger.LogInformation($"Zero-Configuration: Ön belleğe alınmış adres test ediliyor -> {savedAddress}");
                 if (await _connectionProvider.TestConnectionAsync(savedAddress))
                 {
-                    ConfirmConnection(savedAddress);
-                    return; // STOP
+                    return savedAddress;
                 }
             }
 
             // 2. Test Localhost (Is this machine the server?)
             bool isMainServer = _configuration.GetValue<bool>("NetworkDiscovery:IsMainServer", false);
-            
             if (isMainServer)
             {
                 _logger.LogInformation("Zero-Configuration: Yerel PostgreSQL kontrol ediliyor (127.0.0.1)...");
                 if (await _connectionProvider.TestConnectionAsync("127.0.0.1"))
                 {
-                    ConfirmConnection("127.0.0.1");
-
-                    _logger.LogInformation("Bu cihaz Ana Sunucu. UDP Broadcast başlatılıyor.");
-                    // Sunucu olduğumuz için ağdaki diğer istemcilere yayın yapmaya devam et
-                    _ = BroadcastLoopAsync(stoppingToken); 
-                    return; // STOP
+                    return "127.0.0.1";
                 }
             }
 
             // 3. Listen for UDP Broadcasts
-            int timeoutSeconds = _configuration.GetValue<int>("NetworkDiscovery:TimeoutSeconds", 15);
+            int configuredTimeout = _configuration.GetValue<int>("NetworkDiscovery:TimeoutSeconds", 15);
+            int timeoutSeconds = isStartup ? configuredTimeout : Math.Min(configuredTimeout, 4);
             _logger.LogInformation($"Zero-Configuration: UDP yayınları dinleniyor (Maks {timeoutSeconds} saniye)...");
-            
-            // Timeout MUST be strictly longer than broadcaster's interval (3 seconds) to avoid race conditions.
+
             string udpIp = await ListenForUdpBroadcastAsync(TimeSpan.FromSeconds(timeoutSeconds), stoppingToken);
             if (!string.IsNullOrWhiteSpace(udpIp))
             {
@@ -101,12 +137,7 @@ namespace KamatekCrm.Services
                 {
                     KamatekCrm.Properties.Settings.Default.SavedServerAddress = udpIp;
                     KamatekCrm.Properties.Settings.Default.Save();
-                    ConfirmConnection(udpIp);
-                    
-                    _logger.LogInformation("Bu cihaz İstemci.");
-                    // İstemci modundayken dinlemeye devam edebiliriz veya bırakabiliriz. 
-                    // Bağlantı koparsa yeniden bu döngü çalışmalı (NetworkDiscoveryService restart).
-                    return; // STOP
+                    return udpIp;
                 }
             }
 
@@ -120,18 +151,11 @@ namespace KamatekCrm.Services
                 {
                     KamatekCrm.Properties.Settings.Default.SavedServerAddress = scannedIp;
                     KamatekCrm.Properties.Settings.Default.Save();
-                    ConfirmConnection(scannedIp);
-                    return;
+                    return scannedIp;
                 }
             }
 
-            // 5. Fallback to Connection Wizard
-            _logger.LogCritical("Zero-Configuration: Sunucu bulunamadı. Manuel bağlantı sihirbazı çağrılıyor.");
-            try
-            {
-                KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseConnectionLostEvent());
-            }
-            catch { }
+            return null;
         }
 
         /// <summary>
@@ -185,7 +209,7 @@ namespace KamatekCrm.Services
                                     }
                                 }
                             }
-                            catch { }
+                            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "NetworkDiscoveryService.cs"); }
 
                             var serverInfo = new DiscoveredServerInfo
                             {
@@ -197,10 +221,7 @@ namespace KamatekCrm.Services
                             onServerFound?.Invoke(serverInfo);
                         }
                     }
-                    catch
-                    {
-                        // Port kapalı veya zaman aşımı, sessizce geç
-                    }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "NetworkDiscoveryService.cs"); }
                     finally
                     {
                         semaphore.Release();
@@ -212,7 +233,7 @@ namespace KamatekCrm.Services
             {
                 await Task.WhenAll(tasks).ConfigureAwait(false);
             }
-            catch (OperationCanceledException) { }
+            catch (OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "NetworkDiscoveryService.cs"); }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Alt ağ taraması sırasında beklenmeyen durum.");
@@ -258,10 +279,7 @@ namespace KamatekCrm.Services
                             searchCts.Cancel(); // Bulundu, diğer bekleyen istekleri iptal et
                         }
                     }
-                    catch
-                    {
-                        // Port kapalı veya zaman aşımı, sessizce geç
-                    }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "NetworkDiscoveryService.cs"); }
                     finally
                     {
                         semaphore.Release();
@@ -273,10 +291,7 @@ namespace KamatekCrm.Services
             {
                 await Task.WhenAll(tasks).ConfigureAwait(false);
             }
-            catch
-            {
-                // Görevlerin erken iptal edilmesi normaldir
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "NetworkDiscoveryService.cs"); }
 
             return foundIp ?? string.Empty;
         }
@@ -296,9 +311,7 @@ namespace KamatekCrm.Services
                     }
                 }
             }
-            catch
-            {
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "NetworkDiscoveryService.cs"); }
             return null;
         }
 
@@ -310,7 +323,7 @@ namespace KamatekCrm.Services
             {
                 KamatekCrm.Services.EventAggregator.Instance?.Publish(new KamatekCrm.Services.DatabaseConnectionRestoredEvent());
             }
-            catch { }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "NetworkDiscoveryService.cs"); }
         }
 
         private async Task<string> ListenForUdpBroadcastAsync(TimeSpan timeout, CancellationToken stoppingToken)
@@ -335,10 +348,7 @@ namespace KamatekCrm.Services
                     return result.RemoteEndPoint.Address.ToString();
                 }
             }
-            catch (OperationCanceledException)
-            {
-                // Timeout oldu
-            }
+            catch (OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "NetworkDiscoveryService.cs"); }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "UDP Keşif sırasında hata.");

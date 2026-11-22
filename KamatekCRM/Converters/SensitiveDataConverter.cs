@@ -36,10 +36,7 @@ public sealed class SensitiveDataConverter : IValueConverter
                     return protection.Protect(rawText, kind);
                 }
             }
-            catch
-            {
-                // DI veya servis hatasında güvenli fallback
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "SensitiveDataConverter.cs"); }
 
             // Güvenli yerel fallback (ArgumentOutOfRangeException korumalı)
             return SafeFallbackMask(rawText, kind);

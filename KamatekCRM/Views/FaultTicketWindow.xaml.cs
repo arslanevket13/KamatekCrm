@@ -16,7 +16,7 @@ namespace KamatekCrm.Views
 
             viewModel.RequestClose += (result) =>
             {
-                try { DialogResult = result; } catch { }
+                try { DialogResult = result; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "FaultTicketWindow.xaml.cs"); }
                 Close();
             };
         }

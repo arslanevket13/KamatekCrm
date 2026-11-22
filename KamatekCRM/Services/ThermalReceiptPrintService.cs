@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using KamatekCrm.ApplicationCore.Common;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.ApplicationCore.Interfaces;
@@ -26,7 +27,7 @@ namespace KamatekCrm.Services
             _auditTrail = auditTrail;
         }
 
-        public Task PrintReceiptAsync(SalesOrder salesOrder, string? printerName = null)
+        public Task<Result> PrintReceiptAsync(SalesOrder salesOrder, string? printerName = null)
         {
             if (salesOrder == null) throw new ArgumentNullException(nameof(salesOrder));
 
@@ -40,21 +41,52 @@ namespace KamatekCrm.Services
                         pd.PrinterSettings.PrinterName = printerName;
                     }
 
+                    if (!pd.PrinterSettings.IsValid)
+                    {
+                        return Result.Failure($"Seçili yazıcı geçerli değil veya erişilemiyor: '{pd.PrinterSettings.PrinterName}'.");
+                    }
+
                     pd.PrintPage += (sender, ev) =>
                     {
                         DrawReceiptContent(ev, salesOrder);
                     };
 
                     pd.Print();
+                    return Result.Success();
                 }
                 catch (Exception ex)
                 {
-                    System.Windows.Application.Current?.Dispatcher.Invoke(() =>
-                    {
-                        MessageBox.Show($"Fiş yazdırılırken hata oluştu:\n{ex.Message}", "Yazdırma Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
-                    });
+                    return Result.Failure($"Fiş yazdırılırken hata oluştu: {ex.Message}");
                 }
             });
+        }
+
+        public Task<Result> PrintTestReceiptAsync(string? printerName = null)
+        {
+            var testOrder = new SalesOrder
+            {
+                OrderNumber = "TEST-001",
+                Date = DateTime.UtcNow,
+                CustomerName = "Yazıcı Bağlantı Testi",
+                PaymentMethod = "Test",
+                SubTotal = 100m,
+                DiscountTotal = 0m,
+                TaxTotal = 20m,
+                TotalAmount = 120m,
+                Items =
+                {
+                    new SalesOrderItem
+                    {
+                        ProductName = "Termal Yazıcı Test Kalemi",
+                        Quantity = 1,
+                        UnitPrice = 100m,
+                        TaxRate = 20,
+                        LineTotal = 120m
+                    }
+                }
+            };
+
+            return PrintReceiptAsync(testOrder, printerName);
         }
 
         public string FormatReceiptText(SalesOrder salesOrder)
@@ -102,8 +134,9 @@ namespace KamatekCrm.Services
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                 return Encoding.GetEncoding("windows-1254").GetBytes(text);
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"[ThermalReceipt.Encoding] {ex.Message}");
                 return Encoding.UTF8.GetBytes(text);
             }
         }
@@ -269,7 +302,9 @@ namespace KamatekCrm.Services
                 {
                     System.Windows.Application.Current?.Dispatcher.Invoke(() =>
                     {
-                        MessageBox.Show($"Cihaz kabul fişi yazdırılırken hata oluştu:\n{ex.Message}", "Yazdırma Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
+                        (App.ServiceProvider?.GetService(typeof(IToastService)) as IToastService)?.ShowError(
+                            "Yazdırma Hatası",
+                            $"Cihaz kabul fişi yazdırılırken hata oluştu: {ex.Message}");
                     });
                 }
             });

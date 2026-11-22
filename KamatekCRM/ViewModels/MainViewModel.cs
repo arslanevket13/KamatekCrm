@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ namespace KamatekCrm.ViewModels
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
+        private readonly KamatekCrm.Shared.Services.IDialogService? _dialogService;
         private object? _currentView;
         private bool _isConnectionLost;
 
@@ -104,12 +106,18 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public MainViewModel(NavigationService navigationService, IAuthService authService, IToastService toastService, ILoadingService loadingService)
+        public MainViewModel(
+            NavigationService navigationService,
+            IAuthService authService,
+            IToastService toastService,
+            ILoadingService loadingService,
+            KamatekCrm.Shared.Services.IDialogService? dialogService = null)
         {
             _navigationService = navigationService;
             _authService = authService;
             _toastService = toastService;
             _loadingService = loadingService;
+            _dialogService = dialogService;
 
             // Removed UnauthorizedMessage catch since API is removed
 
@@ -150,7 +158,7 @@ namespace KamatekCrm.ViewModels
         public void NavigateToCustomerDetail(int customerId)
         {
              var vm = _navigationService.NavigateTo<CustomerDetailViewModel>();
-             _ = vm.InitializeAsync(customerId);
+             vm.InitializeAsync(customerId).SafeFireAndForget("MainViewModel.vm.InitializeAsync");
         }
 
         /// <summary>
@@ -189,16 +197,15 @@ namespace KamatekCrm.ViewModels
         /// Çıkış yap
         /// </summary>
         [RelayCommand]
-        private void Logout()
+        private async System.Threading.Tasks.Task Logout()
         {
-            var result = MessageBox.Show(
+            bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
                 "Çıkış yapmak istediğinizden emin misiniz?",
-                "Çıkış",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                "Çıkış");
 
-            if (result == MessageBoxResult.Yes)
+            if (confirmed)
             {
+                KamatekCrm.Settings.AppSettings.ClearAutoLoginSession();
                 _authService.Logout();
 
                 // Uygulamayı yeniden başlat
@@ -207,10 +214,17 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void ForceLogout()
+        private async void ForceLogout()
         {
             _authService.Logout();
-            MessageBox.Show("Oturum süreniz doldu veya yetkiniz yok. Tekrar giriş yapın.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (_dialogService != null)
+            {
+                await _dialogService.ShowWarningAsync("Oturum süreniz doldu veya yetkiniz yok. Tekrar giriş yapın.", "Uyarı");
+            }
+            else
+            {
+                _toastService.ShowWarning("Uyarı", "Oturum süreniz doldu veya yetkiniz yok. Tekrar giriş yapın.");
+            }
             System.Diagnostics.Process.Start(System.Windows.Application.ResourceAssembly.Location.Replace(".dll", ".exe"));
             System.Windows.Application.Current.Shutdown();
         }

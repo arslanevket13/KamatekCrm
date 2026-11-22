@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Data;
@@ -115,7 +116,7 @@ public partial class QuoteListViewModel : ViewModelBase
         _dialogService = dialogService;
         _toastService = toastService;
         _pdfService = pdfService;
-        _ = RefreshAsync();
+        RefreshAsync().SafeFireAndForget("QuoteListViewModel.RefreshAsync");
     }
 
     [RelayCommand]

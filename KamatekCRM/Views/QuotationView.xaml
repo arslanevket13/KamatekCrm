@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.QuotationView"
+﻿<UserControl x:Class="KamatekCrm.Views.QuotationView"
               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -23,7 +23,7 @@
             </Grid.RowDefinitions>
 
             <!-- ════════ ROW 0: HEADER ════════ -->
-            <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="20,16" Margin="0,0,0,16">
+            <Border Grid.Row="0" Style="{DynamicResource CardPanel}" Padding="20,16" Margin="0,0,0,16">
                 <DockPanel>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Width="40" Height="40" CornerRadius="10" Background="{DynamicResource ThemePrimary}" Margin="0,0,12,0">
@@ -50,6 +50,10 @@
                                    Icon="{ui:SymbolIcon Save24}" Content="Teklifi Kaydet"
                                    Appearance="Primary" Height="40" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"/>
 
+                        <ui:Button Command="{Binding SaveAndSendCommand}" 
+                                   Icon="{ui:SymbolIcon Send24}" Content="Kaydet ve Gönder"
+                                   Appearance="Secondary" Height="40" Padding="16,0" Margin="0,0,8,0" Cursor="Hand"/>
+
                         <ui:Button Command="{Binding ExportPdfCommand}" 
                                    Icon="{ui:SymbolIcon DocumentPdf24}" Content="PDF Oluştur"
                                    Appearance="Secondary" Height="40" Padding="16,0" Cursor="Hand"/>
@@ -66,7 +70,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Left Master Info Card -->
-                <Border Grid.Column="0" Style="{StaticResource CardPanel}" Padding="16">
+                <Border Grid.Column="0" Style="{DynamicResource CardPanel}" Padding="16">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock Text="MÜŞTERİ &amp; TEKLİF BİLGİLERİ" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource ThemeTextSecondary}" Margin="0,0,0,16"/>
@@ -81,13 +85,20 @@
                                           Style="{StaticResource ModernComboBox}"/>
                             </StackPanel>
 
-                            <!-- Para Birimi -->
+                            <!-- Para Birimi (Sabit TRY - yanıltıcı tek elemanlı seçim kutusu yerine salt-okunur bilgi) -->
                             <StackPanel Margin="0,0,0,16">
                                 <Label Content="Para Birimi" Style="{StaticResource ModernLabel}"/>
-                                <ComboBox ItemsSource="{Binding Currencies}" 
-                                          SelectedItem="{Binding SelectedCurrency}" 
-                                          Height="38"
-                                          Style="{StaticResource ModernComboBox}"/>
+                                <Border Background="{DynamicResource BgInputBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        Height="38"
+                                        Padding="12,0">
+                                    <TextBlock Text="₺ Türk Lirası (TRY)"
+                                               VerticalAlignment="Center"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource ThemeTextPrimary}"/>
+                                </Border>
                             </StackPanel>
 
                             <!-- Teklif Tarihi -->
@@ -106,14 +117,14 @@
                             <StackPanel>
                                 <Label Content="Teklif Notları &amp; Şartlar" Style="{StaticResource ModernLabel}"/>
                                 <TextBox Text="{Binding TermsAndConditions, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="100"/>
+                                         Style="{DynamicResource ModernTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="100"/>
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </Border>
 
                 <!-- Right Quote Lines Table -->
-                <Border Grid.Column="2" Style="{StaticResource CardPanel}" Padding="16">
+                <Border Grid.Column="2" Style="{DynamicResource CardPanel}" Padding="16">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -132,7 +143,7 @@
                         <!-- Quote Lines DataGrid -->
                         <DataGrid Grid.Row="1" ItemsSource="{Binding QuoteLines}" 
                                   Style="{StaticResource ModernDataGrid}"
-                                  ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                                  ColumnHeaderStyle="{DynamicResource ModernDataGridColumnHeader}"
                                   AutoGenerateColumns="False" CanUserAddRows="False" 
                                   GridLinesVisibility="Horizontal" HeadersVisibility="Column">
                             <DataGrid.Columns>
@@ -181,6 +192,15 @@
 
                                 <!-- İskonto % (Sağa Hizalı) -->
                                 <DataGridTextColumn Header="İskonto %" Binding="{Binding DiscountPercent, StringFormat='{}%{0:N0}'}" Width="80">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- KDV % (Sağa Hizalı) -->
+                                <DataGridTextColumn Header="KDV %" Binding="{Binding TaxPercent, StringFormat='{}%{0:N0}'}" Width="75">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -274,7 +294,7 @@
                     </StackPanel>
 
                     <!-- Search Results List with Rich Product Cards (Dinamik Yükseklik) -->
-                    <Border Grid.Row="2" Style="{StaticResource CardPanel}" Padding="6" Margin="0,0,0,16">
+                    <Border Grid.Row="2" Style="{DynamicResource CardPanel}" Padding="6" Margin="0,0,0,16">
                         <ListBox ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedProduct}" 
                                  MinHeight="220" Background="Transparent" BorderThickness="0"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"

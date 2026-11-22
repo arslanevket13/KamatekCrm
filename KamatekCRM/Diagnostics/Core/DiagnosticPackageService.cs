@@ -392,10 +392,7 @@ namespace KamatekCrm.Diagnostics.Core
                     {
                         file.Delete();
                     }
-                    catch
-                    {
-                        // Tek dosya silinemezse diğerleri etkilenmesin.
-                    }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DiagnosticPackageService.cs"); }
                 }
             }
             catch
@@ -418,10 +415,7 @@ namespace KamatekCrm.Diagnostics.Core
                     File.Delete(path);
                 }
             }
-            catch
-            {
-                // Geçici dosya silinemezse asıl sonuç etkilenmesin.
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DiagnosticPackageService.cs"); }
         }
     }
 }

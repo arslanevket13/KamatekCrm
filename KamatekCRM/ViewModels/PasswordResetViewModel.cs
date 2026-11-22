@@ -1,7 +1,6 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Services;
@@ -9,32 +8,49 @@ using KamatekCrm.Services;
 namespace KamatekCrm.ViewModels
 {
     /// <summary>
-    /// Sifre sifirlama/degistirme ViewModel
-    /// API uzerinden sifre degistirme islemi yapar.
+    /// Şifre sıfırlama / zorunlu geçici parola değiştirme ViewModel
     /// </summary>
     public partial class PasswordResetViewModel : ViewModelBase
     {
         private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
         private readonly User _user;
+        private readonly bool _isSelfServiceForcedChange;
 
         private string _newPassword = string.Empty;
         private string _confirmPassword = string.Empty;
         private string _statusMessage = string.Empty;
         private bool _isSuccess;
+        private bool _isSaving;
 
         public string Username => _user.Username;
         public string AdSoyad => _user.AdSoyad;
+        public bool IsSelfServiceForcedChange => _isSelfServiceForcedChange;
+
+        public string HeaderTitle => _isSelfServiceForcedChange
+            ? "Geçici Parolayı Değiştir"
+            : "Şifre Değiştir";
+
+        public string InfoNoteText => _isSelfServiceForcedChange
+            ? "Güvenliğiniz için ilk girişte verilen geçici parolayı kişisel ve güçlü bir parola ile değiştirmeniz gerekir. Mevcut geçici parolayı tekrar kullanamazsınız."
+            : "Kullanıcı için yeni şifre belirleyin ve güvenli bir kanaldan kullanıcıya iletin.";
+
+        public bool HasMinLength => !string.IsNullOrEmpty(NewPassword) && NewPassword.Length >= PasswordPolicy.MinimumLength;
+        public bool HasUpperCase => !string.IsNullOrEmpty(NewPassword) && NewPassword.Any(char.IsUpper);
+        public bool HasLowerCase => !string.IsNullOrEmpty(NewPassword) && NewPassword.Any(char.IsLower);
+        public bool HasDigit => !string.IsNullOrEmpty(NewPassword) && NewPassword.Any(char.IsDigit);
+        public bool HasSpecialChar => !string.IsNullOrEmpty(NewPassword) && NewPassword.Any(c => !char.IsLetterOrDigit(c));
+        public bool HasConfirmAndMatches => !string.IsNullOrEmpty(ConfirmPassword) && NewPassword == ConfirmPassword;
 
         public string NewPassword
         {
             get => _newPassword;
             set
             {
-                SetProperty(ref _newPassword, value);
-                OnPropertyChanged(nameof(PasswordsMatch));
-                OnPropertyChanged(nameof(PasswordMatchMessage));
-                SaveCommand.NotifyCanExecuteChanged();
+                if (SetProperty(ref _newPassword, value))
+                {
+                    NotifyPasswordRulePropertiesChanged();
+                }
             }
         }
 
@@ -43,10 +59,13 @@ namespace KamatekCrm.ViewModels
             get => _confirmPassword;
             set
             {
-                SetProperty(ref _confirmPassword, value);
-                OnPropertyChanged(nameof(PasswordsMatch));
-                OnPropertyChanged(nameof(PasswordMatchMessage));
-                SaveCommand.NotifyCanExecuteChanged();
+                if (SetProperty(ref _confirmPassword, value))
+                {
+                    OnPropertyChanged(nameof(PasswordsMatch));
+                    OnPropertyChanged(nameof(HasConfirmAndMatches));
+                    OnPropertyChanged(nameof(PasswordMatchMessage));
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -66,7 +85,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (string.IsNullOrEmpty(ConfirmPassword))
                     return string.Empty;
-                return PasswordsMatch ? "Sifreler eslesiyor" : "Sifreler eslesmiyor";
+                return PasswordsMatch ? "Şifreler eşleşiyor" : "Şifreler eşleşmiyor";
             }
         }
 
@@ -86,6 +105,18 @@ namespace KamatekCrm.ViewModels
             set => SetProperty(ref _isSuccess, value);
         }
 
+        public bool IsSaving
+        {
+            get => _isSaving;
+            set
+            {
+                if (SetProperty(ref _isSaving, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
         public bool HasStatusMessage => !string.IsNullOrEmpty(StatusMessage);
 
         public event Action? SaveSuccessful;
@@ -94,16 +125,35 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void Cancel() => CancelRequested?.Invoke();
 
-        public PasswordResetViewModel(User user, IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory)
+        public PasswordResetViewModel(
+            User user,
+            IAuthService authService,
+            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory,
+            bool isSelfServiceForcedChange = false)
         {
             _user = user;
             _authService = authService;
             _dbContextFactory = dbContextFactory;
+            _isSelfServiceForcedChange = isSelfServiceForcedChange;
+        }
+
+        private void NotifyPasswordRulePropertiesChanged()
+        {
+            OnPropertyChanged(nameof(HasMinLength));
+            OnPropertyChanged(nameof(HasUpperCase));
+            OnPropertyChanged(nameof(HasLowerCase));
+            OnPropertyChanged(nameof(HasDigit));
+            OnPropertyChanged(nameof(HasSpecialChar));
+            OnPropertyChanged(nameof(PasswordsMatch));
+            OnPropertyChanged(nameof(HasConfirmAndMatches));
+            OnPropertyChanged(nameof(PasswordMatchMessage));
+            SaveCommand.NotifyCanExecuteChanged();
         }
 
         private bool CanSavePassword()
         {
-            return !string.IsNullOrWhiteSpace(NewPassword) &&
+            return !IsSaving &&
+                   !string.IsNullOrWhiteSpace(NewPassword) &&
                    !string.IsNullOrWhiteSpace(ConfirmPassword) &&
                    PasswordPolicy.Validate(NewPassword) is null &&
                    PasswordsMatch &&
@@ -113,6 +163,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(CanSavePassword))]
         private async Task SaveAsync()
         {
+            IsSaving = true;
             try
             {
                 if (!CanChangeTargetPassword())
@@ -125,7 +176,7 @@ namespace KamatekCrm.ViewModels
                 if (!PasswordsMatch)
                 {
                     IsSuccess = false;
-                    StatusMessage = "Sifreler eslesmiyor!";
+                    StatusMessage = "Şifreler eşleşmiyor!";
                     return;
                 }
 
@@ -137,29 +188,40 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
-                using var context = await _dbContextFactory.CreateDbContextAsync();
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
                 var dbUser = await context.Users.FindAsync(_user.Id);
-                
+
                 if (dbUser != null)
                 {
+                    if (AuthService.VerifyPassword(NewPassword, dbUser.PasswordHash))
+                    {
+                        IsSuccess = false;
+                        StatusMessage = "Yeni şifre mevcut (geçici) şifrenizle aynı olamaz. Lütfen farklı bir şifre belirleyin.";
+                        return;
+                    }
+
                     dbUser.PasswordHash = AuthService.HashPassword(NewPassword);
                     dbUser.MustChangePassword = false;
                     await context.SaveChangesAsync();
-                    
+
                     IsSuccess = true;
-                    StatusMessage = "Sifre basariyla guncellendi!";
+                    StatusMessage = "Şifre başarıyla güncellendi!";
                     SaveSuccessful?.Invoke();
                 }
                 else
                 {
                     IsSuccess = false;
-                    StatusMessage = "Hata: Kullanici bulunamadi.";
+                    StatusMessage = "Hata: Kullanıcı bulunamadı.";
                 }
             }
             catch (Exception ex)
             {
                 IsSuccess = false;
                 StatusMessage = $"Hata: {ex.Message}";
+            }
+            finally
+            {
+                IsSaving = false;
             }
         }
 

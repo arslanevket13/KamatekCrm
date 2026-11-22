@@ -1,6 +1,9 @@
+using KamatekCrm.Helpers;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
@@ -20,6 +23,7 @@ namespace KamatekCrm.ViewModels
         private Warehouse? _targetWarehouse;
         private Product? _selectedProduct;
         private int _quantity;
+        private int _availableStock;
         private string _statusMessage = string.Empty;
         private bool _isActionSuccessful;
 
@@ -33,8 +37,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _sourceWarehouse, value))
                 {
-                    OnPropertyChanged(nameof(AvailableStock));
-                    TransferCommand?.NotifyCanExecuteChanged();
+                    RefreshAvailableStockAsync().SafeFireAndForget("StockTransferViewModel.RefreshAvailableStockAsync");
                 }
             }
         }
@@ -58,8 +61,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedProduct, value))
                 {
-                    OnPropertyChanged(nameof(AvailableStock));
-                    TransferCommand?.NotifyCanExecuteChanged();
+                    RefreshAvailableStockAsync().SafeFireAndForget("StockTransferViewModel.RefreshAvailableStockAsync");
                 }
             }
         }
@@ -90,15 +92,43 @@ namespace KamatekCrm.ViewModels
 
         public int AvailableStock
         {
-            get
+            get => _availableStock;
+            private set
             {
-                if (SelectedProduct == null || SourceWarehouse == null) return 0;
-                
-                using var context = _dbContextFactory.CreateDbContext();
-                var inventory = context.Inventories
-                    .FirstOrDefault(i => i.ProductId == SelectedProduct.Id && i.WarehouseId == SourceWarehouse.Id);
-                
-                return inventory?.Quantity ?? 0;
+                if (SetProperty(ref _availableStock, value))
+                {
+                    TransferCommand?.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        private async Task RefreshAvailableStockAsync()
+        {
+            var product = SelectedProduct;
+            var warehouse = SourceWarehouse;
+            if (product == null || warehouse == null)
+            {
+                AvailableStock = 0;
+                return;
+            }
+
+            try
+            {
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                var qty = await context.Inventories.AsNoTracking()
+                    .Where(i => i.ProductId == product.Id && i.WarehouseId == warehouse.Id)
+                    .Select(i => (int?)i.Quantity)
+                    .FirstOrDefaultAsync();
+
+                if (SelectedProduct?.Id == product.Id && SourceWarehouse?.Id == warehouse.Id)
+                {
+                    AvailableStock = qty ?? 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[StockTransfer.AvailableStock] {ex.Message}");
+                AvailableStock = 0;
             }
         }
         
@@ -176,10 +206,9 @@ namespace KamatekCrm.ViewModels
                 StatusMessage = "Transfer işlemi başarıyla tamamlandı.";
                 IsActionSuccessful = true;
                 
-                // Formu temizle
+                // Formu temizle ve önbellekteki mevcut stoğu asenkron güncelle
                 Quantity = 0;
-                OnPropertyChanged(nameof(AvailableStock));
-                TransferCommand.NotifyCanExecuteChanged();
+                RefreshAvailableStockAsync().SafeFireAndForget("StockTransferViewModel.RefreshAvailableStockAsync");
             }
             else
             {

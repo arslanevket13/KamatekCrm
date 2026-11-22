@@ -29,47 +29,56 @@ namespace KamatekCrm.Services
             try
             {
                 await using var context = await _dbContextFactory.CreateDbContextAsync();
-                using var scope = await context.Database.BeginTransactionAsync();
-                var today = DateTime.UtcNow.Date;
-
-                // Günü gelen veya geçen aktif sözleşmeler
-                var dueContracts = await context.MaintenanceContracts
-                    .Where(c => c.IsActive && c.NextDueDate <= today)
-                    .Include(c => c.Customer)
-                    .ToListAsync();
-
-                if (!dueContracts.Any()) return;
-
-                foreach (var contract in dueContracts)
+                await context.ExecuteInTransactionAsync(async transaction =>
                 {
-                    // 1. İş Emri Oluştur
-                    var job = new ServiceJob
-                    {
-                        CustomerId = contract.CustomerId ?? 0,
-                        JobCategory = JobCategory.Other,
-                        WorkOrderType = WorkOrderType.Maintenance,
-                        Description = $"{contract.JobDescriptionTemplate} - {today:MMMM yyyy} Dönemi",
-                        Status = JobStatus.Pending,
-                        Priority = JobPriority.Normal,
-                        CreatedDate = DateTime.UtcNow,
-                        ServiceJobType = ServiceJobType.Fault,
-                        ScheduledDate = today.AddDays(1),
-                        Price = contract.PricePerVisit
-                    };
+                    var today = DateTime.UtcNow.Date;
 
-                    context.ServiceJobs.Add(job);
+                    // Günü gelen veya geçen aktif sözleşmeler
+                    var dueContracts = await context.MaintenanceContracts
+                        .Where(c => c.IsActive && c.NextDueDate <= today)
+                        .Include(c => c.Customer)
+                        .ToListAsync();
 
-                    // 2. Bir sonraki tarihi güncelle
-                    var nextDate = contract.NextDueDate.AddMonths(contract.FrequencyInMonths);
-                    if (nextDate < today)
+                    if (!dueContracts.Any()) return false;
+
+                    foreach (var contract in dueContracts)
                     {
-                        nextDate = today.AddMonths(contract.FrequencyInMonths);
+                        var nowUtc = DateTime.UtcNow;
+                        // 1. İş Emri Oluştur
+                        var job = new ServiceJob
+                        {
+                            CustomerId = contract.CustomerId ?? 0,
+                            JobCategory = JobCategory.Other,
+                            WorkOrderType = WorkOrderType.Maintenance,
+                            Description = $"{contract.JobDescriptionTemplate} - {today:MMMM yyyy} Dönemi",
+                            Status = JobStatus.Pending,
+                            Priority = JobPriority.Normal,
+                            CreatedDate = nowUtc,
+                            ServiceJobType = ServiceJobType.Fault,
+                            ScheduledDate = today.AddDays(1),
+                            SlaDeadline = CalculateWorkingHoursDeadline(nowUtc, GetDefaultSlaDuration(JobPriority.Normal)),
+                            Price = contract.PricePerVisit
+                        };
+
+                        context.ServiceJobs.Add(job);
+
+                        // 2. Bir sonraki tarihi güncelle
+                        var nextDate = contract.NextDueDate.AddMonths(contract.FrequencyInMonths);
+                        if (nextDate < today)
+                        {
+                            nextDate = today.AddMonths(contract.FrequencyInMonths);
+                        }
+                        contract.NextDueDate = nextDate;
                     }
-                    contract.NextDueDate = nextDate;
-                }
 
-                await context.SaveChangesAsync();
-                await scope.CommitAsync();
+                    await context.SaveChangesAsync();
+                    if (transaction is not null)
+                    {
+                        await transaction.CommitAsync();
+                    }
+
+                    return true;
+                });
             }
             catch (Exception ex)
             {
@@ -84,62 +93,142 @@ namespace KamatekCrm.Services
             status is JobStatus.WaitingForParts or JobStatus.WaitingForApproval;
 
         /// <summary>
-        /// Mesai saatleri (Pzt-Cmt 09:00 - 18:00, Pazar tatil) gözetilerek SLA bitiş tarihini hesaplar.
+        /// Öncelik seviyesine göre varsayılan mesai içi SLA süresini döndürür.
+        /// </summary>
+        public TimeSpan GetDefaultSlaDuration(JobPriority priority) => priority switch
+        {
+            JobPriority.Critical => TimeSpan.FromHours(4),
+            JobPriority.Urgent => TimeSpan.FromHours(8),
+            JobPriority.High => TimeSpan.FromHours(16),
+            JobPriority.Medium => TimeSpan.FromHours(24),
+            JobPriority.Normal => TimeSpan.FromHours(24),
+            JobPriority.Low => TimeSpan.FromHours(48),
+            _ => TimeSpan.FromHours(24)
+        };
+
+        private static readonly TimeSpan TurkeyUtcOffset = TimeSpan.FromHours(3);
+
+        /// <summary>
+        /// Türkiye yerel mesai saatleri (UTC+3, Pzt-Cmt 09:00 - 18:00, Pazar tatil) gözetilerek
+        /// SLA bitiş tarihini hesaplar ve sonucu DateTimeKind.Utc olarak döndürür.
         /// </summary>
         public DateTime CalculateWorkingHoursDeadline(DateTime startUtc, TimeSpan slaDuration)
         {
-            var current = startUtc;
-            var remaining = slaDuration;
+            var normalizedUtc = startUtc.Kind switch
+            {
+                DateTimeKind.Utc => startUtc,
+                DateTimeKind.Local => startUtc.ToUniversalTime(),
+                _ => DateTime.SpecifyKind(startUtc, DateTimeKind.Utc)
+            };
 
-            // İş başlangıcı çalışma saatleri dışındaysa bir sonraki mesai başlangıcına çek
+            // Türkiye yerel saatinde (UTC+3) mesai hesabı
+            var currentLocal = DateTime.SpecifyKind(normalizedUtc.Add(TurkeyUtcOffset), DateTimeKind.Unspecified);
+            var remaining = slaDuration > TimeSpan.Zero ? slaDuration : TimeSpan.Zero;
+
             while (remaining > TimeSpan.Zero)
             {
-                if (current.DayOfWeek == DayOfWeek.Sunday)
+                if (currentLocal.DayOfWeek == DayOfWeek.Sunday)
                 {
-                    current = current.Date.AddDays(1).AddHours(9);
+                    currentLocal = currentLocal.Date.AddDays(1).AddHours(9);
                     continue;
                 }
 
-                if (current.Hour < 9)
+                if (currentLocal.Hour < 9)
                 {
-                    current = current.Date.AddHours(9);
+                    currentLocal = currentLocal.Date.AddHours(9);
                 }
-                else if (current.Hour >= 18)
+                else if (currentLocal.Hour >= 18)
                 {
-                    current = current.Date.AddDays(1).AddHours(9);
+                    currentLocal = currentLocal.Date.AddDays(1).AddHours(9);
                     continue;
                 }
 
-                var dayEnd = current.Date.AddHours(18);
-                var availableToday = dayEnd - current;
+                var dayEnd = currentLocal.Date.AddHours(18);
+                var availableToday = dayEnd - currentLocal;
 
                 if (remaining <= availableToday)
                 {
-                    current = current.Add(remaining);
+                    currentLocal = currentLocal.Add(remaining);
                     remaining = TimeSpan.Zero;
                 }
                 else
                 {
                     remaining -= availableToday;
-                    current = current.Date.AddDays(1).AddHours(9);
+                    currentLocal = currentLocal.Date.AddDays(1).AddHours(9);
                 }
             }
 
-            return current;
+            // Yerel Türkiye saatini tekrar UTC'ye çevir
+            return DateTime.SpecifyKind(currentLocal.Subtract(TurkeyUtcOffset), DateTimeKind.Utc);
         }
 
         /// <summary>
-        /// Duraklatma ve mesai saatlerini dikkate alarak efektif kalan SLA süresini hesaplar.
+        /// Duraklatma ve Türkiye mesai saatlerini (UTC+3, 09:00-18:00 Pzt-Cmt) dikkate alarak
+        /// efektif kalan SLA süresini hesaplar.
         /// </summary>
-        public TimeSpan GetRemainingEffectiveTime(DateTime? deadlineUtc, JobStatus status)
+        public TimeSpan GetRemainingEffectiveTime(DateTime? deadlineUtc, JobStatus status, DateTime? pausedAtUtc = null)
         {
             if (!deadlineUtc.HasValue) return TimeSpan.Zero;
-            if (IsSlaPaused(status))
+
+            var targetUtc = deadlineUtc.Value.Kind == DateTimeKind.Utc
+                ? deadlineUtc.Value
+                : DateTime.SpecifyKind(deadlineUtc.Value, DateTimeKind.Utc);
+
+            // Duraklatılmış durumda referans zaman duraklatılma anında sabitlenir
+            var referenceUtc = IsSlaPaused(status)
+                ? (pausedAtUtc.HasValue
+                    ? (pausedAtUtc.Value.Kind == DateTimeKind.Utc ? pausedAtUtc.Value : pausedAtUtc.Value.ToUniversalTime())
+                    : DateTime.UtcNow)
+                : DateTime.UtcNow;
+
+            if (IsSlaPaused(status) && targetUtc <= referenceUtc)
             {
-                // Duraklatılmış durumda kalan süre dondurulur (mevcut an yerine deadline ile kıyas)
-                return deadlineUtc.Value > DateTime.UtcNow ? deadlineUtc.Value - DateTime.UtcNow : TimeSpan.Zero;
+                return TimeSpan.Zero;
             }
-            return deadlineUtc.Value - DateTime.UtcNow;
+
+            return CalculateWorkingHoursBetween(referenceUtc, targetUtc);
+        }
+
+        private static TimeSpan CalculateWorkingHoursBetween(DateTime fromUtc, DateTime toUtc)
+        {
+            if (fromUtc == toUtc) return TimeSpan.Zero;
+
+            bool isNegative = toUtc < fromUtc;
+            var startLocal = DateTime.SpecifyKind((isNegative ? toUtc : fromUtc).Add(TurkeyUtcOffset), DateTimeKind.Unspecified);
+            var endLocal = DateTime.SpecifyKind((isNegative ? fromUtc : toUtc).Add(TurkeyUtcOffset), DateTimeKind.Unspecified);
+
+            var totalWorking = TimeSpan.Zero;
+            var cursor = startLocal;
+
+            while (cursor < endLocal)
+            {
+                if (cursor.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    cursor = cursor.Date.AddDays(1).AddHours(9);
+                    continue;
+                }
+
+                var workStart = cursor.Date.AddHours(9);
+                var workEnd = cursor.Date.AddHours(18);
+
+                if (cursor >= workEnd)
+                {
+                    cursor = cursor.Date.AddDays(1).AddHours(9);
+                    continue;
+                }
+
+                var segmentStart = cursor < workStart ? workStart : cursor;
+                var segmentEnd = endLocal < workEnd ? endLocal : workEnd;
+
+                if (segmentEnd > segmentStart)
+                {
+                    totalWorking += segmentEnd - segmentStart;
+                }
+
+                cursor = cursor.Date.AddDays(1).AddHours(9);
+            }
+
+            return isNegative ? -totalWorking : totalWorking;
         }
     }
 }

@@ -59,10 +59,7 @@ namespace KamatekCrm.Services
                 if (streamLength > MaxImageSizeBytes)
                     throw new InvalidOperationException($"Resim verisi maksimum 10 MB olabilir.");
             }
-            catch (NotSupportedException)
-            {
-                // Canlı stream'ler length desteklemeyebilir
-            }
+            catch (NotSupportedException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "FileSecurityValidator.cs"); }
 
             byte[] header = ReadHeaderBytes(stream, 16);
 
@@ -120,9 +117,7 @@ namespace KamatekCrm.Services
                 if (streamLength > MaxAttachmentSizeBytes)
                     throw new InvalidOperationException("Ek dosya verisi maksimum 25 MB olabilir.");
             }
-            catch (NotSupportedException)
-            {
-            }
+            catch (NotSupportedException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "FileSecurityValidator.cs"); }
 
             byte[] header = ReadHeaderBytes(stream, 16);
 

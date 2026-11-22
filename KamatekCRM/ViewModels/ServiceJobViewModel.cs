@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using KamatekCrm.ApplicationCore.DTOs.ServiceJobs;
 using KamatekCrm.ApplicationCore.Interfaces;
@@ -36,6 +37,7 @@ namespace KamatekCrm.ViewModels
         private readonly IServiceJobReadService _serviceJobReadService;
         private readonly PdfService _pdfService;
         private readonly IDialogService _dialogService;
+        private readonly ISlaService? _slaService;
         private ServiceJobRowDto? _selectedServiceJob;
         private CancellationTokenSource? _searchCts;
 
@@ -74,8 +76,10 @@ namespace KamatekCrm.ViewModels
             IServiceJobCommandService serviceJobCommandService,
             IServiceJobReadService serviceJobReadService,
             PdfService pdfService,
-            IDialogService dialogService)
+            IDialogService dialogService,
+            ISlaService? slaService = null)
         {
+            ArgumentNullException.ThrowIfNull(serviceJobReadService);
             _navigationService = navigationService;
             _toastService = toastService;
             _loadingService = loadingService;
@@ -83,6 +87,7 @@ namespace KamatekCrm.ViewModels
             _serviceJobReadService = serviceJobReadService;
             _pdfService = pdfService;
             _dialogService = dialogService;
+            _slaService = slaService;
 
             ServiceJobs = new ObservableCollection<ServiceJobRowDto>();
             Customers = new ObservableCollection<ServiceJobCustomerLookupDto>();
@@ -117,7 +122,7 @@ namespace KamatekCrm.ViewModels
 
             // Dashboard & durum değiştirme komutları
 
-            if (_serviceJobReadService != null) _ = Refresh();
+            _ = Refresh();
             UpdateDeviceTypeOptions();
         }
 
@@ -397,7 +402,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedTechnicianId, value))
                 {
-                    _ = CheckScheduleConflictAsync();
+                    CheckScheduleConflictAsync().SafeFireAndForget("ServiceJobViewModel.CheckScheduleConflictAsync");
                 }
             }
         }
@@ -424,7 +429,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _scheduledDate, value))
                 {
-                    _ = CheckScheduleConflictAsync();
+                    CheckScheduleConflictAsync().SafeFireAndForget("ServiceJobViewModel.CheckScheduleConflictAsync");
                 }
             }
         }
@@ -464,12 +469,39 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Seçili öncelik
+        /// Seçili öncelik (değiştiğinde yeni iş kaydında SLA hedef süresini Türkiye mesai saatlerine göre günceller)
         /// </summary>
         public JobPriority SelectedPriority
         {
             get => _selectedPriority;
-            set => SetProperty(ref _selectedPriority, value);
+            set
+            {
+                if (SetProperty(ref _selectedPriority, value) && !_isEditing && _slaService != null)
+                {
+                    SlaDeadline = _slaService.CalculateWorkingHoursDeadline(
+                        DateTime.UtcNow,
+                        _slaService.GetDefaultSlaDuration(value));
+                }
+            }
+        }
+
+        private DateTime? ResolveEffectiveSlaDeadline()
+        {
+            if (SlaDeadline.HasValue)
+            {
+                return SlaDeadline.Value.Kind == DateTimeKind.Utc
+                    ? SlaDeadline.Value
+                    : SlaDeadline.Value.ToUniversalTime();
+            }
+
+            if (_slaService != null)
+            {
+                return _slaService.CalculateWorkingHoursDeadline(
+                    DateTime.UtcNow,
+                    _slaService.GetDefaultSlaDuration(SelectedPriority));
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -987,7 +1019,7 @@ namespace KamatekCrm.ViewModels
                 {
                     _searchCts?.Cancel();
                     _searchCts = new CancellationTokenSource();
-                    _ = DebounceSearchAsync(_searchCts.Token);
+                    DebounceSearchAsync(_searchCts.Token).SafeFireAndForget("ServiceJobViewModel.DebounceSearchAsync");
                 }
             }
         }
@@ -999,10 +1031,7 @@ namespace KamatekCrm.ViewModels
                 await Task.Delay(500, cancellationToken);
                 await LoadServiceJobs();
             }
-            catch (OperationCanceledException)
-            {
-                // Yeni arama metni önceki isteğin yerini aldı.
-            }
+            catch (OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ServiceJobViewModel.cs"); }
         }
 
         [RelayCommand]
@@ -1624,13 +1653,13 @@ namespace KamatekCrm.ViewModels
                 var conversion = await _serviceJobCommandService.ConvertToQuoteAsync(
                     jobId.Value,
                     App.CurrentUser?.Username ?? "Sistem");
-                if (conversion.IsFailure)
+                if (conversion.IsFailure || conversion.Value is null)
                 {
                     _toastService?.ShowError(conversion.Error);
                     return;
                 }
 
-                _toastService?.ShowSuccess($"İş #{conversion.Value!.JobId} teklif aşamasına alındı ve teklif kaydı oluşturuldu.");
+                _toastService?.ShowSuccess($"İş #{conversion.Value.JobId} teklif aşamasına alındı ve teklif kaydı oluşturuldu.");
                 await RefreshList();
 
                 // Kullanıcıya teklif düzenleme ekranını aç
@@ -1653,8 +1682,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Teklife dönüştürülmüş iş için montajı planlar (yalnızca kabul edilmiş tekliflerde).
-        /// Teklif kalemleri montaj malzemelerine kopyalanır.
+        /// Teklife dönüştürülmüş iş için montajı planlar ve Montaj Editörü penceresini açar.
         /// </summary>
         [RelayCommand]
         private async Task SetInstallationPlanned(object? param)
@@ -1680,45 +1708,30 @@ namespace KamatekCrm.ViewModels
                 _toastService?.ShowWarning("Montaj planlamak için teklifin önce 'Kabul Edildi' durumunda olması gerekir.");
                 return;
             }
-            if (target is not null && target.InstallationOrderId is not null)
-            {
-                _toastService?.ShowWarning("Bu iş için montaj zaten planlanmış.");
-                return;
-            }
-
-            string? dateInput = await _dialogService.ShowInputAsync(
-                "Montaj tarihi (ör. 2026-08-10) ve/veya boş bırakarak planlayın:",
-                "Montaj Planlama",
-                DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"));
-            if (dateInput is null) return; // iptal edildi
-
-            DateTime? installationDate = null;
-            if (DateTime.TryParse(dateInput.Trim(), out var parsed))
-            {
-                installationDate = parsed;
-            }
 
             try
             {
-                _loadingService?.Show("Montaj planlanıyor...");
-
-                var result = await _serviceJobCommandService.PlanInstallationAsync(
-                    new PlanInstallationRequest(
-                        jobId.Value,
-                        null,
-                        null,
-                        installationDate,
-                        null,
-                        App.CurrentUser?.Username ?? "Sistem"));
-
-                if (result.IsFailure || result.Value is null)
+                if (target?.InstallationOrderId is null)
                 {
-                    _toastService?.ShowError(result.Error);
-                    return;
+                    _loadingService?.Show("Montaj emri hazırlanıyor...");
+                    var result = await _serviceJobCommandService.PlanInstallationAsync(
+                        new PlanInstallationRequest(
+                            jobId.Value,
+                            null,
+                            null,
+                            DateTime.UtcNow.Date.AddDays(1),
+                            null,
+                            App.CurrentUser?.Username ?? "Sistem"));
+
+                    if (result.IsFailure || result.Value is null)
+                    {
+                        _toastService?.ShowError(result.Error);
+                        return;
+                    }
+                    _loadingService?.Hide();
                 }
 
-                _toastService?.ShowSuccess($"İş #{jobId.Value} 'Montaj Yapılacak' durumuna alındı.");
-                await RefreshList();
+                await OpenInstallationEditorAsync(jobId.Value);
             }
             catch (Exception ex)
             {
@@ -1731,8 +1744,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Montajı tamamlar (yalnızca Montaj Yapılacak aşamasında geçerlidir).
-        /// Teslim notu, teknisyen ve müşteri imzası montaj emrine saklanır.
+        /// Montajı tamamlamak ve malzeme/görev/işçilik/teslim notu girmek için Montaj Editörü penceresini açar.
         /// </summary>
         [RelayCommand]
         private async Task SetInstallationCompleted(object? param)
@@ -1764,52 +1776,43 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            string? deliveryNote = await _dialogService.ShowInputAsync(
-                "Teslim notu (boş bırakılabilir):",
-                "Montaj Tamamlama",
-                "Cihaz test edilerek teslim edildi.");
-            if (deliveryNote is null) return; // iptal edildi
+            await OpenInstallationEditorAsync(jobId.Value);
+        }
 
-            string? laborInput = await _dialogService.ShowInputAsync(
-                "Montajda harcanan işçilik saati (ör. 4 veya 6.5):",
-                "Montaj Tamamlama",
-                "4");
-            if (laborInput is null) return; // iptal edildi
-            if (!decimal.TryParse(laborInput.Trim(), out var laborHours) || laborHours <= 0m)
-            {
-                _toastService?.ShowWarning("İşçilik saati geçerli bir pozitif sayı olmalıdır.");
-                return;
-            }
-
+        private async Task<bool> OpenInstallationEditorAsync(int jobId)
+        {
             try
             {
-                _loadingService?.Show("Montaj tamamlanıyor...");
+                var vm = new InstallationEditorViewModel(
+                    jobId,
+                    _serviceJobReadService,
+                    _serviceJobCommandService,
+                    _dialogService,
+                    _toastService);
 
-                var result = await _serviceJobCommandService.CompleteInstallationAsync(
-                    new CompleteInstallationRequest(
-                        jobId.Value,
-                        deliveryNote.Trim(),
-                        null,
-                        null,
-                        laborHours,
-                        App.CurrentUser?.Username ?? "Sistem"));
-
-                if (result.IsFailure || result.Value is null)
+                if (!await vm.InitializeAsync())
                 {
-                    _toastService?.ShowError(result.Error);
-                    return;
+                    return false;
                 }
 
-                _toastService?.ShowSuccess($"İş #{jobId.Value} montajı tamamlandı.");
+                var window = new InstallationEditorWindow(vm)
+                {
+                    Owner = Application.Current?.MainWindow
+                };
+
+                if (window.ShowDialog() == true)
+                {
+                    await RefreshList();
+                    return true;
+                }
+
                 await RefreshList();
+                return false;
             }
             catch (Exception ex)
             {
-                _toastService?.ShowError($"Hata: {ex.Message}");
-            }
-            finally
-            {
-                _loadingService?.Hide();
+                _toastService?.ShowError($"Montaj ekranı açılamadı: {ex.Message}");
+                return false;
             }
         }
 
@@ -2103,6 +2106,10 @@ namespace KamatekCrm.ViewModels
 
             try
             {
+                if (_slaService != null)
+                {
+                    await _slaService.CheckAndGenerateJobsAsync();
+                }
                 await LoadWorkspace();
                 await LoadServiceJobs();
                 await LoadDashboardAsync();
@@ -2239,6 +2246,43 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
+        /// Global arama veya Dashboard drill-down üzerinden belirli bir iş emrini seçip detay çekmecesini açar.
+        /// </summary>
+        public async Task FocusJobByIdAsync(int jobId)
+        {
+            if (jobId <= 0 || _serviceJobReadService == null) return;
+
+            SearchText = string.Empty;
+            SelectedStatusFilter = StatusFilter.All;
+            FilterStartDate = null;
+            FilterEndDate = null;
+
+            await LoadServiceJobs();
+
+            var target = ServiceJobs.FirstOrDefault(j => j.Id == jobId);
+            if (target == null)
+            {
+                var rowRes = await _serviceJobReadService.GetRowByIdAsync(jobId);
+                if (rowRes.IsSuccess && rowRes.Value != null)
+                {
+                    target = rowRes.Value;
+                    ServiceJobs.Insert(0, target);
+                }
+            }
+
+            if (target != null)
+            {
+                SelectedServiceJob = target;
+                IsDetailPanelOpen = true;
+                await LoadSelectedJobHistory();
+            }
+            else
+            {
+                _toastService?.ShowWarning($"İş emri bulunamadı (ID: #{jobId}).");
+            }
+        }
+
+        /// <summary>
         /// Seçili işe ait ürünleri yükle
         /// </summary>
         private async Task LoadJobItems()
@@ -2350,7 +2394,7 @@ namespace KamatekCrm.ViewModels
                     LaborCost = LaborCost,
                     DiscountAmount = DiscountAmount,
                     EstimatedDuration = EstimatedDuration,
-                    SlaDeadline = SlaDeadline,
+                    SlaDeadline = ResolveEffectiveSlaDeadline(),
                     TechnicianNotes = TechnicianNotes,
                     PhotoPathsJson = JsonSerializer.Serialize(UploadedPhotos.ToList()),
                     Price = FinancialCalculator.RoundMoney(SubTotal), TotalAmount = FinancialCalculator.RoundMoney(GrandTotalWithKdv),
@@ -2464,7 +2508,8 @@ namespace KamatekCrm.ViewModels
         private bool CanCompleteJob()
         {
             return SelectedServiceJob != null &&
-                   SelectedServiceJob.Status == JobStatus.InProgress;
+                   (SelectedServiceJob.Status == JobStatus.InProgress ||
+                    SelectedServiceJob.Status == JobStatus.InstallationCompleted);
         }
 
         /// <summary>
@@ -2754,7 +2799,7 @@ namespace KamatekCrm.ViewModels
                 if (result.IsFailure) return;
                 foreach (var item in result.Value!) SelectedJobHistory.Add(item);
             }
-            catch { /* Tarihçe opsiyonel */ }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ServiceJobViewModel.cs"); }
         }
 
         /// <summary>

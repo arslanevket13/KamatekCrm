@@ -63,9 +63,9 @@ namespace KamatekCrm.Views
             }
         }
 
-        private void OnCancelRequested()
+        private async void OnCancelRequested()
         {
-            if (!ConfirmDiscardIfDirty())
+            if (!await ConfirmDiscardIfDirtyAsync())
             {
                 return;
             }
@@ -83,16 +83,22 @@ namespace KamatekCrm.Views
             Close();
         }
 
-        private void OnWindowClosing(object? sender, CancelEventArgs e)
+        private async void OnWindowClosing(object? sender, CancelEventArgs e)
         {
             if (_isSaving || _closeConfirmed)
             {
                 return;
             }
 
-            if (!ConfirmDiscardIfDirty())
+            if (_isDirty)
             {
                 e.Cancel = true;
+                if (await ConfirmDiscardIfDirtyAsync())
+                {
+                    _closeConfirmed = true;
+                    TrySetDialogResult(false);
+                    Close();
+                }
             }
         }
 
@@ -100,22 +106,23 @@ namespace KamatekCrm.Views
         /// Kaydedilmemiş değişiklik varsa kullanıcıya sorar.
         /// Devam edilebilir mi? (true = kapatılabilir)
         /// </summary>
-        private bool ConfirmDiscardIfDirty()
+        private async System.Threading.Tasks.Task<bool> ConfirmDiscardIfDirtyAsync()
         {
             if (!_isDirty)
             {
                 return true;
             }
 
-            var answer = MessageBox.Show(
-                this,
-                "Kaydedilmemiş değişiklikler var. Formu kapatmak istediğinize emin misiniz?",
-                "Kaydedilmemiş Değişiklikler",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning,
-                MessageBoxResult.No);
+            var dialogService = App.ServiceProvider?.GetService(typeof(KamatekCrm.Shared.Services.IDialogService))
+                as KamatekCrm.Shared.Services.IDialogService;
+            if (dialogService != null)
+            {
+                return await dialogService.ShowConfirmationAsync(
+                    "Kaydedilmemiş değişiklikler var. Formu kapatmak istediğinize emin misiniz?",
+                    "Kaydedilmemiş Değişiklikler");
+            }
 
-            return answer == MessageBoxResult.Yes;
+            return true;
         }
 
         /// <summary>
@@ -123,7 +130,7 @@ namespace KamatekCrm.Views
         /// </summary>
         private void TrySetDialogResult(bool value)
         {
-            try { DialogResult = value; } catch { }
+            try { DialogResult = value; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "NewServiceJobWindow.xaml.cs"); }
         }
 
         private void OnWindowClosed(object? sender, EventArgs e)

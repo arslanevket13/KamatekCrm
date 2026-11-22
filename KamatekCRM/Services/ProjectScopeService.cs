@@ -51,10 +51,7 @@ namespace KamatekCrm.Services
                     return nodes;
                 }
             }
-            catch (JsonException)
-            {
-                // JSON parse hatası
-            }
+            catch (JsonException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProjectScopeService.cs"); }
 
             return new List<ScopeNode>();
         }

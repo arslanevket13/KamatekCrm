@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -173,58 +174,131 @@ namespace KamatekCrm.ViewModels
             return ext is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".webp" or ".gif";
         }
 
+        private bool _isInitializing;
+
         public async Task<bool> InitializeAsync()
         {
-            var workflow = await _readService.GetWorkOrderWorkflowAsync(_jobId);
-            if (workflow.IsFailure || workflow.Value is null)
+            _isInitializing = true;
+            try
             {
-                _toastService.ShowError(workflow.Error ?? "İş emri verileri yüklenemedi.");
-                return false;
-            }
-
-            var document = await _readService.GetDocumentAsync(_jobId);
-            if (document.IsFailure || document.Value is null)
-            {
-                _toastService.ShowError(document.Error);
-                return false;
-            }
-
-            HeaderTitle = $"Keşif Raporu — {document.Value.CustomerName}";
-            HeaderSubtitle = $"İş #{_jobId:D6} • {document.Value.Description}";
-
-            var discovery = workflow.Value.Discovery;
-            HasReport = discovery is not null;
-
-            if (discovery is not null)
-            {
-                TechnicalNotes = discovery.TechnicalNotes ?? string.Empty;
-                RecommendedSolution = discovery.RecommendedSolution ?? string.Empty;
-                EstimatedLaborHours = discovery.EstimatedLaborHours;
-                TechnicianName = discovery.TechnicianName ?? string.Empty;
-
-                foreach (var material in discovery.Materials)
+                var workflow = await _readService.GetWorkOrderWorkflowAsync(_jobId);
+                if (workflow.IsFailure || workflow.Value is null)
                 {
-                    Materials.Add(new DiscoveryMaterialRow(material));
+                    _toastService.ShowError(workflow.Error ?? "İş emri verileri yüklenemedi.");
+                    return false;
                 }
-                foreach (var photo in discovery.PhotoPaths)
-                {
-                    Photos.Add(photo);
-                }
-            }
 
-            if (workflow.Value.Visits is not null)
+                var document = await _readService.GetDocumentAsync(_jobId);
+                if (document.IsFailure || document.Value is null)
+                {
+                    _toastService.ShowError(document.Error);
+                    return false;
+                }
+
+                HeaderTitle = $"Keşif Raporu — {document.Value.CustomerName}";
+                HeaderSubtitle = $"İş #{_jobId:D6} • {document.Value.Description}";
+
+                var discovery = workflow.Value.Discovery;
+                HasReport = discovery is not null;
+
+                if (discovery is not null)
+                {
+                    TechnicalNotes = discovery.TechnicalNotes ?? string.Empty;
+                    RecommendedSolution = discovery.RecommendedSolution ?? string.Empty;
+                    EstimatedLaborHours = discovery.EstimatedLaborHours;
+                    TechnicianName = discovery.TechnicianName ?? string.Empty;
+
+                    foreach (var material in discovery.Materials)
+                    {
+                        Materials.Add(new DiscoveryMaterialRow(material));
+                    }
+                    foreach (var photo in discovery.PhotoPaths)
+                    {
+                        Photos.Add(photo);
+                    }
+                }
+
+                if (workflow.Value.Visits is not null)
+                {
+                    foreach (var visit in workflow.Value.Visits.OrderBy(v => v.VisitDate))
+                    {
+                        Visits.Add(new DiscoveryVisitRow(visit));
+                    }
+                }
+
+                await TryRestoreDraftAsync();
+
+                OnPropertyChanged(nameof(HeaderTitle));
+                OnPropertyChanged(nameof(HeaderSubtitle));
+                OnPropertyChanged(nameof(PhotoSummary));
+            }
+            finally
             {
-                foreach (var visit in workflow.Value.Visits.OrderBy(v => v.VisitDate))
-                {
-                    Visits.Add(new DiscoveryVisitRow(visit));
-                }
+                _isInitializing = false;
             }
 
-            OnPropertyChanged(nameof(HeaderTitle));
-            OnPropertyChanged(nameof(HeaderSubtitle));
-            OnPropertyChanged(nameof(PhotoSummary));
             RefreshCompletionCheck();
             return true;
+        }
+
+        private async Task TryRestoreDraftAsync()
+        {
+            try
+            {
+                string draftKey = GetDraftKey();
+                if (!_draftStorageService.HasDraft(draftKey))
+                    return;
+
+                var draft = await _draftStorageService.LoadDraftAsync<DiscoveryDraftData>(draftKey);
+                if (draft is null)
+                    return;
+
+                bool hasDraftContent =
+                    !string.IsNullOrWhiteSpace(draft.TechnicalNotes) ||
+                    !string.IsNullOrWhiteSpace(draft.RecommendedSolution) ||
+                    draft.Materials.Count > 0 ||
+                    draft.Visits.Count > 0 ||
+                    draft.Photos.Count > 0;
+
+                if (!hasDraftContent)
+                    return;
+
+                bool shouldRestore = !HasReport || await _dialogService.ShowConfirmationAsync(
+                    $"Bu iş emri için {draft.SavedAt.ToLocalTime():dd.MM.yyyy HH:mm} tarihli kaydedilmemiş bir keşif taslağı bulundu. Taslak verileri geri yüklensin mi?",
+                    "Kaydedilmemiş Keşif Taslağı");
+
+                if (!shouldRestore)
+                    return;
+
+                TechnicalNotes = draft.TechnicalNotes ?? string.Empty;
+                RecommendedSolution = draft.RecommendedSolution ?? string.Empty;
+                EstimatedLaborHours = draft.EstimatedLaborHours;
+                TechnicianName = draft.TechnicianName ?? string.Empty;
+
+                Materials.Clear();
+                foreach (var m in draft.Materials)
+                {
+                    Materials.Add(new DiscoveryMaterialRow(m.SourceId, m.ProductId, m.ProductName, m.Quantity, m.Notes));
+                }
+
+                Visits.Clear();
+                foreach (var v in draft.Visits)
+                {
+                    Visits.Add(new DiscoveryVisitRow(new DiscoveryVisitDto(v.SourceId ?? 0, v.VisitDate, v.TechnicianName, v.Notes, Array.Empty<string>())));
+                }
+
+                Photos.Clear();
+                foreach (var p in draft.Photos)
+                {
+                    Photos.Add(p);
+                }
+
+                _toastService.ShowInfo("Kaydedilmemiş keşif taslağı geri yüklendi.");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DiscoveryDraft.Restore] {ex.Message}");
+            }
         }
 
         private void RefreshCompletionCheck()
@@ -260,7 +334,10 @@ namespace KamatekCrm.ViewModels
             CompleteCommand.NotifyCanExecuteChanged();
             SaveCommand.NotifyCanExecuteChanged();
 
-            AutoSaveDraft();
+            if (!_isInitializing)
+            {
+                AutoSaveDraft();
+            }
         }
 
         private string GetDraftKey() => $"discovery_draft_{_jobId}";
@@ -269,7 +346,7 @@ namespace KamatekCrm.ViewModels
         {
             try
             {
-                if (!CanSave()) return;
+                if (_isInitializing || !CanSave()) return;
 
                 var validMaterials = Materials
                     .Where(m => !string.IsNullOrWhiteSpace(m.ProductName))
@@ -289,9 +366,12 @@ namespace KamatekCrm.ViewModels
                     SavedAt = DateTime.UtcNow
                 };
 
-                _ = _draftStorageService.SaveDraftAsync(GetDraftKey(), draft);
+                _draftStorageService.SaveDraftAsync(GetDraftKey(), draft).SafeFireAndForget("DiscoveryEditorViewModel._draftStorageService.SaveDraftAsync");
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DiscoveryDraft.Save] {ex.Message}");
+            }
         }
 
         // ── Malzeme yönetimi ──
@@ -370,8 +450,7 @@ namespace KamatekCrm.ViewModels
                                   !string.IsNullOrWhiteSpace(RecommendedSolution) ||
                                   Materials.Count > 0 || Visits.Count > 0 || Photos.Count > 0;
 
-        [RelayCommand(CanExecute = nameof(CanSave))]
-        private async Task Save()
+        private async Task<bool> SaveDiscoveryCoreAsync()
         {
             // Boş adı olan malzeme satırları kaydedilmez (servis tarafında da guard var).
             var validMaterials = Materials
@@ -394,17 +473,31 @@ namespace KamatekCrm.ViewModels
             if (result.IsFailure)
             {
                 _toastService.ShowError(result.Error);
-                return;
+                return false;
             }
 
+            return true;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanSave))]
+        private async Task Save()
+        {
+            if (!await SaveDiscoveryCoreAsync()) return;
+
             _toastService.ShowSuccess("Keşif kaydı kaydedildi.");
-            _ = _draftStorageService.ClearDraftAsync(GetDraftKey());
+            _draftStorageService.ClearDraftAsync(GetDraftKey()).SafeFireAndForget("DiscoveryEditorViewModel._draftStorageService.ClearDraftAsync");
             RequestCloseWithSuccess?.Invoke();
         }
 
         [RelayCommand(CanExecute = nameof(CanComplete))]
         private async Task Complete()
         {
+            if (!await SaveDiscoveryCoreAsync())
+            {
+                RefreshCompletionCheck();
+                return;
+            }
+
             var result = await _commandService.CompleteDiscoveryAsync(
                 _jobId,
                 App.CurrentUser?.Username ?? "Sistem");
@@ -416,7 +509,7 @@ namespace KamatekCrm.ViewModels
             }
 
             _toastService.ShowSuccess("Keşif tamamlandı. Artık teklife dönüştürebilirsiniz.");
-            _ = _draftStorageService.ClearDraftAsync(GetDraftKey());
+            _draftStorageService.ClearDraftAsync(GetDraftKey()).SafeFireAndForget("DiscoveryEditorViewModel._draftStorageService.ClearDraftAsync");
             RequestCloseWithSuccess?.Invoke();
         }
 

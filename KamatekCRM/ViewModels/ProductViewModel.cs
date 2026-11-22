@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using KamatekCrm.Events;
 using System;
 using System.Collections.Generic;
@@ -28,9 +29,10 @@ namespace KamatekCrm.ViewModels
     public partial class ProductViewModel : ViewModelBase
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
-        private AppDbContext _context;
         private readonly IInventoryDomainService _inventoryDomainService;
         private readonly IProductImageService _imageService;
+        private readonly KamatekCrm.Shared.Services.IDialogService? _dialogService;
+        private readonly IToastService? _toastService;
         private Product? _selectedProduct;
         private string _searchText = string.Empty;
         private System.Threading.CancellationTokenSource? _stockUpdateDebounceCts;
@@ -81,7 +83,7 @@ namespace KamatekCrm.ViewModels
                     _searchCts?.Cancel();
                     _searchCts = new System.Threading.CancellationTokenSource();
                     var token = _searchCts.Token;
-                    _ = DebouncedFilterAsync(token);
+                    DebouncedFilterAsync(token).SafeFireAndForget("ProductViewModel.DebouncedFilterAsync");
                 }
             }
         }
@@ -96,9 +98,7 @@ namespace KamatekCrm.ViewModels
                     _productsView?.Refresh();
                 }
             }
-            catch (System.OperationCanceledException)
-            {
-            }
+            catch (System.OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProductViewModel.cs"); }
         }
 
         /// <summary>
@@ -201,11 +201,16 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// Constructor
         /// </summary>
-        public ProductViewModel(IInventoryDomainService inventoryDomainService, IDbContextFactory<AppDbContext> dbContextFactory)
+        public ProductViewModel(
+            IInventoryDomainService inventoryDomainService,
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            KamatekCrm.Shared.Services.IDialogService? dialogService = null,
+            IToastService? toastService = null)
         {
             _inventoryDomainService = inventoryDomainService;
             _dbContextFactory = dbContextFactory;
-            _context = _dbContextFactory.CreateDbContext(); // TODO: Refactor to short-lived contexts
+            _dialogService = dialogService;
+            _toastService = toastService;
             _imageService = new ProductImageService();
             Products = new ObservableCollection<Product>();
 
@@ -227,9 +232,10 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void LoadProducts()
         {
-            _context.ChangeTracker.Clear();
+            using var context = _dbContextFactory.CreateDbContext();
             Products.Clear();
-            var products = _context.Products
+            var products = context.Products
+                .AsNoTracking()
                 .Include(p => p.Category)      // Kategori bilgisi için
                 .Include(p => p.Inventories) // Stok hesaplaması için
                 .ToList();
@@ -246,6 +252,39 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
+        /// Global arama veya Dashboard drill-down üzerinden belirli bir ürünü listede seçer.
+        /// </summary>
+        public void FocusProductById(int productId)
+        {
+            if (productId <= 0) return;
+
+            SearchText = string.Empty;
+            SelectedCategoryFilter = "Tümü";
+            StockStatusFilter = "Tümü";
+            _productsView?.Refresh();
+
+            var target = Products.FirstOrDefault(p => p.Id == productId);
+            if (target == null)
+            {
+                LoadProducts();
+                _productsView?.Refresh();
+                target = Products.FirstOrDefault(p => p.Id == productId);
+            }
+
+            if (target != null)
+            {
+                SelectedProduct = target;
+                StatusMessage = $"Ürün seçildi: {target.ProductName} (SKU: {target.SKU})";
+                IsActionSuccessful = true;
+            }
+            else
+            {
+                StatusMessage = $"Aranan ürün bulunamadı (ID: {productId}).";
+                IsActionSuccessful = false;
+            }
+        }
+
+        /// <summary>
         /// Ürün filtreleme mantığı
         /// </summary>
         private void OnStockUpdated(StockUpdatedEvent e)
@@ -253,7 +292,7 @@ namespace KamatekCrm.ViewModels
             _stockUpdateDebounceCts?.Cancel();
             _stockUpdateDebounceCts = new System.Threading.CancellationTokenSource();
             var token = _stockUpdateDebounceCts.Token;
-            _ = DebouncedReloadProductsAsync(token);
+            DebouncedReloadProductsAsync(token).SafeFireAndForget("ProductViewModel.DebouncedReloadProductsAsync");
         }
 
         private async Task DebouncedReloadProductsAsync(System.Threading.CancellationToken token)
@@ -272,9 +311,7 @@ namespace KamatekCrm.ViewModels
                     LoadProducts();
                 }
             }
-            catch (System.OperationCanceledException)
-            {
-            }
+            catch (System.OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProductViewModel.cs"); }
         }
 
         private bool FilterProducts(object obj)
@@ -363,20 +400,23 @@ namespace KamatekCrm.ViewModels
         /// Seçili ürünü sil
         /// </summary>
         [RelayCommand(CanExecute = nameof(IsProductSelected))]
-        private void DeleteProduct()
+        private async Task DeleteProduct()
         {
             if (SelectedProduct == null) return;
 
-            var result = MessageBox.Show($"'{SelectedProduct.ProductName}' ürününü silmek istediğinize emin misiniz?", "Ürün Sil", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (result == MessageBoxResult.Yes)
+            bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
+                $"'{SelectedProduct.ProductName}' ürününü silmek istediğinize emin misiniz?",
+                "Ürün Sil");
+            if (confirmed)
             {
                 try
                 {
-                    var productToDelete = _context.Products.Find(SelectedProduct.Id);
+                    await using var context = await _dbContextFactory.CreateDbContextAsync();
+                    var productToDelete = await context.Products.FindAsync(SelectedProduct.Id);
                     if (productToDelete != null)
                     {
-                        _context.Products.Remove(productToDelete);
-                        _context.SaveChanges();
+                        context.Products.Remove(productToDelete);
+                        await context.SaveChangesAsync();
 
                         RefreshProductList();
                         StatusMessage = "Ürün başarıyla silindi.";
@@ -424,6 +464,8 @@ namespace KamatekCrm.ViewModels
                 int skippedCount = 0;
                 var notFoundCategories = new List<string>();
 
+                using var context = _dbContextFactory.CreateDbContext();
+
                 foreach (var row in rows)
                 {
                     try
@@ -451,22 +493,22 @@ namespace KamatekCrm.ViewModels
                         Category? category = null;
                         if (!string.IsNullOrEmpty(categoryName))
                         {
-                            category = _context.Categories
+                            category = context.Categories
                                 .FirstOrDefault(c => c.Name.ToLower() == categoryName.ToLower());
 
                             if (category == null)
                             {
                                 // Kategori yoksa oluştur
                                 category = new Category { Name = categoryName };
-                                _context.Categories.Add(category);
-                                _context.SaveChanges();
+                                context.Categories.Add(category);
+                                context.SaveChanges();
                                 notFoundCategories.Add(categoryName);
                             }
                         }
 
                         // Mevcut ürün var mı kontrol et (SKU ile)
                         var existingProduct = !string.IsNullOrEmpty(sku)
-                            ? _context.Products.FirstOrDefault(p => p.SKU != null && p.SKU.ToLower() == sku.ToLower())
+                            ? context.Products.FirstOrDefault(p => p.SKU != null && p.SKU.ToLower() == sku.ToLower())
                             : null;
 
                         if (existingProduct != null)
@@ -477,7 +519,7 @@ namespace KamatekCrm.ViewModels
                             existingProduct.SalePrice = salePrice;
                             if (category != null) existingProduct.CategoryId = category.Id;
 
-                            _context.Products.Update(existingProduct);
+                            context.Products.Update(existingProduct);
                             updatedCount++;
                         }
                         else
@@ -495,14 +537,14 @@ namespace KamatekCrm.ViewModels
                                 Currency = "TRY"
                             };
 
-                            _context.Products.Add(newProduct);
-                            _context.SaveChanges(); // Product ID almak için kaydet
+                            context.Products.Add(newProduct);
+                            context.SaveChanges(); // Product ID almak için kaydet
 
                             // Stok miktarı varsa Inventory ve StockTransaction oluştur
                             if (stockQty > 0)
                             {
                                 // Ana Depo'yu bul veya oluştur
-                                var mainWarehouse = _context.Warehouses.FirstOrDefault(w => w.IsActive);
+                                var mainWarehouse = context.Warehouses.FirstOrDefault(w => w.IsActive);
                                 if (mainWarehouse == null)
                                 {
                                     mainWarehouse = new Warehouse
@@ -511,8 +553,8 @@ namespace KamatekCrm.ViewModels
                                         Type = WarehouseType.MainWarehouse,
                                         IsActive = true
                                     };
-                                    _context.Warehouses.Add(mainWarehouse);
-                                    _context.SaveChanges();
+                                    context.Warehouses.Add(mainWarehouse);
+                                    context.SaveChanges();
                                 }
 
                                 // Inventory kaydı oluştur
@@ -522,7 +564,7 @@ namespace KamatekCrm.ViewModels
                                     WarehouseId = mainWarehouse.Id,
                                     Quantity = stockQty
                                 };
-                                _context.Inventories.Add(inventory);
+                                context.Inventories.Add(inventory);
 
                                 // StockTransaction kaydı oluştur
                                 var transaction = new StockTransaction
@@ -535,11 +577,11 @@ namespace KamatekCrm.ViewModels
                                     Date = DateTime.UtcNow,
                                     Description = "Excel Açılış Stoğu"
                                 };
-                                _context.StockTransactions.Add(transaction);
+                                context.StockTransactions.Add(transaction);
 
                                 // Toplam stok güncelle
                                 newProduct.TotalStockQuantity = stockQty;
-                                _context.SaveChanges();
+                                context.SaveChanges();
                             }
 
                             addedCount++;
@@ -551,7 +593,7 @@ namespace KamatekCrm.ViewModels
                     }
                 }
 
-                _context.SaveChanges();
+                context.SaveChanges();
 
                 // Sonuç mesajı
                 var message = $"İçe aktarım tamamlandı.\n\n" +
@@ -564,7 +606,14 @@ namespace KamatekCrm.ViewModels
                     message += $"\n\n📁 Oluşturulan yeni kategoriler:\n{string.Join(", ", notFoundCategories.Distinct())}";
                 }
 
-                MessageBox.Show(message, "İçe Aktarım Sonucu", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (_dialogService != null)
+                {
+                    _dialogService.ShowMessageAsync(message, "İçe Aktarım Sonucu").SafeFireAndForget("ProductViewModel._dialogService.ShowMessageAsync");
+                }
+                else
+                {
+                    _toastService?.ShowSuccess("İçe Aktarım Sonucu", message);
+                }
 
                 StatusMessage = $"{addedCount} ürün eklendi, {updatedCount} ürün güncellendi.";
                 IsActionSuccessful = true;
@@ -576,7 +625,7 @@ namespace KamatekCrm.ViewModels
             {
                 StatusMessage = $"İçe aktarım hatası: {ex.Message}";
                 IsActionSuccessful = false;
-                MessageBox.Show($"Excel okuma hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Excel okuma hatası: {ex.Message}");
             }
         }
 
@@ -606,8 +655,6 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void RefreshProductList()
         {
-            // Context'i yenile
-            _context.ChangeTracker.Clear();
             LoadProducts();
             _productsView?.Refresh();
         }
@@ -641,11 +688,12 @@ namespace KamatekCrm.ViewModels
                 var relativePath = await _imageService.SaveProductImageAsync(dialog.FileName);
 
                 // DB güncelle
-                var dbProduct = _context.Products.Find(SelectedProduct.Id);
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                var dbProduct = await context.Products.FindAsync(SelectedProduct.Id);
                 if (dbProduct != null)
                 {
                     dbProduct.ImagePath = relativePath;
-                    _context.SaveChanges();
+                    await context.SaveChangesAsync();
                 }
 
                 SelectedProduct.ImagePath = relativePath;
@@ -667,28 +715,27 @@ namespace KamatekCrm.ViewModels
         /// Ürün fotoğrafını siler ve ImagePath'i temizler.
         /// </summary>
         [RelayCommand(CanExecute = nameof(HasProductPhoto))]
-        private void DeleteProductPhoto()
+        private async Task DeleteProductPhoto()
         {
             if (SelectedProduct?.ImagePath == null) return;
 
-            var result = MessageBox.Show(
+            bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
                 $"'{SelectedProduct.ProductName}' ürününün fotoğrafını silmek istediğinizden emin misiniz?",
-                "Fotoğrafı Sil",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                "Fotoğrafı Sil");
 
-            if (result != MessageBoxResult.Yes) return;
+            if (!confirmed) return;
 
             try
             {
                 // ProductImageService ile sil (relative path destekli)
                 _imageService.DeleteProductImage(SelectedProduct.ImagePath);
 
-                var dbProduct = _context.Products.Find(SelectedProduct.Id);
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                var dbProduct = await context.Products.FindAsync(SelectedProduct.Id);
                 if (dbProduct != null)
                 {
                     dbProduct.ImagePath = null;
-                    _context.SaveChanges();
+                    await context.SaveChangesAsync();
                 }
 
                 SelectedProduct.ImagePath = null;

@@ -20,7 +20,7 @@ public sealed class ForcedPasswordChangeService : IForcedPasswordChangeService
 
     public Task<bool> RequireChangeAsync(User user)
     {
-        var window = new PasswordResetView(user, _authService, _dbContextFactory)
+        var window = new PasswordResetView(user, _authService, _dbContextFactory, isSelfServiceForcedChange: true)
         {
             Title = "Geçici Parolayı Değiştir"
         };

@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -22,12 +23,18 @@ namespace KamatekCrm.ViewModels
     }
 
     /// <summary>Süreç göstergesindeki tek aşama (Talep → Keşif → Teklif → Montaj → Teslim → Kapandı).</summary>
-    public sealed class WorkOrderStageItem
+    public sealed class WorkOrderStageItem : ObservableObject
     {
         public string Name { get; }
         public string Glyph { get; }
         public int TargetTabIndex { get; }
-        public WorkOrderStageState State { get; set; }
+
+        private WorkOrderStageState _state;
+        public WorkOrderStageState State
+        {
+            get => _state;
+            set => SetProperty(ref _state, value);
+        }
 
         /// <summary>Adıma tıklandığında ilgili sekmeyi açar (shell tarafından bağlanır).</summary>
         public ICommand? NavigateCommand { get; set; }
@@ -78,7 +85,7 @@ namespace KamatekCrm.ViewModels
 
         partial void OnActiveTabIndexChanged(int value)
         {
-            _ = OnTabActivatedAsync(value);
+            OnTabActivatedAsync(value).SafeFireAndForget("WorkOrderWorkspaceViewModel.OnTabActivatedAsync");
         }
 
         private async Task OnTabActivatedAsync(int tabIndex)

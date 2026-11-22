@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.MainContentView"
+﻿<UserControl x:Class="KamatekCrm.Views.MainContentView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
@@ -53,6 +53,11 @@
         <Geometry x:Key="BackIcon">M20,11H7.83L13.42,5.41L12,4L4,12L12,20L13.41,18.59L7.83,13H20V11Z</Geometry>
         <Geometry x:Key="ForwardIcon">M12,4L10.59,5.41L16.17,11H4V13H16.17L10.59,18.59L12,20L20,12L12,4Z</Geometry>
         <Geometry x:Key="PlusIcon">M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z</Geometry>
+        <Geometry x:Key="PhoneCallIcon">M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z</Geometry>
+        <Geometry x:Key="StarAgendaIcon">M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z</Geometry>
+        <Geometry x:Key="ToolsRepairIcon">M13.78,15.3L19.78,21.3L21.89,19.14L15.89,13.14L13.78,15.3M17.5,10.1C17.11,10.1 16.69,10.05 16.36,9.91L4.97,21.25L2.86,19.14L10.27,11.74L8.5,9.96L7.78,10.66L6.33,9.25V12.11L5.63,12.81L2.11,9.25L2.81,8.55H5.62L4.22,7.14L7.78,3.58C8.95,2.41 10.83,2.41 12,3.58L9.89,5.74L11.3,7.14L10.59,7.85L12.38,9.63L14.2,7.75C14.06,7.42 14,7 14,6.63C14,4.66 15.56,3.11 17.5,3.11C18.09,3.11 18.61,3.25 19.08,3.53L16.41,6.2L17.91,7.7L20.58,5.03C20.86,5.5 21,6.04 21,6.63C21,8.55 19.45,10.1 17.5,10.1Z</Geometry>
+        <Geometry x:Key="ShoppingBagIcon">M19,6H17C17,3.24 14.76,1 12,1C9.24,1 7,3.24 7,6H5C3.9,6 3,6.9 3,8V20C3,21.1 3.9,22 5,22H19C20.1,22 21,21.1 21,20V8C21,6.9 20.1,6 19,6M12,3C13.66,3 15,4.34 15,6H9C9,4.34 10.34,3 12,3M19,20H5V8H19V20Z</Geometry>
+        <Geometry x:Key="BugDiagnosticIcon">M14,12H10V10H14M14,16H10V14H14M20,8H17.19C16.74,7.22 16.12,6.55 15.37,6.04L17,4.41L15.59,3L13.42,5.17C12.96,5.06 12.5,5 12,5C11.5,5 11.04,5.06 10.59,5.17L8.41,3L7,4.41L8.62,6.04C7.88,6.55 7.26,7.22 6.81,8H4V10H6.09C6.04,10.33 6,10.66 6,11V12H4V14H6V15C6,15.34 6.04,15.67 6.09,16H4V18H6.81C7.85,19.79 9.78,21 12,21C14.22,21 16.15,19.79 17.19,18H20V16H17.91C17.96,15.67 18,15.34 18,15V14H20V12H18V11C18,10.66 17.96,10.33 17.91,10H20V8Z</Geometry>
 
         <!-- Storyboards -->
         <Storyboard x:Key="FadeIn">
@@ -89,6 +94,10 @@
                                     Background="{DynamicResource ThemePrimary}" CornerRadius="2" Margin="1,0,0,0" Visibility="Collapsed"/>
                         </Grid>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="FontWeight" Value="SemiBold">
+                                <Setter TargetName="activeBar" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
+                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
                             </Trigger>
@@ -237,7 +246,7 @@
 
                         <Border Margin="16,12,16,6" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
-                        <TextBlock Text="CRM &amp; OPERASYON" Style="{StaticResource NavigationSectionHeader}"
+                        <TextBlock Text="CRM &amp; OPERASYON" Style="{DynamicResource NavigationSectionHeader}"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                         
                         <Button Command="{Binding NavigateToCustomersCommand}" ToolTip="Müşteriler">
@@ -269,7 +278,7 @@
                                 </Style>
                             </Button.Style>
                             <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Call24" FontSize="18" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource PhoneCallIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" İletişim &amp; Talepler" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
@@ -286,7 +295,7 @@
                                 </Style>
                             </Button.Style>
                             <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="PersonStar24" FontSize="18" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource StarAgendaIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Yönetici Gündemi" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
@@ -328,7 +337,7 @@
                         <!-- Separator -->
                         <Border Margin="16,12,16,6" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource GlassBorderBrush}"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
-                        <TextBlock Text="SATIŞ &amp; SERVİS" Style="{StaticResource NavigationSectionHeader}"
+                        <TextBlock Text="SATIŞ &amp; SERVİS" Style="{DynamicResource NavigationSectionHeader}"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
                         <Button Command="{Binding NavigateToRepairListCommand}" ToolTip="Tamir Listesi">
@@ -343,7 +352,7 @@
                                 </Style>
                             </Button.Style>
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource WrenchIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource ToolsRepairIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Tamir Listesi" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
@@ -381,7 +390,7 @@
 
                         <Border Margin="16,8,16,4" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
-                        <TextBlock Text="FİNANS &amp; TEDARİK" Style="{StaticResource NavigationSectionHeader}"
+                        <TextBlock Text="FİNANS &amp; TEDARİK" Style="{DynamicResource NavigationSectionHeader}"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
                         <Button Command="{Binding NavigateToFinanceCommand}" ToolTip="Finans"
@@ -432,7 +441,7 @@
                                 </Style>
                             </Button.Style>
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource PackageIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource ShoppingBagIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Satın Alma" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
@@ -449,7 +458,7 @@
                                 </Style>
                             </Button.Style>
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource PackageIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource TruckIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Tedarikçiler" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
@@ -457,7 +466,7 @@
                         <!-- RAPORLAR -->
                         <Border Margin="16,12,16,6" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
-                        <TextBlock Text="RAPORLAR" Style="{StaticResource NavigationSectionHeader}"
+                        <TextBlock Text="RAPORLAR" Style="{DynamicResource NavigationSectionHeader}"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
 
                         <Button Command="{Binding NavigateToFinancialHealthCommand}" ToolTip="Finansal Rapor"
@@ -514,9 +523,24 @@
 
                         <!-- YÖNETİM -->
                         <Border Margin="16,12,16,6" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}"
-                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
-                        <TextBlock Text="YÖNETİM" Style="{StaticResource NavigationSectionHeader}"
-                                   Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}"/>
+                                Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
+                        <TextBlock Text="YÖNETİM"
+                                   TextTrimming="CharacterEllipsis">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource NavigationSectionHeader}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding IsAdmin}" Value="True"/>
+                                                <Condition Binding="{Binding ShowSidebarText}" Value="True"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
 
                         <Button Command="{Binding NavigateToUsersCommand}" ToolTip="Kullanıcılar"
                                 Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
@@ -560,7 +584,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}"/>
                             </Button.Style>
                             <StackPanel Orientation="Horizontal">
-                                <Path Data="{StaticResource WrenchIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
+                                <Path Data="{StaticResource BugDiagnosticIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="18" Height="18" Stretch="Uniform" VerticalAlignment="Center"/>
                                 <TextBlock Text=" Tanılama Merkezi" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Button>
@@ -645,21 +669,21 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Left: Navigation Controls & Breadcrumb -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
                         <!-- History Back -->
                         <Button Command="{Binding GoBackCommand}" Style="{StaticResource GlassIconButton}" ToolTip="Geri (Alt+Sol Arrow)">
                             <Path Data="{StaticResource BackIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="16" Height="16" Stretch="Uniform"/>
                         </Button>
                         
                         <!-- History Forward -->
-                        <Button Command="{Binding GoForwardCommand}" Style="{StaticResource GlassIconButton}" Margin="4,0,12,0" ToolTip="İleri (Alt+Sağ Arrow)">
+                        <Button Command="{Binding GoForwardCommand}" Style="{StaticResource GlassIconButton}" Margin="4,0,10,0" ToolTip="İleri (Alt+Sağ Arrow)">
                             <Path Data="{StaticResource ForwardIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="16" Height="16" Stretch="Uniform"/>
                         </Button>
 
                         <Path Data="{StaticResource HomeIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"/>
                         <TextBlock Text=" / " Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding CurrentViewTitle, TargetNullValue='Çalışma Alanı'}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center"
-                                   TextTrimming="CharacterEllipsis" MaxWidth="320" ToolTip="{Binding CurrentViewTitle}"
+                        <TextBlock Text="{Binding CurrentViewTitle, TargetNullValue='Çalışma Alanı'}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" FontSize="15" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" MaxWidth="220" ToolTip="{Binding CurrentViewTitle}"
                                    AutomationProperties.HeadingLevel="Level2"/>
                     </StackPanel>
 
@@ -668,7 +692,7 @@
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         
                         <!-- Server Connection Status Pill -->
-                        <Border CornerRadius="12" Padding="10,4" Margin="0,0,12,0" Background="{DynamicResource SurfacePageBrush}">
+                        <Border CornerRadius="12" Padding="10,4" Margin="0,0,10,0" Background="{DynamicResource SurfacePageBrush}">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <Ellipse Width="8" Height="8" Margin="0,0,6,0">
                                     <Ellipse.Style>
@@ -700,15 +724,15 @@
                         </Border>
 
                         <!-- Quick Interaction Add Button -->
-                        <ui:Button Command="{Binding OpenQuickInteractionAddCommand}" Content="Görüşme Kaydet" Icon="{ui:SymbolIcon CallAdd24}" ToolTip="Hızlı Görüşme / Talep Kaydı" Margin="0,0,8,0" Height="34" Padding="12,0" Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource TextOnPrimaryBrush}" FontWeight="SemiBold"/>
+                        <ui:Button Command="{Binding OpenQuickInteractionAddCommand}" Content="Görüşme Kaydet" Icon="{ui:SymbolIcon CallAdd24}" ToolTip="Hızlı Görüşme / Talep Kaydı" Margin="0,0,8,0" Height="34" Padding="10,0" Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource TextOnPrimaryBrush}" FontWeight="SemiBold"/>
 
                         <!-- Quick Add Button -->
-                        <Button Command="{Binding OpenQuickAddCommand}" Style="{StaticResource GlassIconButton}" ToolTip="Hızlı Ekle (Ctrl+K)" Margin="0,0,12,0">
+                        <Button Command="{Binding OpenQuickAddCommand}" Style="{StaticResource GlassIconButton}" ToolTip="Hızlı Ekle (Ctrl+K)" Margin="0,0,10,0">
                             <Path Data="{StaticResource PlusIcon}" Fill="{DynamicResource ThemePrimary}" Width="18" Height="18" Stretch="Uniform"/>
                         </Button>
 
                         <!-- Search Box - Spotlight Style -->
-                        <Border x:Name="SearchHost" Width="260" CornerRadius="8" Background="{DynamicResource SurfacePageBrush}" Margin="0,0,12,0" Padding="8,0">
+                        <Border x:Name="SearchHost" Width="210" CornerRadius="8" Background="{DynamicResource SurfacePageBrush}" Margin="0,0,10,0" Padding="8,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -839,7 +863,7 @@
                                 </Button.Template>
                             </Button>
 
-                            <Popup IsOpen="{Binding IsNotificationsOpen}" StaysOpen="False" Placement="Bottom" AllowsTransparency="True">
+                            <Popup IsOpen="{Binding IsNotificationsOpen, Mode=TwoWay}" StaysOpen="False" Placement="Bottom" AllowsTransparency="True">
                                 <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="16" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Width="360" MaxHeight="450" Margin="0,8,0,0">
                                     <Border.Effect>
                                         <DropShadowEffect BlurRadius="24" Opacity="0.3" ShadowDepth="6"/>
@@ -888,7 +912,7 @@
                                         <Border x:Name="profileBg" Background="{DynamicResource SurfacePageBrush}" CornerRadius="20" Padding="4,4,14,4">
                                             <StackPanel Orientation="Horizontal">
                                                 <Border Background="{DynamicResource ThemePrimary}" CornerRadius="16" Width="30" Height="30" Margin="0,0,10,0">
-                                                    <Path Data="{StaticResource UserIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <Path Data="{StaticResource UserIcon}" Fill="{DynamicResource TextOnPrimaryBrush}" Width="14" Height="14" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
                                                 <StackPanel VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding CurrentUserName}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis"/>
@@ -905,7 +929,7 @@
                                 </Button.Template>
                             </Button>
 
-                            <Popup IsOpen="{Binding IsUserProfileOpen}" StaysOpen="False" Placement="Bottom" AllowsTransparency="True">
+                            <Popup IsOpen="{Binding IsUserProfileOpen, Mode=TwoWay}" StaysOpen="False" Placement="Bottom" AllowsTransparency="True">
                                 <Border Padding="16" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="16" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Width="240" Margin="0,8,0,0">
                                     <Border.Effect>
                                         <DropShadowEffect BlurRadius="24" Opacity="0.3" ShadowDepth="6"/>
@@ -914,7 +938,7 @@
                                         <!-- Profile Header -->
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                                             <Border Background="{DynamicResource ThemePrimary}" CornerRadius="20" Width="40" Height="40" Margin="0,0,12,0">
-                                                <Path Data="{StaticResource UserIcon}" Fill="{DynamicResource TextFillColorPrimaryBrush}" Width="20" Height="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <Path Data="{StaticResource UserIcon}" Fill="{DynamicResource TextOnPrimaryBrush}" Width="20" Height="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding CurrentUserName}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" FontWeight="Bold" FontSize="14"/>
@@ -945,7 +969,7 @@
                                         </Button>
 
                                         <Button Command="{Binding NavigateToSettingsCommand}" Style="{StaticResource GlassNavButton}" Margin="0,2"
-                                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVis}}">
+                                                Visibility="{Binding CanAccessSettings, Converter={StaticResource BoolToVis}}">
                                             <StackPanel Orientation="Horizontal">
                                                 <Path Data="{StaticResource SettingsIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"/>
                                                 <TextBlock Text=" Sistem Ayarları" VerticalAlignment="Center" Margin="8,0,0,0" FontSize="12"/>
@@ -955,7 +979,7 @@
                                         <Button Command="{Binding OpenDevCenterCommand}" Style="{StaticResource GlassNavButton}" Margin="0,2"
                                                 Visibility="{Binding IsDevCenterAvailable, Converter={StaticResource BoolToVis}}">
                                             <StackPanel Orientation="Horizontal">
-                                                <Path Data="{StaticResource WrenchIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"/>
+                                                <Path Data="{StaticResource BugDiagnosticIcon}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center"/>
                                                 <TextBlock Text=" Tanılama Merkezi" VerticalAlignment="Center" Margin="8,0,0,0" FontSize="12"/>
                                             </StackPanel>
                                         </Button>

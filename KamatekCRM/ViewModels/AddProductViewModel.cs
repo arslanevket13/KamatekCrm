@@ -13,6 +13,7 @@ using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Models.Specs;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Helpers;
+using KamatekCrm.Shared.Services;
 using KamatekCrm.Events;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,6 +26,8 @@ namespace KamatekCrm.ViewModels
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IProductImageService _imageService;
+        private readonly IDialogService? _dialogService;
+        private readonly IToastService? _toastService;
         private ProductCategoryType _selectedCategory = ProductCategoryType.Other;
         private ProductSpecBase _currentSpecs = new GeneralSpecs();
         private Product _newProduct = new Product();
@@ -36,18 +39,18 @@ namespace KamatekCrm.ViewModels
         private BitmapImage? _selectedImagePreview;
 
         /// <summary>
-        /// Yeni ürün eklemek için constructor
-        /// </summary>
-        /// <summary>
-        /// Yeni ürün eklemek için constructor
-        /// </summary>
-        /// <summary>
         /// DI Constructor
         /// </summary>
-        public AddProductViewModel(IDbContextFactory<AppDbContext> dbContextFactory, IProductImageService? imageService = null)
+        public AddProductViewModel(
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            IProductImageService? imageService = null,
+            IDialogService? dialogService = null,
+            IToastService? toastService = null)
         {
             _dbContextFactory = dbContextFactory;
             _imageService = imageService ?? new ProductImageService();
+            _dialogService = dialogService;
+            _toastService = toastService;
         }
 
         /// <summary>
@@ -455,8 +458,7 @@ namespace KamatekCrm.ViewModels
                     .FirstOrDefaultAsync(p => p.Id != NewProduct.Id && !p.IsDeleted && p.SKU.ToUpper() == normalizedSku);
                 if (existingWithSku != null)
                 {
-                    MessageBox.Show($"Bu Stok Kodu (SKU) başka bir üründe ('{existingWithSku.ProductName}') zaten kayıtlı.\nLütfen farklı bir stok kodu belirleyin veya otomatik üretin.",
-                        "Mükerrer Stok Kodu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    _toastService?.ShowWarning("Mükerrer Stok Kodu", $"Bu Stok Kodu (SKU) başka bir üründe ('{existingWithSku.ProductName}') zaten kayıtlı. Lütfen farklı bir stok kodu belirleyin veya otomatik üretin.");
                     return;
                 }
 
@@ -467,8 +469,7 @@ namespace KamatekCrm.ViewModels
                         .FirstOrDefaultAsync(p => p.Id != NewProduct.Id && !p.IsDeleted && p.Barcode.ToUpper() == normalizedBarcode);
                     if (existingWithBarcode != null)
                     {
-                        MessageBox.Show($"Bu Barkod başka bir üründe ('{existingWithBarcode.ProductName}') zaten kayıtlı.\nLütfen farklı bir barkod giriniz.",
-                            "Mükerrer Barkod", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        _toastService?.ShowWarning("Mükerrer Barkod", $"Bu Barkod başka bir üründe ('{existingWithBarcode.ProductName}') zaten kayıtlı. Lütfen farklı bir barkod giriniz.");
                         return;
                     }
                 }
@@ -487,9 +488,8 @@ namespace KamatekCrm.ViewModels
                     _pendingImagePath = null;
                 }
 
-                // 6. Tek ACID Transaction içinde Ürün ve Stok Hareketi Yönetimi
-                await using var transaction = await context.Database.BeginTransactionAsync();
-                try
+                // 6. Tek ACID Transaction içinde Ürün ve Stok Hareketi Yönetimi (NpgsqlRetryingExecutionStrategy uyumlu)
+                var txOutcome = await context.ExecuteInTransactionAsync(async transaction =>
                 {
                     // Varsayılan depoyu bul veya oluştur
                     var defaultWarehouse = await context.Warehouses.FirstOrDefaultAsync(w => w.IsActive);
@@ -537,13 +537,13 @@ namespace KamatekCrm.ViewModels
 
                             if (stockDelta < 0 && inventory.Quantity + stockDelta < 0)
                             {
-                                MessageBox.Show($"Yetersiz stok! Ana depodaki mevcut stok: {inventory.Quantity}, düşülmek istenen: {Math.Abs(stockDelta)}.",
-                                    "Yetersiz Stok", MessageBoxButton.OK, MessageBoxImage.Warning);
-                                await transaction.RollbackAsync();
-                                return;
+                                if (transaction is not null)
+                                {
+                                    await transaction.RollbackAsync();
+                                }
+                                return (Success: false, Warning: $"Yetersiz stok! Ana depodaki mevcut stok: {inventory.Quantity}, düşülmek istenen: {Math.Abs(stockDelta)}.", StockDelta: 0, WarehouseId: defaultWarehouse.Id);
                             }
 
-                            int oldQty = inventory.Quantity;
                             inventory.Quantity += stockDelta;
 
                             var st = new StockTransaction
@@ -565,16 +565,12 @@ namespace KamatekCrm.ViewModels
 
                         context.Products.Update(NewProduct);
                         await context.SaveChangesAsync();
-                        await transaction.CommitAsync();
-
-                        if (stockDelta != 0)
+                        if (transaction is not null)
                         {
-                            EventAggregator.Instance.Publish(new StockUpdatedEvent(
-                                NewProduct.Id, defaultWarehouse.Id, _originalStock, NewProduct.TotalStockQuantity, "Ürün Düzenleme Stok Düzeltmesi"));
+                            await transaction.CommitAsync();
                         }
 
-                        MessageBox.Show("Ürün başarıyla güncellendi!", "Başarılı",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        return (Success: true, Warning: (string?)null, StockDelta: stockDelta, WarehouseId: defaultWarehouse.Id);
                     }
                     else
                     {
@@ -610,30 +606,59 @@ namespace KamatekCrm.ViewModels
                             await context.SaveChangesAsync();
                         }
 
-                        await transaction.CommitAsync();
-
-                        if (InitialStock > 0)
+                        if (transaction is not null)
                         {
-                            EventAggregator.Instance.Publish(new StockUpdatedEvent(
-                                NewProduct.Id, defaultWarehouse.Id, 0, InitialStock, "Açılış / Devir Stoğu"));
+                            await transaction.CommitAsync();
                         }
 
-                        MessageBox.Show("Ürün başarıyla kaydedildi!", "Başarılı",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        return (Success: true, Warning: (string?)null, StockDelta: InitialStock, WarehouseId: defaultWarehouse.Id);
+                    }
+                });
+
+                if (!txOutcome.Success)
+                {
+                    if (!string.IsNullOrWhiteSpace(txOutcome.Warning))
+                    {
+                        if (_dialogService != null)
+                            await _dialogService.ShowWarningAsync(txOutcome.Warning, "Yetersiz Stok");
+                        else
+                            _toastService?.ShowWarning("Yetersiz Stok", txOutcome.Warning);
+                    }
+                    return;
+                }
+
+                if (_isEditMode)
+                {
+                    if (txOutcome.StockDelta != 0)
+                    {
+                        EventAggregator.Instance.Publish(new StockUpdatedEvent(
+                            NewProduct.Id, txOutcome.WarehouseId, _originalStock, NewProduct.TotalStockQuantity, "Ürün Düzenleme Stok Düzeltmesi"));
                     }
 
-                    RequestClose?.Invoke(true);
+                    if (_toastService != null)
+                        _toastService.ShowSuccess("Başarılı", "Ürün başarıyla güncellendi!");
+                    else if (_dialogService != null)
+                        await _dialogService.ShowMessageAsync("Ürün başarıyla güncellendi!", "Başarılı");
                 }
-                catch
+                else
                 {
-                    await transaction.RollbackAsync();
-                    throw;
+                    if (InitialStock > 0)
+                    {
+                        EventAggregator.Instance.Publish(new StockUpdatedEvent(
+                            NewProduct.Id, txOutcome.WarehouseId, 0, InitialStock, "Açılış / Devir Stoğu"));
+                    }
+
+                    if (_toastService != null)
+                        _toastService.ShowSuccess("Başarılı", "Ürün başarıyla kaydedildi!");
+                    else if (_dialogService != null)
+                        await _dialogService.ShowMessageAsync("Ürün başarıyla kaydedildi!", "Başarılı");
                 }
+
+                RequestClose?.Invoke(true);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Kaydetme hatası: {ex.Message}", "Hata",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Kaydetme hatası: {ex.Message}");
             }
         }
 
@@ -698,8 +723,7 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Açılış stoğu oluşturulurken hata: {ex.Message}", "Uyarı",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService?.ShowWarning("Uyarı", $"Açılış stoğu oluşturulurken hata: {ex.Message}");
             }
         }
 
@@ -768,8 +792,7 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Stok düzeltme hatası: {ex.Message}", "Uyarı",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService?.ShowWarning("Uyarı", $"Stok düzeltme hatası: {ex.Message}");
             }
         }
 
@@ -803,7 +826,7 @@ namespace KamatekCrm.ViewModels
                     SelectedImagePreview = bitmap;
                     OnPropertyChanged(nameof(HasImage));
                 }
-                catch { /* Önizleme yüklenemezse sessizce atla */ }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "AddProductViewModel.cs"); }
             }
         }
 
@@ -845,7 +868,7 @@ namespace KamatekCrm.ViewModels
                     OnPropertyChanged(nameof(HasImage));
                 }
             }
-            catch { /* Resim yüklenemezse sessizce atla */ }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "AddProductViewModel.cs"); }
         }
 
         #endregion

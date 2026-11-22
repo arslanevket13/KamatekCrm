@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.QuoteListView"
+﻿<UserControl x:Class="KamatekCrm.Views.QuoteListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
@@ -63,7 +63,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Toplam -->
-            <Border Grid.Column="0" Style="{StaticResource CardPanel}" Padding="12,8" Cursor="Hand">
+            <Border Grid.Column="0" Style="{DynamicResource CardPanel}" Padding="12,8" Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding FilterAllCommand}"/>
                 </Border.InputBindings>
@@ -84,7 +84,7 @@
             </Border>
 
             <!-- Taslak -->
-            <Border Grid.Column="2" Style="{StaticResource CardPanel}" Padding="12,8" Cursor="Hand">
+            <Border Grid.Column="2" Style="{DynamicResource CardPanel}" Padding="12,8" Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding FilterDraftCommand}"/>
                 </Border.InputBindings>
@@ -105,7 +105,7 @@
             </Border>
 
             <!-- Gönderildi -->
-            <Border Grid.Column="4" Style="{StaticResource CardPanel}" Padding="12,8" Cursor="Hand">
+            <Border Grid.Column="4" Style="{DynamicResource CardPanel}" Padding="12,8" Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding FilterSentCommand}"/>
                 </Border.InputBindings>
@@ -128,7 +128,7 @@
             </Border>
 
             <!-- Onaylandı -->
-            <Border Grid.Column="6" Style="{StaticResource CardPanel}" Padding="12,8" Cursor="Hand">
+            <Border Grid.Column="6" Style="{DynamicResource CardPanel}" Padding="12,8" Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding FilterApprovedCommand}"/>
                 </Border.InputBindings>
@@ -151,7 +151,7 @@
             </Border>
 
             <!-- Reddedildi -->
-            <Border Grid.Column="8" Style="{StaticResource CardPanel}" Padding="12,8" Cursor="Hand">
+            <Border Grid.Column="8" Style="{DynamicResource CardPanel}" Padding="12,8" Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding MouseAction="LeftClick" Command="{Binding FilterRejectedCommand}"/>
                 </Border.InputBindings>
@@ -173,7 +173,7 @@
         </Grid>
 
         <!-- ═══════════════ ROW 2: FILTER TOOLBAR ═══════════════ -->
-        <Border Grid.Row="2" Style="{StaticResource FilterToolbarCard}">
+        <Border Grid.Row="2" Style="{DynamicResource FilterToolbarCard}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -212,7 +212,7 @@
         </Border>
 
         <!-- ═══════════════ ROW 3: DATA GRID ═══════════════ -->
-        <Border Grid.Row="3" Style="{StaticResource CardPanel}" Padding="0" Margin="0,16,0,0">
+        <Border Grid.Row="3" Style="{DynamicResource CardPanel}" Padding="0" Margin="0,16,0,0">
             <Grid Margin="16">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -223,7 +223,7 @@
                           ItemsSource="{Binding QuotesView}"
                           SelectedItem="{Binding SelectedQuote}"
                           Style="{StaticResource AccessibleDataGrid}"
-                          ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                          ColumnHeaderStyle="{DynamicResource ModernDataGridColumnHeader}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           CanUserDeleteRows="False"
@@ -359,16 +359,11 @@
                                          Message="Henüz teklif oluşturulmamış veya seçili filtrelerle eşleşen teklif yok."
                                          AutomationProperties.Name="Teklif listesi boş"
                                          Visibility="{Binding HasItems, ElementName=QuotesDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
-
-                <!-- Durum Mesajı -->
-                <TextBlock Grid.Row="1" Text="{Binding StatusMessage}" FontSize="11"
-                           Foreground="{DynamicResource ThemeTextSecondary}"
-                           Margin="0,8,0,0"/>
             </Grid>
         </Border>
 
         <!-- ═══════════════ ROW 4: FOOTER ACTIONS ═══════════════ -->
-        <Border Grid.Row="4" Style="{StaticResource CardPanel}" Padding="12,8" Margin="0,16,0,0">
+        <Border Grid.Row="4" Style="{DynamicResource CardPanel}" Padding="12,8" Margin="0,16,0,0">
             <DockPanel>
                 <!-- Sağ taraftaki butonlar -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">

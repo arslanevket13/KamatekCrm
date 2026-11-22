@@ -9,7 +9,7 @@ namespace KamatekCrm.Views
             InitializeComponent();
             viewModel.RequestClose += success =>
             {
-                try { DialogResult = success; } catch { }
+                try { DialogResult = success; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "QuickCustomerAddWindow.xaml.cs"); }
                 Close();
             };
             DataContext = viewModel;
@@ -25,7 +25,7 @@ namespace KamatekCrm.Views
                 var vm = new KamatekCrm.ViewModels.QuickCustomerAddViewModel(dbContextFactory);
                 vm.RequestClose += success =>
                 {
-                    try { DialogResult = success; } catch { }
+                    try { DialogResult = success; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "QuickCustomerAddWindow.xaml.cs"); }
                     Close();
                 };
                 DataContext = vm;

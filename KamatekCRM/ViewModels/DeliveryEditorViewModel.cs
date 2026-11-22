@@ -49,11 +49,11 @@ namespace KamatekCrm.ViewModels
             < 0 => $"{Variance:G29} (Eksik)",
             _ => "Tam (0)"
         };
-        public string StatusColor => Variance switch
+        public System.Windows.Media.Brush StatusColor => Variance switch
         {
-            > 0 => "#D32F2F",
-            < 0 => "#F57C00",
-            _ => "#388E3C"
+            > 0 => ThemeService.ResolveBrush("StatusErrorFg"),
+            < 0 => ThemeService.ResolveBrush("StatusWarningFg"),
+            _ => ThemeService.ResolveBrush("StatusSuccessFg")
         };
 
         public MaterialVarianceRow(string productName, decimal planned, decimal actual)

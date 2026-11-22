@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -52,12 +53,12 @@ public partial class PurchaseReturnViewModel : ViewModelBase
         _readService = readService;
         _toast = toast;
         _dialogs = dialogs;
-        _ = LoadOrdersAsync();
+        LoadOrdersAsync().SafeFireAndForget("PurchaseReturnViewModel.LoadOrdersAsync");
     }
 
     partial void OnSelectedOrderChanged(PurchaseHistoryDto? value)
     {
-        if (value is not null) _ = LoadReturnableAsync(value.PurchaseOrderId);
+        if (value is not null) LoadReturnableAsync(value.PurchaseOrderId).SafeFireAndForget("PurchaseReturnViewModel.LoadReturnableAsync");
     }
 
     [RelayCommand]

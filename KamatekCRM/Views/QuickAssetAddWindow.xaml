@@ -1,4 +1,4 @@
-<Window x:Class="KamatekCrm.Views.QuickAssetAddWindow"
+﻿<Window x:Class="KamatekCrm.Views.QuickAssetAddWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="➕ Hızlı Cihaz Kaydı"
@@ -63,21 +63,21 @@
                     <TextBlock Text="Model *" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
                     <TextBox x:Name="ModelBox" 
                              Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource ModernTextBox}"
+                             Style="{DynamicResource ModernTextBox}"
                              Height="40" Margin="0,0,0,16"/>
 
                     <!-- Seri No -->
                     <TextBlock Text="Seri Numarası" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
                     <TextBox x:Name="SerialBox" 
                              Text="{Binding SerialNumber, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource ModernTextBox}"
+                             Style="{DynamicResource ModernTextBox}"
                              Height="40" Margin="0,0,0,16"/>
 
                     <!-- Konum -->
                     <TextBlock Text="Konum (Örn: Giriş Kapısı)" FontWeight="SemiBold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,8"/>
                     <TextBox x:Name="LocationBox" 
                              Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"
-                             Style="{StaticResource ModernTextBox}"
+                             Style="{DynamicResource ModernTextBox}"
                              Height="40"/>
                 </StackPanel>
             </Border>
@@ -92,7 +92,7 @@
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0" Content="İptal"
-                    Style="{StaticResource SecondaryButton}"
+                    Style="{DynamicResource SecondaryButton}"
                     Height="44"
                     Command="{Binding CancelCommand}"/>
 

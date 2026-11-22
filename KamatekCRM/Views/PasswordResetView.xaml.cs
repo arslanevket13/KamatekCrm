@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using System.Windows;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;
@@ -11,61 +13,42 @@ namespace KamatekCrm.Views
     public partial class PasswordResetView : Window
     {
         public PasswordResetView(User user)
+            : this(
+                user,
+                Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IAuthService>(App.ServiceProvider!),
+                Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>>(App.ServiceProvider!),
+                isSelfServiceForcedChange: false)
         {
-            InitializeComponent();
-            var authService = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IAuthService>(App.ServiceProvider!);
-            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>>(App.ServiceProvider!);
-
-            var viewModel = new PasswordResetViewModel(user, authService, dbContextFactory);
-            viewModel.SaveSuccessful += () =>
-            {
-                try { DialogResult = true; } catch { }
-                Close();
-            };
-            
-            viewModel.CancelRequested += () =>
-            {
-                try { DialogResult = false; } catch { }
-                Close();
-            };
-
-            DataContext = viewModel;
         }
 
-        public PasswordResetView(User user, IAuthService authService, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory)
+        public PasswordResetView(
+            User user,
+            IAuthService authService,
+            Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory,
+            bool isSelfServiceForcedChange = false)
         {
             InitializeComponent();
 
-            var viewModel = new PasswordResetViewModel(user, authService, dbContextFactory);
-            viewModel.SaveSuccessful += () =>
-            {
-                try { DialogResult = true; } catch { }
-                Close();
-            };
-            
-            viewModel.CancelRequested += () =>
-            {
-                try { DialogResult = false; } catch { }
-                Close();
-            };
+            var viewModel = new PasswordResetViewModel(user, authService, dbContextFactory, isSelfServiceForcedChange);
+            viewModel.SaveSuccessful += () => CloseWithResult(true);
+            viewModel.CancelRequested += () => CloseWithResult(false);
 
             DataContext = viewModel;
+            Loaded += (_, _) => NewPasswordBox?.Focus();
         }
 
-        private void NewPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        private void CloseWithResult(bool result)
         {
-            if (DataContext is PasswordResetViewModel vm)
+            try
             {
-                vm.NewPassword = NewPasswordBox.Password;
+                DialogResult = result;
             }
-        }
+            catch (InvalidOperationException ex)
+            {
+                Debug.WriteLine($"PasswordResetView DialogResult atanamadı: {ex.Message}");
+            }
 
-        private void ConfirmPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is PasswordResetViewModel vm)
-            {
-                vm.ConfirmPassword = ConfirmPasswordBox.Password;
-            }
+            Close();
         }
 
         public override void OnApplyTemplate()

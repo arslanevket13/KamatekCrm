@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.Generic; // List i�in gerekli
 using System.Collections.ObjectModel;
@@ -86,7 +87,7 @@ namespace KamatekCrm.ViewModels
                     _searchCts?.Cancel();
                     _searchCts = new System.Threading.CancellationTokenSource();
                     var token = _searchCts.Token;
-                    _ = DebouncedSearchAsync(token);
+                    DebouncedSearchAsync(token).SafeFireAndForget("CustomersViewModel.DebouncedSearchAsync");
                 }
             }
         }
@@ -102,9 +103,7 @@ namespace KamatekCrm.ViewModels
                     await RefreshDataAsync();
                 }
             }
-            catch (System.OperationCanceledException)
-            {
-            }
+            catch (System.OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "CustomersViewModel.cs"); }
         }
 
         public CustomerType? SelectedTypeFilter
@@ -115,7 +114,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedTypeFilter, value))
                 {
                     CurrentPage = 1;
-                    _ = RefreshDataAsync();
+                    RefreshDataAsync().SafeFireAndForget("CustomersViewModel.RefreshDataAsync");
                 }
             }
         }
@@ -398,7 +397,9 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
         private readonly ICustomerAppService _customerAppService;
+        private readonly ICustomerReadService _customerReadService;
         private readonly IQuotationLauncher _quotationLauncher;
+        private readonly KamatekCrm.Shared.Services.IDialogService _dialogService;
 
         public CustomersViewModel(
             NavigationService navigationService,
@@ -406,14 +407,18 @@ namespace KamatekCrm.ViewModels
             IToastService toastService,
             ILoadingService loadingService,
             ICustomerAppService customerAppService,
-            IQuotationLauncher quotationLauncher)
+            ICustomerReadService customerReadService,
+            IQuotationLauncher quotationLauncher,
+            KamatekCrm.Shared.Services.IDialogService dialogService)
         {
             _navigationService = navigationService;
             _logger = logger;
             _toastService = toastService;
             _loadingService = loadingService;
             _customerAppService = customerAppService;
+            _customerReadService = customerReadService;
             _quotationLauncher = quotationLauncher;
+            _dialogService = dialogService;
             Customers = new ObservableCollection<Customer>();
             Cities = new ObservableCollection<City>();
             Districts = new ObservableCollection<District>();
@@ -424,7 +429,7 @@ namespace KamatekCrm.ViewModels
             _logger.LogInformation("CustomersViewModel initialized");
 
             LoadCities();
-            _ = RefreshDataAsync();
+            RefreshDataAsync().SafeFireAndForget("CustomersViewModel.RefreshDataAsync");
         }
 
         protected override async Task RefreshDataAsync()
@@ -433,31 +438,24 @@ namespace KamatekCrm.ViewModels
             {
                 _loadingService.Show("Müşteriler yükleniyor...");
 
-                var result = string.IsNullOrWhiteSpace(SearchText) 
-                    ? await _customerAppService.GetAllAsync()
-                    : await _customerAppService.SearchAsync(SearchText);
+                var result = await _customerReadService.GetPagedAsync(
+                    SearchText,
+                    SelectedTypeFilter,
+                    CurrentPage,
+                    PageSize);
 
                 if (result.IsSuccess && result.Value != null)
                 {
-                    var items = result.Value;
-                    if (SelectedTypeFilter.HasValue)
-                    {
-                        items = items.Where(c => c.Type == SelectedTypeFilter.Value).ToList();
-                    }
+                    var pageData = result.Value;
 
-                    TotalCustomers = items.Count;
-                    IndividualCount = items.Count(c => c.Type == CustomerType.Individual);
-                    CorporateCount = items.Count(c => c.Type == CustomerType.Corporate);
-                    WalkInCount = items.Count(c => c.Type == CustomerType.WalkIn);
-                    TotalCount = items.Count;
-
-                    var pagedItems = items
-                        .OrderByDescending(c => c.Id)
-                        .Skip((CurrentPage - 1) * PageSize)
-                        .Take(PageSize);
+                    TotalCustomers = pageData.TotalCustomers;
+                    IndividualCount = pageData.IndividualCount;
+                    CorporateCount = pageData.CorporateCount;
+                    WalkInCount = pageData.WalkInCount;
+                    TotalCount = pageData.FilteredCount;
 
                     Customers.Clear();
-                    foreach (var item in pagedItems)
+                    foreach (var item in pageData.Items)
                     {
                         Customers.Add(new Customer
                         {
@@ -475,8 +473,6 @@ namespace KamatekCrm.ViewModels
                             CreatedDate = item.CreatedDate
                         });
                     }
-
-                    _toastService.ShowSuccess("Müşteri verileri güncellendi.");
                 }
                 else
                 {
@@ -544,7 +540,7 @@ namespace KamatekCrm.ViewModels
 
                 if (res.IsSuccess)
                 {
-                    _ = RefreshDataAsync();
+                    RefreshDataAsync().SafeFireAndForget("CustomersViewModel.RefreshDataAsync");
                     ClearForm();
                     _toastService.ShowSuccess("Müşteri başarıyla kaydedildi!");
                 }
@@ -579,10 +575,11 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            var result = MessageBox.Show($"{customer.FullName} adlı müşteriyi silmek / arşive almak istediğinize emin misiniz?",
-                "Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                $"{customer.FullName} adlı müşteriyi silmek / arşive almak istediğinize emin misiniz?",
+                "Silme Onayı");
 
-            if (result == MessageBoxResult.Yes)
+            if (confirmed)
             {
                 try
                 {
@@ -725,7 +722,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (success)
                 {
-                    _ = RefreshDataAsync();
+                    RefreshDataAsync().SafeFireAndForget("CustomersViewModel.RefreshDataAsync");
                 }
             };
             

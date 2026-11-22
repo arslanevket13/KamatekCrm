@@ -45,13 +45,9 @@ namespace KamatekCrm.Views
             catch (Exception ex)
             {
                 LoadingOverlay.Visibility = Visibility.Collapsed;
-                MessageBox.Show(
-                    $"Harita bileşeni yüklenemedi: {ex.Message}\n\n" +
-                    "Lütfen 'Microsoft Edge WebView2 Runtime' yüklü olduğundan emin olun.\n" +
-                    "İndirmek için: https://developer.microsoft.com/en-us/microsoft-edge/webview2/",
+                (App.ServiceProvider?.GetService(typeof(Services.IToastService)) as Services.IToastService)?.ShowWarning(
                     "WebView2 Hatası",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    $"Harita bileşeni yüklenemedi: {ex.Message}. Lütfen Microsoft Edge WebView2 Runtime yüklü olduğundan emin olun.");
             }
         }
 

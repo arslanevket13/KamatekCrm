@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -78,12 +79,12 @@ public partial class SalesReturnViewModel : ViewModelBase
         _toast = toast;
         _dialogs = dialogs;
         Refunds.Add(CreateRefundEntry());
-        _ = SearchAsync();
+        SearchAsync().SafeFireAndForget("SalesReturnViewModel.SearchAsync");
     }
 
     partial void OnSelectedSaleChanged(SaleSummaryDto? value)
     {
-        if (value is not null) _ = LoadSelectedSaleAsync(value.SalesOrderId);
+        if (value is not null) LoadSelectedSaleAsync(value.SalesOrderId).SafeFireAndForget("SalesReturnViewModel.LoadSelectedSaleAsync");
     }
 
     [RelayCommand]

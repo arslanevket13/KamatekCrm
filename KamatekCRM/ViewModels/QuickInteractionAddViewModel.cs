@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace KamatekCrm.ViewModels
         /// Parent ViewModel listeyi yenilemek için dinler.
         /// </summary>
         public event Action? OnSaved;
+        public event Action<CustomerInteractionDto>? OnSavedAndRequestTask;
         private readonly ICustomerInteractionCommandService _commandService;
         private readonly ICustomerInteractionReadService _readService;
         private readonly IToastService _toastService;
@@ -36,7 +38,7 @@ namespace KamatekCrm.ViewModels
         private InteractionRequestType _selectedRequestType = InteractionRequestType.PriceQuote;
         private InteractionPriority _selectedPriority = InteractionPriority.Normal;
         private bool _requiresFollowUp;
-        private DateTime? _followUpDate = DateTime.Now.AddDays(1);
+        private DateTime? _followUpDate;
         private bool _requiresManagerAttention;
         private string _managerNotes = string.Empty;
 
@@ -61,8 +63,8 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _callerPhone, value))
                 {
-                    _ = SearchPhoneDebouncedAsync(value);
-                    SaveCommand.NotifyCanExecuteChanged();
+                    SearchPhoneDebouncedAsync(value).SafeFireAndForget("QuickInteractionAddViewModel.SearchPhoneDebouncedAsync");
+                    NotifySaveCommandsCanExecute();
                 }
             }
         }
@@ -73,7 +75,7 @@ namespace KamatekCrm.ViewModels
             set
             {
                 if (SetProperty(ref _callerName, value))
-                    SaveCommand.NotifyCanExecuteChanged();
+                    NotifySaveCommandsCanExecute();
             }
         }
 
@@ -83,7 +85,7 @@ namespace KamatekCrm.ViewModels
             set
             {
                 if (SetProperty(ref _subject, value))
-                    SaveCommand.NotifyCanExecuteChanged();
+                    NotifySaveCommandsCanExecute();
             }
         }
 
@@ -93,7 +95,7 @@ namespace KamatekCrm.ViewModels
             set
             {
                 if (SetProperty(ref _summary, value))
-                    SaveCommand.NotifyCanExecuteChanged();
+                    NotifySaveCommandsCanExecute();
             }
         }
 
@@ -124,13 +126,38 @@ namespace KamatekCrm.ViewModels
         public bool RequiresFollowUp
         {
             get => _requiresFollowUp;
-            set => SetProperty(ref _requiresFollowUp, value);
+            set
+            {
+                if (SetProperty(ref _requiresFollowUp, value))
+                {
+                    if (value && !FollowUpDate.HasValue)
+                    {
+                        FollowUpDate = DateTime.Now.AddDays(1);
+                    }
+                    else if (!value)
+                    {
+                        FollowUpDate = null;
+                    }
+                }
+            }
         }
 
         public DateTime? FollowUpDate
         {
             get => _followUpDate;
-            set => SetProperty(ref _followUpDate, value);
+            set
+            {
+                if (SetProperty(ref _followUpDate, value) && value.HasValue && !_requiresFollowUp)
+                {
+                    RequiresFollowUp = true;
+                }
+            }
+        }
+
+        private void NotifySaveCommandsCanExecute()
+        {
+            SaveCommand.NotifyCanExecuteChanged();
+            SaveAndCreateTaskCommand.NotifyCanExecuteChanged();
         }
 
         public bool RequiresManagerAttention
@@ -173,8 +200,8 @@ namespace KamatekCrm.ViewModels
             _toastService = toastService;
             _loadingService = loadingService;
 
-            _ = LoadUsersAsync();
-            _ = CheckDraftAsync();
+            LoadUsersAsync().SafeFireAndForget("QuickInteractionAddViewModel.LoadUsersAsync");
+            CheckDraftAsync().SafeFireAndForget("QuickInteractionAddViewModel.CheckDraftAsync");
         }
 
         private async Task LoadUsersAsync()
@@ -191,7 +218,7 @@ namespace KamatekCrm.ViewModels
                     }
                 }
             }
-            catch { }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "QuickInteractionAddViewModel.cs"); }
         }
 
         private async Task SearchPhoneDebouncedAsync(string phone)
@@ -218,7 +245,7 @@ namespace KamatekCrm.ViewModels
                     }
                 }
             }
-            catch { }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "QuickInteractionAddViewModel.cs"); }
         }
 
         [RelayCommand]
@@ -270,11 +297,26 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task SaveAsync(Window? window)
         {
+            await SaveCoreAsync(window, createTaskAfterSave: false);
+        }
+
+        [RelayCommand(CanExecute = nameof(CanSave))]
+        private async Task SaveAndCreateTaskAsync(Window? window)
+        {
+            if (!RequiresFollowUp)
+            {
+                RequiresFollowUp = true;
+            }
+            await SaveCoreAsync(window, createTaskAfterSave: true);
+        }
+
+        private async Task SaveCoreAsync(Window? window, bool createTaskAfterSave)
+        {
             _loadingService.Show();
             try
             {
                 DateTime? followUpUtc = null;
-                if (RequiresFollowUp || FollowUpDate.HasValue)
+                if (RequiresFollowUp)
                 {
                     var d = FollowUpDate ?? DateTime.Now.AddDays(1);
                     followUpUtc = d.Kind switch
@@ -300,7 +342,7 @@ namespace KamatekCrm.ViewModels
                     Priority = SelectedPriority,
                     AssignedToUserId = SelectedUser?.Id,
                     AssignedToUsername = SelectedUser?.AdSoyad,
-                    RequiresFollowUp = RequiresFollowUp || FollowUpDate.HasValue,
+                    RequiresFollowUp = RequiresFollowUp,
                     FollowUpDate = followUpUtc,
                     RequiresManagerAttention = RequiresManagerAttention,
                     ManagerNotes = ManagerNotes?.Trim()
@@ -309,14 +351,19 @@ namespace KamatekCrm.ViewModels
                 var res = await _commandService.CreateAsync(dto);
                 if (res.IsSuccess && res.Value != null)
                 {
-                    _toastService.ShowSuccess("Başarılı", $"{res.Value.InteractionNumber} numaralı görüşme kaydı oluşturuldu.");
+                    var created = res.Value;
+                    _toastService.ShowSuccess(
+                        "Başarılı",
+                        createTaskAfterSave
+                            ? $"{created.InteractionNumber} kaydedildi; görev oluşturma penceresi açılıyor."
+                            : $"{created.InteractionNumber} numaralı görüşme kaydı oluşturuldu.");
                     await _commandService.ClearDraftAsync();
 
                     // Diğer açık ViewModel'leri senkronize et
                     EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
-                        res.Value.Id,
-                        res.Value.InteractionNumber,
-                        res.Value.CustomerId,
+                        created.Id,
+                        created.InteractionNumber,
+                        created.CustomerId,
                         InteractionChangeType.Created));
 
                     if (window != null)
@@ -327,7 +374,14 @@ namespace KamatekCrm.ViewModels
                     {
                         // Inline kullanım: formu sıfırla ve parent'ı bilgilendir
                         ResetForm();
-                        OnSaved?.Invoke();
+                        if (createTaskAfterSave)
+                        {
+                            OnSavedAndRequestTask?.Invoke(created);
+                        }
+                        else
+                        {
+                            OnSaved?.Invoke();
+                        }
                     }
                 }
                 else
@@ -363,7 +417,7 @@ namespace KamatekCrm.ViewModels
                     }
                 }
             }
-            catch { }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "QuickInteractionAddViewModel.cs"); }
         }
 
         /// <summary>
@@ -381,7 +435,7 @@ namespace KamatekCrm.ViewModels
             SelectedRequestType = InteractionRequestType.PriceQuote;
             SelectedPriority = InteractionPriority.Normal;
             RequiresFollowUp = false;
-            FollowUpDate = DateTime.Now.AddDays(1);
+            FollowUpDate = null;
             RequiresManagerAttention = false;
             ManagerNotes = string.Empty;
             SelectedUser = null;
@@ -389,7 +443,7 @@ namespace KamatekCrm.ViewModels
             _selectedCustomerId = null;
             _selectedCustomerName = string.Empty;
             PhoneMatches.Clear();
-            SaveCommand.NotifyCanExecuteChanged();
+            NotifySaveCommandsCanExecute();
         }
     }
 }

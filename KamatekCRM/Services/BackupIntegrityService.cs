@@ -162,7 +162,7 @@ public sealed class BackupIntegrityService : IBackupIntegrityService
                     var stderrTask = process.StandardError.ReadToEndAsync();
                     if (!process.WaitForExit(15000))
                     {
-                        try { process.Kill(entireProcessTree: true); } catch { }
+                        try { process.Kill(entireProcessTree: true); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "BackupIntegrityService.cs"); }
                         return BackupValidationResult.Invalid("pg_restore --list doğrulama işlemi zaman aşımına uğradı.");
                     }
 

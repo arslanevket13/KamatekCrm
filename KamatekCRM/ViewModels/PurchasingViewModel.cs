@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -103,6 +104,7 @@ namespace KamatekCrm.ViewModels
         private readonly PurchaseReturnViewModel _purchaseReturnViewModel;
         private readonly IToastService _toastService;
         private Guid _purchaseAttemptId = Guid.NewGuid();
+        private bool _isEditingExistingItem;
 
         public PurchasingViewModel(
             IPurchasingCommandService purchasingCommands,
@@ -116,7 +118,7 @@ namespace KamatekCrm.ViewModels
             _toastService = toastService;
 
             OrderItems = new ObservableCollection<PurchasingLineItem>();
-            OrderItems.CollectionChanged += (s, e) => OnPropertyChanged(nameof(GrandTotal));
+            OrderItems.CollectionChanged += OnOrderItemsCollectionChanged;
 
             SidebarItem = new PurchasingLineItem();
             SidebarSearchResults = new ObservableCollection<PurchaseProductLookupDto>();
@@ -125,7 +127,7 @@ namespace KamatekCrm.ViewModels
 
             
                 // Init
-            _ = InitializeAsync();
+            InitializeAsync().SafeFireAndForget("PurchasingViewModel.InitializeAsync");
         }
 
         #region Properties
@@ -260,7 +262,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _isHistoryOpen, value) && value)
                 {
-                    _ = LoadHistoryAsync();
+                    LoadHistoryAsync().SafeFireAndForget("PurchasingViewModel.LoadHistoryAsync");
                 }
             }
         }
@@ -312,8 +314,42 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        private void OnOrderItemsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null)
+            {
+                foreach (var oldItem in e.OldItems.OfType<PurchasingLineItem>())
+                {
+                    oldItem.PropertyChanged -= OnLineItemPropertyChanged;
+                }
+            }
+
+            if (e.NewItems != null)
+            {
+                foreach (var newItem in e.NewItems.OfType<PurchasingLineItem>())
+                {
+                    newItem.PropertyChanged -= OnLineItemPropertyChanged;
+                    newItem.PropertyChanged += OnLineItemPropertyChanged;
+                }
+            }
+
+            OnPropertyChanged(nameof(GrandTotal));
+        }
+
+        private void OnLineItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is nameof(PurchasingLineItem.LineTotal)
+                or nameof(PurchasingLineItem.Quantity)
+                or nameof(PurchasingLineItem.UnitPrice)
+                or nameof(PurchasingLineItem.VatRate))
+            {
+                OnPropertyChanged(nameof(GrandTotal));
+            }
+        }
+
         private void ResetSidebar()
         {
+            _isEditingExistingItem = false;
             SidebarSearchQuery = "";
             SidebarSearchResults?.Clear();
             IsShowingSearchResults = false;
@@ -325,6 +361,7 @@ namespace KamatekCrm.ViewModels
         {
             if (item != null)
             {
+                _isEditingExistingItem = true;
                 SidebarItem = item;
                 IsSidebarOpen = true;
             }
@@ -422,9 +459,9 @@ namespace KamatekCrm.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
                 {
-                    SidebarSearchResults.Clear();
+                    SidebarSearchResults?.Clear();
                     IsShowingSearchResults = false;
-                    SidebarItem.IsNewProduct = true;
+                    if (SidebarItem != null) SidebarItem.IsNewProduct = true;
                     return;
                 }
 
@@ -435,10 +472,7 @@ namespace KamatekCrm.ViewModels
                 SidebarSearchResults = new ObservableCollection<PurchaseProductLookupDto>(result.Value);
                 IsShowingSearchResults = result.Value.Any();
             }
-            catch (TaskCanceledException)
-            {
-                // Ignored
-            }
+            catch (TaskCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "PurchasingViewModel.cs"); }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Search error: {ex.Message}");
@@ -467,6 +501,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void CreateNewProduct()
         {
+            if (SidebarItem == null) return;
             SidebarItem.IsNewProduct = true;
             IsShowingSearchResults = false;
             SidebarItem.ProductName = SidebarSearchQuery;
@@ -488,7 +523,11 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            OrderItems.Add(SidebarItem);
+            SidebarItem.UpdateTotal();
+            if (!_isEditingExistingItem && !OrderItems.Contains(SidebarItem))
+            {
+                OrderItems.Add(SidebarItem);
+            }
             OnPropertyChanged(nameof(GrandTotal));
             ResetSidebar();
             IsSidebarOpen = false;

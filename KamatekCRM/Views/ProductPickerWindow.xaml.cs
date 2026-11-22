@@ -30,7 +30,8 @@ namespace KamatekCrm.Views
             KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
 
             _search = search ?? throw new ArgumentNullException(nameof(search));
-            ResultsGrid.ItemsSource = Results;
+            ResultsGrid.ItemsSource = Results;
+            Loaded += (_, _) => SearchBox.Focus();
 
             _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(350) };
             _debounceTimer.Tick += async (_, _) =>
@@ -78,6 +79,20 @@ namespace KamatekCrm.Views
             }
         }
 
+        private void ResultsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            AddButton.IsEnabled = ResultsGrid.SelectedItem is not null;
+        }
+
+        private void ResultsGrid_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && ResultsGrid.SelectedItem is QuotationProductLookupDto product)
+            {
+                e.Handled = true;
+                Confirm(product);
+            }
+        }
+
         private void ResultsGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (ResultsGrid.SelectedItem is QuotationProductLookupDto product)
@@ -96,16 +111,16 @@ namespace KamatekCrm.Views
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            try { System.Windows.Input.Keyboard.ClearFocus(); } catch { }
-            try { DialogResult = false; } catch { }
+            try { System.Windows.Input.Keyboard.ClearFocus(); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProductPickerWindow.xaml.cs"); }
+            try { DialogResult = false; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProductPickerWindow.xaml.cs"); }
             Close();
         }
 
         private void Confirm(QuotationProductLookupDto product)
         {
-            try { System.Windows.Input.Keyboard.ClearFocus(); } catch { }
+            try { System.Windows.Input.Keyboard.ClearFocus(); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProductPickerWindow.xaml.cs"); }
             SelectedProduct = product;
-            try { DialogResult = true; } catch { }
+            try { DialogResult = true; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProductPickerWindow.xaml.cs"); }
             Close();
         }
     }

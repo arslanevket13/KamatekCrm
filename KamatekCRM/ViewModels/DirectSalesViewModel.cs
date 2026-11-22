@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -34,6 +35,8 @@ namespace KamatekCrm.ViewModels
         private readonly IThermalReceiptPrintService _thermalPrintService;
         private readonly IPersonalDataProtectionService _personalDataProtection;
         private readonly SalesReturnViewModel _salesReturnViewModel;
+        private readonly IDialogService? _dialogService;
+        private System.Threading.CancellationTokenSource? _customerSearchCts;
         private Guid _saleAttemptId = Guid.NewGuid();
 
         private string _searchText = string.Empty;
@@ -56,6 +59,7 @@ namespace KamatekCrm.ViewModels
         private string _paymentReference = string.Empty;
         private decimal _tenderedAmount;
         private bool _autoPrintReceipt = true;
+        private bool _confirmBeforeCompleteSale;
         private SalesOrder? _lastCompletedOrder;
 
         public ObservableCollection<PosProductItem> AllProducts { get; set; }
@@ -109,9 +113,16 @@ namespace KamatekCrm.ViewModels
             set
             {
                 if (SetProperty(ref _customerSearch, value))
-                    FilterCustomers();
-                    OnPropertyChanged(nameof(IsCustomerSearchOpen));
+                {
+                    TriggerCustomerSearchAsync(value).SafeFireAndForget("DirectSalesViewModel.TriggerCustomerSearchAsync");
+                }
             }
+        }
+
+        public bool ConfirmBeforeCompleteSale
+        {
+            get => _confirmBeforeCompleteSale;
+            set => SetProperty(ref _confirmBeforeCompleteSale, value);
         }
 
         public string CustomerDisplayName =>
@@ -212,6 +223,7 @@ namespace KamatekCrm.ViewModels
         public decimal TaxTotal => FinancialCalculator.RoundMoney(CartItems?.Sum(i => i.TaxAmount) ?? 0);
         public decimal GrandTotal => FinancialCalculator.RoundMoney(CartItems?.Sum(i => i.LineTotal) ?? 0);
         public int CartItemCount => CartItems?.Sum(i => i.Quantity) ?? 0;
+        public bool HasCartItems => CartItemCount > 0;
         public decimal PaidAmount => FinancialCalculator.RoundMoney(Payments?.Sum(p => p.Amount) ?? 0);
         public decimal RemainingAmount => FinancialCalculator.RoundMoney(GrandTotal - PaidAmount);
         public bool CanCompleteSale => RemainingAmount <= 0 && CartItems?.Count > 0;
@@ -245,7 +257,8 @@ namespace KamatekCrm.ViewModels
             IDirectSalesService directSalesService,
             IThermalReceiptPrintService thermalPrintService,
             IPersonalDataProtectionService personalDataProtection,
-            SalesReturnViewModel salesReturnViewModel)
+            SalesReturnViewModel salesReturnViewModel,
+            IDialogService? dialogService = null)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
@@ -255,6 +268,7 @@ namespace KamatekCrm.ViewModels
             _thermalPrintService = thermalPrintService;
             _personalDataProtection = personalDataProtection;
             _salesReturnViewModel = salesReturnViewModel;
+            _dialogService = dialogService;
 
             AllProducts = new ObservableCollection<PosProductItem>();
             CartItems = new ObservableCollection<PosCartItem>();
@@ -273,7 +287,7 @@ namespace KamatekCrm.ViewModels
 
             ParkedCarts.CollectionChanged += (s, e) => OnPropertyChanged(nameof(HasParkedCarts));
 
-            _ = InitializeAsync();
+            InitializeAsync().SafeFireAndForget("DirectSalesViewModel.InitializeAsync");
         }
 
         private async Task InitializeAsync()
@@ -311,9 +325,9 @@ namespace KamatekCrm.ViewModels
                     .Where(i => i.WarehouseId == SelectedWarehouse.Id)
                     .ToListAsync();
 
-                foreach (var inventory in inventories.Where(i => i.Product != null))
+                foreach (var inventory in inventories)
                 {
-                    var product = inventory.Product;
+                    if (inventory.Product is not { } product) continue;
                     AllProducts.Add(new PosProductItem
                     {
                         ProductId = product.Id,
@@ -378,7 +392,7 @@ namespace KamatekCrm.ViewModels
             try
             {
                 using var context = await _dbContextFactory.CreateDbContextAsync();
-                var customers = await context.Customers
+                var customers = await context.Customers.AsNoTracking()
                     .OrderByDescending(c => c.CreatedDate)
                     .Take(25)
                     .ToListAsync();
@@ -387,7 +401,63 @@ namespace KamatekCrm.ViewModels
                 foreach (var c in customers) RecentCustomers.Add(c);
                 FilterCustomers();
             }
-            catch { /* non-critical */ }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DirectSales.LoadRecentCustomers] {ex.Message}");
+            }
+        }
+
+        private async Task TriggerCustomerSearchAsync(string searchText)
+        {
+            _customerSearchCts?.Cancel();
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                FilterCustomers();
+                OnPropertyChanged(nameof(IsCustomerSearchOpen));
+                return;
+            }
+
+            _customerSearchCts = new System.Threading.CancellationTokenSource();
+            var ct = _customerSearchCts.Token;
+
+            try
+            {
+                await Task.Delay(250, ct);
+                var term = searchText.Trim().ToLower();
+                var canSearchPhone = _personalDataProtection.CanView(PersonalDataKind.Phone);
+
+                await using var context = await _dbContextFactory.CreateDbContextAsync(ct);
+                var query = context.Customers.AsNoTracking().AsQueryable();
+
+                if (canSearchPhone)
+                {
+                    query = query.Where(c =>
+                        c.FullName.ToLower().Contains(term) ||
+                        (c.PhoneNumber != null && c.PhoneNumber.ToLower().Contains(term)));
+                }
+                else
+                {
+                    query = query.Where(c => c.FullName.ToLower().Contains(term));
+                }
+
+                var matches = await query
+                    .OrderByDescending(c => c.CreatedDate)
+                    .Take(20)
+                    .ToListAsync(ct);
+
+                if (ct.IsCancellationRequested) return;
+
+                FilteredCustomers.Clear();
+                foreach (var c in matches) FilteredCustomers.Add(c);
+                OnPropertyChanged(nameof(IsCustomerSearchOpen));
+            }
+            catch (OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DirectSalesViewModel.cs"); }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DirectSales.CustomerSearch] {ex.Message}");
+                FilterCustomers();
+                OnPropertyChanged(nameof(IsCustomerSearchOpen));
+            }
         }
 
         private void FilterCustomers()
@@ -589,12 +659,13 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void ClearCart()
+        private async Task ClearCart()
         {
             if (CartItems.Count == 0) return;
-            var result = MessageBox.Show("Sepeti temizlemek istiyor musunuz?", "Sepeti Temizle",
-                MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (result == MessageBoxResult.Yes)
+            bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
+                "Sepeti temizlemek istiyor musunuz?",
+                "Sepeti Temizle");
+            if (confirmed)
             {
                 ResetCartState();
                 StatusMessage = "Sepet temizlendi.";
@@ -659,15 +730,16 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void RestoreParkedCart(PosParkedCart? parkedCart)
+        private async Task RestoreParkedCart(PosParkedCart? parkedCart)
         {
             if (parkedCart == null) return;
 
             if (CartItems.Count > 0)
             {
-                var confirm = MessageBox.Show("Mevcut sepet temizlenip parktaki sepet yüklenecek. Devam edilsin mi?",
-                    "Sepet Değiştir", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (confirm != MessageBoxResult.Yes) return;
+                bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
+                    "Mevcut sepet temizlenip parktaki sepet yüklenecek. Devam edilsin mi?",
+                    "Sepet Değiştir");
+                if (!confirmed) return;
             }
 
             ResetCartState();
@@ -727,8 +799,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SelectedCustomer == null)
                 {
-                    MessageBox.Show("Veresiye / Cari Satış yapabilmek için önce kayıtlı bir Müşteri seçmelisiniz!",
-                        "Müşteri Gerekli", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    _toastService?.ShowWarning("Veresiye / Cari Satış yapabilmek için önce kayıtlı bir Müşteri seçmelisiniz!");
                     return;
                 }
 
@@ -781,8 +852,7 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedCustomer == null)
             {
-                MessageBox.Show("Veresiye / Cari Satış yapabilmek için önce kayıtlı bir Müşteri seçmelisiniz! (F7)",
-                    "Müşteri Gerekli", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService?.ShowWarning("Veresiye / Cari Satış yapabilmek için önce kayıtlı bir Müşteri seçmelisiniz! (F7)");
                 return;
             }
 
@@ -831,10 +901,13 @@ namespace KamatekCrm.ViewModels
 
                     msg += "\nAçık hesap (veresiye) satışa devam etmek istiyor musunuz?";
 
-                    var result = MessageBox.Show(msg, "Cari Risk / Açık Hesap Onayı",
-                        MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (_dialogService != null)
+                    {
+                        return await _dialogService.ShowConfirmationAsync(msg, "Cari Risk / Açık Hesap Onayı");
+                    }
 
-                    return result == MessageBoxResult.Yes;
+                    _toastService?.ShowWarning("Cari Risk Uyarısı", msg);
+                    return false;
                 }
             }
             catch (Exception ex)
@@ -865,29 +938,52 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task CompleteSale()
         {
-            if (!CanCompleteSale || SelectedWarehouse == null || _isCompletingSale) return;
+            if (SelectedWarehouse == null || _isCompletingSale || CartItems == null || CartItems.Count == 0 || GrandTotal <= 0)
+                return;
 
-            var paymentDesc = string.Join(", ", Payments.Select(p =>
-                $"{GetPaymentMethodName(p.PaymentMethod)}: {p.Amount:C}"));
+            // F12 ile hızlı kapatmada henüz ödeme satırı girilmediyse aktif ödeme yöntemini (varsayılan Nakit) uygula
+            if (RemainingAmount > 0 && Payments.Count == 0)
+            {
+                if (SelectedPaymentMethod == PaymentMethod.OnAccount)
+                {
+                    await PayFullOnAccount();
+                    return;
+                }
 
-            var changeNotice = ChangeAmount > 0 ? $"\nPara Üstü: {ChangeAmount:C}" : string.Empty;
+                await PayFull(SelectedPaymentMethod);
+                return;
+            }
 
-            var result = MessageBox.Show(
-                $"Toplam: {GrandTotal:C}\n" +
-                $"Ödeme: {paymentDesc}{changeNotice}\n\n" +
-                "Satışı tamamlamak istiyor musunuz?",
-                "Satış Onayı",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+            if (!CanCompleteSale) return;
 
-            if (result != MessageBoxResult.Yes) return;
-            
+            // Hızlı POS satış modunda varsayılan olarak bloklayıcı onay gösterilmez;
+            // ConfirmBeforeCompleteSale açık ise IDialogService üzerinden onay alınır.
+            if (ConfirmBeforeCompleteSale)
+            {
+                var paymentDesc = string.Join(", ", Payments.Select(p =>
+                    $"{GetPaymentMethodName(p.PaymentMethod)}: {p.Amount:C}"));
+                var changeNotice = ChangeAmount > 0 ? $"\nPara Üstü: {ChangeAmount:C}" : string.Empty;
+                var confirmText =
+                    $"Toplam: {GrandTotal:C}\n" +
+                    $"Ödeme: {paymentDesc}{changeNotice}\n\n" +
+                    "Satışı tamamlamak istiyor musunuz?";
+
+                bool confirmed = _dialogService != null
+                    ? await _dialogService.ShowConfirmationAsync(confirmText, "Satış Onayı")
+                    : true;
+
+                if (!confirmed) return;
+            }
+
             try
             {
                 _isCompletingSale = true;
                 _loadingService?.Show();
 
                 var currentUserName = _authService?.CurrentUser?.Username ?? "Kasiyer";
+                var soldQuantitiesByProduct = CartItems
+                    .GroupBy(i => i.ProductId)
+                    .ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
 
                 var salesOrder = await _directSalesService.ProcessSaleAsync(
                     SelectedCustomer?.Id,
@@ -903,14 +999,27 @@ namespace KamatekCrm.ViewModels
                 StatusMessage = $"✅ Satış tamamlandı! Sipariş No: {salesOrder.OrderNumber}";
                 IsActionSuccessful = true;
 
-                // Auto-print thermal receipt if enabled
+                // Auto-print thermal receipt if enabled (hata varsa yutmak yerine kullanıcıya bildir)
                 if (AutoPrintReceipt && _thermalPrintService != null)
                 {
-                    _ = _thermalPrintService.PrintReceiptAsync(salesOrder);
+                    var printResult = await _thermalPrintService.PrintReceiptAsync(salesOrder);
+                    if (printResult.IsFailure)
+                    {
+                        _toastService?.ShowWarning(printResult.Error ?? "Termal fiş yazdırılamadı.");
+                    }
+                }
+
+                // Tüm ürün kataloğunu DB'den yeniden çekmek yerine yalnızca satılan kalemlerin stoğunu bellekte düş
+                foreach (var (productId, soldQty) in soldQuantitiesByProduct)
+                {
+                    var productItem = AllProducts.FirstOrDefault(p => p.ProductId == productId);
+                    if (productItem != null)
+                    {
+                        productItem.StockQuantity = Math.Max(0, productItem.StockQuantity - soldQty);
+                    }
                 }
 
                 ResetCartState();
-                await LoadProducts(); // Reload stock quantities
 
                 _toastService?.ShowSuccess($"Satış tamamlandı: Sipariş #{salesOrder.OrderNumber}");
             }
@@ -938,8 +1047,15 @@ namespace KamatekCrm.ViewModels
 
             if (_thermalPrintService != null)
             {
-                await _thermalPrintService.PrintReceiptAsync(LastCompletedOrder);
-                _toastService?.ShowSuccess("Fiş yazıcıya gönderildi.");
+                var printResult = await _thermalPrintService.PrintReceiptAsync(LastCompletedOrder);
+                if (printResult.IsSuccess)
+                {
+                    _toastService?.ShowSuccess("Fiş yazıcıya gönderildi.");
+                }
+                else
+                {
+                    _toastService?.ShowError(printResult.Error ?? "Fiş yazdırılamadı.");
+                }
             }
         }
 
@@ -964,6 +1080,7 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(TaxTotal));
             OnPropertyChanged(nameof(GrandTotal));
             OnPropertyChanged(nameof(CartItemCount));
+            OnPropertyChanged(nameof(HasCartItems));
             OnPropertyChanged(nameof(PaidAmount));
             OnPropertyChanged(nameof(RemainingAmount));
             OnPropertyChanged(nameof(CanCompleteSale));
@@ -990,7 +1107,7 @@ namespace KamatekCrm.ViewModels
         public int ItemCount => CartItems.Sum(i => i.Quantity);
     }
 
-    public class PosProductItem
+    public class PosProductItem : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
     {
         public int ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
@@ -999,7 +1116,14 @@ namespace KamatekCrm.ViewModels
         public string Barcode { get; set; } = string.Empty;
         public decimal SalePrice { get; set; }
         public int VatRate { get; set; }
-        public int StockQuantity { get; set; }
+
+        private int _stockQuantity;
+        public int StockQuantity
+        {
+            get => _stockQuantity;
+            set => SetProperty(ref _stockQuantity, value);
+        }
+
         public string Unit { get; set; } = "Adet";
         public string? ImagePath { get; set; }
     }

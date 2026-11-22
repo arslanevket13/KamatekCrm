@@ -1,4 +1,5 @@
 using System.Windows;
+using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.ViewModels;
 using KamatekCrm.Services;
@@ -15,19 +16,33 @@ namespace KamatekCrm.Views
             InitializeComponent();
         }
 
-        public EditUserView(User user)
+        public EditUserView(
+            User user,
+            IUserAppService userAppService,
+            IToastService toastService,
+            ILoadingService loadingService,
+            IAuthService? authService = null)
         {
             InitializeComponent();
-            var dbContextFactory = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext>>(App.ServiceProvider!);
-            var toastService = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IToastService>(App.ServiceProvider!);
-            var loadingService = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<ILoadingService>(App.ServiceProvider!);
-            DataContext = new EditUserViewModel(user, dbContextFactory, toastService, loadingService);
+            var viewModel = new EditUserViewModel(userAppService, toastService, loadingService, authService);
+            viewModel.SeedFromPreview(user);
+            AttachViewModel(viewModel, user.Id);
         }
 
-        public EditUserView(User user, Microsoft.EntityFrameworkCore.IDbContextFactory<KamatekCrm.Infrastructure.Data.AppDbContext> dbContextFactory, IToastService toastService, ILoadingService loadingService)
+        private void AttachViewModel(EditUserViewModel viewModel, int userId)
         {
-            InitializeComponent();
-            DataContext = new EditUserViewModel(user, dbContextFactory, toastService, loadingService);
+            DataContext = viewModel;
+            viewModel.SaveSuccessful += () =>
+            {
+                DialogResult = true;
+                Close();
+            };
+            viewModel.CancelRequested += () =>
+            {
+                DialogResult = false;
+                Close();
+            };
+            Loaded += async (_, _) => await viewModel.LoadAsync(userId);
         }
 
         public override void OnApplyTemplate()

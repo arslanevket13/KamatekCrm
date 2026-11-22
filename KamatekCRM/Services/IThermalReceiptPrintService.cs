@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using KamatekCrm.ApplicationCore.Common;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.ApplicationCore.DTOs.Transactions;
 
@@ -7,9 +8,15 @@ namespace KamatekCrm.Services
     public interface IThermalReceiptPrintService
     {
         /// <summary>
-        /// Prints a thermal receipt (80mm/58mm) for the specified SalesOrder
+        /// Prints a thermal receipt (80mm/58mm) for the specified SalesOrder and returns structured Result.
         /// </summary>
-        Task PrintReceiptAsync(SalesOrder salesOrder, string? printerName = null);
+        Task<Result> PrintReceiptAsync(SalesOrder salesOrder, string? printerName = null);
+
+        /// <summary>
+        /// Prints a test receipt to verify thermal printer connectivity.
+        /// </summary>
+        Task<Result> PrintTestReceiptAsync(string? printerName = null);
+
         Task PrintSalesReturnReceiptAsync(SalesReturnReceiptDto salesReturn, string? printerName = null);
 
         /// <summary>

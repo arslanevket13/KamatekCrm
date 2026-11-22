@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -63,7 +64,7 @@ namespace KamatekCrm.ViewModels.DevCenter
                     return;
                 }
 
-                _ = SafeRefreshAsync(value);
+                SafeRefreshAsync(value).SafeFireAndForget("DevCenterViewModel.SafeRefreshAsync");
             }
         }
 

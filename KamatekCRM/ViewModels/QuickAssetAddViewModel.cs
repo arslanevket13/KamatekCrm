@@ -81,15 +81,17 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void Save()
         {
+            var toastService = App.ServiceProvider?.GetService(typeof(Services.IToastService)) as Services.IToastService;
+
             if (string.IsNullOrWhiteSpace(Brand))
             {
-                MessageBox.Show("Lütfen marka girin.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                toastService?.ShowWarning("Uyarı", "Lütfen marka girin.");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(Model))
             {
-                MessageBox.Show("Lütfen model girin.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                toastService?.ShowWarning("Uyarı", "Lütfen model girin.");
                 return;
             }
 
@@ -130,7 +132,7 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Kayıt hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                toastService?.ShowError("Hata", $"Kayıt hatası: {ex.Message}");
             }
         }
     }

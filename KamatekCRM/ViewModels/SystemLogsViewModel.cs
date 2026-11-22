@@ -1,6 +1,9 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using KamatekCrm.Infrastructure.Data;
@@ -17,6 +20,7 @@ namespace KamatekCrm.ViewModels
     {
         private readonly IAuthService _authService;
         private readonly Microsoft.EntityFrameworkCore.IDbContextFactory<AppDbContext> _dbContextFactory;
+        private CancellationTokenSource? _refreshCts;
         private string _searchText = string.Empty;
         private string _selectedActionFilter = "Tümü";
         private string _selectedEntityFilter = "Tümü";
@@ -39,7 +43,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Arama metni
+        /// Arama metni (300ms debounce ile UI thread bloklamadan asenkron sorgular)
         /// </summary>
         public string SearchText
         {
@@ -48,7 +52,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    Refresh();
+                    TriggerDebouncedRefresh(300);
                 }
             }
         }
@@ -63,7 +67,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedActionFilter, value))
                 {
-                    Refresh();
+                    TriggerDebouncedRefresh(0);
                 }
             }
         }
@@ -78,7 +82,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedEntityFilter, value))
                 {
-                    Refresh();
+                    TriggerDebouncedRefresh(0);
                 }
             }
         }
@@ -93,7 +97,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _startDate, value))
                 {
-                    Refresh();
+                    TriggerDebouncedRefresh(0);
                 }
             }
         }
@@ -108,7 +112,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _endDate, value))
                 {
-                    Refresh();
+                    TriggerDebouncedRefresh(0);
                 }
             }
         }
@@ -161,79 +165,102 @@ namespace KamatekCrm.ViewModels
             _startDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(-7);
             _endDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc).AddDays(1);
 
-            Refresh();
+            TriggerDebouncedRefresh(0);
+        }
+
+        private void TriggerDebouncedRefresh(int delayMs)
+        {
+            _refreshCts?.Cancel();
+            _refreshCts = new CancellationTokenSource();
+            RefreshInternalAsync(_refreshCts.Token, delayMs).SafeFireAndForget("SystemLogsViewModel.RefreshInternalAsync");
         }
 
         /// <summary>
-        /// Logları yükle
+        /// Logları asenkron yükle
         /// </summary>
         [RelayCommand]
-        private void Refresh()
+        private async Task Refresh()
         {
-            Logs.Clear();
+            _refreshCts?.Cancel();
+            _refreshCts = new CancellationTokenSource();
+            await RefreshInternalAsync(_refreshCts.Token, 0);
+        }
 
-            using var context = _dbContextFactory.CreateDbContext();
-            var query = context.ActivityLogs.AsQueryable();
-
-            // Tarih filtresi
-            if (StartDate.HasValue)
+        private async Task RefreshInternalAsync(CancellationToken ct, int delayMs)
+        {
+            try
             {
-                query = query.Where(l => l.Timestamp >= StartDate.Value);
+                if (delayMs > 0)
+                {
+                    await Task.Delay(delayMs, ct);
+                }
+
+                await using var context = await _dbContextFactory.CreateDbContextAsync(ct);
+                var query = context.ActivityLogs.AsNoTracking().AsQueryable();
+
+                // Tarih filtresi (PostgreSQL timestamptz uyumu için UTC normalizasyonu)
+                if (StartDate.HasValue)
+                {
+                    var startUtc = StartDate.Value.Kind == DateTimeKind.Utc
+                        ? StartDate.Value
+                        : DateTime.SpecifyKind(StartDate.Value.Date, DateTimeKind.Utc);
+                    query = query.Where(l => l.Timestamp >= startUtc);
+                }
+                if (EndDate.HasValue)
+                {
+                    var endUtc = EndDate.Value.Kind == DateTimeKind.Utc
+                        ? EndDate.Value
+                        : DateTime.SpecifyKind(EndDate.Value.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+                    query = query.Where(l => l.Timestamp <= endUtc);
+                }
+
+                // İşlem tipi filtresi
+                if (SelectedActionFilter != "Tümü")
+                {
+                    query = query.Where(l => l.ActionType.ToString() == SelectedActionFilter);
+                }
+
+                // Entity filtresi
+                if (SelectedEntityFilter != "Tümü")
+                {
+                    query = query.Where(l => l.EntityName == SelectedEntityFilter);
+                }
+
+                // Arama
+                if (!string.IsNullOrWhiteSpace(SearchText))
+                {
+                    var search = SearchText.Trim().ToLower();
+                    query = query.Where(l =>
+                        (l.Username != null && l.Username.ToLower().Contains(search)) ||
+                        (l.Description != null && l.Description.ToLower().Contains(search)));
+                }
+
+                var visibleLogs = await query
+                    .OrderByDescending(l => l.Timestamp)
+                    .Take(500)
+                    .ToListAsync(ct);
+
+                if (ct.IsCancellationRequested) return;
+
+                Logs.Clear();
+                foreach (var log in visibleLogs)
+                {
+                    Logs.Add(log);
+                }
+
+                var verified = visibleLogs.Count(ActivityLogIntegrity.Verify);
+                var legacy = visibleLogs.Count(log =>
+                    log.IntegrityVersion == 0 && string.IsNullOrWhiteSpace(log.IntegrityHash));
+                var invalid = visibleLogs.Count - verified - legacy;
+                IntegritySummary = invalid > 0
+                    ? $"⚠ {invalid} şüpheli · {verified} doğrulandı · {legacy} eski kayıt"
+                    : $"✓ {verified} doğrulandı · {legacy} mühürleme öncesi kayıt";
             }
-            if (EndDate.HasValue)
+            catch (OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "SystemLogsViewModel.cs"); }
+            catch (Exception ex)
             {
-                query = query.Where(l => l.Timestamp <= EndDate.Value);
+                IntegritySummary = $"⚠ Loglar yüklenemedi: {ex.Message}";
             }
-
-            // İşlem tipi filtresi
-            if (SelectedActionFilter != "Tümü")
-            {
-                // Assuming AuditActionType is an enum and SelectedActionFilter holds its string representation
-                // If SelectedActionFilter is directly the string value, the original line is correct.
-                // If SelectedActionFilter needs to be converted from an enum, you'd typically parse it or have a different property.
-                // Based on the instruction "Convert AuditActionType to string for comparison",
-                // and assuming SelectedActionFilter is already the string to compare against l.ActionType,
-                // the original line is already performing a string comparison.
-                // If the intent was to introduce an enum property, that would be a larger change.
-                // For now, keeping the existing logic as it correctly compares strings.
-                // Compare as string to avoid Enum vs String mismatch
-                query = query.Where(l => l.ActionType.ToString() == SelectedActionFilter);
-            }
-
-            // Entity filtresi
-            if (SelectedEntityFilter != "Tümü")
-            {
-                query = query.Where(l => l.EntityName == SelectedEntityFilter);
-            }
-
-            // Arama
-            if (!string.IsNullOrWhiteSpace(SearchText))
-            {
-                var search = SearchText.ToLower();
-                query = query.Where(l =>
-                    (l.Username != null && l.Username.ToLower().Contains(search)) ||
-                    (l.Description != null && l.Description.ToLower().Contains(search)));
-            }
-
-            // Son kayıtlar önce; denetim ekranı izleme amacıyla salt okunurdur.
-            var visibleLogs = query
-                .AsNoTracking()
-                .OrderByDescending(l => l.Timestamp)
-                .Take(500)
-                .ToList();
-
-            foreach (var log in visibleLogs)
-            {
-                Logs.Add(log);
-            }
-
-            var verified = visibleLogs.Count(ActivityLogIntegrity.Verify);
-            var legacy = visibleLogs.Count(log =>
-                log.IntegrityVersion == 0 && string.IsNullOrWhiteSpace(log.IntegrityHash));
-            var invalid = visibleLogs.Count - verified - legacy;
-            IntegritySummary = invalid > 0
-                ? $"⚠ {invalid} şüpheli · {verified} doğrulandı · {legacy} eski kayıt"
-                : $"✓ {verified} doğrulandı · {legacy} mühürleme öncesi kayıt";
         }
 
         /// <summary>
@@ -254,7 +281,7 @@ namespace KamatekCrm.ViewModels
             OnPropertyChanged(nameof(StartDate));
             OnPropertyChanged(nameof(EndDate));
 
-            Refresh();
+            TriggerDebouncedRefresh(0);
         }
     }
 }

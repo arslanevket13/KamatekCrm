@@ -26,7 +26,7 @@ namespace KamatekCrm.Views
 
         private void OnCloseRequested()
         {
-            try { DialogResult = false; } catch { }
+            try { DialogResult = false; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "WorkOrderWorkspaceWindow.xaml.cs"); }
             Close();
         }
 

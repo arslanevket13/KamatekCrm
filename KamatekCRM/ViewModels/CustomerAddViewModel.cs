@@ -429,8 +429,23 @@ namespace KamatekCrm.ViewModels
             {
                 using var context = await _dbContextFactory.CreateDbContextAsync();
 
-                // Kanonik Telefon Normalizasyonu
+                // Kanonik Telefon Normalizasyonu + Ortak Doğrulama
                 string normPhone = CustomerValidationHelper.NormalizePhoneNumber(PhoneNumber);
+                string? validationError = CustomerValidationHelper.ValidateCustomerInput(
+                    NewCustomerType,
+                    FullName,
+                    PhoneNumber,
+                    Email,
+                    NewCompanyName,
+                    NewTcKimlikNo,
+                    NewTaxNumber,
+                    requirePhone: true);
+                if (validationError != null)
+                {
+                    ErrorMessage = validationError;
+                    return;
+                }
+
                 string? normTc = NewCustomerType == CustomerType.Individual && !string.IsNullOrWhiteSpace(NewTcKimlikNo)
                     ? NewTcKimlikNo.Trim()
                     : null;
@@ -438,11 +453,14 @@ namespace KamatekCrm.ViewModels
                     ? NewTaxNumber.Trim()
                     : null;
 
-                // Split-Brain ve Mükerrer Müşteri Engeli (Duplicate Shield)
+                // Split-Brain ve Formatlı Telefon Mükerrer Müşteri Engeli (Duplicate Shield)
                 string phoneLast10 = normPhone.Length >= 10 ? normPhone.Substring(normPhone.Length - 10) : normPhone;
                 var duplicate = await context.Customers.AsNoTracking()
                     .FirstOrDefaultAsync(c => !c.IsDeleted && (
-                        (!string.IsNullOrEmpty(normPhone) && (c.PhoneNumber == normPhone || (phoneLast10.Length >= 10 && c.PhoneNumber != null && c.PhoneNumber.Contains(phoneLast10)))) ||
+                        (!string.IsNullOrEmpty(normPhone) && (
+                            c.PhoneNumber == normPhone ||
+                            (phoneLast10.Length >= 10 && c.PhoneNumber != null &&
+                             c.PhoneNumber.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace("+", "").EndsWith(phoneLast10)))) ||
                         (!string.IsNullOrEmpty(normTc) && c.TcKimlikNo == normTc) ||
                         (!string.IsNullOrEmpty(normTax) && c.TaxNumber == normTax)
                     ));

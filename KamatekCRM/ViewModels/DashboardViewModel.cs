@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -229,7 +230,7 @@ namespace KamatekCrm.ViewModels
             }
         }
         
-        public string TodaySalesCountText => $"{TodaySalesCount} işlem";
+        public string TodaySalesCountText => $"{TodaySalesCount} satış";
 
         private decimal _weekSalesTotal;
         public decimal WeekSalesTotal
@@ -364,12 +365,15 @@ namespace KamatekCrm.ViewModels
             public bool CanApprovePurchase => true;
             public bool CanAccessSettings => true;
             public Task<bool> LoginAsync(string username, string password) => Task.FromResult(true);
+            public Task<bool> TryAutoLoginAsync(int userId, string username) => Task.FromResult(true);
+            public Task<(bool Success, string? ErrorMessage, User? CreatedUser)> CreateInitialAdminAsync(string fullName, string username, string password) => Task.FromResult<(bool, string?, User?)>((true, null, CurrentUser));
+            public Task<(bool Success, string? ErrorMessage)> ResetAdminPasswordAsync(string newPassword) => Task.FromResult<(bool, string?)>((true, null));
             public void Logout() { }
             public bool HasRole(string role) => true;
             public void EnsureAuthorized(KamatekCrm.ApplicationCore.Security.ApplicationPermission permission) { }
         }
 
-        #region Quick Action Commands
+        #region Quick Action & Drill-Down Commands
 
         [RelayCommand]
         private void OpenFaultTicket()
@@ -400,6 +404,73 @@ namespace KamatekCrm.ViewModels
                 await _quotationLauncher.ShowAsync(modal: false);
         }
 
+        [RelayCommand]
+        private void NavigateToFinance()
+        {
+            if (_serviceProvider == null) return;
+            if (!_authService.CanViewFinance)
+            {
+                _toastService?.ShowWarning("Finans ve Kasa ekranı için yetkiniz bulunmuyor.");
+                return;
+            }
+            var nav = _serviceProvider.GetRequiredService<NavigationService>();
+            nav.NavigateTo<FinanceViewModel>();
+        }
+
+        [RelayCommand]
+        private void NavigateToAnalytics()
+        {
+            if (_serviceProvider == null) return;
+            if (_authService.CanViewAnalytics)
+            {
+                var nav = _serviceProvider.GetRequiredService<NavigationService>();
+                nav.NavigateTo<AnalyticsViewModel>();
+                return;
+            }
+            if (_authService.CanViewFinance)
+            {
+                var nav = _serviceProvider.GetRequiredService<NavigationService>();
+                nav.NavigateTo<FinanceViewModel>();
+                return;
+            }
+            _toastService?.ShowWarning("Analitik veya finans raporları için yetkiniz bulunmuyor.");
+        }
+
+        [RelayCommand]
+        private void NavigateToActiveJobs()
+        {
+            if (_serviceProvider == null) return;
+            var nav = _serviceProvider.GetRequiredService<NavigationService>();
+            var jobVm = nav.NavigateTo<ServiceJobViewModel>();
+            jobVm.SelectedStatusFilter = StatusFilter.InProgress;
+        }
+
+        [RelayCommand]
+        private void NavigateToReadyRepairs()
+        {
+            if (_serviceProvider == null) return;
+            var nav = _serviceProvider.GetRequiredService<NavigationService>();
+            nav.NavigateTo<RepairListViewModel>();
+        }
+
+        [RelayCommand]
+        private void OpenLowStockProduct(LowStockItemDto? item)
+        {
+            if (_serviceProvider == null || item == null) return;
+            var nav = _serviceProvider.GetRequiredService<NavigationService>();
+            var productVm = nav.NavigateTo<ProductViewModel>();
+            productVm.FocusProductById(item.ProductId);
+        }
+
+        [RelayCommand]
+        private void OpenTodayJob(TodayJobItemDto? item)
+        {
+            if (_serviceProvider == null || item == null) return;
+            var nav = _serviceProvider.GetRequiredService<NavigationService>();
+            var jobVm = nav.NavigateTo<ServiceJobViewModel>();
+            jobVm.FocusJobByIdAsync(item.JobId).SafeFireAndForget("DashboardViewModel.jobVm.FocusJobByIdAsync");
+        }
+
         #endregion
 
         /// <summary>
@@ -411,101 +482,128 @@ namespace KamatekCrm.ViewModels
             _loadingService?.Show();
             try
             {
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                var today = DateTime.UtcNow.Date;
-                var startOfMonth = new DateTime(today.Year, today.Month, 1);
-                var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
-                var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                var todayUtc = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+                var tomorrowUtc = todayUtc.AddDays(1);
+                var startOfMonthUtc = DateTime.SpecifyKind(new DateTime(todayUtc.Year, todayUtc.Month, 1), DateTimeKind.Utc);
+                var nextMonthUtc = startOfMonthUtc.AddMonths(1);
+                var startOfWeekUtc = todayUtc.AddDays(-(int)todayUtc.DayOfWeek);
 
-                // 1. Low Stocks
-                var lowStock = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
-                    System.Linq.Queryable.Take(
-                        System.Linq.Queryable.Where(context.Products.AsNoTracking(), p => p.TotalStockQuantity <= p.MinStockLevel), 10));
-                
+                // 1. Low Stocks (gerçek SQL toplam sayı + önizleme için ilk 10)
+                var lowStockQuery = context.Products.AsNoTracking()
+                    .Where(p => p.TotalStockQuantity <= p.MinStockLevel);
+
+                LowStockCount = await lowStockQuery.CountAsync();
+                var lowStock = await lowStockQuery
+                    .OrderBy(p => p.TotalStockQuantity)
+                    .Take(10)
+                    .ToListAsync();
+
                 LowStockProducts.Clear();
-                foreach(var item in lowStock)
+                foreach (var item in lowStock)
                 {
-                    string urgency = item.TotalStockQuantity <= 0 ? "Critical" : (item.TotalStockQuantity <= item.MinStockLevel / 2 ? "Kritik" : "Uyarı");
-                    LowStockProducts.Add(new LowStockItemDto { 
-                        ProductId = item.Id, 
-                        ProductName = item.ProductName, 
-                        CurrentStock = item.TotalStockQuantity, 
+                    string urgency = item.TotalStockQuantity <= 0
+                        ? "Tükendi"
+                        : (item.TotalStockQuantity <= item.MinStockLevel / 2 ? "Kritik" : "Uyarı");
+                    LowStockProducts.Add(new LowStockItemDto
+                    {
+                        ProductId = item.Id,
+                        ProductName = item.ProductName,
+                        CurrentStock = item.TotalStockQuantity,
                         MinStockLevel = item.MinStockLevel,
                         UrgencyLevel = urgency
                     });
                 }
-                LowStockCount = lowStock.Count;
-                
-                // 2. Todays Jobs
-                var todaysJobs = await context.ServiceJobs.AsNoTracking()
+
+                // 2. Todays Jobs (ScheduledDate bazlı UTC aralık + gerçek SQL CountAsync)
+                var todaysJobsQuery = context.ServiceJobs.AsNoTracking()
+                    .Where(j => j.ScheduledDate.HasValue &&
+                                j.ScheduledDate.Value >= todayUtc &&
+                                j.ScheduledDate.Value < tomorrowUtc &&
+                                j.Status != JobStatus.Completed &&
+                                j.Status != JobStatus.Cancelled);
+
+                TodaysJobsCount = await todaysJobsQuery.CountAsync();
+                var todaysJobs = await todaysJobsQuery
                     .Include(j => j.Customer)
-                    .Where(j => j.CreatedDate.Date == today)
+                    .OrderBy(j => j.ScheduledDate)
                     .Take(10)
                     .ToListAsync();
-                
+
                 TodaysJobs.Clear();
-                foreach(var item in todaysJobs)
+                foreach (var item in todaysJobs)
                 {
-                    TodaysJobs.Add(new TodayJobItemDto { 
-                        JobId = item.Id, CustomerName = item.Customer?.CompanyName ?? "Bilinmiyor", 
+                    TodaysJobs.Add(new TodayJobItemDto
+                    {
+                        JobId = item.Id,
+                        CustomerName = item.Customer?.CompanyName ?? item.Customer?.FullName ?? "Bilinmiyor",
                         Category = GetCategoryIcon(item.JobCategory.ToString()) + " " + GetCategoryName(item.JobCategory.ToString()),
-                        ScheduledTime = item.ScheduledDate?.ToString("HH:mm") ?? "",
+                        ScheduledTime = item.ScheduledDate?.ToLocalTime().ToString("HH:mm") ?? "",
                         Priority = item.Priority.ToString()
                     });
                 }
-                TodaysJobsCount = TodaysJobs.Count;
-                
-                // 3. Ready Repairs
-                var readyJobs = await context.ServiceJobs.AsNoTracking()
+
+                // 3. Ready Repairs (gerçek SQL CountAsync + ilk 10 önizleme)
+                var readyJobsQuery = context.ServiceJobs.AsNoTracking()
+                    .Where(j => j.Status == JobStatus.Completed || j.Status == JobStatus.WaitingForApproval);
+
+                ReadyRepairsCount = await readyJobsQuery.CountAsync();
+                var readyJobs = await readyJobsQuery
                     .Include(j => j.Customer)
-                    .Where(j => j.Status == JobStatus.Completed || j.Status == JobStatus.WaitingForApproval)
+                    .OrderBy(j => j.CreatedDate)
                     .Take(10)
                     .ToListAsync();
-                
+
                 ReadyToDeliverRepairs.Clear();
-                foreach(var item in readyJobs)
+                foreach (var item in readyJobs)
                 {
-                    ReadyToDeliverRepairs.Add(new ReadyRepairItemDto { 
-                        JobId = item.Id, CustomerName = item.Customer?.CompanyName ?? "Bilinmiyor",
-                        DeviceInfo = item.Description, DaysWaiting = (DateTime.UtcNow - item.CreatedDate).Days
+                    ReadyToDeliverRepairs.Add(new ReadyRepairItemDto
+                    {
+                        JobId = item.Id,
+                        CustomerName = item.Customer?.CompanyName ?? item.Customer?.FullName ?? "Bilinmiyor",
+                        DeviceInfo = item.Description,
+                        DaysWaiting = (DateTime.UtcNow - item.CreatedDate).Days
                     });
                 }
-                ReadyRepairsCount = ReadyToDeliverRepairs.Count;
-                
-                // 4. Financials
-                DailyIncome = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions.AsNoTracking(), c => c.Date.Date == today && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
-                DailyExpense = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions.AsNoTracking(), c => c.Date.Date == today && FinancialTransactionPolicy.CashExpenseTypes.Contains(c.TransactionType)), c => c.Amount);
-                MonthlySalesTotal = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions.AsNoTracking(), c => c.Date.Date >= startOfMonth && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
-                MonthlySalesCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
-                    System.Linq.Queryable.Where(context.ServiceJobs.AsNoTracking(), j => j.CreatedDate >= startOfMonth));
-                MonthlyJobsCompleted = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
-                    System.Linq.Queryable.Where(context.ServiceJobs.AsNoTracking(), j => j.CreatedDate >= startOfMonth && j.Status == JobStatus.Completed));
-                ActiveJobsCount = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
-                    System.Linq.Queryable.Where(context.ServiceJobs.AsNoTracking(), j => j.Status == JobStatus.Pending || j.Status == JobStatus.InProgress));
-                
+
+                // 4. Financials (UTC aralık sorguları + gerçek satış sayıları)
+                DailyIncome = await context.CashTransactions.AsNoTracking()
+                    .Where(c => c.Date >= todayUtc && c.Date < tomorrowUtc && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType))
+                    .SumAsync(c => c.Amount);
+                DailyExpense = await context.CashTransactions.AsNoTracking()
+                    .Where(c => c.Date >= todayUtc && c.Date < tomorrowUtc && FinancialTransactionPolicy.CashExpenseTypes.Contains(c.TransactionType))
+                    .SumAsync(c => c.Amount);
+                MonthlySalesTotal = await context.CashTransactions.AsNoTracking()
+                    .Where(c => c.Date >= startOfMonthUtc && c.Date < nextMonthUtc && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType))
+                    .SumAsync(c => c.Amount);
+                MonthlySalesCount = await context.SalesOrders.AsNoTracking()
+                    .CountAsync(s => s.Date >= startOfMonthUtc && s.Date < nextMonthUtc && s.Status != SalesOrderStatus.Cancelled);
+                MonthlyJobsCompleted = await context.ServiceJobs.AsNoTracking()
+                    .CountAsync(j => j.CreatedDate >= startOfMonthUtc && j.CreatedDate < nextMonthUtc &&
+                                     (j.Status == JobStatus.Completed || j.Status == JobStatus.Delivered));
+                ActiveJobsCount = await context.ServiceJobs.AsNoTracking()
+                    .CountAsync(j => j.Status == JobStatus.Pending || j.Status == JobStatus.InProgress);
+
                 // 5. Customer Stats
-                TotalCustomers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(context.Customers.AsNoTracking());
-                NewCustomersThisMonth = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
-                    System.Linq.Queryable.Where(context.Customers.AsNoTracking(), c => c.CreatedDate >= startOfMonth));
-                VipCustomers = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
-                    System.Linq.Queryable.Where(context.Customers.AsNoTracking(), c => c.Type == CustomerType.Corporate));
+                TotalCustomers = await context.Customers.AsNoTracking().CountAsync();
+                NewCustomersThisMonth = await context.Customers.AsNoTracking()
+                    .CountAsync(c => c.CreatedDate >= startOfMonthUtc && c.CreatedDate < nextMonthUtc);
+                VipCustomers = await context.Customers.AsNoTracking()
+                    .CountAsync(c => c.Type == CustomerType.Corporate);
                 UpcomingBirthdays = 0;
-                
-                // 6. Sales Reports
+
+                // 6. Sales Reports (Bugünkü gerçek POS satış adedi)
                 TodaySalesTotal = DailyIncome;
-                TodaySalesCount = TodaysJobsCount;
-                WeekSalesTotal = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync(
-                    System.Linq.Queryable.Where(context.CashTransactions.AsNoTracking(), c => c.Date.Date >= startOfWeek && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType)), c => c.Amount);
+                TodaySalesCount = await context.SalesOrders.AsNoTracking()
+                    .CountAsync(s => s.Date >= todayUtc && s.Date < tomorrowUtc && s.Status != SalesOrderStatus.Cancelled);
+                WeekSalesTotal = await context.CashTransactions.AsNoTracking()
+                    .Where(c => c.Date >= startOfWeekUtc && c.Date < tomorrowUtc && FinancialTransactionPolicy.CashIncomeTypes.Contains(c.TransactionType))
+                    .SumAsync(c => c.Amount);
                 AverageSaleAmount = MonthlySalesCount > 0 ? MonthlySalesTotal / MonthlySalesCount : 0;
-                
+
                 // 7. 7-Day Trend Chart Population
-                // Gün başına iki sorgu çalıştırmak yerine iki toplu GROUP BY sorgusu kullanılır.
-                // Böylece dashboard yenilemesindeki 14 veritabanı çağrısı 2 çağrıya iner.
-                var trendStartDate = today.AddDays(-6);
-                var trendEndDate = today.AddDays(1);
+                var trendStartDate = todayUtc.AddDays(-6);
+                var trendEndDate = tomorrowUtc;
                 var incomeByDate = await context.CashTransactions.AsNoTracking()
                     .Where(c => c.Date >= trendStartDate &&
                                 c.Date < trendEndDate &&
@@ -515,17 +613,17 @@ namespace KamatekCrm.ViewModels
                     .ToDictionaryAsync(item => item.Date, item => item.Total);
 
                 var completedJobsByDate = await context.ServiceJobs.AsNoTracking()
-                    .Where(j => j.CreatedDate >= trendStartDate &&
-                                j.CreatedDate < trendEndDate &&
-                                j.Status == JobStatus.Completed)
-                    .GroupBy(j => j.CreatedDate.Date)
+                    .Where(j => (j.CompletedDate ?? j.CreatedDate) >= trendStartDate &&
+                                (j.CompletedDate ?? j.CreatedDate) < trendEndDate &&
+                                (j.Status == JobStatus.Completed || j.Status == JobStatus.Delivered))
+                    .GroupBy(j => (j.CompletedDate ?? j.CreatedDate).Date)
                     .Select(group => new { Date = group.Key, Count = group.Count() })
                     .ToDictionaryAsync(item => item.Date, item => item.Count);
 
                 var weeklyTrendList = new List<WeeklyTrendItemDto>(capacity: 7);
                 for (int i = 6; i >= 0; i--)
                 {
-                    var targetDate = today.AddDays(-i);
+                    var targetDate = todayUtc.AddDays(-i);
 
                     weeklyTrendList.Add(new WeeklyTrendItemDto
                     {
@@ -596,7 +694,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// 7 günlük gelir trend grafiği
+        /// 7 günlük gelir ve tamamlanan iş çift Y eksenli trend grafiği
         /// </summary>
         private void LoadWeeklyTrendChart(List<WeeklyTrendItemDto> trendData)
         {
@@ -606,7 +704,7 @@ namespace KamatekCrm.ViewModels
 
             if (trendData != null)
             {
-                foreach(var day in trendData)
+                foreach (var day in trendData)
                 {
                     labels.Add(day.DayName);
                     incomeData.Add((double)day.Income);
@@ -620,6 +718,7 @@ namespace KamatekCrm.ViewModels
                 {
                     Values = incomeData,
                     Name = "Gelir (₺)",
+                    ScalesYAt = 0,
                     Stroke = new SolidColorPaint(SKColors.DodgerBlue) { StrokeThickness = 3 },
                     Fill = new LinearGradientPaint(
                         new[] { SKColors.DodgerBlue.WithAlpha(100), SKColors.DodgerBlue.WithAlpha(20) },
@@ -633,6 +732,7 @@ namespace KamatekCrm.ViewModels
                 {
                     Values = jobsData,
                     Name = "Tamamlanan İş",
+                    ScalesYAt = 1,
                     Fill = new SolidColorPaint(SKColors.MediumSeaGreen.WithAlpha(180)),
                     MaxBarWidth = 20,
                     Rx = 4,
@@ -654,8 +754,26 @@ namespace KamatekCrm.ViewModels
             {
                 new Axis
                 {
-                    LabelsPaint = new SolidColorPaint(SKColors.Gray),
+                    Name = "Gelir (₺)",
+                    NameTextSize = 11,
+                    NamePaint = new SolidColorPaint(SKColors.DodgerBlue),
+                    LabelsPaint = new SolidColorPaint(SKColors.DodgerBlue),
                     TextSize = 11,
+                    MinLimit = 0,
+                    Labeler = value => $"{value:N0} ₺"
+                },
+                new Axis
+                {
+                    Name = "İş Adedi",
+                    NameTextSize = 11,
+                    NamePaint = new SolidColorPaint(SKColors.MediumSeaGreen),
+                    LabelsPaint = new SolidColorPaint(SKColors.MediumSeaGreen),
+                    Position = LiveChartsCore.Measure.AxisPosition.End,
+                    TextSize = 11,
+                    MinLimit = 0,
+                    MinStep = 1,
+                    ForceStepToMin = true,
+                    ShowSeparatorLines = false,
                     Labeler = value => value.ToString("N0")
                 }
             };

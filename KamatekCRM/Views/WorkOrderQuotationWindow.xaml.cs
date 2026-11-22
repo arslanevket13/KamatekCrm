@@ -26,13 +26,13 @@ namespace KamatekCrm.Views
 
         private void OnCancelRequested()
         {
-            try { DialogResult = false; } catch { }
+            try { DialogResult = false; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "WorkOrderQuotationWindow.xaml.cs"); }
             Close();
         }
 
         private void OnSaveCompleted()
         {
-            try { DialogResult = true; } catch { }
+            try { DialogResult = true; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "WorkOrderQuotationWindow.xaml.cs"); }
             Close();
         }
 

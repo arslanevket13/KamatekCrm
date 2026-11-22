@@ -67,6 +67,60 @@ namespace KamatekCrm.ViewModels
         private readonly Diagnostics.Authorization.DiagnosticAccessGuard? _diagnosticGuard;
         private readonly IServiceProvider? _serviceProvider;
         private LegacyLedgerPreviewDto? _legacyLedgerPreview;
+        private bool _isLoadingSettings;
+        private bool _hasUnsavedChanges;
+
+        public bool HasUnsavedChanges
+        {
+            get => _hasUnsavedChanges;
+            set => SetProperty(ref _hasUnsavedChanges, value);
+        }
+
+        private static readonly System.Collections.Generic.HashSet<string> TrackedSettingProperties = new(StringComparer.Ordinal)
+        {
+            nameof(CompanyName),
+            nameof(CompanySubtitle),
+            nameof(CompanySloganOrBranch),
+            nameof(Website),
+            nameof(TaxOffice),
+            nameof(TaxNumber),
+            nameof(TradeRegistryNo),
+            nameof(MersisNo),
+            nameof(CompanyAddress),
+            nameof(CompanyPhone),
+            nameof(CompanyEmail),
+            nameof(BankName),
+            nameof(AccountHolder),
+            nameof(IbanTry),
+            nameof(IbanUsd),
+            nameof(IbanEur),
+            nameof(CompanyIban),
+            nameof(PrimaryBrandColorHex),
+            nameof(AccentBrandColorHex),
+            nameof(QuoteValidityDays),
+            nameof(QuoteTermsText),
+            nameof(ServiceFormTermsText),
+            nameof(WarrantyTermsText),
+            nameof(ShowUnitPricesInPdf),
+            nameof(ShowProductImagesInPdf),
+            nameof(ShowStampInPdf),
+            nameof(WatermarkText),
+            nameof(SelectedPrinter),
+            nameof(AutoPrintReceipt),
+            nameof(SoundAlertsEnabled),
+            nameof(CustomBackupPath)
+        };
+
+        protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if (!_isLoadingSettings &&
+                !string.IsNullOrEmpty(e.PropertyName) &&
+                TrackedSettingProperties.Contains(e.PropertyName))
+            {
+                HasUnsavedChanges = true;
+            }
+        }
 
         public SettingsViewModel(
             IToastService toastService,
@@ -88,22 +142,30 @@ namespace KamatekCrm.ViewModels
             _serviceProvider = serviceProvider;
             _dialogService = dialogService ?? serviceProvider?.GetService(typeof(IDialogService)) as IDialogService;
 
-            
-            // Ayarları Properties.Settings.Default'tan yükle
-            string savedThemeId = Properties.Settings.Default.ThemePreference;
-            if (string.IsNullOrEmpty(savedThemeId)) savedThemeId = "PremiumLight";
-            
-            _selectedTheme = AvailableThemes.FirstOrDefault(t => t.Id == savedThemeId) 
-                             ?? AvailableThemes.FirstOrDefault(t => t.Id == ThemeService.CurrentThemeName) 
-                             ?? AvailableThemes.First();
-                             
-            _accentColor = Properties.Settings.Default.AccentColor;
-            _isMainServer = Properties.Settings.Default.IsMainServer;
-            
-            LoadCompanySettings();
-            LoadInstalledPrinters();
-            LoadLastBackupInfo();
-            LoadUpdateSettings();
+            _isLoadingSettings = true;
+            try
+            {
+                // Ayarları Properties.Settings.Default'tan yükle
+                string savedThemeId = Properties.Settings.Default.ThemePreference;
+                if (string.IsNullOrEmpty(savedThemeId)) savedThemeId = "PremiumLight";
+                
+                _selectedTheme = AvailableThemes.FirstOrDefault(t => t.Id == savedThemeId) 
+                                 ?? AvailableThemes.FirstOrDefault(t => t.Id == ThemeService.CurrentThemeName) 
+                                 ?? AvailableThemes.First();
+                                 
+                _accentColor = Properties.Settings.Default.AccentColor;
+                _isMainServer = Properties.Settings.Default.IsMainServer;
+                
+                LoadCompanySettings();
+                LoadInstalledPrinters();
+                LoadLastBackupInfo();
+                LoadUpdateSettings();
+                _hasUnsavedChanges = false;
+            }
+            finally
+            {
+                _isLoadingSettings = false;
+            }
         }
 
         #region Properties & Tab Navigation
@@ -123,6 +185,7 @@ namespace KamatekCrm.ViewModels
               {
                   if (!SetProperty(ref _isBusy, value)) return;
                   TakeBackupCommand.NotifyCanExecuteChanged();
+                  VerifyBackupFileCommand.NotifyCanExecuteChanged();
                   RestoreBackupCommand.NotifyCanExecuteChanged();
               }
           }
@@ -355,7 +418,7 @@ namespace KamatekCrm.ViewModels
         /// Geliştirici Merkezi butonunun görünürlüğü. Yetki <see cref="Diagnostics.Authorization.DiagnosticAccessGuard"/>
         /// üzerinden hesaplanır; menü gizleme tek başına güvenlik sayılmaz, servisler de ayrıca denetler.
         /// </summary>
-        public bool IsDevCenterAvailable => _diagnosticGuard?.IsAuthorized == true || _authorizationService.IsAuthorized(ApplicationPermission.AccessSettings);
+        public bool IsDevCenterAvailable => _diagnosticGuard?.IsAuthorized == true;
 
         /// <summary>
         /// Geliştirici Merkezi'ni ayrı pencerede açar. Yetkisizse pencere hiç oluşturulmaz.
@@ -456,12 +519,10 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            var confirm = MessageBox.Show(
+            bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
                 $"{_legacyLedgerPreview.Issues.Count} eski satış için {_legacyLedgerPreview.TotalCorrection:N2} ₺ telafi hareketi eklenecek.\n\nMevcut kayıtlar değiştirilmeyecek veya silinmeyecek. Devam edilsin mi?",
-                "Cari Düzeltme Onayı",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-            if (confirm != MessageBoxResult.Yes) return;
+                "Cari Düzeltme Onayı");
+            if (!confirmed) return;
 
             IsBusy = true;
             try
@@ -535,11 +596,11 @@ namespace KamatekCrm.ViewModels
                 });
 
                 LoadLastBackupInfo();
-                MessageBox.Show($"Yedekleme başarılı!\nKonum: {backupPath}", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                _toastService?.ShowSuccess("Başarılı", $"Yedekleme başarılı! Konum: {backupPath}");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Yedekleme sırasında hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Yedekleme sırasında hata oluştu: {ex.Message}");
             }
             finally
             {
@@ -569,24 +630,27 @@ namespace KamatekCrm.ViewModels
             var validation = await Task.Run(() => _backupService.ValidateBackup(dialog.FileName));
             if (!validation.IsValid)
             {
-                MessageBox.Show(
-                    $"Bu yedek güvenli biçimde doğrulanamadı:\n\n{validation.Message}",
-                    "Geçersiz Yedek",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                if (_dialogService != null)
+                {
+                    await _dialogService.ShowErrorAsync(
+                        $"Bu yedek güvenli biçimde doğrulanamadı:\n\n{validation.Message}",
+                        "Geçersiz Yedek");
+                }
+                else
+                {
+                    _toastService?.ShowError("Geçersiz Yedek", $"Bu yedek güvenli biçimde doğrulanamadı: {validation.Message}");
+                }
                 return;
             }
 
             // 2. Kullanıcı onayı
-            var confirm = MessageBox.Show(
+            bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
                 "DİKKAT: Bu işlem mevcut veritabanını silip seçilen yedeği yükleyecektir.\n\n" +
                 "Tüm güncel veriler kaybolacak!\n\n" +
                 "Devam etmek istiyor musunuz?",
-                "Geri Yükleme Onayı",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                "Geri Yükleme Onayı");
 
-            if (confirm != MessageBoxResult.Yes) return;
+            if (!confirmed) return;
 
             IsBusy = true;
             try
@@ -598,23 +662,28 @@ namespace KamatekCrm.ViewModels
                 });
 
                 // ═══════════════════════════════════════════════════════════════════
-                // GHOST DATA ÖNLEME: MessageBox'tan ÖNCE restart yap
+                // GHOST DATA ÖNLEME: Bilgi diyaloğundan sonra hemen restart yap
                 // EF Core tracking cache'i eski verileri gösterebilir
                 // ═══════════════════════════════════════════════════════════════════
                 
                 // Kullanıcıya bilgi ver ve hemen yeniden başlat
-                MessageBox.Show(
-                    $"Geri yükleme başarılı!\n\nİşlem öncesi kurtarma yedeği:\n{recoveryBackup}\n\nProgram şimdi yeniden başlatılacak.",
-                    "Başarılı",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                if (_dialogService != null)
+                {
+                    await _dialogService.ShowMessageAsync(
+                        $"Geri yükleme başarılı!\n\nİşlem öncesi kurtarma yedeği:\n{recoveryBackup}\n\nProgram şimdi yeniden başlatılacak.",
+                        "Başarılı");
+                }
+                else
+                {
+                    _toastService?.ShowSuccess("Başarılı", $"Geri yükleme başarılı! Kurtarma yedeği: {recoveryBackup}");
+                }
 
                 // Hemen restart - Ghost data önleme için kritik
                 RestartApplication();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Geri yükleme sırasında hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Geri yükleme sırasında hata oluştu: {ex.Message}");
                 IsBusy = false;
             }
             // Not: IsBusy = false finally'de olmamalı çünkü restart yapılıyor
@@ -630,7 +699,7 @@ namespace KamatekCrm.ViewModels
             }
             catch
             {
-                MessageBox.Show("Uygulama yeniden başlatılamadı. Lütfen manuel olarak kapatıp açın.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                _toastService?.ShowWarning("Bilgi", "Uygulama yeniden başlatılamadı. Lütfen manuel olarak kapatıp açın.");
             }
         }
 
@@ -664,7 +733,7 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void SaveIsMainServerToConfig(bool value)
+        private async void SaveIsMainServerToConfig(bool value)
         {
             try
             {
@@ -686,10 +755,11 @@ namespace KamatekCrm.ViewModels
                         var options = new System.Text.Json.JsonSerializerOptions { WriteIndented = true };
                         File.WriteAllText(appSettingsPath, jsonObject.ToJsonString(options));
                         
-                        var result = MessageBox.Show("Ağ ayarı (Ana Sunucu) değiştirildi. Değişikliğin anında etkili olması için programın yeniden başlatılması gerekmektedir.\n\nŞimdi yeniden başlatılsın mı?", 
-                            "Yeniden Başlat Gerekli", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                        bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
+                            "Ağ ayarı (Ana Sunucu) değiştirildi. Değişikliğin anında etkili olması için programın yeniden başlatılması gerekmektedir.\n\nŞimdi yeniden başlatılsın mı?", 
+                            "Yeniden Başlat Gerekli");
                             
-                        if (result == MessageBoxResult.Yes)
+                        if (confirmed)
                         {
                             RestartApplication();
                         }
@@ -698,7 +768,7 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ayar kaydedilemedi: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Ayar kaydedilemedi: {ex.Message}");
             }
         }
 
@@ -899,7 +969,93 @@ namespace KamatekCrm.ViewModels
         {
             if (!EnsureSettingsAuthorized()) return;
             SaveCompanySettings();
+            HasUnsavedChanges = false;
             _toastService?.ShowSuccess("Firma ve PDF marka ayarları başarıyla kaydedildi.");
+        }
+
+        [RelayCommand(CanExecute = nameof(IsNotBusy))]
+        private async Task VerifyBackupFileAsync()
+        {
+            if (!EnsureSettingsAuthorized()) return;
+
+            var docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var backupFolder = string.IsNullOrWhiteSpace(CustomBackupPath)
+                ? _backupService.DefaultBackupDirectory
+                : CustomBackupPath;
+
+            string? selectedFile = null;
+            if (_dialogService != null)
+            {
+                selectedFile = await _dialogService.ShowOpenFileDialogAsync(
+                    "Doğrulanacak Yedek Dosyasını Seçin (SHA-256)",
+                    "Kamatek PostgreSQL Yedeği (*.backup)|*.backup");
+            }
+            else
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "Doğrulanacak Yedek Dosyasını Seçin (SHA-256)",
+                    Filter = "Kamatek PostgreSQL Yedeği (*.backup)|*.backup",
+                    InitialDirectory = Directory.Exists(backupFolder) ? backupFolder : docPath
+                };
+                if (dialog.ShowDialog() == true)
+                    selectedFile = dialog.FileName;
+            }
+
+            if (string.IsNullOrWhiteSpace(selectedFile)) return;
+
+            IsBusy = true;
+            try
+            {
+                var validation = await Task.Run(() => _backupService.ValidateBackup(selectedFile));
+                if (validation.IsValid)
+                {
+                    _toastService?.ShowSuccess("Yedek Bütünlüğü Doğrulandı (SHA-256)", validation.Message);
+                }
+                else
+                {
+                    _toastService?.ShowError("Geçersiz veya Bozuk Yedek", validation.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError("Yedek Doğrulama Hatası", ex.Message);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task PrintTestReceiptAsync()
+        {
+            if (!EnsureSettingsAuthorized()) return;
+
+            try
+            {
+                var printService = _serviceProvider?.GetService(typeof(IThermalReceiptPrintService)) as IThermalReceiptPrintService
+                                   ?? App.ServiceProvider?.GetService(typeof(IThermalReceiptPrintService)) as IThermalReceiptPrintService;
+                if (printService == null)
+                {
+                    _toastService?.ShowError("Yazıcı Servisi Bulunamadı", "Termal yazıcı servisi başlatılamadı.");
+                    return;
+                }
+
+                var result = await printService.PrintTestReceiptAsync(SelectedPrinter);
+                if (result.IsSuccess)
+                {
+                    _toastService?.ShowSuccess("Test Fişi Gönderildi", $"'{SelectedPrinter}' yazıcısına test fişi başarıyla gönderildi.");
+                }
+                else
+                {
+                    _toastService?.ShowError("Yazdırma Hatası", result.Error ?? "Test fişi yazdırılamadı.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError("Yazdırma Hatası", ex.Message);
+            }
         }
 
         #region Branding & PDF Studio Methods & Commands
@@ -1030,9 +1186,45 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void ResetToDefaultBrand()
+        private async Task ResetLogoToDefaultAsync()
         {
             if (!EnsureSettingsAuthorized()) return;
+
+            if (_dialogService == null)
+            {
+                _toastService?.ShowError("Hata", "Onay diyaloğu servisi kullanılamıyor.");
+                return;
+            }
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "Özel firma logosu kaldırılıp varsayılan Kamatek logosuna dönülecektir.\n\nDiğer firma bilgileriniz korunacaktır. Devam etmek istiyor musunuz?",
+                "Logoyu Sıfırla");
+            if (!confirmed) return;
+
+            CustomLogoPath = "";
+            CustomLogoBase64 = "";
+            LoadDefaultLogoPreview();
+            HasCustomLogo = false;
+
+            SaveCompanySettings();
+            _toastService?.ShowSuccess("Özel logo kaldırıldı; varsayılan Kamatek logosu aktif.");
+        }
+
+        [RelayCommand]
+        private async Task ResetToDefaultBrandAsync()
+        {
+            if (!EnsureSettingsAuthorized()) return;
+
+            if (_dialogService == null)
+            {
+                _toastService?.ShowError("Hata", "Onay diyaloğu servisi kullanılamıyor.");
+                return;
+            }
+
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "DİKKAT: Firma adı, vergi bilgileri, IBAN numaraları, adres, iletişim, kaşe, logo ve tüm PDF şartnameleri varsayılan Kamatek değerlerine sıfırlanacaktır.\n\nBu işlem mevcut firma profilinizi üzerine yazar. Devam etmek istiyor musunuz?",
+                "Tüm Firma Profilini Sıfırla");
+            if (!confirmed) return;
 
             var defaultProfile = CompanyBrandProfile.CreateDefaultKamatek();
             CompanyName = defaultProfile.CompanyName;

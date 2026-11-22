@@ -19,7 +19,7 @@ namespace KamatekCrm.Views
             var viewModel = new QuickAssetAddViewModel(customerId, dbContextFactory);
             viewModel.RequestClose += (result) =>
             {
-                try { DialogResult = result; } catch { }
+                try { DialogResult = result; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "QuickAssetAddWindow.xaml.cs"); }
                 Close();
             };
             

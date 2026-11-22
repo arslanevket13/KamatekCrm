@@ -133,10 +133,7 @@ namespace KamatekCrm.Services
                     });
                 }
             }
-            catch
-            {
-                // Arama hatası sessizce geçilir
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "SearchService.cs"); }
 
             return results.Take(boundedMax).ToList();
         }
@@ -223,9 +220,7 @@ namespace KamatekCrm.Services
                     });
                 }
             }
-            catch
-            {
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "SearchService.cs"); }
 
             return results.Take(boundedMax).ToList();
         }

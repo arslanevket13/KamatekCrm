@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -103,7 +104,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _selectedDisplayItem, value))
                 {
                     if (value != null)
-                        _ = LoadFullJobAsync(value.Id);
+                        LoadFullJobAsync(value.Id).SafeFireAndForget("RepairListViewModel.LoadFullJobAsync");
                     else
                         SelectedJob = null;
                 }
@@ -224,7 +225,7 @@ namespace KamatekCrm.ViewModels
             };
 
             // Load Initial Data
-            _ = InitializeAsync();
+            InitializeAsync().SafeFireAndForget("RepairListViewModel.InitializeAsync");
         }
 
         private async Task InitializeAsync()
@@ -340,7 +341,7 @@ namespace KamatekCrm.ViewModels
                     if (paths != null)
                         foreach (var p in paths) PhotoPaths.Add(p);
                 }
-                catch { /* Invalid JSON — ignore */ }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "RepairListViewModel.cs"); }
             });
         }
 
@@ -724,6 +725,12 @@ namespace KamatekCrm.ViewModels
             }
 
             return true;
+        }
+
+        [RelayCommand]
+        private void SelectStatusFilter(RepairStatus? status)
+        {
+            SelectedStatus = status;
         }
 
         [RelayCommand]

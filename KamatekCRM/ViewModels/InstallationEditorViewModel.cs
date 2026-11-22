@@ -303,8 +303,7 @@ namespace KamatekCrm.ViewModels
                                   !string.IsNullOrWhiteSpace(TechnicianName) ||
                                   LaborHours > 0m;
 
-        [RelayCommand(CanExecute = nameof(CanSave))]
-        private async Task Save()
+        private async Task<bool> SaveInstallationCoreAsync()
         {
             var validMaterials = Materials
                 .Where(m => !string.IsNullOrWhiteSpace(m.ProductName))
@@ -328,8 +327,16 @@ namespace KamatekCrm.ViewModels
             if (result.IsFailure)
             {
                 _toastService.ShowError(result.Error);
-                return;
+                return false;
             }
+
+            return true;
+        }
+
+        [RelayCommand(CanExecute = nameof(CanSave))]
+        private async Task Save()
+        {
+            if (!await SaveInstallationCoreAsync()) return;
 
             _toastService.ShowSuccess("Montaj emri kaydedildi; stok rezervasyonları güncellendi.");
             RequestCloseWithSuccess?.Invoke();
@@ -338,6 +345,12 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(CanComplete))]
         private async Task Complete()
         {
+            if (!await SaveInstallationCoreAsync())
+            {
+                RefreshCompletionCheck();
+                return;
+            }
+
             var request = new CompleteInstallationRequest(
                 _jobId,
                 DeliveryNote,

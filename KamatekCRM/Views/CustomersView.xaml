@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.CustomersView"
+﻿<UserControl x:Class="KamatekCrm.Views.CustomersView"
              x:Name="RootCustomersView"
               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -74,7 +74,7 @@
         </UniformGrid>
 
         <!-- ═══════════════ ROW 2: SEARCH & FILTER TOOLBAR ═══════════════ -->
-        <Border Grid.Row="2" Style="{StaticResource FilterToolbarCard}">
+        <Border Grid.Row="2" Style="{DynamicResource FilterToolbarCard}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MaxWidth="360"/>
@@ -90,22 +90,66 @@
                             AutomationProperties.Name="Müşteri ara"
                             AutomationProperties.HelpText="Ad, telefon veya şehir bilgisine göre müşteri arar"/>
 
-                <!-- Type Filters Toolbar Pills -->
+                <!-- Type Filters Toolbar Pills (Aktif seçim vurgulu) -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <ui:Button Content="Tümü" Command="{Binding ClearTypeFilterCommand}"
-                               Appearance="Secondary" Height="36" Padding="14,0" Margin="0,0,8,0" Cursor="Hand"/>
+                               Height="36" Padding="14,0" Margin="0,0,8,0" Cursor="Hand">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button">
+                                <Setter Property="Appearance" Value="Secondary"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTypeFilter}" Value="{x:Null}">
+                                        <Setter Property="Appearance" Value="Primary"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
 
                     <ui:Button Content="Bireysel" Command="{Binding SetTypeFilterCommand}"
                                CommandParameter="{x:Static enums:CustomerType.Individual}"
-                               Appearance="Secondary" Height="36" Padding="14,0" Margin="0,0,8,0" Cursor="Hand"/>
+                               Height="36" Padding="14,0" Margin="0,0,8,0" Cursor="Hand">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button">
+                                <Setter Property="Appearance" Value="Secondary"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTypeFilter}" Value="{x:Static enums:CustomerType.Individual}">
+                                        <Setter Property="Appearance" Value="Primary"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
 
                     <ui:Button Content="Kurumsal" Command="{Binding SetTypeFilterCommand}"
                                CommandParameter="{x:Static enums:CustomerType.Corporate}"
-                               Appearance="Secondary" Height="36" Padding="14,0" Margin="0,0,8,0" Cursor="Hand"/>
+                               Height="36" Padding="14,0" Margin="0,0,8,0" Cursor="Hand">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button">
+                                <Setter Property="Appearance" Value="Secondary"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTypeFilter}" Value="{x:Static enums:CustomerType.Corporate}">
+                                        <Setter Property="Appearance" Value="Primary"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
 
                     <ui:Button Content="Perakende" Command="{Binding SetTypeFilterCommand}"
                                CommandParameter="{x:Static enums:CustomerType.WalkIn}"
-                               Appearance="Secondary" Height="36" Padding="14,0" Cursor="Hand"/>
+                               Height="36" Padding="14,0" Cursor="Hand">
+                        <ui:Button.Style>
+                            <Style TargetType="ui:Button">
+                                <Setter Property="Appearance" Value="Secondary"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTypeFilter}" Value="{x:Static enums:CustomerType.WalkIn}">
+                                        <Setter Property="Appearance" Value="Primary"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ui:Button.Style>
+                    </ui:Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -191,7 +235,7 @@
 
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
-                                <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
+                                <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
                                 <Setter Property="Padding" Value="12,0"/>
                                 <Setter Property="BorderThickness" Value="0"/>
                                 <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
@@ -350,6 +394,8 @@
                                            Command="{Binding CreateQuoteForCustomerCommand}"
                                            CommandParameter="{Binding SelectedCustomer}"
                                            Appearance="Secondary" Height="36" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
+
+                                <Separator Margin="0,4,0,12" Background="{DynamicResource BorderSubtleBrush}"/>
 
                                 <ui:Button Content="Müşteriyi Sil / Arşive Al" Icon="{ui:SymbolIcon Delete24}"
                                            Command="{Binding DeleteCustomerCommand}"

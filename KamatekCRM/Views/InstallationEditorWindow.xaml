@@ -53,119 +53,141 @@
             </StackPanel>
         </Border>
 
-        <!-- ════════ İçerik ════════ -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel MaxWidth="1000">
-                <!-- ── Montaj Başlığı ── -->
-                <Border CornerRadius="8" Padding="14" Margin="0,0,0,10"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="🛠️ MONTAJ BAŞLIĞI" Style="{StaticResource SectionTitleStyle}"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Teknisyen" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding TechnicianName, UpdateSourceTrigger=PropertyChanged}" Height="34"
-                                         IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}" Margin="0,4,0,10"/>
-                                <TextBlock Text="Montaj Tarihi" Style="{StaticResource LabelStyle}"/>
-                                <DatePicker SelectedDate="{Binding InstallationDate}" Height="34" Margin="0,4,0,0"
-                                            IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="İşçilik Saati (planlanan)" Style="{StaticResource LabelStyle}"/>
-                                <ui:NumberBox Value="{Binding LaborHours, Mode=TwoWay}" Minimum="0" Height="34" Margin="0,4,0,10"
-                                              IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}"/>
-                                <TextBlock Text="Notlar" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,4,0,0"/>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
+        <!-- ════════ İçerik (DataGrid sanallaştırmasını korumak için dış ScrollViewer yerine yıldız satırlı Grid) ════════ -->
+        <Grid Grid.Row="1" MaxWidth="1000">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                <!-- ── Malzemeler ── -->
-                <Border CornerRadius="8" Padding="14" Margin="0,0,0,10"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-                    <StackPanel>
-                        <DockPanel Margin="0,0,0,8">
-                            <TextBlock DockPanel.Dock="Left" Text="📦 MONTAJ MALZEMELERİ" Style="{StaticResource SectionTitleStyle}" Margin="0" VerticalAlignment="Center"/>
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                <ui:Button Content="➕ Stoktan Ekle" Command="{Binding AddMaterialFromStockCommand}"
-                                           Appearance="Primary" Height="30" Padding="12,0" Margin="0,0,6,0" FontSize="11" Cursor="Hand"/>
-                                <ui:Button Content="➕ Özel Ekle" Command="{Binding AddCustomMaterialCommand}"
-                                           Appearance="Secondary" Height="30" Padding="12,0" Margin="0,0,6,0" FontSize="11" Cursor="Hand"/>
-                            </StackPanel>
-                        </DockPanel>
-                        <DataGrid ItemsSource="{Binding Materials}" AutoGenerateColumns="False"
-                                  IsReadOnly="{Binding IsCompleted}" Background="Transparent" BorderThickness="0"
-                                  RowHeaderWidth="0" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                                  HorizontalGridLinesBrush="{DynamicResource BorderSubtleBrush}" MinRowHeight="32"
-                                  MaxHeight="200" AlternatingRowBackground="{DynamicResource AlternatingRowBrush}">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Malzeme" Binding="{Binding ProductName, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                                <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
-                                <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="90"/>
-                                <DataGridTextColumn Header="Not" Binding="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Width="140"/>
-                                <DataGridTemplateColumn Header="" Width="44">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ui:Button Content="✕" Command="{Binding DataContext.RemoveMaterialCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                       CommandParameter="{Binding}" Appearance="Danger" Height="24" Width="32"
-                                                       FontSize="10" Padding="0" Cursor="Hand"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </StackPanel>
-                </Border>
+            <!-- ── Montaj Başlığı ── -->
+            <Border Grid.Row="0" CornerRadius="8" Padding="14" Margin="0,0,0,10"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="🛠️ MONTAJ BAŞLIĞI" Style="{StaticResource SectionTitleStyle}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Teknisyen" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding TechnicianName, UpdateSourceTrigger=PropertyChanged}" Height="32"
+                                     IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}" Margin="0,4,0,8"/>
+                            <TextBlock Text="Montaj Tarihi" Style="{StaticResource LabelStyle}"/>
+                            <DatePicker SelectedDate="{Binding InstallationDate}" Height="32" Margin="0,4,0,0"
+                                        IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="İşçilik Saati (planlanan)" Style="{StaticResource LabelStyle}"/>
+                            <ui:NumberBox Value="{Binding LaborHours, Mode=TwoWay}" Minimum="0" Height="32" Margin="0,4,0,8"
+                                          IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}"/>
+                            <TextBlock Text="Notlar" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ── Malzemeler (Yıldız satırda tam sanallaştırmalı DataGrid) ── -->
+            <Border Grid.Row="1" CornerRadius="8" Padding="14" Margin="0,0,0,10"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                        <TextBlock DockPanel.Dock="Left" Text="📦 MONTAJ MALZEMELERİ" Style="{StaticResource SectionTitleStyle}" Margin="0" VerticalAlignment="Center"/>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <ui:Button Content="➕ Stoktan Ekle" Command="{Binding AddMaterialFromStockCommand}"
+                                       Appearance="Primary" Height="30" Padding="12,0" Margin="0,0,6,0" FontSize="11" Cursor="Hand"/>
+                            <ui:Button Content="➕ Özel Ekle" Command="{Binding AddCustomMaterialCommand}"
+                                       Appearance="Secondary" Height="30" Padding="12,0" Margin="0,0,6,0" FontSize="11" Cursor="Hand"/>
+                        </StackPanel>
+                    </DockPanel>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Materials}" AutoGenerateColumns="False"
+                              IsReadOnly="{Binding IsCompleted}" Background="Transparent" BorderThickness="0"
+                              RowHeaderWidth="0" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="{DynamicResource BorderSubtleBrush}" MinRowHeight="32"
+                              AlternatingRowBackground="{DynamicResource AlternatingRowBrush}"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.CanContentScroll="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Malzeme" Binding="{Binding ProductName, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
+                            <DataGridTextColumn Header="Miktar" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                            <DataGridTextColumn Header="Birim Fiyat" Binding="{Binding UnitPrice, UpdateSourceTrigger=PropertyChanged}" Width="90"/>
+                            <DataGridTextColumn Header="Not" Binding="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Width="140"/>
+                            <DataGridTemplateColumn Header="" Width="44">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ui:Button Content="✕" Command="{Binding DataContext.RemoveMaterialCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                   CommandParameter="{Binding}" Appearance="Danger" Height="24" Width="32"
+                                                   FontSize="10" Padding="0" Cursor="Hand"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <!-- ── Görevler & Tamamlama Formu (2 Sütunlu Alt Bölüm) ── -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
                 <!-- ── Görevler ── -->
-                <Border CornerRadius="8" Padding="14" Margin="0,0,0,10"
+                <Border Grid.Column="0" CornerRadius="8" Padding="14"
                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                     <StackPanel>
                         <DockPanel Margin="0,0,0,8">
                             <TextBlock DockPanel.Dock="Left" Text="✅ MONTAJ GÖREVLERİ" Style="{StaticResource SectionTitleStyle}" Margin="0" VerticalAlignment="Center"/>
                             <ui:Button DockPanel.Dock="Right" Content="➕ Görev Ekle" Command="{Binding AddTaskCommand}"
-                                       Appearance="Secondary" Height="30" Padding="12,0" FontSize="11" Cursor="Hand"/>
+                                       Appearance="Secondary" Height="28" Padding="10,0" FontSize="11" Cursor="Hand"/>
                         </DockPanel>
-                        <ItemsControl ItemsSource="{Binding Tasks}" MaxHeight="180">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Padding="8,5" Margin="0,0,0,4" CornerRadius="5" Background="{DynamicResource SurfacePageBrush}">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted}" VerticalAlignment="Center"
-                                                      IsEnabled="{Binding DataContext.IsCompleted, Converter={StaticResource InverseBoolConverter}, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                            <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
-                                                <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontSize="11.5" FontWeight="SemiBold"
-                                                         Background="Transparent" BorderThickness="0"/>
-                                                <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" FontSize="10.5"
-                                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}" Background="Transparent" BorderThickness="0"/>
-                                            </StackPanel>
-                                            <ui:Button Grid.Column="2" Content="✕" Command="{Binding DataContext.RemoveTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                       CommandParameter="{Binding}" Appearance="Danger" Height="24" Width="32"
-                                                       FontSize="10" Padding="0" Cursor="Hand"/>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <ScrollViewer MaxHeight="135" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Tasks}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="8,5" Margin="0,0,0,4" CornerRadius="5" Background="{DynamicResource SurfacePageBrush}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted}" VerticalAlignment="Center"
+                                                          IsEnabled="{Binding DataContext.IsCompleted, Converter={StaticResource InverseBoolConverter}, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                                <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                    <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontSize="11.5" FontWeight="SemiBold"
+                                                             Background="Transparent" BorderThickness="0"/>
+                                                    <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" FontSize="10.5"
+                                                             Foreground="{DynamicResource TextFillColorSecondaryBrush}" Background="Transparent" BorderThickness="0"/>
+                                                </StackPanel>
+                                                <ui:Button Grid.Column="2" Content="✕" Command="{Binding DataContext.RemoveTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                           CommandParameter="{Binding}" Appearance="Danger" Height="24" Width="32"
+                                                           FontSize="10" Padding="0" Cursor="Hand"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </StackPanel>
                 </Border>
 
                 <!-- ── Tamamlama Formu ── -->
-                <Border CornerRadius="8" Padding="14" Margin="0,0,0,10"
+                <Border Grid.Column="2" CornerRadius="8" Padding="14"
                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                     <StackPanel>
@@ -173,31 +195,31 @@
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="10"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Teslim Notu" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding DeliveryNote, UpdateSourceTrigger=PropertyChanged}" Height="60"
-                                         TextWrapping="Wrap" AcceptsReturn="True" Margin="0,4,0,10"
+                                <TextBox Text="{Binding DeliveryNote, UpdateSourceTrigger=PropertyChanged}" Height="48"
+                                         TextWrapping="Wrap" AcceptsReturn="True" Margin="0,4,0,8"
                                          IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}"/>
                                 <TextBlock Text="Tamamlayan Teknisyen" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding CompletionTechnician, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,4,0,0"
+                                <TextBox Text="{Binding CompletionTechnician, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,0"
                                          IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Fiili İşçilik Saati" Style="{StaticResource LabelStyle}"/>
-                                <ui:NumberBox Value="{Binding CompletionLaborHours, Mode=TwoWay}" Minimum="0" Height="34" Margin="0,4,0,10"
+                                <ui:NumberBox Value="{Binding CompletionLaborHours, Mode=TwoWay}" Minimum="0" Height="32" Margin="0,4,0,8"
                                               IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}"/>
-                                <TextBlock Text="Müşteri İmzası (opsiyonel, metin)" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding CustomerSignature, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,4,0,0"
+                                <TextBlock Text="Müşteri İmzası (opsiyonel)" Style="{StaticResource LabelStyle}"/>
+                                <TextBox Text="{Binding CustomerSignature, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,0"
                                          IsEnabled="{Binding IsCompleted, Converter={StaticResource InverseBoolConverter}}"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
                 </Border>
-            </StackPanel>
-        </ScrollViewer>
+            </Grid>
+        </Grid>
 
         <!-- ════════ Alt ════════ -->
         <Grid Grid.Row="2" Margin="0,12,0,0">

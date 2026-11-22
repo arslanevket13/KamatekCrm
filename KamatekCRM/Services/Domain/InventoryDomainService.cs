@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Events;
-using KamatekCrm.Shared.Exceptions;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Repositories;
 using KamatekCrm.Infrastructure.Repositories;

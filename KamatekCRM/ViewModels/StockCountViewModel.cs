@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using KamatekCrm.Events;
 using KamatekCrm.Services;
 using System;
@@ -44,6 +45,7 @@ namespace KamatekCrm.ViewModels
         private CancellationTokenSource? _manualSearchCts;
         private bool _acceptWarehouseChange;
         private bool _acceptManualWarehouseChange;
+        private bool _isBatchUpdating;
         
         private StockCountWarehouseDto? _selectedWarehouse;
         private DateTime _countDate = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
@@ -87,14 +89,14 @@ namespace KamatekCrm.ViewModels
                 {
                     if (!_acceptWarehouseChange && CountItems.Any(i => i.IsCounted))
                     {
-                        _ = ConfirmWarehouseChangeAsync(value);
+                        ConfirmWarehouseChangeAsync(value).SafeFireAndForget("StockCountViewModel.ConfirmWarehouseChangeAsync");
                         OnPropertyChanged(nameof(SelectedWarehouse));
                         return;
                     }
 
                     if (SetProperty(ref _selectedWarehouse, value))
                     {
-                        _ = RefreshCoreAsync();
+                        RefreshCoreAsync().SafeFireAndForget("StockCountViewModel.RefreshCoreAsync");
                     }
                 }
             }
@@ -189,7 +191,7 @@ namespace KamatekCrm.ViewModels
                 {
                     _manualSearchCts?.Cancel();
                     _manualSearchCts = new CancellationTokenSource();
-                    _ = DebounceManualSearchAsync(_manualSearchCts.Token);
+                    DebounceManualSearchAsync(_manualSearchCts.Token).SafeFireAndForget("StockCountViewModel.DebounceManualSearchAsync");
                 }
             }
         }
@@ -209,7 +211,7 @@ namespace KamatekCrm.ViewModels
                 {
                     if (!_acceptManualWarehouseChange && ManualCountItems.Any(i => i.IsCounted))
                     {
-                        _ = ConfirmManualWarehouseChangeAsync(value);
+                        ConfirmManualWarehouseChangeAsync(value).SafeFireAndForget("StockCountViewModel.ConfirmManualWarehouseChangeAsync");
                         OnPropertyChanged(nameof(ManualSelectedWarehouse));
                         return;
                     }
@@ -252,7 +254,7 @@ namespace KamatekCrm.ViewModels
             CountItemsView = CollectionViewSource.GetDefaultView(CountItems);
             CountItemsView.Filter = FilterItems;
 
-            _ = LoadWarehousesAsync();
+            LoadWarehousesAsync().SafeFireAndForget("StockCountViewModel.LoadWarehousesAsync");
         }
 
         private async Task LoadWarehousesAsync()
@@ -429,6 +431,7 @@ namespace KamatekCrm.ViewModels
 
         private void UpdateTotals()
         {
+            if (_isBatchUpdating) return;
             OnPropertyChanged(nameof(TotalDifferenceCount));
             OnPropertyChanged(nameof(TotalPositiveDifference));
             OnPropertyChanged(nameof(TotalNegativeDifference));
@@ -454,13 +457,13 @@ namespace KamatekCrm.ViewModels
                 StatusMessage = $"✓ [{item.ProductCode}] {item.ProductName} sayımı arttırıldı: {item.CountedQuantity}";
                 IsActionSuccessful = true;
 
-                try { SystemSounds.Beep.Play(); } catch { }
+                try { SystemSounds.Beep.Play(); } catch (Exception ex) { Debug.WriteLine($"[Sound] {ex.Message}"); }
             }
             else
             {
                 StatusMessage = $"⚠️ Barkod / Stok Kodu bulunamadı: {code}";
                 IsActionSuccessful = false;
-                try { SystemSounds.Asterisk.Play(); } catch { }
+                try { SystemSounds.Asterisk.Play(); } catch (Exception ex) { Debug.WriteLine($"[Sound] {ex.Message}"); }
             }
 
             BarcodeScanInput = string.Empty;
@@ -514,7 +517,7 @@ namespace KamatekCrm.ViewModels
                     ? $"Sayım daha önce uygulanmıştı ({result.Value.ReferenceNumber}); stok ikinci kez değiştirilmedi."
                     : $"Sayım kaydedildi ({result.Value.ReferenceNumber}). {result.Value.ProductCount} ürün güncellendi.";
                 IsActionSuccessful = true;
-                _ = _draftStorageService.ClearDraftAsync(GetDraftKey());
+                _draftStorageService.ClearDraftAsync(GetDraftKey()).SafeFireAndForget("StockCountViewModel._draftStorageService.ClearDraftAsync");
                 if (!result.Value.WasAlreadyApplied)
                 {
                     var affectedIds = itemsWithDifference.Select(i => i.ProductId).Distinct().ToList();
@@ -622,45 +625,77 @@ namespace KamatekCrm.ViewModels
                 "Excel Dosyası (*.xlsx)|*.xlsx|Tüm Dosyalar (*.*)|*.*");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 
+            IsLoading = true;
             try
             {
-                using var workbook = new XLWorkbook(filePath);
-                var worksheet = workbook.Worksheet(1);
-                var usedRows = worksheet.RangeUsed()?.RowsUsed().ToList();
+                // Dosya okuma ve Excel ayrıştırma işlemini arka plan iş parçacığında (Task.Run) çalıştır
+                var parsedResult = await Task.Run(() =>
+                {
+                    using var workbook = new XLWorkbook(filePath);
+                    var worksheet = workbook.Worksheet(1);
+                    var usedRows = worksheet.RangeUsed()?.RowsUsed().ToList();
 
-                if (usedRows == null || usedRows.Count == 0)
+                    if (usedRows == null || usedRows.Count == 0)
+                    {
+                        return (HasData: false, Rows: new List<(string Key, int Quantity)>(), InvalidCount: 0);
+                    }
+
+                    var headerRow = usedRows.FirstOrDefault(row =>
+                        string.Equals(row.Cell(1).GetValue<string>()?.Trim(), "Ürün Kodu", StringComparison.OrdinalIgnoreCase));
+                    int quantityColumn = 2;
+                    IEnumerable<IXLRangeRow> rows = usedRows;
+                    if (headerRow != null)
+                    {
+                        int lastColumn = headerRow.LastCellUsed()?.Address.ColumnNumber ?? 2;
+                        for (int column = 1; column <= lastColumn; column++)
+                        {
+                            if (string.Equals(
+                                    headerRow.Cell(column).GetValue<string>()?.Trim(),
+                                    "Sayılan Miktar",
+                                    StringComparison.OrdinalIgnoreCase))
+                            {
+                                quantityColumn = column;
+                                break;
+                            }
+                        }
+                        int headerNumber = headerRow.RangeAddress.FirstAddress.RowNumber;
+                        rows = usedRows.Where(row => row.RangeAddress.FirstAddress.RowNumber > headerNumber);
+                    }
+
+                    var extracted = new List<(string Key, int Quantity)>();
+                    int invalidQty = 0;
+
+                    foreach (var row in rows)
+                    {
+                        var searchKey = row.Cell(1).GetValue<string>()?.Trim();
+                        var countedQtyStr = row.Cell(quantityColumn).GetValue<string>();
+
+                        if (string.IsNullOrWhiteSpace(searchKey))
+                            continue;
+                        if (!int.TryParse(countedQtyStr, out int countedQty) || countedQty < 0)
+                        {
+                            invalidQty++;
+                            continue;
+                        }
+
+                        extracted.Add((searchKey, countedQty));
+                    }
+
+                    return (HasData: true, Rows: extracted, InvalidCount: invalidQty);
+                });
+
+                if (!parsedResult.HasData)
                 {
                     StatusMessage = "Excel dosyasında veri bulunamadı.";
                     IsActionSuccessful = false;
                     return;
                 }
 
-                var headerRow = usedRows.FirstOrDefault(row =>
-                    string.Equals(row.Cell(1).GetValue<string>()?.Trim(), "Ürün Kodu", StringComparison.OrdinalIgnoreCase));
-                int quantityColumn = 2;
-                IEnumerable<IXLRangeRow> rows = usedRows;
-                if (headerRow != null)
-                {
-                    int lastColumn = headerRow.LastCellUsed()?.Address.ColumnNumber ?? 2;
-                    for (int column = 1; column <= lastColumn; column++)
-                    {
-                        if (string.Equals(
-                                headerRow.Cell(column).GetValue<string>()?.Trim(),
-                                "Sayılan Miktar",
-                                StringComparison.OrdinalIgnoreCase))
-                        {
-                            quantityColumn = column;
-                            break;
-                        }
-                    }
-                    int headerNumber = headerRow.RangeAddress.FirstAddress.RowNumber;
-                    rows = usedRows.Where(row => row.RangeAddress.FirstAddress.RowNumber > headerNumber);
-                }
-
-                // O(1) arama için Hızlı İndeks Sözlüğü
+                // O(1) arama için Hızlı İndeks Sözlüğü (mükerrer SKU güvenliği ile)
                 var skuLookup = CountItems
                     .Where(i => !string.IsNullOrWhiteSpace(i.ProductCode))
-                    .ToDictionary(i => i.ProductCode.Trim(), i => i, StringComparer.OrdinalIgnoreCase);
+                    .GroupBy(i => i.ProductCode.Trim(), StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
                 var modelLookup = CountItems
                     .Where(i => !string.IsNullOrWhiteSpace(i.ModelName))
@@ -674,35 +709,33 @@ namespace KamatekCrm.ViewModels
 
                 int updatedCount = 0;
                 var notFoundList = new List<string>();
-                int invalidQuantityCount = 0;
+                int invalidQuantityCount = parsedResult.InvalidCount;
 
-                foreach (var row in rows)
+                // O(N²) PropertyChanged fırtınasını önlemek için toplu güncelleme kilidi
+                _isBatchUpdating = true;
+                try
                 {
-                    var searchKey = row.Cell(1).GetValue<string>()?.Trim();
-                    var countedQtyStr = row.Cell(quantityColumn).GetValue<string>();
-
-                    if (string.IsNullOrWhiteSpace(searchKey))
-                        continue;
-                    if (!int.TryParse(countedQtyStr, out int countedQty) || countedQty < 0)
+                    foreach (var (searchKey, countedQty) in parsedResult.Rows)
                     {
-                        invalidQuantityCount++;
-                        continue;
-                    }
+                        StockCountItem? item = null;
+                        if (skuLookup.TryGetValue(searchKey, out var matchedSku)) item = matchedSku;
+                        else if (modelLookup.TryGetValue(searchKey, out var matchedModel)) item = matchedModel;
+                        else if (nameLookup.TryGetValue(searchKey, out var matchedName)) item = matchedName;
 
-                    StockCountItem? item = null;
-                    if (skuLookup.TryGetValue(searchKey, out var matchedSku)) item = matchedSku;
-                    else if (modelLookup.TryGetValue(searchKey, out var matchedModel)) item = matchedModel;
-                    else if (nameLookup.TryGetValue(searchKey, out var matchedName)) item = matchedName;
-
-                    if (item != null)
-                    {
-                        item.CountedQuantity = countedQty;
-                        updatedCount++;
+                        if (item != null)
+                        {
+                            item.CountedQuantity = countedQty;
+                            updatedCount++;
+                        }
+                        else
+                        {
+                            notFoundList.Add(searchKey);
+                        }
                     }
-                    else
-                    {
-                        notFoundList.Add(searchKey);
-                    }
+                }
+                finally
+                {
+                    _isBatchUpdating = false;
                 }
 
                 UpdateTotals();
@@ -716,6 +749,10 @@ namespace KamatekCrm.ViewModels
             {
                 StatusMessage = $"İçe aktarım hatası: {ex.Message}";
                 IsActionSuccessful = false;
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
@@ -788,10 +825,7 @@ namespace KamatekCrm.ViewModels
                 await Task.Delay(350, cancellationToken);
                 await ExecuteSearchProductAsync(cancellationToken);
             }
-            catch (OperationCanceledException)
-            {
-                // Yeni metin önceki aramanın yerini aldı.
-            }
+            catch (OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "StockCountViewModel.cs"); }
         }
 
         private async Task ExecuteSearchProductAsync(CancellationToken cancellationToken = default)
@@ -872,7 +906,9 @@ namespace KamatekCrm.ViewModels
 
             item.PropertyChanged += (s, e) =>
             {
-                if (e.PropertyName is nameof(StockCountItem.Difference) or nameof(StockCountItem.FinancialDifference))
+                if (e.PropertyName is nameof(StockCountItem.Difference)
+                    or nameof(StockCountItem.FinancialDifference)
+                    or nameof(StockCountItem.IsCounted))
                 {
                     UpdateManualTotals();
                 }
@@ -945,7 +981,7 @@ namespace KamatekCrm.ViewModels
                     ? $"Manuel sayım daha önce uygulanmıştı ({result.Value.ReferenceNumber}); stok ikinci kez değiştirilmedi."
                     : $"Manuel sayım kaydedildi ({result.Value.ReferenceNumber}). {result.Value.ProductCount} ürün güncellendi.";
                 IsActionSuccessful = true;
-                _ = _draftStorageService.ClearDraftAsync($"stock_count_manual_{ManualSelectedWarehouse.Id}");
+                _draftStorageService.ClearDraftAsync($"stock_count_manual_{ManualSelectedWarehouse.Id}").SafeFireAndForget("StockCountViewModel._draftStorageService.ClearDraftAsync");
                 if (!result.Value.WasAlreadyApplied)
                 {
                     var affectedIds = itemsWithDifference.Select(i => i.ProductId).Distinct().ToList();
@@ -1035,8 +1071,9 @@ namespace KamatekCrm.ViewModels
             set
             {
                 int normalized = Math.Max(0, value);
+                bool wasCounted = _isCounted;
                 IsCounted = true;
-                if (_countedQuantity != normalized)
+                if (_countedQuantity != normalized || !wasCounted)
                 {
                     _countedQuantity = normalized;
                     OnPropertyChanged();
@@ -1081,9 +1118,12 @@ namespace KamatekCrm.ViewModels
                     SavedAt = DateTime.UtcNow
                 };
 
-                _ = _draftStorageService.SaveDraftAsync(GetDraftKey(), draft);
+                _draftStorageService.SaveDraftAsync(GetDraftKey(), draft).SafeFireAndForget("StockCountViewModel._draftStorageService.SaveDraftAsync");
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[StockCount.AutoSaveDraft] {ex.Message}");
+            }
         }
     }
 

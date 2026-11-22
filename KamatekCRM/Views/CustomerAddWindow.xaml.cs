@@ -17,7 +17,7 @@ namespace KamatekCrm.Views
 
             viewModel.RequestClose += success =>
             {
-                try { DialogResult = success; } catch { }
+                try { DialogResult = success; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "CustomerAddWindow.xaml.cs"); }
                 Close();
             };
             DataContext = viewModel;
@@ -28,7 +28,7 @@ namespace KamatekCrm.Views
             InitializeComponent();
             viewModel.RequestClose += success =>
             {
-                try { DialogResult = success; } catch { }
+                try { DialogResult = success; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "CustomerAddWindow.xaml.cs"); }
                 Close();
             };
             DataContext = viewModel;
@@ -42,7 +42,7 @@ namespace KamatekCrm.Views
 
         private void CloseWindow_Click(object sender, RoutedEventArgs e)
         {
-            try { this.DialogResult = false; } catch { }
+            try { this.DialogResult = false; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "CustomerAddWindow.xaml.cs"); }
             this.Close();
         }
     }

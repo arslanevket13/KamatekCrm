@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -127,7 +128,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _selectedCustomer, value))
                 {
-                    _ = LoadCustomerAssetsAsync();
+                    LoadCustomerAssetsAsync().SafeFireAndForget("FaultTicketViewModel.LoadCustomerAssetsAsync");
                     OnPropertyChanged(nameof(CustomerAddress));
                     SaveFaultTicketCommand.NotifyCanExecuteChanged();
                 }
@@ -155,7 +156,7 @@ namespace KamatekCrm.ViewModels
                     if (value != null)
                     {
                         SelectedCategory = value.Category;
-                        _ = CheckSerialHistoryAsync(value.SerialNumber);
+                        CheckSerialHistoryAsync(value.SerialNumber).SafeFireAndForget("FaultTicketViewModel.CheckSerialHistoryAsync");
                         if (IsWarrantyActive)
                         {
                             _toastService?.ShowInfo($"🛡️ Seçilen cihaz garanti kapsamında: {value.CreatedDate.AddYears(2):dd.MM.yyyy} tarihine kadar geçerlidir.");
@@ -243,7 +244,7 @@ namespace KamatekCrm.ViewModels
             set
             {
                 if (SetProperty(ref _newAssetSerialNumber, value))
-                    _ = CheckSerialHistoryAsync(value);
+                    CheckSerialHistoryAsync(value).SafeFireAndForget("FaultTicketViewModel.CheckSerialHistoryAsync");
             }
         }
 
@@ -342,7 +343,7 @@ namespace KamatekCrm.ViewModels
             _serviceProvider = serviceProvider;
             _toastService = toastService;
             _pdfService = pdfService;
-            _ = LoadCustomersAsync();
+            LoadCustomersAsync().SafeFireAndForget("FaultTicketViewModel.LoadCustomersAsync");
             UpdateDeviceTypeOptions();
         }
 
@@ -376,7 +377,7 @@ namespace KamatekCrm.ViewModels
                                 });
                             }
                         }
-                        catch { }
+                        catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "FaultTicketViewModel.cs"); }
                     });
                 }
             }
@@ -723,10 +724,10 @@ namespace KamatekCrm.ViewModels
                             var thermalPrinter = _serviceProvider.GetService<IThermalReceiptPrintService>();
                             if (thermalPrinter != null)
                             {
-                                _ = thermalPrinter.PrintServiceJobTicketAsync(faultTicket);
+                                thermalPrinter.PrintServiceJobTicketAsync(faultTicket).SafeFireAndForget("FaultTicketViewModel.thermalPrinter.PrintServiceJobTicketAsync");
                             }
                         }
-                        catch { }
+                        catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "FaultTicketViewModel.cs"); }
                     }
 
                     // PDF Formu Oluştur/Aç
@@ -743,7 +744,7 @@ namespace KamatekCrm.ViewModels
                                 UseShellExecute = true
                             });
                         }
-                        catch { }
+                        catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "FaultTicketViewModel.cs"); }
                     }
 
                     // Pencereyi kapat

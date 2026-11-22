@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,30 +13,41 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Login ekrani ViewModel (UserControl icin)
     /// </summary>
-    public partial class LoginViewModel : ViewModelBase
+    public partial class LoginViewModel : ViewModelBase, IDisposable
     {
         private string _username = string.Empty;
         private string _password = string.Empty;
         private string _errorMessage = string.Empty;
         private bool _isLoading;
         private bool _rememberMe;
+        private bool _disposed;
+        private IDisposable? _connectionRestoredSubscription;
+        private IDisposable? _connectionLostSubscription;
 
         [ObservableProperty]
         private bool _isSearchingForServer;
 
         partial void OnIsSearchingForServerChanged(bool value)
         {
+            OnPropertyChanged(nameof(LoginButtonText));
             LoginCommand.NotifyCanExecuteChanged();
         }
 
         [ObservableProperty]
-        private string _serverStatusMessage = string.Empty;
+        private string _serverStatusMessage = "Sunucu aranıyor...";
 
         [ObservableProperty]
         private bool _isServerFound;
 
+        [ObservableProperty]
+        private bool _isCapsLockOn;
+
+        public string LoginButtonText => IsLoading
+            ? "Giriş yapılıyor..."
+            : (IsSearchingForServer ? "Sunucu kontrol ediliyor..." : "Sisteme Giriş Yap");
+
         /// <summary>
-        /// Kullanici adi
+        /// Kullanıcı adı
         /// </summary>
         public string Username
         {
@@ -49,7 +61,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Sifre (code-behind'dan set edilir)
+        /// Şifre
         /// </summary>
         public string Password
         {
@@ -63,7 +75,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Beni Hatirla secenegi
+        /// Beni Hatırla seçeneği
         /// </summary>
         public bool RememberMe
         {
@@ -72,7 +84,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Hata mesaji
+        /// Hata mesajı
         /// </summary>
         public string ErrorMessage
         {
@@ -85,24 +97,25 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Yukleniyor durumu
+        /// Yükleniyor durumu
         /// </summary>
         public bool IsLoading
         {
             get => _isLoading;
             set
             {
-                SetProperty(ref _isLoading, value);
-                LoginCommand.NotifyCanExecuteChanged();
+                if (SetProperty(ref _isLoading, value))
+                {
+                    OnPropertyChanged(nameof(LoginButtonText));
+                    LoginCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
         /// <summary>
-        /// Hata mesaji gorunurlugu
+        /// Hata mesajı görünürlüğü
         /// </summary>
         public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
-
-
 
         private readonly IAuthService _authService;
         private readonly NavigationService _navigationService;
@@ -110,6 +123,7 @@ namespace KamatekCrm.ViewModels
         private readonly IToastService _toastService;
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IForcedPasswordChangeService _forcedPasswordChangeService;
+        private readonly IRecoveryKeyService _recoveryKeyService;
 
         /// <summary>
         /// Constructor
@@ -120,7 +134,8 @@ namespace KamatekCrm.ViewModels
             NetworkDiscoveryService discoveryService,
             IToastService toastService,
             IDatabaseConnectionProvider connectionProvider,
-            IForcedPasswordChangeService forcedPasswordChangeService)
+            IForcedPasswordChangeService forcedPasswordChangeService,
+            IRecoveryKeyService recoveryKeyService)
         {
             _authService = authService;
             _navigationService = navigationService;
@@ -128,83 +143,113 @@ namespace KamatekCrm.ViewModels
             _toastService = toastService;
             _connectionProvider = connectionProvider;
             _forcedPasswordChangeService = forcedPasswordChangeService;
+            _recoveryKeyService = recoveryKeyService;
 
             // Gerçek zamanlı sunucu durumunu dinle
-            EventAggregator.Instance.Subscribe<DatabaseConnectionRestoredEvent>(_ =>
+            _connectionRestoredSubscription = EventAggregator.Instance.Subscribe<DatabaseConnectionRestoredEvent>(_ =>
             {
-                if (System.Windows.Application.Current != null && System.Windows.Application.Current.Dispatcher != null)
-                {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        IsServerFound = true;
-                        IsSearchingForServer = false;
-                        ServerStatusMessage = $"Sunucu bulundu ({_connectionProvider.CurrentServerIp})";
-                        LoginCommand.NotifyCanExecuteChanged();
-                    });
-                }
+                var serverLabel = string.IsNullOrWhiteSpace(_connectionProvider.CurrentServerIp)
+                    ? "Yerel Sunucu"
+                    : _connectionProvider.CurrentServerIp;
+                SetStartupStatus($"Sunucu bağlantısı hazır ({serverLabel})", isSearching: false, isFound: true, isNotFound: false);
             });
 
-            EventAggregator.Instance.Subscribe<DatabaseConnectionLostEvent>(_ =>
+            _connectionLostSubscription = EventAggregator.Instance.Subscribe<DatabaseConnectionLostEvent>(_ =>
             {
-                if (System.Windows.Application.Current != null && System.Windows.Application.Current.Dispatcher != null)
-                {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        IsServerFound = false;
-                        IsSearchingForServer = false;
-                        ServerStatusMessage = "Sunucu bulunamadı! Lütfen ağ ayarlarını yapılandırın.";
-                        LoginCommand.NotifyCanExecuteChanged();
-                    });
-                }
+                SetStartupStatus("Sunucu bulunamadı! Lütfen ağ ayarlarını yapılandırın.", isSearching: false, isFound: false, isNotFound: true);
             });
-            
-            // Load saved settings
+
+            // Kayıtlı bilgileri yükle
             LoadSavedCredentials();
-            
-            _ = InitializeDiscoveryAsync();
+
+            InitializeDiscoveryAsync().SafeFireAndForget("LoginViewModel.InitializeDiscoveryAsync");
         }
 
         [ObservableProperty]
         private bool _isServerNotFound;
 
-        public async Task InitializeDiscoveryAsync()
+        /// <summary>
+        /// Açılış bootstrap ve bağlantı olaylarından gelen canlı durum bilgisini UI thread'de günceller.
+        /// </summary>
+        public void SetStartupStatus(string message, bool isSearching, bool isFound, bool isNotFound)
         {
-            if (_connectionProvider.IsConnected)
+            if (_disposed) return;
+
+            void Apply()
             {
-                IsServerFound = true;
-                IsSearchingForServer = false;
-                IsServerNotFound = false;
-                ServerStatusMessage = $"Sunucu bulundu ({_connectionProvider.CurrentServerIp})";
+                ServerStatusMessage = message;
+                IsSearchingForServer = isSearching;
+                IsServerFound = isFound;
+                IsServerNotFound = isNotFound;
                 LoginCommand.NotifyCanExecuteChanged();
+            }
+
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher != null && !dispatcher.CheckAccess())
+            {
+                dispatcher.Invoke(Apply);
             }
             else
             {
-                IsSearchingForServer = true;
-                IsServerNotFound = false;
-                ServerStatusMessage = "Ağda sunucu aranıyor...";
-                IsServerFound = false;
-                LoginCommand.NotifyCanExecuteChanged();
+                Apply();
+            }
+        }
 
-                // Start Timeout Fallback
+        public async Task InitializeDiscoveryAsync()
+        {
+            if (string.IsNullOrWhiteSpace(_connectionProvider.GetConnectionString()))
+            {
+                SetStartupStatus(
+                    "Veritabanı bağlantısı yapılandırılmamış. Ağ Ayarlarından bağlantı kurabilirsiniz.",
+                    isSearching: false,
+                    isFound: false,
+                    isNotFound: true);
+                return;
+            }
+
+            if (_connectionProvider.IsConnected)
+            {
+                var serverLabel = string.IsNullOrWhiteSpace(_connectionProvider.CurrentServerIp)
+                    ? "Yerel Sunucu"
+                    : _connectionProvider.CurrentServerIp;
+                SetStartupStatus($"Sunucu bulundu ({serverLabel})", isSearching: false, isFound: true, isNotFound: false);
+            }
+            else
+            {
+                SetStartupStatus("Sunucu aranıyor...", isSearching: true, isFound: false, isNotFound: false);
+
+                // 5 saniyelik zaman aşımı geri düşüşü
                 _ = Task.Run(async () =>
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(7));
-                    if (IsSearchingForServer && !_connectionProvider.IsConnected)
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    if (!_disposed && IsSearchingForServer && !_connectionProvider.IsConnected)
                     {
-                        if (System.Windows.Application.Current != null && System.Windows.Application.Current.Dispatcher != null)
-                        {
-                            System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                            {
-                                IsSearchingForServer = false;
-                                IsServerNotFound = true;
-                                ServerStatusMessage = "Sunucuya bağlanılamadı. Lütfen ayarları kontrol edin.";
-                                LoginCommand.NotifyCanExecuteChanged();
-                            });
-                        }
+                        SetStartupStatus(
+                            "Sunucuya 5 sn içinde ulaşılamadı. Ağ Ayarlarından bağlantıyı yapılandırabilirsiniz.",
+                            isSearching: false,
+                            isFound: false,
+                            isNotFound: true);
                     }
                 });
             }
+
             await Task.CompletedTask;
+        }
+
+        [RelayCommand]
+        private void ForgotPassword()
+        {
+            var recoveryWindow = new KamatekCrm.Views.PasswordRecoveryWindow(
+                _recoveryKeyService,
+                _authService,
+                _toastService);
+
+            var owner = System.Windows.Application.Current?.MainWindow;
+            if (owner is not null)
+            {
+                recoveryWindow.Owner = owner;
+            }
+            recoveryWindow.ShowDialog();
         }
 
         [RelayCommand]
@@ -214,12 +259,15 @@ namespace KamatekCrm.ViewModels
             networkViewModel.IsPreLoginMode = true; // Pre-login / Bootstrap modunu etkinleştir
 
             var parentWindow = System.Windows.Application.Current?.MainWindow;
+            var workArea = SystemParameters.WorkArea;
             var settingsWindow = new System.Windows.Window
             {
                 Title = "Ağ ve Bağlantı Ayarları",
                 Content = new KamatekCrm.Views.NetworkSettingsView { DataContext = networkViewModel },
-                Width = 1100,
-                Height = 760,
+                Width = Math.Min(1100, workArea.Width * 0.92),
+                Height = Math.Min(740, workArea.Height * 0.90),
+                MinWidth = 860,
+                MinHeight = 600,
                 Owner = parentWindow,
                 WindowStartupLocation = parentWindow != null ? System.Windows.WindowStartupLocation.CenterOwner : System.Windows.WindowStartupLocation.CenterScreen,
                 ResizeMode = System.Windows.ResizeMode.CanResize
@@ -228,7 +276,7 @@ namespace KamatekCrm.ViewModels
             settingsWindow.Closed += (s, e) =>
             {
                 networkViewModel.Dispose();
-                _ = InitializeDiscoveryAsync();
+                InitializeDiscoveryAsync().SafeFireAndForget("LoginViewModel.InitializeDiscoveryAsync");
             };
 
             settingsWindow.ShowDialog();
@@ -244,7 +292,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Giris yapilabilir mi kontrolu
+        /// Giriş yapılabilir mi kontrolü
         /// </summary>
         private bool CanLogin()
         {
@@ -252,7 +300,7 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Kayitli giris bilgilerini yukle
+        /// Kayıtlı giriş bilgilerini yükle
         /// </summary>
         private void LoadSavedCredentials()
         {
@@ -267,12 +315,12 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                _toastService.ShowError($"Kayitli bilgiler yuklenemedi: {ex.Message}");
+                _toastService.ShowError($"Kayıtlı bilgiler yüklenemedi: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Giris basarili olunca bilgileri kaydet
+        /// Giriş başarılı olunca bilgileri kaydet
         /// </summary>
         private void SaveCredentials(string? token)
         {
@@ -285,27 +333,28 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                _toastService.ShowError($"Kayit bilgileri saklanamadi: {ex.Message}");
+                _toastService.ShowError($"Kayıt bilgileri saklanamadı: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Giris islemini gerceklestir — API uzerinden
+        /// Giriş işlemini gerçekleştir
         /// </summary>
         public async Task ExecuteLoginAsync(object? parameter = null)
         {
             if (!_connectionProvider.IsConnected)
             {
                 ErrorMessage = "Sunucu bağlantısı yok. Lütfen ağ ayarlarını kontrol edin.";
+                IsServerNotFound = true;
                 _toastService.ShowError("Sunucu bağlantısı sağlanamadı!");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
             {
-                 if(string.IsNullOrWhiteSpace(Username)) ErrorMessage = "Kullanici adi gerekli!";
-                 else if(string.IsNullOrWhiteSpace(Password)) ErrorMessage = "Sifre gerekli!";
-                 return;
+                if (string.IsNullOrWhiteSpace(Username)) ErrorMessage = "Kullanıcı adı gerekli!";
+                else if (string.IsNullOrWhiteSpace(Password)) ErrorMessage = "Şifre gerekli!";
+                return;
             }
 
             ErrorMessage = string.Empty;
@@ -324,7 +373,7 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
-                    ErrorMessage = "Hatali kullanici adi veya sifre!";
+                    ErrorMessage = "Hatalı kullanıcı adı veya şifre!";
                 }
 
                 if (isAuthenticated)
@@ -344,16 +393,16 @@ namespace KamatekCrm.ViewModels
                         _authService.CurrentUser.MustChangePassword = false;
                     }
 
-                    // Basarili giris - Ayarlari kaydet
+                    // Başarılı giriş - Ayarları kaydet
                     SaveCredentials(null);
-                    
-                    // Ana icerigi gec
+
+                    // Ana içeriğe geç
                     _navigationService.NavigateToMainContent();
                 }
                 else
                 {
-                     if(string.IsNullOrEmpty(ErrorMessage)) ErrorMessage = "Giris basarisiz.";
-                     Password = string.Empty;
+                    if (string.IsNullOrEmpty(ErrorMessage)) ErrorMessage = "Giriş başarısız.";
+                    Password = string.Empty;
                 }
             }
             catch (Exception ex)
@@ -365,6 +414,17 @@ namespace KamatekCrm.ViewModels
             {
                 IsLoading = false;
             }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _connectionRestoredSubscription?.Dispose();
+            _connectionLostSubscription?.Dispose();
+            _connectionRestoredSubscription = null;
+            _connectionLostSubscription = null;
+            GC.SuppressFinalize(this);
         }
     }
 }

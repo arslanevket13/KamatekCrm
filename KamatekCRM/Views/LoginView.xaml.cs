@@ -10,21 +10,45 @@ namespace KamatekCrm.Views
     /// </summary>
     public partial class LoginView : UserControl
     {
-
         public LoginView()
         {
             InitializeComponent();
 
-            Loaded += (s, e) => UsernameTextBox?.Focus();
+            Loaded += LoginView_Loaded;
+            PreviewKeyDown += (_, _) => UpdateCapsLockState();
+            PreviewKeyUp += (_, _) => UpdateCapsLockState();
+            GotKeyboardFocus += (_, _) => UpdateCapsLockState();
         }
 
-        private void ForgotPassword_Click(object sender, MouseButtonEventArgs e)
+        private void LoginView_Loaded(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
-                "Şifre sıfırlama özelliği henüz aktif değil.\nLütfen sistem yöneticinizle iletişime geçin.",
-                "Şifremi Unuttum",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            UpdateCapsLockState();
+
+            if (DataContext is LoginViewModel vm && !string.IsNullOrWhiteSpace(vm.Username))
+            {
+                PasswordBox?.Focus();
+            }
+            else
+            {
+                UsernameTextBox?.Focus();
+            }
+        }
+
+        private void UsernameTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && PasswordBox != null && string.IsNullOrEmpty(PasswordBox.Password))
+            {
+                PasswordBox.Focus();
+                e.Handled = true;
+            }
+        }
+
+        private void UpdateCapsLockState()
+        {
+            if (DataContext is LoginViewModel vm)
+            {
+                vm.IsCapsLockOn = Keyboard.IsKeyToggled(Key.CapsLock);
+            }
         }
     }
 }

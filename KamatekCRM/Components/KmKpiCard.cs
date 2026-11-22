@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -80,6 +81,14 @@ namespace KamatekCrm.Components
         public static readonly DependencyProperty AnimateProperty =
             DependencyProperty.Register(nameof(Animate), typeof(bool), typeof(KmKpiCard),
                 new PropertyMetadata(true));
+
+        public static readonly DependencyProperty CommandProperty =
+            DependencyProperty.Register(nameof(Command), typeof(ICommand), typeof(KmKpiCard),
+                new PropertyMetadata(null));
+
+        public static readonly DependencyProperty CommandParameterProperty =
+            DependencyProperty.Register(nameof(CommandParameter), typeof(object), typeof(KmKpiCard),
+                new PropertyMetadata(null));
 
         #endregion
 
@@ -173,6 +182,40 @@ namespace KamatekCrm.Components
         {
             get => (bool)GetValue(AnimateProperty);
             set => SetValue(AnimateProperty, value);
+        }
+
+        public ICommand? Command
+        {
+            get => (ICommand?)GetValue(CommandProperty);
+            set => SetValue(CommandProperty, value);
+        }
+
+        public object? CommandParameter
+        {
+            get => GetValue(CommandParameterProperty);
+            set => SetValue(CommandParameterProperty, value);
+        }
+
+        protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+        {
+            base.OnMouseLeftButtonUp(e);
+
+            if (!e.Handled && Command?.CanExecute(CommandParameter) == true)
+            {
+                Command.Execute(CommandParameter);
+                e.Handled = true;
+            }
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            if (!e.Handled && (e.Key == Key.Enter || e.Key == Key.Space) && Command?.CanExecute(CommandParameter) == true)
+            {
+                Command.Execute(CommandParameter);
+                e.Handled = true;
+            }
         }
 
         #endregion

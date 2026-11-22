@@ -53,101 +53,112 @@
             </StackPanel>
         </Border>
 
-        <!-- ════════ İçerik ════════ -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel MaxWidth="920">
-                <!-- ── Teslim Bilgileri ── -->
-                <Border CornerRadius="8" Padding="14" Margin="0,0,0,10"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="🚚 TESLİM BİLGİLERİ" Style="{StaticResource SectionTitleStyle}"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Teslim Eden" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding DeliveredBy, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,4,0,10"
-                                         IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
-                                <TextBlock Text="Teslim Notu" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding DeliveryNote, UpdateSourceTrigger=PropertyChanged}" Height="74"
-                                         TextWrapping="Wrap" AcceptsReturn="True" Margin="0,4,0,0"
-                                         IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Müşteri İmzası (opsiyonel)" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding CustomerSignature, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,4,0,10"
-                                         IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
-                                <TextBlock Text="Teklif Genel Toplamı" Style="{StaticResource LabelStyle}"/>
-                                <Border Padding="10" CornerRadius="6" Background="{DynamicResource SurfacePageBrush}" Margin="0,4,0,0">
-                                    <TextBlock Text="{Binding QuotationTotalDisplay}" FontSize="16" FontWeight="Bold"
-                                               Foreground="{DynamicResource ThemePrimary}"/>
-                                </Border>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
+        <!-- ════════ İçerik (DataGrid sanallaştırmasını korumak için dış ScrollViewer yerine yıldız satırlı Grid) ════════ -->
+        <Grid Grid.Row="1" MaxWidth="920">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                <!-- ── Malzeme Varyansı (Planlanan vs. Gerçekleşen) ── -->
-                <Border CornerRadius="8" Padding="14" Margin="0,0,0,10"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
-                        Visibility="{Binding HasMaterialVariances, Converter={StaticResource BoolToVis}}">
-                    <StackPanel>
-                        <TextBlock Text="📦 MALZEME VARYANSI (TEKLİF vs. SAHA GERÇEKLEŞEN)" Style="{StaticResource SectionTitleStyle}"/>
-                        <DataGrid ItemsSource="{Binding MaterialVariances}" AutoGenerateColumns="False"
-                                  CanUserAddRows="False" IsReadOnly="True" MaxHeight="140"
-                                  Background="Transparent" BorderThickness="0" HeadersVisibility="Column">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Malzeme Adı" Binding="{Binding ProductName}" Width="*"/>
-                                <DataGridTextColumn Header="Planlanan (Teklif)" Binding="{Binding PlannedQuantity, StringFormat={}{0:N2}}" Width="120"/>
-                                <DataGridTextColumn Header="Gerçekleşen (Saha)" Binding="{Binding ActualQuantity, StringFormat={}{0:N2}}" Width="120"/>
-                                <DataGridTextColumn Header="Fark (Varyans)" Binding="{Binding VarianceDisplay}" Width="110"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </StackPanel>
-                </Border>
+            <!-- ── Teslim Bilgileri ── -->
+            <Border Grid.Row="0" CornerRadius="8" Padding="14" Margin="0,0,0,10"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="🚚 TESLİM BİLGİLERİ" Style="{StaticResource SectionTitleStyle}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Teslim Eden" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding DeliveredBy, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,4,0,10"
+                                     IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
+                            <TextBlock Text="Teslim Notu" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding DeliveryNote, UpdateSourceTrigger=PropertyChanged}" Height="64"
+                                     TextWrapping="Wrap" AcceptsReturn="True" Margin="0,4,0,0"
+                                     IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Müşteri İmzası (opsiyonel)" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding CustomerSignature, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,4,0,10"
+                                     IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
+                            <TextBlock Text="Teklif Genel Toplamı" Style="{StaticResource LabelStyle}"/>
+                            <Border Padding="10" CornerRadius="6" Background="{DynamicResource SurfacePageBrush}" Margin="0,4,0,0">
+                                <TextBlock Text="{Binding QuotationTotalDisplay}" FontSize="16" FontWeight="Bold"
+                                           Foreground="{DynamicResource ThemePrimary}"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
 
-                <!-- ── Ödeme Bilgileri ── -->
-                <Border CornerRadius="8" Padding="14" Margin="0,0,0,10"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="💳 ÖDEME BİLGİLERİ" Style="{StaticResource SectionTitleStyle}"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Ödeme Durumu" Style="{StaticResource LabelStyle}"/>
-                                <ComboBox ItemsSource="{Binding PaymentStatusOptions}" DisplayMemberPath="Label"
-                                          SelectedValuePath="Value" SelectedValue="{Binding PaymentStatus}"
-                                          Height="34" Margin="0,4,0,10"
+            <!-- ── Malzeme Varyansı (Planlanan vs. Gerçekleşen — Yıldız satırda tam sanallaştırmalı DataGrid) ── -->
+            <Border Grid.Row="1" CornerRadius="8" Padding="14" Margin="0,0,0,10"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
+                    Visibility="{Binding HasMaterialVariances, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="📦 MALZEME VARYANSI (TEKLİF vs. SAHA GERÇEKLEŞEN)" Style="{StaticResource SectionTitleStyle}"/>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding MaterialVariances}" AutoGenerateColumns="False"
+                              CanUserAddRows="False" IsReadOnly="True"
+                              Background="Transparent" BorderThickness="0" HeadersVisibility="Column"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              ScrollViewer.CanContentScroll="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Malzeme Adı" Binding="{Binding ProductName}" Width="*"/>
+                            <DataGridTextColumn Header="Planlanan (Teklif)" Binding="{Binding PlannedQuantity, StringFormat={}{0:N2}}" Width="120"/>
+                            <DataGridTextColumn Header="Gerçekleşen (Saha)" Binding="{Binding ActualQuantity, StringFormat={}{0:N2}}" Width="120"/>
+                            <DataGridTextColumn Header="Fark (Varyans)" Binding="{Binding VarianceDisplay}" Width="110"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <!-- ── Ödeme Bilgileri ── -->
+            <Border Grid.Row="2" CornerRadius="8" Padding="14"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="💳 ÖDEME BİLGİLERİ" Style="{StaticResource SectionTitleStyle}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Ödeme Durumu" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding PaymentStatusOptions}" DisplayMemberPath="Label"
+                                      SelectedValuePath="Value" SelectedValue="{Binding PaymentStatus}"
+                                      Height="34" Margin="0,4,0,10"
+                                      IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
+                            <TextBlock Text="Tahsil Edilen Tutar (₺)" Style="{StaticResource LabelStyle}"/>
+                            <ui:NumberBox Value="{Binding PaidAmount, Mode=TwoWay}" Minimum="0" Height="34" Margin="0,4,0,0"
                                           IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
-                                <TextBlock Text="Tahsil Edilen Tutar (₺)" Style="{StaticResource LabelStyle}"/>
-                                <ui:NumberBox Value="{Binding PaidAmount, Mode=TwoWay}" Minimum="0" Height="34" Margin="0,4,0,0"
-                                              IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Ödeme Yöntemi" Style="{StaticResource LabelStyle}"/>
-                                <ComboBox ItemsSource="{Binding PaymentMethodOptions}" DisplayMemberPath="Label"
-                                          SelectedValuePath="Value" SelectedValue="{Binding PaymentMethod}"
-                                          Height="34" Margin="0,4,0,10"
-                                          IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
-                                <TextBlock Text="Fatura No (opsiyonel)" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding InvoiceNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,4,0,0"
-                                         IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Ödeme Yöntemi" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding PaymentMethodOptions}" DisplayMemberPath="Label"
+                                      SelectedValuePath="Value" SelectedValue="{Binding PaymentMethod}"
+                                      Height="34" Margin="0,4,0,10"
+                                      IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
+                            <TextBlock Text="Fatura No (opsiyonel)" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding InvoiceNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,4,0,0"
+                                     IsEnabled="{Binding IsDelivered, Converter={StaticResource InverseBoolConverter}}"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
 
         <!-- ════════ Alt ════════ -->
         <Grid Grid.Row="2" Margin="0,12,0,0">

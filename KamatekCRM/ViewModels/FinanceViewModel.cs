@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -24,6 +25,8 @@ namespace KamatekCrm.ViewModels
     {
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IAuthService _authService;
+        private readonly IToastService? _toastService;
+        private readonly IDialogService? _dialogService;
 
         #region Properties
 
@@ -36,10 +39,13 @@ namespace KamatekCrm.ViewModels
             get => _selectedDate;
             set
             {
-                if (SetProperty(ref _selectedDate, value))
+                var normalized = value.Kind == DateTimeKind.Utc
+                    ? value
+                    : DateTime.SpecifyKind(value.Date, DateTimeKind.Utc);
+                if (SetProperty(ref _selectedDate, normalized))
                 {
                     OnPropertyChanged(nameof(SelectedDateDisplay));
-                    _ = RefreshAsync();
+                    RefreshAsync().SafeFireAndForget("FinanceViewModel.RefreshAsync");
                 }
             }
         }
@@ -57,7 +63,7 @@ namespace KamatekCrm.ViewModels
                 if (SetProperty(ref _showMonthly, value))
                 {
                     OnPropertyChanged(nameof(SelectedDateDisplay));
-                    _ = RefreshAsync();
+                    RefreshAsync().SafeFireAndForget("FinanceViewModel.RefreshAsync");
                 }
             }
         }
@@ -108,7 +114,7 @@ namespace KamatekCrm.ViewModels
         public decimal TotalVaultBalance => FinancialCalculator.RoundMoney(CarriedOverBalance + DailyNetBalance);
         public string NetBalanceDisplay => $"₺{TotalVaultBalance:N2}";
         public string CarriedOverDisplay => $"₺{CarriedOverBalance:N2}";
-        public string NetBalanceColor => TotalVaultBalance >= 0 ? "#10B981" : "#EF4444";
+        public System.Windows.Media.Brush NetBalanceColor => ThemeService.ResolveBrush(TotalVaultBalance >= 0 ? "StatusSuccessFg" : "StatusErrorFg");
 
         // Yeni Gider Ekleme Formu
         private decimal _newExpenseAmount;
@@ -171,16 +177,22 @@ namespace KamatekCrm.ViewModels
 
         #region Constructor
 
-        public FinanceViewModel(IAuthService authService, IDbContextFactory<AppDbContext> dbContextFactory)
+        public FinanceViewModel(
+            IAuthService authService,
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            IToastService? toastService = null,
+            IDialogService? dialogService = null)
         {
             _authService = authService;
             _dbContextFactory = dbContextFactory;
+            _toastService = toastService;
+            _dialogService = dialogService;
 
             FilteredTransactions = CollectionViewSource.GetDefaultView(Transactions);
             FilteredTransactions.Filter = FilterTransactions;
             FilteredTransactions.SortDescriptions.Add(new SortDescription(nameof(CashTransaction.Date), ListSortDirection.Descending));
 
-            _ = RefreshAsync();
+            RefreshAsync().SafeFireAndForget("FinanceViewModel.RefreshAsync");
         }
 
         #endregion
@@ -204,7 +216,7 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
-                    startDate = SelectedDate.Date;
+                    startDate = DateTime.SpecifyKind(SelectedDate.Date, DateTimeKind.Utc);
                     endDate = startDate.AddDays(1).AddTicks(-1);
                 }
 
@@ -251,7 +263,7 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Veri yüklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Veri yüklenirken hata: {ex.Message}");
             }
             finally
             {
@@ -286,7 +298,7 @@ namespace KamatekCrm.ViewModels
         {
             if (!_authService.CanViewFinance)
             {
-                MessageBox.Show("Finansal işlem oluşturma yetkiniz yok.", "Yetkisiz işlem", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService?.ShowWarning("Yetkisiz işlem", "Finansal işlem oluşturma yetkiniz yok.");
                 return;
             }
 
@@ -307,18 +319,18 @@ namespace KamatekCrm.ViewModels
                 context.CashTransactions.Add(expense);
                 context.SaveChanges();
 
-                MessageBox.Show($"Gider kaydedildi: ₺{NewExpenseAmount:N2}", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                _toastService?.ShowSuccess("Başarılı", $"Gider kaydedildi: ₺{NewExpenseAmount:N2}");
 
                 // Formu temizle
                 NewExpenseAmount = 0;
                 NewExpenseDescription = string.Empty;
                 NewExpenseCategory = "Genel";
 
-                _ = RefreshAsync();
+                RefreshAsync().SafeFireAndForget("FinanceViewModel.RefreshAsync");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Gider eklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Gider eklenirken hata: {ex.Message}");
             }
         }
 
@@ -328,33 +340,31 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanDeleteTransaction))]
-        private void DeleteTransaction(object? parameter)
+        private async System.Threading.Tasks.Task DeleteTransaction(object? parameter)
         {
             if (parameter is not CashTransaction transaction) return;
             if (!_authService.IsAdmin)
             {
-                MessageBox.Show("Finansal kayıt silmek için yönetici yetkisi gerekir.", "Yetkisiz işlem", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService?.ShowWarning("Yetkisiz işlem", "Finansal kayıt silmek için yönetici yetkisi gerekir.");
                 return;
             }
 
-            var result = MessageBox.Show(
+            bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
                 $"Bu işlemi silmek istediğinize emin misiniz?\n\n{transaction.Description}\nTutar: ₺{transaction.Amount:N2}",
-                "Silme Onayı",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                "Silme Onayı");
 
-            if (result != MessageBoxResult.Yes) return;
+            if (!confirmed) return;
 
             try
             {
                 using var context = _dbContextFactory.CreateDbContext();
                 context.CashTransactions.Remove(transaction);
                 context.SaveChanges();
-                _ = RefreshAsync();
+                RefreshAsync().SafeFireAndForget("FinanceViewModel.RefreshAsync");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Silme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Silme hatası: {ex.Message}");
             }
         }
 

@@ -21,7 +21,12 @@ namespace KamatekCrm.Services
         bool IsSlaPaused(JobStatus status);
 
         /// <summary>
-        /// Mesai saatleri (Pazartesi-Cumartesi 09:00-18:00) dikkate alınarak hedef SLA bitiş tarihini hesaplar.
+        /// Öncelik seviyesine göre varsayılan mesai içi SLA süresini döndürür.
+        /// </summary>
+        TimeSpan GetDefaultSlaDuration(JobPriority priority);
+
+        /// <summary>
+        /// Mesai saatleri (Türkiye yerel saati UTC+3, Pazartesi-Cumartesi 09:00-18:00) dikkate alınarak hedef SLA bitiş tarihini (UTC) hesaplar.
         /// </summary>
         DateTime CalculateWorkingHoursDeadline(DateTime startUtc, TimeSpan slaDuration);
 
@@ -29,7 +34,7 @@ namespace KamatekCrm.Services
         /// Mevcut duruma ve mesai saatlerine göre efektif kalan SLA süresini hesaplar.
         /// Duraklatılmış durumlarda kalan süre dondurulur.
         /// </summary>
-        TimeSpan GetRemainingEffectiveTime(DateTime? deadlineUtc, JobStatus status);
+        TimeSpan GetRemainingEffectiveTime(DateTime? deadlineUtc, JobStatus status, DateTime? pausedAtUtc = null);
     }
 }
 

@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -50,6 +51,13 @@ namespace KamatekCrm.ViewModels
 
         public ObservableCollection<CustomerInteractionDto> AgendaItems { get; } = new();
         public ObservableCollection<UserListItemDto> Users { get; } = new();
+        private IDisposable? _interactionChangedSubscription;
+
+        private static readonly UserListItemDto AllUsersOption = new()
+        {
+            Id = 0,
+            AdSoyad = "Tüm Personel"
+        };
 
         public CustomerInteractionDto? SelectedAgendaItem
         {
@@ -146,10 +154,10 @@ namespace KamatekCrm.ViewModels
             _userAppService = userAppService;
             _serviceProvider = serviceProvider;
 
-            EventAggregator.Instance.Subscribe<CustomerInteractionChangedEvent>(OnInteractionChanged);
+            _interactionChangedSubscription = EventAggregator.Instance.Subscribe<CustomerInteractionChangedEvent>(OnInteractionChanged);
 
-            _ = LoadUsersAsync();
-            _ = LoadAgendaAsync();
+            LoadUsersAsync().SafeFireAndForget("ManagerAgendaViewModel.LoadUsersAsync");
+            LoadAgendaAsync().SafeFireAndForget("ManagerAgendaViewModel.LoadAgendaAsync");
         }
 
         private void OnInteractionChanged(CustomerInteractionChangedEvent evt)
@@ -168,13 +176,22 @@ namespace KamatekCrm.ViewModels
                 if (res.IsSuccess && res.Value != null)
                 {
                     Users.Clear();
+                    Users.Add(AllUsersOption);
                     foreach (var u in res.Value.Where(x => x.IsActive))
                     {
                         Users.Add(u);
                     }
+
+                    if (SelectedUser == null)
+                    {
+                        SelectedUser = AllUsersOption;
+                    }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Personel listesi yüklenemedi: {ex.Message}");
+            }
         }
 
         [RelayCommand]
@@ -189,7 +206,6 @@ namespace KamatekCrm.ViewModels
                     _allAgendaItems.Clear();
                     _allAgendaItems.AddRange(res.Value);
 
-                    UpdateMetrics();
                     ApplyFilter();
                 }
             }
@@ -203,24 +219,10 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        private void UpdateMetrics()
-        {
-            var nowUtc = DateTime.UtcNow;
-            var todayUtc = nowUtc.Date;
-
-            OverdueCount = _allAgendaItems.Count(x => x.IsOverdue);
-            TodayCount = _allAgendaItems.Count(x => !x.IsOverdue && x.FollowUpDate.HasValue && x.FollowUpDate.Value.Date == todayUtc);
-            CriticalCount = _allAgendaItems.Count(x => x.PriorityLevel == "Critical" || x.Priority == InteractionPriority.Critical);
-            TotalPendingCount = _allAgendaItems.Count;
-        }
-
-        private void ApplyFilter()
+        private IEnumerable<CustomerInteractionDto> GetRoleAndUserScopedItems()
         {
             var query = _allAgendaItems.AsEnumerable();
-            var nowUtc = DateTime.UtcNow;
-            var todayUtc = nowUtc.Date;
 
-            // Rol ve kullanıcı filtrelemesi
             if (!IsAdmin)
             {
                 var currentUserId = _authService.CurrentUser?.Id;
@@ -229,10 +231,31 @@ namespace KamatekCrm.ViewModels
                     query = query.Where(x => !x.AssignedToUserId.HasValue || x.AssignedToUserId == currentUserId.Value);
                 }
             }
-            else if (SelectedUser != null)
+            else if (SelectedUser != null && SelectedUser.Id > 0)
             {
                 query = query.Where(x => x.AssignedToUserId == SelectedUser.Id);
             }
+
+            return query;
+        }
+
+        private void UpdateMetrics(IReadOnlyCollection<CustomerInteractionDto> scopedItems)
+        {
+            var todayUtc = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+
+            OverdueCount = scopedItems.Count(x => x.IsOverdue);
+            TodayCount = scopedItems.Count(x => !x.IsOverdue && x.FollowUpDate.HasValue && x.FollowUpDate.Value.Date == todayUtc);
+            CriticalCount = scopedItems.Count(x => x.PriorityLevel == "Critical" || x.Priority == InteractionPriority.Critical);
+            TotalPendingCount = scopedItems.Count;
+        }
+
+        private void ApplyFilter()
+        {
+            var scopedList = GetRoleAndUserScopedItems().ToList();
+            UpdateMetrics(scopedList);
+
+            var query = scopedList.AsEnumerable();
+            var todayUtc = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
 
             // Durum / Zaman filtrelemesi
             switch (SelectedFilter)
@@ -278,6 +301,11 @@ namespace KamatekCrm.ViewModels
         }
 
         private bool CanActOnAgenda() => SelectedAgendaItem != null && SelectedAgendaItem.Status != InteractionStatus.Completed;
+
+        private bool CanSnoozeOrMarkSeen() =>
+            CanActOnAgenda() &&
+            SelectedAgendaItem?.SourceEntityId is > 0 &&
+            (SelectedAgendaItem.SourceType == "Interaction" || SelectedAgendaItem.SourceType == "ServiceJob");
 
         [RelayCommand(CanExecute = nameof(CanActOnAgenda))]
         public async Task CompleteItemAsync()
@@ -335,7 +363,7 @@ namespace KamatekCrm.ViewModels
                 CompletedCount++;
                 _allAgendaItems.Remove(current);
                 AgendaItems.Remove(current);
-                UpdateMetrics();
+                UpdateMetrics(GetRoleAndUserScopedItems().ToList());
                 SelectedAgendaItem = AgendaItems.FirstOrDefault();
             }
             finally
@@ -344,10 +372,10 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanActOnAgenda))]
+        [RelayCommand(CanExecute = nameof(CanSnoozeOrMarkSeen))]
         public async Task SnoozeItemAsync(string? daysParam)
         {
-            if (SelectedAgendaItem == null) return;
+            if (SelectedAgendaItem == null || !CanSnoozeOrMarkSeen()) return;
             int days = 1;
             if (int.TryParse(daysParam, out var d) && d > 0) days = d;
 
@@ -355,14 +383,16 @@ namespace KamatekCrm.ViewModels
             try
             {
                 var current = SelectedAgendaItem;
-                var newDateUtc = DateTime.UtcNow.AddDays(days);
+                var newDateUtc = DateTime.SpecifyKind(DateTime.UtcNow.AddDays(days), DateTimeKind.Utc);
+                string actor = _authService.CurrentUser?.Username ?? "Yönetici";
+                string reason = $"Yönetici gündeminden +{days} gün ertelendi.";
 
                 if (current.SourceType == "Interaction")
                 {
                     var res = await _commandService.RescheduleAsync(
                         current.SourceEntityId ?? current.Id,
                         newDateUtc,
-                        $"Yönetici gündeminden +{days} gün ertelendi.");
+                        reason);
 
                     if (res.IsSuccess)
                     {
@@ -379,10 +409,25 @@ namespace KamatekCrm.ViewModels
                         _toastService.ShowError("Hata", res.Error ?? "Erteleme işlemi başarısız.");
                     }
                 }
-                else
+                else if (current.SourceType == "ServiceJob" && current.SourceEntityId.HasValue)
                 {
-                    _toastService.ShowInfo("Bilgi", $"{current.InteractionNumber} için erteleme uygulandı.");
-                    await LoadAgendaAsync();
+                    bool isSla = current.InteractionNumber.StartsWith("SLA-", StringComparison.OrdinalIgnoreCase);
+                    var res = await _serviceJobCommandService.SnoozeAgendaItemAsync(
+                        current.SourceEntityId.Value,
+                        newDateUtc,
+                        isSla,
+                        actor,
+                        reason);
+
+                    if (res.IsSuccess)
+                    {
+                        _toastService.ShowSuccess("Ertelendi", $"{current.InteractionNumber} kalıcı olarak {newDateUtc:dd.MM.yyyy} tarihine ertelendi.");
+                        await LoadAgendaAsync();
+                    }
+                    else
+                    {
+                        _toastService.ShowError("Hata", res.Error ?? "İş emri ertelenemedi.");
+                    }
                 }
             }
             catch (Exception ex)
@@ -408,7 +453,11 @@ namespace KamatekCrm.ViewModels
             }
             else if (current.SourceType == "ServiceJob")
             {
-                _navigationService.NavigateTo<ServiceJobViewModel>();
+                var jobVm = _navigationService.NavigateTo<ServiceJobViewModel>();
+                if (current.SourceEntityId.HasValue)
+                {
+                    jobVm.FocusJobByIdAsync(current.SourceEntityId.Value).SafeFireAndForget("ManagerAgendaViewModel.jobVm.FocusJobByIdAsync");
+                }
             }
             else
             {
@@ -416,14 +465,16 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanActOnAgenda))]
+        [RelayCommand(CanExecute = nameof(CanSnoozeOrMarkSeen))]
         public async Task MarkAsSeenAsync()
         {
-            if (SelectedAgendaItem == null) return;
+            if (SelectedAgendaItem == null || !CanSnoozeOrMarkSeen()) return;
             _loadingService.Show();
             try
             {
                 var current = SelectedAgendaItem;
+                string actor = _authService.CurrentUser?.Username ?? "Yönetici";
+
                 if (current.SourceType == "Interaction")
                 {
                     var dto = new UpdateCustomerInteractionStatusDto
@@ -440,10 +491,28 @@ namespace KamatekCrm.ViewModels
                         current.Status = InteractionStatus.Seen;
                         OnPropertyChanged(nameof(SelectedAgendaItem));
                     }
+                    else
+                    {
+                        _toastService.ShowError("Hata", res.Error ?? "İncelendi olarak işaretlenemedi.");
+                    }
                 }
-                else
+                else if (current.SourceType == "ServiceJob" && current.SourceEntityId.HasValue)
                 {
-                    _toastService.ShowInfo("İncelendi", $"{current.InteractionNumber} incelendi.");
+                    var res = await _serviceJobCommandService.MarkAgendaItemSeenAsync(
+                        current.SourceEntityId.Value,
+                        actor,
+                        $"{current.InteractionNumber} yönetici gündeminden incelendi.");
+
+                    if (res.IsSuccess)
+                    {
+                        _toastService.ShowSuccess("İncelendi", $"{current.InteractionNumber} iş emri tarihçesine incelendi olarak kaydedildi.");
+                        current.Status = InteractionStatus.Seen;
+                        OnPropertyChanged(nameof(SelectedAgendaItem));
+                    }
+                    else
+                    {
+                        _toastService.ShowError("Hata", res.Error ?? "İşlem kaydedilemedi.");
+                    }
                 }
             }
             finally

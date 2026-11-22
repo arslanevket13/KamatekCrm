@@ -254,8 +254,8 @@
     <Color x:Key="SurfacePageColorValue">#091428</Color>
     <Color x:Key="KpiPurpleStartColor">#C084FC</Color>
     <Color x:Key="KpiPurpleEndColor">#9333EA</Color>
-    <SolidColorBrush x:Key="KpiPurpleStartBrush" Color="{StaticResource KpiPurpleStartColor}"/>
-    <SolidColorBrush x:Key="KpiPurpleEndBrush" Color="{StaticResource KpiPurpleEndColor}"/>
+    <SolidColorBrush x:Key="KpiPurpleStartBrush" Color="#C084FC"/>
+    <SolidColorBrush x:Key="KpiPurpleEndBrush" Color="#9333EA"/>
 
     <!-- ─────────── SEMANTIC SUPPORT TOKENS ─────────── -->
     <Color x:Key="ThemePrimaryLightColor">#312E81</Color>

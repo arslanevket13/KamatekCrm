@@ -28,13 +28,13 @@ namespace KamatekCrm.Views
 
         private void OnCloseRequested()
         {
-            try { DialogResult = false; } catch { }
+            try { DialogResult = false; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DiscoveryEditorWindow.xaml.cs"); }
             Close();
         }
 
         private void OnCloseWithSuccess()
         {
-            try { DialogResult = true; } catch { }
+            try { DialogResult = true; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DiscoveryEditorWindow.xaml.cs"); }
             Close();
         }
 

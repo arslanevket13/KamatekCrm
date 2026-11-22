@@ -1,4 +1,4 @@
-<Window x:Class="KamatekCrm.Views.AddProductWindow"
+﻿<Window x:Class="KamatekCrm.Views.AddProductWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -62,7 +62,7 @@
 
                 <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,12">
                     <Label Content="IR Mesafesi (m)" Style="{StaticResource ModernLabel}"/>
-                    <TextBox Text="{Binding IRDistance}" Style="{StaticResource ModernTextBox}"/>
+                    <TextBox Text="{Binding IRDistance}" Style="{DynamicResource ModernTextBox}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,12">
@@ -100,17 +100,17 @@
 
                 <StackPanel Grid.Column="0">
                     <Label Content="Malzeme" Style="{StaticResource ModernLabel}"/>
-                    <TextBox Text="{Binding Material}" Style="{StaticResource ModernTextBox}"/>
+                    <TextBox Text="{Binding Material}" Style="{DynamicResource ModernTextBox}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
                     <Label Content="Renk" Style="{StaticResource ModernLabel}"/>
-                    <TextBox Text="{Binding Color}" Style="{StaticResource ModernTextBox}"/>
+                    <TextBox Text="{Binding Color}" Style="{DynamicResource ModernTextBox}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="4">
                     <Label Content="Garanti" Style="{StaticResource ModernLabel}"/>
-                    <TextBox Text="{Binding Warranty}" Style="{StaticResource ModernTextBox}"/>
+                    <TextBox Text="{Binding Warranty}" Style="{DynamicResource ModernTextBox}"/>
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -143,7 +143,7 @@
             <TabItem Header="📋 Temel Bilgiler">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
                     <StackPanel>
-                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                        <Border Style="{DynamicResource CardPanel}" Padding="20">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/>
@@ -162,7 +162,7 @@
                                             <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBox Grid.Column="0" Text="{Binding NewProduct.SKU, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{StaticResource ModernTextBox}"/>
+                                                 Style="{DynamicResource ModernTextBox}"/>
                                         <ui:Button Grid.Column="1" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RegenerateSKUCommand}" 
                                                    Height="38" Width="38" Margin="8,0,0,0" ToolTip="Yeni SKU Üret" Appearance="Secondary"/>
                                     </Grid>
@@ -176,7 +176,7 @@
                                             <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBox Grid.Column="0" Text="{Binding NewProduct.Barcode, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{StaticResource ModernTextBox}"/>
+                                                 Style="{DynamicResource ModernTextBox}"/>
                                         <ui:Button Grid.Column="1" Icon="{ui:SymbolIcon BarcodeScanner24}" Command="{Binding GenerateBarcodeCommand}" 
                                                    Height="38" Width="38" Margin="8,0,0,0" ToolTip="Otomatik Barkod Oluştur" Appearance="Secondary"/>
                                     </Grid>
@@ -186,7 +186,7 @@
                                 <StackPanel Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,16">
                                     <Label Content="Ürün Adı *" Style="{StaticResource ModernLabel}"/>
                                     <TextBox Text="{Binding NewProduct.ProductName, UpdateSourceTrigger=PropertyChanged}" 
-                                             Style="{StaticResource ModernTextBox}" FontSize="14" FontWeight="SemiBold"/>
+                                             Style="{DynamicResource ModernTextBox}" FontSize="14" FontWeight="SemiBold"/>
                                 </StackPanel>
 
                                 <!-- Kategori -->
@@ -205,12 +205,12 @@
                                     <StackPanel Grid.Column="0">
                                         <Label Content="Marka" Style="{StaticResource ModernLabel}"/>
                                         <TextBox Text="{Binding NewProduct.BrandName, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{StaticResource ModernTextBox}"/>
+                                                 Style="{DynamicResource ModernTextBox}"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
                                         <Label Content="Model" Style="{StaticResource ModernLabel}"/>
                                         <TextBox Text="{Binding NewProduct.ModelName, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{StaticResource ModernTextBox}"/>
+                                                 Style="{DynamicResource ModernTextBox}"/>
                                     </StackPanel>
                                 </Grid>
                             </Grid>
@@ -224,7 +224,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
                     <StackPanel>
                         <!-- Fiyatlandırma Kartı -->
-                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                        <Border Style="{DynamicResource CardPanel}" Padding="20">
                             <StackPanel>
                                 <DockPanel Margin="0,0,0,16">
                                     <TextBlock Text="Fiyatlandırma &amp; Marj Analizi" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}"/>
@@ -248,14 +248,14 @@
                                     <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,16">
                                         <Label Content="Alış Fiyatı (Maliyet)" Style="{StaticResource ModernLabel}"/>
                                         <TextBox Text="{Binding NewProduct.PurchasePrice, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{StaticResource ModernTextBox}"/>
+                                                 Style="{DynamicResource ModernTextBox}"/>
                                     </StackPanel>
 
                                     <!-- Satış Fiyatı -->
                                     <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,16">
                                         <Label Content="Satış Fiyatı *" Style="{StaticResource ModernLabel}"/>
                                         <TextBox Text="{Binding NewProduct.SalePrice, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{StaticResource ModernTextBox}" FontWeight="Bold"/>
+                                                 Style="{DynamicResource ModernTextBox}" FontWeight="Bold"/>
                                     </StackPanel>
 
                                     <!-- Para Birimi & KDV -->
@@ -285,14 +285,14 @@
                                     <StackPanel Grid.Column="2" Grid.Row="2">
                                         <Label Content="Tedarikçi Adı" Style="{StaticResource ModernLabel}"/>
                                         <TextBox Text="{Binding NewProduct.SupplierName, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{StaticResource ModernTextBox}"/>
+                                                 Style="{DynamicResource ModernTextBox}"/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- Stok Kartı -->
-                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                        <Border Style="{DynamicResource CardPanel}" Padding="20">
                             <StackPanel>
                                 <TextBlock Text="Stok Durumu" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,16"/>
                                 <Grid>
@@ -304,7 +304,7 @@
                                     <StackPanel Grid.Column="0" Visibility="{Binding IsInitialStockVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <Label Content="Açılış Stoğu (İlk Miktar)" Style="{StaticResource ModernLabel}"/>
                                         <TextBox Text="{Binding InitialStock, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{StaticResource ModernTextBox}"
+                                                 Style="{DynamicResource ModernTextBox}"
                                                  ToolTip="Yeni ürün için başlangıç deposundaki stok miktarı"/>
                                     </StackPanel>
 
@@ -312,7 +312,7 @@
                                     <StackPanel Grid.Column="0" Visibility="{Binding IsStockAdjustmentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <Label Content="Mevcut Depo Stoğu" Style="{StaticResource ModernLabel}"/>
                                         <TextBox Text="{Binding CurrentTotalStock, Mode=OneWay}" 
-                                                 Style="{StaticResource ModernTextBox}"
+                                                 Style="{DynamicResource ModernTextBox}"
                                                  IsReadOnly="True" FontWeight="Bold"
                                                  Background="{DynamicResource SurfacePageBrush}"/>
                                     </StackPanel>
@@ -321,7 +321,7 @@
                                     <StackPanel Grid.Column="2" Visibility="{Binding IsStockAdjustmentVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <Label Content="Stok Düzeltme (+ / -)" Style="{StaticResource ModernLabel}"/>
                                         <TextBox Text="{Binding StockAdjustment, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{StaticResource ModernTextBox}"
+                                                 Style="{DynamicResource ModernTextBox}"
                                                  ToolTip="Pozitif stok girerek artırın, negatif girerek düşürün (Örn: +10 veya -3)"/>
                                     </StackPanel>
                                 </Grid>
@@ -336,7 +336,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,16,0,0">
                     <StackPanel>
                         <!-- Fotoğraf Yükleme Dropzone -->
-                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                        <Border Style="{DynamicResource CardPanel}" Padding="20">
                             <StackPanel>
                                 <TextBlock Text="Ürün Görseli" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,12"/>
                                 
@@ -372,7 +372,7 @@
                         </Border>
 
                         <!-- Dinamik Teknik Özellikler -->
-                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                        <Border Style="{DynamicResource CardPanel}" Padding="20">
                             <StackPanel>
                                 <TextBlock Text="Teknik Özellikler (Kategoriye Özel)" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource ThemeTextPrimary}" Margin="0,0,0,12"/>
                                 <ContentControl Content="{Binding CurrentSpecs}"/>
@@ -380,17 +380,17 @@
                                 <StackPanel Margin="0,12,0,0">
                                     <Label Content="Notlar / Özel Belirteçler" Style="{StaticResource ModernLabel}"/>
                                     <TextBox Text="{Binding CurrentSpecs.Notes, UpdateSourceTrigger=PropertyChanged}" 
-                                             Style="{StaticResource ModernTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="50"/>
+                                             Style="{DynamicResource ModernTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="50"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
                         <!-- Ürün Açıklaması -->
-                        <Border Style="{StaticResource CardPanel}" Padding="20">
+                        <Border Style="{DynamicResource CardPanel}" Padding="20">
                             <StackPanel>
                                 <Label Content="Ürün Detaylı Açıklaması" Style="{StaticResource ModernLabel}" FontWeight="SemiBold"/>
                                 <TextBox Text="{Binding NewProduct.Description, UpdateSourceTrigger=PropertyChanged}" 
-                                         Style="{StaticResource ModernTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="70"/>
+                                         Style="{DynamicResource ModernTextBox}" AcceptsReturn="True" TextWrapping="Wrap" Height="70"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>

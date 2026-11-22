@@ -190,12 +190,12 @@
 
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                 <Label Content="Şehir" FontWeight="SemiBold"/>
-                                <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding SelectedCity}" DisplayMemberPath="Name" Height="38"/>
+                                <ComboBox ItemsSource="{Binding Cities}" SelectedItem="{Binding SelectedCity}" DisplayMemberPath="Name" IsEditable="True" IsTextSearchEnabled="True" Height="38"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Margin="8,0,0,0">
                                 <Label Content="İlçe" FontWeight="SemiBold"/>
-                                <ComboBox ItemsSource="{Binding Districts}" SelectedItem="{Binding SelectedDistrict}" DisplayMemberPath="Name" Height="38"/>
+                                <ComboBox ItemsSource="{Binding Districts}" SelectedItem="{Binding SelectedDistrict}" DisplayMemberPath="Name" IsEditable="True" IsTextSearchEnabled="True" Height="38"/>
                             </StackPanel>
                         </Grid>
 
@@ -207,7 +207,7 @@
 
                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                 <Label Content="Mahalle" FontWeight="SemiBold"/>
-                                <ComboBox ItemsSource="{Binding Neighborhoods}" SelectedItem="{Binding SelectedNeighborhood}" DisplayMemberPath="Name" Height="38"/>
+                                <ComboBox ItemsSource="{Binding Neighborhoods}" SelectedItem="{Binding SelectedNeighborhood}" DisplayMemberPath="Name" IsEditable="True" IsTextSearchEnabled="True" Height="38"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Margin="8,0,0,0">
@@ -256,7 +256,7 @@
                        Command="{Binding ClearFormCommand}" Appearance="Secondary" Height="38" Padding="16,0" Cursor="Hand"/>
 
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <ui:Button Content="İptal" Command="{Binding CancelCommand}" Appearance="Secondary" Height="38" Padding="20,0" Margin="0,0,8,0" Click="CloseWindow_Click" Cursor="Hand"/>
+                <ui:Button Content="İptal" Command="{Binding CancelCommand}" Appearance="Secondary" Height="38" Padding="20,0" Margin="0,0,8,0" IsCancel="True" Cursor="Hand"/>
                 <ui:Button Content="Müşteriyi Kaydet" Icon="{ui:SymbolIcon Save24}" Command="{Binding SaveCommand}" Appearance="Primary" Height="40" Padding="20,0" IsDefault="True" Cursor="Hand"
                            AutomationProperties.HelpText="Tüm zorunlu alanlar geçerli olduğunda müşteri kaydını oluşturur."/>
             </StackPanel>

@@ -38,7 +38,10 @@
                   IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column"
                   GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{DynamicResource BorderSubtleBrush}"
                   Background="Transparent" BorderThickness="0" RowHeaderWidth="0" MinRowHeight="34"
-                  AlternatingRowBackground="{DynamicResource AlternatingRowBrush}" MouseDoubleClick="ResultsGrid_MouseDoubleClick">
+                  AlternatingRowBackground="{DynamicResource AlternatingRowBrush}"
+                  SelectionChanged="ResultsGrid_SelectionChanged"
+                  MouseDoubleClick="ResultsGrid_MouseDoubleClick"
+                  PreviewKeyDown="ResultsGrid_PreviewKeyDown">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Ürün Adı" Binding="{Binding ProductName}" Width="*"/>
                 <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="110"/>

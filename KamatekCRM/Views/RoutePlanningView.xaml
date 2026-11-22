@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.RoutePlanningView"
+﻿<UserControl x:Class="KamatekCrm.Views.RoutePlanningView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
@@ -68,7 +68,7 @@
             </Grid.RowDefinitions>
             
             <!-- === HEADER === -->
-            <Border Grid.Row="0" Style="{StaticResource CardBorder}" Margin="0,0,0,8">
+            <Border Grid.Row="0" Style="{DynamicResource CardBorder}" Margin="0,0,0,8">
                 <StackPanel>
                     <TextBlock Text="📍 ROTA PLANLAMA" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}" Margin="0,0,0,16"/>
                     
@@ -95,7 +95,7 @@
             </Border>
             
             <!-- === İSTATİSTİKLER === -->
-            <Border Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0,0,0,8">
+            <Border Grid.Row="1" Style="{DynamicResource CardBorder}" Margin="0,0,0,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -131,7 +131,7 @@
             </Border>
             
             <!-- === EYLEM BUTONLARI === -->
-            <Border Grid.Row="2" Style="{StaticResource CardBorder}" Margin="0,0,0,8" Padding="8">
+            <Border Grid.Row="2" Style="{DynamicResource CardBorder}" Margin="0,0,0,8" Padding="8">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <Button Content="💾 Kaydet" Command="{Binding SaveRouteCommand}" 
                             Background="{DynamicResource ThemeSuccess}" Style="{StaticResource ActionBtn}" Margin="0,0,4,0"/>
@@ -155,7 +155,7 @@
                 
                 <!-- ROTA TAB -->
                 <TabItem Header="📋 Rota Sırası">
-                    <Border Style="{StaticResource CardBorder}" Padding="4" Margin="0,4,0,0">
+                    <Border Style="{DynamicResource CardBorder}" Padding="4" Margin="0,4,0,0">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding RoutePoints}">
                                 <ItemsControl.ItemTemplate>
@@ -213,7 +213,7 @@
                 
                 <!-- PLANLANMIŞ İŞLER TAB -->
                 <TabItem Header="📅 Planlanmış İşler">
-                    <Border Style="{StaticResource CardBorder}" Padding="4" Margin="0,4,0,0">
+                    <Border Style="{DynamicResource CardBorder}" Padding="4" Margin="0,4,0,0">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding AvailableJobs}">
                                 <ItemsControl.ItemTemplate>

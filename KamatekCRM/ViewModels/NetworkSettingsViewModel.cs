@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -78,9 +79,9 @@ namespace KamatekCrm.ViewModels
             };
             _refreshTimer.Tick += async (s, e) =>
             {
-                if (_isMainServer && _connectionProvider.IsConnected && _isAutoRefreshEnabled && !IsBusy)
+                if (_isMainServer && _connectionProvider.IsConnected && _isAutoRefreshEnabled && !IsBusy && !IsRefreshingClients)
                 {
-                    await LoadConnectedClientsAsync();
+                    await LoadConnectedClientsAsync(isBackgroundRefresh: true);
                 }
             };
 
@@ -96,7 +97,7 @@ namespace KamatekCrm.ViewModels
                 _refreshTimer.Start();
                 if (_connectionProvider.IsConnected)
                 {
-                    Task.Run(async () => await LoadConnectedClientsAsync());
+                    LoadConnectedClientsAsync(isBackgroundRefresh: true).SafeFireAndForget("NetworkSettingsViewModel.LoadConnectedClientsAsync");
                 }
             }
         }
@@ -105,9 +106,9 @@ namespace KamatekCrm.ViewModels
 
         #region Observable Properties
 
-        private bool _isPreLoginMode = true;
+        private bool _isPreLoginMode = false;
         /// <summary>
-        /// Giriş öncesi kurulum modunda mıyız? (LoginView üzerinden açıldığında RBAC kontrollerini bypass eder).
+        /// Giriş öncesi kurulum modunda mıyız? (Yalnızca LoginView üzerinden açıldığında true olarak atanır).
         /// </summary>
         public bool IsPreLoginMode
         {
@@ -131,6 +132,7 @@ namespace KamatekCrm.ViewModels
                     OnPropertyChanged(nameof(RoleDisplayText));
                     OnPropertyChanged(nameof(IsClientMode));
                     OnPropertyChanged(nameof(IsManualIpEnabled));
+                    RefreshClientsCommand.NotifyCanExecuteChanged();
 
                     if (value && !_refreshTimer.IsEnabled) _refreshTimer.Start();
                     else if (!value && _refreshTimer.IsEnabled) _refreshTimer.Stop();
@@ -225,6 +227,22 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        private bool _isRefreshingClients;
+        /// <summary>
+        /// Bağlı istemci panelinin arka plan yenileme durumu (Kaydet/Test/Tara butonlarını kilitlemez).
+        /// </summary>
+        public bool IsRefreshingClients
+        {
+            get => _isRefreshingClients;
+            set
+            {
+                if (SetProperty(ref _isRefreshingClients, value))
+                {
+                    RefreshClientsCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
         private bool _hasUnsavedChanges;
         public bool HasUnsavedChanges
         {
@@ -236,14 +254,28 @@ namespace KamatekCrm.ViewModels
         public int ConfiguredPort
         {
             get => _configuredPort;
-            set => SetProperty(ref _configuredPort, value);
+            set
+            {
+                if (SetProperty(ref _configuredPort, value))
+                {
+                    _hasUnsavedChanges = true;
+                    OnPropertyChanged(nameof(HasUnsavedChanges));
+                }
+            }
         }
 
         private int _configuredTimeout = 15;
         public int ConfiguredTimeout
         {
             get => _configuredTimeout;
-            set => SetProperty(ref _configuredTimeout, value);
+            set
+            {
+                if (SetProperty(ref _configuredTimeout, value))
+                {
+                    _hasUnsavedChanges = true;
+                    OnPropertyChanged(nameof(HasUnsavedChanges));
+                }
+            }
         }
 
         private string _dbUsername = "postgres";
@@ -301,7 +333,14 @@ namespace KamatekCrm.ViewModels
         public int ConfiguredDbPort
         {
             get => _configuredDbPort;
-            set => SetProperty(ref _configuredDbPort, value);
+            set
+            {
+                if (SetProperty(ref _configuredDbPort, value))
+                {
+                    _hasUnsavedChanges = true;
+                    OnPropertyChanged(nameof(HasUnsavedChanges));
+                }
+            }
         }
 
         private DiscoveredServerInfo? _selectedDiscoveredServer;
@@ -445,6 +484,33 @@ namespace KamatekCrm.ViewModels
 
                 _connectionProvider.UpdateConnectionString(activeConnectionString);
                 _connectionProvider.SetServerIp(targetHost);
+
+                // 3.5 Gerçek bağlantı doğrulaması (TCP + Npgsql) — doğrulamadan sağlıklı işaretleme!
+                ConnectionStatus = $"Kaydedildi, bağlantı doğrulanıyor ({targetHost}:{targetPort})...";
+                var (isReachable, verificationMessage) = await VerifyDatabaseReachabilityAsync(
+                    targetHost, targetPort, targetDb, targetUser, targetPassword);
+
+                if (!isReachable)
+                {
+                    _connectionProvider.SetConnectionState(false);
+                    _hasUnsavedChanges = false;
+                    OnPropertyChanged(nameof(HasUnsavedChanges));
+                    IsConnectionHealthy = false;
+                    ConnectionStatus = $"Ayarlar kaydedildi ancak sunucuya ulaşılamıyor ({targetHost}:{targetPort})";
+
+                    try
+                    {
+                        EventAggregator.Instance?.Publish(new DatabaseConnectionLostEvent());
+                    }
+                    catch (Exception pubEx)
+                    {
+                        _logger.LogWarning(pubEx, "DatabaseConnectionLostEvent yayınlanamadı.");
+                    }
+
+                    _toastService.ShowWarning($"Ayarlar diske kaydedildi ancak bağlantı doğrulanamadı: {verificationMessage}");
+                    return !promptRestart;
+                }
+
                 _connectionProvider.SetConnectionState(true);
 
                 // 4. İlk kurulum veritabanı migration & Admin seeder kontrolü
@@ -453,14 +519,19 @@ namespace KamatekCrm.ViewModels
                     var dbInitializer = App.ServiceProvider?.GetService<IDatabaseInitializationService>();
                     if (dbInitializer != null)
                     {
-                        var initResult = await dbInitializer.InitializeAsync();
-                        if (initResult.AdminCreated)
+                        using var initCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                        var initResult = await Task.Run(() => dbInitializer.InitializeAsync(initCts.Token), initCts.Token);
+                        if (initResult.AdminCreated && !string.IsNullOrWhiteSpace(initResult.TemporaryAdminPassword))
                         {
-                            MessageBox.Show(
-                                $"İlk yönetici hesabı oluşturuldu.\n\nKullanıcı adı: admin\nGeçici şifre: {initResult.TemporaryAdminPassword}\n\nBu şifre yalnızca bir kez gösterilir. Giriş yaptıktan sonra şifrenizi güncelleyin.",
-                                "İlk Kurulum Tamamlandı",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Information);
+                            Application.Current?.Dispatcher?.Invoke(() =>
+                            {
+                                KamatekCrm.Views.TemporaryPasswordDialog.ShowDialogSafe(
+                                    username: "admin",
+                                    temporaryPassword: initResult.TemporaryAdminPassword,
+                                    title: "İlk Kurulum Tamamlandı",
+                                    headerTitle: "İlk Yönetici Hesabı Oluşturuldu",
+                                    subtitle: "Bu geçici şifre yalnızca bir kez gösterilir. Giriş yaptıktan sonra şifrenizi güncelleyin.");
+                            });
                         }
                     }
                 }
@@ -474,14 +545,17 @@ namespace KamatekCrm.ViewModels
                 {
                     EventAggregator.Instance?.Publish(new DatabaseConnectionRestoredEvent());
                 }
-                catch { }
+                catch (Exception pubEx)
+                {
+                    _logger.LogWarning(pubEx, "DatabaseConnectionRestoredEvent yayınlanamadı.");
+                }
 
                 _hasUnsavedChanges = false;
                 OnPropertyChanged(nameof(HasUnsavedChanges));
                 IsConnectionHealthy = true;
-                ConnectionStatus = $"Bağlantı güncellendi ve kaydedildi → {targetHost}:{targetPort}";
+                ConnectionStatus = $"Bağlantı doğrulandı ve kaydedildi → {targetHost}:{targetPort}";
 
-                _toastService.ShowSuccess("Ağ ve veritabanı ayarları başarıyla kaydedildi (Hot-Swap uygulandı).");
+                _toastService.ShowSuccess("Ağ ve veritabanı ayarları doğrulandı ve kaydedildi (Hot-Swap uygulandı).");
 
                 return true;
             }
@@ -494,6 +568,55 @@ namespace KamatekCrm.ViewModels
             finally
             {
                 IsBusy = false;
+            }
+        }
+
+        private async Task<(bool IsReachable, string Message)> VerifyDatabaseReachabilityAsync(
+            string targetHost,
+            int targetPort,
+            string targetDb,
+            string targetUser,
+            string targetPassword)
+        {
+            try
+            {
+                using (var tcpClient = new TcpClient())
+                using (var tcpCts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
+                {
+                    await tcpClient.ConnectAsync(targetHost, targetPort, tcpCts.Token);
+                }
+
+                var verifyConnBuilder = new Npgsql.NpgsqlConnectionStringBuilder
+                {
+                    Host = targetHost,
+                    Port = targetPort,
+                    Database = targetDb,
+                    Username = targetUser,
+                    Password = targetPassword,
+                    Timeout = 4,
+                    CommandTimeout = 4,
+                    Pooling = false
+                };
+
+                await using var conn = new Npgsql.NpgsqlConnection(verifyConnBuilder.ConnectionString);
+                using var dbCts = new CancellationTokenSource(TimeSpan.FromSeconds(4));
+                await conn.OpenAsync(dbCts.Token);
+                return (true, "OK");
+            }
+            catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "3D000")
+            {
+                // Veritabanı henüz oluşturulmamış ancak sunucu ve kimlik doğrulandı; migration oluşturabilir.
+                return (true, "Veritabanı ilk kurulumda oluşturulacak.");
+            }
+            catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "28P01")
+            {
+                _logger.LogWarning(pgEx, "Kaydetme doğrulamasında veritabanı kimlik hatası.");
+                return (false, "Veritabanı kullanıcı adı veya şifresi hatalı.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Kaydetme doğrulamasında sunucuya erişilemedi ({Host}:{Port}).", targetHost, targetPort);
+                return (false, $"{targetHost}:{targetPort} adresine erişilemedi.");
             }
         }
 
@@ -666,19 +789,21 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        private bool CanRefreshClients() => !IsBusy && !IsRefreshingClients && _isMainServer;
+
         /// <summary>
         /// Sunucu modundayken bağlı istemcileri PostgreSQL pg_stat_activity üzerinden yeniler.
         /// </summary>
-        [RelayCommand(CanExecute = nameof(CanExecuteSettingsAction))]
+        [RelayCommand(CanExecute = nameof(CanRefreshClients))]
         private async Task RefreshClients()
         {
             if (!_isMainServer)
             {
-                _toastService.ShowError("İstemci listesi yalnızca Ana Sunucu modunda görüntülenebilir.");
+                _toastService.ShowInfo("İstemci listesi yalnızca Ana Sunucu modunda görüntülenebilir.");
                 return;
             }
 
-            await LoadConnectedClientsAsync();
+            await LoadConnectedClientsAsync(isBackgroundRefresh: false);
         }
 
         #endregion
@@ -825,15 +950,15 @@ namespace KamatekCrm.ViewModels
             var dbSection = jsonObject["DatabaseSettings"];
             if (dbSection == null)
             {
-                jsonObject["DatabaseSettings"] = new JsonObject();
-                dbSection = jsonObject["DatabaseSettings"];
+                dbSection = new JsonObject();
+                jsonObject["DatabaseSettings"] = dbSection;
             }
 
             var connStringsSection = dbSection["ConnectionStrings"];
             if (connStringsSection == null)
             {
-                dbSection["ConnectionStrings"] = new JsonObject();
-                connStringsSection = dbSection["ConnectionStrings"];
+                connStringsSection = new JsonObject();
+                dbSection["ConnectionStrings"] = connStringsSection;
             }
 
             connStringsSection["PostgreSQL"] = newConnectionString;
@@ -882,7 +1007,7 @@ namespace KamatekCrm.ViewModels
         /// <summary>
         /// .NET 9 Single-File executable uyumlu şekilde uygulamayı yeniden başlatır.
         /// </summary>
-        private static void RestartApplication()
+        private void RestartApplication()
         {
             try
             {
@@ -917,23 +1042,24 @@ namespace KamatekCrm.ViewModels
                     }
                 }
 
-                MessageBox.Show(
-                    "Uygulama yeniden başlatılamadı. Lütfen uygulamayı manuel olarak kapatıp açın.",
-                    "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                _toastService.ShowWarning(
+                    "Bilgi",
+                    "Uygulama yeniden başlatılamadı. Lütfen uygulamayı manuel olarak kapatıp açın.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Uygulama yeniden başlatılırken bir hata oluştu: {ex.Message}\nLütfen uygulamayı manuel başlatın.",
-                    "Yeniden Başlatma", MessageBoxButton.OK, MessageBoxImage.Information);
+                _toastService.ShowError(
+                    "Yeniden Başlatma",
+                    $"Uygulama yeniden başlatılırken bir hata oluştu: {ex.Message}. Lütfen uygulamayı manuel başlatın.");
             }
         }
 
         /// <summary>
         /// PostgreSQL pg_stat_activity üzerinden bağlı istemcileri yükler.
         /// Yalnızca Ana Sunucu modunda ve veritabanı bağlıyken çalışır.
+        /// Arka plan yenilemesi IsBusy yerine IsRefreshingClients bayrağını kullanır; kullanıcı ayar butonlarını kilitlemez.
         /// </summary>
-        private async Task LoadConnectedClientsAsync()
+        private async Task LoadConnectedClientsAsync(bool isBackgroundRefresh = false)
         {
             if (!_connectionProvider.IsConnected)
             {
@@ -941,10 +1067,12 @@ namespace KamatekCrm.ViewModels
                 return;
             }
 
-            IsBusy = true;
+            if (IsRefreshingClients) return;
+
+            IsRefreshingClients = true;
             try
             {
-                using var context = await _dbContextFactory.CreateDbContextAsync();
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
 
                 var clients = await context.Database
                     .SqlQueryRaw<ConnectedClientDto>(
@@ -952,7 +1080,7 @@ namespace KamatekCrm.ViewModels
                                  state AS State,
                                  query_start AS QueryStart
                           FROM pg_stat_activity
-                          WHERE datname = 'kamatekcrm'
+                          WHERE datname = current_database()
                             AND client_addr IS NOT NULL")
                     .ToListAsync();
 
@@ -976,14 +1104,17 @@ namespace KamatekCrm.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Bağlı istemciler yüklenirken hata.");
-                Application.Current?.Dispatcher?.Invoke(() =>
+                if (!isBackgroundRefresh)
                 {
-                    _toastService?.ShowError($"İstemci listesi okunamadı: {ex.Message}");
-                });
+                    Application.Current?.Dispatcher?.Invoke(() =>
+                    {
+                        _toastService?.ShowError($"İstemci listesi okunamadı: {ex.Message}");
+                    });
+                }
             }
             finally
             {
-                IsBusy = false;
+                IsRefreshingClients = false;
             }
         }
 

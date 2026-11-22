@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.FinancialHealthView"
+﻿<UserControl x:Class="KamatekCrm.Views.FinancialHealthView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
@@ -81,56 +81,158 @@
             </Border>
         </Grid>
 
-        <!-- DataGrid: Project Profitability -->
-        <Border Grid.Row="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16" Effect="{DynamicResource Elevation2}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <TextBlock Text="Proje Bazlı Kârlılık Raporu (Top 20)" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,16"/>
-                
-                <DataGrid Grid.Row="1" x:Name="ProjectProfitsDataGrid" ItemsSource="{Binding ProjectProfits}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                          HeadersVisibility="Column" GridLinesVisibility="Horizontal" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0">
-                    <DataGrid.Resources>
-                         <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Padding" Value="10,5"/>
-                            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                         </Style>
-                        <Style TargetType="DataGridCell">
-                            <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
-                             <Setter Property="Padding" Value="10,5"/>
-                             <Setter Property="Template">
-                                 <Setter.Value>
-                                     <ControlTemplate TargetType="DataGridCell">
-                                         <Border BorderThickness="0" Background="Transparent">
-                                             <ContentPresenter VerticalAlignment="Center" />
-                                         </Border>
-                                     </ControlTemplate>
-                                 </Setter.Value>
-                             </Setter>
-                         </Style>
-                    </DataGrid.Resources>
-                    
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Proje Adı" Binding="{Binding ProjectName}" Width="*"/>
-                        <DataGridTextColumn Header="Müşteri" Binding="{Binding CustomerName}" Width="*"/>
-                        <DataGridTextColumn Header="Ciro" Binding="{Binding Revenue, StringFormat=C2}" Width="100"/>
-                        <DataGridTextColumn Header="Maliyet" Binding="{Binding Cost, StringFormat=C2}" Width="100"/>
-                        <DataGridTextColumn Header="Kâr" Binding="{Binding Profit, StringFormat=C2}" Width="100" FontWeight="Bold"/>
-                        <DataGridTextColumn Header="Marj %" Binding="{Binding MarginPercent, StringFormat=N1}" Width="80"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+        <!-- Tabbed Details: Proje Bazlı Kârlılık & Alacak Yaşlandırma (Receivables Aging) -->
+        <TabControl Grid.Row="3" Background="Transparent" BorderThickness="0">
+            <!-- TAB 1: PROJE BAZLI KÂRLILIK -->
+            <TabItem Header="📈 Proje Bazlı Kârlılık (Top 20)">
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16" Margin="0,8,0,0" Effect="{DynamicResource Elevation2}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Proje Bazlı Kârlılık Raporu (Top 20)" FontWeight="Bold" Foreground="{DynamicResource TextHeadingBrush}" Margin="0,0,0,16"/>
+                        
+                        <DataGrid Grid.Row="1" x:Name="ProjectProfitsDataGrid" ItemsSource="{Binding ProjectProfits}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                                  HeadersVisibility="Column" GridLinesVisibility="Horizontal" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0">
+                            <DataGrid.Resources>
+                                 <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Padding" Value="10,5"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                                 </Style>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
+                                     <Setter Property="Padding" Value="10,5"/>
+                                     <Setter Property="Template">
+                                         <Setter.Value>
+                                             <ControlTemplate TargetType="DataGridCell">
+                                                 <Border BorderThickness="0" Background="Transparent">
+                                                     <ContentPresenter VerticalAlignment="Center" />
+                                                 </Border>
+                                             </ControlTemplate>
+                                         </Setter.Value>
+                                     </Setter>
+                                 </Style>
+                            </DataGrid.Resources>
+                            
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Proje Adı" Binding="{Binding ProjectName}" Width="*"/>
+                                <DataGridTextColumn Header="Müşteri" Binding="{Binding CustomerName}" Width="*"/>
+                                <DataGridTextColumn Header="Ciro" Binding="{Binding Revenue, StringFormat=C2}" Width="100"/>
+                                <DataGridTextColumn Header="Maliyet" Binding="{Binding Cost, StringFormat=C2}" Width="100"/>
+                                <DataGridTextColumn Header="Kâr" Binding="{Binding Profit, StringFormat=C2}" Width="100" FontWeight="Bold"/>
+                                <DataGridTextColumn Header="Marj %" Binding="{Binding MarginPercent, StringFormat=N1}" Width="80"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
 
-                <components:KmEmptyState Grid.Row="1" Panel.ZIndex="1"
-                                         Icon="&#xE8A5;" Title="Veri Yok"
-                                         Message="Kârlılık hesaplanacak proje bulunmuyor."
-                                         AutomationProperties.Name="Kârlılık tablosu boş"
-                                         Visibility="{Binding HasItems, ElementName=ProjectProfitsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
-            </Grid>
-        </Border>
+                        <components:KmEmptyState Grid.Row="1" Panel.ZIndex="1"
+                                                 Icon="&#xE8A5;" Title="Veri Yok"
+                                                 Message="Kârlılık hesaplanacak proje bulunmuyor."
+                                                 AutomationProperties.Name="Kârlılık tablosu boş"
+                                                 Visibility="{Binding HasItems, ElementName=ProjectProfitsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
+                    </Grid>
+                </Border>
+            </TabItem>
+
+            <!-- TAB 2: CARİ ALACAK YAŞLANDIRMA ANALİZİ (RECEIVABLES AGING) -->
+            <TabItem Header="⏳ Cari Alacak Yaşlandırma (Receivables Aging)">
+                <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16" Margin="0,8,0,0" Effect="{DynamicResource Elevation2}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Yaşlandırma Özet Kartları -->
+                        <Grid Grid.Row="0" Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Background="{DynamicResource SurfacePageBrush}" CornerRadius="6" Padding="12,8" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="Toplam Açık Alacak" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding TotalReceivables, StringFormat=C2}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2" Background="{DynamicResource StatusSuccessBg}" CornerRadius="6" Padding="12,8">
+                                <StackPanel>
+                                    <TextBlock Text="0–30 Gün (Güncel)" FontSize="11" Foreground="{DynamicResource StatusSuccessFgDark}"/>
+                                    <TextBlock Text="{Binding Aging0To30, StringFormat=C2}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource StatusSuccessFg}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="4" Background="{DynamicResource StatusInfoBg}" CornerRadius="6" Padding="12,8">
+                                <StackPanel>
+                                    <TextBlock Text="31–60 Gün" FontSize="11" Foreground="{DynamicResource StatusInfoFg}"/>
+                                    <TextBlock Text="{Binding Aging31To60, StringFormat=C2}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="6" Background="{DynamicResource StatusWarningBg}" CornerRadius="6" Padding="12,8">
+                                <StackPanel>
+                                    <TextBlock Text="61–90 Gün" FontSize="11" Foreground="{DynamicResource StatusWarningFgDark}"/>
+                                    <TextBlock Text="{Binding Aging61To90, StringFormat=C2}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="8" Background="{DynamicResource StatusErrorBg}" CornerRadius="6" Padding="12,8">
+                                <StackPanel>
+                                    <TextBlock Text="90+ Gün (Gecikmiş)" FontSize="11" Foreground="{DynamicResource StatusErrorFgDark}"/>
+                                    <TextBlock Text="{Binding Aging90Plus, StringFormat=C2}" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource StatusErrorFg}"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Yaşlandırma Tablosu + Pasta Grafik -->
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2.2*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Grid Grid.Column="0">
+                                <DataGrid x:Name="CustomerAgingsDataGrid" ItemsSource="{Binding CustomerAgings}"
+                                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                          Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Müşteri" Binding="{Binding CustomerName}" Width="*"/>
+                                        <DataGridTextColumn Header="0–30 Gün" Binding="{Binding Days0To30, StringFormat=C2}" Width="105"/>
+                                        <DataGridTextColumn Header="31–60 Gün" Binding="{Binding Days31To60, StringFormat=C2}" Width="105"/>
+                                        <DataGridTextColumn Header="61–90 Gün" Binding="{Binding Days61To90, StringFormat=C2}" Width="105"/>
+                                        <DataGridTextColumn Header="90+ Gün" Binding="{Binding Days90Plus, StringFormat=C2}" Width="105"/>
+                                        <DataGridTextColumn Header="Toplam Borç" Binding="{Binding TotalBalance, StringFormat=C2}" Width="120" FontWeight="Bold"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <components:KmEmptyState Panel.ZIndex="1"
+                                                         Icon="&#xE73E;" Title="Açık Alacak Yok"
+                                                         Message="Vadesi geçmiş veya açık cari müşteri borcu bulunmuyor."
+                                                         AutomationProperties.Name="Alacak yaşlandırma tablosu boş"
+                                                         Visibility="{Binding HasItems, ElementName=CustomerAgingsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
+                            </Grid>
+
+                            <Border Grid.Column="2" Background="{DynamicResource SurfacePageBrush}" CornerRadius="8" Padding="12">
+                                <lvc:PieChart Series="{Binding AgingBreakdownSeries}" LegendPosition="Bottom"/>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </TabItem>
+        </TabControl>
     </Grid>
 </UserControl>
 

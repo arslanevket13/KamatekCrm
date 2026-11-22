@@ -68,10 +68,7 @@ namespace KamatekCrm.Helpers
                         var storyboard = element.FindResource(storyboardKey) as Storyboard;
                         storyboard?.Begin(element);
                     }
-                    catch (ResourceReferenceKeyNotFoundException)
-                    {
-                        // Resource not found, ignore animation
-                    }
+                    catch (ResourceReferenceKeyNotFoundException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "AnimationHelper.cs"); }
                 }
             }
         }

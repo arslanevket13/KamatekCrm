@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -10,6 +11,7 @@ using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Helpers;
+using KamatekCrm.Shared.Services;
 using KamatekCrm.Views;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,7 +39,8 @@ namespace KamatekCrm.ViewModels
         private string? _street;
         private string? _buildingNo;
         private string? _apartmentNo;
-        private string? _notes;
+        private string? _customerNotes;
+        private string _newTimelineNote = string.Empty;
         private CustomerType _customerType = CustomerType.Individual;
         private string _customerCode = string.Empty;
         private string? _tcKimlikNo;
@@ -82,6 +85,7 @@ namespace KamatekCrm.ViewModels
         private readonly IPersonalDataProtectionService _personalDataProtection;
         private readonly IAuditTrailService _auditTrail;
         private readonly PdfService? _pdfService;
+        private readonly IDialogService? _dialogService;
 
         private int _customerId;
 
@@ -92,7 +96,8 @@ namespace KamatekCrm.ViewModels
             IDbContextFactory<AppDbContext> dbContextFactory,
             IPersonalDataProtectionService personalDataProtection,
             IAuditTrailService auditTrail,
-            PdfService? pdfService = null)
+            PdfService? pdfService = null,
+            IDialogService? dialogService = null)
         {
             _navigationService = navigationService;
             _toastService = toastService;
@@ -101,6 +106,7 @@ namespace KamatekCrm.ViewModels
             _personalDataProtection = personalDataProtection;
             _auditTrail = auditTrail;
             _pdfService = pdfService;
+            _dialogService = dialogService;
             
             Cities = new ObservableCollection<City>(AddressService.GetCities());
             Districts = new ObservableCollection<District>();
@@ -129,7 +135,7 @@ namespace KamatekCrm.ViewModels
 
         public void Initialize(int customerId)
         {
-            _ = InitializeAsync(customerId);
+            InitializeAsync(customerId).SafeFireAndForget("CustomerDetailViewModel.InitializeAsync");
         }
 
         public async Task InitializeAsync(int customerId)
@@ -144,7 +150,13 @@ namespace KamatekCrm.ViewModels
         public string FullName
         {
             get => _fullName;
-            set => SetProperty(ref _fullName, value);
+            set
+            {
+                if (SetProperty(ref _fullName, value))
+                {
+                    SaveCustomerCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         public string PhoneNumber
@@ -152,7 +164,10 @@ namespace KamatekCrm.ViewModels
             get => _personalDataProtection.Protect(_phoneNumber, PersonalDataKind.Phone);
             set
             {
-                if (CanViewContactData) SetProperty(ref _phoneNumber, value);
+                if (CanViewContactData && SetProperty(ref _phoneNumber, value))
+                {
+                    SaveCustomerCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -161,7 +176,10 @@ namespace KamatekCrm.ViewModels
             get => _personalDataProtection.Protect(_email, PersonalDataKind.Email);
             set
             {
-                if (CanViewContactData) SetProperty(ref _email, value);
+                if (CanViewContactData && SetProperty(ref _email, value))
+                {
+                    SaveCustomerCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -170,7 +188,10 @@ namespace KamatekCrm.ViewModels
             get => _personalDataProtection.Protect(_city, PersonalDataKind.Address);
             set
             {
-                if (CanViewContactData) SetProperty(ref _city, value);
+                if (CanViewContactData && SetProperty(ref _city, value))
+                {
+                    SaveCustomerCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -237,6 +258,7 @@ namespace KamatekCrm.ViewModels
                     {
                         _city = value.Name;
                         OnPropertyChanged(nameof(City));
+                        SaveCustomerCommand.NotifyCanExecuteChanged();
                         var districts = AddressService.GetDistricts(value.Name);
                         foreach (var d in districts) Districts.Add(d);
                     }
@@ -244,6 +266,7 @@ namespace KamatekCrm.ViewModels
                     {
                         _city = string.Empty;
                         OnPropertyChanged(nameof(City));
+                        SaveCustomerCommand.NotifyCanExecuteChanged();
                     }
                 }
             }
@@ -369,19 +392,32 @@ namespace KamatekCrm.ViewModels
             finally
             {
                 _isAddressLoading = false;
+                SaveCustomerCommand.NotifyCanExecuteChanged();
             }
         }
 
-        public string? Notes
+        public string? CustomerNotes
         {
-            get => _notes;
-            set => SetProperty(ref _notes, value);
+            get => _customerNotes;
+            set => SetProperty(ref _customerNotes, value);
+        }
+
+        public string NewTimelineNote
+        {
+            get => _newTimelineNote;
+            set => SetProperty(ref _newTimelineNote, value);
         }
 
         public CustomerType CustomerType
         {
             get => _customerType;
-            set => SetProperty(ref _customerType, value);
+            set
+            {
+                if (SetProperty(ref _customerType, value))
+                {
+                    SaveCustomerCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         public string CustomerCode
@@ -395,14 +431,23 @@ namespace KamatekCrm.ViewModels
             get => _personalDataProtection.Protect(_tcKimlikNo, PersonalDataKind.NationalIdentity);
             set
             {
-                if (CanViewIdentityData) SetProperty(ref _tcKimlikNo, value);
+                if (CanViewIdentityData && SetProperty(ref _tcKimlikNo, value))
+                {
+                    SaveCustomerCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
         public string? CompanyName
         {
             get => _companyName;
-            set => SetProperty(ref _companyName, value);
+            set
+            {
+                if (SetProperty(ref _companyName, value))
+                {
+                    SaveCustomerCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         public string? TaxNumber
@@ -410,7 +455,10 @@ namespace KamatekCrm.ViewModels
             get => _personalDataProtection.Protect(_taxNumber, PersonalDataKind.TaxNumber);
             set
             {
-                if (CanViewIdentityData) SetProperty(ref _taxNumber, value);
+                if (CanViewIdentityData && SetProperty(ref _taxNumber, value))
+                {
+                    SaveCustomerCommand.NotifyCanExecuteChanged();
+                }
             }
         }
 
@@ -462,7 +510,11 @@ namespace KamatekCrm.ViewModels
             private set => SetProperty(ref _netBalance, value);
         }
 
-        public string BalanceColor => TotalBalance > 0 ? "#F44336" : (TotalBalance < 0 ? "#2E7D32" : "#757575");
+        public System.Windows.Media.Brush BalanceColor => TotalBalance > 0
+            ? ThemeService.ResolveBrush("StatusErrorFg", System.Windows.Media.Brushes.IndianRed)
+            : (TotalBalance < 0
+                ? ThemeService.ResolveBrush("StatusSuccessFg", System.Windows.Media.Brushes.SeaGreen)
+                : ThemeService.ResolveBrush("TextFillColorSecondaryBrush", System.Windows.Media.Brushes.Gray));
         
         /// <summary>
         /// Aktif iş sayısı
@@ -547,7 +599,7 @@ namespace KamatekCrm.ViewModels
                     {
                         await Application.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            MessageBox.Show("Müşteri bulunamadı!", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                            _toastService.ShowError("Hata", "Müşteri bulunamadı!");
                         });
                         return;
                     }
@@ -604,7 +656,8 @@ namespace KamatekCrm.ViewModels
                     OnPropertyChanged(nameof(Street));
                     OnPropertyChanged(nameof(BuildingNo));
                     OnPropertyChanged(nameof(ApartmentNo));
-                    Notes = _customer.Notes;
+                    CustomerNotes = _customer.Notes;
+                    NewTimelineNote = string.Empty;
                     CustomerType = _customer.Type;
                     CustomerCode = _customer.CustomerCode;
                     _tcKimlikNo = _customer.TcKimlikNo;
@@ -613,6 +666,7 @@ namespace KamatekCrm.ViewModels
                     _taxNumber = _customer.TaxNumber;
                     OnPropertyChanged(nameof(TaxNumber));
                     TaxOffice = _customer.TaxOffice;
+                    SaveCustomerCommand.NotifyCanExecuteChanged();
 
                     // Yeni alanları doldur
                     Tags = _customer.Tags;
@@ -737,7 +791,7 @@ namespace KamatekCrm.ViewModels
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    MessageBox.Show($"Veri yükleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService.ShowError("Hata", $"Veri yükleme hatası: {ex.Message}");
                 });
             }
             finally
@@ -777,30 +831,62 @@ namespace KamatekCrm.ViewModels
 
         private async Task AddTransactionAsync(TransactionType type)
         {
-            var input = "0";
+            if (_customerId <= 0) return;
+
+            if (_dialogService == null)
+            {
+                _toastService.ShowError("Hata", "Diyalog servisi kullanılamıyor.");
+                return;
+            }
+
+            string title = type == TransactionType.Payment ? "Tahsilat Al" : "Borç Ekle";
+            string amountPrompt = type == TransactionType.Payment
+                ? "Tahsilat tutarını giriniz (₺) (isteğe bağlı 'Tutar - Açıklama'):"
+                : "Borç tutarını giriniz (₺) (isteğe bağlı 'Tutar - Açıklama'):";
+
+            var input = await _dialogService.ShowInputAsync(amountPrompt, title);
             if (string.IsNullOrWhiteSpace(input)) return;
 
-            decimal amount = 0;
-            string description = type == TransactionType.Payment ? "Tahsilat" : "Borç Yansıtma";
+            decimal amount = 0m;
+            string defaultDescription = type == TransactionType.Payment ? "Tahsilat" : "Borç Yansıtma";
+            string description = defaultDescription;
+            bool hasInlineDescription = false;
 
-            if (input.Contains("-"))
+            string amountPart = input.Trim();
+            if (input.Contains('-'))
             {
                 var parts = input.Split('-', 2);
-                if (decimal.TryParse(parts[0].Trim(), out decimal parsedAmount))
+                amountPart = parts[0].Trim();
+                if (!string.IsNullOrWhiteSpace(parts[1]))
                 {
-                    amount = parsedAmount;
                     description = parts[1].Trim();
+                    hasInlineDescription = true;
                 }
             }
-            else
+
+            var trCulture = new System.Globalization.CultureInfo("tr-TR");
+            if (!decimal.TryParse(amountPart, System.Globalization.NumberStyles.Number, trCulture, out amount) &&
+                !decimal.TryParse(amountPart, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out amount))
             {
-                decimal.TryParse(input, out amount);
+                amount = 0m;
             }
 
-            if (amount <= 0)
+            if (amount <= 0m)
             {
-                MessageBox.Show("Geçerli bir tutar giriniz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService.ShowWarning("Uyarı", "Geçerli ve sıfırdan büyük bir tutar giriniz.");
                 return;
+            }
+
+            if (!hasInlineDescription)
+            {
+                var descInput = await _dialogService.ShowInputAsync(
+                    "İşlem açıklaması giriniz:",
+                    $"{title} — Açıklama",
+                    defaultDescription);
+                if (!string.IsNullOrWhiteSpace(descInput))
+                {
+                    description = descInput.Trim();
+                }
             }
 
             try
@@ -810,7 +896,7 @@ namespace KamatekCrm.ViewModels
                 {
                     CustomerId = _customerId,
                     Type = type,
-                    Amount = amount,
+                    Amount = FinancialCalculator.RoundMoney(amount),
                     Date = DateTime.UtcNow,
                     Description = description
                 };
@@ -825,13 +911,16 @@ namespace KamatekCrm.ViewModels
                 {
                     Transactions.Insert(0, transaction);
                     CalculateTotals();
+                    _toastService.ShowSuccess(
+                        title,
+                        $"{transaction.Amount:N2} ₺ tutarında {(type == TransactionType.Payment ? "tahsilat" : "borç")} kaydedildi.");
                 });
             }
             catch (Exception ex)
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    MessageBox.Show($"İşlem eklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService.ShowError("Hata", $"İşlem eklenirken hata: {ex.Message}");
                 });
             }
         }
@@ -840,7 +929,7 @@ namespace KamatekCrm.ViewModels
         {
             return !string.IsNullOrWhiteSpace(FullName) &&
                    !string.IsNullOrWhiteSpace(_phoneNumber) &&
-                   !string.IsNullOrWhiteSpace(_city);
+                   (CustomerType != CustomerType.Corporate || !string.IsNullOrWhiteSpace(CompanyName));
         }
 
         [RelayCommand(CanExecute = nameof(CanSaveCustomer))]
@@ -850,36 +939,38 @@ namespace KamatekCrm.ViewModels
 
             try
             {
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-
-                // Kanonik Telefon Normalizasyonu
-                string normPhone = CustomerValidationHelper.NormalizePhoneNumber(_phoneNumber);
-                if (!string.IsNullOrWhiteSpace(_phoneNumber) && !CustomerValidationHelper.IsValidPhoneNumber(_phoneNumber))
-                {
-                    _toastService.ShowError("Hata", "Geçerli bir telefon numarası giriniz.");
-                    return;
-                }
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
 
                 string? cleanTc = CustomerType == CustomerType.Individual && !string.IsNullOrWhiteSpace(_tcKimlikNo) ? _tcKimlikNo.Trim() : null;
                 string? cleanTax = CustomerType == CustomerType.Corporate && !string.IsNullOrWhiteSpace(_taxNumber) ? _taxNumber.Trim() : null;
 
-                if (!string.IsNullOrEmpty(cleanTc) && !CustomerValidationHelper.IsValidTcKimlikNo(cleanTc))
+                // Ortak Müşteri Doğrulayıcı (QuickCustomerAdd, CustomerAdd, CustomerDetail tek kuralda birleşik)
+                string? validationError = CustomerValidationHelper.ValidateCustomerInput(
+                    CustomerType,
+                    FullName,
+                    _phoneNumber,
+                    _email,
+                    CompanyName,
+                    cleanTc,
+                    cleanTax,
+                    requirePhone: CanViewContactData);
+
+                if (validationError != null)
                 {
-                    _toastService.ShowError("Hata", "Geçersiz T.C. Kimlik Numarası (11 haneli ve algoritmayı sağlamalıdır).");
+                    _toastService.ShowError("Hata", validationError);
                     return;
                 }
 
-                if (!string.IsNullOrEmpty(cleanTax) && !CustomerValidationHelper.IsValidTaxNumber(cleanTax))
-                {
-                    _toastService.ShowError("Hata", "Geçersiz Vergi Kimlik Numarası (10 haneli ve algoritmayı sağlamalıdır).");
-                    return;
-                }
+                string normPhone = CustomerValidationHelper.NormalizePhoneNumber(_phoneNumber);
 
-                // Mükerrer Kontrolü (Başka müşteri ile çakışma olmamalı)
+                // Mükerrer Kontrolü (Formatlı ve normalize edilmiş telefonlar dahil)
                 string phoneLast10 = normPhone.Length >= 10 ? normPhone.Substring(normPhone.Length - 10) : normPhone;
                 var duplicate = await context.Customers.AsNoTracking()
                     .FirstOrDefaultAsync(c => c.Id != _customerId && !c.IsDeleted && (
-                        (!string.IsNullOrEmpty(normPhone) && (c.PhoneNumber == normPhone || (phoneLast10.Length >= 10 && c.PhoneNumber != null && c.PhoneNumber.Contains(phoneLast10)))) ||
+                        (!string.IsNullOrEmpty(normPhone) && (
+                            c.PhoneNumber == normPhone ||
+                            (phoneLast10.Length >= 10 && c.PhoneNumber != null &&
+                             c.PhoneNumber.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace("+", "").EndsWith(phoneLast10)))) ||
                         (!string.IsNullOrEmpty(cleanTc) && c.TcKimlikNo == cleanTc) ||
                         (!string.IsNullOrEmpty(cleanTax) && c.TaxNumber == cleanTax)
                     ));
@@ -903,7 +994,7 @@ namespace KamatekCrm.ViewModels
                     existingCustomer.Street = _street;
                     existingCustomer.BuildingNo = _buildingNo;
                     existingCustomer.ApartmentNo = _apartmentNo;
-                    existingCustomer.Notes = Notes;
+                    existingCustomer.Notes = CustomerNotes;
                     existingCustomer.Type = CustomerType;
                     existingCustomer.TcKimlikNo = cleanTc;
                     existingCustomer.CompanyName = CompanyName;
@@ -923,7 +1014,7 @@ namespace KamatekCrm.ViewModels
                         _customer.Street = _street;
                         _customer.BuildingNo = _buildingNo;
                         _customer.ApartmentNo = _apartmentNo;
-                        _customer.Notes = Notes;
+                        _customer.Notes = CustomerNotes;
                     }
 
                     _toastService.ShowSuccess("Müşteri bilgileri başarıyla güncellendi!");
@@ -968,10 +1059,10 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task AddNote()
         {
-            var note = Notes;
+            var note = NewTimelineNote?.Trim();
             if (string.IsNullOrWhiteSpace(note))
             {
-                MessageBox.Show("Lütfen bir not girin!", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService.ShowWarning("Uyarı", "Lütfen bir not girin!");
                 return;
             }
 
@@ -984,7 +1075,7 @@ namespace KamatekCrm.ViewModels
                     Type = ActivityType.NoteAdded,
                     Description = note,
                     CreatedDate = DateTime.UtcNow,
-                    CreatedBy = "Kullanıcı"
+                    CreatedBy = App.CurrentUser?.Username ?? "Kullanıcı"
                 };
 
                 await using (context.ConfigureAwait(false))
@@ -994,9 +1085,6 @@ namespace KamatekCrm.ViewModels
                     var customerInDb = await context.Customers.FindAsync(_customerId).ConfigureAwait(false);
                     if (customerInDb != null)
                     {
-                        customerInDb.Notes = string.IsNullOrEmpty(customerInDb.Notes) 
-                            ? note 
-                            : customerInDb.Notes + "\n" + DateTime.UtcNow.ToString("dd.MM.yyyy") + ": " + note;
                         customerInDb.LastInteractionDate = DateTime.UtcNow;
                     }
 
@@ -1006,7 +1094,7 @@ namespace KamatekCrm.ViewModels
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     Activities.Insert(0, activity);
-                    Notes = string.Empty;
+                    NewTimelineNote = string.Empty;
                     _toastService.ShowSuccess("Not başarıyla eklendi!");
                 });
             }
@@ -1014,7 +1102,7 @@ namespace KamatekCrm.ViewModels
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    MessageBox.Show($"Not ekleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService.ShowError("Hata", $"Not ekleme hatası: {ex.Message}");
                 });
             }
         }
@@ -1059,7 +1147,7 @@ namespace KamatekCrm.ViewModels
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    MessageBox.Show($"Etiket kaydetme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService.ShowError("Hata", $"Etiket kaydetme hatası: {ex.Message}");
                 });
             }
         }
@@ -1092,7 +1180,7 @@ namespace KamatekCrm.ViewModels
             {
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    MessageBox.Show($"Segment güncelleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService.ShowError("Hata", $"Segment güncelleme hatası: {ex.Message}");
                 });
             }
         }
@@ -1138,7 +1226,7 @@ namespace KamatekCrm.ViewModels
                             StartInfo = new System.Diagnostics.ProcessStartInfo(saveDialog.FileName) { UseShellExecute = true }
                         }.Start();
                     }
-                    catch { }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "CustomerDetailViewModel.cs"); }
                 }
             }
             catch (Exception ex)

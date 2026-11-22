@@ -67,18 +67,11 @@ namespace KamatekCrm.Diagnostics
             {
                 try
                 {
-                    MessageBox.Show(
-                        "WPF bağlama hatası (salt okunur özelliğe TwoWay/OneWayToSource bağlama):\n\n" +
-                        message +
-                        "\n\nÇözüm: Bağlamaya Mode=OneWay ekleyin.",
+                    (App.ServiceProvider?.GetService(typeof(Services.IToastService)) as Services.IToastService)?.ShowWarning(
                         "Bağlama Hatası — Geliştirici Modu",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        $"WPF bağlama hatası (salt okunur özelliğe TwoWay/OneWayToSource bağlama): {message}");
                 }
-                catch
-                {
-                    // Mesaj kutusu gösterilemezse sessizce geç — Debug çıktısı zaten yazıldı.
-                }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "BindingErrorTraceListener.cs"); }
             }));
         }
 
@@ -108,10 +101,7 @@ namespace KamatekCrm.Diagnostics
                     ProcessId = Environment.ProcessId
                 });
             }
-            catch
-            {
-                // Tanılama hatası bağlama akışını etkilemez.
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "BindingErrorTraceListener.cs"); }
         }
     }
 }

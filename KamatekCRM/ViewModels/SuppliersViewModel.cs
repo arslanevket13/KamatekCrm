@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -14,11 +15,18 @@ namespace KamatekCrm.ViewModels
     public partial class SuppliersViewModel : ViewModelBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly Services.IToastService? _toastService;
+        private readonly KamatekCrm.Shared.Services.IDialogService? _dialogService;
         private CancellationTokenSource? _searchCts;
 
-        public SuppliersViewModel(IUnitOfWork unitOfWork)
+        public SuppliersViewModel(
+            IUnitOfWork unitOfWork,
+            Services.IToastService? toastService = null,
+            KamatekCrm.Shared.Services.IDialogService? dialogService = null)
         {
             _unitOfWork = unitOfWork;
+            _toastService = toastService;
+            _dialogService = dialogService;
             _ = Refresh();
         }
 
@@ -54,7 +62,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    _ = DebouncedRefreshAsync();
+                    DebouncedRefreshAsync().SafeFireAndForget("SuppliersViewModel.DebouncedRefreshAsync");
                 }
             }
         }
@@ -95,9 +103,7 @@ namespace KamatekCrm.ViewModels
                 await Task.Delay(200, cts.Token);
                 await LoadSuppliersAsync(cts.Token);
             }
-            catch (OperationCanceledException)
-            {
-            }
+            catch (OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "SuppliersViewModel.cs"); }
         }
 
         [RelayCommand]
@@ -126,12 +132,10 @@ namespace KamatekCrm.ViewModels
                     Suppliers = new ObservableCollection<Supplier>(list.OrderBy(x => x.CompanyName));
                 }
             }
-            catch (OperationCanceledException)
-            {
-            }
+            catch (OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "SuppliersViewModel.cs"); }
             catch (Exception ex)
             {
-                MessageBox.Show($"Veri yüklenirken hata oluştu: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Veri yüklenirken hata oluştu: {ex.Message}");
             }
             finally
             {
@@ -156,7 +160,7 @@ namespace KamatekCrm.ViewModels
 
             if (string.IsNullOrWhiteSpace(SelectedSupplier.CompanyName))
             {
-                MessageBox.Show("Firma ünvanı boş olamaz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _toastService?.ShowWarning("Uyarı", "Firma ünvanı boş olamaz.");
                 return;
             }
 
@@ -175,11 +179,11 @@ namespace KamatekCrm.ViewModels
 
                 await _unitOfWork.SaveChangesAsync();
                 await Refresh();
-                MessageBox.Show("Kayıt Başarılı.", "Bilgi");
+                _toastService?.ShowSuccess("Bilgi", "Kayıt Başarılı.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Kaydetme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Kaydetme hatası: {ex.Message}");
             }
             finally
             {
@@ -192,8 +196,10 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedSupplier == null) return;
 
-            var res = MessageBox.Show($"'{SelectedSupplier.CompanyName}' silinecek. Onaylıyor musunuz?", "Silme Onayı", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (res == MessageBoxResult.Yes)
+            bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
+                $"'{SelectedSupplier.CompanyName}' silinecek. Onaylıyor musunuz?",
+                "Silme Onayı");
+            if (confirmed)
             {
                 IsBusy = true;
                 try
@@ -205,7 +211,7 @@ namespace KamatekCrm.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Silme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService?.ShowError("Hata", $"Silme hatası: {ex.Message}");
                 }
                 finally
                 {

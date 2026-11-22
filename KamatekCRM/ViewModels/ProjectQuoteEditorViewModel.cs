@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -299,7 +300,7 @@ namespace KamatekCrm.ViewModels
 
         public void LoadExistingProject(int projectId)
         {
-            _ = LoadProjectAsync(projectId);
+            LoadProjectAsync(projectId).SafeFireAndForget("ProjectQuoteEditorViewModel.LoadProjectAsync");
         }
 
         #endregion
@@ -389,10 +390,7 @@ namespace KamatekCrm.ViewModels
                             }
                         }
                     }
-                    catch
-                    {
-                        // Taslak yükleme hatası projeyi bozmamalı
-                    }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProjectQuoteEditorViewModel.cs"); }
                 }
 
                 OnPropertyChanged(nameof(DiscountPercent));
@@ -482,7 +480,7 @@ namespace KamatekCrm.ViewModels
 
                 AutoSaveDraft(snapshot);
             }
-            catch { }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProjectQuoteEditorViewModel.cs"); }
         }
 
         private string GetDraftKey() => CurrentProject.Id > 0 
@@ -492,7 +490,7 @@ namespace KamatekCrm.ViewModels
         private void AutoSaveDraft(string scopeJson)
         {
             var version = Interlocked.Increment(ref _autoSaveVersion);
-            _ = DebouncedAutoSaveAsync(scopeJson, version);
+            DebouncedAutoSaveAsync(scopeJson, version).SafeFireAndForget("ProjectQuoteEditorViewModel.DebouncedAutoSaveAsync");
         }
 
         private async Task DebouncedAutoSaveAsync(string scopeJson, long expectedVersion)
@@ -861,15 +859,23 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand]
-        private void RenameNode(object? parameter)
+        private async Task RenameNode(object? parameter)
         {
             if (SelectedNode == null) return;
 
             var newName = parameter as string;
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                newName = await _dialogService.ShowInputAsync(
+                    "Kapsam düğümü için yeni adı giriniz:",
+                    "Yeniden Adlandır",
+                    SelectedNode.Name);
+            }
+
             if (!string.IsNullOrWhiteSpace(newName))
             {
                 SaveSnapshot();
-                SelectedNode.Name = newName;
+                SelectedNode.Name = newName.Trim();
                 OnPropertyChanged(nameof(SelectedNodeName));
                 SaveSnapshot();
             }
@@ -1359,7 +1365,7 @@ namespace KamatekCrm.ViewModels
             }
             finally
             {
-                try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); } catch { }
+                try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProjectQuoteEditorViewModel.cs"); }
             }
         }
 

@@ -6,11 +6,13 @@ using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using KamatekCrm.ApplicationCore.DTOs.ServiceJobs;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.Infrastructure.Data;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Shared.Models;
+using KamatekCrm.Shared.Services;
 using KamatekCrm.Views;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,6 +27,8 @@ namespace KamatekCrm.ViewModels
         private readonly IServiceJobCommandService _serviceJobCommandService;
         private readonly IServiceJobReadService? _readService;
         private readonly IToastService? _toastService;
+        private readonly PdfService? _pdfService;
+        private readonly IDialogService? _dialogService;
         private string _searchText = string.Empty;
         private DateTime? _startDate;
         private DateTime? _endDate;
@@ -71,12 +75,16 @@ namespace KamatekCrm.ViewModels
             IDbContextFactory<AppDbContext> dbContextFactory,
             IServiceJobCommandService serviceJobCommandService,
             IServiceJobReadService? readService = null,
-            IToastService? toastService = null)
+            IToastService? toastService = null,
+            PdfService? pdfService = null,
+            IDialogService? dialogService = null)
         {
             _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
             _serviceJobCommandService = serviceJobCommandService;
             _readService = readService;
             _toastService = toastService;
+            _pdfService = pdfService;
+            _dialogService = dialogService;
             AllFieldJobs = new ObservableCollection<FieldJobDisplayItem>();
             CategoryFilters = new ObservableCollection<CategoryFilterItem>();
 
@@ -144,7 +152,7 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Veriler yüklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                _toastService?.ShowError("Hata", $"Veriler yüklenirken hata: {ex.Message}");
             }
         }
 
@@ -181,9 +189,9 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void ToggleCategory(object? parameter)
         {
-            if (parameter is CategoryFilterItem filter)
+            if (parameter is CategoryFilterItem)
             {
-                filter.IsSelected = !filter.IsSelected;
+                // ToggleButton.IsChecked (Mode=TwoWay) zaten filter.IsSelected değerini güncelledi; tekrar tersine çevirme!
                 FilteredFieldJobs?.Refresh();
                 OnPropertyChanged(nameof(TotalCount));
             }
@@ -206,7 +214,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (string.IsNullOrEmpty(job.Address))
                 {
-                    MessageBox.Show("Adres bilgisi bulunamadı.", "Harita", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    _toastService?.ShowWarning("Harita", "Adres bilgisi bulunamadı.");
                     return;
                 }
 
@@ -223,17 +231,67 @@ namespace KamatekCrm.ViewModels
                 }
                 catch
                 {
-                    MessageBox.Show($"Harita açılamadı.\n\nAdres: {job.Address}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                    _toastService?.ShowError("Hata", $"Harita açılamadı. Adres: {job.Address}");
                 }
             }
         }
 
         [RelayCommand]
-        private void ShowFieldPhotos(object? parameter)
+        private async Task ShowFieldPhotos(object? parameter)
         {
-            if (parameter is FieldJobDisplayItem job)
+            if (parameter is not FieldJobDisplayItem job) return;
+
+            if (_readService == null || _pdfService == null || _dialogService == null)
             {
-                MessageBox.Show($"Montaj fotoğrafları özelliği yakında eklenecek.\n\nİş: {job.JobNo}", "Fotoğraflar", MessageBoxButton.OK, MessageBoxImage.Information);
+                _toastService?.ShowWarning("Uyarı", "İş emri çalışma alanı servisleri bu oturumda yüklenemedi.");
+                return;
+            }
+
+            try
+            {
+                var rowDto = new ServiceJobRowDto
+                {
+                    Id = job.Id,
+                    CustomerFullName = job.CustomerName,
+                    Description = job.Description,
+                    Status = job.Status,
+                    WorkOrderType = job.WorkOrderType,
+                    AssignedTechnician = job.AssignedTechnician,
+                    ScheduledDate = job.ScheduledDate,
+                    CreatedDate = job.ScheduledDate ?? DateTime.UtcNow
+                };
+
+                var workspaceVm = new WorkOrderWorkspaceViewModel(
+                    rowDto,
+                    _readService,
+                    _serviceJobCommandService,
+                    _pdfService,
+                    _dialogService,
+                    _toastService ?? new ToastService());
+
+                if (!await workspaceVm.InitializeAsync()) return;
+
+                if (!workspaceVm.DocumentsTab.HasPhotos)
+                {
+                    _toastService?.ShowInfo("Belgeler & Fotoğraflar", $"{job.JobNo} için henüz yüklenmiş montaj fotoğrafı yok. Çalışma alanından fotoğraf ekleyebilirsiniz.");
+                }
+
+                // Belgeler & Fotoğraflar sekmesini aktif et (Tab Index = 5)
+                workspaceVm.ActiveTabIndex = 5;
+
+                var window = new WorkOrderWorkspaceWindow(workspaceVm)
+                {
+                    Owner = Application.Current?.MainWindow
+                };
+                window.ShowDialog();
+
+                Refresh();
+                FilteredFieldJobs?.Refresh();
+                OnPropertyChanged(nameof(TotalCount));
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError("Hata", $"Fotoğraflar ve belgeler açılamadı: {ex.Message}");
             }
         }
 
@@ -259,13 +317,11 @@ namespace KamatekCrm.ViewModels
                     }
                 }
 
-                var result = MessageBox.Show(
+                bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
                     $"İşi tamamlamak istiyor musunuz?\n\n{job.JobNo} - {job.CustomerName}",
-                    "İşi Tamamla",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
+                    "İşi Tamamla");
 
-                if (result == MessageBoxResult.Yes)
+                if (confirmed)
                 {
                     try
                     {
@@ -275,28 +331,70 @@ namespace KamatekCrm.ViewModels
                             App.CurrentUser?.Username ?? "Sistem");
                         if (completion.IsFailure)
                         {
-                            MessageBox.Show(completion.Error, "İş tamamlanamadı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            _toastService?.ShowWarning("İş tamamlanamadı", completion.Error);
                             return;
                         }
 
                         job.Status = JobStatus.Completed;
                         FilteredFieldJobs?.Refresh();
-                        MessageBox.Show("İş başarıyla tamamlandı!", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                        _toastService?.ShowSuccess("Başarılı", "İş başarıyla tamamlandı!");
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                        _toastService?.ShowError("Hata", $"Hata: {ex.Message}");
                     }
                 }
             }
         }
 
         [RelayCommand]
-        private void OpenFieldJobDetail(object? parameter)
+        private async Task OpenFieldJobDetail(object? parameter)
         {
-            if (parameter is FieldJobDisplayItem job)
+            if (parameter is not FieldJobDisplayItem job) return;
+
+            if (_readService == null || _pdfService == null || _dialogService == null)
             {
-                MessageBox.Show($"Saha işi detay penceresi: {job.JobNo}", "Detay", MessageBoxButton.OK, MessageBoxImage.Information);
+                _toastService?.ShowWarning("Uyarı", "İş emri çalışma alanı servisleri bu oturumda yüklenemedi.");
+                return;
+            }
+
+            try
+            {
+                var rowDto = new ServiceJobRowDto
+                {
+                    Id = job.Id,
+                    CustomerFullName = job.CustomerName,
+                    Description = job.Description,
+                    Status = job.Status,
+                    WorkOrderType = job.WorkOrderType,
+                    AssignedTechnician = job.AssignedTechnician,
+                    ScheduledDate = job.ScheduledDate,
+                    CreatedDate = job.ScheduledDate ?? DateTime.UtcNow
+                };
+
+                var workspaceVm = new WorkOrderWorkspaceViewModel(
+                    rowDto,
+                    _readService,
+                    _serviceJobCommandService,
+                    _pdfService,
+                    _dialogService,
+                    _toastService ?? new ToastService());
+
+                if (!await workspaceVm.InitializeAsync()) return;
+
+                var window = new WorkOrderWorkspaceWindow(workspaceVm)
+                {
+                    Owner = Application.Current?.MainWindow
+                };
+                window.ShowDialog();
+
+                Refresh();
+                FilteredFieldJobs?.Refresh();
+                OnPropertyChanged(nameof(TotalCount));
+            }
+            catch (Exception ex)
+            {
+                _toastService?.ShowError("Hata", $"İş emri çalışma alanı açılamadı: {ex.Message}");
             }
         }
     }
@@ -304,20 +402,94 @@ namespace KamatekCrm.ViewModels
     /// <summary>
     /// Saha işi görüntüleme modeli
     /// </summary>
-    public class FieldJobDisplayItem
+    public class FieldJobDisplayItem : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
     {
         public int Id { get; set; }
         public string JobNo { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
-        public JobCategory JobCategory { get; set; }
-        public WorkOrderType WorkOrderType { get; set; }
-        public DateTime? ScheduledDate { get; set; }
-        public string AssignedTechnician { get; set; } = string.Empty;
-        public JobStatus Status { get; set; }
-        public string Description { get; set; } = string.Empty;
-        public JobPriority Priority { get; set; }
+
+        private string _address = string.Empty;
+        public string Address
+        {
+            get => _address;
+            set
+            {
+                if (SetProperty(ref _address, value))
+                    OnPropertyChanged(nameof(LocationDisplay));
+            }
+        }
+
+        private string _city = string.Empty;
+        public string City
+        {
+            get => _city;
+            set
+            {
+                if (SetProperty(ref _city, value))
+                    OnPropertyChanged(nameof(LocationDisplay));
+            }
+        }
+
+        private JobCategory _jobCategory;
+        public JobCategory JobCategory
+        {
+            get => _jobCategory;
+            set
+            {
+                if (SetProperty(ref _jobCategory, value))
+                {
+                    OnPropertyChanged(nameof(CategoryIcon));
+                    OnPropertyChanged(nameof(CategoryDisplay));
+                    OnPropertyChanged(nameof(CategoryColor));
+                }
+            }
+        }
+
+        private WorkOrderType _workOrderType;
+        public WorkOrderType WorkOrderType
+        {
+            get => _workOrderType;
+            set => SetProperty(ref _workOrderType, value);
+        }
+
+        private DateTime? _scheduledDate;
+        public DateTime? ScheduledDate
+        {
+            get => _scheduledDate;
+            set
+            {
+                if (SetProperty(ref _scheduledDate, value))
+                    OnPropertyChanged(nameof(ScheduleDisplay));
+            }
+        }
+
+        private string _assignedTechnician = string.Empty;
+        public string AssignedTechnician
+        {
+            get => _assignedTechnician;
+            set => SetProperty(ref _assignedTechnician, value);
+        }
+
+        private JobStatus _status;
+        public JobStatus Status
+        {
+            get => _status;
+            set => SetProperty(ref _status, value);
+        }
+
+        private string _description = string.Empty;
+        public string Description
+        {
+            get => _description;
+            set => SetProperty(ref _description, value);
+        }
+
+        private JobPriority _priority;
+        public JobPriority Priority
+        {
+            get => _priority;
+            set => SetProperty(ref _priority, value);
+        }
 
         // Computed
         public string LocationDisplay => !string.IsNullOrEmpty(City) ? $"{Address}, {City}" : Address;
@@ -349,17 +521,17 @@ namespace KamatekCrm.ViewModels
             _ => JobCategory.ToString()
         };
 
-        public string CategoryColor => JobCategory switch
+        public System.Windows.Media.Brush CategoryColor => JobCategory switch
         {
-            JobCategory.CCTV => "#1976D2",
-            JobCategory.FireAlarm => "#D32F2F",
-            JobCategory.BurglarAlarm => "#F57C00",
-            JobCategory.VideoIntercom => "#7B1FA2",
-            JobCategory.SatelliteSystem => "#00796B",
-            JobCategory.AccessControl => "#5D4037",
-            JobCategory.SmartHome => "#0097A7",
-            JobCategory.FiberOptic => "#388E3C",
-            _ => "#757575"
+            JobCategory.CCTV => ThemeService.ResolveBrush("ThemePrimary"),
+            JobCategory.FireAlarm => ThemeService.ResolveBrush("StatusErrorFg"),
+            JobCategory.BurglarAlarm => ThemeService.ResolveBrush("StatusWarningFg"),
+            JobCategory.VideoIntercom => ThemeService.ResolveBrush("AccentBrush"),
+            JobCategory.SatelliteSystem => ThemeService.ResolveBrush("StatusInfoFg"),
+            JobCategory.AccessControl => ThemeService.ResolveBrush("TextHeadingBrush"),
+            JobCategory.SmartHome => ThemeService.ResolveBrush("ThemePrimaryDark"),
+            JobCategory.FiberOptic => ThemeService.ResolveBrush("StatusSuccessFg"),
+            _ => ThemeService.ResolveBrush("TextFillColorSecondaryBrush")
         };
 
         public string StatusDisplay => Status switch

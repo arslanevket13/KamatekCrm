@@ -47,8 +47,9 @@ namespace KamatekCrm.Helpers
                 else
                 {
                     Serilog.Log.Error("[ProcessManager] API exe not found! Backend (Port 5050) will not start.");
-                    System.Windows.MessageBox.Show("API Sunucusu başlatılamadı (KamatekCrm.API.exe bulunamadı).\nVeritabanı işlemleri çalışmayacak.", 
-                        "Kritik Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    (App.ServiceProvider?.GetService(typeof(Services.IToastService)) as Services.IToastService)?.ShowError(
+                        "Kritik Hata",
+                        "API Sunucusu başlatılamadı (KamatekCrm.API.exe bulunamadı). Veritabanı işlemleri çalışmayacak.");
                 }
 
                 if (cancellationToken.IsCancellationRequested)
@@ -67,8 +68,9 @@ namespace KamatekCrm.Helpers
                 else
                 {
                     Serilog.Log.Error("[ProcessManager] WEB exe not found! Web Interface (Port 7000) will not start.");
-                    System.Windows.MessageBox.Show("Web Arayüzü başlatılamadı (KamatekCrm.Web.exe bulunamadı).", 
-                        "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    (App.ServiceProvider?.GetService(typeof(Services.IToastService)) as Services.IToastService)?.ShowWarning(
+                        "Hata",
+                        "Web Arayüzü başlatılamadı (KamatekCrm.Web.exe bulunamadı).");
                 }
 
                 // Open Browser after delay (Use Localhost URL for the server user)
@@ -105,10 +107,7 @@ namespace KamatekCrm.Helpers
                             process.Dispose();
                         }
                     }
-                    catch
-                    {
-                        // Ignore already terminated processes
-                    }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProcessManager.cs"); }
                 }
             }
             catch (Exception ex)
@@ -133,10 +132,10 @@ namespace KamatekCrm.Helpers
                             process.Kill(entireProcessTree: true);
                             process.Dispose();
                         }
-                        catch { }
+                        catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProcessManager.cs"); }
                     }
                 }
-                catch { }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProcessManager.cs"); }
             }
         }
 
@@ -206,7 +205,7 @@ namespace KamatekCrm.Helpers
                    
                    if (files.Any()) return files.First().FullName;
                 }
-                catch {}
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProcessManager.cs"); }
             }
             else
             {
@@ -233,7 +232,7 @@ namespace KamatekCrm.Helpers
             {
                 Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
             }
-            catch { }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "ProcessManager.cs"); }
         }
     }
 }

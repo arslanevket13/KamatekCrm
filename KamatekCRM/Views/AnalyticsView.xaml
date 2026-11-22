@@ -27,17 +27,51 @@
                             CornerRadius="8" Padding="4" Margin="0,0,16,0"
                             BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                         <StackPanel Orientation="Horizontal">
-                            <ui:Button Content="Bu Hafta" Appearance="Secondary" Height="32" Padding="12,0" Margin="0,0,4,0"/>
-                            <ui:Button Content="Bu Ay" Appearance="Primary" Height="32" Padding="12,0" Margin="0,0,4,0"/>
-                            <ui:Button Content="Bu Yıl" Appearance="Secondary" Height="32" Padding="12,0"/>
+                            <ui:Button Content="Bu Hafta" Command="{Binding SetPeriodCommand}" CommandParameter="Week" Height="32" Padding="12,0" Margin="0,0,4,0" Cursor="Hand">
+                                <ui:Button.Style>
+                                    <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                        <Setter Property="Appearance" Value="Secondary"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsWeekSelected}" Value="True">
+                                                <Setter Property="Appearance" Value="Primary"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ui:Button.Style>
+                            </ui:Button>
+                            <ui:Button Content="Bu Ay" Command="{Binding SetPeriodCommand}" CommandParameter="Month" Height="32" Padding="12,0" Margin="0,0,4,0" Cursor="Hand">
+                                <ui:Button.Style>
+                                    <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                        <Setter Property="Appearance" Value="Secondary"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMonthSelected}" Value="True">
+                                                <Setter Property="Appearance" Value="Primary"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ui:Button.Style>
+                            </ui:Button>
+                            <ui:Button Content="Bu Yıl" Command="{Binding SetPeriodCommand}" CommandParameter="Year" Height="32" Padding="12,0" Cursor="Hand">
+                                <ui:Button.Style>
+                                    <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                                        <Setter Property="Appearance" Value="Secondary"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsYearSelected}" Value="True">
+                                                <Setter Property="Appearance" Value="Primary"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ui:Button.Style>
+                            </ui:Button>
                         </StackPanel>
                     </Border>
 
                     <!-- Export Button -->
                     <ui:Button Content="Rapor İndir (PDF)" 
                                Icon="{ui:SymbolIcon ArrowDownload24}"
+                               Command="{Binding ExportPdfCommand}"
                                Appearance="Secondary"
-                               Height="40" Padding="16,0"/>
+                               Height="40" Padding="16,0" Cursor="Hand"/>
                 </StackPanel>
 
                 <!-- Left: Title & Subtitle -->

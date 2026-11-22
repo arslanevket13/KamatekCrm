@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.IO;
 using System.Reflection;
@@ -192,7 +193,7 @@ namespace KamatekCrm.Services.Update
 
                 if (_settings.AutoDownloadUpdates && !IsDownloading && !IsUpdateDownloaded)
                 {
-                    _ = DownloadUpdateAsync(ct: ct);
+                    DownloadUpdateAsync(ct: ct).SafeFireAndForget("VelopackUpdateService.DownloadUpdateAsync");
                 }
 
                 return _availableUpdate;

@@ -11,8 +11,8 @@ namespace KamatekCrm.Views
             var vm = new KamatekCrm.ViewModels.QuickNewProductForPurchaseViewModel(dbContextFactory);
             vm.RequestClose += success =>
             {
-                try { System.Windows.Input.Keyboard.ClearFocus(); } catch { }
-                try { DialogResult = success; } catch { }
+                try { System.Windows.Input.Keyboard.ClearFocus(); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "QuickNewProductForPurchaseWindow.xaml.cs"); }
+                try { DialogResult = success; } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "QuickNewProductForPurchaseWindow.xaml.cs"); }
                 Close();
             };
             DataContext = vm;

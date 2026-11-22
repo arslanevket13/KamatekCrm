@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Markup;
 using KamatekCrm.Settings;
@@ -19,6 +20,20 @@ namespace KamatekCrm.Services
         public static string CurrentThemeName { get; private set; } = string.Empty;
 
         public static readonly string[] AvailableThemes = { "PremiumLight", "MidnightDark", "Glassmorphism" };
+
+        /// <summary>
+        /// Aktif tema sözlüğünden Brush kaynağını çözümler; bulunamazsa yedek fırçayı döndürür.
+        /// ViewModel katmanında hardcoded hex string yerine tema duyarlı fırça döndürmek için kullanılır.
+        /// </summary>
+        public static Brush ResolveBrush(string resourceKey, Brush? fallback = null)
+        {
+            if (Application.Current?.TryFindResource(resourceKey) is Brush brush)
+            {
+                return brush;
+            }
+
+            return fallback ?? Brushes.Gray;
+        }
 
         public static void Initialize()
         {

@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
@@ -25,6 +26,7 @@ namespace KamatekCrm.ViewModels
         private readonly IAuthService _authService;
         private readonly IToastService _toastService;
         private readonly ILoadingService _loadingService;
+        private readonly KamatekCrm.Shared.Services.IDialogService? _dialogService;
         
         private readonly IServiceProvider? _serviceProvider;
         
@@ -103,16 +105,18 @@ namespace KamatekCrm.ViewModels
             IUserAppService userAppService,
             IToastService toastService,
             ILoadingService loadingService,
-            IServiceProvider? serviceProvider = null)
+            IServiceProvider? serviceProvider = null,
+            KamatekCrm.Shared.Services.IDialogService? dialogService = null)
         {
             _authService = authService;
             _userAppService = userAppService;
             _toastService = toastService;
             _loadingService = loadingService;
             _serviceProvider = serviceProvider;
+            _dialogService = dialogService;
 
             // Execute initial load
-            _ = LoadUsersAsync();
+            LoadUsersAsync().SafeFireAndForget("UsersViewModel.LoadUsersAsync");
         }
 
         /// <summary>
@@ -135,6 +139,15 @@ namespace KamatekCrm.ViewModels
                         Role = u.Role,
                         Phone = u.Phone,
                         IsActive = u.IsActive,
+                        IsTechnician = u.IsTechnician,
+                        VehiclePlate = u.VehiclePlate,
+                        ServiceArea = u.ServiceArea,
+                        ExpertiseAreas = u.ExpertiseAreas,
+                        CanViewFinance = u.CanViewFinance,
+                        CanViewAnalytics = u.CanViewAnalytics,
+                        CanDeleteRecords = u.CanDeleteRecords,
+                        CanApprovePurchase = u.CanApprovePurchase,
+                        CanAccessSettings = u.CanAccessSettings,
                         CreatedDate = u.CreatedDate
                     }).ToList();
                     FilterUsers();
@@ -246,7 +259,7 @@ namespace KamatekCrm.ViewModels
                 var view = new AddUserView();
                 view.ShowDialog();
             }
-            _ = LoadUsersAsync();
+            LoadUsersAsync().SafeFireAndForget("UsersViewModel.LoadUsersAsync");
         }
 
         [RelayCommand(CanExecute = nameof(CanManageSelectedUser))]
@@ -261,10 +274,10 @@ namespace KamatekCrm.ViewModels
 
         private void OpenEditUserWindow(User user)
         {
-            var view = new EditUserView(user);
+            var view = new EditUserView(user, _userAppService, _toastService, _loadingService, _authService);
             view.Owner = Application.Current.MainWindow;
             view.ShowDialog();
-            _ = LoadUsersAsync();
+            LoadUsersAsync().SafeFireAndForget("UsersViewModel.LoadUsersAsync");
         }
 
         [RelayCommand(CanExecute = nameof(CanManageSelectedUser))]
@@ -294,13 +307,11 @@ namespace KamatekCrm.ViewModels
         {
             if (SelectedUser == null) return;
 
-            var result = MessageBox.Show(
+            bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
                 $"{SelectedUser.AdSoyad} kullanıcısını sistemden kaldırmak istediğinize emin misiniz?",
-                "Kullanıcı Sil",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
+                "Kullanıcı Sil");
 
-            if (result == MessageBoxResult.Yes)
+            if (confirmed)
             {
                 _loadingService.Show();
                 try
@@ -340,33 +351,51 @@ namespace KamatekCrm.ViewModels
 
             var temporaryPassword = PasswordPolicy.GenerateTemporaryPassword();
 
-            var result = MessageBox.Show(
+            bool confirmed = _dialogService != null && await _dialogService.ShowConfirmationAsync(
                 $"{SelectedUser.AdSoyad} kullanıcısı için güçlü bir geçici parola üretmek istiyor musunuz?",
-                "Şifre Sıfırla",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                "Şifre Sıfırla");
 
-            if (result == MessageBoxResult.Yes)
+            if (confirmed)
             {
                 _loadingService.Show();
                 try
                 {
+                    var freshUserResult = await _userAppService.GetByIdAsync(SelectedUser.Id);
+                    var source = freshUserResult.IsSuccess && freshUserResult.Value != null
+                        ? freshUserResult.Value
+                        : null;
+
                     var updateDto = new KamatekCrm.ApplicationCore.DTOs.Users.UserCreateUpdateDto
                     {
                         Id = SelectedUser.Id,
-                        Username = SelectedUser.Username,
-                        Ad = SelectedUser.Ad,
-                        Soyad = SelectedUser.Soyad,
-                        Phone = SelectedUser.Phone,
-                        Role = SelectedUser.Role,
+                        Username = source?.Username ?? SelectedUser.Username,
+                        Ad = source?.Ad ?? SelectedUser.Ad,
+                        Soyad = source?.Soyad ?? SelectedUser.Soyad,
+                        Phone = source?.Phone ?? SelectedUser.Phone,
+                        Role = source?.Role ?? SelectedUser.Role,
                         Password = temporaryPassword,
-                        IsActive = SelectedUser.IsActive
+                        IsActive = source?.IsActive ?? SelectedUser.IsActive,
+                        IsTechnician = source?.IsTechnician ?? SelectedUser.IsTechnician,
+                        VehiclePlate = source?.VehiclePlate ?? SelectedUser.VehiclePlate,
+                        ServiceArea = source?.ServiceArea ?? SelectedUser.ServiceArea,
+                        ExpertiseAreas = source?.ExpertiseAreas ?? SelectedUser.ExpertiseAreas,
+                        CanViewFinance = source?.CanViewFinance ?? SelectedUser.CanViewFinance,
+                        CanViewAnalytics = source?.CanViewAnalytics ?? SelectedUser.CanViewAnalytics,
+                        CanDeleteRecords = source?.CanDeleteRecords ?? SelectedUser.CanDeleteRecords,
+                        CanApprovePurchase = source?.CanApprovePurchase ?? SelectedUser.CanApprovePurchase,
+                        CanAccessSettings = source?.CanAccessSettings ?? SelectedUser.CanAccessSettings
                     };
 
                     var res = await _userAppService.UpdateAsync(updateDto);
                     if (res.IsSuccess)
                     {
-                        _toastService.ShowSuccess("Geçici parola oluşturuldu", $"Yeni geçici parola: {temporaryPassword}");
+                        _loadingService.Hide();
+                        var dialog = new Views.TemporaryPasswordDialog(updateDto.Username, temporaryPassword)
+                        {
+                            Owner = System.Windows.Application.Current?.MainWindow
+                        };
+                        dialog.ShowDialog();
+                        _toastService.ShowSuccess("Geçici parola oluşturuldu", $"{SelectedUser.AdSoyad} için geçici şifre tanımlandı.");
                     }
                     else
                     {

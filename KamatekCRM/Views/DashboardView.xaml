@@ -85,6 +85,8 @@
                                MaxHeight="76"
                                Subtitle="{Binding TodaySalesCountText}"
                                AccentBrush="{DynamicResource KpiGradientPurple}"
+                               Command="{Binding NavigateToFinanceCommand}"
+                               ToolTip="Finans &amp; Kasa hareketlerini aç"
                                Margin="0,0,10,0"/>
 
                 <km:KmKpiCard Title="Aylık Satış"
@@ -94,6 +96,8 @@
                                MaxHeight="76"
                                Subtitle="{Binding CurrentMonthName}"
                                AccentBrush="{DynamicResource KpiGradientGreen}"
+                               Command="{Binding NavigateToAnalyticsCommand}"
+                               ToolTip="Analitik ve satış raporlarını aç"
                                Margin="0,0,10,0"/>
 
                 <km:KmKpiCard Title="Aktif İşler" 
@@ -102,6 +106,8 @@
                                MaxHeight="76"
                                Subtitle="devam ediyor"
                                AccentBrush="{DynamicResource KpiGradientOrange}"
+                               Command="{Binding NavigateToActiveJobsCommand}"
+                               ToolTip="Aktif iş emirlerini görüntüle"
                                Margin="0,0,10,0"/>
 
                 <km:KmKpiCard Title="Teslime Hazır" 
@@ -110,6 +116,8 @@
                                MaxHeight="76"
                                Subtitle="cihaz bekliyor"
                                AccentBrush="{DynamicResource KpiGradientCyan}"
+                               Command="{Binding NavigateToReadyRepairsCommand}"
+                               ToolTip="Teslime hazır tamir cihazlarını görüntüle"
                                Margin="0,0,0,0"/>
             </UniformGrid>
 
@@ -144,7 +152,7 @@
                                     <TextBlock Text="Haftalık Performans Trendi" FontSize="15" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextHeadingBrush}"/>
                                 </StackPanel>
-                                <TextBlock Text="Son 7 günlük gelir ve tamamlanan iş dağılımı" FontSize="11" 
+                                <TextBlock Text="Son 7 günlük gelir (sol eksen) ve tamamlanan iş dağılımı (sağ eksen)" FontSize="11" 
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="26,2,0,0"/>
                             </StackPanel>
 
@@ -177,7 +185,7 @@
                                     <StackPanel Margin="12,0,0,0">
                                         <TextBlock Text="Kritik Stok Uyarısı" FontSize="14" FontWeight="Bold" 
                                                    Foreground="{DynamicResource StatusErrorFg}"/>
-                                        <TextBlock Text="Minimum seviyenin altındaki ürünler" FontSize="11" 
+                                        <TextBlock Text="Minimum seviyenin altındaki ürünler (ürünü açmak için tıklayın)" FontSize="11" 
                                                    Foreground="{DynamicResource StatusErrorFg}" Opacity="0.8"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -190,7 +198,13 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="8"
-                                                        Background="{DynamicResource HoverOverlayBrush}">
+                                                        Background="{DynamicResource HoverOverlayBrush}"
+                                                        Cursor="Hand">
+                                                    <Border.InputBindings>
+                                                        <MouseBinding Gesture="LeftClick"
+                                                                      Command="{Binding DataContext.OpenLowStockProductCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                      CommandParameter="{Binding}"/>
+                                                    </Border.InputBindings>
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="*"/>
@@ -206,7 +220,7 @@
                                                         <Border Grid.Column="1" CornerRadius="6" Padding="12,4" Background="{DynamicResource StatusErrorFg}" VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding CurrentStock}" 
                                                                        FontWeight="Bold" FontSize="16"
-                                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" HorizontalAlignment="Center"/>
+                                                                       Foreground="{DynamicResource TextOnPrimaryBrush}" HorizontalAlignment="Center"/>
                                                         </Border>
                                                     </Grid>
                                                 </Border>
@@ -250,7 +264,7 @@
                                     <StackPanel Margin="12,0,0,0">
                                         <TextBlock Text="Bugünün İşleri" FontSize="14" FontWeight="Bold" 
                                                    Foreground="{DynamicResource StatusInfoFg}"/>
-                                        <TextBlock Text="Planlanan saha &amp; servis randevuları" FontSize="11" 
+                                        <TextBlock Text="Bugüne planlanan saha &amp; servis randevuları" FontSize="11" 
                                                    Foreground="{DynamicResource StatusInfoFg}" Opacity="0.8"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -263,7 +277,13 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="8"
-                                                        Background="{DynamicResource HoverOverlayBrush}">
+                                                        Background="{DynamicResource HoverOverlayBrush}"
+                                                        Cursor="Hand">
+                                                    <Border.InputBindings>
+                                                        <MouseBinding Gesture="LeftClick"
+                                                                      Command="{Binding DataContext.OpenTodayJobCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                      CommandParameter="{Binding}"/>
+                                                    </Border.InputBindings>
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="Auto"/>
@@ -274,7 +294,7 @@
                                                                 VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding ScheduledTime, TargetNullValue='Bugün'}" 
                                                                        FontWeight="Bold" FontSize="12"
-                                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                                       Foreground="{DynamicResource TextOnPrimaryBrush}"/>
                                                         </Border>
                                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding CustomerName}" 
@@ -330,7 +350,12 @@
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="8"
-                                                        Background="{DynamicResource HoverOverlayBrush}">
+                                                        Background="{DynamicResource HoverOverlayBrush}"
+                                                        Cursor="Hand">
+                                                    <Border.InputBindings>
+                                                        <MouseBinding Gesture="LeftClick"
+                                                                      Command="{Binding DataContext.NavigateToReadyRepairsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                                    </Border.InputBindings>
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="*"/>
@@ -344,7 +369,7 @@
                                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
                                                         </StackPanel>
                                                         <Border Grid.Column="1" Background="{DynamicResource ThemeSuccess}" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
-                                                            <TextBlock Text="Hazır" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                            <TextBlock Text="Hazır" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextOnPrimaryBrush}"/>
                                                         </Border>
                                                     </Grid>
                                                 </Border>

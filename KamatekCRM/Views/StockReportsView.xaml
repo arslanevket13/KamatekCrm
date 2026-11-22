@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.StockReportsView"
+﻿<UserControl x:Class="KamatekCrm.Views.StockReportsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -31,7 +31,7 @@
         </StackPanel>
 
         <!-- Filters -->
-        <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="14,10" Margin="0,0,0,12">
+        <Border Grid.Row="1" Style="{DynamicResource CardPanel}" Padding="14,10" Margin="0,0,0,12">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -106,15 +106,15 @@
                             Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="🗑️ Filtreleri Temizle" 
                             Command="{Binding ClearFiltersCommand}"
-                            Style="{StaticResource BtnSecondary}" 
+                            Style="{DynamicResource BtnSecondary}" 
                             Height="38" Margin="0,0,10,0" Padding="14,0"/>
                     <Button Content="📋 Kopyala" 
                             Command="{Binding ExportCommand}"
-                            Style="{StaticResource BtnSecondary}" 
+                            Style="{DynamicResource BtnSecondary}" 
                             Height="38" Margin="0,0,10,0" Padding="14,0"/>
                     <Button Content="🔍 Ara" 
                             Command="{Binding SearchCommand}"
-                            Style="{StaticResource BtnPrimary}" 
+                            Style="{DynamicResource BtnPrimary}" 
                             Height="38" Width="110"/>
                 </StackPanel>
             </Grid>
@@ -123,6 +123,8 @@
         <!-- Summary Cards (Moved above DataGrid for ergonomic compact overview) -->
         <Grid Grid.Row="2" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -183,19 +185,39 @@
             </Border>
 
             <!-- Transaction Count -->
-            <Border Grid.Column="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="12,8" Margin="6,0,0,0">
+            <Border Grid.Column="3" Background="{DynamicResource StatusWarningBg}" CornerRadius="8" Padding="12,8" Margin="6,0,6,0">
                 <StackPanel>
                     <TextBlock Text="📝 Toplam Hareket" Foreground="{DynamicResource StatusWarningFgDark}" FontWeight="Medium" FontSize="11"/>
                     <TextBlock Text="{Binding TransactionCount, StringFormat='{}{0:N0} kayıt'}" 
                                FontSize="17" FontWeight="Bold" Foreground="{DynamicResource StatusWarningFg}"/>
                 </StackPanel>
             </Border>
+
+            <!-- Critical Stock Count -->
+            <Border Grid.Column="4" Background="{DynamicResource StatusErrorBg}" CornerRadius="8" Padding="12,8" Margin="6,0,6,0">
+                <StackPanel>
+                    <TextBlock Text="⚠️ Kritik Stok" Foreground="{DynamicResource StatusErrorFgDark}" FontWeight="Medium" FontSize="11"/>
+                    <TextBlock Text="{Binding CriticalStockCount, StringFormat='{}{0:N0} ürün'}"
+                               FontSize="17" FontWeight="Bold" Foreground="{DynamicResource StatusErrorFg}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Dead Stock Count & Value -->
+            <Border Grid.Column="5" Background="{DynamicResource StatusInfoBg}" CornerRadius="8" Padding="12,8" Margin="6,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="🕸️ Hareketsiz (90+ Gün)" Foreground="{DynamicResource StatusInfoFg}" FontWeight="Medium" FontSize="11"/>
+                    <TextBlock Text="{Binding DeadStockCount, StringFormat='{}{0:N0} ürün'}"
+                               FontSize="17" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"/>
+                </StackPanel>
+            </Border>
         </Grid>
 
-        <!-- DataGrid & Empty State Area -->
-        <Border Grid.Row="3" CornerRadius="8" Background="{DynamicResource SurfaceCardBrush}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="0" Margin="0" MinHeight="260">
-            <Grid>
-                <DataGrid x:Name="TransactionsDataGrid" ItemsSource="{Binding Transactions}"
+        <!-- Tabbed DataGrids: Stok Hareketleri / Kritik Stok / Hareketsiz (Ölü) Stok -->
+        <TabControl Grid.Row="3" Background="Transparent" BorderThickness="0">
+            <TabItem Header="📋 Stok Hareketleri">
+                <Border CornerRadius="8" Background="{DynamicResource SurfaceCardBrush}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="0" Margin="0,8,0,0" MinHeight="260">
+                    <Grid>
+                        <DataGrid x:Name="TransactionsDataGrid" ItemsSource="{Binding Transactions}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           CanUserAddRows="False"
@@ -221,7 +243,7 @@
 
                     <DataGrid.CellStyle>
                         <Style TargetType="DataGridCell">
-                            <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
+                            <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
                             <Setter Property="Padding" Value="10,6"/>
                             <Setter Property="BorderThickness" Value="0"/>
                             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -386,8 +408,82 @@
                                          Message="Seçili kriterlerle eşleşen stok hareketi yok."
                                          AutomationProperties.Name="Stok hareketleri listesi boş"
                                          Visibility="{Binding HasItems, ElementName=TransactionsDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
-            </Grid>
-        </Border>
+                    </Grid>
+                </Border>
+            </TabItem>
+
+            <!-- TAB 2: KRİTİK STOK VE SİPARİŞ ÖNERİLERİ -->
+            <TabItem Header="⚠️ Kritik Stok &amp; Sipariş Önerisi">
+                <Border CornerRadius="8" Background="{DynamicResource SurfaceCardBrush}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="0" Margin="0,8,0,0" MinHeight="260">
+                    <Grid>
+                        <DataGrid x:Name="CriticalStockDataGrid" ItemsSource="{Binding CriticalStockItems}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  SelectionMode="Single"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                  BorderThickness="0"
+                                  Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                  RowHeight="38"
+                                  ColumnHeaderHeight="40">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Ürün Kodu" Binding="{Binding ProductCode}" Width="120"/>
+                                <DataGridTextColumn Header="Ürün Adı" Binding="{Binding ProductName}" Width="*"/>
+                                <DataGridTextColumn Header="Mevcut Stok" Binding="{Binding CurrentStock}" Width="110"/>
+                                <DataGridTextColumn Header="Min. Seviye" Binding="{Binding MinStockLevel}" Width="110"/>
+                                <DataGridTextColumn Header="Önerilen Sipariş" Binding="{Binding SuggestedOrderQuantity}" Width="130"/>
+                                <DataGridTextColumn Header="Birim Maliyet" Binding="{Binding UnitCost, StringFormat=C2}" Width="120"/>
+                                <DataGridTextColumn Header="Tahmini Sipariş Tutarı" Binding="{Binding EstimatedCost, StringFormat=C2}" Width="150"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <components:KmEmptyState Panel.ZIndex="1"
+                                                 Icon="&#xE73E;" Title="Kritik Stok Yok"
+                                                 Message="Tüm ürünler minimum stok seviyesinin üzerinde."
+                                                 AutomationProperties.Name="Kritik stok listesi boş"
+                                                 Visibility="{Binding HasItems, ElementName=CriticalStockDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
+                    </Grid>
+                </Border>
+            </TabItem>
+
+            <!-- TAB 3: HAREKETSİZ (ÖLÜ) STOKLAR (90+ GÜN) -->
+            <TabItem Header="🕸️ Hareketsiz (Ölü) Stoklar (90+ Gün)">
+                <Border CornerRadius="8" Background="{DynamicResource SurfaceCardBrush}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Padding="0" Margin="0,8,0,0" MinHeight="260">
+                    <Grid>
+                        <DataGrid x:Name="DeadStockDataGrid" ItemsSource="{Binding DeadStockItems}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  SelectionMode="Single"
+                                  HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal"
+                                  BorderThickness="0"
+                                  Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                  RowHeight="38"
+                                  ColumnHeaderHeight="40">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Ürün Kodu" Binding="{Binding ProductCode}" Width="120"/>
+                                <DataGridTextColumn Header="Ürün Adı" Binding="{Binding ProductName}" Width="*"/>
+                                <DataGridTextColumn Header="Mevcut Stok" Binding="{Binding CurrentStock}" Width="110"/>
+                                <DataGridTextColumn Header="Hareketsiz Gün" Binding="{Binding DaysWithoutMovement, StringFormat='{}{0} gün'}" Width="120"/>
+                                <DataGridTextColumn Header="Son Çıkış Tarihi" Binding="{Binding LastOutgoingDate, StringFormat='dd.MM.yyyy', TargetNullValue='Hiç çıkış yok'}" Width="130"/>
+                                <DataGridTextColumn Header="Birim Maliyet" Binding="{Binding UnitCost, StringFormat=C2}" Width="120"/>
+                                <DataGridTextColumn Header="Bağlı Sermaye Tutarı" Binding="{Binding TotalValue, StringFormat=C2}" Width="150"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <components:KmEmptyState Panel.ZIndex="1"
+                                                 Icon="&#xE73E;" Title="Hareketsiz Stok Yok"
+                                                 Message="Son 90 günde tüm stoklu ürünlerde çıkış hareketi gerçekleşmiş."
+                                                 AutomationProperties.Name="Hareketsiz stok listesi boş"
+                                                 Visibility="{Binding HasItems, ElementName=DeadStockDataGrid, Converter={StaticResource InvertedBoolToVis}}"/>
+                    </Grid>
+                </Border>
+            </TabItem>
+        </TabControl>
 
         <!-- Footer -->
         <Grid Grid.Row="4" Margin="0,12,0,0">

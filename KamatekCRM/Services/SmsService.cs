@@ -125,7 +125,7 @@ namespace KamatekCrm.Services
                                 EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
                                     0, "SMS", customerId.Value, InteractionChangeType.Created));
                             }
-                            catch { }
+                            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "SmsService.cs"); }
                         });
                     }
                 }
@@ -186,7 +186,7 @@ namespace KamatekCrm.Services
                                     EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
                                         0, "SMS", customerId.Value, InteractionChangeType.Created));
                                 }
-                                catch { }
+                                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "SmsService.cs"); }
                             });
                         }
                     }

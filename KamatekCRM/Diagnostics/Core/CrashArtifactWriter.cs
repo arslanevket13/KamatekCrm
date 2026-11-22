@@ -79,16 +79,10 @@ namespace KamatekCrm.Diagnostics.Core
                     {
                         file.Delete();
                     }
-                    catch
-                    {
-                        // Tek dosya silinemezse diğerleri etkilenmesin.
-                    }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "CrashArtifactWriter.cs"); }
                 }
             }
-            catch
-            {
-                // Temizlik başarısız olsa da iz dosyası yazılmış olarak kalır.
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "CrashArtifactWriter.cs"); }
         }
     }
 }

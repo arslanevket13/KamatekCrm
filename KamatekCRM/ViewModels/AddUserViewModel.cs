@@ -304,6 +304,10 @@ namespace KamatekCrm.ViewModels
                     Soyad = Soyad.Trim(),
                     Phone = Phone?.Trim() ?? string.Empty,
                     IsActive = true,
+                    IsTechnician = IsTechnicianRole,
+                    VehiclePlate = IsTechnicianRole && !string.IsNullOrWhiteSpace(VehiclePlate) ? VehiclePlate.Trim() : null,
+                    ServiceArea = IsTechnicianRole && !string.IsNullOrWhiteSpace(ServiceArea) ? ServiceArea.Trim() : null,
+                    ExpertiseAreas = IsTechnicianRole && !string.IsNullOrWhiteSpace(ExpertiseAreas) ? ExpertiseAreas.Trim() : null,
                     CanViewFinance = CanViewFinance,
                     CanViewAnalytics = CanViewAnalytics,
                     CanDeleteRecords = CanDeleteRecords,
@@ -354,6 +358,16 @@ namespace KamatekCrm.ViewModels
             Ad = string.Empty;
             Soyad = string.Empty;
             Username = string.Empty;
+            Phone = string.Empty;
+            VehiclePlate = string.Empty;
+            ServiceArea = string.Empty;
+            ExpertiseAreas = string.Empty;
+            CanViewFinance = false;
+            CanViewAnalytics = false;
+            CanDeleteRecords = false;
+            CanApprovePurchase = false;
+            CanAccessSettings = false;
+            IsCustomPassword = false;
             SelectedRoleDisplay = "Personel";
             InitialPassword = PasswordPolicy.GenerateTemporaryPassword();
             IsUsernameAvailable = true;
@@ -368,6 +382,7 @@ namespace KamatekCrm.ViewModels
             {
                 "Patron" => "Admin",
                 "Personel" => "Technician",
+                "İzleyici" => "Viewer",
                 _ => "Technician"
             };
         }

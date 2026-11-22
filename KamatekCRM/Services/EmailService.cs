@@ -153,7 +153,7 @@ namespace KamatekCrm.Services
                                         EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
                                             0, "EMAIL", customerId.Value, InteractionChangeType.Created));
                                     }
-                                    catch { }
+                                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "EmailService.cs"); }
                                 });
                             }
                             break; // Başarılı, döngüden çık

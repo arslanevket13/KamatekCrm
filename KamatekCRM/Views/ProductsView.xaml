@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.ProductsView"
+﻿<UserControl x:Class="KamatekCrm.Views.ProductsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -68,7 +68,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Card 1: Total Products -->
-            <Border Grid.Column="0" Style="{StaticResource CardPanel}" Padding="12,8">
+            <Border Grid.Column="0" Style="{DynamicResource CardPanel}" Padding="12,8">
                 <DockPanel>
                     <Border Width="36" Height="36" CornerRadius="8" Background="{DynamicResource StatusInfoBg}" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Box24" FontSize="18" Foreground="{DynamicResource StatusInfoFg}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -81,7 +81,7 @@
             </Border>
 
             <!-- Card 2: Total Stock Items -->
-            <Border Grid.Column="2" Style="{StaticResource CardPanel}" Padding="12,8">
+            <Border Grid.Column="2" Style="{DynamicResource CardPanel}" Padding="12,8">
                 <DockPanel>
                     <Border Width="36" Height="36" CornerRadius="8" Background="{DynamicResource ThemePrimaryMuted}" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="GroupList24" FontSize="18" Foreground="{DynamicResource ThemePrimary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -104,7 +104,7 @@
             </Border>
 
             <!-- Card 3: Low Stock Warnings -->
-            <Border Grid.Column="4" Style="{StaticResource CardPanel}" Padding="12,8">
+            <Border Grid.Column="4" Style="{DynamicResource CardPanel}" Padding="12,8">
                 <DockPanel>
                     <Border Width="36" Height="36" CornerRadius="8" Background="{DynamicResource StatusErrorBg}" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Warning24" FontSize="18" Foreground="{DynamicResource StatusErrorFg}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -117,7 +117,7 @@
             </Border>
 
             <!-- Card 4: Total Inventory Value -->
-            <Border Grid.Column="6" Style="{StaticResource CardPanel}" Padding="12,8">
+            <Border Grid.Column="6" Style="{DynamicResource CardPanel}" Padding="12,8">
                 <DockPanel>
                     <Border Width="36" Height="36" CornerRadius="8" Background="{DynamicResource StatusSuccessBg}" VerticalAlignment="Center">
                         <ui:SymbolIcon Symbol="Money24" FontSize="18" Foreground="{DynamicResource StatusSuccessFg}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -131,7 +131,7 @@
         </Grid>
 
         <!-- ════════ ROW 2: FILTER TOOLBAR ════════ -->
-        <Border Grid.Row="2" Style="{StaticResource FilterToolbarCard}" Margin="0,0,0,10" Padding="12,8">
+        <Border Grid.Row="2" Style="{DynamicResource FilterToolbarCard}" Margin="0,0,0,10" Padding="12,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -185,7 +185,7 @@
                 <DataGrid Grid.Row="0" x:Name="ProductsDataGrid" ItemsSource="{Binding ProductsView}"
                           SelectedItem="{Binding SelectedProduct}"
                           Style="{StaticResource AccessibleDataGrid}"
-                          ColumnHeaderStyle="{StaticResource ModernDataGridColumnHeader}"
+                          ColumnHeaderStyle="{DynamicResource ModernDataGridColumnHeader}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           IsReadOnly="True"

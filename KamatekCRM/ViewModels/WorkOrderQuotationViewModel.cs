@@ -337,10 +337,24 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task Save()
         {
+            if (await SaveQuotationCoreAsync(showToast: true))
+            {
+                RequestCloseWithSuccess?.Invoke();
+            }
+        }
+
+        private async Task<bool> SaveQuotationCoreAsync(bool showToast)
+        {
             if (!IsEditable)
             {
                 _toastService.ShowWarning("Bu teklif düzenlenemez; durum kilidi aktif.");
-                return;
+                return false;
+            }
+
+            if (!Items.Any(i => i.Quantity > 0))
+            {
+                _toastService.ShowWarning("Teklifte en az bir geçerli kalem bulunmalıdır.");
+                return false;
             }
 
             var request = new UpdateWorkOrderQuotationRequest(
@@ -358,14 +372,24 @@ namespace KamatekCrm.ViewModels
                     i.UnitPrice, i.DiscountPercent, i.TaxPercent, index)).ToList());
 
             var result = await _commandService.UpdateQuotationAsync(request);
-            if (result.IsFailure)
+            if (result.IsFailure || result.Value is null)
             {
-                _toastService.ShowError(result.Error);
-                return;
+                _toastService.ShowError(result.Error ?? "Teklif güncellenemedi.");
+                return false;
             }
 
-            _toastService.ShowSuccess($"Teklif güncellendi — Genel Toplam: {result.Value!.TotalAmount:N2} ₺");
-            RequestCloseWithSuccess?.Invoke();
+            var refreshed = await _readService.GetQuotationByIdAsync(_quotation.Id);
+            if (refreshed.IsSuccess && refreshed.Value is not null)
+            {
+                _quotation = refreshed.Value;
+            }
+
+            if (showToast)
+            {
+                _toastService.ShowSuccess($"Teklif güncellendi — Genel Toplam: {result.Value.TotalAmount:N2} ₺");
+            }
+
+            return true;
         }
 
         // ── Satır yönetimi ──
@@ -490,7 +514,7 @@ namespace KamatekCrm.ViewModels
             }
 
             var result = await _commandService.CreateRevisionAsync(_quotation.Id, "Kullanıcı");
-            if (result.IsFailure)
+            if (result.IsFailure || result.Value is null)
             {
                 _toastService.ShowError(result.Error);
                 return;
@@ -687,6 +711,15 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private async Task PrintPdf()
         {
+            // Düzenlenebilir durumdaysa PDF üretmeden önce ekrandaki son değişiklikleri DB'ye kaydet
+            if (IsEditable)
+            {
+                if (!await SaveQuotationCoreAsync(showToast: false))
+                {
+                    return;
+                }
+            }
+
             var filePath = await _dialogService.ShowSaveFileDialogAsync(
                 "Fiyat Teklifini Kaydet",
                 "PDF Dosyası (*.pdf)|*.pdf",
@@ -697,7 +730,7 @@ namespace KamatekCrm.ViewModels
             {
                 _pdfService.GenerateWorkOrderQuotationPdf(_quotation, _jobDocument, filePath);
                 Process.Start(new ProcessStartInfo { FileName = filePath, UseShellExecute = true });
-                _toastService.ShowSuccess("Fiyat teklifi PDF olarak oluşturuldu.");
+                _toastService.ShowSuccess("Fiyat teklifi kaydedildi ve PDF olarak oluşturuldu.");
             }
             catch (Exception ex)
             {

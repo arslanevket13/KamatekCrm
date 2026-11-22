@@ -141,7 +141,7 @@ namespace KamatekCrm.ViewModels
                 foreach (var c in context.Categories.OrderBy(x => x.Name).ToList())
                     Categories.Add(c);
             }
-            catch { /* silently ignore — category is optional */ }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "QuickNewProductForPurchaseViewModel.cs"); }
         }
 
         private bool CanSaveProduct() => !string.IsNullOrWhiteSpace(ProductName) && !IsBusy;

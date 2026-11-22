@@ -21,8 +21,8 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
-        <!-- Title Bar -->
-        <ui:TitleBar Grid.Row="0" Title="Kamatek CRM" ShowMaximize="True" ShowMinimize="True" ShowClose="True">
+        <!-- Title Bar (Başlık çiftlenmesini önlemek için yalnızca Header içinde gösterilir) -->
+        <ui:TitleBar Grid.Row="0" ShowMaximize="True" ShowMinimize="True" ShowClose="True">
             <ui:TitleBar.Header>
                 <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="Kamatek CRM" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>

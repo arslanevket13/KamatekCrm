@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -186,7 +187,7 @@ namespace KamatekCrm.ViewModels
                                         SavedAt = DateTime.Now
                                     }, options);
                                 }
-                                catch { }
+                                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "MainContentViewModel.cs"); }
 
                                 System.IO.File.WriteAllText(draftFile, draftContent);
 
@@ -243,14 +244,14 @@ namespace KamatekCrm.ViewModels
         public bool IsAdmin => _authService.IsAdmin;
 
         /// <summary>
-        /// Geliştirici Tanılama Merkezi butonunun görünürlüğü.
+        /// Geliştirici Tanılama Merkezi butonunun görünürlüğü (yalnızca DiagnosticAccessGuard yetkisiyle).
         /// </summary>
         public bool IsDevCenterAvailable =>
-            _authService.IsAdmin ||
             _serviceProvider.GetService<Diagnostics.Authorization.DiagnosticAccessGuard>()?.IsAuthorized == true;
 
-        // Navigation History Stack
-        private readonly System.Collections.Generic.Stack<object> _backStack = new();
+        // Navigation History Stack (Bounded LinkedList — yalnızca yığından düşen nesneler dispose edilir)
+        private const int MaxHistoryDepth = 15;
+        private readonly System.Collections.Generic.LinkedList<object> _backStack = new();
         private readonly System.Collections.Generic.Stack<object> _forwardStack = new();
         private bool _isNavigatingHistory;
 
@@ -326,7 +327,7 @@ namespace KamatekCrm.ViewModels
             
             // Yeni komutlar
 
-            _ = RefreshNotificationsAsync();
+            RefreshNotificationsAsync().SafeFireAndForget("MainContentViewModel.RefreshNotificationsAsync");
 
             // Varsayılan olarak Dashboard'u göster (Local Navigation)
             NavigateTo<DashboardViewModel>();
@@ -335,23 +336,114 @@ namespace KamatekCrm.ViewModels
         #region Navigation Methods
 
         /// <summary>
-        /// Sets the inner content view locally, without affecting the global window navigation.
-        /// Maintains navigation history stack.
+        /// Merkezi RBAC yetki koruyucusu: tüm ekran geçişlerini tek noktadan denetler.
         /// </summary>
-        /// <typeparam name="TViewModel"></typeparam>
+        private bool EnsureAuthorizedForView(Type viewModelType)
+        {
+            if (viewModelType == typeof(FinanceViewModel) || viewModelType == typeof(FinancialHealthViewModel))
+            {
+                if (!CanViewFinance)
+                {
+                    _toastService.ShowError("Finans ekranına erişim yetkiniz yok.");
+                    return false;
+                }
+            }
+            else if (viewModelType == typeof(AnalyticsViewModel))
+            {
+                if (!CanViewAnalytics)
+                {
+                    _toastService.ShowError("Analitik ekranına erişim yetkiniz yok.");
+                    return false;
+                }
+            }
+            else if (viewModelType == typeof(SettingsViewModel) || viewModelType == typeof(NetworkSettingsViewModel))
+            {
+                if (!CanAccessSettings)
+                {
+                    _toastService.ShowError("Sistem ayarlarına erişim yetkiniz yok.");
+                    return false;
+                }
+            }
+            else if (viewModelType == typeof(UsersViewModel) || viewModelType == typeof(SystemLogsViewModel))
+            {
+                if (!IsAdmin)
+                {
+                    _toastService.ShowError("Bu yönetim ekranı için yönetici yetkisi gerekir.");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private void ClearAndDisposeForwardStack()
+        {
+            while (_forwardStack.Count > 0)
+            {
+                var evicted = _forwardStack.Pop();
+                if (!ReferenceEquals(evicted, CurrentView) && evicted is IDisposable disp)
+                {
+                    disp.Dispose();
+                }
+            }
+        }
+
+        private void PushToBackStack(object viewModel)
+        {
+            _backStack.AddLast(viewModel);
+            while (_backStack.Count > MaxHistoryDepth)
+            {
+                var oldest = _backStack.First!.Value;
+                _backStack.RemoveFirst();
+                if (!ReferenceEquals(oldest, CurrentView) && oldest is IDisposable disp)
+                {
+                    disp.Dispose();
+                }
+            }
+        }
+
+        private void NotifyHistoryCommands()
+        {
+            OnPropertyChanged(nameof(CanGoBack));
+            OnPropertyChanged(nameof(CanGoForward));
+            GoBackCommand.NotifyCanExecuteChanged();
+            GoForwardCommand.NotifyCanExecuteChanged();
+        }
+
+        private void SetCurrentViewWithHistory(object nextView)
+        {
+            var previousView = CurrentView;
+            bool pushedToHistory = false;
+
+            if (!_isNavigatingHistory && previousView != null && previousView.GetType() != nextView.GetType())
+            {
+                PushToBackStack(previousView);
+                pushedToHistory = true;
+                ClearAndDisposeForwardStack();
+                NotifyHistoryCommands();
+            }
+
+            CurrentView = nextView;
+
+            // Geçmiş yığınına alınmayan eski görünüm güvenli şekilde serbest bırakılır
+            if (!pushedToHistory && previousView != null && !ReferenceEquals(previousView, nextView) && previousView is IDisposable oldDisposable)
+            {
+                oldDisposable.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Sets the inner content view locally, without affecting the global window navigation.
+        /// Maintains navigation history stack safely without Use-After-Dispose.
+        /// </summary>
         private void NavigateTo<TViewModel>() where TViewModel : notnull
         {
+            if (!EnsureAuthorizedForView(typeof(TViewModel))) return;
+
             try
             {
                 var vm = _serviceProvider.GetRequiredService<TViewModel>();
-                if (!_isNavigatingHistory && CurrentView != null && CurrentView.GetType() != typeof(TViewModel))
-                {
-                    if (CurrentView is IDisposable disp) disp.Dispose(); if (_backStack.Count < 15) _backStack.Push(CurrentView);
-                    _forwardStack.Clear();
-                    OnPropertyChanged(nameof(CanGoBack));
-                    OnPropertyChanged(nameof(CanGoForward));
-                }
-                CurrentView = vm;
+                SetCurrentViewWithHistory(vm);
             }
             catch (Exception ex)
             {
@@ -359,31 +451,37 @@ namespace KamatekCrm.ViewModels
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanGoBack))]
         private void GoBack()
         {
             if (_backStack.Count > 0)
             {
                 _isNavigatingHistory = true;
-                _forwardStack.Push(CurrentView!);
-                CurrentView = _backStack.Pop();
+                if (CurrentView != null)
+                {
+                    _forwardStack.Push(CurrentView);
+                }
+                var previous = _backStack.Last!.Value;
+                _backStack.RemoveLast();
+                CurrentView = previous;
                 _isNavigatingHistory = false;
-                OnPropertyChanged(nameof(CanGoBack));
-                OnPropertyChanged(nameof(CanGoForward));
+                NotifyHistoryCommands();
             }
         }
 
-        [RelayCommand]
+        [RelayCommand(CanExecute = nameof(CanGoForward))]
         private void GoForward()
         {
             if (_forwardStack.Count > 0)
             {
                 _isNavigatingHistory = true;
-                _backStack.Push(CurrentView!);
+                if (CurrentView != null)
+                {
+                    PushToBackStack(CurrentView);
+                }
                 CurrentView = _forwardStack.Pop();
                 _isNavigatingHistory = false;
-                OnPropertyChanged(nameof(CanGoBack));
-                OnPropertyChanged(nameof(CanGoForward));
+                NotifyHistoryCommands();
             }
         }
 
@@ -430,7 +528,12 @@ namespace KamatekCrm.ViewModels
         }
         [RelayCommand] private void NavigateToPurchaseOrders() => NavigateTo<PurchasingViewModel>();
         [RelayCommand] private void NavigateToSuppliers() => NavigateTo<SuppliersViewModel>();
-        [RelayCommand] private void NavigateToFinancialHealth() => NavigateTo<FinancialHealthViewModel>();
+        [RelayCommand]
+        private void NavigateToFinancialHealth()
+        {
+            if (!CanViewFinance) { _toastService.ShowError("Finansal rapor ekranına erişim yetkiniz yok."); return; }
+            NavigateTo<FinancialHealthViewModel>();
+        }
         [RelayCommand] private void NavigateToStockCount() => NavigateTo<StockCountViewModel>();
         [RelayCommand] private void NavigateToReports() => NavigateTo<StockReportsViewModel>();
         [RelayCommand]
@@ -526,7 +629,7 @@ namespace KamatekCrm.ViewModels
                     }
                 }
             }
-            catch { }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "MainContentViewModel.cs"); }
 
             var moduleName = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
             if (!string.IsNullOrEmpty(moduleName))
@@ -548,10 +651,14 @@ namespace KamatekCrm.ViewModels
                     NavigateToCustomerDetail(id);
                     break;
                 case "Product":
-                    NavigateTo<ProductViewModel>();
+                    var productVm = _serviceProvider.GetRequiredService<ProductViewModel>();
+                    SetCurrentViewWithHistory(productVm);
+                    productVm.FocusProductById(id);
                     break;
                 case "ServiceJob":
-                    NavigateTo<ServiceJobViewModel>();
+                    var jobVm = _serviceProvider.GetRequiredService<ServiceJobViewModel>();
+                    SetCurrentViewWithHistory(jobVm);
+                    jobVm.FocusJobByIdAsync(id).SafeFireAndForget("MainContentViewModel.jobVm.FocusJobByIdAsync");
                     break;
             }
         }
@@ -562,8 +669,8 @@ namespace KamatekCrm.ViewModels
         public void NavigateToCustomerDetail(int customerId)
         {
             var vm = _serviceProvider.GetRequiredService<CustomerDetailViewModel>();
-            _ = vm.InitializeAsync(customerId);
-            CurrentView = vm;
+            vm.InitializeAsync(customerId).SafeFireAndForget("MainContentViewModel.vm.InitializeAsync");
+            SetCurrentViewWithHistory(vm);
         }
 
         [RelayCommand]
@@ -578,10 +685,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void OpenRepairTracking()
         {
-            // Yeni Arıza Takip Merkezi (Repair Module) — DI ile ViewModel çözümlenir
-            var repairVm = _serviceProvider.GetRequiredService<RepairViewModel>();
-            var window = new RepairTrackingWindow(repairVm);
-            window.Show();
+            NavigateTo<RepairListViewModel>();
         }
 
         [RelayCommand]
@@ -609,6 +713,12 @@ namespace KamatekCrm.ViewModels
         private async Task RefreshNotificationsAsync()
         {
             var items = await _notificationService.GetNotificationsAsync();
+
+            foreach (var item in items)
+            {
+                var captured = item;
+                captured.ActionCommand = new RelayCommand(() => HandleNotificationAction(captured));
+            }
             
             System.Windows.Application.Current.Dispatcher.Invoke(() => 
             {
@@ -616,6 +726,33 @@ namespace KamatekCrm.ViewModels
                 foreach (var item in items) Notifications.Add(item);
                 NotificationCount = items.Count;
             });
+        }
+
+        private void HandleNotificationAction(NotificationItem item)
+        {
+            _notificationService.MarkAsRead(item.Id);
+            Notifications.Remove(item);
+            NotificationCount = Notifications.Count;
+            IsNotificationsOpen = false;
+
+            switch (item.ActionType)
+            {
+                case "LOW_STOCK":
+                    NavigateTo<PurchasingViewModel>();
+                    break;
+                case "STALE_QUOTE":
+                    NavigateTo<QuoteListViewModel>();
+                    break;
+                case "OVERDUE_INTERACTION":
+                    NavigateTo<ManagerAgendaViewModel>();
+                    break;
+                case "SLA_BREACH":
+                    NavigateTo<ServiceJobViewModel>();
+                    break;
+                default:
+                    NavigateTo<DashboardViewModel>();
+                    break;
+            }
         }
 
         #endregion
@@ -626,6 +763,7 @@ namespace KamatekCrm.ViewModels
         [RelayCommand]
         private void Logout()
         {
+            KamatekCrm.Settings.AppSettings.ClearAutoLoginSession();
             _authService.Logout();
             _navigationService.NavigateToLogin();
         }
@@ -645,12 +783,13 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Quick Add Modal'ı aç (Ctrl+K)
+        /// Quick Add Modal'ı aç (Ctrl+K) — RBAC filtreli ve merkezi yetki korumalı
         /// </summary>
         [RelayCommand]
         private void OpenQuickAdd()
         {
-            var modal = new Views.QuickAddModal
+            var quickAddVm = new QuickAddViewModel(_authService);
+            var modal = new Views.QuickAddModal(quickAddVm)
             {
                 Owner = System.Windows.Application.Current.MainWindow
             };
@@ -666,28 +805,40 @@ namespace KamatekCrm.ViewModels
                         OpenDirectSales();
                         break;
                     case "NewCustomer":
-                        NavigateTo<CustomersViewModel>(); // Fixed
+                        NavigateTo<CustomersViewModel>();
                         break;
                     case "OpenProjectQuote":
                         OpenProjectQuote();
                         break;
                     case "NavigateDashboard":
-                        NavigateTo<DashboardViewModel>(); // Fixed
+                        NavigateTo<DashboardViewModel>();
                         break;
                     case "NavigateCustomers":
-                        NavigateTo<CustomersViewModel>(); // Fixed
+                        NavigateTo<CustomersViewModel>();
                         break;
                     case "NavigateProducts":
-                        NavigateTo<ProductViewModel>(); // Fixed
+                        NavigateTo<ProductViewModel>();
                         break;
                     case "NavigateRepairList":
-                        NavigateTo<RepairListViewModel>(); // Fixed
+                        NavigateTo<RepairListViewModel>();
                         break;
                     case "NavigateFinance":
-                        NavigateTo<FinanceViewModel>(); // Fixed
+                        NavigateToFinance();
+                        break;
+                    case "NavigateFinancialHealth":
+                        NavigateToFinancialHealth();
+                        break;
+                    case "NavigateAnalytics":
+                        NavigateToAnalytics();
                         break;
                     case "NavigateSettings":
-                        NavigateTo<SettingsViewModel>(); // Fixed
+                        NavigateToSettings();
+                        break;
+                    case "NavigateUsers":
+                        NavigateToUsers();
+                        break;
+                    case "NavigateSystemLogs":
+                        NavigateToSystemLogs();
                         break;
                 }
             };

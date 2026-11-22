@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.StockCountView"
+﻿<UserControl x:Class="KamatekCrm.Views.StockCountView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -61,7 +61,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header Panel -->
-        <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="12,8" Margin="0,0,0,12">
+        <Border Grid.Row="0" Style="{DynamicResource CardPanel}" Padding="12,8" Margin="0,0,0,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -87,7 +87,7 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Content="📋 Sayım Geçmişi" 
                             Command="{Binding ShowHistoryCommand}"
-                            Style="{StaticResource BtnSecondary}"
+                            Style="{DynamicResource BtnSecondary}"
                             Height="38" Padding="14,0"/>
                 </StackPanel>
             </Grid>
@@ -109,7 +109,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- Filter & Barcode Bar -->
-                    <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,14">
+                    <Border Grid.Row="0" Style="{DynamicResource CardPanel}" Padding="16" Margin="0,0,0,14">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -142,7 +142,7 @@
                                 <StackPanel Grid.Column="2">
                                     <Label Content="Ürün Ara (Kod / Ad / Model)" Style="{StaticResource ModernLabel}"/>
                                     <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource ModernTextBox}"
+                                             Style="{DynamicResource ModernTextBox}"
                                              Height="36" VerticalContentAlignment="Center">
                                         <TextBox.InputBindings>
                                             <KeyBinding Key="Escape" Command="{Binding RefreshCommand}"/>
@@ -162,7 +162,7 @@
                                 <StackPanel Grid.Column="6" VerticalAlignment="Bottom">
                                     <ToggleButton Content="⚡ Seri Barkod Modu" 
                                                   IsChecked="{Binding IsBarcodeScanMode}"
-                                                  Style="{StaticResource SecondaryToggleButton}"
+                                                  Style="{DynamicResource SecondaryToggleButton}"
                                                   Height="36" Padding="12,0"/>
                                 </StackPanel>
                             </Grid>
@@ -186,7 +186,7 @@
 
                                     <TextBox Grid.Column="1"
                                              Text="{Binding BarcodeScanInput, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource ModernTextBox}"
+                                             Style="{DynamicResource ModernTextBox}"
                                              FontSize="14" FontWeight="Bold" Height="34"
                                              KeyDown="BarcodeTextBox_KeyDown"
                                              VerticalContentAlignment="Center">
@@ -207,17 +207,17 @@
                                         Visibility="{Binding IsBarcodeScanMode, Converter={StaticResource InvertedBoolToVis}}">
                                 <TextBlock Text="Hızlı Filtre:" VerticalAlignment="Center" FontWeight="Medium" Margin="0,0,10,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                 
-                                <Button Content="Tümü" Command="{Binding SetFilterModeCommand}" CommandParameter="All" Style="{StaticResource BtnSecondary}" Height="28" Margin="0,0,6,0" Padding="10,0"/>
-                                <Button Content="⚠️ Sadece Farklılar" Command="{Binding SetFilterModeCommand}" CommandParameter="DifferencesOnly" Style="{StaticResource BtnSecondary}" Height="28" Margin="0,0,6,0" Padding="10,0"/>
-                                <Button Content="➕ Sayım Fazlası" Command="{Binding SetFilterModeCommand}" CommandParameter="SurplusesOnly" Style="{StaticResource BtnSecondary}" Height="28" Margin="0,0,6,0" Padding="10,0"/>
-                                <Button Content="➖ Sayım Eksiği" Command="{Binding SetFilterModeCommand}" CommandParameter="ShortagesOnly" Style="{StaticResource BtnSecondary}" Height="28" Margin="0,0,6,0" Padding="10,0"/>
-                                <Button Content="⚪ Sayılmayanlar" Command="{Binding SetFilterModeCommand}" CommandParameter="UncountedOnly" Style="{StaticResource BtnSecondary}" Height="28" Padding="10,0"/>
+                                <Button Content="Tümü" Command="{Binding SetFilterModeCommand}" CommandParameter="All" Style="{DynamicResource BtnSecondary}" Height="28" Margin="0,0,6,0" Padding="10,0"/>
+                                <Button Content="⚠️ Sadece Farklılar" Command="{Binding SetFilterModeCommand}" CommandParameter="DifferencesOnly" Style="{DynamicResource BtnSecondary}" Height="28" Margin="0,0,6,0" Padding="10,0"/>
+                                <Button Content="➕ Sayım Fazlası" Command="{Binding SetFilterModeCommand}" CommandParameter="SurplusesOnly" Style="{DynamicResource BtnSecondary}" Height="28" Margin="0,0,6,0" Padding="10,0"/>
+                                <Button Content="➖ Sayım Eksiği" Command="{Binding SetFilterModeCommand}" CommandParameter="ShortagesOnly" Style="{DynamicResource BtnSecondary}" Height="28" Margin="0,0,6,0" Padding="10,0"/>
+                                <Button Content="⚪ Sayılmayanlar" Command="{Binding SetFilterModeCommand}" CommandParameter="UncountedOnly" Style="{DynamicResource BtnSecondary}" Height="28" Padding="10,0"/>
                             </StackPanel>
                         </Grid>
                     </Border>
 
                     <!-- Main DataGrid -->
-                    <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="0">
+                    <Border Grid.Row="1" Style="{DynamicResource CardPanel}" Padding="0">
                         <DataGrid x:Name="CountItemsDataGrid" ItemsSource="{Binding CountItemsView}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
@@ -248,7 +248,7 @@
 
                             <DataGrid.CellStyle>
                                 <Style TargetType="DataGridCell">
-                                    <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
+                                    <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
                                     <Setter Property="Padding" Value="8,6"/>
                                     <Setter Property="BorderThickness" Value="0"/>
                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -482,11 +482,11 @@
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,12,0">
                             <Button Content="📤 Excel İçe Aktar" 
                                     Command="{Binding ImportFromExcelCommand}"
-                                    Style="{StaticResource BtnSecondary}" 
+                                    Style="{DynamicResource BtnSecondary}" 
                                     Height="38" Padding="12,0" Margin="0,0,8,0"/>
                             <Button Content="📥 Excel Dışa Aktar" 
                                     Command="{Binding ExportToExcelCommand}"
-                                    Style="{StaticResource BtnSecondary}" 
+                                    Style="{DynamicResource BtnSecondary}" 
                                     Height="38" Padding="12,0"/>
                         </StackPanel>
                         
@@ -514,7 +514,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- Upper Controls -->
-                    <Border Grid.Row="0" Style="{StaticResource CardPanel}" Padding="16" Margin="0,0,0,14">
+                    <Border Grid.Row="0" Style="{DynamicResource CardPanel}" Padding="16" Margin="0,0,0,14">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="240"/>
@@ -561,7 +561,7 @@
                     </Border>
 
                     <!-- Manual DataGrid -->
-                    <Border Grid.Row="1" Style="{StaticResource CardPanel}" Padding="0">
+                    <Border Grid.Row="1" Style="{DynamicResource CardPanel}" Padding="0">
                         <DataGrid ItemsSource="{Binding ManualCountItems}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
@@ -670,7 +670,7 @@
 
                         <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" VerticalAlignment="Center" FontWeight="Medium"/>
 
-                        <Button Grid.Column="1" Content="🗑️ Temizle" Command="{Binding ClearManualListCommand}" Style="{StaticResource BtnSecondary}" Height="38" Padding="14,0" Margin="0,0,12,0"/>
+                        <Button Grid.Column="1" Content="🗑️ Temizle" Command="{Binding ClearManualListCommand}" Style="{DynamicResource BtnSecondary}" Height="38" Padding="14,0" Margin="0,0,12,0"/>
                         <Button Grid.Column="2" Content="✅ Manuel Sayımı Onayla" Command="{Binding ConfirmManualCountCommand}" Style="{StaticResource ModernButton}" Height="38" Padding="18,0"/>
                     </Grid>
                 </Grid>
@@ -706,14 +706,14 @@
                                         <Button Content="👁️ Detay" 
                                                 Command="{Binding DataContext.ViewHistoryDetailCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
-                                                Style="{StaticResource BtnSecondary}" Height="26" Padding="6,0"/>
+                                                Style="{DynamicResource BtnSecondary}" Height="26" Padding="6,0"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <Button Grid.Row="2" Content="Kapat" Command="{Binding CloseHistoryCommand}" Style="{StaticResource BtnSecondary}" Height="34" Width="100" HorizontalAlignment="Right" Margin="0,14,0,0"/>
+                    <Button Grid.Row="2" Content="Kapat" Command="{Binding CloseHistoryCommand}" Style="{DynamicResource BtnSecondary}" Height="34" Width="100" HorizontalAlignment="Right" Margin="0,14,0,0"/>
 
                     <!-- History Detail Sub-Modal -->
                     <Border Grid.RowSpan="3" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" 
@@ -739,7 +739,7 @@
                                 </DataGrid.Columns>
                             </DataGrid>
 
-                            <Button Grid.Row="2" Content="Geri Dön" Command="{Binding CloseHistoryDetailCommand}" Style="{StaticResource BtnSecondary}" Height="32" Width="90" HorizontalAlignment="Right" Margin="0,10,0,0"/>
+                            <Button Grid.Row="2" Content="Geri Dön" Command="{Binding CloseHistoryDetailCommand}" Style="{DynamicResource BtnSecondary}" Height="32" Width="90" HorizontalAlignment="Right" Margin="0,10,0,0"/>
                         </Grid>
                     </Border>
                 </Grid>

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -16,7 +16,7 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         protected new bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
-            return base.SetProperty(ref field, value, validate: true, propertyName);
+            return base.SetProperty(ref field, value, validate: true, propertyName ?? string.Empty);
         }
     }
 }

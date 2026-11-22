@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -83,7 +84,7 @@ public partial class QuotationViewModel : ViewModelBase
         set
         {
             if (!SetProperty(ref _searchTerm, value)) return;
-            _ = DebouncedSearchAsync(value);
+            DebouncedSearchAsync(value).SafeFireAndForget("QuotationViewModel.DebouncedSearchAsync");
         }
     }
 
@@ -162,7 +163,7 @@ public partial class QuotationViewModel : ViewModelBase
         _toastService = toastService;
         _pdfService = pdfService;
         if (!DesignerProperties.GetIsInDesignMode(new System.Windows.DependencyObject()))
-            _ = RefreshAsync();
+            RefreshAsync().SafeFireAndForget("QuotationViewModel.RefreshAsync");
     }
 
     public async Task SelectCustomerByIdAsync(int customerId)
@@ -244,9 +245,7 @@ public partial class QuotationViewModel : ViewModelBase
             SearchResults.Clear();
             foreach (var product in result.Value) SearchResults.Add(ToProduct(product));
         }
-        catch (OperationCanceledException)
-        {
-        }
+        catch (OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "QuotationViewModel.cs"); }
         catch (Exception exception)
         {
             _toastService.ShowError($"Ürün araması başarısız: {exception.Message}");

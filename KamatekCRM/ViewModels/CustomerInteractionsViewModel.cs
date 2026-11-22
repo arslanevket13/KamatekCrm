@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -25,6 +26,7 @@ namespace KamatekCrm.ViewModels
         Today,
         FollowUpRequired,
         Overdue,
+        ManagerAgenda,
         AssignedToMe,
         Completed
     }
@@ -70,7 +72,7 @@ namespace KamatekCrm.ViewModels
                     ConvertToQuoteCommand.NotifyCanExecuteChanged();
                     ConvertToServiceJobCommand.NotifyCanExecuteChanged();
                     ConvertToFaultTicketCommand.NotifyCanExecuteChanged();
-                    _ = LoadCustomerContextAsync();
+                    LoadCustomerContextAsync().SafeFireAndForget("CustomerInteractionsViewModel.LoadCustomerContextAsync");
                 }
             }
         }
@@ -84,7 +86,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _searchText, value))
                 {
-                    _ = LoadInteractionsAsync();
+                    LoadInteractionsAsync().SafeFireAndForget("CustomerInteractionsViewModel.LoadInteractionsAsync");
                 }
             }
         }
@@ -106,7 +108,7 @@ namespace KamatekCrm.ViewModels
             {
                 if (SetProperty(ref _activeFilter, value))
                 {
-                    _ = LoadInteractionsAsync();
+                    LoadInteractionsAsync().SafeFireAndForget("CustomerInteractionsViewModel.LoadInteractionsAsync");
                 }
             }
         }
@@ -161,11 +163,12 @@ namespace KamatekCrm.ViewModels
             // Sol panel form VM'ini DI ile oluştur
             InlineFormViewModel = _serviceProvider.GetRequiredService<QuickInteractionAddViewModel>();
             InlineFormViewModel.OnSaved += OnInlineFormSaved;
+            InlineFormViewModel.OnSavedAndRequestTask += OnInlineFormSavedAndRequestTask;
 
             // Olay senkronizasyonu aboneliği
             EventAggregator.Instance.Subscribe<CustomerInteractionChangedEvent>(OnInteractionChanged);
 
-            _ = LoadInteractionsAsync();
+            LoadInteractionsAsync().SafeFireAndForget("CustomerInteractionsViewModel.LoadInteractionsAsync");
         }
 
         private void OnInteractionChanged(CustomerInteractionChangedEvent evt)
@@ -181,7 +184,20 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private void OnInlineFormSaved()
         {
-            _ = LoadInteractionsAsync();
+            LoadInteractionsAsync().SafeFireAndForget("CustomerInteractionsViewModel.LoadInteractionsAsync");
+        }
+
+        /// <summary>
+        /// "Kaydet ve Görev Oluştur" sonrası kaydı seçip iş emri / görev oluşturma ekranını açar.
+        /// </summary>
+        private void OnInlineFormSavedAndRequestTask(CustomerInteractionDto createdInteraction)
+        {
+            Application.Current?.Dispatcher.InvokeAsync(async () =>
+            {
+                await LoadInteractionsAsync();
+                SelectedInteraction = Interactions.FirstOrDefault(i => i.Id == createdInteraction.Id) ?? createdInteraction;
+                await ConvertToServiceJobAsync();
+            });
         }
 
         [RelayCommand]
@@ -243,6 +259,10 @@ namespace KamatekCrm.ViewModels
 
                 case InteractionListFilter.Overdue:
                     filter.OnlyOverdue = true;
+                    break;
+
+                case InteractionListFilter.ManagerAgenda:
+                    filter.RequiresManagerAttention = true;
                     break;
 
                 case InteractionListFilter.AssignedToMe:
@@ -345,10 +365,7 @@ namespace KamatekCrm.ViewModels
                     RecentCustomerInteractions.Clear();
                 }
             }
-            catch (OperationCanceledException)
-            {
-                // Beklenen iptal — sessizce geç
-            }
+            catch (OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "CustomerInteractionsViewModel.cs"); }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Müşteri bağlamı yüklenemedi: {ex.Message}");
@@ -404,10 +421,36 @@ namespace KamatekCrm.ViewModels
         }
 
         [RelayCommand(CanExecute = nameof(CanActOnSelected))]
-        private void ConvertToQuote()
+        private async Task ConvertToQuote()
         {
             if (SelectedInteraction == null) return;
-            _toastService.ShowInfo("Teklife Dönüştür", $"{SelectedInteraction.InteractionNumber} standart teklif hazırlama ekranına aktarılıyor.");
+
+            try
+            {
+                var quotationLauncher = _serviceProvider.GetRequiredService<IQuotationLauncher>();
+                await quotationLauncher.ShowAsync(SelectedInteraction.CustomerId, modal: false);
+
+                var dto = new UpdateCustomerInteractionStatusDto
+                {
+                    InteractionId = SelectedInteraction.Id,
+                    NewStatus = InteractionStatus.InProgress,
+                    Reason = "Teklif ekranına aktarıldı.",
+                    ResolutionNotes = $"Standart teklif ekranı açıldı. Tarih: {DateTime.UtcNow:dd.MM.yyyy HH:mm}"
+                };
+                await _commandService.UpdateStatusAsync(dto);
+
+                EventAggregator.Instance.Publish(new CustomerInteractionChangedEvent(
+                    SelectedInteraction.Id,
+                    SelectedInteraction.InteractionNumber,
+                    SelectedInteraction.CustomerId,
+                    InteractionChangeType.Converted));
+
+                _toastService.ShowSuccess("Teklife Dönüştür", $"{SelectedInteraction.InteractionNumber} teklif hazırlama ekranına aktarıldı.");
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError("Hata", $"Teklif ekranı açılamadı: {ex.Message}");
+            }
         }
 
         [RelayCommand(CanExecute = nameof(CanActOnSelected))]

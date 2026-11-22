@@ -76,8 +76,8 @@ public sealed class BackupService : IBackupService
                 connection.Password);
 
             EnsureSuccessful(result, "Yedekleme");
-            ValidateArchiveStructure(backupPath, connection.Password);
-            _integrityService.CreateManifest(backupPath, connection.Database);
+            ValidateArchiveStructure(backupPath, connection.Password ?? string.Empty);
+            _integrityService.CreateManifest(backupPath, connection.Database ?? string.Empty);
 
             var validation = ValidateBackup(backupPath);
             if (!validation.IsValid)
@@ -129,7 +129,7 @@ public sealed class BackupService : IBackupService
             if (string.Equals(ext, ".backup", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(ext, ".dump", StringComparison.OrdinalIgnoreCase))
             {
-                ValidateArchiveStructure(fullPath, connection.Password);
+                ValidateArchiveStructure(fullPath, connection.Password ?? string.Empty);
             }
             return integrity;
         }
@@ -265,7 +265,7 @@ public sealed class BackupService : IBackupService
 
         if (!process.WaitForExit((int)ProcessTimeout.TotalMilliseconds))
         {
-            try { process.Kill(entireProcessTree: true); } catch { }
+            try { process.Kill(entireProcessTree: true); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "BackupService.cs"); }
             throw new TimeoutException($"{Path.GetFileName(executable)} zaman aşımına uğradı.");
         }
 
@@ -299,13 +299,13 @@ public sealed class BackupService : IBackupService
 
     private static void TryDeletePartialBackup(string backupPath)
     {
-        try { if (File.Exists(backupPath)) File.Delete(backupPath); } catch { }
+        try { if (File.Exists(backupPath)) File.Delete(backupPath); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "BackupService.cs"); }
         try
         {
             var manifest = BackupIntegrityService.GetManifestPath(backupPath);
             if (File.Exists(manifest)) File.Delete(manifest);
         }
-        catch { }
+        catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "BackupService.cs"); }
     }
 
     private sealed record ProcessResult(int ExitCode, string StandardOutput, string StandardError);

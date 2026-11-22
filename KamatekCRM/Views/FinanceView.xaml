@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.FinanceView"
+﻿<UserControl x:Class="KamatekCrm.Views.FinanceView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
@@ -63,7 +63,8 @@
             <WrapPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,12,0,0">
                 <Button Content="◀" Command="{Binding PreviousDayCommand}"
                         Width="32" Height="32" FontSize="14"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
                         Margin="0,0,4,4" Cursor="Hand"/>
                 
                 <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}" 
@@ -72,7 +73,8 @@
                 
                 <Button Content="▶" Command="{Binding NextDayCommand}"
                         Width="32" Height="32" FontSize="14"
-                        Background="{DynamicResource ThemePrimaryDark}" Foreground="{DynamicResource TextOnPrimaryBrush}" BorderThickness="0"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
                         Margin="0,0,16,4" Cursor="Hand"/>
 
                 <Button Content="📅 Bugün" Command="{Binding GoToTodayCommand}"
@@ -89,45 +91,45 @@
         <UniformGrid Grid.Row="1" Columns="5" Margin="0,0,0,16">
             
             <!-- Devreden Bakiye -->
-            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+            <Border Style="{DynamicResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="DEVREDEN BAKİYE" Style="{StaticResource CardLabel}"/>
+                    <TextBlock Text="DEVREDEN BAKİYE" Style="{DynamicResource CardLabel}"/>
                     <TextBlock Text="{Binding CarriedOverDisplay}" Style="{StaticResource BigAmount}"/>
                     <TextBlock Text="🏛️ Geçmiş Net Toplam" Foreground="{DynamicResource TextFillColorSecondaryBrush}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Nakit Gelir -->
-            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+            <Border Style="{DynamicResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="NAKİT GELİR" Style="{StaticResource CardLabel}"/>
+                    <TextBlock Text="NAKİT GELİR" Style="{DynamicResource CardLabel}"/>
                     <TextBlock Text="{Binding CashIncome, StringFormat='₺{0:N2}'}" Style="{StaticResource BigAmount}" Foreground="{DynamicResource StatusSuccessFg}"/>
                     <TextBlock Text="💵 Nakit Ödemeler" Foreground="{DynamicResource StatusSuccessFg}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Kredi Kartı Gelir -->
-            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+            <Border Style="{DynamicResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="KREDİ KARTI" Style="{StaticResource CardLabel}"/>
+                    <TextBlock Text="KREDİ KARTI" Style="{DynamicResource CardLabel}"/>
                     <TextBlock Text="{Binding CardIncome, StringFormat='₺{0:N2}'}" Style="{StaticResource BigAmount}" Foreground="{DynamicResource ThemePrimary}"/>
                     <TextBlock Text="💳 Kart Ödemeleri" Foreground="{DynamicResource ThemePrimary}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Giderler -->
-            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
+            <Border Style="{DynamicResource SummaryCard}" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="GİDERLER" Style="{StaticResource CardLabel}"/>
+                    <TextBlock Text="GİDERLER" Style="{DynamicResource CardLabel}"/>
                     <TextBlock Text="{Binding TotalExpense, StringFormat='₺{0:N2}'}" Style="{StaticResource BigAmount}" Foreground="{DynamicResource StatusErrorFg}"/>
                     <TextBlock Text="📤 Masraflar" Foreground="{DynamicResource StatusErrorFg}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
             <!-- Net Kasa Mevcudu -->
-            <Border Style="{StaticResource SummaryCard}" Background="{DynamicResource ThemePrimaryLight}" BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1.5">
+            <Border Style="{DynamicResource SummaryCard}" Background="{DynamicResource ThemePrimaryLight}" BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1.5">
                 <StackPanel>
-                    <TextBlock Text="TOPLAM KASA MEVCUDU" Style="{StaticResource CardLabel}" Foreground="{DynamicResource ThemePrimaryDark}" FontWeight="Bold"/>
+                    <TextBlock Text="TOPLAM KASA MEVCUDU" Style="{DynamicResource CardLabel}" Foreground="{DynamicResource ThemePrimaryDark}" FontWeight="Bold"/>
                     <TextBlock Text="{Binding NetBalanceDisplay}" Style="{StaticResource BigAmount}" Foreground="{DynamicResource ThemePrimaryDark}"/>
                     <TextBlock Text="📊 Gün Sonu Net Mevcut" Foreground="{DynamicResource ThemePrimaryDark}" FontSize="11" Margin="0,8,0,0"/>
                 </StackPanel>
@@ -224,7 +226,7 @@
                         
                         <Button Content="🔄" Command="{Binding RefreshCommand}"
                                 Width="36" Height="36" FontSize="16"
-                                Background="{DynamicResource ThemePrimaryDark}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderThickness="0"
+                                Background="{DynamicResource ThemePrimaryDark}" Foreground="{DynamicResource TextOnPrimaryBrush}" BorderThickness="0"
                                 ToolTip="Yenile" Cursor="Hand"/>
                     </StackPanel>
                 </Grid>
@@ -262,7 +264,7 @@
 
                     <DataGrid.CellStyle>
                         <Style TargetType="DataGridCell">
-                            <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
+                            <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
                             <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <Setter Property="BorderThickness" Value="0"/>
                             <Setter Property="Padding" Value="12,0"/>

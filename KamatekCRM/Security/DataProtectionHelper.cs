@@ -110,10 +110,7 @@ namespace KamatekCrm.Security
                     return builder.ConnectionString;
                 }
             }
-            catch
-            {
-                // Standart dışı bağlantı dizesi veya çözümleme hatası
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DataProtectionHelper.cs"); }
 
             return connectionString;
         }
@@ -180,7 +177,7 @@ namespace KamatekCrm.Security
                             modified = true;
                         }
                     }
-                    catch { }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DataProtectionHelper.cs"); }
                 }
 
                 // Root ConnectionStrings:PostgreSQL kontrolü
@@ -197,7 +194,7 @@ namespace KamatekCrm.Security
                             modified = true;
                         }
                     }
-                    catch { }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DataProtectionHelper.cs"); }
                 }
 
                 if (modified)
@@ -206,10 +203,7 @@ namespace KamatekCrm.Security
                     File.WriteAllText(appSettingsPath, jsonObject.ToJsonString(options));
                 }
             }
-            catch
-            {
-                // Migration hatası sessizce yutulur, uygulamanın çökmesi engellenir
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DataProtectionHelper.cs"); }
         }
     }
 }

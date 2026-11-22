@@ -46,10 +46,7 @@ namespace KamatekCrm.Diagnostics.Core
                 {
                     output.Write("[log format hatasi]");
                 }
-                catch
-                {
-                    // Çıktı hedefi de kullanılamıyorsa yapacak bir şey yok.
-                }
+                catch (Exception catchEx) { Serilog.Debugging.SelfLog.WriteLine($"[RedactingTextFormatter.cs] {catchEx.Message}"); }
             }
         }
     }

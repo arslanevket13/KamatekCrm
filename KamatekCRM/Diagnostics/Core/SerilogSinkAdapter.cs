@@ -50,10 +50,7 @@ namespace KamatekCrm.Diagnostics.Core
             {
                 _sink.Publish(Map(logEvent));
             }
-            catch
-            {
-                // Tanılama hattındaki hata loglamayı veya uygulamayı durdurmamalı.
-            }
+            catch (Exception catchEx) { Serilog.Debugging.SelfLog.WriteLine($"[SerilogSinkAdapter.cs] {catchEx.Message}"); }
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.UsersView"
+﻿<UserControl x:Class="KamatekCrm.Views.UsersView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:components="clr-namespace:KamatekCrm.Components"
@@ -141,7 +141,7 @@
 
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
-                                <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
+                                <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
                                 <Setter Property="Padding" Value="12,0"/>
                                 <Setter Property="BorderThickness" Value="0"/>
                                 <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
@@ -319,7 +319,7 @@
                                            Command="{Binding DataContext.SetPasswordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                            Appearance="Secondary" Height="38" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
 
-                                <ui:Button Content="Şifreyi 1234'e Sıfırla" Icon="{ui:SymbolIcon Key24}"
+                                <ui:Button Content="Geçici Şifre Oluştur / Sıfırla" Icon="{ui:SymbolIcon Key24}"
                                            Command="{Binding DataContext.ResetPasswordCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                            Appearance="Secondary" Height="38" Margin="0,0,0,8" HorizontalAlignment="Stretch" Cursor="Hand"/>
 

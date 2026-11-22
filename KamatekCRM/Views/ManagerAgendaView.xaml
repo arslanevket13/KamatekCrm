@@ -1,4 +1,4 @@
-<UserControl x:Class="KamatekCrm.Views.ManagerAgendaView"
+﻿<UserControl x:Class="KamatekCrm.Views.ManagerAgendaView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:components="clr-namespace:KamatekCrm.Components"
@@ -32,12 +32,23 @@
                 </StackPanel>
             </StackPanel>
 
-            <!-- KPI sayaçları -->
+            <!-- KPI sayaçları (Aktif filtre seçimi DataTrigger ile vurgulanır) -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <!-- Geciken / Overdue -->
                 <Border CornerRadius="8" Padding="12,6" Margin="0,0,8,0" Cursor="Hand"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource ThemeError}" BorderThickness="1">
+                        BorderBrush="{DynamicResource ThemeError}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedFilter}" Value="Overdue">
+                                    <Setter Property="Background" Value="{DynamicResource StatusErrorBg}"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Border.InputBindings>
                         <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="Overdue"/>
                     </Border.InputBindings>
@@ -52,8 +63,19 @@
 
                 <!-- Kritik / SLA -->
                 <Border CornerRadius="8" Padding="12,6" Margin="0,0,8,0" Cursor="Hand"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource StatusWarningFg}" BorderThickness="1">
+                        BorderBrush="{DynamicResource StatusWarningFg}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedFilter}" Value="Critical">
+                                    <Setter Property="Background" Value="{DynamicResource StatusWarningBg}"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Border.InputBindings>
                         <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="Critical"/>
                     </Border.InputBindings>
@@ -68,8 +90,19 @@
 
                 <!-- Bugün -->
                 <Border CornerRadius="8" Padding="12,6" Margin="0,0,8,0" Cursor="Hand"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1">
+                        BorderBrush="{DynamicResource ThemePrimary}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedFilter}" Value="Today">
+                                    <Setter Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Border.InputBindings>
                         <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="Today"/>
                     </Border.InputBindings>
@@ -83,9 +116,21 @@
                 </Border>
 
                 <!-- Tümü -->
-                <Border CornerRadius="8" Padding="12,6" Cursor="Hand"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                <Border CornerRadius="8" Padding="12,6" Cursor="Hand">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedFilter}" Value="All">
+                                    <Setter Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Border.InputBindings>
                         <MouseBinding Gesture="LeftClick" Command="{Binding SelectFilterCommand}" CommandParameter="All"/>
                     </Border.InputBindings>
@@ -166,7 +211,7 @@
 
                     <DataGrid.CellStyle>
                         <Style TargetType="DataGridCell">
-                            <Setter Property="FocusVisualStyle" Value="{StaticResource KmFocusVisual}"/>
+                            <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
                             <Setter Property="Padding" Value="10,0"/>
                             <Setter Property="BorderThickness" Value="0"/>
                             <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>

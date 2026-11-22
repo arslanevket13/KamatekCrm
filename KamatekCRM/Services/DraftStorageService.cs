@@ -53,7 +53,7 @@ namespace KamatekCrm.Services
                     var oldTemps = Directory.GetFiles(_draftsDirectory, "*.tmp");
                     foreach (var temp in oldTemps)
                     {
-                        try { File.Delete(temp); } catch { }
+                        try { File.Delete(temp); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DraftStorageService.cs"); }
                     }
                 }
             }
@@ -106,7 +106,7 @@ namespace KamatekCrm.Services
             {
                 if (tempPath != null && File.Exists(tempPath))
                 {
-                    try { File.Delete(tempPath); } catch { }
+                    try { File.Delete(tempPath); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DraftStorageService.cs"); }
                 }
                 gate.Release();
             }
@@ -163,7 +163,7 @@ namespace KamatekCrm.Services
                     var strayTemps = Directory.GetFiles(_draftsDirectory, $"{safeName}*.tmp");
                     foreach (var stray in strayTemps)
                     {
-                        try { File.Delete(stray); } catch { }
+                        try { File.Delete(stray); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "DraftStorageService.cs"); }
                     }
                 }
             }

@@ -101,7 +101,7 @@ namespace KamatekCrm.Services
                     if (bytes != null && bytes.Length > 0)
                         return bytes;
                 }
-                catch { }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "PdfService.cs"); }
             }
 
             // 2. Özel Logo Dosya Yolu
@@ -113,7 +113,7 @@ namespace KamatekCrm.Services
                     if (bytes != null && bytes.Length > 0)
                         return bytes;
                 }
-                catch { }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "PdfService.cs"); }
             }
 
             // 3. Fallback: Varsayılan Kamatek Kurumsal Logosu (Önbellekli)
@@ -138,7 +138,7 @@ namespace KamatekCrm.Services
                         }
                     }
                 }
-                catch { }
+                catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "PdfService.cs"); }
 
                 var pngPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "KamatekLogo.png");
                 var jpgPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Images", "KamatekLogo.jpg");
@@ -168,11 +168,12 @@ namespace KamatekCrm.Services
 
         public void GenerateProjectQuote(ServiceProject project, List<ScopeNode> rootNodes, string filePath)
         {
+            ArgumentNullException.ThrowIfNull(project);
             AuditSensitiveDocumentAccess("Proje teklifi", project.Customer?.Id);
             var logoBytes = GetLogoBytes();
 
             var flattenedItems = FlattenScopeNodesWithImages(rootNodes);
-            var bom = ProjectScopeService.GenerateConsolidatedBom(rootNodes, project?.DiscountPercent ?? 0m, project?.KdvRate ?? 20m);
+            var bom = ProjectScopeService.GenerateConsolidatedBom(rootNodes, project.DiscountPercent, project.KdvRate);
             var totalAmount = bom.GrandTotal;
             var totalItems = bom.TotalItemCount;
 
@@ -2279,7 +2280,8 @@ namespace KamatekCrm.Services
 
         public void GenerateCustomerStatement(Customer customer, IEnumerable<Transaction> transactions, decimal currentBalance, string filePath)
         {
-            AuditSensitiveDocumentAccess("Cari Hesap Ekstresi", customer?.Id);
+            ArgumentNullException.ThrowIfNull(customer);
+            AuditSensitiveDocumentAccess("Cari Hesap Ekstresi", customer.Id);
             var logoBytes = GetLogoBytes();
 
             Document.Create(container =>
@@ -2516,6 +2518,148 @@ namespace KamatekCrm.Services
 
             GenerateStandardQuote(sampleQuote, targetPath);
             return targetPath;
+        }
+
+        /// <summary>
+        /// Analitik ekranı KPI, kategori dağılımı ve teknisyen performans verilerini kurumsal PDF raporu olarak üretir.
+        /// </summary>
+        public void GenerateAnalyticsReport(
+            string periodDisplay,
+            int totalJobs,
+            int completedJobs,
+            double successRate,
+            IEnumerable<(string Category, int Count)> categoryBreakdown,
+            IEnumerable<(string Technician, int CompletedCount)> technicianStats,
+            string filePath)
+        {
+            var brand = AppSettings.GetBrandProfile();
+            var primaryHex = string.IsNullOrWhiteSpace(brand.PrimaryBrandColorHex) ? "#182649" : brand.PrimaryBrandColorHex;
+
+            Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(1.8f, Unit.Centimetre);
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Segoe UI"));
+
+                    page.Header().Column(col =>
+                    {
+                        col.Item().Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text(brand.CompanyName).FontSize(18).Bold().FontColor(primaryHex);
+                                c.Item().Text("Analitik ve Operasyon Performans Raporu").FontSize(12).SemiBold();
+                            });
+                            row.ConstantItem(170).AlignRight().Column(c =>
+                            {
+                                c.Item().Text($"Dönem: {periodDisplay}").FontSize(10).SemiBold();
+                                c.Item().Text($"Oluşturma: {DateTime.Now:dd.MM.yyyy HH:mm}").FontSize(9).FontColor(Colors.Grey.Darken1);
+                            });
+                        });
+                        col.Item().PaddingTop(8).LineHorizontal(1).LineColor(primaryHex);
+                    });
+
+                    page.Content().PaddingVertical(14).Column(col =>
+                    {
+                        col.Spacing(14);
+
+                        // Özet KPI Satırı
+                        col.Item().Row(row =>
+                        {
+                            row.Spacing(10);
+                            row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(c =>
+                            {
+                                c.Item().Text("Toplam İş Hacmi").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                c.Item().Text(totalJobs.ToString()).FontSize(18).Bold().FontColor(primaryHex);
+                            });
+                            row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(c =>
+                            {
+                                c.Item().Text("Tamamlanan İş").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                c.Item().Text(completedJobs.ToString()).FontSize(18).Bold().FontColor("#2E7D32");
+                            });
+                            row.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(c =>
+                            {
+                                c.Item().Text("Başarı Oranı").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                c.Item().Text($"%{successRate:N1}").FontSize(18).Bold().FontColor("#1565C0");
+                            });
+                        });
+
+                        // Kategori Dağılımı
+                        col.Item().Text("İş Türü / Kategori Dağılımı").FontSize(12).Bold().FontColor(primaryHex);
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1);
+                            });
+                            table.Header(h =>
+                            {
+                                h.Cell().Background(Colors.Grey.Lighten3).Padding(6).Text("Kategori").Bold();
+                                h.Cell().Background(Colors.Grey.Lighten3).Padding(6).AlignRight().Text("Adet").Bold();
+                                h.Cell().Background(Colors.Grey.Lighten3).Padding(6).AlignRight().Text("Oran").Bold();
+                            });
+
+                            var catList = categoryBreakdown.ToList();
+                            if (catList.Count == 0)
+                            {
+                                table.Cell().ColumnSpan(3).Padding(6).Text("Bu dönem için kayıt bulunamadı.").FontColor(Colors.Grey.Darken1);
+                            }
+                            else
+                            {
+                                foreach (var item in catList)
+                                {
+                                    double share = totalJobs > 0 ? (double)item.Count / totalJobs * 100d : 0d;
+                                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(6).Text(item.Category);
+                                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(6).AlignRight().Text(item.Count.ToString());
+                                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(6).AlignRight().Text($"%{share:N1}");
+                                }
+                            }
+                        });
+
+                        // Teknisyen Performansı
+                        col.Item().Text("Teknisyen Performansı (Tamamlanan İş)").FontSize(12).Bold().FontColor(primaryHex);
+                        col.Item().Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(1);
+                            });
+                            table.Header(h =>
+                            {
+                                h.Cell().Background(Colors.Grey.Lighten3).Padding(6).Text("Teknisyen").Bold();
+                                h.Cell().Background(Colors.Grey.Lighten3).Padding(6).AlignRight().Text("Tamamlanan").Bold();
+                            });
+
+                            var techList = technicianStats.ToList();
+                            if (techList.Count == 0)
+                            {
+                                table.Cell().ColumnSpan(2).Padding(6).Text("Atanmış teknisyen verisi bulunamadı.").FontColor(Colors.Grey.Darken1);
+                            }
+                            else
+                            {
+                                foreach (var t in techList)
+                                {
+                                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(6).Text(t.Technician);
+                                    table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(6).AlignRight().Text(t.CompletedCount.ToString());
+                                }
+                            }
+                        });
+                    });
+
+                    page.Footer().AlignCenter().Text(txt =>
+                    {
+                        txt.Span($"{brand.CompanyName} — Sayfa ");
+                        txt.CurrentPageNumber();
+                        txt.Span(" / ");
+                        txt.TotalPages();
+                    });
+                });
+            }).GeneratePdf(filePath);
         }
 
         #endregion

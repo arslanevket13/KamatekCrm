@@ -50,10 +50,7 @@ namespace KamatekCrm.Helpers
             {
                 window.ApplyTemplate();
             }
-            catch
-            {
-                // Ignore if visual tree cannot be created yet
-            }
+            catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "WindowControlHelper.cs"); }
 
             AttachTemplateControls(window);
         }

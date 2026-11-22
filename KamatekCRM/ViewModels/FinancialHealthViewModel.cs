@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -27,7 +28,7 @@ namespace KamatekCrm.ViewModels
             CostBreakdownSeries = Array.Empty<ISeries>();
             AgingBreakdownSeries = Array.Empty<ISeries>();
             
-            _ = LoadDataAsync();
+            LoadDataAsync().SafeFireAndForget("FinancialHealthViewModel.LoadDataAsync");
         }
 
         #region KPI Properties
@@ -297,7 +298,7 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Finansal veriler yüklenirken hata oluştu: {ex.Message}", "Hata", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"[FinancialHealthViewModel] Finansal veriler yüklenirken hata: {ex.Message}");
             }
         }
     }

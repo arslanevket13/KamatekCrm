@@ -31,7 +31,7 @@ namespace KamatekCrm.Services
                 // 1. Düşük Stok Uyarısı
                 var lowStock = await context.Products
                     .Where(p => p.TotalStockQuantity <= 5)
-                    .Select(p => new { p.ProductName, p.TotalStockQuantity })
+                    .Select(p => new { p.Id, p.ProductName, p.TotalStockQuantity })
                     .Take(5)
                     .ToListAsync();
 
@@ -46,7 +46,9 @@ namespace KamatekCrm.Services
                             Title = "Düşük Stok",
                             Message = $"{item.ProductName} stoğu kritik seviyede ({item.TotalStockQuantity} adet).",
                             Type = NotificationType.Warning,
-                            ActionLabel = "Sipariş Ver"
+                            ActionLabel = "Sipariş Ver",
+                            ActionType = "LOW_STOCK",
+                            TargetEntityId = item.Id
                         });
                     }
                 }
@@ -71,7 +73,9 @@ namespace KamatekCrm.Services
                             Title = "Bekleyen Fırsat",
                             Message = $"{quote.Customer?.FullName} - {quote.Title} (7+ gündür işlem görmedi).",
                             Type = NotificationType.Info,
-                            ActionLabel = "İncele"
+                            ActionLabel = "İncele",
+                            ActionType = "STALE_QUOTE",
+                            TargetEntityId = quote.Id
                         });
                     }
                 }
@@ -103,7 +107,9 @@ namespace KamatekCrm.Services
                             Title = "Gecikmiş Müşteri Talebi",
                             Message = $"{item.CallerName} - {item.Subject} ({timeStr} gecikmiş).",
                             Type = NotificationType.Error,
-                            ActionLabel = "Gündeme Git"
+                            ActionLabel = "Gündeme Git",
+                            ActionType = "OVERDUE_INTERACTION",
+                            TargetEntityId = item.Id
                         });
                     }
                 }
@@ -131,7 +137,9 @@ namespace KamatekCrm.Services
                             Title = "SLA Süresi Aşıldı!",
                             Message = $"İş No: #{job.Id} ({job.Customer?.FullName ?? "Müşteri"}) SLA süresi {hours} saat aşıldı.",
                             Type = NotificationType.Error,
-                            ActionLabel = "İncele"
+                            ActionLabel = "İncele",
+                            ActionType = "SLA_BREACH",
+                            TargetEntityId = job.Id
                         });
                     }
                 }
@@ -169,6 +177,8 @@ namespace KamatekCrm.Services
         public string Message { get; set; } = string.Empty;
         public NotificationType Type { get; set; } = NotificationType.Info;
         public string ActionLabel { get; set; } = string.Empty;
+        public string ActionType { get; set; } = string.Empty;
+        public int? TargetEntityId { get; set; }
         public System.Windows.Input.ICommand? ActionCommand { get; set; }
     }
 

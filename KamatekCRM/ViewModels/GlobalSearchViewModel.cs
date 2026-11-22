@@ -1,3 +1,4 @@
+using KamatekCrm.Helpers;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
@@ -30,7 +31,7 @@ namespace KamatekCrm.ViewModels
                     _searchCts?.Cancel();
                     _searchCts = new System.Threading.CancellationTokenSource();
                     var token = _searchCts.Token;
-                    _ = DebouncedSearchAsync(token);
+                    DebouncedSearchAsync(token).SafeFireAndForget("GlobalSearchViewModel.DebouncedSearchAsync");
                 }
             }
         }
@@ -45,10 +46,7 @@ namespace KamatekCrm.ViewModels
                     await PerformSearchAsync(token);
                 }
             }
-            catch (System.OperationCanceledException)
-            {
-                // Debounced keystroke was superseded
-            }
+            catch (System.OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "GlobalSearchViewModel.cs"); }
         }
 
         /// <summary>
@@ -137,10 +135,7 @@ namespace KamatekCrm.ViewModels
                     Results.Add(result);
                 }
             }
-            catch (System.OperationCanceledException)
-            {
-                // Request cancelled
-            }
+            catch (System.OperationCanceledException catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "GlobalSearchViewModel.cs"); }
             finally
             {
                 IsSearching = false;
