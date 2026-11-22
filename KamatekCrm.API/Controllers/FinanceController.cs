@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Enums;
 using KamatekCrm.Infrastructure.Data;
-using KamatekCrm.API.Models;
+using KamatekCrm.Shared.DTOs;
 using KamatekCrm.API.Services;
 using Microsoft.AspNetCore.Authorization;
 

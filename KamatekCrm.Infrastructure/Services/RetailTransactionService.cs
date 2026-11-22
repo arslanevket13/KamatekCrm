@@ -311,7 +311,10 @@ public sealed class RetailTransactionService : IRetailTransactionService
                 }
                 inventory.Quantity += input.Quantity;
                 var product = await context.Products.FindAsync([original.ProductId], cancellationToken);
-                if (product is not null) product.TotalStockQuantity += input.Quantity;
+                if (product is not null && input.Disposition == ReturnDisposition.Restock && !destination.IsQuarantine)
+                {
+                    product.TotalStockQuantity += input.Quantity;
+                }
 
                 var returnItem = new SalesReturnItem
                 {

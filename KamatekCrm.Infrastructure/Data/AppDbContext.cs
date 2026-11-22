@@ -759,7 +759,8 @@ namespace KamatekCrm.Infrastructure.Data
         {
             if (CurrentUserContext != null && CurrentUserContext.IsAuthenticated)
             {
-                return (CurrentUserContext.UserId, CurrentUserContext.Username);
+                var ctxUser = string.IsNullOrWhiteSpace(CurrentUserContext.Username) ? "System" : CurrentUserContext.Username;
+                return (CurrentUserContext.UserId, ctxUser);
             }
 
             try
@@ -767,11 +768,12 @@ namespace KamatekCrm.Infrastructure.Data
                 var wpfUser = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType("KamatekCrm.App", false)).FirstOrDefault(t => t != null)?.GetProperty("CurrentUser")?.GetValue(null) as User;
                 if (wpfUser != null)
                 {
-                    return (wpfUser.Id, wpfUser.Username ?? "Sistem");
+                    return (wpfUser.Id, string.IsNullOrWhiteSpace(wpfUser.Username) ? "System" : wpfUser.Username);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"GetCurrentUserInfo fallback: {ex.Message}");
             }
 
             return (null, "System");
@@ -787,7 +789,7 @@ namespace KamatekCrm.Infrastructure.Data
             if (auditEntries.Count == 0) return;
 
             var (userId, username) = GetCurrentUserInfo();
-            if (CurrentUserContext == null && username == "System") return;
+            if (userId is null && string.Equals(username, "System", StringComparison.Ordinal)) return;
 
             var timestamp = DateTime.UtcNow;
 
@@ -877,7 +879,8 @@ namespace KamatekCrm.Infrastructure.Data
         private void ApplyAuditInformation()
         {
             var entries = ChangeTracker.Entries<BaseEntity>();
-            var currentUser = GetCurrentUserInfo().Username;
+            var resolvedUser = GetCurrentUserInfo().Username;
+            var currentUser = string.IsNullOrWhiteSpace(resolvedUser) ? "System" : resolvedUser;
             var timestamp = DateTime.UtcNow;
 
             foreach (var entry in entries)

@@ -58,4 +58,8 @@ public interface IServiceJobReadService
         DateTime scheduledDate,
         int? excludeJobId = null,
         CancellationToken cancellationToken = default);
+
+    Task<Result<ServiceJobRowDto>> GetRowByIdAsync(
+        int jobId,
+        CancellationToken cancellationToken = default);
 }

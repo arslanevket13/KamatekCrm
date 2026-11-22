@@ -9,7 +9,13 @@ namespace KamatekCrm.Infrastructure.Services;
 /// </summary>
 public interface IDatabaseInitializationService
 {
-    Task<DatabaseInitializationResult> InitializeAsync(CancellationToken cancellationToken = default);
+    Task<DatabaseInitializationResult> InitializeAsync(
+        CancellationToken cancellationToken = default,
+        bool seedDefaultAdminIfEmpty = true);
 }
 
-public sealed record DatabaseInitializationResult(bool AdminCreated, string? TemporaryAdminPassword);
+public sealed record DatabaseInitializationResult(
+    bool AdminCreated,
+    string? TemporaryAdminPassword,
+    bool HasAnyUsers = true,
+    int UserCount = 0);

@@ -129,4 +129,24 @@ public interface IServiceJobCommandService
         int jobId,
         string changedBy,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Yönetici gündemindeki iş emri SLA/randevu kaydını kalıcı olarak erteler ve tarihçeye işler.
+    /// </summary>
+    Task<Result> SnoozeAgendaItemAsync(
+        int jobId,
+        DateTime newTargetDateUtc,
+        bool isSlaItem,
+        string changedBy,
+        string reason,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Yönetici gündemindeki iş emri öğesini incelendi olarak iş emri tarihçesine kalıcı kaydeder.
+    /// </summary>
+    Task<Result> MarkAgendaItemSeenAsync(
+        int jobId,
+        string changedBy,
+        string? note = null,
+        CancellationToken cancellationToken = default);
 }

@@ -94,7 +94,7 @@ namespace KamatekCrm.Infrastructure.Services
                     Priority = dto.Priority,
                     Status = dto.RequiresFollowUp ? InteractionStatus.Scheduled : InteractionStatus.New,
                     InteractionDate = DateTime.UtcNow,
-                    CreatedByUserId = _currentUser.UserId.ToString(),
+                    CreatedByUserId = _currentUser.UserId.ToString() ?? string.Empty,
                     CreatedByUsername = _currentUser.Username,
                     AssignedToUserId = dto.AssignedToUserId,
                     AssignedToUsername = dto.AssignedToUsername,

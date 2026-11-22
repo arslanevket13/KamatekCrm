@@ -3,6 +3,5 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoWarn>CS8602;CS8604;CS8625</NoWarn>
   </PropertyGroup>
 </Project>

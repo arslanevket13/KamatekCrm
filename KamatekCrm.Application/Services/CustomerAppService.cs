@@ -1,7 +1,6 @@
 using KamatekCrm.ApplicationCore.Common;
 using KamatekCrm.ApplicationCore.DTOs.Customers;
 using KamatekCrm.ApplicationCore.Interfaces;
-using KamatekCrm.Shared.Exceptions;
 using KamatekCrm.Shared.Models;
 using KamatekCrm.Shared.Repositories;
 

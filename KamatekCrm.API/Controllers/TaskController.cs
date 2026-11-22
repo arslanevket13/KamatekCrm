@@ -5,7 +5,7 @@ using KamatekCrm.API.Application.Queries.Tasks;
 using KamatekCrm.API.Application.Commands.Tasks;
 using System.Security.Claims;
 using KamatekCrm.Shared.Enums;
-using KamatekCrm.API.Application.Common;
+using KamatekCrm.ApplicationCore.Common;
 
 namespace KamatekCrm.API.Controllers
 {
@@ -77,7 +77,7 @@ namespace KamatekCrm.API.Controllers
 
             if (!result.IsSuccess)
             {
-                return BadRequest(new { Success = false, Message = result.ErrorMessage });
+                return BadRequest(new { Success = false, Message = result.Error });
             }
 
             return Ok(new { Success = true });

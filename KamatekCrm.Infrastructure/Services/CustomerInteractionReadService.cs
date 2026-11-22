@@ -216,8 +216,21 @@ namespace KamatekCrm.Infrastructure.Services
                             (j.SlaDeadline.HasValue || j.ScheduledDate.HasValue))
                 .ToListAsync(cancellationToken);
 
+            var openJobIds = openJobs.Select(j => j.Id).ToList();
+            var reviewedJobIds = openJobIds.Count > 0
+                ? (await context.ServiceJobHistories
+                    .AsNoTracking()
+                    .Where(h => h.ServiceJobId.HasValue && openJobIds.Contains(h.ServiceJobId.Value) && h.Action == "Yönetici İncelemesi")
+                    .Select(h => h.ServiceJobId!.Value)
+                    .Distinct()
+                    .ToListAsync(cancellationToken)).ToHashSet()
+                : new HashSet<int>();
+
             foreach (var job in openJobs)
             {
+                bool isReviewed = reviewedJobIds.Contains(job.Id);
+                int? assignedToId = job.AssignedUserId ?? job.AssignedTechnicianId;
+
                 // SLA Kontrolü (Duraklatılmış durumlar hariç)
                 if (job.SlaDeadline.HasValue)
                 {
@@ -237,13 +250,15 @@ namespace KamatekCrm.Infrastructure.Services
                                 CustomerName = job.Customer?.FullName ?? "Müşteri",
                                 CallerName = job.Customer?.FullName ?? "Müşteri",
                                 CallerPhone = job.Customer?.PhoneNumber ?? string.Empty,
+                                AssignedToUserId = assignedToId,
+                                AssignedToUsername = job.AssignedTechnician,
                                 Subject = $"⚠️ SLA İHLALİ: {job.JobCategory} - {job.Description}",
                                 Summary = $"İş Emri #{job.Id}. Hedef SLA süresi {job.SlaDeadline:dd.MM.yyyy HH:mm} tarihinde aşıldı ({hours} saat gecikme).",
                                 ManagerNotes = "SLA ihlali yönetici müdahalesi gerektiriyor.",
                                 Priority = InteractionPriority.Critical,
                                 PriorityLevel = "Critical",
                                 PriorityScore = 250 + Math.Min(50, hours * 2),
-                                Status = InteractionStatus.New,
+                                Status = isReviewed ? InteractionStatus.Seen : InteractionStatus.New,
                                 IsOverdue = true,
                                 OverdueText = $"SLA İhlali ({hours} saat)",
                                 InteractionDate = job.CreatedDate,
@@ -263,12 +278,14 @@ namespace KamatekCrm.Infrastructure.Services
                                 CustomerName = job.Customer?.FullName ?? "Müşteri",
                                 CallerName = job.Customer?.FullName ?? "Müşteri",
                                 CallerPhone = job.Customer?.PhoneNumber ?? string.Empty,
+                                AssignedToUserId = assignedToId,
+                                AssignedToUsername = job.AssignedTechnician,
                                 Subject = $"⏱️ SLA KRİTİK: {job.JobCategory} - {job.Description}",
                                 Summary = $"İş Emri #{job.Id} için SLA bitimine {remainHours} saat kaldı.",
                                 Priority = InteractionPriority.Critical,
                                 PriorityLevel = "Critical",
                                 PriorityScore = 180,
-                                Status = InteractionStatus.New,
+                                Status = isReviewed ? InteractionStatus.Seen : InteractionStatus.New,
                                 IsOverdue = false,
                                 InteractionDate = job.CreatedDate,
                                 FollowUpDate = job.SlaDeadline
@@ -292,12 +309,14 @@ namespace KamatekCrm.Infrastructure.Services
                             CustomerName = job.Customer?.FullName ?? "Müşteri",
                             CallerName = job.Customer?.FullName ?? "Müşteri",
                             CallerPhone = job.Customer?.PhoneNumber ?? string.Empty,
+                            AssignedToUserId = assignedToId,
+                            AssignedToUsername = job.AssignedTechnician,
                             Subject = $"📅 Bugünkü Saha Randevusu: {job.Customer?.FullName}",
                             Summary = $"İş Emri #{job.Id}. Planlanan Saat: {job.ScheduledDate:HH:mm}. {job.Description}",
                             Priority = InteractionPriority.High,
                             PriorityLevel = "High",
                             PriorityScore = 75,
-                            Status = InteractionStatus.Scheduled,
+                            Status = isReviewed ? InteractionStatus.Seen : InteractionStatus.Scheduled,
                             IsOverdue = false,
                             InteractionDate = job.CreatedDate,
                             FollowUpDate = job.ScheduledDate
@@ -316,12 +335,14 @@ namespace KamatekCrm.Infrastructure.Services
                             CustomerName = job.Customer?.FullName ?? "Müşteri",
                             CallerName = job.Customer?.FullName ?? "Müşteri",
                             CallerPhone = job.Customer?.PhoneNumber ?? string.Empty,
+                            AssignedToUserId = assignedToId,
+                            AssignedToUsername = job.AssignedTechnician,
                             Subject = $"⚠️ Gecikmiş Saha Randevusu: {job.Customer?.FullName}",
                             Summary = $"İş Emri #{job.Id}. Planlanan tarih: {job.ScheduledDate:dd.MM.yyyy}. Randevu gerçekleştirilemedi.",
                             Priority = InteractionPriority.Critical,
                             PriorityLevel = "Critical",
                             PriorityScore = 150 + Math.Min(30, days * 5),
-                            Status = InteractionStatus.Scheduled,
+                            Status = isReviewed ? InteractionStatus.Seen : InteractionStatus.Scheduled,
                             IsOverdue = true,
                             OverdueText = $"{days} gün gecikti",
                             InteractionDate = job.CreatedDate,

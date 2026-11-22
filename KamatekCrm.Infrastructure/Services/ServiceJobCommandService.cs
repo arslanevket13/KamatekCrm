@@ -2364,4 +2364,96 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
 
     private static Task RollbackIfPresentAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken) =>
         transaction?.RollbackAsync(cancellationToken) ?? Task.CompletedTask;
+
+    public async Task<Result> SnoozeAgendaItemAsync(
+        int jobId,
+        DateTime newTargetDateUtc,
+        bool isSlaItem,
+        string changedBy,
+        string reason,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = _authorizationService.Authorize(ApplicationPermission.ManageServiceJobs);
+        if (authorization.IsFailure)
+        {
+            return Result.Failure(authorization.Error);
+        }
+
+        DateTime normalizedTargetUtc = newTargetDateUtc.Kind == DateTimeKind.Utc
+            ? newTargetDateUtc
+            : DateTime.SpecifyKind(newTargetDateUtc, DateTimeKind.Utc);
+        string actor = NormalizeUser(changedBy);
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.ExecuteInTransactionAsync(async _ =>
+        {
+            var job = await context.ServiceJobs.FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
+            if (job is null)
+            {
+                return Result.Failure($"İş emri bulunamadı (ID: {jobId}).");
+            }
+
+            if (isSlaItem || job.SlaDeadline.HasValue && !job.ScheduledDate.HasValue)
+            {
+                job.SlaDeadline = normalizedTargetUtc;
+            }
+            else
+            {
+                job.ScheduledDate = normalizedTargetUtc;
+            }
+
+            job.ModifiedDate = DateTime.UtcNow;
+
+            context.ServiceJobHistories.Add(new ServiceJobHistory
+            {
+                ServiceJobId = job.Id,
+                Date = DateTime.UtcNow,
+                Action = "Yönetici Ertelemesi",
+                JobStatusChange = job.Status,
+                Notes = reason,
+                UserId = actor
+            });
+
+            await context.SaveChangesAsync(cancellationToken);
+            return Result.Success();
+        }, cancellationToken: cancellationToken);
+    }
+
+    public async Task<Result> MarkAgendaItemSeenAsync(
+        int jobId,
+        string changedBy,
+        string? note = null,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = _authorizationService.Authorize(ApplicationPermission.ManageServiceJobs);
+        if (authorization.IsFailure)
+        {
+            return Result.Failure(authorization.Error);
+        }
+
+        string actor = NormalizeUser(changedBy);
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.ExecuteInTransactionAsync(async _ =>
+        {
+            var job = await context.ServiceJobs.FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
+            if (job is null)
+            {
+                return Result.Failure($"İş emri bulunamadı (ID: {jobId}).");
+            }
+
+            context.ServiceJobHistories.Add(new ServiceJobHistory
+            {
+                ServiceJobId = job.Id,
+                Date = DateTime.UtcNow,
+                Action = "Yönetici İncelemesi",
+                JobStatusChange = job.Status,
+                Notes = string.IsNullOrWhiteSpace(note) ? "Yönetici gündeminden incelendi olarak işaretlendi." : note.Trim(),
+                UserId = actor
+            });
+
+            await context.SaveChangesAsync(cancellationToken);
+            return Result.Success();
+        }, cancellationToken: cancellationToken);
+    }
 }

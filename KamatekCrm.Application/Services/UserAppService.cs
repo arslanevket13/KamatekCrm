@@ -89,7 +89,13 @@ namespace KamatekCrm.ApplicationCore.Services
                 if (passwordError is not null)
                     return Result.Failure<int>(passwordError);
 
-                var entity = new User();
+                var entity = new User
+                {
+                    IsOnDuty = false,
+                    TotalJobsCompleted = 0,
+                    IsDeleted = false,
+                    CreatedBy = "System"
+                };
                 dto.ApplyToEntity(entity);
                 entity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
                 entity.MustChangePassword = true;

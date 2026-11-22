@@ -818,4 +818,53 @@ public sealed class ServiceJobReadService : IServiceJobReadService
 
         return Result.Success<IReadOnlyList<ServiceJobRowDto>>(rows);
     }
+
+    public async Task<Result<ServiceJobRowDto>> GetRowByIdAsync(
+        int jobId,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = AuthorizeRead();
+        if (authorization.IsFailure) return Result.Failure<ServiceJobRowDto>(authorization.Error);
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var row = await context.ServiceJobs.AsNoTracking()
+            .Where(item => item.Id == jobId)
+            .Select(item => new ServiceJobRowDto
+            {
+                Id = item.Id,
+                CustomerId = item.CustomerId,
+                CustomerAssetId = item.CustomerAssetId,
+                CustomerFullName = item.Customer.FullName,
+                CustomerPhone = item.Customer.PhoneNumber,
+                Description = item.Description,
+                Status = item.Status,
+                Priority = item.Priority,
+                WorkOrderType = item.WorkOrderType,
+                JobCategory = item.JobCategory,
+                CategoriesJson = item.CategoriesJson,
+                CreatedDate = item.CreatedDate,
+                CompletedDate = item.CompletedDate,
+                ScheduledDate = item.ScheduledDate,
+                AssignedTechnicianId = item.AssignedTechnicianId,
+                AssignedTechnician = item.AssignedTechnician,
+                LaborCost = item.LaborCost,
+                DiscountAmount = item.DiscountAmount,
+                TaxAmount = item.TaxAmount,
+                TotalAmount = item.TotalAmount,
+                EstimatedDuration = item.EstimatedDuration,
+                SlaDeadline = item.SlaDeadline,
+                TechnicianNotes = item.TechnicianNotes,
+                PhotoPathsJson = item.PhotoPathsJson,
+                DiscoveryReportId = context.DiscoveryReports.Where(d => d.ServiceJobId == item.Id).Select(d => (int?)d.Id).FirstOrDefault(),
+                QuotationId = context.WorkOrderQuotations.Where(q => q.ServiceJobId == item.Id).OrderByDescending(q => q.Id).Select(q => (int?)q.Id).FirstOrDefault(),
+                QuotationStatus = context.WorkOrderQuotations.Where(q => q.ServiceJobId == item.Id).OrderByDescending(q => q.Id).Select(q => (QuotationStatus?)q.Status).FirstOrDefault(),
+                InstallationOrderId = context.InstallationOrders.Where(i => i.ServiceJobId == item.Id).Select(i => (int?)i.Id).FirstOrDefault(),
+                IsInstallationCompleted = context.InstallationOrders.Where(i => i.ServiceJobId == item.Id).Select(i => i.CompletedAt != null).FirstOrDefault()
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return row is null
+            ? Result.Failure<ServiceJobRowDto>($"İş emri bulunamadı (ID: {jobId}).")
+            : Result.Success(row);
+    }
 }

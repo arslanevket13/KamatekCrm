@@ -54,6 +54,16 @@ namespace KamatekCrm.Shared.Models
         public bool IsTechnician { get; set; }
 
         /// <summary>
+        /// Teknisyen aktif görevde mi? (DB NOT NULL)
+        /// </summary>
+        public bool IsOnDuty { get; set; } = false;
+
+        /// <summary>
+        /// Teknisyenin toplam tamamladığı iş sayısı (DB NOT NULL)
+        /// </summary>
+        public int TotalJobsCompleted { get; set; } = 0;
+
+        /// <summary>
         /// Teknisyen telefon numarası
         /// </summary>
         [MaxLength(20)]

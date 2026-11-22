@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using KamatekCrm.API.Application.Common;
+using KamatekCrm.ApplicationCore.Common;
 
 namespace KamatekCrm.API.Application.Commands.Tasks
 {

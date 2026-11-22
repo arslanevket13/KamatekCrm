@@ -22,8 +22,11 @@ internal sealed class DatabaseInitializationService : IDatabaseInitializationSer
         _logger = logger;
     }
 
-    public async Task<DatabaseInitializationResult> InitializeAsync(CancellationToken cancellationToken = default)
+    public async Task<DatabaseInitializationResult> InitializeAsync(
+        CancellationToken cancellationToken = default,
+        bool seedDefaultAdminIfEmpty = true)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         using var migrationMutex = new Mutex(false, MigrationMutexName);
         bool hasHandle = false;
 
@@ -31,7 +34,8 @@ internal sealed class DatabaseInitializationService : IDatabaseInitializationSer
         {
             try
             {
-                hasHandle = migrationMutex.WaitOne(TimeSpan.FromSeconds(30));
+                var mutexTimeout = cancellationToken.CanBeCanceled ? TimeSpan.FromSeconds(5) : TimeSpan.FromSeconds(30);
+                hasHandle = migrationMutex.WaitOne(mutexTimeout);
                 if (!hasHandle)
                 {
                     _logger?.LogWarning("Veritabanı migration kilidi alınamadı; başka bir istemci migration çalıştırıyor olabilir.");
@@ -42,20 +46,32 @@ internal sealed class DatabaseInitializationService : IDatabaseInitializationSer
                 hasHandle = true;
             }
 
+            cancellationToken.ThrowIfCancellationRequested();
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             
             _logger?.LogInformation("Veritabanı şema uyumluluğu kontrol ediliyor...");
             await dbContext.Database.MigrateAsync(cancellationToken);
             _logger?.LogInformation("Veritabanı şeması güncel.");
 
-            if (!await dbContext.Users.AnyAsync(cancellationToken))
+            var userCount = await dbContext.Users.CountAsync(cancellationToken);
+            if (userCount == 0)
             {
+                if (!seedDefaultAdminIfEmpty)
+                {
+                    return new DatabaseInitializationResult(false, null, HasAnyUsers: false, UserCount: 0);
+                }
+
                 var temporaryPassword = GenerateTemporaryPassword();
                 DbSeeder.SeedDemoData(dbContext, temporaryPassword);
-                return new DatabaseInitializationResult(true, temporaryPassword);
+                return new DatabaseInitializationResult(true, temporaryPassword, HasAnyUsers: true, UserCount: 1);
             }
 
-            return new DatabaseInitializationResult(false, null);
+            return new DatabaseInitializationResult(false, null, HasAnyUsers: true, UserCount: userCount);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger?.LogWarning("Veritabanı kurulum/şema kontrolü iptal edildi veya zaman aşımına uğradı.");
+            throw;
         }
         catch (Exception ex)
         {
@@ -70,9 +86,9 @@ internal sealed class DatabaseInitializationService : IDatabaseInitializationSer
                 {
                     migrationMutex.ReleaseMutex();
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Mutex serbest bırakma hatası kritik değil
+                    _logger?.LogDebug(ex, "Veritabanı migration mutex serbest bırakılırken önemsiz hata.");
                 }
             }
         }

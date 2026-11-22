@@ -18,6 +18,15 @@ namespace KamatekCrm.ApplicationCore.DTOs.Users
         public bool IsTechnician { get; set; }
         public DateTime? LastLoginDate { get; set; }
         public string? Phone { get; set; }
+        public string? VehiclePlate { get; set; }
         public string? ServiceArea { get; set; }
+        public string? ExpertiseAreas { get; set; }
+
+        // RBAC İzinleri
+        public bool CanViewFinance { get; set; }
+        public bool CanViewAnalytics { get; set; }
+        public bool CanDeleteRecords { get; set; }
+        public bool CanApprovePurchase { get; set; }
+        public bool CanAccessSettings { get; set; }
     }
 }

@@ -31,14 +31,36 @@ namespace KamatekCrm.Infrastructure
             services.AddTransient<IStandardQuoteReadService, StandardQuoteReadService>();
             services.AddTransient<ICustomerInteractionCommandService, CustomerInteractionCommandService>();
             services.AddTransient<ICustomerInteractionReadService, CustomerInteractionReadService>();
+            services.AddTransient<ICustomerReadService, CustomerReadService>();
             services.AddSingleton<KamatekCrm.ApplicationCore.ErrorHandling.IExceptionClassifier, ErrorHandling.ExceptionMapper>();
 
-            services.AddDbContextFactory<AppDbContext>((sp, options) =>
-            {
-                var connectionProvider = sp.GetRequiredService<IDatabaseConnectionProvider>();
-                var connString = connectionProvider.GetConnectionString();
+            services.AddSingleton<IDbContextFactory<AppDbContext>, DynamicAppDbContextFactory>();
 
-                options.UseNpgsql(connString, sqlOptions =>
+            services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+
+            return services;
+        }
+
+        /// <summary>
+        /// Her CreateDbContext çağrısında aktif IDatabaseConnectionProvider üzerinden canlı bağlantı dizesini okur.
+        /// Böylece İlk Kurulum Sihirbazı veya Ağ Ayarları bağlantı dizesini güncellediğinde
+        /// Singleton servisler dahi anında yeni veritabanına bağlanır.
+        /// </summary>
+        private sealed class DynamicAppDbContextFactory : IDbContextFactory<AppDbContext>
+        {
+            private readonly IDatabaseConnectionProvider _connectionProvider;
+
+            public DynamicAppDbContextFactory(IDatabaseConnectionProvider connectionProvider)
+            {
+                _connectionProvider = connectionProvider;
+            }
+
+            public AppDbContext CreateDbContext()
+            {
+                var connString = _connectionProvider.GetConnectionString();
+                var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+                optionsBuilder.UseNpgsql(connString, sqlOptions =>
                 {
                     sqlOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
                     sqlOptions.EnableRetryOnFailure(
@@ -46,14 +68,11 @@ namespace KamatekCrm.Infrastructure
                         maxRetryDelay: TimeSpan.FromSeconds(10),
                         errorCodesToAdd: null);
                 });
+                optionsBuilder.ConfigureWarnings(warnings =>
+                    warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
-                options.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-            });
-
-            services.AddTransient<IUnitOfWork, UnitOfWork>();
-            services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
-
-            return services;
+                return new AppDbContext(optionsBuilder.Options);
+            }
         }
     }
 }

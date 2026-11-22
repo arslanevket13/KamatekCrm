@@ -50,9 +50,7 @@ namespace KamatekCrm.Infrastructure.Services
         {
             _configuredConnectionString = configuration.GetConnectionString("PostgreSQL")
                 ?? configuration["DatabaseSettings:ConnectionStrings:PostgreSQL"]
-                ?? throw new InvalidOperationException(
-                    "PostgreSQL bağlantı dizesi yapılandırılmamış. " +
-                    "ConnectionStrings:PostgreSQL veya DatabaseSettings:ConnectionStrings:PostgreSQL ayarını tanımlayın.");
+                ?? string.Empty;
         }
 
         public string CurrentServerIp
@@ -123,6 +121,9 @@ namespace KamatekCrm.Infrastructure.Services
             _rwLock.EnterReadLock();
             try
             {
+                if (string.IsNullOrWhiteSpace(_configuredConnectionString))
+                    return string.Empty;
+
                 var builder = new NpgsqlConnectionStringBuilder(_configuredConnectionString);
                 if (!string.IsNullOrWhiteSpace(_currentServerIp))
                     builder.Host = _currentServerIp;
@@ -153,7 +154,21 @@ namespace KamatekCrm.Infrastructure.Services
         public async Task<bool> TestConnectionAsync(string serverIp)
         {
             if (string.IsNullOrWhiteSpace(serverIp)) return false;
-            
+
+            string configuredConn;
+            _rwLock.EnterReadLock();
+            try
+            {
+                configuredConn = _configuredConnectionString;
+            }
+            finally
+            {
+                _rwLock.ExitReadLock();
+            }
+
+            if (string.IsNullOrWhiteSpace(configuredConn))
+                return false;
+
             string cleanIp = serverIp.SanitizeServerAddress();
             
             if (string.IsNullOrWhiteSpace(cleanIp) || cleanIp == "0.0.0.0" || cleanIp == "::0") 
@@ -161,7 +176,7 @@ namespace KamatekCrm.Infrastructure.Services
                 return false;
             }
 
-            var connectionBuilder = new NpgsqlConnectionStringBuilder(_configuredConnectionString)
+            var connectionBuilder = new NpgsqlConnectionStringBuilder(configuredConn)
             {
                 Host = cleanIp,
                 Pooling = false,

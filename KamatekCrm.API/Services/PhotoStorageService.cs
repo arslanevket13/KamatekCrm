@@ -1,5 +1,4 @@
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -54,7 +53,12 @@ namespace KamatekCrm.API.Services
 
             // Önce bellek akışı üzerinde gerçek görsel imzasını ve içeriğini doğrula (diske yazmadan önce!)
             await using var inputStream = file.OpenReadStream();
-            using var image = await Image.LoadAsync(inputStream);
+            using var ms = new MemoryStream();
+            await inputStream.CopyToAsync(ms);
+            ms.Position = 0;
+
+            using var originalBitmap = SKBitmap.Decode(ms)
+                ?? throw new InvalidOperationException("Geçersiz veya bozuk görsel dosyası.");
 
             if (!Directory.Exists(absolutePath))
             {
@@ -64,18 +68,40 @@ namespace KamatekCrm.API.Services
             var fileName = $"{Guid.NewGuid()}{ext}";
             var fullPath = Path.Combine(absolutePath, fileName);
 
-            await image.SaveAsync(fullPath);
+            var format = ext switch
+            {
+                ".png" => SKEncodedImageFormat.Png,
+                ".webp" => SKEncodedImageFormat.Webp,
+                _ => SKEncodedImageFormat.Jpeg
+            };
+
+            using (var fullImage = SKImage.FromBitmap(originalBitmap))
+            using (var fullData = fullImage.Encode(format, 90))
+            using (var fs = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                fullData.SaveTo(fs);
+            }
 
             var thumbnailName = $"thumb_{fileName}";
             var thumbnailPath = Path.Combine(absolutePath, thumbnailName);
 
-            image.Mutate(x => x.Resize(new ResizeOptions
-            {
-                Size = new Size(200, 200),
-                Mode = ResizeMode.Max
-            }));
+            double ratio = Math.Min(200.0 / originalBitmap.Width, 200.0 / originalBitmap.Height);
+            if (ratio > 1.0) ratio = 1.0;
+            int thumbWidth = Math.Max(1, (int)Math.Round(originalBitmap.Width * ratio));
+            int thumbHeight = Math.Max(1, (int)Math.Round(originalBitmap.Height * ratio));
 
-            await image.SaveAsync(thumbnailPath);
+            SKBitmap? resizedThumb = originalBitmap.Resize(new SKImageInfo(thumbWidth, thumbHeight), SKFilterQuality.High);
+            try
+            {
+                using var thumbImage = SKImage.FromBitmap(resizedThumb ?? originalBitmap);
+                using var thumbData = thumbImage.Encode(format, 85);
+                using var tfs = new FileStream(thumbnailPath, FileMode.Create, FileAccess.Write, FileShare.None);
+                thumbData.SaveTo(tfs);
+            }
+            finally
+            {
+                resizedThumb?.Dispose();
+            }
 
             var relativePath = Path.Combine(_uploadsFolder, safeSubFolder);
             var webRelativePath = Path.Combine(relativePath, fileName).Replace("\\", "/");

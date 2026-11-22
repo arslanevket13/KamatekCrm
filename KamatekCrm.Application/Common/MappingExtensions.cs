@@ -115,7 +115,14 @@ namespace KamatekCrm.ApplicationCore.Common
                 IsActive = entity.IsActive,
                 IsTechnician = entity.IsTechnician,
                 LastLoginDate = entity.LastLoginDate,
-                ServiceArea = entity.ServiceArea
+                VehiclePlate = entity.VehiclePlate,
+                ServiceArea = entity.ServiceArea,
+                ExpertiseAreas = entity.ExpertiseAreas,
+                CanViewFinance = entity.CanViewFinance,
+                CanViewAnalytics = entity.CanViewAnalytics,
+                CanDeleteRecords = entity.CanDeleteRecords,
+                CanApprovePurchase = entity.CanApprovePurchase,
+                CanAccessSettings = entity.CanAccessSettings
             };
         }
 

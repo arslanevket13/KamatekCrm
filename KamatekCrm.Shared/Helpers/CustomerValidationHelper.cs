@@ -140,5 +140,66 @@ namespace KamatekCrm.Shared.Helpers
             int checkDigit = (10 - (sum % 10)) % 10;
             return checkDigit == (trimmed[9] - '0');
         }
+
+        /// <summary>
+        /// E-posta biçimini doğrular (boşsa geçerlidir).
+        /// </summary>
+        public static bool IsValidEmail(string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return true;
+
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email.Trim());
+                return string.Equals(addr.Address, email.Trim(), StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// QuickCustomerAdd, CustomerAdd ve CustomerDetail ekranları arasında tek ortak müşteri giriş doğrulaması.
+        /// </summary>
+        public static string? ValidateCustomerInput(
+            KamatekCrm.Shared.Enums.CustomerType customerType,
+            string? fullName,
+            string? phoneNumber,
+            string? email = null,
+            string? companyName = null,
+            string? tcKimlikNo = null,
+            string? taxNumber = null,
+            bool requirePhone = true)
+        {
+            if (string.IsNullOrWhiteSpace(fullName) || fullName.Trim().Length < 2)
+                return "Ad Soyad alanı zorunludur ve en az 2 karakter olmalıdır.";
+
+            if (requirePhone && string.IsNullOrWhiteSpace(phoneNumber))
+                return "Telefon numarası zorunludur.";
+
+            if (!string.IsNullOrWhiteSpace(phoneNumber) && !IsValidPhoneNumber(phoneNumber))
+                return "Geçerli bir telefon numarası giriniz (Örn: 05XX XXX XX XX).";
+
+            if (!IsValidEmail(email))
+                return "Geçerli bir e-posta adresi giriniz.";
+
+            if (customerType == KamatekCrm.Shared.Enums.CustomerType.Corporate)
+            {
+                if (string.IsNullOrWhiteSpace(companyName))
+                    return "Kurumsal müşteri için Şirket Ünvanı zorunludur.";
+
+                if (!string.IsNullOrWhiteSpace(taxNumber) && !IsValidTaxNumber(taxNumber))
+                    return "Geçersiz Vergi Kimlik Numarası (10 haneli olmalı ve resmi algoritmayı sağlamalıdır).";
+            }
+            else if (customerType == KamatekCrm.Shared.Enums.CustomerType.Individual)
+            {
+                if (!string.IsNullOrWhiteSpace(tcKimlikNo) && !IsValidTcKimlikNo(tcKimlikNo))
+                    return "Geçersiz T.C. Kimlik Numarası (11 haneli olmalı ve resmi algoritmayı sağlamalıdır).";
+            }
+
+            return null;
+        }
     }
 }

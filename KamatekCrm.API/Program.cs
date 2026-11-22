@@ -25,8 +25,11 @@ try
     builder.Host.UseSerilog();
 
     // DbContext - PostgreSQL
-    var connectionString = builder.Configuration.GetConnectionString("PostgreSQL") 
-        ?? "Host=localhost;Port=5432;Database=kamatekcrm;Username=postgres;Password=123456";
+    var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException("PostgreSQL connection string is not configured. Please set 'ConnectionStrings:PostgreSQL' in configuration or user secrets.");
+    }
     
     builder.Services.AddDbContext<AppDbContext>(options =>
     {
@@ -34,7 +37,6 @@ try
         {
             npgsqlOptions.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName);
         });
-        options.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
     });
 
     // MediatR - CQRS için
