@@ -1,4 +1,4 @@
-﻿<Window x:Class="KamatekCrm.Views.AddProductWindow"
+<Window x:Class="KamatekCrm.Views.AddProductWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -13,6 +13,7 @@
         Title="{Binding WindowTitle}" 
         Height="640" Width="880"
         MinWidth="680" MinHeight="480"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterOwner"
         Style="{DynamicResource PremiumWindowStyle}"
         Background="{DynamicResource SurfacePageBrush}">
@@ -137,7 +138,7 @@
         </DockPanel>
 
         <!-- ════════ ROW 1: TABBED FORM BODY ════════ -->
-        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0" MaxWidth="960">
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
             
             <!-- 📌 TAB 1: TEMEL BİLGİLER -->
             <TabItem Header="📋 Temel Bilgiler">
@@ -152,45 +153,62 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <!-- SKU -->
-                                <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,16">
-                                    <Label Content="SKU / Stok Kodu *" Style="{StaticResource ModernLabel}"/>
+                                <!-- Kısa SKU -->
+                                <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,12">
+                                    <Label Content="Kısa Stok Kodu (SKU) *" Style="{StaticResource ModernLabel}"/>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBox Grid.Column="0" Text="{Binding NewProduct.SKU, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{DynamicResource ModernTextBox}"/>
-                                        <ui:Button Grid.Column="1" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RegenerateSKUCommand}" 
-                                                   Height="38" Width="38" Margin="8,0,0,0" ToolTip="Yeni SKU Üret" Appearance="Secondary"/>
+                                        <TextBox Grid.Column="0" Text="{Binding Sku, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{DynamicResource ModernTextBox}" ToolTip="Örn: KAM-0001, 2MP-DOME, CAT6-305"/>
+                                        <ui:Button Grid.Column="1" Content="Kısa Kod Üret" Icon="{ui:SymbolIcon ArrowClockwise24}" Command="{Binding RegenerateSKUCommand}" 
+                                                   Height="38" Padding="10,0" Margin="8,0,0,0" ToolTip="Kategoriye göre kısa SKU üret" Appearance="Secondary"/>
                                     </Grid>
                                 </StackPanel>
 
-                                <!-- Barkod -->
-                                <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,16">
-                                    <Label Content="Barkod (EAN/UPC)" Style="{StaticResource ModernLabel}"/>
+                                <!-- Barkod (Barkod Okuyucu Enter-Güvenli) -->
+                                <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,12">
+                                    <Label Content="Barkod (EAN-13 / Barkod Okuyucu)" Style="{StaticResource ModernLabel}"/>
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBox Grid.Column="0" Text="{Binding NewProduct.Barcode, UpdateSourceTrigger=PropertyChanged}" 
-                                                 Style="{DynamicResource ModernTextBox}"/>
-                                        <ui:Button Grid.Column="1" Icon="{ui:SymbolIcon BarcodeScanner24}" Command="{Binding GenerateBarcodeCommand}" 
-                                                   Height="38" Width="38" Margin="8,0,0,0" ToolTip="Otomatik Barkod Oluştur" Appearance="Secondary"/>
+                                        <TextBox Grid.Column="0" Text="{Binding Barcode, UpdateSourceTrigger=PropertyChanged}" 
+                                                 PreviewKeyDown="BarcodeTextBox_PreviewKeyDown"
+                                                 Style="{DynamicResource ModernTextBox}" ToolTip="Barkod okuyucu ile okutun veya EAN-13 üretin"/>
+                                        <ui:Button Grid.Column="1" Content="Barkod Üret" Icon="{ui:SymbolIcon BarcodeScanner24}" Command="{Binding GenerateBarcodeCommand}" 
+                                                   Height="38" Padding="10,0" Margin="8,0,0,0" ToolTip="Geçerli dahili EAN-13 barkod üret" Appearance="Secondary"/>
                                     </Grid>
                                 </StackPanel>
+
+                                <!-- SKU + Barkod Önizleme & Etiket Yazdır -->
+                                <Border Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"
+                                        Background="{DynamicResource SurfaceSubtleBrush}"
+                                        BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,16">
+                                    <DockPanel>
+                                        <ui:Button DockPanel.Dock="Right" Content="Etiket Yazdır" Icon="{ui:SymbolIcon Print24}"
+                                                   Command="{Binding PrintBarcodeLabelCommand}" Appearance="Secondary" Height="32" Padding="12,0"/>
+                                        <TextBlock Text="{Binding SkuBarcodePreview}"
+                                                   Foreground="{DynamicResource ThemeTextSecondary}"
+                                                   FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" Margin="0,0,12,0"/>
+                                    </DockPanel>
+                                </Border>
 
                                 <!-- Ürün Adı -->
-                                <StackPanel Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,16">
+                                <StackPanel Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" Margin="0,0,0,16">
                                     <Label Content="Ürün Adı *" Style="{StaticResource ModernLabel}"/>
-                                    <TextBox Text="{Binding NewProduct.ProductName, UpdateSourceTrigger=PropertyChanged}" 
+                                    <TextBox Text="{Binding ProductName, UpdateSourceTrigger=PropertyChanged}" 
                                              Style="{DynamicResource ModernTextBox}" FontSize="14" FontWeight="SemiBold"/>
                                 </StackPanel>
 
                                 <!-- Kategori -->
-                                <StackPanel Grid.Column="0" Grid.Row="2">
+                                <StackPanel Grid.Column="0" Grid.Row="3">
                                     <Label Content="Kategori *" Style="{StaticResource ModernLabel}"/>
                                     <ComboBox ItemsSource="{Binding Categories}" 
                                               SelectedItem="{Binding SelectedCategory}"
@@ -198,7 +216,7 @@
                                 </StackPanel>
 
                                 <!-- Marka & Model -->
-                                <Grid Grid.Column="2" Grid.Row="2">
+                                <Grid Grid.Column="2" Grid.Row="3">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
@@ -247,14 +265,14 @@
                                     <!-- Alış Fiyatı -->
                                     <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,0,16">
                                         <Label Content="Alış Fiyatı (Maliyet)" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding NewProduct.PurchasePrice, UpdateSourceTrigger=PropertyChanged}" 
+                                        <TextBox Text="{Binding PurchasePrice, UpdateSourceTrigger=PropertyChanged}" 
                                                  Style="{DynamicResource ModernTextBox}"/>
                                     </StackPanel>
 
                                     <!-- Satış Fiyatı -->
                                     <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,16">
                                         <Label Content="Satış Fiyatı *" Style="{StaticResource ModernLabel}"/>
-                                        <TextBox Text="{Binding NewProduct.SalePrice, UpdateSourceTrigger=PropertyChanged}" 
+                                        <TextBox Text="{Binding SalePrice, UpdateSourceTrigger=PropertyChanged}" 
                                                  Style="{DynamicResource ModernTextBox}" FontWeight="Bold"/>
                                     </StackPanel>
 
@@ -404,6 +422,14 @@
                 <ui:Button Content="İptal" Command="{Binding CancelCommand}" Height="40" Padding="24,0" Margin="0,0,8,0" Appearance="Secondary"/>
                 <ui:Button Content="{Binding SaveButtonText}" Icon="{ui:SymbolIcon Checkmark24}" Command="{Binding SaveCommand}" IsDefault="True" Height="40" Padding="28,0" Appearance="Primary"/>
             </StackPanel>
+            <TextBlock Text="{Binding ValidationMessage}"
+                       Foreground="{DynamicResource DangerBrush}"
+                       FontSize="12"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap"
+                       Margin="0,0,16,0"
+                       Visibility="{Binding HasValidationError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </DockPanel>
     </Grid>
 </Window>

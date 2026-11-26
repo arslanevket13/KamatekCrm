@@ -594,170 +594,183 @@ namespace KamatekCrm.ViewModels
 
                 int customerId = SelectedCustomer.Id;
 
-                // Transaction ile tüm işlemleri atomik yap
-                await using var transaction = await ctx.Database.CreateExecutionStrategy().ExecuteAsync(async () => await ctx.Database.BeginTransactionAsync());
-                try
+                if (IsNewAsset && (string.IsNullOrWhiteSpace(NewAssetBrand) || string.IsNullOrWhiteSpace(NewAssetModel)))
                 {
-                    int? assetId = null;
+                    _toastService.ShowError("Yeni cihaz için Marka ve Model zorunludur.");
+                    return;
+                }
 
-                    // Yeni cihaz
-                    if (IsNewAsset)
+                // Fotoğrafları transaction öncesi hazırla (yan etki tekrarını önle)
+                string? photoPathsJson = null;
+                if (TempPhotoPaths.Any())
+                {
+                    string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    string photoDir = System.IO.Path.Combine(appData, "KamatekCrm", "Photos");
+                    if (!System.IO.Directory.Exists(photoDir)) System.IO.Directory.CreateDirectory(photoDir);
+
+                    var finalPaths = new System.Collections.Generic.List<string>();
+                    foreach (var src in TempPhotoPaths)
                     {
-                        if (string.IsNullOrWhiteSpace(NewAssetBrand) || string.IsNullOrWhiteSpace(NewAssetModel))
+                        if (System.IO.File.Exists(src))
                         {
-                            _toastService.ShowError("Yeni cihaz için Marka ve Model zorunludur.");
-                            return;
+                            string fileName = $"NewJob_{Guid.NewGuid()}{System.IO.Path.GetExtension(src)}";
+                            string destPath = System.IO.Path.Combine(photoDir, fileName);
+                            System.IO.File.Copy(src, destPath);
+                            finalPaths.Add(destPath);
+                        }
+                    }
+                    photoPathsJson = System.Text.Json.JsonSerializer.Serialize(finalPaths);
+                }
+
+                // Transaction ile tüm işlemleri atomik yap (NpgsqlRetryingExecutionStrategy uyumlu)
+                var faultTicket = await ctx.ExecuteInTransactionAsync(async transaction =>
+                {
+                    try
+                    {
+                        int? assetId = null;
+
+                        // Yeni cihaz
+                        if (IsNewAsset)
+                        {
+                            var newAsset = new CustomerAsset
+                            {
+                                CustomerId = customerId,
+                                Category = SelectedCategory,
+                                Brand = NewAssetBrand.Trim(),
+                                Model = NewAssetModel.Trim(),
+                                SerialNumber = string.IsNullOrWhiteSpace(NewAssetSerialNumber) ? null : NewAssetSerialNumber.Trim(),
+                                Location = string.IsNullOrWhiteSpace(NewAssetLocation) ? null : NewAssetLocation.Trim(),
+                                Status = AssetStatus.NeedsRepair,
+                                CreatedDate = DateTime.UtcNow
+                            };
+
+                            ctx.CustomerAssets.Add(newAsset);
+                            await ctx.SaveChangesAsync();
+                            assetId = newAsset.Id;
+                        }
+                        else if (SelectedAsset != null)
+                        {
+                            assetId = SelectedAsset.Id;
+                            var assetInDb = await ctx.CustomerAssets.FindAsync(SelectedAsset.Id);
+                            if (assetInDb != null)
+                            {
+                                assetInDb.Status = AssetStatus.NeedsRepair;
+                            }
                         }
 
-                        var newAsset = new CustomerAsset
+                        // Arıza kaydı
+                        var accessories = new System.Collections.Generic.List<string>();
+                        if (AccessoryAdapter) accessories.Add("Adaptör");
+                        if (AccessoryCable) accessories.Add("Güç Kablosu");
+                        if (AccessoryRemote) accessories.Add("Kumanda");
+                        if (AccessoryBox) accessories.Add("Kutu/Ambalaj");
+
+                        var createdTicket = new ServiceJob
                         {
                             CustomerId = customerId,
-                            Category = SelectedCategory,
-                            Brand = NewAssetBrand.Trim(),
-                            Model = NewAssetModel.Trim(),
-                            SerialNumber = string.IsNullOrWhiteSpace(NewAssetSerialNumber) ? null : NewAssetSerialNumber.Trim(),
-                            Location = string.IsNullOrWhiteSpace(NewAssetLocation) ? null : NewAssetLocation.Trim(),
-                            Status = AssetStatus.NeedsRepair,
-                            CreatedDate = DateTime.UtcNow
+                            CustomerAssetId = assetId,
+                            ServiceJobType = ServiceJobType.Fault,
+                            WorkOrderType = WorkOrderType.Repair,
+                            WorkflowStatus = WorkflowStatus.Draft,
+                            JobCategory = SelectedCategory,
+                            Priority = SelectedPriority,
+                            Description = string.IsNullOrWhiteSpace(SelectedDeviceTypeName)
+                                ? $"ARIZA: {FaultSymptom}\n\n{Description}"
+                                : $"CİHAZ TİPİ: {SelectedDeviceTypeName}\nARIZA: {FaultSymptom}\n\n{Description}",
+                            PhysicalCondition = PhysicalCondition,
+                            Accessories = accessories.Count > 0 ? string.Join(", ", accessories) : null,
+                            DeviceBrand = IsNewAsset ? NewAssetBrand.Trim() : SelectedAsset?.Brand,
+                            DeviceModel = IsNewAsset ? NewAssetModel.Trim() : SelectedAsset?.Model,
+                            SerialNumber = IsNewAsset ? NewAssetSerialNumber?.Trim() : SelectedAsset?.SerialNumber,
+                            Status = JobStatus.Pending,
+                            RepairStatus = RepairStatus.Registered,
+                            LaborCost = LaborCost,
+                            CreatedDate = DateTime.UtcNow,
+                            CreatedBy = App.CurrentUser?.Username ?? "System",
+                            PhotoPathsJson = photoPathsJson
                         };
 
-                        ctx.CustomerAssets.Add(newAsset);
+                        ctx.ServiceJobs.Add(createdTicket);
                         await ctx.SaveChangesAsync();
-                        assetId = newAsset.Id;
-                    }
-                    else if (SelectedAsset != null)
-                    {
-                        assetId = SelectedAsset.Id;
-                        var assetInDb = await ctx.CustomerAssets.FindAsync(SelectedAsset.Id);
-                        if (assetInDb != null)
+
+                        // ═══════ Müşteri Profil Senkronizasyonu ═══════
+                        var customerInDb = await ctx.Customers.FindAsync(customerId);
+                        if (customerInDb != null)
                         {
-                            assetInDb.Status = AssetStatus.NeedsRepair;
+                            customerInDb.LastInteractionDate = DateTime.UtcNow;
+                            customerInDb.TotalPurchaseCount += 1;
+                            createdTicket.Customer = customerInDb;
                         }
-                    }
 
-                    // Arıza kaydı
-                    var accessories = new System.Collections.Generic.List<string>();
-                    if (AccessoryAdapter) accessories.Add("Adaptör");
-                    if (AccessoryCable) accessories.Add("Güç Kablosu");
-                    if (AccessoryRemote) accessories.Add("Kumanda");
-                    if (AccessoryBox) accessories.Add("Kutu/Ambalaj");
-
-                    var faultTicket = new ServiceJob
-                    {
-                        CustomerId = customerId,
-                        CustomerAssetId = assetId,
-                        ServiceJobType = ServiceJobType.Fault,
-                        WorkOrderType = WorkOrderType.Repair,
-                        WorkflowStatus = WorkflowStatus.Draft,
-                        JobCategory = SelectedCategory,
-                        Priority = SelectedPriority,
-                        Description = string.IsNullOrWhiteSpace(SelectedDeviceTypeName)
-                            ? $"ARIZA: {FaultSymptom}\n\n{Description}"
-                            : $"CİHAZ TİPİ: {SelectedDeviceTypeName}\nARIZA: {FaultSymptom}\n\n{Description}",
-                        PhysicalCondition = PhysicalCondition,
-                        Accessories = accessories.Count > 0 ? string.Join(", ", accessories) : null,
-                        DeviceBrand = IsNewAsset ? NewAssetBrand.Trim() : SelectedAsset?.Brand,
-                        DeviceModel = IsNewAsset ? NewAssetModel.Trim() : SelectedAsset?.Model,
-                        SerialNumber = IsNewAsset ? NewAssetSerialNumber?.Trim() : SelectedAsset?.SerialNumber,
-                        Status = JobStatus.Pending,
-                        RepairStatus = RepairStatus.Registered,
-                        LaborCost = LaborCost,
-                        CreatedDate = DateTime.UtcNow,
-                        CreatedBy = App.CurrentUser?.Username ?? "System"
-                    };
-
-                    // Fotoğraf kaydet
-                    if (TempPhotoPaths.Any())
-                    {
-                        string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                        string photoDir = System.IO.Path.Combine(appData, "KamatekCrm", "Photos");
-                        if (!System.IO.Directory.Exists(photoDir)) System.IO.Directory.CreateDirectory(photoDir);
-
-                        var finalPaths = new System.Collections.Generic.List<string>();
-                        foreach (var src in TempPhotoPaths)
+                        // ═══════ Müşteri Aktivite Kaydı ═══════
+                        var activity = new CustomerActivity
                         {
-                            if (System.IO.File.Exists(src))
-                            {
-                                string fileName = $"NewJob_{Guid.NewGuid()}{System.IO.Path.GetExtension(src)}";
-                                string destPath = System.IO.Path.Combine(photoDir, fileName);
-                                System.IO.File.Copy(src, destPath);
-                                finalPaths.Add(destPath);
-                            }
-                        }
-                        faultTicket.PhotoPathsJson = System.Text.Json.JsonSerializer.Serialize(finalPaths);
-                    }
+                            CustomerId = customerId,
+                            Type = ActivityType.ServiceJobCreated,
+                            Description = $"Yeni tamir kaydı oluşturuldu: #{createdTicket.Id} - {createdTicket.DeviceBrand} {createdTicket.DeviceModel}",
+                            RelatedId = createdTicket.Id,
+                            RelatedType = "ServiceJob",
+                            CreatedBy = App.CurrentUser?.Username ?? "System"
+                        };
+                        ctx.CustomerActivities.Add(activity);
 
-                    ctx.ServiceJobs.Add(faultTicket);
-                    await ctx.SaveChangesAsync();
-
-                    // ═══════ Müşteri Profil Senkronizasyonu ═══════
-                    var customerInDb = await ctx.Customers.FindAsync(customerId);
-                    if (customerInDb != null)
-                    {
-                        customerInDb.LastInteractionDate = DateTime.UtcNow;
-                        customerInDb.TotalPurchaseCount += 1;
-                        faultTicket.Customer = customerInDb;
-                    }
-
-                    // ═══════ Müşteri Aktivite Kaydı ═══════
-                    var activity = new CustomerActivity
-                    {
-                        CustomerId = customerId,
-                        Type = ActivityType.ServiceJobCreated,
-                        Description = $"Yeni tamir kaydı oluşturuldu: #{faultTicket.Id} - {faultTicket.DeviceBrand} {faultTicket.DeviceModel}",
-                        RelatedId = faultTicket.Id,
-                        RelatedType = "ServiceJob",
-                        CreatedBy = App.CurrentUser?.Username ?? "System"
-                    };
-                    ctx.CustomerActivities.Add(activity);
-
-                    await ctx.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    _toastService.ShowSuccess($"Arıza kaydı oluşturuldu: #{faultTicket.Id}");
-
-                    // Termal fiş yazdır
-                    if (AutoPrintReceipt)
-                    {
-                        try
+                        await ctx.SaveChangesAsync();
+                        if (transaction != null)
                         {
-                            var thermalPrinter = _serviceProvider.GetService<IThermalReceiptPrintService>();
-                            if (thermalPrinter != null)
-                            {
-                                thermalPrinter.PrintServiceJobTicketAsync(faultTicket).SafeFireAndForget("FaultTicketViewModel.thermalPrinter.PrintServiceJobTicketAsync");
-                            }
+                            await transaction.CommitAsync();
                         }
-                        catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "FaultTicketViewModel.cs"); }
-                    }
 
-                    // PDF Formu Oluştur/Aç
-                    if (AutoPrintPdf)
+                        return createdTicket;
+                    }
+                    catch
                     {
-                        try
+                        if (transaction != null)
                         {
-                            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                            string pdfPath = System.IO.Path.Combine(desktopPath, $"CihazKabul_{faultTicket.Id:D6}.pdf");
-                            _pdfService.GenerateServiceForm(faultTicket, pdfPath);
-                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                            {
-                                FileName = pdfPath,
-                                UseShellExecute = true
-                            });
+                            await transaction.RollbackAsync();
                         }
-                        catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "FaultTicketViewModel.cs"); }
+                        throw;
                     }
+                });
 
-                    // Pencereyi kapat
-                    RequestClose?.Invoke(true);
-                }
-                catch
+                _toastService.ShowSuccess($"Arıza kaydı oluşturuldu: #{faultTicket.Id}");
+
+                // Termal fiş yazdır
+                if (AutoPrintReceipt)
                 {
-                    await transaction.RollbackAsync();
-                    throw;
+                    try
+                    {
+                        var thermalPrinter = _serviceProvider.GetService<IThermalReceiptPrintService>();
+                        if (thermalPrinter != null)
+                        {
+                            thermalPrinter.PrintServiceJobTicketAsync(faultTicket).SafeFireAndForget("FaultTicketViewModel.thermalPrinter.PrintServiceJobTicketAsync");
+                        }
+                    }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "FaultTicketViewModel.cs"); }
                 }
+
+                // PDF Formu Oluştur/Aç
+                if (AutoPrintPdf)
+                {
+                    try
+                    {
+                        string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                        string pdfPath = System.IO.Path.Combine(desktopPath, $"CihazKabul_{faultTicket.Id:D6}.pdf");
+                        _pdfService.GenerateServiceForm(faultTicket, pdfPath);
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = pdfPath,
+                            UseShellExecute = true
+                        });
+                    }
+                    catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "FaultTicketViewModel.cs"); }
+                }
+
+                // Pencereyi kapat
+                RequestClose?.Invoke(true);
             }
             catch (Exception ex)
             {
+                Serilog.Log.Error(ex, "Arıza kaydı oluşturulurken hata oluştu.");
                 _toastService.ShowError($"Kayıt hatası: {ex.Message}");
             }
             finally

@@ -85,6 +85,7 @@ namespace KamatekCrm.ViewModels
 
         partial void OnActiveTabIndexChanged(int value)
         {
+            NotifyActiveTabFlags();
             OnTabActivatedAsync(value).SafeFireAndForget("WorkOrderWorkspaceViewModel.OnTabActivatedAsync");
         }
 
@@ -164,7 +165,8 @@ namespace KamatekCrm.ViewModels
             PdfService pdfService,
             IDialogService dialogService,
             IToastService toastService,
-            Func<Task>? openGeneralEditor = null)
+            Func<Task>? openGeneralEditor = null,
+            IWorkOrderIntelligenceService? intelligenceService = null)
         {
             _job = job ?? throw new ArgumentNullException(nameof(job));
             _jobId = job.Id;
@@ -173,6 +175,7 @@ namespace KamatekCrm.ViewModels
             _dialogService = dialogService;
             _toastService = toastService;
             _openGeneralEditor = openGeneralEditor;
+            _intelligenceService = intelligenceService;
 
             JobNumber = $"#{_jobId:D6}";
             CustomerFullName = job.CustomerFullName;
@@ -208,12 +211,12 @@ namespace KamatekCrm.ViewModels
                 _jobId, readService, pdfService, dialogService, toastService, BuildWorkflow);
             TimelineTab = new WorkspaceTimelineViewModel();
 
-            Stages.Add(new WorkOrderStageItem("Talep", "📥", 0));
-            Stages.Add(new WorkOrderStageItem("Keşif", "🔍", 1));
-            Stages.Add(new WorkOrderStageItem("Teklif", "📄", 2));
-            Stages.Add(new WorkOrderStageItem("Montaj", "🛠️", 3));
-            Stages.Add(new WorkOrderStageItem("Teslim", "🚚", 4));
-            Stages.Add(new WorkOrderStageItem("Kapandı", "✅", 0));
+            Stages.Add(new WorkOrderStageItem("1. Talep", "1", 0));
+            Stages.Add(new WorkOrderStageItem("2. Keşif", "2", 1));
+            Stages.Add(new WorkOrderStageItem("3. Teklif", "3", 2));
+            Stages.Add(new WorkOrderStageItem("4. Montaj", "4", 3));
+            Stages.Add(new WorkOrderStageItem("5. Teslim", "5", 4));
+            Stages.Add(new WorkOrderStageItem("6. Finans", "6", 4));
 
             foreach (var stage in Stages)
             {
@@ -234,6 +237,7 @@ namespace KamatekCrm.ViewModels
 
             ApplyWorkspace(result.Value);
             await OverviewTab.LoadMaterialsAsync();
+            await InitializeCockpitDataAsync(result.Value);
             return true;
         }
 

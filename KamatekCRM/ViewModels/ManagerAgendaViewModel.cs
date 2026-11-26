@@ -1,7 +1,7 @@
-using KamatekCrm.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,8 +10,10 @@ using KamatekCrm.ApplicationCore.DTOs.CustomerInteractions;
 using KamatekCrm.ApplicationCore.DTOs.Users;
 using KamatekCrm.ApplicationCore.Interfaces;
 using KamatekCrm.Events;
+using KamatekCrm.Helpers;
 using KamatekCrm.Services;
 using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace KamatekCrm.ViewModels
@@ -20,9 +22,55 @@ namespace KamatekCrm.ViewModels
     {
         All,
         Overdue,
+        ManagerDecision,
+        WaitingCustomer,
         Today,
         Critical,
         AssignedToMe
+    }
+
+    public class AgendaDayStripItemViewModel : ViewModelBase
+    {
+        public DateTime Date { get; set; }
+        public string DayName { get; set; } = string.Empty;
+        public string DateFormatted { get; set; } = string.Empty;
+        public bool IsToday { get; set; }
+
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
+
+        private int _itemCount;
+        public int ItemCount
+        {
+            get => _itemCount;
+            set
+            {
+                if (SetProperty(ref _itemCount, value))
+                {
+                    OnPropertyChanged(nameof(HasItems));
+                }
+            }
+        }
+
+        private int _overdueCount;
+        public int OverdueCount
+        {
+            get => _overdueCount;
+            set
+            {
+                if (SetProperty(ref _overdueCount, value))
+                {
+                    OnPropertyChanged(nameof(HasOverdue));
+                }
+            }
+        }
+
+        public bool HasItems => ItemCount > 0;
+        public bool HasOverdue => OverdueCount > 0;
     }
 
     public partial class ManagerAgendaViewModel : ViewModelBase
@@ -41,16 +89,23 @@ namespace KamatekCrm.ViewModels
         private readonly List<CustomerInteractionDto> _allAgendaItems = new();
         private AgendaFilterType _selectedFilter = AgendaFilterType.All;
         private UserListItemDto? _selectedUser;
+        private AgendaDayStripItemViewModel? _selectedDayStripItem;
+        private string _instructionText = string.Empty;
 
-        // ===== KPI SAYAÇLARI =====
+        // KPI Counts
         private int _overdueCount;
+        private int _managerDecisionCount;
+        private int _waitingCustomerCount;
         private int _todayCount;
-        private int _criticalCount;
         private int _totalPendingCount;
         private int _completedCount;
 
+        // Collections
         public ObservableCollection<CustomerInteractionDto> AgendaItems { get; } = new();
         public ObservableCollection<UserListItemDto> Users { get; } = new();
+        public ObservableCollection<AgendaDayStripItemViewModel> DayStrip { get; } = new();
+        public ObservableCollection<InteractionThreadEntry> SelectedAgendaItemThread { get; } = new();
+
         private IDisposable? _interactionChangedSubscription;
 
         private static readonly UserListItemDto AllUsersOption = new()
@@ -72,6 +127,8 @@ namespace KamatekCrm.ViewModels
                     CompleteItemCommand.NotifyCanExecuteChanged();
                     SnoozeItemCommand.NotifyCanExecuteChanged();
                     NavigateToSourceCommand.NotifyCanExecuteChanged();
+                    SendManagerInstructionCommand.NotifyCanExecuteChanged();
+                    PopulateSelectedItemDetails();
                 }
             }
         }
@@ -103,22 +160,53 @@ namespace KamatekCrm.ViewModels
             }
         }
 
+        public AgendaDayStripItemViewModel? SelectedDayStripItem
+        {
+            get => _selectedDayStripItem;
+            set
+            {
+                if (SetProperty(ref _selectedDayStripItem, value))
+                {
+                    ApplyFilter();
+                }
+            }
+        }
+
+        public string InstructionText
+        {
+            get => _instructionText;
+            set
+            {
+                if (SetProperty(ref _instructionText, value))
+                {
+                    SendManagerInstructionCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        // KPI Properties
         public int OverdueCount
         {
             get => _overdueCount;
             set => SetProperty(ref _overdueCount, value);
         }
 
+        public int ManagerDecisionCount
+        {
+            get => _managerDecisionCount;
+            set => SetProperty(ref _managerDecisionCount, value);
+        }
+
+        public int WaitingCustomerCount
+        {
+            get => _waitingCustomerCount;
+            set => SetProperty(ref _waitingCustomerCount, value);
+        }
+
         public int TodayCount
         {
             get => _todayCount;
             set => SetProperty(ref _todayCount, value);
-        }
-
-        public int CriticalCount
-        {
-            get => _criticalCount;
-            set => SetProperty(ref _criticalCount, value);
         }
 
         public int TotalPendingCount
@@ -156,6 +244,7 @@ namespace KamatekCrm.ViewModels
 
             _interactionChangedSubscription = EventAggregator.Instance.Subscribe<CustomerInteractionChangedEvent>(OnInteractionChanged);
 
+            BuildDayStrip();
             LoadUsersAsync().SafeFireAndForget("ManagerAgendaViewModel.LoadUsersAsync");
             LoadAgendaAsync().SafeFireAndForget("ManagerAgendaViewModel.LoadAgendaAsync");
         }
@@ -166,6 +255,32 @@ namespace KamatekCrm.ViewModels
             {
                 await LoadAgendaAsync();
             });
+        }
+
+        private void BuildDayStrip()
+        {
+            DayStrip.Clear();
+            var today = DateTime.UtcNow.Date;
+
+            // 7 gün: Dün (-1), Bugün (0), Yarın (+1), ... (+5)
+            for (int i = -1; i <= 5; i++)
+            {
+                var d = today.AddDays(i);
+                string dayName;
+                if (i == -1) dayName = "Dün";
+                else if (i == 0) dayName = "Bugün";
+                else if (i == 1) dayName = "Yarın";
+                else dayName = d.ToString("ddd", CultureInfo.GetCultureInfo("tr-TR"));
+
+                var item = new AgendaDayStripItemViewModel
+                {
+                    Date = d,
+                    DayName = dayName,
+                    DateFormatted = d.ToString("dd MMM", CultureInfo.GetCultureInfo("tr-TR")),
+                    IsToday = (i == 0)
+                };
+                DayStrip.Add(item);
+            }
         }
 
         private async Task LoadUsersAsync()
@@ -190,7 +305,7 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Personel listesi yüklenemedi: {ex.Message}");
+                Serilog.Log.Error(ex, "Personel listesi yüklenemedi: {Message}", ex.Message);
             }
         }
 
@@ -206,6 +321,7 @@ namespace KamatekCrm.ViewModels
                     _allAgendaItems.Clear();
                     _allAgendaItems.AddRange(res.Value);
 
+                    UpdateDayStripCounts();
                     ApplyFilter();
                 }
             }
@@ -216,6 +332,20 @@ namespace KamatekCrm.ViewModels
             finally
             {
                 _loadingService.Hide();
+            }
+        }
+
+        private void UpdateDayStripCounts()
+        {
+            var todayUtc = DateTime.UtcNow.Date;
+            foreach (var stripItem in DayStrip)
+            {
+                var targetDate = stripItem.Date.Date;
+                stripItem.ItemCount = _allAgendaItems.Count(x =>
+                    x.FollowUpDate.HasValue && x.FollowUpDate.Value.Date == targetDate);
+
+                stripItem.OverdueCount = _allAgendaItems.Count(x =>
+                    x.IsOverdue && x.FollowUpDate.HasValue && x.FollowUpDate.Value.Date == targetDate);
             }
         }
 
@@ -241,11 +371,26 @@ namespace KamatekCrm.ViewModels
 
         private void UpdateMetrics(IReadOnlyCollection<CustomerInteractionDto> scopedItems)
         {
-            var todayUtc = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+            var todayUtc = DateTime.UtcNow.Date;
 
+            // 1. Geciken Sözler & SLA
             OverdueCount = scopedItems.Count(x => x.IsOverdue);
-            TodayCount = scopedItems.Count(x => !x.IsOverdue && x.FollowUpDate.HasValue && x.FollowUpDate.Value.Date == todayUtc);
-            CriticalCount = scopedItems.Count(x => x.PriorityLevel == "Critical" || x.Priority == InteractionPriority.Critical);
+
+            // 2. Patron Kararı Bekleyenler
+            ManagerDecisionCount = scopedItems.Count(x =>
+                x.BallInCourt == BallInCourtStatus.Manager ||
+                x.RequiresManagerAttention ||
+                x.RequestType == InteractionRequestType.ManagerAgenda);
+
+            // 3. Müşteriden Bilgi Beklenenler
+            WaitingCustomerCount = scopedItems.Count(x =>
+                x.BallInCourt == BallInCourtStatus.Customer ||
+                x.Status == InteractionStatus.WaitingCustomer);
+
+            // 4. Bugünkü Randevu & Takipler
+            TodayCount = scopedItems.Count(x =>
+                !x.IsOverdue && x.FollowUpDate.HasValue && x.FollowUpDate.Value.Date == todayUtc);
+
             TotalPendingCount = scopedItems.Count;
         }
 
@@ -255,28 +400,48 @@ namespace KamatekCrm.ViewModels
             UpdateMetrics(scopedList);
 
             var query = scopedList.AsEnumerable();
-            var todayUtc = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
+            var todayUtc = DateTime.UtcNow.Date;
 
-            // Durum / Zaman filtrelemesi
-            switch (SelectedFilter)
+            // Eğer yatay takvim gün şeridinden bir gün seçilmişse
+            if (SelectedDayStripItem != null)
             {
-                case AgendaFilterType.Overdue:
-                    query = query.Where(x => x.IsOverdue);
-                    break;
-                case AgendaFilterType.Today:
-                    query = query.Where(x => !x.IsOverdue && x.FollowUpDate.HasValue && x.FollowUpDate.Value.Date == todayUtc);
-                    break;
-                case AgendaFilterType.Critical:
-                    query = query.Where(x => x.PriorityLevel == "Critical" || x.Priority == InteractionPriority.Critical);
-                    break;
-                case AgendaFilterType.AssignedToMe:
-                    var myId = _authService.CurrentUser?.Id;
-                    if (myId.HasValue)
-                        query = query.Where(x => x.AssignedToUserId == myId.Value);
-                    break;
-                case AgendaFilterType.All:
-                default:
-                    break;
+                var targetDate = SelectedDayStripItem.Date.Date;
+                query = query.Where(x => x.FollowUpDate.HasValue && x.FollowUpDate.Value.Date == targetDate);
+            }
+            else
+            {
+                // KPI Filtresi
+                switch (SelectedFilter)
+                {
+                    case AgendaFilterType.Overdue:
+                        query = query.Where(x => x.IsOverdue);
+                        break;
+                    case AgendaFilterType.ManagerDecision:
+                        query = query.Where(x =>
+                            x.BallInCourt == BallInCourtStatus.Manager ||
+                            x.RequiresManagerAttention ||
+                            x.RequestType == InteractionRequestType.ManagerAgenda);
+                        break;
+                    case AgendaFilterType.WaitingCustomer:
+                        query = query.Where(x =>
+                            x.BallInCourt == BallInCourtStatus.Customer ||
+                            x.Status == InteractionStatus.WaitingCustomer);
+                        break;
+                    case AgendaFilterType.Today:
+                        query = query.Where(x => !x.IsOverdue && x.FollowUpDate.HasValue && x.FollowUpDate.Value.Date == todayUtc);
+                        break;
+                    case AgendaFilterType.Critical:
+                        query = query.Where(x => x.PriorityLevel == "Critical" || x.Priority == InteractionPriority.Critical);
+                        break;
+                    case AgendaFilterType.AssignedToMe:
+                        var myId = _authService.CurrentUser?.Id;
+                        if (myId.HasValue)
+                            query = query.Where(x => x.AssignedToUserId == myId.Value);
+                        break;
+                    case AgendaFilterType.All:
+                    default:
+                        break;
+                }
             }
 
             AgendaItems.Clear();
@@ -289,6 +454,24 @@ namespace KamatekCrm.ViewModels
             {
                 SelectedAgendaItem = AgendaItems.FirstOrDefault();
             }
+            else if (SelectedAgendaItem == null && AgendaItems.Any())
+            {
+                SelectedAgendaItem = AgendaItems.FirstOrDefault();
+            }
+        }
+
+        private void PopulateSelectedItemDetails()
+        {
+            SelectedAgendaItemThread.Clear();
+            InstructionText = string.Empty;
+
+            if (SelectedAgendaItem != null)
+            {
+                foreach (var entry in SelectedAgendaItem.ThreadEntries.OrderBy(x => x.CreatedAtUtc))
+                {
+                    SelectedAgendaItemThread.Add(entry);
+                }
+            }
         }
 
         [RelayCommand]
@@ -296,7 +479,99 @@ namespace KamatekCrm.ViewModels
         {
             if (Enum.TryParse<AgendaFilterType>(filterName, out var filter))
             {
+                if (SelectedDayStripItem != null)
+                {
+                    SelectedDayStripItem.IsSelected = false;
+                    _selectedDayStripItem = null;
+                    OnPropertyChanged(nameof(SelectedDayStripItem));
+                }
                 SelectedFilter = filter;
+            }
+        }
+
+        [RelayCommand]
+        public void SelectDayStrip(AgendaDayStripItemViewModel? day)
+        {
+            if (day == null) return;
+            if (_selectedDayStripItem != null)
+            {
+                _selectedDayStripItem.IsSelected = false;
+            }
+
+            if (_selectedDayStripItem == day)
+            {
+                _selectedDayStripItem = null;
+            }
+            else
+            {
+                _selectedDayStripItem = day;
+                day.IsSelected = true;
+            }
+
+            OnPropertyChanged(nameof(SelectedDayStripItem));
+            ApplyFilter();
+        }
+
+        [RelayCommand]
+        public void ClearDayStripSelection()
+        {
+            if (_selectedDayStripItem != null)
+            {
+                _selectedDayStripItem.IsSelected = false;
+                _selectedDayStripItem = null;
+                OnPropertyChanged(nameof(SelectedDayStripItem));
+                ApplyFilter();
+            }
+        }
+
+        [RelayCommand]
+        public void ApplyTemplate(string templateText)
+        {
+            InstructionText = templateText;
+        }
+
+        private bool CanSendInstruction() => SelectedAgendaItem != null && !string.IsNullOrWhiteSpace(InstructionText);
+
+        [RelayCommand(CanExecute = nameof(CanSendInstruction))]
+        public async Task SendManagerInstructionAsync()
+        {
+            if (SelectedAgendaItem == null || string.IsNullOrWhiteSpace(InstructionText)) return;
+            _loadingService.Show();
+            try
+            {
+                int targetId = SelectedAgendaItem.SourceEntityId ?? SelectedAgendaItem.Id;
+                var dto = new AddThreadEntryDto
+                {
+                    EntryType = ThreadEntryType.ManagerInstruction,
+                    Content = $"★ PATRON TALİMATI: {InstructionText.Trim()}",
+                    UpdateBallInCourt = BallInCourtStatus.Us
+                };
+
+                var res = await _commandService.AddThreadEntryAsync(targetId, dto);
+                if (res.IsSuccess)
+                {
+                    _toastService.ShowSuccess("Talimat İletildi", "Patron talimatı eklendi ve vaka ekibe devredildi.");
+                    InstructionText = string.Empty;
+                    await LoadAgendaAsync();
+
+                    var updated = await _readService.GetByIdAsync(targetId);
+                    if (updated.IsSuccess && updated.Value != null)
+                    {
+                        SelectedAgendaItem = updated.Value;
+                    }
+                }
+                else
+                {
+                    _toastService.ShowError("Hata", res.Error ?? "Talimat iletilemedi.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _toastService.ShowError("Hata", ex.Message ?? "Talimat gönderilemedi.");
+            }
+            finally
+            {
+                _loadingService.Hide();
             }
         }
 
@@ -334,12 +609,11 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
-                    // Interaction
                     var dto = new UpdateCustomerInteractionStatusDto
                     {
                         InteractionId = current.SourceEntityId ?? current.Id,
                         NewStatus = InteractionStatus.Completed,
-                        Reason = "Yönetici gündeminden tamamlandı.",
+                        Reason = "Patron kokpitinden onaylandı ve tamamlandı.",
                         ResolutionNotes = $"Yönetici tarafından sonuçlandırıldı ({DateTime.UtcNow:dd.MM.yyyy HH:mm})."
                     };
 
@@ -421,7 +695,7 @@ namespace KamatekCrm.ViewModels
 
                     if (res.IsSuccess)
                     {
-                        _toastService.ShowSuccess("Ertelendi", $"{current.InteractionNumber} kalıcı olarak {newDateUtc:dd.MM.yyyy} tarihine ertelendi.");
+                        _toastService.ShowSuccess("Ertelendi", $"{current.InteractionNumber} {newDateUtc:dd.MM.yyyy} tarihine ertelendi.");
                         await LoadAgendaAsync();
                     }
                     else
@@ -505,7 +779,7 @@ namespace KamatekCrm.ViewModels
 
                     if (res.IsSuccess)
                     {
-                        _toastService.ShowSuccess("İncelendi", $"{current.InteractionNumber} iş emri tarihçesine incelendi olarak kaydedildi.");
+                        _toastService.ShowSuccess("İncelendi", $"{current.InteractionNumber} incelendi olarak kaydedildi.");
                         current.Status = InteractionStatus.Seen;
                         OnPropertyChanged(nameof(SelectedAgendaItem));
                     }

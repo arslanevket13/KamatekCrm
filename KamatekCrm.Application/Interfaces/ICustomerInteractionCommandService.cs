@@ -48,5 +48,31 @@ namespace KamatekCrm.ApplicationCore.Interfaces
 
         Task<Result> ClearDraftAsync(
             CancellationToken cancellationToken = default);
+
+        Task<Result<CustomerInteractionDto>> AddThreadEntryAsync(
+            int interactionId,
+            AddThreadEntryDto dto,
+            CancellationToken cancellationToken = default);
+
+        Task<Result> ToggleChecklistItemAsync(
+            int interactionId,
+            Guid itemId,
+            CancellationToken cancellationToken = default);
+
+        Task<Result> AddChecklistItemAsync(
+            int interactionId,
+            string title,
+            CancellationToken cancellationToken = default);
+
+        Task<Result> DeleteChecklistItemAsync(
+            int interactionId,
+            Guid itemId,
+            CancellationToken cancellationToken = default);
+
+        Task<Result> SnoozeInteractionAsync(
+            int interactionId,
+            DateTime untilUtc,
+            string? reason = null,
+            CancellationToken cancellationToken = default);
     }
 }

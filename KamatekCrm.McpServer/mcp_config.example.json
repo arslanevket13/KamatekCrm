@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "kamatekcrm-debug": {
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "<mutlak-yol>/KamatekCrm.McpServer/KamatekCrm.McpServer.csproj",
+        "--no-build"
+      ]
+    }
+  }
+}

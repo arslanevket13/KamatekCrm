@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using KamatekCrm.Settings;
 using Npgsql;
 using KamatekCrm.Shared.Services;
 using Serilog;
@@ -17,10 +20,12 @@ namespace KamatekCrm.Services;
 public sealed class BackupService : IBackupService
 {
     private static readonly TimeSpan ProcessTimeout = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan VersionProbeTimeout = TimeSpan.FromSeconds(5);
+    private static readonly Regex ToolVersionRegex = new(@"(\d+)(?:\.\d+)*\s*$", RegexOptions.Compiled);
     private static readonly string PostgresToolsDirectory =
         Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PostgresTools");
-    private static readonly string PgDumpPath = Path.Combine(PostgresToolsDirectory, "pg_dump.exe");
-    private static readonly string PgRestorePath = Path.Combine(PostgresToolsDirectory, "pg_restore.exe");
+    private static readonly string ManagedPostgresBinDirectory =
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PostgresRuntime", "bin");
 
     private readonly IDatabaseConnectionProvider _connectionProvider;
     private readonly IBackupIntegrityService _integrityService;
@@ -42,10 +47,11 @@ public sealed class BackupService : IBackupService
 
     public string BackupDatabase(string? destinationDirectory = null, string? label = null)
     {
-        EnsureToolExists(PgDumpPath, "pg_dump.exe");
-        EnsureToolExists(PgRestorePath, "pg_restore.exe");
-
         var connection = ParseConnectionString();
+        var serverMajor = QueryServerMajorVersion(connection);
+        var pgDumpPath = ResolvePostgresTool("pg_dump.exe", serverMajor);
+        var pgRestorePath = ResolvePostgresTool("pg_restore.exe", serverMajor);
+
         var targetDirectory = string.IsNullOrWhiteSpace(destinationDirectory)
             ? DefaultBackupDirectory
             : Path.GetFullPath(destinationDirectory);
@@ -61,10 +67,10 @@ public sealed class BackupService : IBackupService
         try
         {
             var result = RunPostgresTool(
-                PgDumpPath,
+                pgDumpPath,
                 [
                     "--host", connection.Host!,
-                    "--port", connection.Port.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    "--port", connection.Port.ToString(CultureInfo.InvariantCulture),
                     "--username", connection.Username!,
                     "--dbname", connection.Database!,
                     "--format", "custom",
@@ -76,7 +82,7 @@ public sealed class BackupService : IBackupService
                 connection.Password);
 
             EnsureSuccessful(result, "Yedekleme");
-            ValidateArchiveStructure(backupPath, connection.Password ?? string.Empty);
+            ValidateArchiveStructure(pgRestorePath, backupPath, connection.Password ?? string.Empty);
             _integrityService.CreateManifest(backupPath, connection.Database ?? string.Empty);
 
             var validation = ValidateBackup(backupPath);
@@ -84,9 +90,11 @@ public sealed class BackupService : IBackupService
                 throw new InvalidOperationException(validation.Message);
 
             Log.Information(
-                "Database backup verified. Path: {BackupPath}, SHA256: {Sha256}",
+                "Database backup verified. Path: {BackupPath}, SHA256: {Sha256}, PgDump: {PgDumpPath}, ServerMajor: {ServerMajor}",
                 backupPath,
-                validation.Manifest?.Sha256);
+                validation.Manifest?.Sha256,
+                pgDumpPath,
+                serverMajor);
             return backupPath;
         }
         catch
@@ -124,12 +132,13 @@ public sealed class BackupService : IBackupService
 
         try
         {
-            EnsureToolExists(PgRestorePath, "pg_restore.exe");
             var connection = ParseConnectionString();
+            var serverMajor = QueryServerMajorVersion(connection);
+            var pgRestorePath = ResolvePostgresTool("pg_restore.exe", serverMajor);
             if (string.Equals(ext, ".backup", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(ext, ".dump", StringComparison.OrdinalIgnoreCase))
             {
-                ValidateArchiveStructure(fullPath, connection.Password ?? string.Empty);
+                ValidateArchiveStructure(pgRestorePath, fullPath, connection.Password ?? string.Empty);
             }
             return integrity;
         }
@@ -150,12 +159,14 @@ public sealed class BackupService : IBackupService
             throw new InvalidOperationException(validation.Message);
 
         var connection = ParseConnectionString();
+        var serverMajor = QueryServerMajorVersion(connection);
+        var pgRestorePath = ResolvePostgresTool("pg_restore.exe", serverMajor);
         var recoveryDirectory = Path.Combine(DefaultBackupDirectory, "Recovery");
         var recoveryBackup = BackupDatabase(recoveryDirectory, "pre_restore");
 
         try
         {
-            RestoreArchive(fullPath, connection, "Geri yükleme");
+            RestoreArchive(pgRestorePath, fullPath, connection, "Geri yükleme");
         }
         catch (Exception restoreException)
         {
@@ -167,7 +178,7 @@ public sealed class BackupService : IBackupService
 
             try
             {
-                RestoreArchive(recoveryBackup, connection, "Otomatik geri alma");
+                RestoreArchive(pgRestorePath, recoveryBackup, connection, "Otomatik geri alma");
             }
             catch (Exception recoveryException)
             {
@@ -194,15 +205,16 @@ public sealed class BackupService : IBackupService
     }
 
     private static void RestoreArchive(
+        string pgRestorePath,
         string backupPath,
         NpgsqlConnectionStringBuilder connection,
         string operation)
     {
         var result = RunPostgresTool(
-            PgRestorePath,
+            pgRestorePath,
             [
                 "--host", connection.Host!,
-                "--port", connection.Port.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--port", connection.Port.ToString(CultureInfo.InvariantCulture),
                 "--username", connection.Username!,
                 "--dbname", connection.Database!,
                 "--clean",
@@ -216,13 +228,186 @@ public sealed class BackupService : IBackupService
         EnsureSuccessful(result, operation);
     }
 
-    private void ValidateArchiveStructure(string backupPath, string password)
+    private static void ValidateArchiveStructure(string pgRestorePath, string backupPath, string password)
     {
-        var result = RunPostgresTool(PgRestorePath, ["--list", backupPath], password);
+        var result = RunPostgresTool(pgRestorePath, ["--list", backupPath], password);
         EnsureSuccessful(result, "Yedek arşivi doğrulama");
         if (string.IsNullOrWhiteSpace(result.StandardOutput) ||
             !result.StandardOutput.Contains("Archive", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("pg_restore arşiv içeriğini okuyamadı.");
+    }
+
+    public static string ResolvePsqlPath(int serverMajor = 0) => ResolvePostgresTool("psql.exe", serverMajor);
+
+    private static int QueryServerMajorVersion(NpgsqlConnectionStringBuilder connection)
+    {
+        try
+        {
+            var probeBuilder = new NpgsqlConnectionStringBuilder(connection.ConnectionString)
+            {
+                Timeout = 10,
+                CommandTimeout = 10,
+                Pooling = false
+            };
+
+            using var conn = new NpgsqlConnection(probeBuilder.ConnectionString);
+            conn.Open();
+            using var cmd = new NpgsqlCommand("SELECT current_setting('server_version_num')::int / 10000;", conn);
+            var scalar = cmd.ExecuteScalar();
+            return scalar is not null && int.TryParse(Convert.ToString(scalar, CultureInfo.InvariantCulture), out var major)
+                ? major
+                : 0;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "PostgreSQL sunucu sürümü sorgulanamadı; varsayılan araç çözümlemesi kullanılacak.");
+            return 0;
+        }
+    }
+
+    private static string ResolvePostgresTool(string toolName, int serverMajor)
+    {
+        var candidates = new List<(string Path, int Priority)>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        void AddCandidate(string path, int priority)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return;
+            try
+            {
+                var full = Path.GetFullPath(path);
+                if (File.Exists(full) && seen.Add(full))
+                    candidates.Add((full, priority));
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "Geçersiz PostgreSQL araç yolu atlandı: {Path}", path);
+            }
+        }
+
+        // 1. Uygulama ile gelen yönetilen PostgresRuntime\bin ve PostgresTools
+        var managedPath = Path.Combine(ManagedPostgresBinDirectory, toolName);
+        AddCandidate(managedPath, 0);
+        AddCandidate(Path.Combine(PostgresToolsDirectory, toolName), 1);
+
+        // 2. Sistemde kurulu PostgreSQL sürümleri (Program Files)
+        foreach (var programFiles in new[]
+                 {
+                     Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                     Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                     @"C:\Program Files"
+                 }.Where(d => !string.IsNullOrWhiteSpace(d)).Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            var pgRoot = Path.Combine(programFiles, "PostgreSQL");
+            if (!Directory.Exists(pgRoot)) continue;
+            try
+            {
+                foreach (var versionDir in Directory.EnumerateDirectories(pgRoot))
+                {
+                    AddCandidate(Path.Combine(versionDir, "bin", toolName), 2);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Debug(ex, "PostgreSQL dizini taranamadı: {PgRoot}", pgRoot);
+            }
+        }
+
+        // 3. PATH ortam değişkeni
+        var pathEnv = Environment.GetEnvironmentVariable("PATH");
+        if (!string.IsNullOrWhiteSpace(pathEnv))
+        {
+            foreach (var dir in pathEnv.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                AddCandidate(Path.Combine(dir, toolName), 3);
+            }
+        }
+
+        if (candidates.Count == 0)
+        {
+            throw new FileNotFoundException(
+                serverMajor > 0
+                    ? $"PostgreSQL {serverMajor} ile uyumlu {toolName} bulunamadı. Lütfen PostgreSQL {serverMajor} istemci araçlarını kurun."
+                    : $"{toolName} bulunamadı. PostgresRuntime veya PostgreSQL istemci araçlarını kontrol edin.");
+        }
+
+        // Yönetilen yerel PostgreSQL aktifse ve bundled PostgresRuntime\bin sürümü sunucuyla uyumluysa önceliklendir
+        if (AppSettings.IsManagedLocalPostgres && File.Exists(managedPath))
+        {
+            var managedMajor = ProbeToolMajorVersion(managedPath);
+            if (serverMajor <= 0 || (managedMajor > 0 && managedMajor >= serverMajor))
+            {
+                return Path.GetFullPath(managedPath);
+            }
+        }
+
+        var inspected = candidates
+            .Select(c => (c.Path, c.Priority, Major: ProbeToolMajorVersion(c.Path)))
+            .ToList();
+
+        if (serverMajor > 0)
+        {
+            var compatible = inspected
+                .Where(x => x.Major >= serverMajor)
+                .OrderBy(x => x.Major)
+                .ThenBy(x => x.Priority)
+                .FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(compatible.Path))
+                return compatible.Path;
+
+            var maxFound = inspected.Select(x => x.Major).DefaultIfEmpty(0).Max();
+            var foundText = maxFound > 0 ? $"bulunan en yüksek sürüm: {maxFound}" : "uyumlu sürüm algılanamadı";
+            throw new InvalidOperationException(
+                $"Aktif veritabanı sunucusu PostgreSQL {serverMajor} sürümünde çalışıyor, ancak bilgisayarda uyumlu {toolName} (>= {serverMajor}) bulunamadı ({foundText}). " +
+                $"Lütfen PostgreSQL {serverMajor} (veya üzeri) istemci araçlarını kurun.");
+        }
+
+        var bestFallback = inspected
+            .OrderByDescending(x => x.Major)
+            .ThenBy(x => x.Priority)
+            .First();
+        return bestFallback.Path;
+    }
+
+    private static int ProbeToolMajorVersion(string executablePath)
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = executablePath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = Path.GetDirectoryName(executablePath) ?? PostgresToolsDirectory
+            };
+            startInfo.ArgumentList.Add("--version");
+
+            using var process = Process.Start(startInfo);
+            if (process is null) return 0;
+
+            var stdout = process.StandardOutput.ReadToEndAsync();
+            var stderr = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit((int)VersionProbeTimeout.TotalMilliseconds))
+            {
+                try { process.Kill(entireProcessTree: true); } catch (Exception ex) { Log.Debug(ex, "Sürüm kontrol süreci sonlandırılamadı: {Path}", executablePath); }
+                return 0;
+            }
+
+            Task.WaitAll(stdout, stderr);
+            var output = (stdout.Result ?? string.Empty).Trim();
+            var match = ToolVersionRegex.Match(output);
+            return match.Success && int.TryParse(match.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var major)
+                ? major
+                : 0;
+        }
+        catch (Exception ex)
+        {
+            Log.Debug(ex, "PostgreSQL araç sürümü okunamadı: {Path}", executablePath);
+            return 0;
+        }
     }
 
     private NpgsqlConnectionStringBuilder ParseConnectionString()
@@ -252,7 +437,7 @@ public sealed class BackupService : IBackupService
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
-            WorkingDirectory = PostgresToolsDirectory
+            WorkingDirectory = Path.GetDirectoryName(executable) ?? PostgresToolsDirectory
         };
         foreach (var argument in arguments) startInfo.ArgumentList.Add(argument);
         startInfo.Environment["PGPASSWORD"] = password ?? string.Empty;
@@ -280,14 +465,6 @@ public sealed class BackupService : IBackupService
             ? "PostgreSQL aracı ayrıntılı hata döndürmedi."
             : result.StandardError.Trim();
         throw new InvalidOperationException($"{operation} başarısız (kod {result.ExitCode}): {error}");
-    }
-
-    private static void EnsureToolExists(string path, string toolName)
-    {
-        if (!File.Exists(path))
-            throw new FileNotFoundException(
-                $"{toolName} bulunamadı. PostgresTools paketini kontrol edin.",
-                path);
     }
 
     private static string SanitizeLabel(string? label)

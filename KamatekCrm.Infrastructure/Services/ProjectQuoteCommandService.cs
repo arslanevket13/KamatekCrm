@@ -806,13 +806,6 @@ public sealed class ProjectQuoteCommandService : IProjectQuoteCommandService
     private static string OperationReference(Guid key) => OperationReference("SAVE", key);
     private static string OperationReference(string operation, Guid key) => $"QUOTE-{operation}:{key:N}";
 
-    private static async Task<IDbContextTransaction?> BeginTransactionAsync(
-        AppDbContext context,
-        CancellationToken cancellationToken) =>
-        context.Database.IsRelational()
-            ? await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)
-            : null;
-
     private static async Task<Result<T>> FailAsync<T>(
         IDbContextTransaction? transaction,
         string error,

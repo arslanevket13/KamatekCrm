@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using KamatekCrm.Shared.Enums;
+using KamatekCrm.Shared.Models;
 
 namespace KamatekCrm.ApplicationCore.DTOs.CustomerInteractions
 {
@@ -21,10 +23,12 @@ namespace KamatekCrm.ApplicationCore.DTOs.CustomerInteractions
         public InteractionPriority Priority { get; set; }
         public InteractionStatus Status { get; set; }
         public DateTime InteractionDate { get; set; }
+        public DateTime Date => InteractionDate;
         public string CreatedByUserId { get; set; } = string.Empty;
         public string CreatedByUsername { get; set; } = string.Empty;
         public int? AssignedToUserId { get; set; }
         public string? AssignedToUsername { get; set; }
+        public int? AssignedUserId { get => AssignedToUserId; set => AssignedToUserId = value; }
         public bool RequiresFollowUp { get; set; }
         public DateTime? FollowUpDate { get; set; }
         public bool RequiresManagerAttention { get; set; }
@@ -42,6 +46,51 @@ namespace KamatekCrm.ApplicationCore.DTOs.CustomerInteractions
         public string PriorityLevel { get; set; } = "Normal";
         public string? SourceType { get; set; } = "Interaction";
         public int? SourceEntityId { get; set; }
+
+        // Faz 5 Çok Katmanlı Defter Alanları
+        public InteractionDirection Direction { get; set; } = InteractionDirection.InboundRequest;
+        public BallInCourtStatus BallInCourt { get; set; } = BallInCourtStatus.Us;
+        public DateTime? SnoozedUntilUtc { get; set; }
+        public string? LinkedEntityType { get; set; }
+        public int? LinkedEntityId { get; set; }
+        public string EntriesJson { get; set; } = "[]";
+        public string ChecklistJson { get; set; } = "[]";
+        public List<InteractionThreadEntry> ThreadEntries { get; set; } = new();
+        public List<InteractionChecklistItem> ChecklistItems { get; set; } = new();
+
+        public bool IsSnoozed => SnoozedUntilUtc.HasValue && SnoozedUntilUtc.Value > DateTime.UtcNow;
+        public int OverdueDays
+        {
+            get
+            {
+                if (!FollowUpDate.HasValue || FollowUpDate.Value >= DateTime.UtcNow ||
+                    Status == InteractionStatus.Completed || Status == InteractionStatus.Cancelled)
+                    return 0;
+                return (int)Math.Max(1, (DateTime.UtcNow - FollowUpDate.Value).TotalDays);
+            }
+        }
+
+        public string DirectionText => Direction switch
+        {
+            InteractionDirection.InboundRequest => "Müşteri Talebi",
+            InteractionDirection.OutboundInfoRequest => "Bilgi/Onay İstendi",
+            InteractionDirection.InternalNote => "İç Not",
+            _ => "Talebi"
+        };
+
+        public string BallInCourtText => BallInCourt switch
+        {
+            BallInCourtStatus.Us => "Top Bizde",
+            BallInCourtStatus.Customer => "Müşteride",
+            BallInCourtStatus.Manager => "Patronda",
+            _ => "Top Bizde"
+        };
+
+        public int CompletedChecklistCount => ChecklistItems?.Count(x => x.IsCompleted) ?? 0;
+        public int TotalChecklistCount => ChecklistItems?.Count ?? 0;
+        public string ChecklistProgressText => TotalChecklistCount > 0 ? $"{CompletedChecklistCount}/{TotalChecklistCount}" : string.Empty;
+        public string LastThreadEntryPreview => ThreadEntries?.LastOrDefault()?.Content ?? Summary;
+        public string? LastThreadEntryOutcome => ThreadEntries?.LastOrDefault()?.CallOutcome;
     }
 
     public class CreateCustomerInteractionDto
@@ -59,6 +108,7 @@ namespace KamatekCrm.ApplicationCore.DTOs.CustomerInteractions
         public InteractionPriority Priority { get; set; } = InteractionPriority.Normal;
         public int? AssignedToUserId { get; set; }
         public string? AssignedToUsername { get; set; }
+        public int? AssignedUserId { get => AssignedToUserId; set => AssignedToUserId = value; }
         public bool RequiresFollowUp { get; set; }
         public DateTime? FollowUpDate { get; set; }
         public bool RequiresManagerAttention { get; set; }
@@ -66,6 +116,15 @@ namespace KamatekCrm.ApplicationCore.DTOs.CustomerInteractions
         public string? RelatedEntityType { get; set; }
         public int? RelatedEntityId { get; set; }
         public string? RelatedEntityNumber { get; set; }
+
+        // Faz 5 Yeni Alanlar
+        public InteractionDirection Direction { get; set; } = InteractionDirection.InboundRequest;
+        public BallInCourtStatus BallInCourt { get; set; } = BallInCourtStatus.Us;
+        public DateTime? SnoozedUntilUtc { get; set; }
+        public string? LinkedEntityType { get; set; }
+        public int? LinkedEntityId { get; set; }
+        public List<string>? InitialChecklist { get; set; }
+        public string? InitialThreadNote { get; set; }
     }
 
     public class UpdateCustomerInteractionStatusDto
@@ -86,10 +145,15 @@ namespace KamatekCrm.ApplicationCore.DTOs.CustomerInteractions
         public InteractionStatus? Status { get; set; }
         public InteractionPriority? Priority { get; set; }
         public int? AssignedToUserId { get; set; }
+        public int? AssignedUserId { get => AssignedToUserId; set => AssignedToUserId = value; }
         public int? CustomerId { get; set; }
         public bool? RequiresManagerAttention { get; set; }
         public bool? RequiresFollowUp { get; set; }
         public bool OnlyOverdue { get; set; }
+        public bool IsOverdueOnly { get => OnlyOverdue; set => OnlyOverdue = value; }
+        public DateTime? FollowUpStartDate { get; set; }
+        public DateTime? FollowUpEndDate { get; set; }
+        public BallInCourtStatus? BallInCourt { get; set; }
         public string? SearchText { get; set; }
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 50;
@@ -116,5 +180,64 @@ namespace KamatekCrm.ApplicationCore.DTOs.CustomerInteractions
         public int ActiveServiceJobsCount { get; set; }
         public int ActiveQuotesCount { get; set; }
         public int PendingInteractionsCount { get; set; }
+    }
+
+    public class AddThreadEntryDto
+    {
+        public ThreadEntryType EntryType { get; set; } = ThreadEntryType.Note;
+        public string Content { get; set; } = string.Empty;
+        public string? CallOutcome { get; set; }
+        public BallInCourtStatus? UpdateBallInCourt { get; set; }
+        public DateTime? UpdateSnoozedUntilUtc { get; set; }
+        public int? UpdateAssignedToUserId { get; set; }
+        public string? UpdateAssignedToUsername { get; set; }
+        public BallInCourtStatus? NewBallInCourt { get => UpdateBallInCourt; set => UpdateBallInCourt = value; }
+        public int? NewAssignedUserId { get => UpdateAssignedToUserId; set => UpdateAssignedToUserId = value; }
+    }
+
+    public class CallerContextDto
+    {
+        public int? CustomerId { get; set; }
+        public string? FullName { get; set; }
+        public string? CustomerName => FullName;
+        public int OpenJobsCount => OpenServiceJobsCount;
+        public decimal Balance => CurrentBalance;
+        private string? _matchedPhone;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string MatchedPhone
+        {
+            get => string.IsNullOrWhiteSpace(_matchedPhone) ? PhoneNumber : _matchedPhone;
+            set => _matchedPhone = value;
+        }
+        public string? Email { get; set; }
+        public string? FullAddress { get; set; }
+        public bool IsRegisteredCustomer => CustomerId.HasValue && CustomerId.Value > 0;
+        public decimal CurrentBalance { get; set; }
+        public int OpenServiceJobsCount { get; set; }
+        public int PendingQuotesCount { get; set; }
+        public int PendingInteractionsCount { get; set; }
+        public List<CallerRecentInteractionDto> RecentInteractions { get; set; } = new();
+    }
+
+    public class CallerRecentInteractionDto
+    {
+        public int Id { get; set; }
+        public string InteractionNumber { get; set; } = string.Empty;
+        public DateTime InteractionDate { get; set; }
+        public DateTime Date => InteractionDate;
+        public string Subject { get; set; } = string.Empty;
+        public string Summary { get; set; } = string.Empty;
+        public InteractionStatus Status { get; set; }
+        public InteractionRequestType RequestType { get; set; }
+        public string? CreatedByUsername { get; set; }
+    }
+
+    public class CalendarDaySummaryDto
+    {
+        public int Day { get; set; }
+        public DateTime Date { get; set; }
+        public int TotalCount { get; set; }
+        public int OverdueCount { get; set; }
+        public bool HasManagerAgenda { get; set; }
     }
 }

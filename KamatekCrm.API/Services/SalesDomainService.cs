@@ -34,9 +34,10 @@ namespace KamatekCrm.API.Services
             await _salesLock.WaitAsync();
             try
             {
-                await using var transaction = await _context.Database.CreateExecutionStrategy().ExecuteAsync(async () => await _context.Database.BeginTransactionAsync());
-                try
+                return await _context.ExecuteInTransactionAsync(async transaction =>
                 {
+                    try
+                    {
                     var todayOrders = await _context.SalesOrders.CountAsync(o => o.Date.Date == DateTime.UtcNow.Date);
                     var orderNumber = $"SO-{DateTime.UtcNow:yyyyMMdd}-{(todayOrders + 1):D3}";
 
@@ -152,17 +153,24 @@ namespace KamatekCrm.API.Services
                         }
                     }
 
-                    await transaction.CommitAsync();
+                        if (transaction != null)
+                        {
+                            await transaction.CommitAsync();
+                        }
 
-                    _logger.LogInformation($"Satış tamamlandı: {orderNumber}, Tutar: {totalAmount:C}");
-                    return SaleResult.Ok(orderNumber, totalAmount);
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    _logger.LogError(ex, "Satış işlemi başarısız.");
-                    return SaleResult.Fail($"Satış işlemi başarısız: {ex.Message}");
-                }
+                        _logger.LogInformation($"Satış tamamlandı: {orderNumber}, Tutar: {totalAmount:C}");
+                        return SaleResult.Ok(orderNumber, totalAmount);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (transaction != null)
+                        {
+                            await transaction.RollbackAsync();
+                        }
+                        _logger.LogError(ex, "Satış işlemi başarısız.");
+                        return SaleResult.Fail($"Satış işlemi başarısız: {ex.Message}");
+                    }
+                });
             }
             finally
             {

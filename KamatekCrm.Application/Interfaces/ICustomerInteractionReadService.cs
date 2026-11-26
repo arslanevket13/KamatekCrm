@@ -34,5 +34,14 @@ namespace KamatekCrm.ApplicationCore.Interfaces
 
         Task<Result<List<CustomerInteractionDto>>> GetOverdueFollowUpsAsync(
             CancellationToken cancellationToken = default);
+
+        Task<Result<CallerContextDto>> LookupCallerContextAsync(
+            string phoneOrQuery,
+            CancellationToken cancellationToken = default);
+
+        Task<Result<List<CalendarDaySummaryDto>>> GetCalendarDayCountsAsync(
+            int year,
+            int month,
+            CancellationToken cancellationToken = default);
     }
 }

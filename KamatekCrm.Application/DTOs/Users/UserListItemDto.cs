@@ -10,6 +10,7 @@ namespace KamatekCrm.ApplicationCore.DTOs.Users
         public string Ad { get; set; } = string.Empty;
         public string Soyad { get; set; } = string.Empty;
         public string AdSoyad { get; set; } = string.Empty;
+        public string FullName => AdSoyad;
         public string Role { get; set; } = string.Empty;
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }

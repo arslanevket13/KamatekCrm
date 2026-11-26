@@ -19,6 +19,7 @@ namespace KamatekCrm.Infrastructure
             services.AddSingleton<IDatabaseInitializationService, DatabaseInitializationService>();
             services.AddTransient<IServiceJobCommandService, ServiceJobCommandService>();
             services.AddTransient<IServiceJobReadService, ServiceJobReadService>();
+            services.AddTransient<IWorkOrderIntelligenceService, WorkOrderIntelligenceService>();
             services.AddTransient<IRetailTransactionService, RetailTransactionService>();
             services.AddTransient<IPurchasingCommandService, PurchasingCommandService>();
             services.AddTransient<IAuditTrailService, AuditTrailService>();

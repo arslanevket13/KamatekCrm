@@ -720,10 +720,11 @@ namespace KamatekCrm.ViewModels
                 }
             }
 
+            var defaultFileName = KamatekCrm.Helpers.WorkOrderPdfFileNameBuilder.Build(_jobDocument, "Fiyat Teklifi");
             var filePath = await _dialogService.ShowSaveFileDialogAsync(
                 "Fiyat Teklifini Kaydet",
                 "PDF Dosyası (*.pdf)|*.pdf",
-                $"FiyatTeklifi_{_jobId:D6}.pdf");
+                defaultFileName);
             if (string.IsNullOrWhiteSpace(filePath)) return;
 
             try

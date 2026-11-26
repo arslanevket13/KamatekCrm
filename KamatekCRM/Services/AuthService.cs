@@ -199,12 +199,59 @@ namespace KamatekCrm.Services
             }
 
             _currentUser = user;
+#if DEBUG
+            _hasLoggedOutManually = false;
+#endif
             user.LastLoginDate = DateTime.UtcNow;
             await context.SaveChangesAsync();
 
             Log.Information("DB Login başarılı: {Username} (Role: {Role})", user.Username, user.Role);
             return true;
         }
+
+#if DEBUG
+        private bool _hasLoggedOutManually;
+
+        public bool HasLoggedOutManually => _hasLoggedOutManually;
+
+        /// <summary>
+        /// Yalnızca geliştirme (DEBUG) ortamında aktif Admin hesabıyla şifresiz hızlı oturum açar.
+        /// </summary>
+        public async Task<bool> DevQuickLoginAsAdminAsync(string? preferredUsername = null)
+        {
+            await using var context = await _dbContextFactory.CreateDbContextAsync();
+
+            User? user = null;
+            if (!string.IsNullOrWhiteSpace(preferredUsername))
+            {
+                var normalizedPreferred = preferredUsername.Trim().ToLowerInvariant();
+                user = await context.Users
+                    .OrderBy(u => u.Id)
+                    .FirstOrDefaultAsync(u =>
+                        u.IsActive
+                        && u.Role.ToLower() == "admin"
+                        && u.Username.ToLower() == normalizedPreferred);
+            }
+
+            user ??= await context.Users
+                .OrderBy(u => u.Id)
+                .FirstOrDefaultAsync(u => u.IsActive && u.Role.ToLower() == "admin");
+
+            if (user is null)
+            {
+                Log.Warning("DEV-ONLY quick admin login failed: no active Admin account found.");
+                throw new InvalidOperationException("Veritabanında aktif bir Admin kullanıcısı bulunamadı.");
+            }
+
+            _currentUser = user;
+            _hasLoggedOutManually = false;
+            user.LastLoginDate = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+
+            Log.Warning("DEV-ONLY quick admin login used for {Username}", user.Username);
+            return true;
+        }
+#endif
 
         public async Task<bool> TryAutoLoginAsync(int userId, string username)
         {
@@ -417,6 +464,9 @@ namespace KamatekCrm.Services
         public void Logout()
         {
             _currentUser = null;
+#if DEBUG
+            _hasLoggedOutManually = true;
+#endif
             Log.Information("Kullanıcı oturumu kapatıldı.");
         }
     }

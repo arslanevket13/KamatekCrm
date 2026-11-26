@@ -65,6 +65,10 @@ namespace KamatekCrm.Configuration
                 loggerConfiguration = loggerConfiguration.WriteTo.Sink(new SerilogSinkAdapter(store));
             }
 
+#if DEBUG
+            loggerConfiguration = loggerConfiguration.WriteTo.Sink(Diagnostics.DebugDiagnosticsCollector.Instance.SerilogSink);
+#endif
+
             Log.Logger = loggerConfiguration.CreateLogger();
 
             Log.Information(

@@ -149,4 +149,13 @@ public interface IServiceJobCommandService
         string changedBy,
         string? note = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// İş emrinin akıllı alanlarını (alt görevler, keşif kontrol listesi, sonraki takip tarihi ve notu)
+    /// tek transaction içinde günceller; takip tarihi ayarlandığında ilgili Müşteri Etkileşimi
+    /// kaydını da otomatik senkronize eder.
+    /// </summary>
+    Task<Result> SaveSmartWorkOrderFieldsAsync(
+        SaveSmartWorkOrderFieldsRequest request,
+        CancellationToken cancellationToken = default);
 }

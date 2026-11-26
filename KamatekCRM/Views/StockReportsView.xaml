@@ -82,7 +82,7 @@
                               Style="{StaticResource ModernComboBox}"
                               Height="38">
                         <ComboBox.ItemContainerStyle>
-                            <Style TargetType="ComboBoxItem">
+                            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Type ComboBoxItem}}">
                                 <Setter Property="Padding" Value="8,5"/>
                             </Style>
                         </ComboBox.ItemContainerStyle>
@@ -230,34 +230,8 @@
                           RowHeight="40"
                           ColumnHeaderHeight="40">
 
-                    <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Padding" Value="10,8"/>
-                            <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                        </Style>
-                    </DataGrid.ColumnHeaderStyle>
-
-                    <DataGrid.CellStyle>
-                        <Style TargetType="DataGridCell">
-                            <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
-                            <Setter Property="Padding" Value="10,6"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource StatusInfoBg}"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DataGrid.CellStyle>
-
                     <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsIncoming}" Value="True">
                                     <Setter Property="Background" Value="{DynamicResource StatusSuccessBgLight}"/>

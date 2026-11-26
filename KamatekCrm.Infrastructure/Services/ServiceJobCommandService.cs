@@ -2352,13 +2352,6 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-    private static async Task<IDbContextTransaction?> BeginTransactionIfSupportedAsync(
-        AppDbContext context,
-        CancellationToken cancellationToken) =>
-        context.Database.IsRelational()
-            ? await context.Database.CreateExecutionStrategy().ExecuteAsync(async () => await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken))
-            : null;
-
     private static Task CommitIfPresentAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken) =>
         transaction?.CommitAsync(cancellationToken) ?? Task.CompletedTask;
 
@@ -2451,6 +2444,138 @@ public sealed class ServiceJobCommandService : IServiceJobCommandService
                 Notes = string.IsNullOrWhiteSpace(note) ? "Yönetici gündeminden incelendi olarak işaretlendi." : note.Trim(),
                 UserId = actor
             });
+
+            await context.SaveChangesAsync(cancellationToken);
+            return Result.Success();
+        }, cancellationToken: cancellationToken);
+    }
+
+    public async Task<Result> SaveSmartWorkOrderFieldsAsync(
+        SaveSmartWorkOrderFieldsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var authorization = _authorizationService.Authorize(ApplicationPermission.ManageServiceJobs);
+        if (authorization.IsFailure)
+        {
+            return Result.Failure(authorization.Error);
+        }
+
+        string actor = NormalizeUser(request.ChangedBy);
+        DateTime? normalizedFollowUpUtc = request.NextFollowUpUtc.HasValue
+            ? (request.NextFollowUpUtc.Value.Kind == DateTimeKind.Utc
+                ? request.NextFollowUpUtc.Value
+                : DateTime.SpecifyKind(request.NextFollowUpUtc.Value, DateTimeKind.Utc))
+            : null;
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.ExecuteInTransactionAsync(async _ =>
+        {
+            var job = await context.ServiceJobs
+                .Include(j => j.Customer)
+                .FirstOrDefaultAsync(j => j.Id == request.JobId, cancellationToken);
+            if (job is null)
+            {
+                return Result.Failure($"İş emri bulunamadı (ID: {request.JobId}).");
+            }
+
+            var now = DateTime.UtcNow;
+            bool followUpChanged = job.NextFollowUpUtc != normalizedFollowUpUtc ||
+                                   !string.Equals(job.FollowUpNote, request.FollowUpNote?.Trim(), StringComparison.Ordinal);
+
+            if (request.SubTasksJson is not null)
+            {
+                job.SubTasksJson = string.IsNullOrWhiteSpace(request.SubTasksJson) ? "[]" : request.SubTasksJson;
+            }
+
+            if (request.DiscoveryChecklistJson is not null)
+            {
+                job.DiscoveryChecklistJson = string.IsNullOrWhiteSpace(request.DiscoveryChecklistJson) ? "[]" : request.DiscoveryChecklistJson;
+            }
+
+            job.NextFollowUpUtc = normalizedFollowUpUtc;
+            job.FollowUpNote = string.IsNullOrWhiteSpace(request.FollowUpNote) ? null : request.FollowUpNote.Trim();
+            job.ModifiedDate = now;
+            job.ModifiedBy = actor;
+
+            if (followUpChanged && normalizedFollowUpUtc.HasValue)
+            {
+                context.ServiceJobHistories.Add(new ServiceJobHistory
+                {
+                    ServiceJobId = job.Id,
+                    Date = now,
+                    Action = "Takip Hatırlatması Ayarlandı",
+                    JobStatusChange = job.Status,
+                    Notes = string.IsNullOrWhiteSpace(job.FollowUpNote)
+                        ? $"Sonraki takip: {normalizedFollowUpUtc.Value.ToLocalTime():dd.MM.yyyy HH:mm}"
+                        : $"{normalizedFollowUpUtc.Value.ToLocalTime():dd.MM.yyyy HH:mm} — {job.FollowUpNote}",
+                    UserId = actor
+                });
+
+                if (request.SyncCustomerInteraction)
+                {
+                    var linkedInteraction = await context.CustomerInteractions
+                        .FirstOrDefaultAsync(ci =>
+                            ci.IsActive &&
+                            ci.LinkedEntityType == "ServiceJob" &&
+                            ci.LinkedEntityId == job.Id &&
+                            ci.Status != InteractionStatus.Completed &&
+                            ci.Status != InteractionStatus.Cancelled,
+                            cancellationToken);
+
+                    if (linkedInteraction is not null)
+                    {
+                        linkedInteraction.RequiresFollowUp = true;
+                        linkedInteraction.FollowUpDate = normalizedFollowUpUtc;
+                        linkedInteraction.SnoozedUntilUtc = null;
+                        linkedInteraction.Summary = string.IsNullOrWhiteSpace(job.FollowUpNote)
+                            ? $"İş Emri #{job.Id} takibi planlandı."
+                            : job.FollowUpNote;
+                        linkedInteraction.ModifiedDate = now;
+                    }
+                    else
+                    {
+                        string customerName = job.Customer?.FullName ?? $"Müşteri #{job.CustomerId}";
+                        string phone = job.Customer?.PhoneNumber ?? string.Empty;
+                        string normalizedPhone = new string(phone.Where(char.IsDigit).ToArray());
+
+                        context.CustomerInteractions.Add(new CustomerInteraction
+                        {
+                            InteractionNumber = $"WO-{job.Id}-{now:yyMMddHHmm}",
+                            CustomerId = job.CustomerId,
+                            CustomerName = customerName.Length > 200 ? customerName[..200] : customerName,
+                            CallerName = customerName.Length > 150 ? customerName[..150] : customerName,
+                            CallerPhone = phone.Length > 30 ? phone[..30] : phone,
+                            NormalizedPhone = normalizedPhone.Length > 30 ? normalizedPhone[..30] : normalizedPhone,
+                            Channel = InteractionChannel.Phone,
+                            RequestType = InteractionRequestType.ServiceStatus,
+                            Direction = InteractionDirection.OutboundInfoRequest,
+                            BallInCourt = BallInCourtStatus.Us,
+                            Subject = $"İş Emri #{job.Id} Takibi",
+                            Summary = string.IsNullOrWhiteSpace(job.FollowUpNote)
+                                ? $"İş Emri #{job.Id} için planlı takip."
+                                : job.FollowUpNote,
+                            Priority = InteractionPriority.Normal,
+                            Status = InteractionStatus.Scheduled,
+                            InteractionDate = now,
+                            CreatedByUserId = actor.Length > 100 ? actor[..100] : actor,
+                            CreatedByUsername = actor.Length > 150 ? actor[..150] : actor,
+                            AssignedToUserId = job.AssignedUserId,
+                            AssignedToUsername = job.AssignedTechnician,
+                            RequiresFollowUp = true,
+                            FollowUpDate = normalizedFollowUpUtc,
+                            RelatedEntityType = "ServiceJob",
+                            RelatedEntityId = job.Id,
+                            RelatedEntityNumber = $"#{job.Id}",
+                            LinkedEntityType = "ServiceJob",
+                            LinkedEntityId = job.Id,
+                            EntriesJson = "[]",
+                            ChecklistJson = "[]",
+                            CreatedDate = now,
+                            IsActive = true
+                        });
+                    }
+                }
+            }
 
             await context.SaveChangesAsync(cancellationToken);
             return Result.Success();

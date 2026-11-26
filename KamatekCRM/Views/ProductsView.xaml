@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="KamatekCrm.Views.ProductsView"
+<UserControl x:Class="KamatekCrm.Views.ProductsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -39,6 +39,13 @@
                            Icon="{ui:SymbolIcon DocumentTable24}"
                            Command="{Binding ImportExcelCommand}"
                            Appearance="Secondary"
+                           Height="38" Padding="14,0" Margin="0,0,8,0"/>
+
+                <ui:Button Content="Etiket Yazdır" 
+                           Icon="{ui:SymbolIcon BarcodeScanner24}"
+                           Command="{Binding PrintBarcodeLabelCommand}"
+                           Appearance="Secondary"
+                           ToolTip="Seçili ürün için barkod etiketi PDF oluştur"
                            Height="38" Padding="14,0" Margin="0,0,8,0"/>
 
                 <ui:Button Content="Stok Transferi" 

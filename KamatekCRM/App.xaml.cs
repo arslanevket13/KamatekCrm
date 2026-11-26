@@ -61,6 +61,10 @@ namespace KamatekCrm
 
         private readonly System.Threading.CancellationTokenSource _appCts = new();
 
+#if DEBUG
+        private Diagnostics.DebugAutomationBridge? _debugAutomationBridge;
+#endif
+
 
 
         public static IServiceProvider ServiceProvider { get; private set; } = null!;
@@ -162,6 +166,8 @@ namespace KamatekCrm
             PresentationTraceSources.DataBindingSource.Listeners.Add(new Diagnostics.BindingErrorTraceListener());
 
             PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Warning;
+
+            Diagnostics.DebugDiagnosticsCollector.Instance.AttachWpfTraceListeners();
 
 #endif
 
@@ -303,6 +309,11 @@ namespace KamatekCrm
 
 
                 await _host.StartAsync();
+
+#if DEBUG
+                _debugAutomationBridge = new Diagnostics.DebugAutomationBridge(() => _host?.Services);
+                _debugAutomationBridge.Start();
+#endif
 
                 // MainWindow açılış karar ağacı: ilk kurulum tamamlanmamışsa veya --first-run geçildiyse LoginView asla ilk ekran olmasın
                 var mainWindow = _host.Services.GetRequiredService<MainWindow>();
@@ -664,9 +675,11 @@ namespace KamatekCrm
 
             // ── Diğer tüm hatalar ──
 
-            Log.Error(exception, "Unhandled UI exception: {Message}", exception.Message);
+            var correlationId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
 
-            ShowErrorToast($"Beklenmeyen bir hata oluştu: {exception.Message}");
+            Log.Error(exception, "Unhandled UI exception [CorrelationId: {CorrelationId}]: {Message}", correlationId, exception.Message);
+
+            ShowErrorToast(FormatSafeGlobalErrorMessage(exception, "Beklenmeyen bir hata oluştu", correlationId));
 
 
 
@@ -674,6 +687,32 @@ namespace KamatekCrm
 
             args.Handled = true;
 
+        }
+
+        private static bool IsDatabaseException(Exception? ex)
+        {
+            var current = ex;
+            while (current != null)
+            {
+                if (current is Npgsql.PostgresException
+                    or Npgsql.NpgsqlException
+                    or Microsoft.EntityFrameworkCore.DbUpdateException
+                    || ToastService.ContainsRawDatabaseError(current.Message))
+                {
+                    return true;
+                }
+                current = current.InnerException;
+            }
+            return false;
+        }
+
+        private static string FormatSafeGlobalErrorMessage(Exception? ex, string prefix, string correlationId)
+        {
+            if (IsDatabaseException(ex))
+            {
+                return $"{prefix}: Veritabanı işlemi gerçekleştirilemedi. Lütfen tekrar deneyin. (Ref: {correlationId})";
+            }
+            return $"{prefix}. Lütfen tekrar deneyin. (Ref: {correlationId})";
         }
 
 
@@ -693,8 +732,9 @@ namespace KamatekCrm
         {
 
             var exception = args.ExceptionObject as Exception;
+            var correlationId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
 
-            Log.Fatal(exception, "Unhandled domain exception - IsTerminating: {IsTerminating}", args.IsTerminating);
+            Log.Fatal(exception, "Unhandled domain exception [CorrelationId: {CorrelationId}] - IsTerminating: {IsTerminating}", correlationId, args.IsTerminating);
 
             // Kapanmadan önce redakte edilmiş küçük bir çökme izi bırak (dump değil).
             var crashArtifact = CrashArtifactWriter.Write(exception, "AppDomain.UnhandledException", args.IsTerminating);
@@ -723,7 +763,7 @@ namespace KamatekCrm
 
                         MessageBox.Show(
 
-                            $"Kritik bir hata oluştu ve uygulama kapanıyor:\n\n{exception?.Message}",
+                            FormatSafeGlobalErrorMessage(exception, "Kritik bir hata oluştu ve uygulama kapanıyor", correlationId),
 
                             "Kritik Hata",
 
@@ -743,7 +783,7 @@ namespace KamatekCrm
 
             {
 
-                ShowErrorToast($"Arka plan hatası: {exception?.Message}");
+                ShowErrorToast(FormatSafeGlobalErrorMessage(exception, "Arka plan hatası", correlationId));
 
             }
 
@@ -775,7 +815,9 @@ namespace KamatekCrm
 
 
 
-            Log.Error(innerException, "Unobserved task exception: {Message}", innerException?.Message);
+            var correlationId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+
+            Log.Error(innerException, "Unobserved task exception [CorrelationId: {CorrelationId}]: {Message}", correlationId, innerException?.Message);
 
 
 
@@ -787,7 +829,7 @@ namespace KamatekCrm
 
             // Kullanıcıya thread-safe bildirim gönder
 
-            ShowErrorToast($"Arka plan işleminde hata: {innerException?.Message}");
+            ShowErrorToast(FormatSafeGlobalErrorMessage(innerException, "Arka plan işleminde hata", correlationId));
 
         }
 
@@ -1000,6 +1042,18 @@ namespace KamatekCrm
 
 
                 // Aktif arka plan güncelleme taramasını iptal et
+
+#if DEBUG
+                try
+                {
+                    _debugAutomationBridge?.Dispose();
+                    _debugAutomationBridge = null;
+                }
+                catch (Exception bridgeEx)
+                {
+                    Serilog.Log.Debug(bridgeEx, "DebugAutomationBridge kapatılırken ikincil hata: {Source}", "App.xaml.cs");
+                }
+#endif
 
                 try
 

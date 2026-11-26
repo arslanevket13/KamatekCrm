@@ -38,7 +38,14 @@ namespace KamatekCrm.Services
         public static void Initialize()
         {
             string savedTheme = Properties.Settings.Default.ThemePreference;
-            if (string.IsNullOrEmpty(savedTheme)) savedTheme = "PremiumLight";
+            if (string.IsNullOrWhiteSpace(savedTheme) || !AvailableThemes.Contains(savedTheme))
+            {
+                savedTheme = AppSettings.CurrentTheme;
+            }
+            if (string.IsNullOrWhiteSpace(savedTheme) || !AvailableThemes.Contains(savedTheme))
+            {
+                savedTheme = "PremiumLight";
+            }
 
             ChangeTheme(savedTheme);
         }
@@ -120,11 +127,12 @@ namespace KamatekCrm.Services
                 }
                 else
                 {
-                    // Fallback: UxFoundation öncesine (DesignTokens ve WPF-UI sonrasına) ekle
-                    var uxDict = dictionaries.FirstOrDefault(d =>
+                    // Fallback: Styles/DesignTokens veya UxFoundation öncesine ekle
+                    var afterThemeDict = dictionaries.FirstOrDefault(d =>
                         d.Source != null &&
-                        d.Source.OriginalString.Contains("UxFoundation.xaml", StringComparison.OrdinalIgnoreCase));
-                    int insertIndex = uxDict != null ? dictionaries.IndexOf(uxDict) : dictionaries.Count;
+                        (d.Source.OriginalString.Contains("Styles/DesignTokens.xaml", StringComparison.OrdinalIgnoreCase) ||
+                         d.Source.OriginalString.Contains("UxFoundation.xaml", StringComparison.OrdinalIgnoreCase)));
+                    int insertIndex = afterThemeDict != null ? dictionaries.IndexOf(afterThemeDict) : dictionaries.Count;
                     dictionaries.Insert(Math.Max(0, insertIndex), newThemeDict);
                 }
 

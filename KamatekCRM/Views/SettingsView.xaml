@@ -225,7 +225,7 @@
                     BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                 <ScrollViewer>
                     <ScrollViewer.Style>
-                        <Style TargetType="ScrollViewer">
+                        <Style TargetType="ScrollViewer" BasedOn="{StaticResource {x:Type ScrollViewer}}">
                             <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
                             <Style.Triggers>
                                 <!-- Tab 2'de LegacyLedgerIssues DataGrid sanallaştırmasını korumak için dış dikey kaydırma kapatılır -->

@@ -41,6 +41,15 @@ namespace KamatekCrm.Views
             KamatekCrm.Helpers.WindowControlHelper.SetupWindowControls(this);
         }
 
+        private void BarcodeTextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            // Donanımsal barkod okuyucu CR/Enter gönderdiğinde pencerenin yanlışlıkla kaydedip kapanmasını engelle
+            if (e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.Return)
+            {
+                e.Handled = true;
+            }
+        }
+
         private void CloseWindow_Click(object sender, RoutedEventArgs e)
         {
             try { System.Windows.Input.Keyboard.ClearFocus(); } catch (Exception catchEx) { Serilog.Log.Debug(catchEx, "İşlem sırasında beklenen/ikincil hata yakalandı: {Source}", "AddProductWindow.xaml.cs"); }

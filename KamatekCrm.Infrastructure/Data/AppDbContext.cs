@@ -253,6 +253,13 @@ namespace KamatekCrm.Infrastructure.Data
                 entity.HasIndex(e => e.AssignedToUserId);
                 entity.HasIndex(e => e.FollowUpDate);
                 entity.HasIndex(e => e.InteractionNumber).IsUnique();
+                entity.HasIndex(e => e.Direction);
+                entity.HasIndex(e => e.BallInCourt);
+                entity.HasIndex(e => e.SnoozedUntilUtc);
+
+                entity.Property(e => e.LinkedEntityType).HasMaxLength(50);
+                entity.Property(e => e.EntriesJson).HasColumnType("jsonb");
+                entity.Property(e => e.ChecklistJson).HasColumnType("jsonb");
 
                 entity.HasOne(e => e.Customer)
                     .WithMany()
@@ -431,6 +438,15 @@ namespace KamatekCrm.Infrastructure.Data
                 entity.HasIndex(e => e.WorkOrderType);
                 entity.HasIndex(e => e.CreatedDate);
                 entity.HasIndex(e => e.ScheduledDate);
+                entity.HasIndex(e => e.NextFollowUpUtc);
+
+                entity.Property(e => e.SubTasksJson)
+                      .HasColumnType("jsonb")
+                      .HasDefaultValue("[]");
+
+                entity.Property(e => e.DiscoveryChecklistJson)
+                      .HasColumnType("jsonb")
+                      .HasDefaultValue("[]");
 
                 entity.Property(e => e.JobDetails)
                       .HasColumnType("jsonb")

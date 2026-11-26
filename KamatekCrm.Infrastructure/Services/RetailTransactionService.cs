@@ -41,7 +41,8 @@ public sealed class RetailTransactionService : IRetailTransactionService
         if (existing is not null)
             return Result.Success(new SaleTransactionResult(existing.Id, existing.OrderNumber, true));
 
-        await using var transaction = await BeginTransactionAsync(context, cancellationToken);
+        return await context.ExecuteInTransactionAsync(async transaction =>
+        {
         try
         {
             var warehouse = await context.Warehouses
@@ -196,6 +197,7 @@ public sealed class RetailTransactionService : IRetailTransactionService
             await RollbackAsync(transaction, cancellationToken);
             return Result.Failure<SaleTransactionResult>($"Satış tamamlanamadı: {exception.Message}");
         }
+        }, IsolationLevel.Serializable, cancellationToken);
     }
 
     public async Task<Result<IReadOnlyList<SaleSummaryDto>>> SearchSalesAsync(
@@ -245,8 +247,8 @@ public sealed class RetailTransactionService : IRetailTransactionService
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         var existing = await context.SalesReturns.AsNoTracking().SingleOrDefaultAsync(item => item.IdempotencyKey == command.IdempotencyKey, cancellationToken);
         if (existing is not null) return Result.Success(new ReturnTransactionResult(existing.Id, existing.ReturnNumber, existing.TotalAmount, true));
-        await using var transaction = await BeginTransactionAsync(context, cancellationToken);
-
+        return await context.ExecuteInTransactionAsync(async transaction =>
+        {
         try
         {
             var order = await context.SalesOrders.Include(item => item.Items).Include(item => item.Payments)
@@ -453,6 +455,7 @@ public sealed class RetailTransactionService : IRetailTransactionService
             await RollbackAsync(transaction, cancellationToken);
             return Result.Failure<ReturnTransactionResult>($"Satış iadesi tamamlanamadı: {exception.Message}");
         }
+        }, IsolationLevel.Serializable, cancellationToken);
     }
 
     public async Task<Result<LegacyLedgerPreviewDto>> PreviewLegacyLedgerAsync(CancellationToken cancellationToken = default)
@@ -571,11 +574,6 @@ public sealed class RetailTransactionService : IRetailTransactionService
 
     private static void AddAudit(AppDbContext context, string action, string entity, string recordId, string description, string username) =>
         context.ActivityLogs.Add(new ActivityLog { Action = action, ActionType = action, EntityName = entity, RecordId = recordId, ReferenceId = recordId, Description = description, Username = username, Timestamp = DateTime.UtcNow, UserAgent = "WPF Client" });
-
-    private static async Task<IDbContextTransaction?> BeginTransactionAsync(AppDbContext context, CancellationToken cancellationToken) =>
-        context.Database.IsRelational()
-            ? await context.Database.CreateExecutionStrategy().ExecuteAsync(async () => await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken))
-            : null;
 
     private static Task CommitAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken) => transaction?.CommitAsync(cancellationToken) ?? Task.CompletedTask;
     private static Task RollbackAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken) => transaction?.RollbackAsync(cancellationToken) ?? Task.CompletedTask;

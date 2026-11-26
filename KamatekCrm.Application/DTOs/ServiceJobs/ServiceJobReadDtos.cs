@@ -187,6 +187,14 @@ public sealed class ServiceJobRowDto
     public DateTime? SlaDeadline { get; init; }
     public string? TechnicianNotes { get; init; }
     public string? PhotoPathsJson { get; init; }
+    public DateTime? ModifiedDate { get; init; }
+    public DateTime? ProposalSentDate { get; init; }
+    public bool IsConvertedToQuote { get; init; }
+    public bool IsPaid { get; init; }
+    public DateTime? NextFollowUpUtc { get; init; }
+    public string? FollowUpNote { get; init; }
+    public string SubTasksJson { get; init; } = "[]";
+    public string DiscoveryChecklistJson { get; init; } = "[]";
     public IReadOnlyList<string> PhotoPathsList => ParsePhotoPaths(PhotoPathsJson);
 
     private static IReadOnlyList<string> ParsePhotoPaths(string? value)

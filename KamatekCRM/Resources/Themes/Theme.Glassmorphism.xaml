@@ -6,6 +6,33 @@
          Tam Kontrast Birincil Metin (#FFFFFF) ve WCAG AA İkincil Metin (#E2E8F0 / #94A3B8)
     ═══════════════════════════════════════════════════════════════════ -->
 
+    <!-- ─────────── FAZ 6A KURUMSAL ANLAMSAL TOKEN ÇEKİRDEĞİ ─────────── -->
+    <SolidColorBrush x:Key="CanvasBgBrush" Color="#091428"/>
+    <SolidColorBrush x:Key="SurfaceSubtleBrush" Color="#1B2A4E" Opacity="0.80"/>
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#243763" Opacity="0.85"/>
+    <SolidColorBrush x:Key="ControlBgBrush" Color="#0F1A33" Opacity="0.88"/>
+    <SolidColorBrush x:Key="ControlHoverBgBrush" Color="#18274B" Opacity="0.90"/>
+    <SolidColorBrush x:Key="ControlDisabledBgBrush" Color="#0C1528" Opacity="0.65"/>
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="#475E94" Opacity="0.85"/>
+    <SolidColorBrush x:Key="BorderFocusBrush" Color="#818CF8"/>
+    <SolidColorBrush x:Key="AccentPrimaryBrush" Color="#6366F1"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#4F46E5"/>
+    <SolidColorBrush x:Key="AccentSubtleBgBrush" Color="#312E81" Opacity="0.72"/>
+    <SolidColorBrush x:Key="TitleBarBgBrush" Color="#0B1428" Opacity="0.92"/>
+    <SolidColorBrush x:Key="TitleBarFgBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SidebarBgBrush" Color="#111B3D" Opacity="0.90"/>
+    <SolidColorBrush x:Key="SidebarHoverBgBrush" Color="#1D2B54" Opacity="0.88"/>
+    <SolidColorBrush x:Key="SidebarActiveBgBrush" Color="#312E81" Opacity="0.85"/>
+    <SolidColorBrush x:Key="SidebarActiveFgBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="BadgeSuccessBgBrush" Color="#064E3B" Opacity="0.75"/>
+    <SolidColorBrush x:Key="BadgeSuccessFgBrush" Color="#6EE7B7"/>
+    <SolidColorBrush x:Key="BadgeWarningBgBrush" Color="#78350F" Opacity="0.75"/>
+    <SolidColorBrush x:Key="BadgeWarningFgBrush" Color="#FCD34D"/>
+    <SolidColorBrush x:Key="BadgeErrorBgBrush" Color="#7F1D1D" Opacity="0.75"/>
+    <SolidColorBrush x:Key="BadgeErrorFgBrush" Color="#FCA5A5"/>
+    <SolidColorBrush x:Key="BadgeInfoBgBrush" Color="#1E3A8A" Opacity="0.75"/>
+    <SolidColorBrush x:Key="BadgeInfoFgBrush" Color="#93C5FD"/>
+
     <!-- ─────────── CANONICAL SEMANTIC TOKENS ─────────── -->
     <SolidColorBrush x:Key="AppBackgroundBrush" Color="#091428"/>
     <SolidColorBrush x:Key="SurfaceBrush" Color="#131D36"/>

@@ -64,8 +64,12 @@
     <None Update="turkiye_ilce_mahalle.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="appsettings.Development.json" Condition="Exists('appsettings.Development.json')">
+    <None Update="appsettings.Development.json" Condition="'$(Configuration)' == 'Debug' and Exists('appsettings.Development.json')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+    <None Update="appsettings.Development.json" Condition="'$(Configuration)' != 'Debug' and Exists('appsettings.Development.json')">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </None>
     <None Update="appsettings.json">

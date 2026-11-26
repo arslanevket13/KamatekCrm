@@ -127,36 +127,6 @@
                               GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                               AlternatingRowBackground="{DynamicResource HoverOverlayBrush}">
 
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="FontSize" Value="11"/>
-                                <Setter Property="Padding" Value="12,8"/>
-                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
-
-                        <DataGrid.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
-                                <Setter Property="Padding" Value="12,0"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="DataGridCell">
-                                            <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
-                                                <ContentPresenter VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </DataGrid.CellStyle>
-                        
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="50"/>
 

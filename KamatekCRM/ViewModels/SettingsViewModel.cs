@@ -575,8 +575,9 @@ namespace KamatekCrm.ViewModels
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Serilog.Log.Warning(ex, "Son yedek bilgisi alınırken hata oluştu.");
                 LastBackupText = "Bilgi alınamadı";
             }
         }
@@ -588,19 +589,24 @@ namespace KamatekCrm.ViewModels
             IsBusy = true;
             try
             {
-                string backupPath = "";
-                await Task.Run(() => 
-                {
-                    backupPath = _backupService.BackupDatabase(
-                        string.IsNullOrWhiteSpace(CustomBackupPath) ? null : CustomBackupPath);
-                });
+                var targetDir = string.IsNullOrWhiteSpace(CustomBackupPath) ? null : CustomBackupPath;
+                string backupPath = await Task.Run(() => _backupService.BackupDatabase(targetDir));
 
                 LoadLastBackupInfo();
                 _toastService?.ShowSuccess("Başarılı", $"Yedekleme başarılı! Konum: {backupPath}");
             }
             catch (Exception ex)
             {
-                _toastService?.ShowError("Hata", $"Yedekleme sırasında hata oluştu: {ex.Message}");
+                Serilog.Log.Error(ex, "Veritabanı yedeği alınırken hata oluştu.");
+                var message = $"Yedekleme sırasında hata oluştu: {ex.Message}";
+                if (_toastService != null)
+                {
+                    _toastService.ShowError("Yedekleme Hatası", message);
+                }
+                else if (_dialogService != null)
+                {
+                    await _dialogService.ShowErrorAsync(message, "Yedekleme Hatası");
+                }
             }
             finally
             {
@@ -683,7 +689,16 @@ namespace KamatekCrm.ViewModels
             }
             catch (Exception ex)
             {
-                _toastService?.ShowError("Hata", $"Geri yükleme sırasında hata oluştu: {ex.Message}");
+                Serilog.Log.Error(ex, "Veritabanı geri yüklenirken hata oluştu.");
+                var message = $"Geri yükleme sırasında hata oluştu: {ex.Message}";
+                if (_toastService != null)
+                {
+                    _toastService.ShowError("Geri Yükleme Hatası", message);
+                }
+                else if (_dialogService != null)
+                {
+                    await _dialogService.ShowErrorAsync(message, "Geri Yükleme Hatası");
+                }
                 IsBusy = false;
             }
             // Not: IsBusy = false finally'de olmamalı çünkü restart yapılıyor

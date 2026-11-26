@@ -66,6 +66,9 @@ namespace KamatekCrm.ViewModels
                     UploadProductPhotoCommand.NotifyCanExecuteChanged();
                     DeleteProductPhotoCommand.NotifyCanExecuteChanged();
                     TransferStockCommand.NotifyCanExecuteChanged();
+                    EditProductCommand.NotifyCanExecuteChanged();
+                    DeleteProductCommand.NotifyCanExecuteChanged();
+                    PrintBarcodeLabelCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -321,11 +324,12 @@ namespace KamatekCrm.ViewModels
             // 1. Metin Araması
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                var search = SearchText.ToLower();
-                bool matchesText = (product.ProductName != null && product.ProductName.ToLower().Contains(search)) ||
-                                   (product.SKU != null && product.SKU.ToLower().Contains(search)) ||
-                                   (product.Category != null && product.Category.Name != null && product.Category.Name.ToLower().Contains(search)) ||
-                                   (product.Brand != null && product.Brand.BrandName != null && product.Brand.BrandName.ToLower().Contains(search));
+                var search = SearchText.Trim().ToLowerInvariant();
+                bool matchesText = (product.ProductName != null && product.ProductName.ToLowerInvariant().Contains(search)) ||
+                                   (product.SKU != null && product.SKU.ToLowerInvariant().Contains(search)) ||
+                                   (product.Barcode != null && product.Barcode.ToLowerInvariant().Contains(search)) ||
+                                   (product.Category != null && product.Category.Name != null && product.Category.Name.ToLowerInvariant().Contains(search)) ||
+                                   (product.Brand != null && product.Brand.BrandName != null && product.Brand.BrandName.ToLowerInvariant().Contains(search));
                 if (!matchesText) return false;
             }
 
@@ -367,6 +371,31 @@ namespace KamatekCrm.ViewModels
                 // Liste yeniden yükle
                 RefreshProductList();
             }
+        }
+
+        /// <summary>
+        /// Seçili ürün için Barkod Etiketi Yazdır penceresini aç
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(IsProductSelected))]
+        private void PrintBarcodeLabel()
+        {
+            if (SelectedProduct == null) return;
+
+            var vm = new BarcodeLabelPrintViewModel(
+                SelectedProduct.ProductName,
+                SelectedProduct.SKU,
+                SelectedProduct.Barcode,
+                SelectedProduct.SalePrice,
+                SelectedProduct.Currency,
+                _dialogService,
+                _toastService);
+
+            var window = new Views.BarcodeLabelPrintWindow
+            {
+                DataContext = vm,
+                Owner = System.Windows.Application.Current?.MainWindow
+            };
+            window.ShowDialog();
         }
 
         /// <summary>

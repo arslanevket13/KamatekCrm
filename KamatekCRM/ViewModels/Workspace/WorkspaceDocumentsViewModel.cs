@@ -211,9 +211,10 @@ namespace KamatekCrm.ViewModels
 
             try
             {
+                var defaultFileName = KamatekCrm.Helpers.WorkOrderPdfFileNameBuilder.Build(document.Value, item.Title);
                 var filePath = await _dialogService.ShowSaveFileDialogAsync(
                     $"{item.Title} — Kaydet", "PDF Dosyası (*.pdf)|*.pdf",
-                    $"{item.Key.ToLowerInvariant()}_{_jobId:D6}.pdf");
+                    defaultFileName);
                 if (string.IsNullOrWhiteSpace(filePath)) return;
 
                 switch (item.Key)

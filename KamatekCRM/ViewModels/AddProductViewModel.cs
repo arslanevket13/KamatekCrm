@@ -137,13 +137,174 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         public string SaveButtonText => _isEditMode ? "Güncelle" : "Kaydet";
 
+        private bool _isSaving;
+        private string _validationMessage = string.Empty;
+
+        /// <summary>
+        /// Kayıt işlemi sürüyor mu?
+        /// </summary>
+        public bool IsSaving
+        {
+            get => _isSaving;
+            private set
+            {
+                if (SetProperty(ref _isSaving, value))
+                {
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Satır içi doğrulama hata mesajı
+        /// </summary>
+        public string ValidationMessage
+        {
+            get => _validationMessage;
+            private set
+            {
+                if (SetProperty(ref _validationMessage, value))
+                {
+                    OnPropertyChanged(nameof(HasValidationError));
+                }
+            }
+        }
+
+        public bool HasValidationError => !string.IsNullOrWhiteSpace(ValidationMessage);
+
+        /// <summary>
+        /// Ürün adı (CanSave bildirimi için observable proxy)
+        /// </summary>
+        public string ProductName
+        {
+            get => _newProduct.ProductName;
+            set
+            {
+                var next = value ?? string.Empty;
+                if (!string.Equals(_newProduct.ProductName, next, StringComparison.Ordinal))
+                {
+                    _newProduct.ProductName = next;
+                    OnPropertyChanged();
+                    if (!string.IsNullOrWhiteSpace(next) && HasValidationError)
+                    {
+                        ValidationMessage = string.Empty;
+                    }
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Alış fiyatı (kâr marjı bildirimi için observable proxy)
+        /// </summary>
+        public decimal PurchasePrice
+        {
+            get => _newProduct.PurchasePrice;
+            set
+            {
+                if (_newProduct.PurchasePrice != value)
+                {
+                    _newProduct.PurchasePrice = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ProfitMarginDisplay));
+                    OnPropertyChanged(nameof(ProfitColor));
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Satış fiyatı (CanSave ve kâr marjı bildirimi için observable proxy)
+        /// </summary>
+        public decimal SalePrice
+        {
+            get => _newProduct.SalePrice;
+            set
+            {
+                if (_newProduct.SalePrice != value)
+                {
+                    _newProduct.SalePrice = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ProfitMarginDisplay));
+                    OnPropertyChanged(nameof(ProfitColor));
+                    if (value >= 0 && HasValidationError)
+                    {
+                        ValidationMessage = string.Empty;
+                    }
+                    SaveCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Kısa stok kodu (SKU) — kullanıcı tarafından serbestçe düzenlenebilir
+        /// </summary>
+        public string Sku
+        {
+            get => _newProduct.SKU;
+            set
+            {
+                var next = value ?? string.Empty;
+                if (!string.Equals(_newProduct.SKU, next, StringComparison.Ordinal))
+                {
+                    _newProduct.SKU = next;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(SkuBarcodePreview));
+                    PrintBarcodeLabelCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Barkod (EAN-13 veya barkod okuyucu girdisi)
+        /// </summary>
+        public string Barcode
+        {
+            get => _newProduct.Barcode;
+            set
+            {
+                var next = value ?? string.Empty;
+                if (!string.Equals(_newProduct.Barcode, next, StringComparison.Ordinal))
+                {
+                    _newProduct.Barcode = next;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(SkuBarcodePreview));
+                    PrintBarcodeLabelCommand.NotifyCanExecuteChanged();
+                }
+            }
+        }
+
+        public string SkuBarcodePreview
+        {
+            get
+            {
+                var skuText = string.IsNullOrWhiteSpace(Sku) ? "—" : Sku.Trim();
+                var barcodeText = string.IsNullOrWhiteSpace(Barcode) ? "Henüz tanımlı değil" : Barcode.Trim();
+                var formatHint = ProductCodeHelper.IsValidEan13(Barcode) ? " [EAN-13]" : string.Empty;
+                return $"SKU: {skuText}   •   Barkod: {barcodeText}{formatHint}";
+            }
+        }
+
         /// <summary>
         /// Ürün nesnesi
         /// </summary>
         public Product NewProduct
         {
             get => _newProduct;
-            set => SetProperty(ref _newProduct, value);
+            set
+            {
+                if (SetProperty(ref _newProduct, value))
+                {
+                    OnPropertyChanged(nameof(ProductName));
+                    OnPropertyChanged(nameof(Sku));
+                    OnPropertyChanged(nameof(Barcode));
+                    OnPropertyChanged(nameof(SkuBarcodePreview));
+                    OnPropertyChanged(nameof(PurchasePrice));
+                    OnPropertyChanged(nameof(SalePrice));
+                    SaveCommand.NotifyCanExecuteChanged();
+                    PrintBarcodeLabelCommand.NotifyCanExecuteChanged();
+                }
+            }
         }
 
         /// <summary>
@@ -395,32 +556,97 @@ namespace KamatekCrm.ViewModels
         }
 
         /// <summary>
-        /// Benzersiz SKU kodu üretir
+        /// Benzersiz kısa SKU kodu üretir ({PREFIX}-{0001})
         /// </summary>
         private string GenerateSKU()
         {
-            return ProductCodeHelper.GenerateSku(SelectedCategory);
+            return ProductCodeHelper.GenerateShortSku(SelectedCategory);
         }
 
         /// <summary>
-        /// SKU'yu yeniden üretir
+        /// Veritabanı benzersizlik kontrolü ile kısa SKU kodu üretir
         /// </summary>
         [RelayCommand]
-        private void RegenerateSKU()
+        private async Task RegenerateSKU()
         {
-            NewProduct.SKU = GenerateSKU();
-            OnPropertyChanged(nameof(NewProduct));
+            try
+            {
+                var prefix = ProductCodeHelper.GetCategoryPrefix(SelectedCategory);
+                var prefixPattern = prefix + "-";
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                var existingSkus = await context.Products.AsNoTracking()
+                    .Where(p => !p.IsDeleted && p.SKU != null && p.SKU.ToUpper().StartsWith(prefixPattern))
+                    .Select(p => p.SKU)
+                    .ToListAsync();
+
+                var nextSeq = ProductCodeHelper.ExtractNextSequence(prefix, existingSkus);
+                Sku = ProductCodeHelper.GenerateShortSku(SelectedCategory, nextSeq);
+                OnPropertyChanged(nameof(NewProduct));
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "Sıralı kısa SKU üretilemedi; rastgele kısa SKU kullanılıyor.");
+                Sku = GenerateSKU();
+                OnPropertyChanged(nameof(NewProduct));
+            }
         }
 
         /// <summary>
-        /// Barkod otomatik üretir
+        /// Benzersiz dahili EAN-13 (200 + 9 rakam + kontrol basamağı) barkod üretir
         /// </summary>
         [RelayCommand]
-        private void GenerateBarcode()
+        private async Task GenerateBarcode()
         {
+            try
+            {
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
+                for (var attempt = 0; attempt < 10; attempt++)
+                {
+                    var candidate = ProductCodeHelper.GenerateEan13Barcode();
+                    var exists = await context.Products.AsNoTracking()
+                        .AnyAsync(p => !p.IsDeleted && p.Barcode == candidate);
+                    if (!exists)
+                    {
+                        Barcode = candidate;
+                        OnPropertyChanged(nameof(NewProduct));
+                        return;
+                    }
+                }
+                Barcode = ProductCodeHelper.GenerateEan13Barcode();
+                OnPropertyChanged(nameof(NewProduct));
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "Barkod benzersizlik kontrolü yapılamadı; yerel EAN-13 üretildi.");
+                Barcode = ProductCodeHelper.GenerateEan13Barcode();
+                OnPropertyChanged(nameof(NewProduct));
+            }
+        }
 
-            NewProduct.Barcode = ProductCodeHelper.GenerateBarcode();
-            OnPropertyChanged(nameof(NewProduct));
+        private bool CanPrintBarcodeLabel() =>
+            !string.IsNullOrWhiteSpace(Sku) || !string.IsNullOrWhiteSpace(Barcode);
+
+        /// <summary>
+        /// Stok kartından doğrudan Barkod Etiketi Yazdır penceresini açar
+        /// </summary>
+        [RelayCommand(CanExecute = nameof(CanPrintBarcodeLabel))]
+        private void PrintBarcodeLabel()
+        {
+            var vm = new BarcodeLabelPrintViewModel(
+                string.IsNullOrWhiteSpace(ProductName) ? "Yeni Ürün" : ProductName,
+                Sku,
+                Barcode,
+                SalePrice,
+                NewProduct.Currency,
+                _dialogService,
+                _toastService);
+
+            var window = new Views.BarcodeLabelPrintWindow
+            {
+                DataContext = vm,
+                Owner = System.Windows.Application.Current?.MainWindow
+            };
+            window.ShowDialog();
         }
 
         /// <summary>
@@ -428,7 +654,8 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private bool CanSave()
         {
-            return !string.IsNullOrWhiteSpace(NewProduct.ProductName) &&
+            return !IsSaving &&
+                   !string.IsNullOrWhiteSpace(NewProduct.ProductName) &&
                    NewProduct.SalePrice >= 0;
         }
 
@@ -438,11 +665,30 @@ namespace KamatekCrm.ViewModels
         [RelayCommand(CanExecute = nameof(CanSave))]
         private async Task Save()
         {
+            if (IsSaving) return;
+
+            ValidationMessage = string.Empty;
+            if (string.IsNullOrWhiteSpace(NewProduct.ProductName))
+            {
+                ValidationMessage = "Ürün adı zorunludur.";
+                _toastService?.ShowWarning("Eksik Bilgi", ValidationMessage);
+                return;
+            }
+
+            if (NewProduct.SalePrice < 0 || NewProduct.PurchasePrice < 0)
+            {
+                ValidationMessage = "Alış ve satış fiyatı negatif olamaz.";
+                _toastService?.ShowWarning("Geçersiz Fiyat", ValidationMessage);
+                return;
+            }
+
+            IsSaving = true;
             try
             {
                 using var context = await _dbContextFactory.CreateDbContextAsync();
 
                 // 1. Normalizasyon: SKU ve Barcode alanları
+                NewProduct.ProductName = NewProduct.ProductName.Trim();
                 var normalizedSku = ProductCodeHelper.Normalize(NewProduct.SKU);
                 if (string.IsNullOrWhiteSpace(normalizedSku))
                 {
@@ -452,12 +698,17 @@ namespace KamatekCrm.ViewModels
 
                 NewProduct.SKU = normalizedSku;
                 NewProduct.Barcode = normalizedBarcode;
+                if (!_isEditMode)
+                {
+                    NewProduct.CreatedDate = DateTime.UtcNow;
+                }
 
                 // 2. Mükerrer SKU Kontrolü
                 var existingWithSku = await context.Products.AsNoTracking()
                     .FirstOrDefaultAsync(p => p.Id != NewProduct.Id && !p.IsDeleted && p.SKU.ToUpper() == normalizedSku);
                 if (existingWithSku != null)
                 {
+                    ValidationMessage = $"Bu Stok Kodu (SKU) '{existingWithSku.ProductName}' ürününde zaten kayıtlı.";
                     _toastService?.ShowWarning("Mükerrer Stok Kodu", $"Bu Stok Kodu (SKU) başka bir üründe ('{existingWithSku.ProductName}') zaten kayıtlı. Lütfen farklı bir stok kodu belirleyin veya otomatik üretin.");
                     return;
                 }
@@ -469,6 +720,7 @@ namespace KamatekCrm.ViewModels
                         .FirstOrDefaultAsync(p => p.Id != NewProduct.Id && !p.IsDeleted && p.Barcode.ToUpper() == normalizedBarcode);
                     if (existingWithBarcode != null)
                     {
+                        ValidationMessage = $"Bu Barkod '{existingWithBarcode.ProductName}' ürününde zaten kayıtlı.";
                         _toastService?.ShowWarning("Mükerrer Barkod", $"Bu Barkod başka bir üründe ('{existingWithBarcode.ProductName}') zaten kayıtlı. Lütfen farklı bir barkod giriniz.");
                         return;
                     }
@@ -507,6 +759,18 @@ namespace KamatekCrm.ViewModels
 
                     if (_isEditMode)
                     {
+                        // UPDATE: Detached UI entity yerine tracked kaydı DB'den yeniden yükle (PostgreSQL xmin concurrency uyumu)
+                        var trackedProduct = await context.Products
+                            .FirstOrDefaultAsync(p => p.Id == NewProduct.Id);
+                        if (trackedProduct == null)
+                        {
+                            if (transaction is not null)
+                            {
+                                await transaction.RollbackAsync();
+                            }
+                            return (Success: false, Warning: "Güncellenmek istenen ürün kaydı bulunamadı veya başka bir işlem tarafından silinmiş. Lütfen listeyi yenileyin.", StockDelta: 0, WarehouseId: defaultWarehouse.Id, ProductId: NewProduct.Id);
+                        }
+
                         // UPDATE: Stok mutasyonunu hareket olmadan ezme!
                         int stockDelta = 0;
                         if (StockAdjustment != 0)
@@ -521,13 +785,13 @@ namespace KamatekCrm.ViewModels
                         if (stockDelta != 0)
                         {
                             var inventory = await context.Inventories
-                                .FirstOrDefaultAsync(i => i.ProductId == NewProduct.Id && i.WarehouseId == defaultWarehouse.Id);
+                                .FirstOrDefaultAsync(i => i.ProductId == trackedProduct.Id && i.WarehouseId == defaultWarehouse.Id);
 
                             if (inventory == null)
                             {
                                 inventory = new Inventory
                                 {
-                                    ProductId = NewProduct.Id,
+                                    ProductId = trackedProduct.Id,
                                     WarehouseId = defaultWarehouse.Id,
                                     Quantity = 0,
                                     AverageCost = NewProduct.PurchasePrice
@@ -541,14 +805,14 @@ namespace KamatekCrm.ViewModels
                                 {
                                     await transaction.RollbackAsync();
                                 }
-                                return (Success: false, Warning: $"Yetersiz stok! Ana depodaki mevcut stok: {inventory.Quantity}, düşülmek istenen: {Math.Abs(stockDelta)}.", StockDelta: 0, WarehouseId: defaultWarehouse.Id);
+                                return (Success: false, Warning: $"Yetersiz stok! Ana depodaki mevcut stok: {inventory.Quantity}, düşülmek istenen: {Math.Abs(stockDelta)}.", StockDelta: 0, WarehouseId: defaultWarehouse.Id, ProductId: trackedProduct.Id);
                             }
 
                             inventory.Quantity += stockDelta;
 
                             var st = new StockTransaction
                             {
-                                ProductId = NewProduct.Id,
+                                ProductId = trackedProduct.Id,
                                 SourceWarehouseId = stockDelta < 0 ? defaultWarehouse.Id : null,
                                 TargetWarehouseId = stockDelta > 0 ? defaultWarehouse.Id : null,
                                 Quantity = Math.Abs(stockDelta),
@@ -561,43 +825,86 @@ namespace KamatekCrm.ViewModels
                             context.StockTransactions.Add(st);
 
                             NewProduct.TotalStockQuantity = _originalStock + stockDelta;
+                            trackedProduct.TotalStockQuantity = NewProduct.TotalStockQuantity;
                         }
 
-                        context.Products.Update(NewProduct);
+                        // Yalnızca skaler alanlar ve FK ID'ler kopyalanır (detached navigation eklenmez)
+                        trackedProduct.ProductName = NewProduct.ProductName;
+                        trackedProduct.SKU = NewProduct.SKU;
+                        trackedProduct.Barcode = NewProduct.Barcode;
+                        trackedProduct.ModelName = NewProduct.ModelName;
+                        trackedProduct.Description = NewProduct.Description;
+                        trackedProduct.CategoryId = NewProduct.CategoryId;
+                        trackedProduct.BrandId = NewProduct.BrandId;
+                        trackedProduct.ProductCategoryType = NewProduct.ProductCategoryType;
+                        trackedProduct.Unit = NewProduct.Unit;
+                        trackedProduct.Currency = NewProduct.Currency;
+                        trackedProduct.PurchasePrice = NewProduct.PurchasePrice;
+                        trackedProduct.SalePrice = NewProduct.SalePrice;
+                        trackedProduct.AverageCost = NewProduct.AverageCost;
+                        trackedProduct.VatRate = NewProduct.VatRate;
+                        trackedProduct.MinStockLevel = NewProduct.MinStockLevel;
+                        trackedProduct.SupplierName = NewProduct.SupplierName;
+                        trackedProduct.ImagePath = NewProduct.ImagePath;
+                        trackedProduct.Specifications = NewProduct.Specifications;
+
                         await context.SaveChangesAsync();
                         if (transaction is not null)
                         {
                             await transaction.CommitAsync();
                         }
 
-                        return (Success: true, Warning: (string?)null, StockDelta: stockDelta, WarehouseId: defaultWarehouse.Id);
+                        return (Success: true, Warning: (string?)null, StockDelta: stockDelta, WarehouseId: defaultWarehouse.Id, ProductId: trackedProduct.Id);
                     }
                     else
                     {
-                        // ADD: Yeni ürün ekle
-                        NewProduct.TotalStockQuantity = InitialStock > 0 ? InitialStock : 0;
-                        context.Products.Add(NewProduct);
+                        // ADD: NpgsqlRetryingExecutionStrategy retry güvenliği için lambda içinde taze Product örneği oluştur
+                        int openingStock = InitialStock > 0 ? InitialStock : 0;
+                        var createdProduct = new Product
+                        {
+                            ProductName = NewProduct.ProductName,
+                            SKU = NewProduct.SKU,
+                            Barcode = NewProduct.Barcode,
+                            ModelName = NewProduct.ModelName,
+                            Description = NewProduct.Description,
+                            CategoryId = NewProduct.CategoryId,
+                            BrandId = NewProduct.BrandId,
+                            ProductCategoryType = NewProduct.ProductCategoryType,
+                            Unit = NewProduct.Unit,
+                            Currency = NewProduct.Currency,
+                            PurchasePrice = NewProduct.PurchasePrice,
+                            SalePrice = NewProduct.SalePrice,
+                            AverageCost = NewProduct.AverageCost > 0 ? NewProduct.AverageCost : NewProduct.PurchasePrice,
+                            VatRate = NewProduct.VatRate,
+                            MinStockLevel = NewProduct.MinStockLevel,
+                            TotalStockQuantity = openingStock,
+                            SupplierName = NewProduct.SupplierName,
+                            ImagePath = NewProduct.ImagePath,
+                            Specifications = NewProduct.Specifications
+                        };
+
+                        context.Products.Add(createdProduct);
                         await context.SaveChangesAsync();
 
                         // Açılış stoğu varsa aynı transaction içinde Inventory ve StockTransaction oluştur
-                        if (InitialStock > 0)
+                        if (openingStock > 0)
                         {
                             var inventory = new Inventory
                             {
-                                ProductId = NewProduct.Id,
+                                ProductId = createdProduct.Id,
                                 WarehouseId = defaultWarehouse.Id,
-                                Quantity = InitialStock,
-                                AverageCost = NewProduct.PurchasePrice
+                                Quantity = openingStock,
+                                AverageCost = createdProduct.PurchasePrice
                             };
                             context.Inventories.Add(inventory);
 
                             var st = new StockTransaction
                             {
-                                ProductId = NewProduct.Id,
+                                ProductId = createdProduct.Id,
                                 TargetWarehouseId = defaultWarehouse.Id,
-                                Quantity = InitialStock,
+                                Quantity = openingStock,
                                 TransactionType = StockTransactionType.OpeningStock,
-                                UnitCost = NewProduct.PurchasePrice,
+                                UnitCost = createdProduct.PurchasePrice,
                                 Date = DateTime.UtcNow,
                                 Description = "Açılış / Devir Stoğu",
                                 ReferenceId = $"OPEN-{DateTime.UtcNow:yyyyMMddHHmmss}"
@@ -611,7 +918,7 @@ namespace KamatekCrm.ViewModels
                             await transaction.CommitAsync();
                         }
 
-                        return (Success: true, Warning: (string?)null, StockDelta: InitialStock, WarehouseId: defaultWarehouse.Id);
+                        return (Success: true, Warning: (string?)null, StockDelta: openingStock, WarehouseId: defaultWarehouse.Id, ProductId: createdProduct.Id);
                     }
                 });
 
@@ -627,14 +934,22 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
+                if (!_isEditMode)
+                {
+                    NewProduct.Id = txOutcome.ProductId;
+                    NewProduct.TotalStockQuantity = txOutcome.StockDelta;
+                }
+
+                // Stok listesini her başarılı kayıt/güncellemede EventAggregator üzerinden yenile
+                EventAggregator.Instance.Publish(new StockUpdatedEvent(
+                    NewProduct.Id,
+                    txOutcome.WarehouseId,
+                    _isEditMode ? _originalStock : 0,
+                    NewProduct.TotalStockQuantity,
+                    _isEditMode ? "Ürün Güncellendi" : (InitialStock > 0 ? "Açılış / Devir Stoğu" : "Yeni Ürün Oluşturuldu")));
+
                 if (_isEditMode)
                 {
-                    if (txOutcome.StockDelta != 0)
-                    {
-                        EventAggregator.Instance.Publish(new StockUpdatedEvent(
-                            NewProduct.Id, txOutcome.WarehouseId, _originalStock, NewProduct.TotalStockQuantity, "Ürün Düzenleme Stok Düzeltmesi"));
-                    }
-
                     if (_toastService != null)
                         _toastService.ShowSuccess("Başarılı", "Ürün başarıyla güncellendi!");
                     else if (_dialogService != null)
@@ -642,12 +957,6 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
-                    if (InitialStock > 0)
-                    {
-                        EventAggregator.Instance.Publish(new StockUpdatedEvent(
-                            NewProduct.Id, txOutcome.WarehouseId, 0, InitialStock, "Açılış / Devir Stoğu"));
-                    }
-
                     if (_toastService != null)
                         _toastService.ShowSuccess("Başarılı", "Ürün başarıyla kaydedildi!");
                     else if (_dialogService != null)
@@ -656,9 +965,22 @@ namespace KamatekCrm.ViewModels
 
                 RequestClose?.Invoke(true);
             }
+            catch (DbUpdateConcurrencyException concurrencyEx)
+            {
+                string affectedEntities = string.Join(", ", concurrencyEx.Entries.Select(e => e.Metadata.ClrType.Name));
+                Serilog.Log.Error(concurrencyEx, "Stok kartı eşzamanlılık çakışması (ProductId: {ProductId}, Entities: {Entities})", NewProduct.Id, affectedEntities);
+                ValidationMessage = "Kayıt başka bir işlem tarafından güncellenmiş veya silinmiş. Lütfen listeyi yenileyip tekrar deneyin.";
+                _toastService?.ShowWarning("Eşzamanlılık Çakışması", ValidationMessage);
+            }
             catch (Exception ex)
             {
-                _toastService?.ShowError("Hata", $"Kaydetme hatası: {ex.Message}");
+                Serilog.Log.Error(ex, "Stok kartı kaydedilirken hata oluştu.");
+                ValidationMessage = $"Kaydetme hatası: {ex.Message}";
+                _toastService?.ShowError("Hata", ValidationMessage);
+            }
+            finally
+            {
+                IsSaving = false;
             }
         }
 

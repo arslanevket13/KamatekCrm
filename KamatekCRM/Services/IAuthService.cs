@@ -13,6 +13,18 @@ namespace KamatekCrm.Services
         /// </summary>
         Task<bool> LoginAsync(string username, string password);
 
+#if DEBUG
+        /// <summary>
+        /// Kullanıcı mevcut uygulama oturumunda manuel olarak çıkış yaptı mı?
+        /// </summary>
+        bool HasLoggedOutManually => false;
+
+        /// <summary>
+        /// Yalnızca geliştirme (DEBUG) ortamında aktif Admin hesabıyla parola doğrulaması olmadan hızlı oturum açar.
+        /// </summary>
+        Task<bool> DevQuickLoginAsAdminAsync(string? preferredUsername = null) => Task.FromResult(false);
+#endif
+
         /// <summary>
         /// DPAPI ile saklanan oturum bilgisini doğrulayarak sessiz otomatik giriş yapar.
         /// </summary>

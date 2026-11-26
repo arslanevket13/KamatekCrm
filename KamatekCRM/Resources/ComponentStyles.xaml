@@ -280,6 +280,8 @@
                                      Text="{Binding SearchText, RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=PropertyChanged}"
                                      Background="Transparent"
                                      BorderThickness="0"
+                                     MinHeight="0"
+                                     Padding="0"
                                      Foreground="{DynamicResource PrimaryTextBrush}"
                                      FontSize="13"
                                      VerticalContentAlignment="Center"
@@ -315,7 +317,7 @@
                                     VerticalAlignment="Center"
                                     Command="{Binding ClearCommand, RelativeSource={RelativeSource TemplatedParent}}">
                                 <Button.Style>
-                                    <Style TargetType="Button">
+                                    <Style TargetType="Button" BasedOn="{StaticResource BtnGhost}">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding HasText, RelativeSource={RelativeSource TemplatedParent}}" Value="True">

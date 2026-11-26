@@ -258,6 +258,27 @@
                             <TextBlock Text="{Binding LoginButtonText}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ui:Button>
+
+                    <!-- DEV-ONLY Quick Admin Login Button -->
+                    <ui:Button x:Name="DevQuickLoginBtn"
+                               Command="{Binding DevQuickLoginCommand}"
+                               Visibility="{Binding IsDebugQuickLoginVisible, Converter={StaticResource BoolToVis}}"
+                               Appearance="Secondary"
+                               HorizontalAlignment="Stretch"
+                               Height="38"
+                               Margin="0,10,0,0"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextBodyBrush}"
+                               BorderBrush="{DynamicResource BorderSubtleBrush}"
+                               Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <ui:SymbolIcon Symbol="Key24" FontSize="15"
+                                           Foreground="{DynamicResource ThemePrimary}"
+                                           Margin="0,0,8,0"/>
+                            <TextBlock Text="Hızlı Admin Girişi (DEBUG)" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ui:Button>
                 </StackPanel>
             </ScrollViewer>
 

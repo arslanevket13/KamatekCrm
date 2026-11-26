@@ -20,15 +20,18 @@ namespace KamatekCrm.Infrastructure.Services
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly IApplicationAuthorizationService _authorization;
         private readonly ICurrentUserContext _currentUser;
+        private readonly IInteractionEventNotifier? _eventNotifier;
 
         public CustomerInteractionCommandService(
             IDbContextFactory<AppDbContext> dbContextFactory,
             IApplicationAuthorizationService authorization,
-            ICurrentUserContext currentUser)
+            ICurrentUserContext currentUser,
+            IInteractionEventNotifier? eventNotifier = null)
         {
             _dbContextFactory = dbContextFactory;
             _authorization = authorization;
             _currentUser = currentUser;
+            _eventNotifier = eventNotifier;
         }
 
         public async Task<Result<CustomerInteractionDto>> CreateAsync(
@@ -78,6 +81,37 @@ namespace KamatekCrm.Infrastructure.Services
                 var normalizedPhone = PhoneNormalizationHelper.NormalizePhoneNumber(dto.CallerPhone);
                 var interactionNumber = $"TALEP-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid():N}"[..24].ToUpper();
 
+                var initialEntries = new List<InteractionThreadEntry>();
+                var initialNoteText = !string.IsNullOrWhiteSpace(dto.InitialThreadNote)
+                    ? dto.InitialThreadNote.Trim()
+                    : dto.DetailedNotes?.Trim();
+                if (!string.IsNullOrWhiteSpace(initialNoteText))
+                {
+                    initialEntries.Add(new InteractionThreadEntry
+                    {
+                        Id = Guid.NewGuid(),
+                        CreatedAtUtc = DateTime.UtcNow,
+                        AuthorName = !string.IsNullOrWhiteSpace(_currentUser.Username) ? _currentUser.Username : "Sistem",
+                        AuthorRole = !string.IsNullOrWhiteSpace(_currentUser.Role) ? _currentUser.Role : "Personel",
+                        EntryType = ThreadEntryType.Note,
+                        Content = initialNoteText
+                    });
+                }
+
+                var initialChecklist = new List<InteractionChecklistItem>();
+                if (dto.InitialChecklist != null && dto.InitialChecklist.Count > 0)
+                {
+                    foreach (var chk in dto.InitialChecklist.Where(x => !string.IsNullOrWhiteSpace(x)))
+                    {
+                        initialChecklist.Add(new InteractionChecklistItem
+                        {
+                            Id = Guid.NewGuid(),
+                            Title = chk.Trim(),
+                            IsCompleted = false
+                        });
+                    }
+                }
+
                 var interaction = new CustomerInteraction
                 {
                     InteractionNumber = interactionNumber,
@@ -105,6 +139,13 @@ namespace KamatekCrm.Infrastructure.Services
                     RelatedEntityType = dto.RelatedEntityType,
                     RelatedEntityId = dto.RelatedEntityId,
                     RelatedEntityNumber = dto.RelatedEntityNumber,
+                    Direction = dto.Direction,
+                    BallInCourt = dto.BallInCourt,
+                    SnoozedUntilUtc = dto.SnoozedUntilUtc.HasValue ? DateTime.SpecifyKind(dto.SnoozedUntilUtc.Value, DateTimeKind.Utc) : null,
+                    LinkedEntityType = dto.LinkedEntityType ?? dto.RelatedEntityType,
+                    LinkedEntityId = dto.LinkedEntityId ?? dto.RelatedEntityId,
+                    EntriesJson = JsonSerializer.Serialize(initialEntries),
+                    ChecklistJson = JsonSerializer.Serialize(initialChecklist),
                     CreatedDate = DateTime.UtcNow,
                     IsActive = true
                 };
@@ -155,6 +196,8 @@ namespace KamatekCrm.Infrastructure.Services
                 });
 
                 await context.SaveChangesAsync(cancellationToken);
+
+                _eventNotifier?.NotifyInteractionChanged(interaction.Id, interaction.InteractionNumber, interaction.CustomerId, "Created");
 
                 return Result.Success(MapToDto(interaction));
             }, cancellationToken: cancellationToken);
@@ -371,8 +414,249 @@ namespace KamatekCrm.Infrastructure.Services
             return Result.Success();
         }
 
+        public async Task<Result<CustomerInteractionDto>> AddThreadEntryAsync(
+            int interactionId,
+            AddThreadEntryDto dto,
+            CancellationToken cancellationToken = default)
+        {
+            if (interactionId <= 0)
+                return Result.Failure<CustomerInteractionDto>("Geçersiz görüşme kimliği.");
+            if (string.IsNullOrWhiteSpace(dto.Content))
+                return Result.Failure<CustomerInteractionDto>("Kayıt içeriği boş olamaz.");
+
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            return await context.ExecuteInTransactionAsync(async transaction =>
+            {
+                var interaction = await context.CustomerInteractions
+                    .FirstOrDefaultAsync(i => i.Id == interactionId, cancellationToken);
+                if (interaction == null)
+                    return Result.Failure<CustomerInteractionDto>("Görüşme kaydı bulunamadı.");
+
+                var entries = !string.IsNullOrWhiteSpace(interaction.EntriesJson) && interaction.EntriesJson != "[]"
+                    ? JsonSerializer.Deserialize<List<InteractionThreadEntry>>(interaction.EntriesJson) ?? new List<InteractionThreadEntry>()
+                    : new List<InteractionThreadEntry>();
+
+                var entry = new InteractionThreadEntry
+                {
+                    Id = Guid.NewGuid(),
+                    CreatedAtUtc = DateTime.UtcNow,
+                    AuthorName = !string.IsNullOrWhiteSpace(_currentUser.Username) ? _currentUser.Username : "Sistem",
+                    AuthorRole = !string.IsNullOrWhiteSpace(_currentUser.Role) ? _currentUser.Role : "Personel",
+                    EntryType = dto.EntryType,
+                    Content = dto.Content.Trim(),
+                    CallOutcome = dto.CallOutcome?.Trim()
+                };
+                entries.Add(entry);
+                interaction.EntriesJson = JsonSerializer.Serialize(entries);
+
+                if (dto.UpdateBallInCourt.HasValue)
+                {
+                    interaction.BallInCourt = dto.UpdateBallInCourt.Value;
+                }
+                if (dto.UpdateSnoozedUntilUtc.HasValue)
+                {
+                    interaction.SnoozedUntilUtc = DateTime.SpecifyKind(dto.UpdateSnoozedUntilUtc.Value, DateTimeKind.Utc);
+                }
+                if (dto.UpdateAssignedToUserId.HasValue)
+                {
+                    interaction.AssignedToUserId = dto.UpdateAssignedToUserId.Value;
+                    interaction.AssignedToUsername = dto.UpdateAssignedToUsername;
+                }
+                interaction.ModifiedDate = DateTime.UtcNow;
+
+                // Add audit history
+                context.CustomerInteractionHistories.Add(new CustomerInteractionHistory
+                {
+                    CustomerInteractionId = interaction.Id,
+                    PreviousStatus = interaction.Status,
+                    NewStatus = interaction.Status,
+                    NewAssignedToUsername = interaction.AssignedToUsername,
+                    ChangedByUsername = _currentUser.Username,
+                    ChangedAt = DateTime.UtcNow,
+                    Reason = $"Zaman çizelgesi öğesi eklendi: {dto.EntryType}"
+                });
+
+                await context.SaveChangesAsync(cancellationToken);
+
+                _eventNotifier?.NotifyInteractionChanged(interaction.Id, interaction.InteractionNumber, interaction.CustomerId, "Updated");
+
+                return Result.Success(MapToDto(interaction));
+            });
+        }
+
+        public async Task<Result> ToggleChecklistItemAsync(
+            int interactionId,
+            Guid itemId,
+            CancellationToken cancellationToken = default)
+        {
+            if (interactionId <= 0) return Result.Failure("Geçersiz görüşme kimliği.");
+
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            return await context.ExecuteInTransactionAsync(async transaction =>
+            {
+                var interaction = await context.CustomerInteractions
+                    .FirstOrDefaultAsync(i => i.Id == interactionId, cancellationToken);
+                if (interaction == null)
+                    return Result.Failure("Görüşme kaydı bulunamadı.");
+
+                var checklist = !string.IsNullOrWhiteSpace(interaction.ChecklistJson) && interaction.ChecklistJson != "[]"
+                    ? JsonSerializer.Deserialize<List<InteractionChecklistItem>>(interaction.ChecklistJson) ?? new List<InteractionChecklistItem>()
+                    : new List<InteractionChecklistItem>();
+
+                var target = checklist.FirstOrDefault(x => x.Id == itemId);
+                if (target == null)
+                    return Result.Failure("Kontrol listesi maddesi bulunamadı.");
+
+                target.IsCompleted = !target.IsCompleted;
+                target.CompletedAtUtc = target.IsCompleted ? DateTime.UtcNow : null;
+                target.CompletedBy = target.IsCompleted ? (_currentUser.Username ?? "Personel") : null;
+
+                interaction.ChecklistJson = JsonSerializer.Serialize(checklist);
+                interaction.ModifiedDate = DateTime.UtcNow;
+
+                await context.SaveChangesAsync(cancellationToken);
+                _eventNotifier?.NotifyInteractionChanged(interaction.Id, interaction.InteractionNumber, interaction.CustomerId, "Updated");
+
+                return Result.Success();
+            });
+        }
+
+        public async Task<Result> AddChecklistItemAsync(
+            int interactionId,
+            string title,
+            CancellationToken cancellationToken = default)
+        {
+            if (interactionId <= 0) return Result.Failure("Geçersiz görüşme kimliği.");
+            if (string.IsNullOrWhiteSpace(title)) return Result.Failure("Madde başlığı boş olamaz.");
+
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            return await context.ExecuteInTransactionAsync(async transaction =>
+            {
+                var interaction = await context.CustomerInteractions
+                    .FirstOrDefaultAsync(i => i.Id == interactionId, cancellationToken);
+                if (interaction == null)
+                    return Result.Failure("Görüşme kaydı bulunamadı.");
+
+                var checklist = !string.IsNullOrWhiteSpace(interaction.ChecklistJson) && interaction.ChecklistJson != "[]"
+                    ? JsonSerializer.Deserialize<List<InteractionChecklistItem>>(interaction.ChecklistJson) ?? new List<InteractionChecklistItem>()
+                    : new List<InteractionChecklistItem>();
+
+                checklist.Add(new InteractionChecklistItem
+                {
+                    Id = Guid.NewGuid(),
+                    Title = title.Trim(),
+                    IsCompleted = false
+                });
+
+                interaction.ChecklistJson = JsonSerializer.Serialize(checklist);
+                interaction.ModifiedDate = DateTime.UtcNow;
+
+                await context.SaveChangesAsync(cancellationToken);
+                _eventNotifier?.NotifyInteractionChanged(interaction.Id, interaction.InteractionNumber, interaction.CustomerId, "Updated");
+
+                return Result.Success();
+            });
+        }
+
+        public async Task<Result> DeleteChecklistItemAsync(
+            int interactionId,
+            Guid itemId,
+            CancellationToken cancellationToken = default)
+        {
+            if (interactionId <= 0) return Result.Failure("Geçersiz görüşme kimliği.");
+
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            return await context.ExecuteInTransactionAsync(async transaction =>
+            {
+                var interaction = await context.CustomerInteractions
+                    .FirstOrDefaultAsync(i => i.Id == interactionId, cancellationToken);
+                if (interaction == null)
+                    return Result.Failure("Görüşme kaydı bulunamadı.");
+
+                var checklist = !string.IsNullOrWhiteSpace(interaction.ChecklistJson) && interaction.ChecklistJson != "[]"
+                    ? JsonSerializer.Deserialize<List<InteractionChecklistItem>>(interaction.ChecklistJson) ?? new List<InteractionChecklistItem>()
+                    : new List<InteractionChecklistItem>();
+
+                int removed = checklist.RemoveAll(x => x.Id == itemId);
+                if (removed == 0) return Result.Failure("Silinecek madde bulunamadı.");
+
+                interaction.ChecklistJson = JsonSerializer.Serialize(checklist);
+                interaction.ModifiedDate = DateTime.UtcNow;
+
+                await context.SaveChangesAsync(cancellationToken);
+                _eventNotifier?.NotifyInteractionChanged(interaction.Id, interaction.InteractionNumber, interaction.CustomerId, "Updated");
+
+                return Result.Success();
+            });
+        }
+
+        public async Task<Result> SnoozeInteractionAsync(
+            int interactionId,
+            DateTime untilUtc,
+            string? reason = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (interactionId <= 0) return Result.Failure("Geçersiz görüşme kimliği.");
+            var utcTime = DateTime.SpecifyKind(untilUtc, DateTimeKind.Utc);
+            if (utcTime <= DateTime.UtcNow) return Result.Failure("Erteleme tarihi gelecekte bir zaman olmalıdır.");
+
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            return await context.ExecuteInTransactionAsync(async transaction =>
+            {
+                var interaction = await context.CustomerInteractions
+                    .FirstOrDefaultAsync(i => i.Id == interactionId, cancellationToken);
+                if (interaction == null)
+                    return Result.Failure("Görüşme kaydı bulunamadı.");
+
+                interaction.SnoozedUntilUtc = utcTime;
+                interaction.ModifiedDate = DateTime.UtcNow;
+
+                var entries = !string.IsNullOrWhiteSpace(interaction.EntriesJson) && interaction.EntriesJson != "[]"
+                    ? JsonSerializer.Deserialize<List<InteractionThreadEntry>>(interaction.EntriesJson) ?? new List<InteractionThreadEntry>()
+                    : new List<InteractionThreadEntry>();
+
+                entries.Add(new InteractionThreadEntry
+                {
+                    Id = Guid.NewGuid(),
+                    CreatedAtUtc = DateTime.UtcNow,
+                    AuthorName = !string.IsNullOrWhiteSpace(_currentUser.Username) ? _currentUser.Username : "Sistem",
+                    AuthorRole = !string.IsNullOrWhiteSpace(_currentUser.Role) ? _currentUser.Role : "Personel",
+                    EntryType = ThreadEntryType.Snooze,
+                    Content = string.IsNullOrWhiteSpace(reason)
+                        ? $"Kayıt {utcTime:dd.MM.yyyy HH:mm} tarihine kadar ertelendi."
+                        : $"Kayıt {utcTime:dd.MM.yyyy HH:mm} tarihine kadar ertelendi. Neden: {reason.Trim()}"
+                });
+
+                interaction.EntriesJson = JsonSerializer.Serialize(entries);
+
+                context.CustomerInteractionHistories.Add(new CustomerInteractionHistory
+                {
+                    CustomerInteractionId = interaction.Id,
+                    PreviousStatus = interaction.Status,
+                    NewStatus = interaction.Status,
+                    NewAssignedToUsername = interaction.AssignedToUsername,
+                    ChangedByUsername = _currentUser.Username,
+                    ChangedAt = DateTime.UtcNow,
+                    Reason = $"Erteleme: {utcTime:dd.MM.yyyy HH:mm}"
+                });
+
+                await context.SaveChangesAsync(cancellationToken);
+                _eventNotifier?.NotifyInteractionChanged(interaction.Id, interaction.InteractionNumber, interaction.CustomerId, "Updated");
+
+                return Result.Success();
+            });
+        }
+
         private static CustomerInteractionDto MapToDto(CustomerInteraction entity)
         {
+            var threadEntries = !string.IsNullOrWhiteSpace(entity.EntriesJson) && entity.EntriesJson != "[]"
+                ? JsonSerializer.Deserialize<List<InteractionThreadEntry>>(entity.EntriesJson) ?? new List<InteractionThreadEntry>()
+                : new List<InteractionThreadEntry>();
+
+            var checklist = !string.IsNullOrWhiteSpace(entity.ChecklistJson) && entity.ChecklistJson != "[]"
+                ? JsonSerializer.Deserialize<List<InteractionChecklistItem>>(entity.ChecklistJson) ?? new List<InteractionChecklistItem>()
+                : new List<InteractionChecklistItem>();
+
             return new CustomerInteractionDto
             {
                 Id = entity.Id,
@@ -403,6 +687,15 @@ namespace KamatekCrm.Infrastructure.Services
                 RelatedEntityType = entity.RelatedEntityType,
                 RelatedEntityId = entity.RelatedEntityId,
                 RelatedEntityNumber = entity.RelatedEntityNumber,
+                Direction = entity.Direction,
+                BallInCourt = entity.BallInCourt,
+                SnoozedUntilUtc = entity.SnoozedUntilUtc,
+                LinkedEntityType = entity.LinkedEntityType,
+                LinkedEntityId = entity.LinkedEntityId,
+                EntriesJson = entity.EntriesJson,
+                ChecklistJson = entity.ChecklistJson,
+                ThreadEntries = threadEntries,
+                ChecklistItems = checklist,
                 IsDraft = entity.IsDraft,
                 CreatedDate = entity.CreatedDate
             };

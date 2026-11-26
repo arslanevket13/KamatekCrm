@@ -60,54 +60,67 @@ namespace KamatekCrm.Helpers
             if (window.CommandBindings.OfType<CommandBinding>().Any(b => b.Command == SystemCommands.CloseWindowCommand))
                 return;
 
-            window.CommandBindings.Add(new CommandBinding(SystemCommands.CloseWindowCommand, (s, e) =>
-            {
-                if (s is Window w)
+            window.CommandBindings.Add(new CommandBinding(
+                SystemCommands.CloseWindowCommand,
+                (s, e) =>
                 {
-                    SystemCommands.CloseWindow(w);
-                }
-            }));
+                    if (s is Window w)
+                    {
+                        SystemCommands.CloseWindow(w);
+                    }
+                },
+                (s, e) => e.CanExecute = true));
 
-            window.CommandBindings.Add(new CommandBinding(SystemCommands.MinimizeWindowCommand, (s, e) =>
-            {
-                if (s is Window w)
+            window.CommandBindings.Add(new CommandBinding(
+                SystemCommands.MinimizeWindowCommand,
+                (s, e) =>
                 {
-                    SystemCommands.MinimizeWindow(w);
-                }
-            }));
+                    if (s is Window w)
+                    {
+                        SystemCommands.MinimizeWindow(w);
+                    }
+                },
+                (s, e) => e.CanExecute = s is Window w && w.ResizeMode != ResizeMode.NoResize));
 
-            window.CommandBindings.Add(new CommandBinding(SystemCommands.MaximizeWindowCommand, (s, e) =>
-            {
-                if (s is Window w)
+            window.CommandBindings.Add(new CommandBinding(
+                SystemCommands.MaximizeWindowCommand,
+                (s, e) =>
                 {
-                    if (w.WindowState == WindowState.Maximized)
+                    if (s is Window w)
+                    {
+                        if (w.WindowState == WindowState.Maximized)
+                        {
+                            SystemCommands.RestoreWindow(w);
+                        }
+                        else
+                        {
+                            SystemCommands.MaximizeWindow(w);
+                        }
+                    }
+                },
+                (s, e) => e.CanExecute = s is Window w &&
+                    (w.ResizeMode == ResizeMode.CanResize || w.ResizeMode == ResizeMode.CanResizeWithGrip)));
+
+            window.CommandBindings.Add(new CommandBinding(
+                SystemCommands.RestoreWindowCommand,
+                (s, e) =>
+                {
+                    if (s is Window w)
                     {
                         SystemCommands.RestoreWindow(w);
                     }
-                    else
-                    {
-                        SystemCommands.MaximizeWindow(w);
-                    }
-                }
-            }));
-
-            window.CommandBindings.Add(new CommandBinding(SystemCommands.RestoreWindowCommand, (s, e) =>
-            {
-                if (s is Window w)
-                {
-                    SystemCommands.RestoreWindow(w);
-                }
-            }));
+                },
+                (s, e) => e.CanExecute = true));
         }
 
         private static void AttachTemplateControls(Window window)
         {
             if (window.Template == null) return;
 
-            if (window.Template.FindName("PART_CloseButton", window) is Button closeBtn)
+            if (window.Template.FindName("PART_CloseButton", window) is Button closeBtn && closeBtn.Command == null)
             {
-                closeBtn.Click -= CloseBtn_Click;
-                closeBtn.Click += CloseBtn_Click;
+                closeBtn.Click -= OnCloseButtonClick;
+                closeBtn.Click += OnCloseButtonClick;
             }
 
             if (window.Template.FindName("PART_MinimizeButton", window) is Button minBtn)
@@ -119,8 +132,11 @@ namespace KamatekCrm.Helpers
                 else
                 {
                     minBtn.Visibility = Visibility.Visible;
-                    minBtn.Click -= MinBtn_Click;
-                    minBtn.Click += MinBtn_Click;
+                    if (minBtn.Command == null)
+                    {
+                        minBtn.Click -= OnMinimizeButtonClick;
+                        minBtn.Click += OnMinimizeButtonClick;
+                    }
                 }
             }
 
@@ -133,52 +149,65 @@ namespace KamatekCrm.Helpers
                 else
                 {
                     maxBtn.Visibility = Visibility.Visible;
-                    maxBtn.Click -= MaxBtn_Click;
-                    maxBtn.Click += MaxBtn_Click;
+                    if (maxBtn.Command == null)
+                    {
+                        maxBtn.Click -= OnMaximizeButtonClick;
+                        maxBtn.Click += OnMaximizeButtonClick;
+                    }
 
-                    window.StateChanged -= Window_StateChanged;
-                    window.StateChanged += Window_StateChanged;
+                    window.StateChanged -= OnWindowStateChanged;
+                    window.StateChanged += OnWindowStateChanged;
                     UpdateMaximizeIcon(window, maxBtn);
                 }
             }
+        }
 
-            void CloseBtn_Click(object? sender, RoutedEventArgs e)
+        private static void OnCloseButtonClick(object? sender, RoutedEventArgs e)
+        {
+            if (sender is DependencyObject d && Window.GetWindow(d) is Window window)
             {
                 try
                 {
                     window.Close();
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Serilog.Log.Debug(ex, "Pencere kapatılırken SystemCommands geri dönüşü kullanıldı.");
                     SystemCommands.CloseWindow(window);
                 }
             }
+        }
 
-            void MinBtn_Click(object? sender, RoutedEventArgs e)
+        private static void OnMinimizeButtonClick(object? sender, RoutedEventArgs e)
+        {
+            if (sender is DependencyObject d && Window.GetWindow(d) is Window window)
             {
                 window.WindowState = WindowState.Minimized;
             }
+        }
 
-            void MaxBtn_Click(object? sender, RoutedEventArgs e)
+        private static void OnMaximizeButtonClick(object? sender, RoutedEventArgs e)
+        {
+            if (sender is DependencyObject d && Window.GetWindow(d) is Window window)
             {
-                window.WindowState = (window.WindowState == WindowState.Maximized) 
-                    ? WindowState.Normal 
+                window.WindowState = window.WindowState == WindowState.Maximized
+                    ? WindowState.Normal
                     : WindowState.Maximized;
             }
+        }
 
-            void Window_StateChanged(object? sender, EventArgs e)
+        private static void OnWindowStateChanged(object? sender, EventArgs e)
+        {
+            if (sender is Window window && window.Template?.FindName("PART_MaximizeButton", window) is Button btn)
             {
-                if (window.Template?.FindName("PART_MaximizeButton", window) is Button btn)
-                {
-                    UpdateMaximizeIcon(window, btn);
-                }
+                UpdateMaximizeIcon(window, btn);
             }
+        }
 
-            void UpdateMaximizeIcon(Window win, Button btn)
-            {
-                btn.Content = (win.WindowState == WindowState.Maximized) ? "🗗" : "🗖";
-                btn.ToolTip = (win.WindowState == WindowState.Maximized) ? "Normal Boyut" : "Ekranı Kapla";
-            }
+        private static void UpdateMaximizeIcon(Window win, Button btn)
+        {
+            btn.Content = win.WindowState == WindowState.Maximized ? "❐" : "☐";
+            btn.ToolTip = win.WindowState == WindowState.Maximized ? "Normal Boyut" : "Ekranı Kapla";
         }
     }
 }

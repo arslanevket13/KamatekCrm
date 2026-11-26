@@ -31,6 +31,7 @@ namespace KamatekCrm.ViewModels
         {
             OnPropertyChanged(nameof(LoginButtonText));
             LoginCommand.NotifyCanExecuteChanged();
+            DevQuickLoginCommand.NotifyCanExecuteChanged();
         }
 
         [ObservableProperty]
@@ -41,6 +42,14 @@ namespace KamatekCrm.ViewModels
 
         [ObservableProperty]
         private bool _isCapsLockOn;
+
+#if DEBUG
+        private static bool _hasTriggeredDevAutoLogin;
+
+        public bool IsDebugQuickLoginVisible => true;
+#else
+        public bool IsDebugQuickLoginVisible => false;
+#endif
 
         public string LoginButtonText => IsLoading
             ? "Giriş yapılıyor..."
@@ -108,6 +117,7 @@ namespace KamatekCrm.ViewModels
                 {
                     OnPropertyChanged(nameof(LoginButtonText));
                     LoginCommand.NotifyCanExecuteChanged();
+                    DevQuickLoginCommand.NotifyCanExecuteChanged();
                 }
             }
         }
@@ -152,6 +162,9 @@ namespace KamatekCrm.ViewModels
                     ? "Yerel Sunucu"
                     : _connectionProvider.CurrentServerIp;
                 SetStartupStatus($"Sunucu bağlantısı hazır ({serverLabel})", isSearching: false, isFound: true, isNotFound: false);
+#if DEBUG
+                TryScheduleDevAutoLoginIfEnabled();
+#endif
             });
 
             _connectionLostSubscription = EventAggregator.Instance.Subscribe<DatabaseConnectionLostEvent>(_ =>
@@ -182,6 +195,7 @@ namespace KamatekCrm.ViewModels
                 IsServerFound = isFound;
                 IsServerNotFound = isNotFound;
                 LoginCommand.NotifyCanExecuteChanged();
+                DevQuickLoginCommand.NotifyCanExecuteChanged();
             }
 
             var dispatcher = Application.Current?.Dispatcher;
@@ -213,6 +227,9 @@ namespace KamatekCrm.ViewModels
                     ? "Yerel Sunucu"
                     : _connectionProvider.CurrentServerIp;
                 SetStartupStatus($"Sunucu bulundu ({serverLabel})", isSearching: false, isFound: true, isNotFound: false);
+#if DEBUG
+                TryScheduleDevAutoLoginIfEnabled();
+#endif
             }
             else
             {
@@ -291,12 +308,31 @@ namespace KamatekCrm.ViewModels
             await ExecuteLoginAsync(param);
         }
 
+        [RelayCommand(CanExecute = nameof(CanDevQuickLogin))]
+        private Task DevQuickLoginAsync()
+        {
+#if DEBUG
+            return ExecuteDevQuickLoginAsync();
+#else
+            return Task.CompletedTask;
+#endif
+        }
+
         /// <summary>
         /// Giriş yapılabilir mi kontrolü
         /// </summary>
         private bool CanLogin()
         {
             return !string.IsNullOrWhiteSpace(Username) && !IsLoading && !IsSearchingForServer;
+        }
+
+        private bool CanDevQuickLogin()
+        {
+#if DEBUG
+            return !IsLoading && !IsSearchingForServer;
+#else
+            return false;
+#endif
         }
 
         /// <summary>
@@ -369,7 +405,6 @@ namespace KamatekCrm.ViewModels
                 if (await _authService.LoginAsync(Username, Password))
                 {
                     isAuthenticated = true;
-                    App.CurrentUser = _authService.CurrentUser;
                 }
                 else
                 {
@@ -378,26 +413,7 @@ namespace KamatekCrm.ViewModels
 
                 if (isAuthenticated)
                 {
-                    if (_authService.CurrentUser?.MustChangePassword == true)
-                    {
-                        var changed = await _forcedPasswordChangeService.RequireChangeAsync(_authService.CurrentUser);
-                        if (!changed)
-                        {
-                            _authService.Logout();
-                            App.CurrentUser = null;
-                            ErrorMessage = "Devam etmek için geçici parolanızı değiştirmeniz gerekir.";
-                            Password = string.Empty;
-                            return;
-                        }
-
-                        _authService.CurrentUser.MustChangePassword = false;
-                    }
-
-                    // Başarılı giriş - Ayarları kaydet
-                    SaveCredentials(null);
-
-                    // Ana içeriğe geç
-                    _navigationService.NavigateToMainContent();
+                    await CompleteLoginSuccessAsync(saveCredentials: true);
                 }
                 else
                 {
@@ -415,6 +431,109 @@ namespace KamatekCrm.ViewModels
                 IsLoading = false;
             }
         }
+
+        private async Task CompleteLoginSuccessAsync(bool saveCredentials)
+        {
+            App.CurrentUser = _authService.CurrentUser;
+
+            if (_authService.CurrentUser?.MustChangePassword == true)
+            {
+                var changed = await _forcedPasswordChangeService.RequireChangeAsync(_authService.CurrentUser);
+                if (!changed)
+                {
+                    _authService.Logout();
+                    App.CurrentUser = null;
+                    ErrorMessage = "Devam etmek için geçici parolanızı değiştirmeniz gerekir.";
+                    Password = string.Empty;
+                    return;
+                }
+
+                _authService.CurrentUser.MustChangePassword = false;
+            }
+
+            if (saveCredentials)
+            {
+                SaveCredentials(null);
+            }
+
+            _navigationService.NavigateToMainContent();
+        }
+
+#if DEBUG
+        private void TryScheduleDevAutoLoginIfEnabled()
+        {
+            if (_disposed || _hasTriggeredDevAutoLogin || _authService.HasLoggedOutManually)
+            {
+                return;
+            }
+
+            var autoLoginEnabled = string.Equals(
+                KamatekCrm.Settings.AppSettings.Configuration["DevQuickLogin:AutoLogin"],
+                "true",
+                StringComparison.OrdinalIgnoreCase);
+
+            if (!autoLoginEnabled || !_connectionProvider.IsConnected)
+            {
+                return;
+            }
+
+            _hasTriggeredDevAutoLogin = true;
+
+            var dispatcher = Application.Current?.Dispatcher;
+            if (dispatcher != null && !dispatcher.CheckAccess())
+            {
+                dispatcher.InvokeAsync(() =>
+                    ExecuteDevQuickLoginAsync().SafeFireAndForget("LoginViewModel.DevAutoLogin"));
+            }
+            else
+            {
+                ExecuteDevQuickLoginAsync().SafeFireAndForget("LoginViewModel.DevAutoLogin");
+            }
+        }
+
+        private async Task ExecuteDevQuickLoginAsync()
+        {
+            if (IsLoading || _disposed)
+            {
+                return;
+            }
+
+            if (!_connectionProvider.IsConnected)
+            {
+                ErrorMessage = "Sunucu bağlantısı yok. Lütfen ağ ayarlarını kontrol edin.";
+                IsServerNotFound = true;
+                _toastService.ShowError("Sunucu bağlantısı sağlanamadı!");
+                return;
+            }
+
+            ErrorMessage = string.Empty;
+            IsLoading = true;
+
+            try
+            {
+                var preferredUsername = KamatekCrm.Settings.AppSettings.Configuration["DevQuickLogin:PreferredUsername"];
+                if (await _authService.DevQuickLoginAsAdminAsync(preferredUsername))
+                {
+                    await CompleteLoginSuccessAsync(saveCredentials: false);
+                }
+                else
+                {
+                    ErrorMessage = "Hızlı Admin girişi başarısız oldu.";
+                    _toastService.ShowError(ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "DEV-ONLY hızlı admin girişi başarısız oldu.");
+                ErrorMessage = ex.Message;
+                _toastService.ShowError(ex.Message);
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+#endif
 
         public void Dispose()
         {

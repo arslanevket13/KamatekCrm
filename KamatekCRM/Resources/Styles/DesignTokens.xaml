@@ -1,0 +1,35 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         KAMATEK CRM — FAZ 6A KURUMSAL TASARIM ÇEKİRDEĞİ (4px/8px Grid & Tipografi)
+         Yalnızca ölçü, boşluk, yuvarlaklık ve tipografi sabitlerini içerir.
+    ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- ─────────── FONT AİLESİ ─────────── -->
+    <FontFamily x:Key="KmFontFamily">Segoe UI Variable, Segoe UI, Arial</FontFamily>
+
+    <!-- ─────────── TİPOGRAFİ ÖLÇEĞİ ─────────── -->
+    <sys:Double x:Key="KmFontSizePageTitle">20</sys:Double>
+    <sys:Double x:Key="KmFontSizeSection">14</sys:Double>
+    <sys:Double x:Key="KmFontSizeBody">13</sys:Double>
+    <sys:Double x:Key="KmFontSizeCaption">11</sys:Double>
+    <sys:Double x:Key="KmFontSizeMicro">10</sys:Double>
+
+    <!-- ─────────── BOŞLUK, PADDING & BOYUTLAR (4px/8px IZGARASI) ─────────── -->
+    <Thickness x:Key="KmPagePadding">20</Thickness>
+    <Thickness x:Key="KmCardPadding">16</Thickness>
+    <Thickness x:Key="KmControlPadding">10,7</Thickness>
+    <sys:Double x:Key="KmToolbarHeight">44</sys:Double>
+    <sys:Double x:Key="KmPageHeaderHeight">56</sys:Double>
+    <sys:Double x:Key="KmGridRowHeight">42</sys:Double>
+    <sys:Double x:Key="KmFormMaxWidth">760</sys:Double>
+
+    <!-- ─────────── KÖŞE YUVARLAKLIKLARI ─────────── -->
+    <CornerRadius x:Key="KmRadiusControl">6</CornerRadius>
+    <CornerRadius x:Key="KmRadiusCard">10</CornerRadius>
+    <CornerRadius x:Key="KmRadiusModal">12</CornerRadius>
+    <CornerRadius x:Key="KmRadiusBadge">6</CornerRadius>
+
+</ResourceDictionary>

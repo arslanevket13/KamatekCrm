@@ -116,6 +116,7 @@ namespace KamatekCrm.Tests.Services
             });
 
             Assert.True(searchResult.IsSuccess);
+            Assert.NotNull(searchResult.Value);
             Assert.Single(searchResult.Value.Items);
             Assert.Equal("Mehmet Demir", searchResult.Value.Items[0].CallerName);
         }

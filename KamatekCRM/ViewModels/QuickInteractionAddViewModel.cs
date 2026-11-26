@@ -386,12 +386,24 @@ namespace KamatekCrm.ViewModels
                 }
                 else
                 {
-                    _toastService.ShowError("Hata", res.Error ?? "Kayıt oluşturulamadı.");
+                    var err = res.Error;
+                    if (string.IsNullOrWhiteSpace(err) || ToastService.ContainsRawDatabaseError(err))
+                    {
+                        var correlationId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+                        Serilog.Log.Error("Hızlı görüşme kaydı oluşturulamadı [CorrelationId: {CorrelationId}] Detay: {Error}", correlationId, err);
+                        _toastService.ShowError($"Kayıt oluşturulamadı. (Ref: {correlationId})", "Hata");
+                    }
+                    else
+                    {
+                        _toastService.ShowError(err, "Hata");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                _toastService.ShowError("Hata", ex.Message ?? "Hata");
+                var correlationId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+                Serilog.Log.Error(ex, "Hızlı görüşme kaydı sırasında hata oluştu [CorrelationId: {CorrelationId}]", correlationId);
+                _toastService.ShowError($"Görüşme kaydı oluşturulamadı. Lütfen tekrar deneyin. (Ref: {correlationId})", "Hata");
             }
             finally
             {

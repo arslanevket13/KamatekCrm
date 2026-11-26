@@ -588,6 +588,30 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<int>("Channel")
                         .HasColumnType("integer");
 
+                    b.Property<int>("BallInCourt")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ChecklistJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EntriesJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int?>("LinkedEntityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LinkedEntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("SnoozedUntilUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("CompletedDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -705,6 +729,12 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.HasIndex("NormalizedPhone");
 
                     b.HasIndex("Status");
+
+                    b.HasIndex("BallInCourt");
+
+                    b.HasIndex("Direction");
+
+                    b.HasIndex("SnoozedUntilUtc");
 
                     b.ToTable("CustomerInteractions");
                 });
@@ -2209,6 +2239,12 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<decimal>("DiscountAmount")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("DiscoveryChecklistJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValue("[]");
+
                     b.Property<string>("DiscoveryTechnicalNotes")
                         .HasColumnType("text");
 
@@ -2217,6 +2253,9 @@ namespace KamatekCrm.Infrastructure.Migrations
 
                     b.Property<double>("EstimatedLaborHours")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("FollowUpNote")
+                        .HasColumnType("text");
 
                     b.Property<string>("GpsLocation")
                         .HasMaxLength(50)
@@ -2254,6 +2293,9 @@ namespace KamatekCrm.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("NextFollowUpUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PhotoPathsJson")
@@ -2302,6 +2344,12 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<string>("SubTasksJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValue("[]");
+
                     b.Property<decimal>("TaxAmount")
                         .HasColumnType("numeric");
 
@@ -2338,6 +2386,8 @@ namespace KamatekCrm.Infrastructure.Migrations
                     b.HasIndex("CustomerAssetId");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("NextFollowUpUtc");
 
                     b.HasIndex("RepairStatus");
 
@@ -3160,6 +3210,12 @@ namespace KamatekCrm.Infrastructure.Migrations
 
                     b.Property<bool>("IsTechnician")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("IsOnDuty")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("TotalJobsCompleted")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastLoginDate")
                         .HasColumnType("timestamp with time zone");

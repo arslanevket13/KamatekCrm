@@ -147,6 +147,7 @@
                         <TextBox Grid.Column="1" x:Name="BarcodeTextBox"
                                  Text="{Binding BarcodeText, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="15" FontWeight="SemiBold" BorderThickness="0" Background="Transparent"
+                                 MinHeight="0" Padding="0"
                                  VerticalAlignment="Center">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding BarcodeScanCommand}"/>
@@ -180,6 +181,7 @@
                         <TextBox Grid.Column="1"
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="13" BorderThickness="0" Background="Transparent"
+                                 MinHeight="0" Padding="0"
                                  VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="Ürün adı, model veya barkod ile hızlı arama..."
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" IsHitTestVisible="False" FontSize="13">
@@ -212,27 +214,9 @@
                           RowHeight="48"
                           ColumnHeaderHeight="38">
 
-                    <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimaryDark}"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Padding" Value="10,6"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                        </Style>
-                    </DataGrid.ColumnHeaderStyle>
-
                     <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                             <Setter Property="Cursor" Value="Hand"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}"/>
-                                </Trigger>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
-                                </Trigger>
-                            </Style.Triggers>
                         </Style>
                     </DataGrid.RowStyle>
 
@@ -326,22 +310,14 @@
                                     <Button Content="➕"
                                             Command="{Binding DataContext.AddToCartCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}"
-                                            Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextOnStatusBrush}"
-                                            FontSize="14" Width="42" Height="34"
+                                            Background="{DynamicResource ThemeSuccess}" Foreground="{DynamicResource TextOnAccentBrush}"
+                                            FontSize="14" Width="42" Height="34" Padding="0"
                                             BorderThickness="0" Cursor="Hand" ToolTip="Sepete Ekle">
-                                        <Button.Template>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}" CornerRadius="6">
-                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Button.Template>
                                         <Button.Style>
-                                            <Style TargetType="Button">
+                                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding StockQuantity}" Value="0">
                                                         <Setter Property="IsEnabled" Value="False"/>
-                                                        <Setter Property="Opacity" Value="0.3"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -464,10 +440,10 @@
                             <Button Grid.Column="2" Content="✕"
                                     Command="{Binding ClearCustomerCommand}"
                                     Foreground="{DynamicResource StatusErrorFg}" FontSize="12" FontWeight="Bold"
-                                    Background="Transparent" BorderThickness="0"
+                                    Padding="4,2"
                                     Cursor="Hand" Margin="4,0,6,0" ToolTip="Müşteriyi Temizle">
                                 <Button.Style>
-                                    <Style TargetType="Button">
+                                    <Style TargetType="Button" BasedOn="{StaticResource BtnGhost}">
                                         <Setter Property="Visibility" Value="Visible"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding SelectedCustomer}" Value="{x:Null}">
@@ -496,17 +472,7 @@
                         <!-- Search Customer Box -->
                         <Grid Grid.Row="1" Margin="0,6,0,0">
                             <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged}"
-                                     FontSize="12" Padding="8,4"
-                                     BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1"
-                                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
-                                <TextBox.Template>
-                                    <ControlTemplate TargetType="TextBox">
-                                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
-                                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </TextBox.Template>
-                            </TextBox>
+                                     FontSize="12" Padding="8,4" MinHeight="0"/>
 
                             <!-- Popup Dropdown -->
                             <Popup IsOpen="{Binding IsCustomerSearchOpen, Mode=OneWay}"
@@ -550,17 +516,6 @@
                                VirtualizingPanel.IsVirtualizing="True"
                                VirtualizingPanel.VirtualizationMode="Recycling"
                                ScrollViewer.CanContentScroll="True">
-
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="{DynamicResource ThemePrimaryLight}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource ThemePrimaryDark}"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="FontSize" Value="11"/>
-                                <Setter Property="Padding" Value="6,4"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
 
                         <DataGrid.Columns>
                             <!-- Product Name -->
@@ -621,6 +576,7 @@
                                                  FontSize="12" FontWeight="Bold"
                                                  Foreground="{DynamicResource TextHeadingBrush}"
                                                  BorderThickness="0" Background="Transparent"
+                                                 MinHeight="0"
                                                  TextAlignment="Right" VerticalAlignment="Center"
                                                  Padding="2,0"/>
                                     </DataTemplate>
@@ -634,6 +590,7 @@
                                         <TextBox Text="{Binding DiscountPercent, UpdateSourceTrigger=PropertyChanged, StringFormat='N0'}"
                                                  FontSize="11" FontWeight="Bold" Foreground="{DynamicResource ThemePrimary}"
                                                  BorderThickness="0" Background="{DynamicResource ThemePrimaryLight}"
+                                                 MinHeight="0"
                                                  TextAlignment="Center" VerticalAlignment="Center"
                                                  Padding="2,0"/>
                                     </DataTemplate>
@@ -660,9 +617,11 @@
                                         <Button Content="✕"
                                                 Command="{Binding DataContext.RemoveFromCartCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                 CommandParameter="{Binding}"
-                                                Background="Transparent" Foreground="{DynamicResource StatusErrorFg}"
+                                                Style="{StaticResource BtnGhost}"
+                                                Padding="0"
+                                                Foreground="{DynamicResource StatusErrorFg}"
                                                 FontSize="12" FontWeight="Bold"
-                                                BorderThickness="0" Cursor="Hand" ToolTip="Kaldır"/>
+                                                Cursor="Hand" ToolTip="Kaldır"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -692,16 +651,8 @@
                             <TextBox Grid.Column="2"
                                      Text="{Binding GlobalDiscountPercent, UpdateSourceTrigger=PropertyChanged, StringFormat='N0'}"
                                      FontSize="13" FontWeight="Bold" TextAlignment="Center"
-                                     Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource ThemePrimary}" BorderThickness="1"
-                                     Padding="2,2" Foreground="{DynamicResource ThemePrimary}">
-                                <TextBox.Template>
-                                    <ControlTemplate TargetType="TextBox">
-                                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5">
-                                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </TextBox.Template>
-                            </TextBox>
+                                     MinHeight="0"
+                                     Padding="2,2" Foreground="{DynamicResource ThemePrimary}"/>
                             <TextBlock Grid.Column="3" Text=" %" VerticalAlignment="Center" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource ThemePrimaryDark}"/>
                         </Grid>
 
@@ -720,6 +671,7 @@
                             <TextBox Grid.Column="1" Width="70"
                                      Text="{Binding TenderedAmount, UpdateSourceTrigger=LostFocus, StringFormat='N2'}"
                                      FontSize="13" FontWeight="Bold" TextAlignment="Right"
+                                     MinHeight="0"
                                      Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1"
                                      Padding="4,2"/>
 

@@ -88,7 +88,7 @@
                             <!-- Para Birimi (Sabit TRY - yanıltıcı tek elemanlı seçim kutusu yerine salt-okunur bilgi) -->
                             <StackPanel Margin="0,0,0,16">
                                 <Label Content="Para Birimi" Style="{StaticResource ModernLabel}"/>
-                                <Border Background="{DynamicResource BgInputBrush}"
+                                <Border Background="{DynamicResource ControlBgBrush}"
                                         BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="6"

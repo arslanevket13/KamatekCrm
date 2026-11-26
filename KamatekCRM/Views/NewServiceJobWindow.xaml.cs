@@ -17,7 +17,8 @@ namespace KamatekCrm.Views
         // Kaydedilmemiş değişiklik koruması (yalnızca görünüm katmanı)
         private bool _isDirty;
         private bool _isSaving;
-        private bool _closeConfirmed;
+        private bool _isCloseConfirmed;
+        private bool _isClosePromptOpen;
 
         public NewServiceJobWindow(ServiceJobViewModel vm)
         {
@@ -65,41 +66,81 @@ namespace KamatekCrm.Views
 
         private async void OnCancelRequested()
         {
-            if (!await ConfirmDiscardIfDirtyAsync())
+            if (_isClosePromptOpen)
             {
                 return;
             }
 
-            _closeConfirmed = true;
-            TrySetDialogResult(false);
-            Close();
+            _isClosePromptOpen = true;
+            try
+            {
+                if (!await ConfirmDiscardIfDirtyAsync())
+                {
+                    return;
+                }
+
+                _isCloseConfirmed = true;
+                TrySetDialogResult(false);
+                Close();
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "İptal onayı sırasında beklenmeyen hata oluştu: {Source}", nameof(NewServiceJobWindow));
+            }
+            finally
+            {
+                _isClosePromptOpen = false;
+            }
         }
 
         private void OnSaveCompleted()
         {
             _isSaving = true;
-            _closeConfirmed = true;
+            _isCloseConfirmed = true;
             TrySetDialogResult(true);
             Close();
         }
 
-        private async void OnWindowClosing(object? sender, CancelEventArgs e)
+        private void OnWindowClosing(object? sender, CancelEventArgs e)
         {
-            if (_isSaving || _closeConfirmed)
+            if (_isSaving || _isCloseConfirmed)
             {
                 return;
             }
 
-            if (_isDirty)
+            if (!_isDirty)
             {
-                e.Cancel = true;
-                if (await ConfirmDiscardIfDirtyAsync())
-                {
-                    _closeConfirmed = true;
-                    TrySetDialogResult(false);
-                    Close();
-                }
+                return;
             }
+
+            e.Cancel = true;
+
+            if (_isClosePromptOpen)
+            {
+                return;
+            }
+
+            _isClosePromptOpen = true;
+            _ = Dispatcher.InvokeAsync(async () =>
+            {
+                try
+                {
+                    if (await ConfirmDiscardIfDirtyAsync())
+                    {
+                        _isCloseConfirmed = true;
+                        TrySetDialogResult(false);
+                        Close();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Error(ex, "Pencere kapatma onayı sırasında beklenmeyen hata oluştu: {Source}", nameof(NewServiceJobWindow));
+                }
+                finally
+                {
+                    _isClosePromptOpen = false;
+                }
+            });
         }
 
         /// <summary>

@@ -1,4 +1,3 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11505.172
@@ -6,6 +5,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KamatekCrm", "KamatekCrm\KamatekCrm.csproj", "{A1B2C3D4-1234-5678-90AB-CDEF12345678}"
 	ProjectSection(ProjectDependencies) = postProject
 		{7EDBE316-B419-4C80-826D-1D65E9A3D39F} = {7EDBE316-B419-4C80-826D-1D65E9A3D39F}
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC} = {D4E5F6A7-8901-4BCD-8EF0-123456789ABC}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KamatekCrm.Shared", "KamatekCrm.Shared\KamatekCrm.Shared.csproj", "{B2C3D4E5-2345-6789-01BC-DEF23456789A}"
@@ -19,6 +19,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KamatekCrm.Infrastructure", "KamatekCrm.Infrastructure\KamatekCrm.Infrastructure.csproj", "{C774837F-5DC0-4AC9-8A9C-BDF2CD6A252F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KamatekCrm.Application", "KamatekCrm.Application\KamatekCrm.Application.csproj", "{AFF81D87-98ED-493E-8753-2491AE391DFB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KamatekCrm.McpServer", "KamatekCrm.McpServer\KamatekCrm.McpServer.csproj", "{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -114,6 +116,17 @@ Global
 		{AFF81D87-98ED-493E-8753-2491AE391DFB}.Release|x64.Build.0 = Release|Any CPU
 		{AFF81D87-98ED-493E-8753-2491AE391DFB}.Release|x86.ActiveCfg = Release|Any CPU
 		{AFF81D87-98ED-493E-8753-2491AE391DFB}.Release|x86.Build.0 = Release|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Debug|x64.Build.0 = Debug|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Debug|x86.Build.0 = Debug|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Release|x64.ActiveCfg = Release|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Release|x64.Build.0 = Release|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Release|x86.ActiveCfg = Release|Any CPU
+		{D4E5F6A7-8901-4BCD-8EF0-123456789ABC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

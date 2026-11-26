@@ -77,7 +77,8 @@ namespace KamatekCrm.ViewModels
             IServiceJobReadService serviceJobReadService,
             PdfService pdfService,
             IDialogService dialogService,
-            ISlaService? slaService = null)
+            ISlaService? slaService = null,
+            IWorkOrderIntelligenceService? intelligenceService = null)
         {
             ArgumentNullException.ThrowIfNull(serviceJobReadService);
             _navigationService = navigationService;
@@ -88,6 +89,7 @@ namespace KamatekCrm.ViewModels
             _pdfService = pdfService;
             _dialogService = dialogService;
             _slaService = slaService;
+            _intelligenceService = intelligenceService;
 
             ServiceJobs = new ObservableCollection<ServiceJobRowDto>();
             Customers = new ObservableCollection<ServiceJobCustomerLookupDto>();
@@ -123,6 +125,7 @@ namespace KamatekCrm.ViewModels
             // Dashboard & durum değiştirme komutları
 
             _ = Refresh();
+            InitializeSmartRadarHooks();
             UpdateDeviceTypeOptions();
         }
 
@@ -1055,6 +1058,7 @@ namespace KamatekCrm.ViewModels
             SelectedStatusFilter = StatusFilter.All;
             FilterStartDate = null;
             FilterEndDate = null;
+            ActiveRadarFilter = "All";
         }
 
         private WorkOrderType _selectedWorkOrderType = WorkOrderType.Repair;
@@ -1192,6 +1196,7 @@ namespace KamatekCrm.ViewModels
                     // Müşteri değiştiğinde cihaz ve projeleri yükle
                     _ = LoadCustomerAssets();
                     _ = LoadCustomerProjects();
+                    LoadCustomerMemoryAsync().SafeFireAndForget("ServiceJobViewModel.LoadCustomerMemoryAsync");
                     SaveServiceJobCommand.NotifyCanExecuteChanged();
                 }
             }
@@ -1261,6 +1266,7 @@ namespace KamatekCrm.ViewModels
                     // Varsayılan birim fiyatı ayarla
                     UnitPriceToAdd = value.SalePrice;
                 }
+                UpdateSelectedProductStockBadge();
                 AddItemToJobCommand.NotifyCanExecuteChanged();
             }
         }
@@ -1396,13 +1402,17 @@ namespace KamatekCrm.ViewModels
         /// </summary>
         private bool FilterServiceJobs(object obj)
         {
-            // İstemci tarafında (Client-Side) yapılan filtreleme, LoadServiceJobs API çağrısı ile yer değiştirilmiştir.
+            if (obj is ServiceJobRowDto row)
+            {
+                return MatchesActiveRadarFilter(row);
+            }
             return true;
         }
 
         public async Task InitializeForCreateAsync(CancellationToken cancellationToken = default)
         {
             await LoadWorkspace();
+            await InitializeSmartFormAsync();
         }
 
         public async Task InitializeForEditAsync(ServiceJobRowDto job, CancellationToken cancellationToken = default)
@@ -1467,7 +1477,9 @@ namespace KamatekCrm.ViewModels
                 _serviceJobCommandService,
                 _serviceJobReadService,
                 _pdfService,
-                _dialogService);
+                _dialogService,
+                _slaService,
+                _intelligenceService);
             
             await newVm.InitializeForCreateAsync();
 
@@ -1544,7 +1556,8 @@ namespace KamatekCrm.ViewModels
                 _pdfService,
                 _dialogService,
                 _toastService,
-                () => OpenGeneralEditorWindowAsync(targetJob));
+                () => OpenGeneralEditorWindowAsync(targetJob),
+                _intelligenceService);
 
             if (!await workspaceVm.InitializeAsync()) return;
 
@@ -2243,6 +2256,7 @@ namespace KamatekCrm.ViewModels
             }
             ServiceJobs.Clear();
             foreach (var job in result.Value!) ServiceJobs.Add(job);
+            RebuildSmartRadarCollections();
         }
 
         /// <summary>
@@ -2397,6 +2411,7 @@ namespace KamatekCrm.ViewModels
                     SlaDeadline = ResolveEffectiveSlaDeadline(),
                     TechnicianNotes = TechnicianNotes,
                     PhotoPathsJson = JsonSerializer.Serialize(UploadedPhotos.ToList()),
+                    DiscoveryChecklistJson = SerializeDiscoveryChecklistJson(),
                     Price = FinancialCalculator.RoundMoney(SubTotal), TotalAmount = FinancialCalculator.RoundMoney(GrandTotalWithKdv),
                     TaxAmount = FinancialCalculator.RoundMoney(KdvAmount)
                 };
@@ -2652,24 +2667,24 @@ namespace KamatekCrm.ViewModels
                 switch (data.JobStatus)
                 {
                     case JobStatus.ConvertedToQuote when data.Quotation is not null:
-                        suggestedName = $"FiyatTeklifi_{jobInfo.Id:D6}.pdf";
                         documentLabel = "Fiyat Teklifi";
+                        suggestedName = KamatekCrm.Helpers.WorkOrderPdfFileNameBuilder.Build(jobInfo, documentLabel);
                         if (!await ChooseAndGenerateAsync("Fiyat Teklifini Kaydet", suggestedName, filePath =>
                                 _pdfService.GenerateWorkOrderQuotationPdf(data.Quotation!, jobInfo, filePath)))
                             return;
                         break;
 
                     case JobStatus.InstallationPlanned when data.Installation is not null:
-                        suggestedName = $"MontajIsEmri_{jobInfo.Id:D6}.pdf";
                         documentLabel = "Montaj İş Emri";
+                        suggestedName = KamatekCrm.Helpers.WorkOrderPdfFileNameBuilder.Build(jobInfo, documentLabel);
                         if (!await ChooseAndGenerateAsync("Montaj İş Emrini Kaydet", suggestedName, filePath =>
                                 _pdfService.GenerateInstallationOrderPdf(data.Installation!, jobInfo, filePath)))
                             return;
                         break;
 
                     case JobStatus.InstallationCompleted when data.Installation is not null:
-                        suggestedName = $"MontajTamamlama_{jobInfo.Id:D6}.pdf";
                         documentLabel = "Montaj Tamamlama Formu";
+                        suggestedName = KamatekCrm.Helpers.WorkOrderPdfFileNameBuilder.Build(jobInfo, documentLabel);
                         if (!await ChooseAndGenerateAsync("Montaj Tamamlama Formunu Kaydet", suggestedName, filePath =>
                                 _pdfService.GenerateInstallationCompletionFormPdf(data.Installation!, jobInfo, filePath)))
                             return;
@@ -2678,8 +2693,8 @@ namespace KamatekCrm.ViewModels
                     case JobStatus.DiscoveryRequest:
                     case JobStatus.PendingDiscovery:
                     case JobStatus.DiscoveryCompleted:
-                        suggestedName = $"KesifRaporu_{jobInfo.Id:D6}.pdf";
                         documentLabel = "Keşif Raporu";
+                        suggestedName = KamatekCrm.Helpers.WorkOrderPdfFileNameBuilder.Build(jobInfo, documentLabel);
                         if (data.Discovery is not null)
                         {
                             if (!await ChooseAndGenerateAsync("Keşif Raporunu Kaydet", suggestedName, filePath =>
@@ -2697,8 +2712,8 @@ namespace KamatekCrm.ViewModels
 
                     default:
                         // Eski/legacy durumlar için servis formu şablonu kullanılır (keşif PDF'i değil)
-                        suggestedName = $"ServisFormu_{jobInfo.Id:D6}.pdf";
                         documentLabel = "Servis Formu";
+                        suggestedName = KamatekCrm.Helpers.WorkOrderPdfFileNameBuilder.Build(jobInfo, documentLabel);
                         if (!await ChooseAndGenerateAsync("Servis Formunu Kaydet", suggestedName, filePath =>
                                 GenerateLegacyServiceFormPdfAsync(jobInfo, filePath)))
                             return;

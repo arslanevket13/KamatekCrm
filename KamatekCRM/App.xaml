@@ -20,14 +20,17 @@
                 <!-- 3. ACTIVE THEME COLORS (Varsayılan: Premium Light; çalışma zamanında yalnızca bu sözlük değişir) -->
                 <ResourceDictionary Source="Resources/Themes/Theme.PremiumLight.xaml"/>
 
-                <!-- 4. UX FOUNDATION, STYLES & COMPONENT STYLES -->
+                <!-- 3B. CORPORATE DESIGN TOKENS (4px/8px Grid & Tipografi Çekirdeği) -->
+                <ResourceDictionary Source="Resources/Styles/DesignTokens.xaml"/>
+
+                <!-- 4. UX FOUNDATION, GLOBAL CONTROLS, STYLES & COMPONENT STYLES -->
                 <ResourceDictionary Source="Resources/UxFoundation.xaml"/>
+                <ResourceDictionary Source="Resources/Styles/GlobalControls.xaml"/>
                 <ResourceDictionary Source="Resources/Styles.xaml"/>
                 <ResourceDictionary Source="Resources/ComponentStyles.xaml"/>
 
-                <!-- 5. ANIMATIONS & SCROLLBAR -->
+                <!-- 5. ANIMATIONS -->
                 <ResourceDictionary Source="Resources/Animations.xaml"/>
-                <ResourceDictionary Source="Resources/FixedScrollBar.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Navigation Views -->
@@ -156,17 +159,11 @@
             <converters:SafeNullableIntConverter x:Key="SafeNullableIntConverter"/>
             <converters:SafeDecimalConverter x:Key="SafeDecimalConverter"/>
             <converters:StructureTypeDisplayConverter x:Key="StructureTypeDisplayConverter"/>
-
-            <!-- TSF / IME Layout Hatası (0x80040206 - TS_E_NOLAYOUT) Önleyici Global Stiller -->
-            <Style TargetType="{x:Type TextBox}">
-                <Setter Property="InputMethod.IsInputMethodEnabled" Value="False"/>
-            </Style>
-            <Style TargetType="{x:Type PasswordBox}">
-                <Setter Property="InputMethod.IsInputMethodEnabled" Value="False"/>
-            </Style>
-            <Style TargetType="{x:Type RichTextBox}">
-                <Setter Property="InputMethod.IsInputMethodEnabled" Value="False"/>
-            </Style>
+            <converters:BallInCourtTextConverter x:Key="BallInCourtText"/>
+            <converters:BallInCourtColorConverter x:Key="BallInCourtColor"/>
+            <converters:DirectionTextConverter x:Key="DirectionText"/>
+            <converters:ThreadEntryTypeTitleConverter x:Key="ThreadEntryTypeTitle"/>
+            <converters:IsManagerInstructionConverter x:Key="IsManagerInstruction"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

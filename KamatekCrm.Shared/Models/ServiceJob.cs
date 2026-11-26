@@ -158,6 +158,26 @@ namespace KamatekCrm.Shared.Models
         /// </summary>
         [MaxLength(50)]
         public string? Source { get; set; }
+
+        /// <summary>
+        /// İş emri alt görev kontrol listesi (JSONB: Id, Title, IsCompleted, AssignedTo, CompletedAtUtc)
+        /// </summary>
+        public string SubTasksJson { get; set; } = "[]";
+
+        /// <summary>
+        /// Bir sonraki akıllı takip hatırlatma zamanı (UTC)
+        /// </summary>
+        public DateTime? NextFollowUpUtc { get; set; }
+
+        /// <summary>
+        /// Akıllı takip hatırlatma notu
+        /// </summary>
+        public string? FollowUpNote { get; set; }
+
+        /// <summary>
+        /// Kategori bazlı keşif kontrol listesi (JSONB: Id, Title, IsChecked, Note)
+        /// </summary>
+        public string DiscoveryChecklistJson { get; set; } = "[]";
         
         public virtual System.Collections.Generic.ICollection<ServiceJobItem> ServiceJobItems { get; set; } = new System.Collections.Generic.List<ServiceJobItem>();
         

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="KamatekCrm.Views.MainContentView"
+<UserControl x:Class="KamatekCrm.Views.MainContentView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:KamatekCrm.ViewModels"
@@ -71,7 +71,7 @@
         <!-- Base Navigation Button Style with Active Indicator -->
         <Style x:Key="GlassNavButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextBodyBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Height" Value="40"/>
             <Setter Property="Padding" Value="12,0"/>
@@ -90,16 +90,17 @@
                                                 VerticalAlignment="Center"/>
                             </Border>
                             <!-- Active Accent Indicator Strip -->
-                            <Border x:Name="activeBar" Width="4" Height="22" HorizontalAlignment="Left" VerticalAlignment="Center"
-                                    Background="{DynamicResource ThemePrimary}" CornerRadius="2" Margin="1,0,0,0" Visibility="Collapsed"/>
+                            <Border x:Name="activeBar" Width="3" Height="22" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                    Background="{DynamicResource AccentPrimaryBrush}" CornerRadius="2" Margin="1,0,0,0" Visibility="Collapsed"/>
                         </Grid>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource SidebarHoverBgBrush}"/>
+                            </Trigger>
                             <Trigger Property="FontWeight" Value="SemiBold">
                                 <Setter TargetName="activeBar" Property="Visibility" Value="Visible"/>
-                                <Setter TargetName="border" Property="Background" Value="{DynamicResource AccentOverlayBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource SidebarActiveBgBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="{DynamicResource BorderSubtleBrush}"/>
@@ -188,8 +189,8 @@
                 </Grid.RowDefinitions>
 
                 <!-- Logo Header - Corporate Sleek -->
-                <Border Grid.Row="0" Padding="12,10" Background="{DynamicResource ThemeSidebar}"
-                        BorderBrush="{DynamicResource ThemeDivider}" BorderThickness="0,0,0,1">
+                <Border Grid.Row="0" Padding="12,10" Background="{DynamicResource SidebarBgBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -224,7 +225,7 @@
 
 
                 <!-- Navigation List -->
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,6,0,0">
                     <StackPanel>
                         <!-- ANA MENÜ -->
                         <Button Command="{Binding NavigateToDashboardCommand}" ToolTip="Ana Sayfa">
@@ -232,7 +233,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="Dashboard">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -254,7 +255,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="Customers">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -271,7 +272,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="CustomerInteractions">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -288,7 +289,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="ManagerAgenda">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -305,7 +306,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="Product">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -322,7 +323,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="ServiceJob">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -335,7 +336,7 @@
                         </Button>
 
                         <!-- Separator -->
-                        <Border Margin="16,12,16,6" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource GlassBorderBrush}"
+                        <Border Margin="16,12,16,6" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}"
                                 Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
                         <TextBlock Text="SATIŞ &amp; SERVİS" Style="{DynamicResource NavigationSectionHeader}"
                                    Visibility="{Binding ShowSidebarText, Converter={StaticResource BoolToVis}}"/>
@@ -345,7 +346,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="RepairList">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -369,7 +370,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="QuoteList">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -399,7 +400,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="Finance">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -417,7 +418,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="Analytics">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -434,7 +435,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="Purchasing">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -451,7 +452,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="Suppliers">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -475,7 +476,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="FinancialHealth">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -492,7 +493,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="StockCount">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -509,7 +510,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="StockReports">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -548,7 +549,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="Users">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -566,7 +567,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="SystemLogs">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -592,7 +593,7 @@
                 </ScrollViewer>
 
                 <!-- Footer -->
-                <Border Grid.Row="2" Padding="8,12" Background="{DynamicResource SurfacePageBrush}">
+                <Border Grid.Row="2" Padding="8,12" Background="{DynamicResource SidebarBgBrush}">
                     <StackPanel>
                         <Button Command="{Binding ToggleDarkModeCommand}" Style="{StaticResource GlassNavButton}" ToolTip="Tema Değiştir (Ctrl+D)">
                             <StackPanel Orientation="Horizontal">
@@ -619,7 +620,7 @@
                                 <Style TargetType="Button" BasedOn="{StaticResource GlassNavButton}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding CurrentViewName}" Value="Settings">
-                                            <Setter Property="Foreground" Value="{DynamicResource ThemePrimary}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource SidebarActiveFgBrush}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -732,7 +733,7 @@
                         </Button>
 
                         <!-- Search Box - Spotlight Style -->
-                        <Border x:Name="SearchHost" Width="210" CornerRadius="8" Background="{DynamicResource SurfacePageBrush}" Margin="0,0,10,0" Padding="8,0">
+                        <Border x:Name="SearchHost" Width="210" CornerRadius="8" Background="{DynamicResource ControlBgBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" Margin="0,0,10,0" Padding="8,0">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -740,25 +741,26 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 
-                                <Path Grid.Column="0" Data="{StaticResource SearchIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" Margin="6,0,8,0"/>
+                                <Path Grid.Column="0" Data="{StaticResource SearchIcon}" Fill="{DynamicResource TextSecondaryBrush}" Width="14" Height="14" Stretch="Uniform" VerticalAlignment="Center" Margin="6,0,8,0"/>
                                 
                                 <TextBox Grid.Column="1" x:Name="GlobalSearchBox"
                                          Text="{Binding SearchViewModel.SearchQuery, UpdateSourceTrigger=PropertyChanged}"
-                                         Background="Transparent" BorderThickness="0"
+                                         Background="Transparent" BorderThickness="0" MinHeight="0"
                                          VerticalAlignment="Center" Height="36" FontSize="13" Padding="0,6"
                                          ToolTip="Global arama (Ctrl+F)"
                                          AutomationProperties.Name="Global arama"
-                                         Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+                                         Foreground="{DynamicResource TextPrimaryBrush}">
                                     <TextBox.InputBindings>
                                         <KeyBinding Key="Escape" Command="{Binding SearchViewModel.ClearCommand}"/>
                                     </TextBox.InputBindings>
                                 </TextBox>
                                 
                                 <Button Grid.Column="2" Command="{Binding SearchViewModel.ClearCommand}"
+                                        Style="{StaticResource BtnGhost}"
                                         Visibility="{Binding SearchViewModel.HasResults, Converter={StaticResource BoolToVis}}"
                                         AutomationProperties.Name="Aramayı temizle"
-                                        Background="Transparent" BorderThickness="0" Width="28" Height="28" Cursor="Hand">
-                                    <Path Data="{StaticResource CloseIcon}" Fill="{DynamicResource TextFillColorSecondaryBrush}" Width="10" Height="10" Stretch="Uniform"/>
+                                        Padding="0" Width="28" Height="28" Cursor="Hand">
+                                    <Path Data="{StaticResource CloseIcon}" Fill="{DynamicResource TextSecondaryBrush}" Width="10" Height="10" Stretch="Uniform"/>
                                 </Button>
 
                                 <!-- Global Search Results -->
@@ -1027,19 +1029,15 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,32,0,0">
                     <Button Content="Ayarları Aç"
                             Command="{Binding GoToSettingsCommand}"
-                            Style="{DynamicResource ModernButton}"
-                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                            BorderBrush="{DynamicResource ThemeBorder}"
-                            Background="{DynamicResource ThemeSurface}"
+                            Style="{DynamicResource BtnSecondary}"
                             Padding="24,8" Margin="0,0,8,0"
                             HorizontalAlignment="Center" Cursor="Hand"/>
 
                     <Button Content="Bu Cihazı Sunucu Yap (Sıfırla)"
                             Command="{Binding ForceMainServerCommand}"
+                            Style="{DynamicResource BtnDanger}"
                             Visibility="{Binding IsForceServerButtonVisible, Converter={StaticResource BoolToVis}}"
-                            Background="{DynamicResource StatusErrorFg}"
-                            Foreground="{DynamicResource TextOnStatusBrush}"
-                            BorderThickness="0" Padding="24,8" FontWeight="SemiBold"
+                            Padding="24,8" FontWeight="SemiBold"
                             HorizontalAlignment="Center" Cursor="Hand"/>
                 </StackPanel>
             </StackPanel>

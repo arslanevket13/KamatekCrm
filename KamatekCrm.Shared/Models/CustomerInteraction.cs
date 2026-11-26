@@ -89,6 +89,23 @@ namespace KamatekCrm.Shared.Models
         [MaxLength(100)]
         public string? RelatedEntityNumber { get; set; }
 
+        public InteractionDirection Direction { get; set; } = InteractionDirection.InboundRequest;
+
+        public BallInCourtStatus BallInCourt { get; set; } = BallInCourtStatus.Us;
+
+        public DateTime? SnoozedUntilUtc { get; set; }
+
+        [MaxLength(50)]
+        public string? LinkedEntityType { get; set; }
+
+        public int? LinkedEntityId { get; set; }
+
+        [Column(TypeName = "jsonb")]
+        public string EntriesJson { get; set; } = "[]";
+
+        [Column(TypeName = "jsonb")]
+        public string ChecklistJson { get; set; } = "[]";
+
         public bool IsDraft { get; set; }
 
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
@@ -102,5 +119,31 @@ namespace KamatekCrm.Shared.Models
         public virtual User? AssignedToUser { get; set; }
 
         public virtual ICollection<CustomerInteractionHistory> Histories { get; set; } = new List<CustomerInteractionHistory>();
+    }
+
+    /// <summary>
+    /// Kronolojik vaka zaman çizelgesi öğesi
+    /// </summary>
+    public class InteractionThreadEntry
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+        public string AuthorName { get; set; } = string.Empty;
+        public string AuthorRole { get; set; } = string.Empty;
+        public ThreadEntryType EntryType { get; set; } = ThreadEntryType.Note;
+        public string Content { get; set; } = string.Empty;
+        public string? CallOutcome { get; set; }
+    }
+
+    /// <summary>
+    /// Hızlı alt kontrol listesi öğesi
+    /// </summary>
+    public class InteractionChecklistItem
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public string Title { get; set; } = string.Empty;
+        public bool IsCompleted { get; set; }
+        public DateTime? CompletedAtUtc { get; set; }
+        public string? CompletedBy { get; set; }
     }
 }

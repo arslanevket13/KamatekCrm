@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using KamatekCrm.ApplicationCore.Common;
@@ -63,6 +64,12 @@ namespace KamatekCrm.Infrastructure.Services
                 query = query.Where(i => i.RequiresManagerAttention == filter.RequiresManagerAttention.Value);
             if (filter.RequiresFollowUp.HasValue)
                 query = query.Where(i => i.RequiresFollowUp == filter.RequiresFollowUp.Value);
+            if (filter.BallInCourt.HasValue)
+                query = query.Where(i => i.BallInCourt == filter.BallInCourt.Value);
+            if (filter.FollowUpStartDate.HasValue)
+                query = query.Where(i => i.FollowUpDate >= filter.FollowUpStartDate.Value);
+            if (filter.FollowUpEndDate.HasValue)
+                query = query.Where(i => i.FollowUpDate <= filter.FollowUpEndDate.Value);
 
             if (filter.OnlyOverdue)
             {
@@ -199,6 +206,7 @@ namespace KamatekCrm.Infrastructure.Services
                 .AsNoTracking()
                 .Where(i => i.IsActive &&
                             (i.RequiresManagerAttention || 
+                             i.BallInCourt == BallInCourtStatus.Manager ||
                              i.RequestType == InteractionRequestType.ManagerAgenda || 
                              i.Priority == InteractionPriority.Critical ||
                              (i.RequiresFollowUp && i.FollowUpDate.HasValue)) &&
@@ -413,6 +421,178 @@ namespace KamatekCrm.Infrastructure.Services
             return Result.Success(items.Select(MapToDto).ToList());
         }
 
+        public async Task<Result<CallerContextDto>> LookupCallerContextAsync(
+            string phoneOrQuery,
+            CancellationToken cancellationToken = default)
+        {
+            var result = new CallerContextDto
+            {
+                PhoneNumber = phoneOrQuery ?? string.Empty,
+                MatchedPhone = phoneOrQuery ?? string.Empty
+            };
+
+            if (string.IsNullOrWhiteSpace(phoneOrQuery))
+                return Result.Success(result);
+
+            var cleanDigits = new string(phoneOrQuery.Where(char.IsDigit).ToArray());
+            var queryLower = phoneOrQuery.Trim().ToLower();
+
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            // 1. Müşteri Arama (Telefonun son 4+ hanesi veya tam adı)
+            Customer? customer = null;
+            if (cleanDigits.Length >= 4)
+            {
+                var lastDigits = cleanDigits.Length > 7 ? cleanDigits[^7..] : cleanDigits;
+                customer = await context.Customers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.PhoneNumber.Contains(lastDigits) ||
+                                              c.FullName.ToLower().Contains(queryLower), cancellationToken);
+            }
+            else if (queryLower.Length >= 2)
+            {
+                customer = await context.Customers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.FullName.ToLower().Contains(queryLower), cancellationToken);
+            }
+
+            if (customer != null)
+            {
+                result.CustomerId = customer.Id;
+                result.FullName = customer.FullName;
+                result.PhoneNumber = customer.PhoneNumber;
+                result.MatchedPhone = customer.PhoneNumber;
+                result.Email = customer.Email;
+                result.FullAddress = customer.FullAddress;
+
+                // Açık İş Emirleri Sayısı
+                result.OpenServiceJobsCount = await context.ServiceJobs
+                    .AsNoTracking()
+                    .CountAsync(j => j.CustomerId == customer.Id &&
+                                     j.Status != JobStatus.Completed &&
+                                     j.Status != JobStatus.Cancelled, cancellationToken);
+
+                // Bekleyen Teklif Sayısı
+                result.PendingQuotesCount = await context.Quotes
+                    .AsNoTracking()
+                    .CountAsync(q => q.CustomerId == customer.Id &&
+                                     q.Status != QuoteStatus.Approved &&
+                                     q.Status != QuoteStatus.Rejected, cancellationToken);
+
+                // Bekleyen Görüşme/Talep Sayısı
+                result.PendingInteractionsCount = await context.CustomerInteractions
+                    .AsNoTracking()
+                    .CountAsync(i => i.CustomerId == customer.Id &&
+                                     i.Status != InteractionStatus.Completed &&
+                                     i.Status != InteractionStatus.Cancelled, cancellationToken);
+
+                // Cari Bakiye Hesaplama (Borç - Alacak)
+                try
+                {
+                    var balanceSum = await context.Transactions
+                        .AsNoTracking()
+                        .Where(t => t.CustomerId == customer.Id)
+                        .SumAsync(t => t.Type == TransactionType.Debt ? t.Amount : -t.Amount, cancellationToken);
+                    result.CurrentBalance = balanceSum;
+                }
+                catch
+                {
+                    result.CurrentBalance = 0m;
+                }
+
+                // Son 3 Görüşme
+                var recent = await context.CustomerInteractions
+                    .AsNoTracking()
+                    .Where(i => i.CustomerId == customer.Id)
+                    .OrderByDescending(i => i.CreatedDate)
+                    .Take(3)
+                    .Select(i => new CallerRecentInteractionDto
+                    {
+                        Id = i.Id,
+                        InteractionNumber = i.InteractionNumber,
+                        InteractionDate = i.InteractionDate,
+                        Subject = i.Subject,
+                        Summary = i.Summary,
+                        Status = i.Status,
+                        RequestType = i.RequestType,
+                        CreatedByUsername = i.CreatedByUsername
+                    })
+                    .ToListAsync(cancellationToken);
+
+                result.RecentInteractions = recent;
+            }
+            else if (cleanDigits.Length >= 4)
+            {
+                // Kayıtlı müşteri yoksa, numara bazlı geçmiş görüşme özetleri
+                var lastDigits = cleanDigits.Length > 7 ? cleanDigits[^7..] : cleanDigits;
+                var pastInteractions = await context.CustomerInteractions
+                    .AsNoTracking()
+                    .Where(i => i.NormalizedPhone.Contains(lastDigits) || i.CallerPhone.Contains(lastDigits))
+                    .OrderByDescending(i => i.CreatedDate)
+                    .Take(3)
+                    .Select(i => new CallerRecentInteractionDto
+                    {
+                        Id = i.Id,
+                        InteractionNumber = i.InteractionNumber,
+                        InteractionDate = i.InteractionDate,
+                        Subject = i.Subject,
+                        Summary = i.Summary,
+                        Status = i.Status,
+                        RequestType = i.RequestType,
+                        CreatedByUsername = i.CreatedByUsername
+                    })
+                    .ToListAsync(cancellationToken);
+
+                result.RecentInteractions = pastInteractions;
+                result.PendingInteractionsCount = await context.CustomerInteractions
+                    .AsNoTracking()
+                    .CountAsync(i => (i.NormalizedPhone.Contains(lastDigits) || i.CallerPhone.Contains(lastDigits)) &&
+                                     i.Status != InteractionStatus.Completed &&
+                                     i.Status != InteractionStatus.Cancelled, cancellationToken);
+            }
+
+            return Result.Success(result);
+        }
+
+        public async Task<Result<List<CalendarDaySummaryDto>>> GetCalendarDayCountsAsync(
+            int year,
+            int month,
+            CancellationToken cancellationToken = default)
+        {
+            var startUtc = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+            var endUtc = startUtc.AddMonths(1);
+            var nowUtc = DateTime.UtcNow;
+
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            // Takvim ayı içindeki kayıtlar
+            var list = await context.CustomerInteractions
+                .AsNoTracking()
+                .Where(i => i.IsActive && !i.IsDraft &&
+                            ((i.FollowUpDate >= startUtc && i.FollowUpDate < endUtc) ||
+                             (i.FollowUpDate == null && i.InteractionDate >= startUtc && i.InteractionDate < endUtc)))
+                .Select(i => new
+                {
+                    TargetDate = (i.FollowUpDate ?? i.InteractionDate).Date,
+                    IsOverdue = i.FollowUpDate.HasValue && i.FollowUpDate.Value < nowUtc &&
+                                i.Status != InteractionStatus.Completed && i.Status != InteractionStatus.Cancelled,
+                    IsManager = i.RequiresManagerAttention || i.BallInCourt == BallInCourtStatus.Manager || i.RequestType == InteractionRequestType.ManagerAgenda
+                })
+                .GroupBy(x => x.TargetDate)
+                .Select(g => new CalendarDaySummaryDto
+                {
+                    Date = g.Key,
+                    Day = g.Key.Day,
+                    TotalCount = g.Count(),
+                    OverdueCount = g.Count(x => x.IsOverdue),
+                    HasManagerAgenda = g.Any(x => x.IsManager)
+                })
+                .OrderBy(x => x.Day)
+                .ToListAsync(cancellationToken);
+
+            return Result.Success(list);
+        }
+
         private static CustomerInteractionDto MapToDto(CustomerInteraction entity)
         {
             var nowUtc = DateTime.UtcNow;
@@ -448,10 +628,18 @@ namespace KamatekCrm.Infrastructure.Services
                 score += 40;
             }
 
-            if (entity.RequiresManagerAttention) score += 50;
+            if (entity.RequiresManagerAttention || entity.BallInCourt == BallInCourtStatus.Manager) score += 50;
             if (entity.RequestType == InteractionRequestType.Complaint) score += 40;
 
             string priorityLevel = score >= 120 ? "Critical" : (score >= 60 ? "High" : "Normal");
+
+            var threadEntries = !string.IsNullOrWhiteSpace(entity.EntriesJson) && entity.EntriesJson != "[]"
+                ? JsonSerializer.Deserialize<List<InteractionThreadEntry>>(entity.EntriesJson) ?? new List<InteractionThreadEntry>()
+                : new List<InteractionThreadEntry>();
+
+            var checklist = !string.IsNullOrWhiteSpace(entity.ChecklistJson) && entity.ChecklistJson != "[]"
+                ? JsonSerializer.Deserialize<List<InteractionChecklistItem>>(entity.ChecklistJson) ?? new List<InteractionChecklistItem>()
+                : new List<InteractionChecklistItem>();
 
             return new CustomerInteractionDto
             {
@@ -489,6 +677,15 @@ namespace KamatekCrm.Infrastructure.Services
                 RelatedEntityType = entity.RelatedEntityType,
                 RelatedEntityId = entity.RelatedEntityId,
                 RelatedEntityNumber = entity.RelatedEntityNumber,
+                Direction = entity.Direction,
+                BallInCourt = entity.BallInCourt,
+                SnoozedUntilUtc = entity.SnoozedUntilUtc,
+                LinkedEntityType = entity.LinkedEntityType,
+                LinkedEntityId = entity.LinkedEntityId,
+                EntriesJson = entity.EntriesJson,
+                ChecklistJson = entity.ChecklistJson,
+                ThreadEntries = threadEntries,
+                ChecklistItems = checklist,
                 IsDraft = entity.IsDraft,
                 CreatedDate = entity.CreatedDate
             };

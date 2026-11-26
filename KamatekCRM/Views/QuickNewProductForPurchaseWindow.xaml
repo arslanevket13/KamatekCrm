@@ -20,38 +20,18 @@
             <Setter Property="Margin" Value="0,10,0,3"/>
         </Style>
 
-        <Style x:Key="Field" TargetType="TextBox">
+        <Style x:Key="Field" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="MinHeight" Value="34"/>
             <Setter Property="Height" Value="34"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Padding" Value="9,5"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="{DynamicResource ThemePrimary}"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
 
-        <Style x:Key="ComboField" TargetType="ComboBox">
+        <Style x:Key="ComboField" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="MinHeight" Value="34"/>
             <Setter Property="Height" Value="34"/>
             <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
-            <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}"/>
+            <Setter Property="Padding" Value="8,0,32,0"/>
         </Style>
     </Window.Resources>
 
@@ -156,48 +136,15 @@
 
                     <Button Grid.Column="0" Content="İptal"
                             Command="{Binding CancelCommand}"
-                            Height="38" FontSize="14"
-                            Background="{DynamicResource ApplicationBackgroundBrush}" Foreground="{DynamicResource TextBodyBrush}"
-                            BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" Cursor="Hand">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border Background="{TemplateBinding Background}"
-                                        BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}"
-                                        CornerRadius="8">
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                            Style="{StaticResource BtnSecondary}"
+                            Height="38" FontSize="14" Cursor="Hand"/>
 
                     <Button Grid.Column="2"
                             Content="📦 Oluştur &amp; Ekle"
                             Command="{Binding SaveProductCommand}"
+                            Style="{StaticResource BtnPrimary}"
                             IsDefault="True"
-                            Height="38" FontSize="14" FontWeight="SemiBold"
-                            Foreground="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderThickness="0" Cursor="Hand">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsEnabled" Value="False">
-                                        <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
-                                    </Trigger>
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border Background="{TemplateBinding Background}" CornerRadius="8">
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                            </ControlTemplate>
-                        </Button.Template>
-                    </Button>
+                            Height="38" FontSize="14" FontWeight="SemiBold" Cursor="Hand"/>
                 </Grid>
             </StackPanel>
         </Grid>

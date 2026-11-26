@@ -22,10 +22,14 @@
         </Grid.RowDefinitions>
         
         <!-- Title Bar (Başlık çiftlenmesini önlemek için yalnızca Header içinde gösterilir) -->
-        <ui:TitleBar Grid.Row="0" ShowMaximize="True" ShowMinimize="True" ShowClose="True">
+        <Border Grid.Row="0" Background="{DynamicResource TitleBarBgBrush}"/>
+        <ui:TitleBar Grid.Row="0" ShowMaximize="True" ShowMinimize="True" ShowClose="True"
+                     Background="{DynamicResource TitleBarBgBrush}"
+                     Foreground="{DynamicResource TitleBarFgBrush}"
+                     ButtonsForeground="{DynamicResource TitleBarFgBrush}">
             <ui:TitleBar.Header>
                 <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="Kamatek CRM" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <TextBlock Text="Kamatek CRM" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TitleBarFgBrush}"/>
                 </StackPanel>
             </ui:TitleBar.Header>
         </ui:TitleBar>

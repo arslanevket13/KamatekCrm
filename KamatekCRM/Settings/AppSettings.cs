@@ -202,7 +202,7 @@ namespace KamatekCrm.Settings
                     if (File.Exists(themeFile))
                     {
                         var savedTheme = File.ReadAllText(themeFile).Trim();
-                        if (!string.IsNullOrEmpty(savedTheme))
+                        if (savedTheme == "PremiumLight" || savedTheme == "MidnightDark" || savedTheme == "Glassmorphism")
                             return savedTheme;
                     }
                 }

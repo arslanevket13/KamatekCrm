@@ -223,8 +223,9 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
+                var defaultFileName = KamatekCrm.Helpers.WorkOrderPdfFileNameBuilder.Build(document.Value, "Fatura");
                 var filePath = await _dialogService.ShowSaveFileDialogAsync(
-                    "Faturayı Kaydet", "PDF Dosyası (*.pdf)|*.pdf", $"fatura_is_{_jobId:D6}.pdf");
+                    "Faturayı Kaydet", "PDF Dosyası (*.pdf)|*.pdf", defaultFileName);
                 if (string.IsNullOrWhiteSpace(filePath)) return;
 
                 _pdfService.GenerateWorkOrderInvoice(workflow, document.Value, filePath);
@@ -260,8 +261,9 @@ namespace KamatekCrm.ViewModels
                     return;
                 }
 
+                var defaultFileName = KamatekCrm.Helpers.WorkOrderPdfFileNameBuilder.Build(document.Value, "Servis Raporu");
                 var filePath = await _dialogService.ShowSaveFileDialogAsync(
-                    "Servis Raporunu Kaydet", "PDF Dosyası (*.pdf)|*.pdf", $"servis_raporu_{_jobId:D6}.pdf");
+                    "Servis Raporunu Kaydet", "PDF Dosyası (*.pdf)|*.pdf", defaultFileName);
                 if (string.IsNullOrWhiteSpace(filePath)) return;
 
                 _pdfService.GenerateWorkOrderServiceReport(workflow, document.Value, filePath);

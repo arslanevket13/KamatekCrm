@@ -235,26 +235,6 @@
                                   VirtualizingPanel.VirtualizationMode="Recycling"
                                   ScrollViewer.CanContentScroll="True">
 
-                            <DataGrid.ColumnHeaderStyle>
-                                <Style TargetType="DataGridColumnHeader">
-                                    <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource TextHeadingBrush}"/>
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                    <Setter Property="Padding" Value="10,8"/>
-                                    <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
-                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                </Style>
-                            </DataGrid.ColumnHeaderStyle>
-
-                            <DataGrid.CellStyle>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
-                                    <Setter Property="Padding" Value="8,6"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                </Style>
-                            </DataGrid.CellStyle>
-
                             <DataGrid.Columns>
                                 <!-- Product Code -->
                                 <DataGridTextColumn Header="Ürün Kodu / SKU" 
@@ -325,7 +305,8 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                     <DataGridTextColumn.EditingElementStyle>
-                                        <Style TargetType="TextBox">
+                                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                            <Setter Property="MinHeight" Value="0"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="TextAlignment" Value="Center"/>
                                             <Setter Property="Background" Value="{DynamicResource StatusWarningBgLight}"/>

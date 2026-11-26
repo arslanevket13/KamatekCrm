@@ -57,4 +57,38 @@ namespace KamatekCrm.Shared.Enums
         Cancelled = 9,          // İptal edildi
         Overdue = 10            // Gecikmiş takip
     }
+
+    /// <summary>
+    /// Görüşme / Vaka yönü
+    /// </summary>
+    public enum InteractionDirection
+    {
+        InboundRequest = 1,       // Müşteri Talebi (Müşteri Aradı/Geldi)
+        OutboundInfoRequest = 2,  // Bilgi/Onay İstendi (Biz Aradık/Sorduk)
+        InternalNote = 3          // İç Not
+    }
+
+    /// <summary>
+    /// Vaka sorumluluk durumu (Top kimde)
+    /// </summary>
+    public enum BallInCourtStatus
+    {
+        Us = 1,         // Top Bizde
+        Customer = 2,   // Müşteride
+        Manager = 3     // Patronda
+    }
+
+    /// <summary>
+    /// Çok katmanlı vaka zaman çizelgesi öğe türü
+    /// </summary>
+    public enum ThreadEntryType
+    {
+        Note = 1,
+        CallAttempt = 2,
+        CustomerReply = 3,
+        Snooze = 4,
+        Handoff = 5,
+        ManagerInstruction = 6,
+        SystemConversion = 7
+    }
 }

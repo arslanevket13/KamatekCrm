@@ -170,9 +170,9 @@
                                                           IsEnabled="{Binding DataContext.IsCompleted, Converter={StaticResource InverseBoolConverter}, RelativeSource={RelativeSource AncestorType=Window}}"/>
                                                 <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
                                                     <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" FontSize="11.5" FontWeight="SemiBold"
-                                                             Background="Transparent" BorderThickness="0"/>
+                                                             Background="Transparent" BorderThickness="0" Padding="0,1"/>
                                                     <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" FontSize="10.5"
-                                                             Foreground="{DynamicResource TextFillColorSecondaryBrush}" Background="Transparent" BorderThickness="0"/>
+                                                             Foreground="{DynamicResource TextFillColorSecondaryBrush}" Background="Transparent" BorderThickness="0" Padding="0,1"/>
                                                 </StackPanel>
                                                 <ui:Button Grid.Column="2" Content="✕" Command="{Binding DataContext.RemoveTaskCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                            CommandParameter="{Binding}" Appearance="Danger" Height="24" Width="32"

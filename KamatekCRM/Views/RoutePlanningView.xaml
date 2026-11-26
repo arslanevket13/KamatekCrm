@@ -147,7 +147,7 @@
             <!-- === LİSTELER (Tab) === -->
             <TabControl Grid.Row="3" Background="Transparent" BorderThickness="0" Padding="0">
                 <TabControl.Resources>
-                    <Style TargetType="TabItem">
+                    <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
                         <Setter Property="FontWeight" Value="SemiBold"/>
                         <Setter Property="Padding" Value="12,6"/>
                     </Style>

@@ -174,19 +174,9 @@
 
                 <Button Grid.Column="4" Content="💾 KAYDET" 
                         Command="{Binding AddExpenseCommand}"
+                        Style="{StaticResource BtnPrimary}"
                         Padding="24,14" FontSize="14" FontWeight="Bold"
-                        Background="{DynamicResource ThemePrimary}" Foreground="{DynamicResource TextOnPrimaryBrush}" BorderThickness="0"
-                        VerticalAlignment="Bottom" Cursor="Hand">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Style.Triggers>
-                                <Trigger Property="IsEnabled" Value="False">
-                                    <Setter Property="Opacity" Value="0.5"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                        VerticalAlignment="Bottom" Cursor="Hand"/>
             </Grid>
         </Border>
 
@@ -211,18 +201,7 @@
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
-                                 Width="200" Padding="8,8" Margin="0,0,8,0"
-                                 Background="{DynamicResource SurfacePageBrush}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" BorderBrush="{DynamicResource BorderDefaultBrush}">
-                            <TextBox.Style>
-                                <Style TargetType="TextBox">
-                                    <Style.Triggers>
-                                        <Trigger Property="Text" Value="">
-                                            <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBox.Style>
-                        </TextBox>
+                                 Width="200" Margin="0,0,8,0"/>
                         
                         <Button Content="🔄" Command="{Binding RefreshCommand}"
                                 Width="36" Height="36" FontSize="16"
@@ -250,32 +229,6 @@
                           ScrollViewer.CanContentScroll="True"
                           VirtualizingPanel.ScrollUnit="Pixel"
                           CanUserAddRows="False">
-
-                    <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="{DynamicResource SurfacePageBrush}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Padding" Value="12,10"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
-                        </Style>
-                    </DataGrid.ColumnHeaderStyle>
-
-                    <DataGrid.CellStyle>
-                        <Style TargetType="DataGridCell">
-                            <Setter Property="FocusVisualStyle" Value="{DynamicResource KmFocusVisual}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Padding" Value="12,0"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource ThemePrimary}"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DataGrid.CellStyle>
 
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="TARİH" Width="130"

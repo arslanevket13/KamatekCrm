@@ -34,7 +34,8 @@ public sealed class StockCountCommandService : IStockCountCommandService
         if (validation is not null) return Result.Failure<StockCountResult>(validation);
 
         await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        await using var transaction = await BeginTransactionIfSupportedAsync(context, cancellationToken);
+        return await context.ExecuteInTransactionAsync(async transaction =>
+        {
         try
         {
             string idempotencyKey = command.IdempotencyKey.ToString("D");
@@ -196,6 +197,7 @@ public sealed class StockCountCommandService : IStockCountCommandService
             await RollbackIfPresentAsync(transaction, cancellationToken);
             return Result.Failure<StockCountResult>($"Stok sayımı uygulanamadı: {ex.Message}");
         }
+        }, IsolationLevel.Serializable, cancellationToken);
     }
 
     private static string? Validate(ApplyStockCountCommand command)
@@ -223,13 +225,6 @@ public sealed class StockCountCommandService : IStockCountCommandService
 
     private static string NormalizeUser(string? value) =>
         string.IsNullOrWhiteSpace(value) ? "Sistem" : value.Trim()[..Math.Min(100, value.Trim().Length)];
-
-    private static async Task<IDbContextTransaction?> BeginTransactionIfSupportedAsync(
-        AppDbContext context,
-        CancellationToken cancellationToken) =>
-        context.Database.IsRelational()
-            ? await context.Database.CreateExecutionStrategy().ExecuteAsync(async () => await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken))
-            : null;
 
     private static Task CommitIfPresentAsync(IDbContextTransaction? transaction, CancellationToken cancellationToken) =>
         transaction?.CommitAsync(cancellationToken) ?? Task.CompletedTask;

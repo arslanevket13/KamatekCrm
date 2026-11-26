@@ -46,6 +46,7 @@ namespace KamatekCrm.Extensions
             services.AddSingleton<IProjectQuoteEditorLauncher, ProjectQuoteEditorLauncher>();
             services.AddSingleton<IQuotationLauncher, QuotationLauncher>();
             services.AddSingleton<EventAggregator>();
+            services.AddSingleton<KamatekCrm.ApplicationCore.Interfaces.IInteractionEventNotifier, InteractionEventNotifier>();
             services.AddTransient<InvoiceScannerService>();
             services.AddTransient<NotificationService>();
             services.AddTransient<PdfInvoiceParserService>();

@@ -401,29 +401,108 @@
 
         <!-- API / DB SAĞLIĞI -->
         <DataTemplate DataType="{x:Type vm:HealthTabViewModel}">
-            <StackPanel>
-                <WrapPanel>
-                    <Border Style="{DynamicResource InfoCard}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4">
+                <StackPanel>
+                    <WrapPanel>
+                        <Border Style="{DynamicResource InfoCard}">
+                            <StackPanel>
+                                <TextBlock Text="VERİTABANI" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding DatabaseStatus}" Style="{DynamicResource ValueText}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{DynamicResource InfoCard}">
+                            <StackPanel>
+                                <TextBlock Text="API" Style="{DynamicResource LabelText}"/>
+                                <TextBlock Text="{Binding ApiStatus}" Style="{DynamicResource ValueText}"/>
+                            </StackPanel>
+                        </Border>
+                    </WrapPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <ui:Button Content="Şimdi Kontrol Et" Command="{Binding CheckCommand}" Appearance="Primary"/>
+                        <TextBlock Text="{Binding LastCheckedText}" VerticalAlignment="Center" Margin="12,0,0,0"
+                                   FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+                    <TextBlock Text="Kontroller 5 saniye zaman aşımıyla arka planda çalışır; hata mesajı yerine yalnızca hata tipi gösterilir."
+                               Style="{DynamicResource NoteText}"/>
+
+                    <!-- VERİTABANI & PGADMIN BAĞLANTI BİLGİLERİ -->
+                    <Border Margin="0,16,0,0" Padding="16" CornerRadius="10"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                            BorderThickness="1"
+                            MaxWidth="780" HorizontalAlignment="Left">
                         <StackPanel>
-                            <TextBlock Text="VERİTABANI" Style="{DynamicResource LabelText}"/>
-                            <TextBlock Text="{Binding DatabaseStatus}" Style="{DynamicResource ValueText}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="🔐" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="Veritabanı &amp; pgAdmin Bağlantı Bilgileri"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextHeadingBrush}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="Yalnızca yetkili geliştirici oturumunda aktiftir; parola varsayılan olarak maskelidir ve kopyalandıktan 30 sn sonra panodan temizlenir."
+                                       FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Mod" Style="{DynamicResource LabelText}" VerticalAlignment="Center" Margin="0,5,8,5"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ConnectionModeText}" Style="{DynamicResource ValueText}" VerticalAlignment="Center" Margin="0,5,0,5"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Sunucu &amp; Port" Style="{DynamicResource LabelText}" VerticalAlignment="Center" Margin="0,5,8,5"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding HostAndPortText}" Style="{DynamicResource ValueText}" FontFamily="Consolas" VerticalAlignment="Center" Margin="0,5,0,5"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Veritabanı" Style="{DynamicResource LabelText}" VerticalAlignment="Center" Margin="0,5,8,5"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding DbName}" Style="{DynamicResource ValueText}" FontFamily="Consolas" VerticalAlignment="Center" Margin="0,5,0,5"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Kullanıcı" Style="{DynamicResource LabelText}" VerticalAlignment="Center" Margin="0,5,8,5"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding DbUsername}" Style="{DynamicResource ValueText}" FontFamily="Consolas" VerticalAlignment="Center" Margin="0,5,0,5"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Veri Dizini" Style="{DynamicResource LabelText}" VerticalAlignment="Center" Margin="0,5,8,5"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ManagedDataDirectoryDisplay}" Style="{DynamicResource ValueText}" FontFamily="Consolas"
+                                           ToolTip="{Binding ManagedDataDirectoryDisplay}" VerticalAlignment="Center" Margin="0,5,0,5"/>
+
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Parola" Style="{DynamicResource LabelText}" VerticalAlignment="Center" Margin="0,6,8,4"/>
+                                <Border Grid.Row="5" Grid.Column="1" Margin="0,4,0,4" Padding="10,5" CornerRadius="6"
+                                        Background="{DynamicResource SurfacePageBrush}"
+                                        BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                        BorderThickness="1"
+                                        HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding DisplayedPassword}"
+                                               FontFamily="Consolas" FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextHeadingBrush}"/>
+                                </Border>
+                            </Grid>
+
+                            <WrapPanel>
+                                <ui:Button Content="{Binding TogglePasswordButtonText}"
+                                           Command="{Binding TogglePasswordVisibilityCommand}"
+                                           Appearance="Secondary" Margin="0,0,8,6"/>
+                                <ui:Button Content="Parolayı Kopyala"
+                                           Command="{Binding CopyPasswordCommand}"
+                                           Appearance="Primary" Margin="0,0,8,6"/>
+                                <ui:Button Content="pgAdmin Bilgilerini Kopyala"
+                                           Command="{Binding CopyPgAdminSummaryCommand}"
+                                           Appearance="Secondary" Margin="0,0,8,6"/>
+                                <ui:Button Content="Veri Klasörünü Aç"
+                                           Command="{Binding OpenDataDirectoryCommand}"
+                                           Appearance="Secondary" Margin="0,0,0,6"/>
+                            </WrapPanel>
                         </StackPanel>
                     </Border>
-                    <Border Style="{DynamicResource InfoCard}">
-                        <StackPanel>
-                            <TextBlock Text="API" Style="{DynamicResource LabelText}"/>
-                            <TextBlock Text="{Binding ApiStatus}" Style="{DynamicResource ValueText}"/>
-                        </StackPanel>
-                    </Border>
-                </WrapPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <ui:Button Content="Şimdi Kontrol Et" Command="{Binding CheckCommand}" Appearance="Primary"/>
-                    <TextBlock Text="{Binding LastCheckedText}" VerticalAlignment="Center" Margin="12,0,0,0"
-                               FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                 </StackPanel>
-                <TextBlock Text="Kontroller 5 saniye zaman aşımıyla arka planda çalışır; hata mesajı yerine yalnızca hata tipi gösterilir."
-                           Style="{DynamicResource NoteText}"/>
-            </StackPanel>
+            </ScrollViewer>
         </DataTemplate>
     </Window.Resources>
 
